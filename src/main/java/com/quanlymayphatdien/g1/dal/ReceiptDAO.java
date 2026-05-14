@@ -31,7 +31,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public List<Receipt> findWithFilters(String typeFilter, String statusFilter, String whFilter,
-            String search, Integer createdByFilter, int page, int pageSize, Integer currentUserId) {
+            String search, Integer createdByFilter, String relatedTypeFilter, int page, int pageSize, Integer currentUserId) {
         List<Receipt> allReceipts = new ArrayList<>();
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
@@ -79,6 +79,13 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             inputs.add(like);
             inputs.add(like);
         }
+        if (relatedTypeFilter != null && !relatedTypeFilter.isEmpty()) {
+            if ("ORDER".equals(relatedTypeFilter)) {
+                sql += "AND r.order_id IS NOT NULL ";
+            } else if ("LIQUIDATION".equals(relatedTypeFilter)) {
+                sql += "AND r.liquidation_id IS NOT NULL ";
+            }
+        }
         sql += "ORDER BY r.created_at DESC";
         try {
             connection = getConnection();
@@ -107,7 +114,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return new ArrayList<>();
     }
 
-    public int countWithFilters(String typeFilter, String statusFilter, String whFilter, String search, Integer createdByFilter, Integer currentUserId) {
+    public int countWithFilters(String typeFilter, String statusFilter, String whFilter, String search, Integer createdByFilter, String relatedTypeFilter, Integer currentUserId) {
         String sql = "SELECT COUNT(*) FROM receipt r "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
@@ -141,6 +148,13 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             inputs.add(like);
             inputs.add(like);
             inputs.add(like);
+        }
+        if (relatedTypeFilter != null && !relatedTypeFilter.isEmpty()) {
+            if ("ORDER".equals(relatedTypeFilter)) {
+                sql += "AND r.order_id IS NOT NULL ";
+            } else if ("LIQUIDATION".equals(relatedTypeFilter)) {
+                sql += "AND r.liquidation_id IS NOT NULL ";
+            }
         }
         try {
             connection = getConnection();

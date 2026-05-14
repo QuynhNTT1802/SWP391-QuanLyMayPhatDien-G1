@@ -314,45 +314,39 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
-    public int cancelOrder(int orderId, int cancelledBy) {
-        String checkSql = "SELECT COUNT(*) FROM receipt "
-                + "WHERE order_id = ? AND receipt_type = 'EXPORT' AND status = 'COMPLETED'";
-
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(checkSql);
-            statement.setInt(1, orderId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next() && resultSet.getInt(1) > 0) {
-                return -1;
+    public boolean updateForRevision(SaleOrder s) {
+        String sql = "UPDATE sale_order SET customer_id = ?, note = ?, "
+                + "customer_note = ?, total_amount = ?, status = ?, "
+                + "updated_by = ?, updated_at = NOW() "
+                + "WHERE order_id = ? AND status = ?";
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                if (s.getCustomerId() > 0) {
+                    ps.setInt(1, s.getCustomerId());
+                } else {
+                    ps.setNull(1, java.sql.Types.INTEGER);
+                }
+                ps.setString(2, s.getNote());
+                ps.setString(3, s.getCustomerNote());
+                ps.setDouble(4, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
+                ps.setString(5, GlobalUtils.STATUS_PENDING);
+                ps.setInt(6, s.getUpdatedBy());
+                ps.setInt(7, s.getOrderId());
+                ps.setString(8, GlobalUtils.STATUS_NEEDS_REVISION);
+                int rows = ps.executeUpdate();
+                conn.commit();
+                return rows > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return 0;
-        } finally {
-            closeResources();
-        }
-
-        String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
-                + "WHERE order_id = ? AND (status = ? OR status = ?)";
-
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(updateSql);
-            statement.setString(1, GlobalUtils.STATUS_CANCELLED);
-            statement.setInt(2, cancelledBy);
-            statement.setInt(3, orderId);
-            statement.setString(4, GlobalUtils.STATUS_PENDING);
-            statement.setString(5, GlobalUtils.STATUS_APPROVED);
-
-            int rowsAffected = statement.executeUpdate();
-            return rowsAffected > 0 ? 1 : 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        } finally {
-            closeResources();
+            return false;
         }
     }
 
@@ -660,73 +654,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
         return s;
-    }
-
-    public boolean updateWithDetails(SaleOrder s, List<OrderDetail> newDetails) {
-        String updateSql = "UPDATE sale_order SET customer_id = ?, customer_note = ?, "
-                + "total_amount = ?, note = ?, status = ?, revision_reason = NULL, "
-                + "updated_at = NOW() "
-                + "WHERE order_id = ? AND status IN (?, ?)";
-        String deleteDetailSql = "DELETE FROM order_detail WHERE order_id = ?";
-        String insertDetailSql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
-
-        try (Connection conn = getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-
-                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
-                    if (s.getCustomerId() > 0) {
-                        ps.setInt(1, s.getCustomerId());
-                    } else {
-                        ps.setNull(1, java.sql.Types.INTEGER);
-                    }
-                    ps.setString(2, s.getCustomerNote());
-                    ps.setDouble(3, s.getTotalAmount());
-                    ps.setString(4, s.getNote());
-                    ps.setString(5, GlobalUtils.STATUS_PENDING);
-                    ps.setInt(6, s.getOrderId());
-                    ps.setString(7, GlobalUtils.STATUS_PENDING);
-                    ps.setString(8, GlobalUtils.STATUS_NEEDS_REVISION);
-
-                    int rows = ps.executeUpdate();
-                    if (rows == 0) {
-                        conn.rollback();
-                        return false;
-                    }
-                }
-
-                try (PreparedStatement ps = conn.prepareStatement(deleteDetailSql)) {
-                    ps.setInt(1, s.getOrderId());
-                    ps.executeUpdate();
-                }
-
-                try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
-                    for (OrderDetail d : newDetails) {
-                        ps.setInt(1, d.getOrderId());
-                        ps.setInt(2, d.getGeneratorId());
-                        ps.setInt(3, d.getQuantity());
-                        ps.setDouble(4, d.getUnitPrice());
-                        ps.setString(5, d.getNote());
-                        ps.addBatch();
-                    }
-                    ps.executeBatch();
-                }
-
-                conn.commit();
-                return true;
-
-            } catch (SQLException e) {
-                conn.rollback();
-                e.printStackTrace();
-                return false;
-            } finally {
-                conn.setAutoCommit(true);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
     }
 
     public int countOrderByStatus(String status, int userId, int loggedUserId) {

@@ -80,7 +80,6 @@
 
                     <c:set var="canApprove" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.approve')}" />
                     <c:set var="canReject" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.reject')}" />
-                    <c:set var="canCancelProp" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
 
 
@@ -285,11 +284,7 @@
                                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                     <input id="genSearch" placeholder="Tìm kiếm thông tin..." autocomplete="off"/>
                                 </div>
-                                <div class="spacer"></div>
-                                <button type="button" class="btn" title="Xuất file (đang phát triển)">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    Xuất file
-                                </button>
+
                             </div>
 
                             <div style="overflow-x:auto;">
@@ -574,22 +569,6 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
                             <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Huỷ phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu đề xuất sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
                         </div>
                     </form>
                 </div>

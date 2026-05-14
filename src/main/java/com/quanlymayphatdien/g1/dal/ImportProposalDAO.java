@@ -27,7 +27,7 @@ import java.util.List;
 public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal> {
 
     public String generateProposalCode() {
-        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         return String.format("PRC-%s-%03d", dateStr, countTodayProposals() + 1);
     }
 
@@ -357,24 +357,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             statement.setInt(3, rejecterId);
             statement.setInt(4, proposalId);
             statement.setString(5, GlobalUtils.STATUS_PENDING);
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            closeResources();
-        }
-    }
-
-    public boolean cancelProposal(int proposalId, int cancellerId) {
-        String sql = "UPDATE import_proposal SET status = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_CANCELLED);
-            statement.setInt(2, proposalId);
-            statement.setString(3, GlobalUtils.STATUS_PENDING);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
