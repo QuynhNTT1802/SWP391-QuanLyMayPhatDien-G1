@@ -10,6 +10,8 @@ package com.quanlymayphatdien.g1.entity;
  */
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 public class Admin extends User {
     private String department;
@@ -20,17 +22,19 @@ public class Admin extends User {
         super();
     }
 
-  
-    public Admin(int id, String name, String username, String password, String email,
-                 String phone, String address, String status,
-                 LocalDateTime createdAt, LocalDateTime updatedAt,
-                 Integer createdBy, Integer updatedBy,
-                 String department, LocalDateTime lastLogin) {
-        super(id, name, username, password, email, phone, address, status,
-              createdAt, updatedAt, createdBy, updatedBy);
+    public Admin(String department, LocalDateTime lastLogin) {
         this.department = department;
         this.lastLogin = lastLogin;
     }
+
+    public Admin(String department, LocalDateTime lastLogin, Integer id, String name, String username, String password, String email, String phone, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer createdBy, Integer updatedBy, List<Role> roles, Set<String> effectivePermissions) {
+        super(id, name, username, password, email, phone, address, status, createdAt, updatedAt, createdBy, updatedBy, roles, effectivePermissions);
+        this.department = department;
+        this.lastLogin = lastLogin;
+    }
+
+    
+    
 
 
     public String getDepartment() {
