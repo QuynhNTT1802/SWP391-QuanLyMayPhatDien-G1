@@ -1,0 +1,388 @@
+CREATE DATABASE IF NOT EXISTS `warehousedb` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `warehousedb`;
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+-- =============================================================
+-- CORE TABLES
+-- =============================================================
+
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
+  `username` varchar(45) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(45) DEFAULT NULL,
+  `address` text,
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL,
+  `updated_by` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`),
+  UNIQUE KEY `uk_email` (`email`),
+  KEY `idx_created_by` (`created_by`),
+  KEY `idx_updated_by` (`updated_by`),
+  CONSTRAINT `fk_user_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`),
+  CONSTRAINT `fk_user_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =============================================================
+-- RBAC TABLES
+-- =============================================================
+
+DROP TABLE IF EXISTS `permissions`;
+CREATE TABLE `permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `resource` varchar(100) NOT NULL,
+  `action` varchar(50) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_resource_action` (`resource`, `action`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_role_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `role_permissions`;
+CREATE TABLE `role_permissions` (
+  `role_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  PRIMARY KEY (`role_id`, `permission_id`),
+  KEY `idx_rp_permission` (`permission_id`),
+  CONSTRAINT `fk_rp_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_rp_permission` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `user_roles`;
+CREATE TABLE `user_roles` (
+  `user_id` int NOT NULL,
+  `role_id` int NOT NULL,
+  PRIMARY KEY (`user_id`, `role_id`),
+  KEY `idx_ur_role` (`role_id`),
+  CONSTRAINT `fk_ur_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_ur_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `user_permissions`;
+CREATE TABLE `user_permissions` (
+  `user_id` int NOT NULL,
+  `permission_id` int NOT NULL,
+  `type` enum('GRANT','DENY') NOT NULL,
+  PRIMARY KEY (`user_id`, `permission_id`),
+  KEY `idx_up_permission` (`permission_id`),
+  CONSTRAINT `fk_up_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_up_permission` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =============================================================
+-- ROLE-SPECIFIC TABLES (thuoc tinh rieng theo loai user)
+-- =============================================================
+
+DROP TABLE IF EXISTS `admin`;
+CREATE TABLE `admin` (
+  `admin_id` int NOT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `last_login` datetime DEFAULT NULL,
+  PRIMARY KEY (`admin_id`),
+  CONSTRAINT `fk_admin_user` FOREIGN KEY (`admin_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `warehouse_manager`;
+CREATE TABLE `warehouse_manager` (
+  `manager_id` int NOT NULL,
+  `warehouse_id` int DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`manager_id`),
+  CONSTRAINT `fk_wm_user` FOREIGN KEY (`manager_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `warehouse_staff`;
+CREATE TABLE `warehouse_staff` (
+  `staff_id` int NOT NULL,
+  `warehouse_id` int DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`staff_id`),
+  CONSTRAINT `fk_ws_user` FOREIGN KEY (`staff_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `technician`;
+CREATE TABLE `technician` (
+  `technician_id` int NOT NULL,
+  `specialization` varchar(100) DEFAULT NULL,
+  `certification_level` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`technician_id`),
+  CONSTRAINT `fk_tech_user` FOREIGN KEY (`technician_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `sales_staff`;
+CREATE TABLE `sales_staff` (
+  `sales_id` int NOT NULL,
+  `region` varchar(100) DEFAULT NULL,
+  `sales_target` decimal(15,2) DEFAULT NULL,
+  PRIMARY KEY (`sales_id`),
+  CONSTRAINT `fk_sales_user` FOREIGN KEY (`sales_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `accountant`;
+CREATE TABLE `accountant` (
+  `accountant_id` int NOT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`accountant_id`),
+  CONSTRAINT `fk_acc_user` FOREIGN KEY (`accountant_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `customer`;
+CREATE TABLE `customer` (
+  `customer_id` int NOT NULL,
+  `tax_code` varchar(45) DEFAULT NULL,
+  `customer_type` varchar(45) NOT NULL DEFAULT 'individual',
+  `company_name` varchar(255) DEFAULT NULL,
+  `note` text,
+  PRIMARY KEY (`customer_id`),
+  CONSTRAINT `fk_cust_user` FOREIGN KEY (`customer_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `driver`;
+CREATE TABLE `driver` (
+  `driver_id` int NOT NULL,
+  `license_no` varchar(50) DEFAULT NULL,
+  `vehicle_type` varchar(100) DEFAULT NULL,
+  `vehicle_plate` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`driver_id`),
+  CONSTRAINT `fk_driver_user` FOREIGN KEY (`driver_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- =============================================================
+-- SEED DATA: Roles
+-- =============================================================
+
+INSERT INTO `roles` (`name`, `description`, `status`) VALUES
+('admin', 'Quan tri he thong IT', 'active'),
+('warehouse_manager', 'Quan ly toan bo kho', 'active'),
+('warehouse_staff', 'Thao tac truc tiep trong kho', 'active'),
+('technician', 'Ky su bao tri, sua chua', 'active'),
+('sales_staff', 'Nhan vien kinh doanh', 'active'),
+('accountant', 'Ke toan tai chinh', 'active'),
+('customer', 'Nguoi thue/mua may phat dien', 'active'),
+('driver', 'Tai xe giao nhan', 'active');
+
+-- =============================================================
+-- SEED DATA: Permissions
+-- =============================================================
+
+INSERT INTO `permissions` (`resource`, `action`, `description`) VALUES
+-- Users
+('users', 'view', 'Xem danh sach nguoi dung'),
+('users', 'create', 'Them nguoi dung moi'),
+('users', 'update', 'Cap nhat thong tin nguoi dung'),
+('users', 'deactivate', 'Vo hieu hoa nguoi dung'),
+-- Roles
+('roles', 'view', 'Xem danh sach vai tro'),
+('roles', 'create', 'Them vai tro moi'),
+('roles', 'update', 'Cap nhat vai tro'),
+('roles', 'deactivate', 'Vo hieu hoa vai tro'),
+('roles', 'edit_permissions', 'Chinh sua quyen cua vai tro'),
+-- Generators
+('generators', 'view', 'Xem danh sach may phat dien'),
+('generators', 'create', 'Them may phat dien moi'),
+('generators', 'update', 'Cap nhat thong tin may'),
+('generators', 'delete', 'Xoa may phat dien'),
+-- Import Orders
+('import_orders', 'view', 'Xem phieu nhap kho'),
+('import_orders', 'create', 'Tao phieu nhap kho'),
+('import_orders', 'approve', 'Duyet phieu nhap kho'),
+('import_orders', 'reject', 'Tu choi phieu nhap kho'),
+-- Export Orders
+('export_orders', 'view', 'Xem phieu xuat kho'),
+('export_orders', 'create', 'Tao phieu xuat kho'),
+('export_orders', 'approve', 'Duyet phieu xuat kho'),
+('export_orders', 'reject', 'Tu choi phieu xuat kho'),
+-- Inventory
+('inventory', 'view', 'Xem ton kho'),
+('inventory', 'check', 'Kiem ke'),
+('inventory', 'adjust', 'Dieu chinh ton kho'),
+-- Warehouses
+('warehouses', 'view', 'Xem thong tin kho'),
+('warehouses', 'create', 'Them kho moi'),
+('warehouses', 'update', 'Cap nhat thong tin kho'),
+('warehouses', 'delete', 'Xoa kho'),
+-- Maintenance
+('maintenance', 'view', 'Xem lich bao tri'),
+('maintenance', 'create', 'Tao lich bao tri'),
+('maintenance', 'update', 'Cap nhat bao tri'),
+('maintenance', 'complete', 'Hoan thanh bao tri'),
+-- Repairs
+('repairs', 'view', 'Xem danh sach sua chua'),
+('repairs', 'create', 'Tao phieu sua chua'),
+('repairs', 'update', 'Cap nhat sua chua'),
+('repairs', 'complete', 'Hoan thanh sua chua'),
+-- Quotations
+('quotations', 'view', 'Xem bao gia'),
+('quotations', 'create', 'Tao bao gia'),
+('quotations', 'update', 'Cap nhat bao gia'),
+('quotations', 'send', 'Gui bao gia cho khach'),
+-- Contracts
+('contracts', 'view', 'Xem hop dong'),
+('contracts', 'create', 'Tao hop dong'),
+('contracts', 'update', 'Cap nhat hop dong'),
+('contracts', 'cancel', 'Huy hop dong'),
+-- Orders
+('orders', 'view', 'Xem don hang'),
+('orders', 'create', 'Tao don hang'),
+('orders', 'update', 'Cap nhat don hang'),
+('orders', 'cancel', 'Huy don hang'),
+-- Invoices
+('invoices', 'view', 'Xem hoa don'),
+('invoices', 'create', 'Tao hoa don'),
+-- Payments
+('payments', 'view', 'Xem thanh toan'),
+('payments', 'confirm', 'Xac nhan thanh toan'),
+-- Debts
+('debts', 'view', 'Xem cong no'),
+('debts', 'remind', 'Gui nhac no'),
+-- Customers
+('customers', 'view', 'Xem danh sach khach hang'),
+('customers', 'create', 'Them khach hang'),
+('customers', 'update', 'Cap nhat khach hang'),
+-- Suppliers
+('suppliers', 'view', 'Xem nha cung cap'),
+('suppliers', 'create', 'Them nha cung cap'),
+('suppliers', 'update', 'Cap nhat nha cung cap'),
+-- Deliveries
+('deliveries', 'view', 'Xem lenh van chuyen'),
+('deliveries', 'create', 'Tao lenh van chuyen'),
+('deliveries', 'update', 'Cap nhat trang thai van chuyen'),
+('deliveries', 'confirm', 'Xac nhan giao/nhan hang'),
+-- Reports
+('reports', 'view', 'Xem bao cao'),
+('reports', 'export', 'Xuat bao cao'),
+-- System Config
+('system_config', 'view', 'Xem cau hinh he thong'),
+('system_config', 'update', 'Cap nhat cau hinh he thong'),
+-- Audit Logs
+('audit_logs', 'view', 'Xem log hoat dong');
+
+-- =============================================================
+-- SEED DATA: Role Permissions
+-- =============================================================
+
+-- Admin: users.*, roles.*, system_config.*, audit_logs.view, reports.*
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'admin' AND (
+  p.resource = 'users'
+  OR p.resource = 'roles'
+  OR p.resource = 'system_config'
+  OR (p.resource = 'audit_logs' AND p.action = 'view')
+  OR p.resource = 'reports'
+);
+
+-- Warehouse Manager
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'warehouse_manager' AND (
+  (p.resource = 'generators' AND p.action = 'view')
+  OR (p.resource = 'import_orders' AND p.action IN ('view', 'approve', 'reject'))
+  OR (p.resource = 'export_orders' AND p.action IN ('view', 'approve', 'reject'))
+  OR p.resource = 'inventory'
+  OR (p.resource = 'warehouses' AND p.action IN ('view', 'create', 'update'))
+  OR p.resource = 'reports'
+);
+
+-- Warehouse Staff
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'warehouse_staff' AND (
+  (p.resource = 'generators' AND p.action IN ('view', 'create', 'update'))
+  OR (p.resource = 'import_orders' AND p.action IN ('view', 'create'))
+  OR (p.resource = 'export_orders' AND p.action IN ('view', 'create'))
+  OR (p.resource = 'inventory' AND p.action IN ('view', 'check'))
+  OR (p.resource = 'warehouses' AND p.action = 'view')
+);
+
+-- Technician
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'technician' AND (
+  (p.resource = 'generators' AND p.action = 'view')
+  OR p.resource = 'maintenance'
+  OR p.resource = 'repairs'
+);
+
+-- Sales Staff
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'sales_staff' AND (
+  (p.resource = 'generators' AND p.action = 'view')
+  OR p.resource = 'customers'
+  OR p.resource = 'suppliers'
+  OR p.resource = 'quotations'
+  OR p.resource = 'contracts'
+  OR (p.resource = 'orders' AND p.action IN ('view', 'create', 'update'))
+);
+
+-- Accountant
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'accountant' AND (
+  p.resource = 'payments'
+  OR p.resource = 'invoices'
+  OR p.resource = 'debts'
+  OR p.resource = 'reports'
+  OR (p.resource = 'contracts' AND p.action = 'view')
+  OR (p.resource = 'orders' AND p.action = 'view')
+);
+
+-- Customer
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'customer' AND (
+  (p.resource = 'generators' AND p.action = 'view')
+  OR (p.resource = 'quotations' AND p.action = 'view')
+  OR (p.resource = 'contracts' AND p.action = 'view')
+  OR (p.resource = 'orders' AND p.action = 'view')
+  OR (p.resource = 'invoices' AND p.action = 'view')
+  OR (p.resource = 'debts' AND p.action = 'view')
+);
+
+-- Driver
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT r.id, p.id FROM `roles` r, `permissions` p
+WHERE r.name = 'driver' AND (
+  (p.resource = 'deliveries' AND p.action IN ('view', 'update', 'confirm'))
+);
+
+-- =============================================================
+-- RESTORE SETTINGS
+-- =============================================================
+
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
