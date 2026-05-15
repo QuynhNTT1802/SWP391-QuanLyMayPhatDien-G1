@@ -19,11 +19,10 @@ public class DBContext {
     protected PreparedStatement statement;
 
     public DBContext() {
-        try {
-            //Change the username password and url to connect your own database
+        try {          
             String username = "root";
-            String password = "123456";
-            String url = "jdbc:mysql://localhost:3306/ocms";
+            String password = "123456789";
+            String url = "jdbc:mysql://localhost:3306/warehousedb";
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException | SQLException ex) {
