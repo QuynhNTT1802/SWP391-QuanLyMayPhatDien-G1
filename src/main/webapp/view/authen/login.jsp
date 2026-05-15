@@ -62,7 +62,7 @@
 
             <main class="form-side">
                 <div class="form-top">
-                    <a href="homepage.html" class="back">
+                    <a href="${pageContext.request.contextPath}/home" class="back">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Trang chủ
                     </a>
