@@ -5,6 +5,8 @@
 package com.quanlymayphatdien.g1.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -24,14 +26,15 @@ public abstract class User {
     private LocalDateTime updatedAt;
     private Integer createdBy;   
     private Integer updatedBy;   
-
+    
+    
+    private List<Role> roles;
+    private Set<String> effectivePermissions;
+    
     public User() {
     }
 
-    public User(Integer id, String name, String username, String password, String email,
-            String phone, String address, String status,
-            LocalDateTime createdAt, LocalDateTime updatedAt,
-            Integer createdBy, Integer updatedBy) {
+    public User(Integer id, String name, String username, String password, String email, String phone, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer createdBy, Integer updatedBy, List<Role> roles, Set<String> effectivePermissions) {
         this.id = id;
         this.name = name;
         this.username = username;
@@ -44,7 +47,12 @@ public abstract class User {
         this.updatedAt = updatedAt;
         this.createdBy = createdBy;
         this.updatedBy = updatedBy;
+        this.roles = roles;
+        this.effectivePermissions = effectivePermissions;
     }
+    
+    
+   
 
     public Integer getId() {
         return id;
