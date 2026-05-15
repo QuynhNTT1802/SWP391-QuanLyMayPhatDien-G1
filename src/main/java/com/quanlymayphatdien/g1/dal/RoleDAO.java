@@ -70,6 +70,20 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
         return roles;
     }
 
+    //deactive or active
+    public boolean updateStatus(int roleId, String status) {
+        String sql = "UPDATE roles SET status = ? WHERE id = ?";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setString(1, status);
+            p.setInt(2, roleId);
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     @Override
     public List<Role> findAll() {
         List<Role> list = new ArrayList<>();
