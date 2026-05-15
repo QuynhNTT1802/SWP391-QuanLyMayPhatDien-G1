@@ -99,7 +99,7 @@
                         <div class="field">
                             <label for="password">
                                 Mật khẩu
-                                <span class="hint"><a href="forgot-password.html">Quên mật khẩu?</a></span>
+                                <span class="hint"><a href="authen?action=forgotpass">Quên mật khẩu?</a></span>
                             </label>
                             <div class="input has-icon">
                                 <span class="leading"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>

@@ -31,6 +31,9 @@ public class AuthenServlet extends HttpServlet {
             case "login":
                 url = "view/authen/login.jsp";
                 break;
+            case "forgotpass":
+                url = "view/authen/forgotpass.jsp";
+                break;
             default:
                 throw new AssertionError();
         }
@@ -49,6 +52,9 @@ public class AuthenServlet extends HttpServlet {
             case "login":
                 url = loginDoPost(request, response);
                 break;
+            case "forgot":
+                url = forgotpassDoPost(request, response);
+                break;
             default:
                 throw new AssertionError();
         }
@@ -56,6 +62,10 @@ public class AuthenServlet extends HttpServlet {
 
     private String loginDoPost(HttpServletRequest request, HttpServletResponse response) {
         return null;
+    }
+
+    private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
+        
     }
     
     
