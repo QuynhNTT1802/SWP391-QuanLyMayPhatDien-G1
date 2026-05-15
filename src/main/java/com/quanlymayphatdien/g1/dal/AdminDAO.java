@@ -1,10 +1,12 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Admin;
+import com.quanlymayphatdien.g1.entity.Role;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
@@ -13,9 +15,9 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     public List<Admin> findAll() {
         List<Admin> list = new ArrayList<>();
         String sql = "SELECT u.id, u.name, u.username, u.password, u.email, u.phone, u.address, u.status, " +
-                     "u.createdAt, u.updatedAt, u.createdBy, u.updatedBy, " +
-                     "a.department, a.lastLogin " +
-                     "FROM user u INNER JOIN admin a ON u.id = a.adminId";
+                     "u.created_at, u.updated_at, u.created_by, u.updated_by, " +
+                     "a.department, a.last_login " +
+                     "FROM user u INNER JOIN admin a ON u.id = a.admin_id";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -30,8 +32,8 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
     @Override
     public boolean update(Admin t) {
-        String updateUser = "UPDATE user SET name=?, username=?, password=?, email=?, phone=?, address=?, status=?, updatedBy=? WHERE id=?";
-        String updateAdmin = "UPDATE admin SET department=?, lastLogin=? WHERE adminId=?";
+        String updateUser = "UPDATE user SET name=?, username=?, password=?, email=?, phone=?, address=?, status=?, updated_by=? WHERE id=?";
+        String updateAdmin = "UPDATE admin SET department=?, last_login=? WHERE admin_id=?";
         // Nên dùng transaction để đảm bảo toàn vẹn dữ liệu
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -82,7 +84,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     @Override
     public boolean delete(Admin t) {
         // Xóa admin trước vì khóa ngoại, sau đó xóa user
-        String deleteAdmin = "DELETE FROM admin WHERE adminId=?";
+        String deleteAdmin = "DELETE FROM admin WHERE admin_id=?";
         String deleteUser = "DELETE FROM user WHERE id=?";
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -113,8 +115,8 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     @Override
     public int insert(Admin t) {
         // Insert user trước, lấy ID, rồi insert admin
-        String insertUser = "INSERT INTO user (name, username, password, email, phone, address, status, createdBy, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        String insertAdmin = "INSERT INTO admin (adminId, department, lastLogin) VALUES (?, ?, ?)";
+        String insertUser = "INSERT INTO user (name, username, password, email, phone, address, status, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String insertAdmin = "INSERT INTO admin (admin_id, department, last_login) VALUES (?, ?, ?)";
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement psUser = conn.prepareStatement(insertUser, Statement.RETURN_GENERATED_KEYS);
@@ -184,30 +186,39 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
         String address = rs.getString("address");
         String status = rs.getString("status");
 
-        LocalDateTime createdAt = rs.getTimestamp("createdAt") != null
-                ? rs.getTimestamp("createdAt").toLocalDateTime() : null;
-        LocalDateTime updatedAt = rs.getTimestamp("updatedAt") != null
-                ? rs.getTimestamp("updatedAt").toLocalDateTime() : null;
+        LocalDateTime createdAt = rs.getTimestamp("created_at") != null
+                ? rs.getTimestamp("created_at").toLocalDateTime() : null;
+        LocalDateTime updatedAt = rs.getTimestamp("updated_at") != null
+                ? rs.getTimestamp("updated_at").toLocalDateTime() : null;
 
-        Integer createdBy = rs.getObject("createdBy") != null ? rs.getInt("createdBy") : null;
-        Integer updatedBy = rs.getObject("updatedBy") != null ? rs.getInt("updatedBy") : null;
+        Integer createdBy = rs.getObject("created_by") != null ? rs.getInt("created_by") : null;
+        Integer updatedBy = rs.getObject("updated_by") != null ? rs.getInt("updated_by") : null;
 
         // Các cột từ admin
         String department = rs.getString("department");
-        LocalDateTime lastLogin = rs.getTimestamp("lastLogin") != null
-                ? rs.getTimestamp("lastLogin").toLocalDateTime() : null;
+        LocalDateTime lastLogin = rs.getTimestamp("last_login") != null
+                ? rs.getTimestamp("last_login").toLocalDateTime() : null;
+        
+        
+        // phan quyen Hybrid
+        PermissionDAO perDAO = new PermissionDAO();
+        RoleDAO roleDAO = new RoleDAO();
+        
+        List<Role> roles = roleDAO.getRolesByUserId(id);
+        Set<String> effectPermissions = perDAO.getEffectPermissions(id);
 
         return new Admin(id, name, username, password, email, phone, address, status,
                          createdAt, updatedAt, createdBy, updatedBy,
+                         roles, effectPermissions, 
                          department, lastLogin);
     }
 
     // Tiện ích: tìm Admin theo ID
     public Admin findById(int id) {
         String sql = "SELECT u.id, u.name, u.username, u.password, u.email, u.phone, u.address, u.status, " +
-                     "u.createdAt, u.updatedAt, u.createdBy, u.updatedBy, " +
-                     "a.department, a.lastLogin " +
-                     "FROM user u INNER JOIN admin a ON u.id = a.adminId " +
+                     "u.created_at, u.updated_at, u.created_by, u.updated_by, " +
+                     "a.department, a.last_login " +
+                     "FROM user u INNER JOIN admin a ON u.id = a.admin_id " +
                      "WHERE u.id = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

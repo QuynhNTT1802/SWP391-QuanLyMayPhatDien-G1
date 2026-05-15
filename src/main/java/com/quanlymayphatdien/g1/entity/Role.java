@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.quanlymayphatdien.g1.entity;
 
 import java.time.LocalDateTime;
@@ -15,21 +11,21 @@ public class Role {
     private String roleName;
     private String description;
     private String status;
-    private LocalDateTime createAt;
-    private LocalDateTime updateAt;
+    private LocalDateTime createdAt; 
+    private LocalDateTime updatedAt; 
 
     public Role() {
     }
 
-    public Role(int roleId, String roleName, String description, String status, LocalDateTime createAt, LocalDateTime updateAt) {
+    public Role(int roleId, String roleName, String description, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.roleId = roleId;
         this.roleName = roleName;
         this.description = description;
         this.status = status;
-        this.createAt = createAt;
-        this.updateAt = updateAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
-
+    
     public int getRoleId() {
         return roleId;
     }
@@ -62,21 +58,19 @@ public class Role {
         this.status = status;
     }
 
-    public LocalDateTime getCreateAt() {
-        return createAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateAt(LocalDateTime createAt) {
-        this.createAt = createAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdateAt() {
-        return updateAt;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setUpdateAt(LocalDateTime updateAt) {
-        this.updateAt = updateAt;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
-    
-    
 }
