@@ -1,4 +1,3 @@
-
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.User;
@@ -7,7 +6,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class UserDAO extends DBContext implements I_DAO<User> {
 
@@ -24,14 +22,14 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        }
         return list;
     }
 
     @Override
     public boolean update(User user) {
         String sql = "UPDATE user SET name = ?, username = ?, password = ?, email = ?, phone = ?, "
-                   + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
+                + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -69,7 +67,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
     @Override
     public int insert(User user) {
         String sql = "INSERT INTO user (name, username, password, email, phone, address, status, created_at, created_by) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -87,7 +85,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {
-                    return resultSet.getInt(1); 
+                    return resultSet.getInt(1);
                 }
             }
         } catch (SQLException e) {
@@ -95,9 +93,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         } finally {
             closeResources();
         }
-        return 0; 
+        return 0;
     }
-    
+
     public User findById(int id) {
         String sql = "SELECT * FROM user WHERE id = ?";
         try {
@@ -110,14 +108,153 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        }
         return null;
+    }
+
+    public boolean activateAccount(int userId) {
+        String sql = "UPDATE user SET status = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, "active");
+            statement.setInt(2, userId);
+
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deactivateAccount(int userId) {
+        String sql = "UPDATE user SET status = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, "inactive");
+            statement.setInt(2, userId);
+
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            return false;
+        }
+    }
+
+    public List<User> findUsersWithFilters(String roleFilter, String statusFilter, String searchFilter, int page, int pageSize) {
+        List<User> allUsers = new ArrayList<>();
+        String sql = "SELECT u.* FROM user u WHERE 1=1 ";
+        List<String> inputs = new ArrayList<>();
+
+        if (roleFilter != null && !roleFilter.isEmpty()) {
+            sql += "AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
+            inputs.add(roleFilter);
+        }
+
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            sql += "AND u.status = ? ";
+            inputs.add(statusFilter);
+        }
+
+        if (searchFilter != null && !searchFilter.trim().isEmpty()) {
+            sql += "AND (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?) ";
+            String searchPattern = "%" + searchFilter.trim() + "%";
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+        }
+
+        sql += "ORDER BY u.created_at DESC";
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+
+            for (int i = 0; i < inputs.size(); i++) {
+                statement.setString(i + 1, inputs.get(i));
+            }
+
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                allUsers.add(getFromResultSet(resultSet));
+            }
+
+            if (allUsers.isEmpty()) {
+                return allUsers;
+            }
+
+            int start = (page - 1) * pageSize;
+            int end = Math.min(start + pageSize, allUsers.size());
+
+            if (start > allUsers.size()) {
+                return new ArrayList<>();
+            }
+
+            return allUsers.subList(start, end);
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return new ArrayList<>();
+    }
+
+//    public List<User> findUsersWithRoles(String roleFilter, String statusFilter, String searchFilter, int page, int pageSize) {
+//        List<User> users = findUsersWithFilters(roleFilter, statusFilter, searchFilter, page, pageSize);
+//        RoleDAO roleDAO = new RoleDAO();
+//        for (User user : users) {
+//            user.setRoles(roleDAO.getRolesByUserId(user.getId()));
+//        }
+//        return users;
+//    }
+
+    public int getTotalFilteredUsers(String roleFilter, String statusFilter, String searchFilter) {
+        String sql = "SELECT COUNT(*) FROM user u WHERE 1=1 ";
+        List<String> inputs = new ArrayList<>();
+
+        if (roleFilter != null && !roleFilter.isEmpty()) {
+            sql += "AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
+            inputs.add(roleFilter);
+        }
+
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            sql += "AND u.status = ? ";
+            inputs.add(statusFilter);
+        }
+
+        if (searchFilter != null && !searchFilter.trim().isEmpty()) {
+            sql += "AND (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?) ";
+            String searchPattern = "%" + searchFilter.trim() + "%";
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+        }
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+
+            for (int i = 0; i < inputs.size(); i++) {
+                statement.setString(i + 1, inputs.get(i));
+            }
+
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } 
+        return 0;
     }
 
     @Override
     public User getFromResultSet(ResultSet resultSet) throws SQLException {
-        User user = new User() {};
-        
+        User user = new User() {
+        };
+
         user.setId(resultSet.getInt("id"));
         user.setName(resultSet.getString("name"));
         user.setUsername(resultSet.getString("username"));
@@ -126,19 +263,27 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         user.setPhone(resultSet.getString("phone"));
         user.setAddress(resultSet.getString("address"));
         user.setStatus(resultSet.getString("status"));
-        
+
         Timestamp createdAt = resultSet.getTimestamp("created_at");
-        if (createdAt != null) user.setCreatedAt(createdAt.toLocalDateTime());
-        
+        if (createdAt != null) {
+            user.setCreatedAt(createdAt.toLocalDateTime());
+        }
+
         Timestamp updatedAt = resultSet.getTimestamp("updated_at");
-        if (updatedAt != null) user.setUpdatedAt(updatedAt.toLocalDateTime());
-        
+        if (updatedAt != null) {
+            user.setUpdatedAt(updatedAt.toLocalDateTime());
+        }
+
         int createdBy = resultSet.getInt("created_by");
-        if (!resultSet.wasNull()) user.setCreatedBy(createdBy);
-        
+        if (!resultSet.wasNull()) {
+            user.setCreatedBy(createdBy);
+        }
+
         int updatedBy = resultSet.getInt("updated_by");
-        if (!resultSet.wasNull()) user.setUpdatedBy(updatedBy);
-        
+        if (!resultSet.wasNull()) {
+            user.setUpdatedBy(updatedBy);
+        }
+
         return user;
     }
 
@@ -154,16 +299,14 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
-        }
+        } 
         return false;
     }
 
     public boolean isEmailExists(String email, Integer userId) {
         String sql = "SELECT COUNT(*) FROM user WHERE email = ?";
         if (userId != null) {
-            sql += " AND user_id != ?";
+            sql += " AND id != ?";
         }
         try {
             connection = getConnection();
@@ -177,17 +320,15 @@ public class UserDAO extends DBContext implements I_DAO<User> {
                 return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.out.println("Error checking email existence: " + e.getMessage());
-        } finally {
-            closeResources();
-        }
+            System.out.println(e.getMessage());
+        } 
         return false;
     }
 
     public boolean isPhoneExists(String phone, Integer userId) {
         String sql = "SELECT COUNT(*) FROM user WHERE phone = ?";
         if (userId != null) {
-            sql += " AND user_id != ?";
+            sql += " AND id != ?";
         }
         try {
             connection = getConnection();
@@ -201,13 +342,40 @@ public class UserDAO extends DBContext implements I_DAO<User> {
                 return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.out.println("Error checking phone existence: " + e.getMessage());
-        } finally {
-            closeResources();
+            System.out.println(e.getMessage());
         }
         return false;
     }
-    
+
+    public int countUsersByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM user WHERE status = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, status);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countAllUsers() {
+        String sql = "SELECT COUNT(*) FROM user";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
 
 }
-

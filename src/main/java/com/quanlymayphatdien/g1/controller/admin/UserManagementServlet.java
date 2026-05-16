@@ -1,7 +1,9 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
 import com.quanlymayphatdien.g1.dal.AdminDAO;
+import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
@@ -12,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -74,13 +77,61 @@ public class UserManagementServlet extends HttpServlet {
         dispatcher.forward(request, response);
     }
 
+    private void createUser(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            String username = request.getParameter("username");
+            String email = request.getParameter("email");
+            String password = request.getParameter("password");
+            String name = request.getParameter("name");
+            String phone = request.getParameter("phone");
+            String address = request.getParameter("address");
+            String status = request.getParameter("status");
+            if (status == null || status.isEmpty()) {
+                status = "active";
+            }
+            Map<String, String> errors = validateForm(username, password, email, phone, null);
+            if (!errors.isEmpty()) {
+                request.getSession().setAttribute("errors", errors);
+                request.getSession().setAttribute("formData", request.getParameterMap());
+
+                response.sendRedirect(request.getContextPath() + "/admin/users?action=create");
+                return;
+            }
+
+            User newUser = new User() {
+            };
+            newUser.setUsername(username);
+            newUser.setEmail(email);
+            newUser.setPassword(password);
+            newUser.setName(name);
+            newUser.setPhone(phone);
+            newUser.setAddress(address);
+            newUser.setStatus(status);
+            newUser.setCreatedAt(LocalDateTime.now());
+            newUser.setUpdatedAt(LocalDateTime.now());
+            newUser.setCreatedBy(1);
+            UserDAO userDAO = new UserDAO();
+            boolean isSuccess = userDAO.insert(newUser) > 0;
+            if (isSuccess) {
+                request.getSession().setAttribute("message", "User added successfully!");
+            } else {
+                request.getSession().setAttribute("message", "Failed to add user!");
+            }
+
+        } catch (Exception e) {
+            request.getSession().setAttribute("message", e.getMessage());
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
+    }
+
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String userIdStr = request.getParameter("id");
         if (userIdStr != null && !userIdStr.isEmpty()) {
             int userId = Integer.parseInt(userIdStr);
-            UserDAO userDAO = new UserDAO(); 
-            User user = userDAO.findById(userId); 
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findById(userId);
             if (user != null) {
                 request.setAttribute("user", user);
                 request.getRequestDispatcher("/view/admin/update-user.jsp").forward(request, response);
@@ -96,7 +147,7 @@ public class UserManagementServlet extends HttpServlet {
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
         }
-        
+
         try {
             int userId = Integer.parseInt(request.getParameter("id"));
             String password = request.getParameter("password");
@@ -106,7 +157,7 @@ public class UserManagementServlet extends HttpServlet {
             String address = request.getParameter("address");
             String status = request.getParameter("status");
 
-            UserDAO userDAO = new UserDAO(); 
+            UserDAO userDAO = new UserDAO();
             User user = userDAO.findById(userId);
 
             if (user != null) {
@@ -114,7 +165,7 @@ public class UserManagementServlet extends HttpServlet {
                 if (!errors.isEmpty()) {
                     request.getSession().setAttribute("errors", errors);
                     request.getSession().setAttribute("formData", request.getParameterMap());
-                    
+
                     response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
                     return;
                 }
@@ -126,7 +177,7 @@ public class UserManagementServlet extends HttpServlet {
                 user.setAddress(address);
                 user.setStatus(status);
                 user.setUpdatedAt(LocalDateTime.now());
-                user.setUpdatedBy(1); 
+                user.setUpdatedBy(1);
 
                 boolean isUpdated = userDAO.update(user);
                 if (isUpdated) {
@@ -199,27 +250,106 @@ public class UserManagementServlet extends HttpServlet {
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
         }
-        
+
         String userIdStr = request.getParameter("id");
-        
-        
-        
+        if (userIdStr != null && !userIdStr.isEmpty()) {
+            int userId = Integer.parseInt(userIdStr);
+            UserDAO userDAO = new UserDAO();
+            RoleDAO roleDAO = new RoleDAO();
+            User user = userDAO.findById(userId);
+            if (user != null) {
+                List<Role> userRoles = roleDAO.getRolesByUserId(userId);
+                boolean isAdmin = false;
+                if (userRoles != null) {
+                    for (Role role : userRoles) {
+                        if (role.equals("admin")) {
+                            isAdmin = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isAdmin) {
+                    request.getSession().setAttribute("message", "Cannot deactivate admin");
+                } else {
+                    boolean check = userDAO.deactivateAccount(userId);
+                    if (check) {
+                        request.getSession().setAttribute("message", "Deactivate successfully");
+                    } else {
+                        request.getSession().setAttribute("message", "Fail to deactivate");
+                    }
+                }
+            } else {
+                request.getSession().setAttribute("message", "User not found");
+            }
+        } else {
+            request.getSession().setAttribute("message", "UserID not found");
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
-    
-    private void activateUser(HttpServletRequest request, HttpServletResponse response) 
+
+    private void activateUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
         }
-        
+
         String userIdStr = request.getParameter("id");
         if (userIdStr != null || !userIdStr.isEmpty()) {
             int userId = Integer.parseInt(userIdStr);
             UserDAO userDAO = new UserDAO();
-            
+            boolean check = userDAO.activateAccount(userId);
+            if (check) {
+                request.getSession().setAttribute("message", "Activate user  successfully");
+            } else {
+                request.getSession().setAttribute("message", "Fail to activate user");
+            }
+        } else {
+            request.getSession().setAttribute("message", "UserID not found");
         }
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
-    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
-    private void createUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
+
+    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String searchFilter = request.getParameter("search");
+        String statusFilter = request.getParameter("status");
+        String roleFilter = request.getParameter("role");
+
+        int page = 1;
+        int pageSize = 10;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) {
+                    page = 1;
+                }
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        UserDAO userDAO = new UserDAO();
+        // TODO: temporarily disable role filter for testing
+        List<User> users = userDAO.findUsersWithFilters(null, statusFilter, searchFilter, page, pageSize);
+        int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
+        int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
+
+        //request.setAttribute("users", users);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalUsers", totalUsers);
+        request.setAttribute("roleFilter", roleFilter);
+        request.setAttribute("statusFilter", statusFilter);
+        request.setAttribute("searchFilter", searchFilter);
+
+        request.setAttribute("activeCount", userDAO.countUsersByStatus("active"));
+        request.setAttribute("inactiveCount", userDAO.countUsersByStatus("inactive"));
+        request.setAttribute("pendingCount", userDAO.countUsersByStatus("pending"));
+        request.setAttribute("lockedCount", userDAO.countUsersByStatus("locked"));
+        request.setAttribute("now", LocalDateTime.now());
+
+        request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
+    }
 }
