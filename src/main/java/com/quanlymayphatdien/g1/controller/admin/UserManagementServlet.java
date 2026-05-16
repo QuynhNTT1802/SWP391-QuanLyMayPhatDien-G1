@@ -36,7 +36,7 @@ public class UserManagementServlet extends HttpServlet {
                 showCreateForm(request, response);
                 break;
             case "update":
-                showUpdateForm(request, response); // Sửa từ showUpdateForm thành showEditForm cho khớp bên dưới
+                showUpdateForm(request, response); 
                 break;
             case "deactivate":
                 deactivateUser(request, response);
