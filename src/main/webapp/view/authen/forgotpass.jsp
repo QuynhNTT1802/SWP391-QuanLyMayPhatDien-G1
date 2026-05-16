@@ -156,7 +156,7 @@
                 </div>
 
                 <div class="form-wrap">
-                    <form class="form" onsubmit="event.preventDefault(); window.location.href = 'authen?action=forgotpass';" method="post">
+                    <form class="form" action="authen?action=forgotpass" method="post">
                         <div class="icon-badge">
                             <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/><path d="M16 14h.01"/></svg>
                         </div>
@@ -171,7 +171,7 @@
                             <div class="input has-icon">
                                 <span class="leading"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
 
-                                <input id="email" type="email" placeholder="ban@congty.vn" autocomplete="email" required>
+                                <input name="username" id="email" type="email" placeholder="ban@congty.vn" autocomplete="email" required>
                             </div>
 
                         </div>
