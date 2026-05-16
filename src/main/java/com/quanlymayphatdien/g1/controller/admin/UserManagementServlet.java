@@ -12,6 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -262,7 +263,7 @@ public class UserManagementServlet extends HttpServlet {
                 boolean isAdmin = false;
                 if (userRoles != null) {
                     for (Role role : userRoles) {
-                        if (role.equals("admin")) {
+                        if (role.getRoleName().equals("admin")) {
                             isAdmin = true;
                             break;
                         }
@@ -336,7 +337,7 @@ public class UserManagementServlet extends HttpServlet {
         int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
-        //request.setAttribute("users", users);
+        request.setAttribute("users", users);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalUsers", totalUsers);
@@ -352,4 +353,8 @@ public class UserManagementServlet extends HttpServlet {
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
+    
+
+    
+    
 }

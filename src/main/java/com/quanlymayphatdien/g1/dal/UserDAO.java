@@ -41,6 +41,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(6, user.getAddress());
             statement.setString(7, user.getStatus());
             statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
+            statement.setInt(9, user.getCreatedBy());
             statement.setInt(10, user.getId());
 
             return statement.executeUpdate() > 0;
@@ -78,7 +79,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(5, user.getPhone());
             statement.setString(6, user.getAddress());
             statement.setString(7, user.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
+            statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
             statement.setInt(9, user.getCreatedBy());
 
             int affectedRows = statement.executeUpdate();

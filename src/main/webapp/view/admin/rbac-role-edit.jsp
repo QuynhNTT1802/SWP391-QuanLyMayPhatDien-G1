@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chỉnh sửa vai trò — Warehouse OS</title>
+    <title>Chỉnh sửa vai trò</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -98,7 +98,7 @@
                                     <span class="leading">
                                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                                     </span>
-                                    <input type="text" id="permSearch" placeholder="Tìm kiếm quyền..." autocomplete="off">
+                                    <input type="text" id="permSearch" placeholder="Tìm kiếm quyền..." value="${param.permSearch}" autocomplete="off">
                                 </div>
                             </div>
                             <div class="perm-table" id="permTable">
