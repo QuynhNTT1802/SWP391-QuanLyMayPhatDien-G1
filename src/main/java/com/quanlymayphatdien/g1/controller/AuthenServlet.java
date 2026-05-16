@@ -5,7 +5,9 @@
 package com.quanlymayphatdien.g1.controller;
 
 import com.quanlymayphatdien.g1.dal.AdminDAO;
+import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.Admin;
+import com.quanlymayphatdien.g1.entity.User;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -85,13 +87,34 @@ public class AuthenServlet extends HttpServlet {
         String password = request.getParameter("password");
         if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập thông tin đầy đủ");
-            return "/view/login.jsp";
+            return "/view/authen/login.jsp";
         }
         try {
-            
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findByName(username);
+
+            if (user == null || !user.getPassword().equals(password)) {
+                request.setAttribute("error", "Sai tên đăng nhập hoặc mật khẩu!");
+                return "/view/authen/login.jsp";
+            }
+
+            if (!"active".equals(user.getStatus())) {
+                request.setAttribute("error", "Tài khoản đã bị khóa!");
+                return "/view/authen/login.jsp";
+            }
+
+            HttpSession session = request.getSession();
+            session.setAttribute("loggedUser", user);
+            session.setAttribute("username", user.getUsername());
+
+            return "redirect:/view/admin/admin-user.jsp";
+
         } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            return "/view/authen/login.jsp";
         }
-        return null;
+
     }
 
 }
