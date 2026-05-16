@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package com.quanlymayphatdien.g1.controller.admin;
 
 import com.quanlymayphatdien.g1.dal.AdminDAO;
@@ -9,7 +5,6 @@ import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * @author Aadmin
  */
 @WebServlet(name = "UserManagementServlet", urlPatterns = {"/admin/users"})
@@ -39,7 +33,7 @@ public class UserManagementServlet extends HttpServlet {
                 showCreateForm(request, response);
                 break;
             case "update":
-                showUpdateForm(request, response);
+                showUpdateForm(request, response); // Sửa từ showUpdateForm thành showEditForm cho khớp bên dưới
                 break;
             case "deactivate":
                 deactivateUser(request, response);
@@ -52,8 +46,6 @@ public class UserManagementServlet extends HttpServlet {
                 listUsers(request, response);
                 break;
         }
-        request.getRequestDispatcher(url).forward(request, response);
-
     }
 
     @Override
@@ -81,27 +73,30 @@ public class UserManagementServlet extends HttpServlet {
         RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/create-user.jsp");
         dispatcher.forward(request, response);
     }
-    
-    
-    
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
+
+    private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String userIdStr = request.getParameter("id");
         if (userIdStr != null && !userIdStr.isEmpty()) {
             int userId = Integer.parseInt(userIdStr);
-            UserDAO userDAO = new UserDAO();
-            User user = UserDAO.findById(userId);
+            UserDAO userDAO = new UserDAO(); 
+            User user = userDAO.findById(userId); 
             if (user != null) {
                 request.setAttribute("user", user);
                 request.getRequestDispatcher("/view/admin/update-user.jsp").forward(request, response);
                 return;
             }
         }
-        response.sendRedirect(request.getContextPath() + "/admin/manage-account");
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
     }
 
     private void updateUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String currentPage = request.getParameter("page");
+        if (currentPage == null || currentPage.isEmpty()) {
+            currentPage = "1";
+        }
+        
         try {
             int userId = Integer.parseInt(request.getParameter("id"));
             String password = request.getParameter("password");
@@ -111,12 +106,8 @@ public class UserManagementServlet extends HttpServlet {
             String address = request.getParameter("address");
             String status = request.getParameter("status");
 
-            String currentPage = request.getParameter("page");
-            if (currentPage == null || currentPage.isEmpty()) {
-                currentPage = "1";
-            }
-            AdminDAO adminDAO = new AdminDAO();
-            User user = adminDAO.findById(userId);
+            UserDAO userDAO = new UserDAO(); 
+            User user = userDAO.findById(userId);
 
             if (user != null) {
                 Map<String, String> errors = validateForm(null, password, email, phone, userId);
@@ -124,7 +115,7 @@ public class UserManagementServlet extends HttpServlet {
                     request.getSession().setAttribute("errors", errors);
                     request.getSession().setAttribute("formData", request.getParameterMap());
                     
-                    response.sendRedirect(request.getContextPath() + "/admin/manage-user?action=update&id=" + userId);
+                    response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
                     return;
                 }
 
@@ -134,9 +125,10 @@ public class UserManagementServlet extends HttpServlet {
                 user.setPhone(phone);
                 user.setAddress(address);
                 user.setStatus(status);
-
                 user.setUpdatedAt(LocalDateTime.now());
-                boolean isUpdated = adminDAO.update(user);
+                user.setUpdatedBy(1); 
+
+                boolean isUpdated = userDAO.update(user);
                 if (isUpdated) {
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
@@ -149,13 +141,7 @@ public class UserManagementServlet extends HttpServlet {
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
-        String currentPage = request.getParameter("page");
-        if (currentPage == null || currentPage.isEmpty()) {
-            currentPage = "1";
-        }
-
-        response.sendRedirect(request.getContextPath() + "/admin/manage-account?action=list&page=" + currentPage);
-
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
 
     private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
@@ -164,7 +150,7 @@ public class UserManagementServlet extends HttpServlet {
 
         if (username != null && !username.isEmpty()) {
             if (username.length() < 3 || username.length() > 50) {
-                errors.put("username", "Tên đăng nhập phải có độ dài từ 3 đến 30 ký tự");
+                errors.put("username", "Tên đăng nhập phải có độ dài từ 3 đến 50 ký tự");
             } else if (!username.matches("^[a-zA-Z0-9_]+$")) {
                 errors.put("username", "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới");
             } else if (userDAO.isUsernameExists(username)) {
@@ -208,4 +194,32 @@ public class UserManagementServlet extends HttpServlet {
         return errors;
     }
 
+    private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String currentPage = request.getParameter("page");
+        if (currentPage == null || currentPage.isEmpty()) {
+            currentPage = "1";
+        }
+        
+        String userIdStr = request.getParameter("id");
+        
+        
+        
+    }
+    
+    private void activateUser(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        String currentPage = request.getParameter("page");
+        if (currentPage == null || currentPage.isEmpty()) {
+            currentPage = "1";
+        }
+        
+        String userIdStr = request.getParameter("id");
+        if (userIdStr != null || !userIdStr.isEmpty()) {
+            int userId = Integer.parseInt(userIdStr);
+            UserDAO userDAO = new UserDAO();
+            
+        }
+    }
+    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
+    private void createUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
 }
