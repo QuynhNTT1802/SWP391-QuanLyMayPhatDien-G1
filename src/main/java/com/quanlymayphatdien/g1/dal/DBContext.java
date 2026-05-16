@@ -20,7 +20,6 @@ public class DBContext {
 
     public DBContext() {
         try {
-            //Change the username password and url to connect your own database
             String username = "root";
             String password = "1234";
             String url = "jdbc:mysql://localhost:3306/warehousedb";
