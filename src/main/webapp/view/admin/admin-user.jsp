@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+<script src="admin-js.js"></script>
 <style>
 
   [data-theme="dark"] {
@@ -480,7 +481,7 @@
   </div>
 </div>
 
-<script src="${pageContext.request.contextPath}/view/admin/admin-js.js"></script>
+
 
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 </body>
