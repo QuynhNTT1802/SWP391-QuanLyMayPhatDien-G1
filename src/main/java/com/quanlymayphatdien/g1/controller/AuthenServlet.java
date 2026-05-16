@@ -5,7 +5,11 @@
 package com.quanlymayphatdien.g1.controller;
 
 import com.quanlymayphatdien.g1.dal.AdminDAO;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
 import com.quanlymayphatdien.g1.entity.Admin;
+import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
+import com.quanlymayphatdien.g1.entity.User;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -45,7 +49,6 @@ public class AuthenServlet extends HttpServlet {
 
     }
 
-    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -67,11 +70,11 @@ public class AuthenServlet extends HttpServlet {
 
         if (url != null && !url.isEmpty()) {
             if (url.startsWith("redirect:")) {
-                
+
                 String redirectUrl = url.substring("redirect:".length());
                 response.sendRedirect(request.getContextPath() + redirectUrl);
             } else {
-                
+
                 request.getRequestDispatcher(url).forward(request, response);
             }
         }
@@ -93,7 +96,7 @@ public class AuthenServlet extends HttpServlet {
 
                 HttpSession session = request.getSession();
                 session.setAttribute("admin", admin);
-                
+
                 return "/view/authen/user.jsp";
             }
         }
@@ -104,9 +107,19 @@ public class AuthenServlet extends HttpServlet {
     }
 
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
-        return null;
+        String username = request.getParameter("username");
+        UserDAO userDAO = new UserDAO();
+        User user = userDAO.findByUsername(username);
+        PasswordResetRequest req = new PasswordResetRequest();
+        req.setUserId(user.getId());
+        PasswordResetRequestDAO reqDao = new PasswordResetRequestDAO();
+        int result = reqDao.insert(req);
+        if (result > 0) {
+            request.setAttribute("message", "Yêu cầu cấp lại mật khẩu đã gửi đến admin");
+        }else{
+            request.setAttribute("error", "có lỗi xảy ra yêu cầu thử lại sau");
+        }
+        return "/view/authen/forgotpass.jsp";
     }
-    
-    
 
 }
