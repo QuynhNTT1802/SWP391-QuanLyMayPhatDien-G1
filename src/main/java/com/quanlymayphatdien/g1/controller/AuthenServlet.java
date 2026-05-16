@@ -45,7 +45,6 @@ public class AuthenServlet extends HttpServlet {
 
     }
 
-    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -67,46 +66,32 @@ public class AuthenServlet extends HttpServlet {
 
         if (url != null && !url.isEmpty()) {
             if (url.startsWith("redirect:")) {
-                
+
                 String redirectUrl = url.substring("redirect:".length());
                 response.sendRedirect(request.getContextPath() + redirectUrl);
             } else {
-                
+
                 request.getRequestDispatcher(url).forward(request, response);
             }
         }
     }
 
-    private String loginDoPost(HttpServletRequest request, HttpServletResponse response) {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-
-        AdminDAO adminDao = new AdminDAO();
-        List<Admin> listAdmin = adminDao.findAll();
-        for (Admin admin : listAdmin) {
-            if (admin.getUsername().equals(username.trim())
-                    && admin.getPassword().equals(password.trim())) {
-                if (!"active".equalsIgnoreCase(admin.getStatus())) {
-                    request.setAttribute("error", "Tài khoản của bạn đã bị khóa!");
-                    return "/view/authen/login.jsp";
-                }
-
-                HttpSession session = request.getSession();
-                session.setAttribute("admin", admin);
-                
-                return "/view/authen/user.jsp";
-            }
-        }
-
-        request.setAttribute("error", "Username hoặc mật khẩu không chính xác!");
-        request.setAttribute("username", username);
-        return "/view/authen/login.jsp";
-    }
-
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
         return null;
     }
-    
-    
+
+    private String loginDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập thông tin đầy đủ");
+            return "/view/login.jsp";
+        }
+        try {
+            
+        } catch (Exception e) {
+        }
+        return null;
+    }
 
 }
