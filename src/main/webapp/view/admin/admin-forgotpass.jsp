@@ -255,42 +255,75 @@
                         </tr>
                     </thead>
                     <tbody>
-                    <c:forEach items="${listRequests}" var="req">
-                        <tr>
-                            <td>#FP${req.id}</td>
-                            <td>${req.username}</td>
-                            <td>
-                                <span class="status ${req.status}">
-                                    <c:choose>
-                                        <c:when test="${req.status == 'pending'}">Chờ xử lý</c:when>
-                                        <c:when test="${req.status == 'approved'}">Đã cấp lại</c:when>
-                                        <c:otherwise>${req.status}</c:otherwise>
-                                    </c:choose>
-                                </span>
-                            </td>
-                            <td>${req.createdAt}</td>
-                            <td>
-                                <div class="action-group">
-                                    <c:if test="${req.status == 'pending'}">
-                                        <button class="btn btn-reset"
-                                                onclick="openModal(${req.id}, '${req.username}')">
-                                            Cấp lại
-                                        </button>
-                                    </c:if>
-                                    <c:if test="${req.status != 'pending'}">
-                                        <button class="btn btn-view">Chi tiết</button>
-                                    </c:if>
-                                </div>
-                            </td>
-                        </tr>
-                    </c:forEach>
-                    <c:if test="${empty listRequests}">
-                        <tr><td colspan="5" style="text-align:center; color:#64748b;">Không có yêu cầu nào</td></tr>
-                    </c:if>
+                        <c:forEach items="${listRequests}" var="req">
+                            <tr>
+                                <td>#FP${req.id}</td>
+                                <td>${req.username}</td>
+                                <td>
+                                    <span class="status ${req.status}">
+                                        <c:choose>
+                                            <c:when test="${req.status == 'pending'}">Chờ xử lý</c:when>
+                                            <c:when test="${req.status == 'approved'}">Đã cấp lại</c:when>
+                                            <c:otherwise>${req.status}</c:otherwise>
+                                        </c:choose>
+                                    </span>
+                                </td>
+                                <td>${req.createdAt}</td>
+                                <td>
+                                    <div class="action-group">
+                                        <c:if test="${req.status == 'pending'}">
+                                            <button class="btn btn-reset"
+                                                    onclick="openModal(${req.id}, '${req.username}')">
+                                                Cấp lại
+                                            </button>
+                                        </c:if>
+                                        <c:if test="${req.status != 'pending'}">
+                                            <button class="btn btn-view" 
+                                                    onclick="openDetailModal('${req.username}', '${req.status}', '${req.newPassword}', '${req.note}', '${req.processedAt}')">
+                                                Chi tiết
+                                            </button>
+                                        </c:if>
+                                    </div>
+                                </td>
+                            </tr>
+                        </c:forEach>
+                        <c:if test="${empty listRequests}">
+                            <tr><td colspan="5" style="text-align:center; color:#64748b;">Không có yêu cầu nào</td></tr>
+                        </c:if>
                     </tbody>
                 </table>
             </div>
         </div>
+
+        <div class="modal" id="detailModal">
+            <div class="modal-content">
+                <div class="modal-title">Chi tiết yêu cầu</div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="detailUsername" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái</label>
+                    <input type="text" id="detailStatus" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu đã cấp</label>
+                    <input type="text" id="detailNewPassword" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Ghi chú</label>
+                    <textarea id="detailNote" readonly style="resize:none;height:90px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Ngày xử lý</label>
+                    <input type="text" id="detailProcessedAt" readonly>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeDetailModal()">Đóng</button>
+                </div>
+            </div>
+        </div>
+
         <div class="modal" id="resetModal">
             <div class="modal-content">
                 <div class="modal-title">Cấp lại mật khẩu</div>
@@ -328,6 +361,25 @@
             window.onclick = function (e) {
                 if (e.target === modal)
                     closeModal();
+            }
+
+            const detailModal = document.getElementById("detailModal");
+            function openDetailModal(username, status, newPassword, note, processedAt) {
+                detailModal.style.display = "flex";
+                document.getElementById("detailUsername").value = username;
+                document.getElementById("detailStatus").value = status === 'approved' ? 'Đã cấp lại' : status;
+                document.getElementById("detailNewPassword").value = newPassword || '';
+                document.getElementById("detailNote").value = note || '';
+                document.getElementById("detailProcessedAt").value = processedAt || '';
+            }
+            function closeDetailModal() {
+                detailModal.style.display = "none";
+            }
+            window.onclick = function (e) {
+                if (e.target === resetModal)
+                    closeModal();
+                if (e.target === detailModal)
+                    closeDetailModal();
             }
         </script>
     </body>

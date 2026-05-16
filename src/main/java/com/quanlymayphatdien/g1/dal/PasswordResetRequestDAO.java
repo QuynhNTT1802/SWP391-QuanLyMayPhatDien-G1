@@ -81,6 +81,27 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
         return list;
     }
 
+    public PasswordResetRequest findById(int id) {
+        String sql = "SELECT pr.*, u.username "
+                + "FROM password_reset_request pr "
+                + "JOIN user u ON pr.user_id = u.id "
+                + "WHERE pr.id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return null;
+    }
+
     @Override
     public boolean update(PasswordResetRequest req) {
         String sql = "UPDATE password_reset_request SET status = ?, processed_by = ?, "

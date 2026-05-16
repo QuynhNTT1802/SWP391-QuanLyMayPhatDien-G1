@@ -110,13 +110,17 @@ public class AuthenServlet extends HttpServlet {
         String username = request.getParameter("username");
         UserDAO userDAO = new UserDAO();
         User user = userDAO.findByUsername(username);
+        if (user == null) {
+            request.setAttribute("error", "Tên đăng nhập không tồn tại!");
+            return "/view/authen/forgotpass.jsp";
+        }
         PasswordResetRequest req = new PasswordResetRequest();
         req.setUserId(user.getId());
         PasswordResetRequestDAO reqDao = new PasswordResetRequestDAO();
         int result = reqDao.insert(req);
         if (result > 0) {
             request.setAttribute("message", "Yêu cầu cấp lại mật khẩu đã gửi đến admin");
-        }else{
+        } else {
             request.setAttribute("error", "có lỗi xảy ra yêu cầu thử lại sau");
         }
         return "/view/authen/forgotpass.jsp";
