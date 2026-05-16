@@ -1,3 +1,4 @@
+
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.User;
@@ -9,7 +10,6 @@ import java.util.List;
 
 
 public class UserDAO extends DBContext implements I_DAO<User> {
-
 
     @Override
     public List<User> findAll() {
@@ -210,3 +210,4 @@ public class UserDAO extends DBContext implements I_DAO<User> {
     
 
 }
+
