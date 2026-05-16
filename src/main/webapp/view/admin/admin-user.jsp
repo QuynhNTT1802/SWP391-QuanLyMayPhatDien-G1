@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
 <script src="admin-js.js"></script>
+
 <style>
 
   [data-theme="dark"] {
@@ -73,7 +74,7 @@
   .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--fg-soft); }
   .user-meta { line-height: 1.2; flex: 1; min-width: 0; }
   .user-meta .name { font-size: 12.5px; font-weight: 700; }
-  .user-meta .role { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .user-meta .role { font-size: 11px; color: var(--muted); font-weighta: 500; }
 
   header.topbar {
     position: sticky; top: 0; z-index: 10;
