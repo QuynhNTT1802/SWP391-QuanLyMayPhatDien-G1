@@ -19,6 +19,10 @@ public class Admin extends User {
 
    
     public Admin() {
+        this(id, name, username, password, email, phone, address, status, createdAt, updatedAt, createdBy, updatedBy, department, lastLogin);
+    }
+
+    public Admin(int id, String name, String username, String password, String email, String phone, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer createdBy, Integer updatedBy, String department1, LocalDateTime lastLogin1) {
         super();
     }
 

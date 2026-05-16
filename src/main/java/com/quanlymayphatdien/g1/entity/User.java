@@ -14,18 +14,18 @@ import java.util.Set;
  */
 public abstract class User {
 
-    private Integer id;
-    private String name;
-    private String username;
-    private String password;
-    private String email;
-    private String phone;
-    private String address;
-    private String status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Integer createdBy;   
-    private Integer updatedBy;   
+    Integer id;
+    String name;
+    String username;
+    String password;
+    String email;
+    String phone;
+    String address;
+    String status;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+    Integer createdBy;   
+    Integer updatedBy;   
     
     
     private List<Role> roles;
