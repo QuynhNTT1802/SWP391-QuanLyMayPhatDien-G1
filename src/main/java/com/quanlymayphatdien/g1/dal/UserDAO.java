@@ -5,6 +5,7 @@ import com.quanlymayphatdien.g1.entity.User;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(6, user.getAddress());
             statement.setString(7, user.getStatus());
             statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
+            statement.setNull(9, Types.INTEGER);  
             statement.setInt(10, user.getId());
 
             return statement.executeUpdate() > 0;
