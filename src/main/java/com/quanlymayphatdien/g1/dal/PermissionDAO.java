@@ -18,7 +18,7 @@ import java.util.Set;
  *
  * @author LENOVO
  */
-public class PermissionDAO extends DBContext {
+public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     
     //ABAC override -> RBAC
     public Set<String> getEffectPermissions(int userId) throws SQLException {
@@ -46,27 +46,6 @@ public class PermissionDAO extends DBContext {
             e.printStackTrace();
         }
         return permissions;
-    }
-
-    //get all permission o trong database cua he thong
-    public List<Permission> getAllPermission() throws SQLException {
-        List<Permission> list = new ArrayList<>();
-        String sql = "select * from permissions order by resource, action";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String resource = rs.getString("resource");
-                String action = rs.getString("action");
-                String desc = rs.getString("description");
-
-                list.add(new Permission(id, resource, action, desc));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
     }
 
     // xu li quyen ngoai le overide uu tien cao nhat
@@ -176,6 +155,52 @@ public class PermissionDAO extends DBContext {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public List<Permission> findAll() {
+        List<Permission> list = new ArrayList<>();
+        String sql = "select * from permissions order by resource, action";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String resource = rs.getString("resource");
+                String action = rs.getString("action");
+                String desc = rs.getString("description");
+
+                list.add(new Permission(id, resource, action, desc));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    @Override
+    public boolean update(Permission t) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public boolean delete(Permission t) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public int insert(Permission t) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public Permission getFromResultSet(ResultSet rs) throws SQLException {
+        return new Permission(
+            rs.getInt("id"),
+            rs.getString("resource"),
+            rs.getString("action"),
+            rs.getString("description")
+         );
     }
 
 }
