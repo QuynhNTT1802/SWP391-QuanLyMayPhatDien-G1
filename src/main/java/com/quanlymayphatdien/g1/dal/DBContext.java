@@ -22,7 +22,7 @@ public class DBContext {
 
         try {
             String username = "root";
-            String password = "root";
+            String password = "1234";
 
             String url = "jdbc:mysql://localhost:3306/warehousedb";
             Class.forName("com.mysql.cj.jdbc.Driver");
