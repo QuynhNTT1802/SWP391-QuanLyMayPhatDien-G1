@@ -120,6 +120,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, username);
+            statement.setString(1, username);
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return getFromResultSet(resultSet);

@@ -7,7 +7,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
-<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -75,7 +74,7 @@
   .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--fg-soft); }
   .user-meta { line-height: 1.2; flex: 1; min-width: 0; }
   .user-meta .name { font-size: 12.5px; font-weight: 700; }
-  .user-meta .role { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .user-meta .role { font-size: 11px; color: var(--muted); font-weighta: 500; }
 
   header.topbar {
     position: sticky; top: 0; z-index: 10;
@@ -461,10 +460,7 @@
                     <td>
                       <div class="user-cell">
                         <div class="user-avatar ${loop.index % 7 == 0 ? 'green' : loop.index % 7 == 1 ? 'blue' : loop.index % 7 == 2 ? 'orange' : loop.index % 7 == 3 ? 'purple' : loop.index % 7 == 4 ? 'pink' : loop.index % 7 == 5 ? 'teal' : 'grey'}">
-                          <c:choose>
-                            <c:when test="${fn:length(user.name) >= 2}">${fn:toUpperCase(fn:substring(user.name, 0, 1))}${fn:toUpperCase(fn:substring(user.name, fn:lastIndexOf(user.name, ' ') + 1, fn:indexOf(user.name, ' ') + 2))}</c:when>
-                            <c:otherwise>${fn:toUpperCase(fn:substring(user.name, 0, 1))}</c:otherwise>
-                          </c:choose>
+                          ${user.name.substring(0, 1).toUpperCase()}
                         </div>
                         <div class="user-name-block">
                           <div class="user-name">${user.name}</div>
@@ -590,18 +586,35 @@
 <script>
   window.APP_CTX = '${pageContext.request.contextPath}';
 </script>
-<script src="${pageContext.request.contextPath}/assets/js/admin-js.js"></script>
 
 <c:if test="${not empty sessionScope.message}">
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    toast('${fn:escapeXml(sessionScope.message)}', 'success');
-  });
+  document.addEventListener('DOMContentLoaded', function () {
+    var host = document.getElementById('toastHost')
+    var t = document.createElement('div')
+    t.className = 'toast success'
+    t.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg><span><c:out value="${sessionScope.message}"/></span>'
+    host.appendChild(t)
+    requestAnimationFrame(function () { t.classList.add('show') })
+    setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove() }, 200) }, 2800)
+  })
 </script>
-<c:remove var="message" scope="session" />
+<c:remove var="message" scope="session"/>
 </c:if>
 
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+  function confirmDeactivate(userId, page) {
+    if (confirm('Vô hiệu hoá người dùng này?')) {
+      location.href = APP_CTX + '/admin/users?action=deactivate&id=' + userId + '&page=' + page
+    }
+  }
+  function confirmActivate(userId, page) {
+    if (confirm('Kích hoạt người dùng này?')) {
+      location.href = APP_CTX + '/admin/users?action=activate&id=' + userId + '&page=' + page
+    }
+  }
+</script>
 </body>
 </html>
 

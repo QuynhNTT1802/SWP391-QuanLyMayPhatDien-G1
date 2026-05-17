@@ -19,7 +19,6 @@ public class DBContext {
     protected PreparedStatement statement;
 
     public DBContext() {
-
         try {
             String username = "root";
             String password = "root";
