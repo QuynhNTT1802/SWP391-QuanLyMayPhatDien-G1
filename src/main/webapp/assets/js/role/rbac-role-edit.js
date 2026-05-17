@@ -18,14 +18,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var permSearch = document.getElementById('permSearch');
     if (permSearch) {
-        permSearch.addEventListener('input', function () {
-            var query = this.value.toLowerCase().trim();
-            var rows = permTable.querySelectorAll('.perm-row');
-            rows.forEach(function (row) {
-                var nameEl = row.querySelector('.res-name');
-                var text = nameEl ? nameEl.textContent.toLowerCase() : '';
-                row.style.display = text.indexOf(query) !== -1 ? '' : 'none';
-            });
+        permSearch.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var urlParams = new URLSearchParams(window.location.search);
+                var id = urlParams.get('id');
+                var url = window.location.pathname;
+                var params = [];
+                if (id) params.push('id=' + encodeURIComponent(id));
+                if (this.value.trim()) {
+                    params.push('permSearch=' + encodeURIComponent(this.value.trim()));
+                }
+                if (params.length) url += '?' + params.join('&');
+                window.location.href = url;
+            }
         });
     }
 });
