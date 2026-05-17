@@ -25,6 +25,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -44,12 +46,14 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(6, user.getAddress());
             statement.setString(7, user.getStatus());
             statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
-            statement.setNull(9, Types.INTEGER);  
+            statement.setNull(9, Types.INTEGER);
             statement.setInt(10, user.getId());
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -64,6 +68,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -87,10 +93,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
-                resultSet = statement.getGeneratedKeys();
-                if (resultSet.next()) {
-                    return resultSet.getInt(1);
-                }
+                return findByUsername(user.getUsername()).getId();
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -112,10 +115,12 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
-    
+
     public User findByUsername(String username) {
         String sql = "SELECT * FROM user WHERE username = ?";
         try {
@@ -128,10 +133,11 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        } finally {
+            closeResources();
+        }
         return null;
     }
-    
 
     public boolean activateAccount(int userId) {
         String sql = "UPDATE user SET status = ? WHERE id = ?";
@@ -146,6 +152,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -162,6 +170,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -218,10 +228,11 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
-
 
     public List<User> findUsersWithRoles(String roleFilter, String statusFilter,
             String searchFilter, int page, int pageSize) {
@@ -269,7 +280,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
-        } 
+        } finally {
+            closeResources();
+        }
         return 0;
     }
 
@@ -306,7 +319,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         if (!resultSet.wasNull()) {
             user.setUpdatedBy(updatedBy);
         }
-
         return user;
     }
 
@@ -322,7 +334,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        } finally {
+            closeResources();
+        }
         return false;
     }
 
@@ -344,7 +358,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        } finally {
+            closeResources();
+        }
         return false;
     }
 
@@ -366,6 +382,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -382,6 +400,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -397,22 +417,24 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
-    
+
     public void updateUserRoles(int userId, List<Integer> roleIds) throws SQLException {
         String deleteOld = "delete from user_roles where user_id = ?";
         String insertNew = "insert into user_roles (user_id, role_id) values (?,?)";
-        
+
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
             try {
                 PreparedStatement del = c.prepareStatement(deleteOld);
                 del.setInt(1, userId);
                 del.executeUpdate();
-                
-                if (roleIds != null && !roleIds.isEmpty()){
+
+                if (roleIds != null && !roleIds.isEmpty()) {
                     PreparedStatement ins = c.prepareStatement(insertNew);
                     for (Integer roleId : roleIds) {
                         ins.setInt(1, userId);
@@ -425,23 +447,10 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             } catch (Exception e) {
                 c.rollback();
                 throw e;
+            } finally {
+                closeResources();
             }
         }
     }
-    
-     public User findByName(String name) {
-        String sql = "SELECT * FROM user WHERE username = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, name);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return getFromResultSet(resultSet);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
+
 }

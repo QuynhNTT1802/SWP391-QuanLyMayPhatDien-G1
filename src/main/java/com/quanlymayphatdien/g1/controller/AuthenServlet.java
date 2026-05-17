@@ -80,30 +80,39 @@ public class AuthenServlet extends HttpServlet {
         }
     }
 
-    private String loginDoPost(HttpServletRequest request, HttpServletResponse response) {
+    private String loginDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
+        if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập thông tin đầy đủ");
+            return "view/authen/login.jsp";
+        }
+        try {
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findByUsername(username);
 
-        AdminDAO adminDao = new AdminDAO();
-        List<Admin> listAdmin = adminDao.findAll();
-        for (Admin admin : listAdmin) {
-            if (admin.getUsername().equals(username.trim())
-                    && admin.getPassword().equals(password.trim())) {
-                if (!"active".equalsIgnoreCase(admin.getStatus())) {
-                    request.setAttribute("error", "Tài khoản của bạn đã bị khóa!");
-                    return "/view/authen/login.jsp";
-                }
-
-                HttpSession session = request.getSession();
-                session.setAttribute("admin", admin);
-
-                return "/view/authen/user.jsp";
+            if (user == null || !user.getPassword().equals(password)) {
+                request.setAttribute("error", "Sai tên đăng nhập hoặc mật khẩu!");
+                return "view/authen/login.jsp";
             }
+
+            if (!"active".equals(user.getStatus())) {
+                request.setAttribute("error", "Tài khoản đã bị khóa!");
+                return "view/authen/login.jsp";
+            }
+
+            HttpSession session = request.getSession();
+            session.setAttribute("loggedUser", user);
+            session.setAttribute("username", user.getUsername());
+
+            return "view/admin/admin-user.jsp";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            return "view/authen/login.jsp";
         }
 
-        request.setAttribute("error", "Username hoặc mật khẩu không chính xác!");
-        request.setAttribute("username", username);
-        return "/view/authen/login.jsp";
     }
 
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {

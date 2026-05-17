@@ -65,34 +65,34 @@
                         <c:remove var="message" scope="session"/>
                     </c:if>
 
-                        <form method="get" action="${pageContext.request.contextPath}/admin/users" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
-                            <input type="hidden" name="action" value="list" />
-                            <input type="hidden" name="page" value="1" />
-                            <div class="search-input">
-                                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo tên hoặc email…" autocomplete="off" />
-                            </div>
+                    <form method="get" action="${pageContext.request.contextPath}/admin/users" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                        <input type="hidden" name="action" value="list" />
+                        <input type="hidden" name="page" value="1" />
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo tên hoặc email…" autocomplete="off" />
+                        </div>
 
-                            <select class="filter-select" name="role" onchange="this.form.submit()">
-                                <option value="">Vai trò: Tất cả</option>
-                                <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Admin</option>
-                                <option value="warehouse_manager" <c:if test="${roleFilter == 'warehouse_manager'}">selected</c:if>>Quản lý kho</option>
-                                <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
-                                <option value="accountant" <c:if test="${roleFilter == 'accountant'}">selected</c:if>>Kế toán</option>
-                                <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên</option>
-                                <option value="technician" <c:if test="${roleFilter == 'technician'}">selected</c:if>>Kỹ thuật</option>
-                                <option value="customer" <c:if test="${roleFilter == 'customer'}">selected</c:if>>Khách hàng</option>
-                                <option value="driver" <c:if test="${roleFilter == 'driver'}">selected</c:if>>Tài xế</option>
+                        <select class="filter-select" name="role" onchange="this.form.submit()">
+                            <option value="">Vai trò: Tất cả</option>
+                            <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Admin</option>
+                            <option value="warehouse_manager" <c:if test="${roleFilter == 'warehouse_manager'}">selected</c:if>>Quản lý kho</option>
+                            <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
+                            <option value="accountant" <c:if test="${roleFilter == 'accountant'}">selected</c:if>>Kế toán</option>
+                            <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên</option>
+                            <option value="technician" <c:if test="${roleFilter == 'technician'}">selected</c:if>>Kỹ thuật</option>
+                            <option value="customer" <c:if test="${roleFilter == 'customer'}">selected</c:if>>Khách hàng</option>
+                            <option value="driver" <c:if test="${roleFilter == 'driver'}">selected</c:if>>Tài xế</option>
                             </select>
 
                             <select class="filter-select" name="status" onchange="this.form.submit()">
-                            <option value="">Trạng thái: Tất cả</option>
-                            <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
+                                <option value="">Trạng thái: Tất cả</option>
+                                <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
                             <option value="inactive" <c:if test="${statusFilter == 'inactive'}">selected</c:if>>Không hoạt động</option>
                             <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khoá</option>
                             </select>
                             <div class="spacer"></div>
-                            <button type="button" class="btn" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=list'">
+                            <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=list'">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Xoá lọc
                         </button>
@@ -120,13 +120,14 @@
                                     <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="usersBody">
                                 <c:choose>
                                     <c:when test="${empty users}">
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="user" items="${users}" varStatus="loop">
-                                            <tr data-id="${user.id}" onclick="if(!event.target.closest('button,input,a')) location.href='${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'"
+                                            <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a'))
+                                                        location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'"
                                                 style="cursor:pointer;">
                                                 <td class="col-check"><input type="checkbox" class="checkbox row-check" value="${user.id}"/></td>
                                                 <td>
@@ -240,30 +241,11 @@
                 </div>
             </div>
         </div>
-
-<<<<<<< HEAD
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
-        <script src="${pageContext.request.contextPath}/view/admin/admin-js.js"></script>
-        <script src="${pageContext.request.contextPath}/view/admin/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/admin-js.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     </body>
-=======
-<script>
-  window.APP_CTX = '${pageContext.request.contextPath}';
-</script>
-<script src="${pageContext.request.contextPath}/assets/js/admin-js.js"></script>
 
-<c:if test="${not empty sessionScope.message}">
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    toast('${fn:escapeXml(sessionScope.message)}', 'success');
-  });
-</script>
-<c:remove var="message" scope="session" />
-</c:if>
-
-<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-</body>
->>>>>>> origin/feature/homepage
 </html>
 

@@ -4,6 +4,7 @@ import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.PasswordUtils;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -69,6 +70,12 @@ public class UserManagementServlet extends HttpServlet {
             case "update":
                 updateUser(request, response);
                 break;
+            case "deactivate":
+                deactivateUser(request, response);
+                break;
+            case "activate":
+                activateUser(request, response);
+                break;
             case "list":
             default:
                 listUsers(request, response);
@@ -106,7 +113,7 @@ public class UserManagementServlet extends HttpServlet {
             };
             newUser.setUsername(username);
             newUser.setEmail(email);
-            newUser.setPassword(password);
+            newUser.setPassword(PasswordUtils.hash(password));
             newUser.setName(name);
             newUser.setPhone(phone);
             newUser.setAddress(address);
@@ -388,7 +395,7 @@ public class UserManagementServlet extends HttpServlet {
         }
 
         UserDAO userDAO = new UserDAO();
-        List<User> users = userDAO.findUsersWithFilters(null, statusFilter, searchFilter, page, pageSize);
+        List<User> users = userDAO.findUsersWithRoles(roleFilter, statusFilter, searchFilter, page, pageSize);
         prepareUserDisplayData(users, request);
         int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);

@@ -12,7 +12,7 @@
     </div>
     <nav class="nav">
         <div class="nav-section">Tổng quan</div>
-        <a href="index.html">
+        <a href="${pageContext.request.contextPath}/">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Dashboard
         </a>
@@ -32,7 +32,7 @@
         </a>
 
         <div class="nav-section">Quản trị</div>
-        <a href="admin-users.html">
+        <a href="${pageContext.request.contextPath}/admin/users"">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Người dùng
             <span class="count"></span>
