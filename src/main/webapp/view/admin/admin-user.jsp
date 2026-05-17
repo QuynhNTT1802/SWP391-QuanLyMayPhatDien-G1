@@ -5,6 +5,9 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -359,7 +362,7 @@
           <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
         </button>
-        <a class="btn btn-primary" href="admin-user-create.html">
+        <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users?action=create">
           <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
           Thêm người dùng
         </a>
@@ -371,51 +374,50 @@
         <div class="left">
           <div class="eyebrow">Quản trị · Super Admin</div>
           <h2 class="page-title">Quản lý người dùng</h2>
-          <div class="page-sub">142 tài khoản trong 3 kho · Cập nhật 12/05/2026 14:08</div>
+          <div class="page-sub">${totalUsers} tài khoản · Cập nhật <fmt:formatDate value="${now}" pattern="dd/MM/yyyy HH:mm" /></div>
         </div>
       </div>
 
       <div class="stats-row">
-        <div class="stat"><div class="lbl">Tổng người dùng</div><div class="val">142 <span class="delta up">+8</span></div></div>
-        <div class="stat"><div class="lbl">Đang hoạt động</div><div class="val">118</div></div>
-        <div class="stat"><div class="lbl">Chờ kích hoạt</div><div class="val">11</div></div>
-        <div class="stat"><div class="lbl">Bị khoá</div><div class="val">5 <span class="delta down">+2</span></div></div>
-        <div class="stat"><div class="lbl">Vô hiệu</div><div class="val">8</div></div>
+        <div class="stat"><div class="lbl">Tổng người dùng</div><div class="val">${totalUsers}</div></div>
+        <div class="stat"><div class="lbl">Đang hoạt động</div><div class="val">${activeCount}</div></div>
+        <div class="stat"><div class="lbl">Chờ kích hoạt</div><div class="val">${pendingCount}</div></div>
+        <div class="stat"><div class="lbl">Bị khoá</div><div class="val">${lockedCount}</div></div>
+        <div class="stat"><div class="lbl">Vô hiệu</div><div class="val">${inactiveCount}</div></div>
       </div>
 
       <div class="toolbar">
-        <div class="search-input">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="searchInput" placeholder="Tìm theo tên hoặc email…" autocomplete="off" />
-        </div>
-        <select class="filter-select" id="filterRole">
-          <option value="">Vai trò: Tất cả</option>
-          <option value="admin">Admin</option>
-          <option value="manager">Quản lý kho</option>
-          <option value="keeper">Thủ kho</option>
-          <option value="account">Kế toán</option>
-          <option value="staff">Nhân viên</option>
-          <option value="viewer">Viewer</option>
-        </select>
-        <select class="filter-select" id="filterWarehouse">
-          <option value="">Kho: Tất cả</option>
-          <option value="HN-01">HN-01 · Hà Nội</option>
-          <option value="HCM-03">HCM-03 · TP.HCM</option>
-          <option value="DN-02">DN-02 · Đà Nẵng</option>
-          <option value="ALL">Toàn hệ thống</option>
-        </select>
-        <select class="filter-select" id="filterStatus">
-          <option value="">Trạng thái: Tất cả</option>
-          <option value="active">Đang hoạt động</option>
-          <option value="pending">Chờ kích hoạt</option>
-          <option value="locked">Bị khoá</option>
-          <option value="disabled">Vô hiệu</option>
-        </select>
-        <div class="spacer"></div>
-        <button class="btn" id="clearFilters" title="Xoá bộ lọc">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          Xoá lọc
-        </button>
+        <form method="get" action="${pageContext.request.contextPath}/admin/users" id="filterForm" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+          <input type="hidden" name="action" value="list" />
+          <input type="hidden" name="page" id="filterPage" value="1" />
+          <div class="search-input">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input name="search" id="searchInput" value="${searchFilter != null ? searchFilter : ''}" placeholder="Tìm theo tên hoặc email…" autocomplete="off" />
+          </div>
+          <select class="filter-select" name="role" id="filterRole" style="display:none;">
+            <option value="">Vai trò: Tất cả</option>
+            <option value="admin" ${roleFilter == 'admin' ? 'selected' : ''}>Admin</option>
+            <option value="warehouse_manager" ${roleFilter == 'warehouse_manager' ? 'selected' : ''}>Quản lý kho</option>
+            <option value="warehouse_staff" ${roleFilter == 'warehouse_staff' ? 'selected' : ''}>Thủ kho</option>
+            <option value="accountant" ${roleFilter == 'accountant' ? 'selected' : ''}>Kế toán</option>
+            <option value="sales_staff" ${roleFilter == 'sales_staff' ? 'selected' : ''}>Nhân viên</option>
+            <option value="technician" ${roleFilter == 'technician' ? 'selected' : ''}>Kỹ thuật</option>
+            <option value="customer" ${roleFilter == 'customer' ? 'selected' : ''}>Khách hàng</option>
+            <option value="driver" ${roleFilter == 'driver' ? 'selected' : ''}>Tài xế</option>
+          </select>
+          <select class="filter-select" name="status" id="filterStatus">
+            <option value="">Trạng thái: Tất cả</option>
+            <option value="active" ${statusFilter == 'active' ? 'selected' : ''}>Đang hoạt động</option>
+            <option value="inactive" ${statusFilter == 'inactive' ? 'selected' : ''}>Vô hiệu</option>
+            <option value="pending" ${statusFilter == 'pending' ? 'selected' : ''}>Chờ kích hoạt</option>
+            <option value="locked" ${statusFilter == 'locked' ? 'selected' : ''}>Bị khoá</option>
+          </select>
+          <div class="spacer"></div>
+          <button type="button" class="btn" id="clearFilters" title="Xoá bộ lọc">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Xoá lọc
+          </button>
+        </form>
       </div>
 
       <div class="bulk-bar" id="bulkBar">
@@ -434,32 +436,137 @@
           <thead>
             <tr>
               <th class="col-check"><input type="checkbox" class="checkbox" id="checkAll" /></th>
-              <th class="sortable" data-sort="name">Người dùng <span class="sort-ind"></span></th>
-              <th>Vai trò</th>
-              <th>Kho</th>
+              <th>Người dùng</th>
+              <%-- <th>Vai trò</th> --%>
               <th>Trạng thái</th>
-              <th class="sortable" data-sort="joined">Tham gia <span class="sort-ind"></span></th>
-              <th class="sortable sorted-desc" data-sort="lastLogin">Đăng nhập cuối <span class="sort-ind"></span></th>
-              <th class="col-actions">Hành động</th>
+              <th>Tham gia</th>
+              <th>Hành động</th>
             </tr>
           </thead>
-          <tbody id="usersBody"></tbody>
+          <tbody>
+            <c:choose>
+              <c:when test="${empty users}">
+                <tr>
+                  <td colspan="5" class="empty-state">
+                    <div class="icon-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+                    <strong>Không tìm thấy người dùng</strong>
+                    Thử bỏ bộ lọc hoặc đổi từ khoá tìm kiếm
+                  </td>
+                </tr>
+              </c:when>
+              <c:otherwise>
+                <c:forEach var="user" items="${users}" varStatus="loop">
+                  <tr data-id="${user.id}">
+                    <td class="col-check"><input type="checkbox" class="checkbox row-check" value="${user.id}" /></td>
+                    <td>
+                      <div class="user-cell">
+                        <div class="user-avatar ${loop.index % 7 == 0 ? 'green' : loop.index % 7 == 1 ? 'blue' : loop.index % 7 == 2 ? 'orange' : loop.index % 7 == 3 ? 'purple' : loop.index % 7 == 4 ? 'pink' : loop.index % 7 == 5 ? 'teal' : 'grey'}">
+                          <c:choose>
+                            <c:when test="${fn:length(user.name) >= 2}">${fn:toUpperCase(fn:substring(user.name, 0, 1))}${fn:toUpperCase(fn:substring(user.name, fn:lastIndexOf(user.name, ' ') + 1, fn:indexOf(user.name, ' ') + 2))}</c:when>
+                            <c:otherwise>${fn:toUpperCase(fn:substring(user.name, 0, 1))}</c:otherwise>
+                          </c:choose>
+                        </div>
+                        <div class="user-name-block">
+                          <div class="user-name">${user.name}</div>
+                          <div class="user-email">${user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <%-- 
+                    <td>
+                      <c:choose>
+                        <c:when test="${empty user.roles}">
+                          <span class="pill role-staff"><span class="pdot"></span>Chưa gán</span>
+                        </c:when>
+                        <c:otherwise>
+                          <c:forEach var="role" items="${user.roles}" varStatus="rs">
+                            <span class="pill role-${role.roleName}"><span class="pdot"></span>
+                              <c:choose>
+                                <c:when test="${role.roleName == 'admin'}">Admin</c:when>
+                                <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
+                                <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
+                                <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
+                                <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
+                                <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
+                                <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
+                                <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
+                                <c:otherwise>${role.roleName}</c:otherwise>
+                              </c:choose>
+                            </span>
+                          </c:forEach>
+                        </c:otherwise>
+                      </c:choose>
+                    </td>
+                    --%>
+                    <td>
+                      <c:choose>
+                        <c:when test="${user.status == 'active'}">
+                          <span class="status active"><span class="sdot"></span>Hoạt động</span>
+                        </c:when>
+                        <c:when test="${user.status == 'inactive'}">
+                          <span class="status disabled"><span class="sdot"></span>Vô hiệu</span>
+                        </c:when>
+                        <c:when test="${user.status == 'pending'}">
+                          <span class="status pending"><span class="sdot"></span>Chờ kích hoạt</span>
+                        </c:when>
+                        <c:when test="${user.status == 'locked'}">
+                          <span class="status locked"><span class="sdot"></span>Bị khoá</span>
+                        </c:when>
+                        <c:otherwise>
+                          <span class="status disabled"><span class="sdot"></span>${user.status}</span>
+                        </c:otherwise>
+                      </c:choose>
+                    </td>
+                    <td class="last-login">
+                      <div><fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy" /></div>
+                      <c:if test="${user.createdAt != null}">
+                        <div class="when"><fmt:formatDate value="${user.createdAt}" pattern="HH:mm" /></div>
+                      </c:if>
+                    </td>
+                    <td class="col-actions">
+                      <div class="row-actions">
+                        <button class="icon-mini" onclick="location.href='${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
+                          <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                        </button>
+                        <c:choose>
+                          <c:when test="${user.status == 'active'}">
+                            <button class="icon-mini" onclick="confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
+                              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            </button>
+                          </c:when>
+                          <c:otherwise>
+                            <button class="icon-mini" onclick="confirmActivate(${user.id}, ${currentPage})" title="Kích hoạt">
+                              <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                            </button>
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                    </td>
+                  </tr>
+                </c:forEach>
+              </c:otherwise>
+            </c:choose>
+          </tbody>
         </table>
-        <div class="empty-state" id="emptyState" style="display:none">
-          <div class="icon-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
-          <strong>Không tìm thấy người dùng</strong>
-          Thử bỏ bộ lọc hoặc đổi từ khoá tìm kiếm
-        </div>
         <div class="pagination">
-          <div class="info">Hiển thị <strong id="rangeFrom">1</strong>–<strong id="rangeTo">20</strong> / <strong id="totalFiltered">24</strong> kết quả</div>
+          <div class="info">Hiển thị <strong id="rangeFrom">${(currentPage - 1) * 10 + 1}</strong>–<strong id="rangeTo">${currentPage * 10 > totalUsers ? totalUsers : currentPage * 10}</strong> / <strong id="totalFiltered">${totalUsers}</strong> kết quả</div>
           <div class="controls">
-            <select class="page-size" id="pageSize">
-              <option value="20">20/trang</option>
-              <option value="50">50/trang</option>
-            </select>
-            <button class="page-btn" id="prevPage">‹</button>
-            <div id="pageNumbers" style="display:flex;gap:4px"></div>
-            <button class="page-btn" id="nextPage">›</button>
+            <c:if test="${currentPage > 1}">
+              <a href="?action=list&page=${currentPage - 1}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">‹</a>
+            </c:if>
+            <c:forEach begin="1" end="${totalPages}" var="p">
+              <c:choose>
+                <c:when test="${p == currentPage}">
+                  <span class="page-btn active">${p}</span>
+                </c:when>
+                <c:otherwise>
+                  <a href="?action=list&page=${p}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">${p}</a>
+                </c:otherwise>
+              </c:choose>
+            </c:forEach>
+            <c:if test="${currentPage < totalPages}">
+              <a href="?action=list&page=${currentPage + 1}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">›</a>
+            </c:if>
           </div>
         </div>
       </div>
@@ -480,7 +587,19 @@
   </div>
 </div>
 
+<script>
+  window.APP_CTX = '${pageContext.request.contextPath}';
+</script>
 <script src="${pageContext.request.contextPath}/view/admin/admin-js.js"></script>
+
+<c:if test="${not empty sessionScope.message}">
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    toast('${fn:escapeXml(sessionScope.message)}', 'success');
+  });
+</script>
+<c:remove var="message" scope="session" />
+</c:if>
 
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 </body>
