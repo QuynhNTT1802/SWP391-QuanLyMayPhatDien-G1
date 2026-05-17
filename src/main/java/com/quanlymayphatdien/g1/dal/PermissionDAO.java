@@ -33,7 +33,8 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
         String sql = "select p.resource, p.action from permissions p "
                 + "join role_permissions rp on p.id = rp.permission_id "
                 + "join user_roles ur on rp.role_id = ur.role_id "
-                + "where ur.user_id = ?";
+                + "join roles r on r.id = ur.role_id "
+                + "where ur.user_id = ? and r.status = 'active'";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setInt(1, userId);
