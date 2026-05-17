@@ -159,7 +159,7 @@ public class UserManagementServlet extends HttpServlet {
             User user = userDAO.findById(userId);
             if (user != null) {
                 request.setAttribute("user", user);
-                request.getRequestDispatcher("/view/admin/update-user.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/admin/admin-user-edit.jsp").forward(request, response);
                 return;
             }
         }
@@ -172,9 +172,9 @@ public class UserManagementServlet extends HttpServlet {
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
         }
-
+        int userId = 0;
         try {
-            int userId = Integer.parseInt(request.getParameter("id"));
+            userId = Integer.parseInt(request.getParameter("id"));
             String password = request.getParameter("password");
             String name = request.getParameter("name");
             String email = request.getParameter("email");
@@ -195,7 +195,6 @@ public class UserManagementServlet extends HttpServlet {
                     return;
                 }
 
-                user.setPassword(password);
                 user.setName(name);
                 user.setEmail(email);
                 user.setPhone(phone);
@@ -217,7 +216,7 @@ public class UserManagementServlet extends HttpServlet {
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
-        response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
     }
 
     private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
