@@ -363,7 +363,7 @@
 
 <% request.setAttribute("activePage", "profile"); %>
 <div class="app">
-  <jsp:include page="../common/dashboard/aside.jsp"/>
+  <jsp:include page="../common/admin/aside.jsp"/>
 
   <div>
     <header class="topbar">
@@ -667,6 +667,7 @@
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cur.email)) errors.email = 'Email không hợp lệ.';
 
     if (!cur.phone) errors.phone = 'SĐT không được để trống.';
+    else if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(cur.phone)) errors.phone = 'SĐT không hợp lệ (10 số, bắt đầu 03/05/07/08/09).';
 
     return errors;
   }

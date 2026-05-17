@@ -7,7 +7,6 @@ package com.quanlymayphatdien.g1.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import javax.management.relation.Role;
 
 /**
  *
@@ -150,6 +149,24 @@ public abstract class User {
     public void setUpdatedBy(Integer updatedBy) {
         this.updatedBy = updatedBy;
     }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
+
+    public Set<String> getEffectivePermissions() {
+        return effectivePermissions;
+    }
+
+    public void setEffectivePermissions(Set<String> effectivePermissions) {
+        this.effectivePermissions = effectivePermissions;
+    }
+    
+    
 
     @Override
     public String toString() {
