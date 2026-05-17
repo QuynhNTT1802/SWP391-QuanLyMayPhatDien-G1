@@ -13,10 +13,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,9 +74,7 @@ String url = null;
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        RoleDAO roleDAO = new RoleDAO();
-        request.setAttribute("roleList", roleDAO.findAll());
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/create-user.jsp");        
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/create-user.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -118,23 +113,12 @@ String url = null;
             newUser.setUpdatedAt(LocalDateTime.now());
             newUser.setCreatedBy(1);
             UserDAO userDAO = new UserDAO();
-            
-            //add role
-            int userId = userDAO.insert(newUser);
-            if (userId > 0) {
-                String[] roleIds = request.getParameterValues("roleIds");
-                List<Integer> roleIdList = new ArrayList<>();
-                if (roleIds != null) {
-                    for (String r : roleIds) {
-                        roleIdList.add(Integer.parseInt(r));
-                    }
-                    userDAO.updateUserRoles(userId, roleIdList);
-                    request.getSession().setAttribute("message", "User added successfully!");
-                } else {
-                    request.getSession().setAttribute("message", "Failed to add user !");
-                }
+            boolean isSuccess = userDAO.insert(newUser) > 0;
+            if (isSuccess) {
+                request.getSession().setAttribute("message", "User added successfully!");
+            } else {
+                request.getSession().setAttribute("message", "Failed to add user!");
             }
-
 
         } catch (Exception e) {
             request.getSession().setAttribute("message", e.getMessage());
@@ -150,10 +134,6 @@ String url = null;
             UserDAO userDAO = new UserDAO();
             User user = userDAO.findById(userId);
             if (user != null) {
-                //Add role
-                RoleDAO roleDAO = new RoleDAO();
-                request.setAttribute("roleList", roleDAO.findAll());
-                request.setAttribute("userRoles", roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
                 request.getRequestDispatcher("/view/admin/admin-user-edit.jsp").forward(request, response);
                 return;
@@ -200,17 +180,7 @@ String url = null;
                 user.setUpdatedBy(1);
 
                 boolean isUpdated = userDAO.update(user);
-                
-                //add role
                 if (isUpdated) {
-                    String []roleIds = request.getParameterValues("roleIds");
-                    List<Integer> roleIdList = new ArrayList<>();
-                    if (roleIds != null) {
-                        for (String r : roleIds) {
-                            roleIdList.add(Integer.parseInt(r));
-                        }
-                    }
-                    userDAO.updateUserRoles(userId, roleIdList);
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
@@ -292,7 +262,7 @@ String url = null;
                 boolean isAdmin = false;
                 if (userRoles != null) {
                     for (Role role : userRoles) {
-                        if (role.getRoleName().equalsIgnoreCase("admin")) {
+                        if (role.equals("admin")) {
                             isAdmin = true;
                             break;
                         }
@@ -361,13 +331,12 @@ String url = null;
         }
 
         UserDAO userDAO = new UserDAO();
-        RoleDAO roleDAO = new RoleDAO();
-        List<User> users = userDAO.findUsersWithRoles(roleFilter, statusFilter, searchFilter, page, pageSize);
-        int totalUsers = userDAO.getTotalFilteredUsers(roleFilter, statusFilter, searchFilter);
+        // TODO: temporarily disable role filter for testing
+        List<User> users = userDAO.findUsersWithFilters(null, statusFilter, searchFilter, page, pageSize);
+        int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
-        request.setAttribute("users", users);
-        request.setAttribute("roleList", roleDAO.findAll());
+        //request.setAttribute("users", users);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalUsers", totalUsers);
@@ -383,8 +352,4 @@ String url = null;
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
-    
-
-    
-    
 }
