@@ -5,7 +5,7 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri= "http://java.sun.com/jsp/jstl/core" %>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -195,7 +195,7 @@
 </head>
 <body>
 <div class="app">
-  <jsp:include page="../common/dashboard/aside.jsp" />
+  <jsp:include page="../common/admin/aside.jsp" />
 
   <div>
     <header class="topbar">

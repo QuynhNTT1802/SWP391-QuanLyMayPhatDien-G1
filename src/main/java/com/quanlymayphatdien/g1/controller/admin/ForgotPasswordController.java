@@ -26,7 +26,7 @@ import java.util.List;
  * @author FPTShop
  */
 @WebServlet(name = "ForgotPasswordManagementServlet", urlPatterns = {"/admin/forgot-password"})
-public class ForgotPasswordManagementServlet extends HttpServlet {
+public class ForgotPasswordController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

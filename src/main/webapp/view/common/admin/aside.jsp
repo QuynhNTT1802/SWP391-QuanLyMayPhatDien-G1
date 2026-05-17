@@ -26,7 +26,7 @@
     </div>
     <nav class="nav">
         <div class="nav-section">Tổng quan</div>
-        <a href="<%=request.getContextPath()%>/home">
+        <a href="<%=request.getContextPath()%>/dashboard">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Dashboard
         </a>
@@ -51,7 +51,7 @@
             Người dùng
             <span class="count">142</span>
         </a>
-        <a href="#">
+        <a href="<%=request.getContextPath()%>/admin/roles">
             <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Phân quyền
         </a>
@@ -75,7 +75,6 @@
         </a>
     </nav>
     <div class="sidebar-footer">
-        <div class="avatar-sm"><%=initials%></div>
         <div class="user-meta">
             <div class="name"><%=fullName%></div>
             <div class="role">Người dùng</div>
