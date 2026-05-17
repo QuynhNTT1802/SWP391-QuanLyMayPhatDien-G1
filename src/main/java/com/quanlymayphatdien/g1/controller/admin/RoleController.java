@@ -66,7 +66,7 @@ public class RoleController extends HttpServlet {
         }
         request.setAttribute("roleList", roleList);
 
-        request.getRequestDispatcher("/view/admin/rbac-roles.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-role.jsp").forward(request, response);
     }
 
     //TASK 13: VIEW ROLE EDIT
@@ -99,7 +99,7 @@ public class RoleController extends HttpServlet {
             request.setAttribute("role", curRole);
             request.setAttribute("rolePermissions", rolePermissions);
         }
-        request.getRequestDispatcher("/view/admin/rbac-role-edit.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-role-edit.jsp").forward(request, response);
     }
 
     //TASK 14 & 16: SAVE EVERYTHING

@@ -1,11 +1,10 @@
-
 package com.quanlymayphatdien.g1.controller.admin;
 
-import com.quanlymayphatdien.g1.dal.AdminDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -14,13 +13,12 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author Aadmin
- */
 @WebServlet(name = "UserManagementServlet", urlPatterns = {"/admin/users"})
 public class UserManagementController extends HttpServlet {
 
@@ -31,8 +29,11 @@ public class UserManagementController extends HttpServlet {
         if (action == null) {
             action = "list";
         }
-        String url = null;
+
         switch (action) {
+            case "view":
+                viewDetail(request, response);
+                break;
             case "create":
                 showCreateForm(request, response);
                 break;
@@ -66,6 +67,12 @@ public class UserManagementController extends HttpServlet {
             case "update":
                 updateUser(request, response);
                 break;
+            case "deactivate":
+                deactivateUser(request, response);
+                break;
+            case "activate":
+                activateUser(request, response);
+                break;
             case "list":
             default:
                 listUsers(request, response);
@@ -73,12 +80,45 @@ public class UserManagementController extends HttpServlet {
         }
     }
 
+    private void viewDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String userIdStr = request.getParameter("id");
+        if (userIdStr != null && !userIdStr.isEmpty()) {
+            int userId = Integer.parseInt(userIdStr);
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findById(userId);
+            if (user != null) {
+                RoleDAO roleDAO = new RoleDAO();
+                user.setRoles(roleDAO.getRolesByUserId(userId));
+                request.setAttribute("user", user);
+
+                // Tính initials
+                String name = user.getName() != null ? user.getName().trim() : "";
+                int sp = name.lastIndexOf(' ');
+                request.setAttribute("userInitials",
+                        name.isEmpty() ? "?" : (name.substring(0, 1)
+                        + (sp >= 0 && sp + 1 < name.length() ? name.substring(sp + 1, sp + 2) : ""))
+                        .toUpperCase());
+
+                // Format dates
+                java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(df) : "—");
+                request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
+
+                request.getRequestDispatcher("/view/admin/admin-user-detail.jsp").forward(request, response);
+                return;
+            }
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
+    }
+
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/create-user.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/admin-user-create.jsp");
         dispatcher.forward(request, response);
     }
 
-    private void createUser(HttpServletRequest request, HttpServletResponse response)
+ private void createUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String username = request.getParameter("username");
@@ -95,7 +135,6 @@ public class UserManagementController extends HttpServlet {
             if (!errors.isEmpty()) {
                 request.getSession().setAttribute("errors", errors);
                 request.getSession().setAttribute("formData", request.getParameterMap());
-
                 response.sendRedirect(request.getContextPath() + "/admin/users?action=create");
                 return;
             }
@@ -104,7 +143,7 @@ public class UserManagementController extends HttpServlet {
             };
             newUser.setUsername(username);
             newUser.setEmail(email);
-            newUser.setPassword(password);
+            newUser.setPassword(BCryptUtils.hash(password));
             newUser.setName(name);
             newUser.setPhone(phone);
             newUser.setAddress(address);
@@ -112,9 +151,31 @@ public class UserManagementController extends HttpServlet {
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
             newUser.setCreatedBy(1);
+
             UserDAO userDAO = new UserDAO();
-            boolean isSuccess = userDAO.insert(newUser) > 0;
-            if (isSuccess) {
+            int newUserId = userDAO.insert(newUser);
+            if (newUserId > 0) {
+                String roleParam = request.getParameter("role");
+                if (roleParam != null && !roleParam.isEmpty()) {
+                    RoleDAO roleDAO = new RoleDAO();
+                    int roleId = -1;
+                    for (Role r : roleDAO.findAll()) {
+                        if (r.getRoleName().equals(roleParam)) {
+                            roleId = r.getRoleId();
+                            break;
+                        }
+                    }
+                    if (roleId > 0) {
+                        userDAO.updateUserRoles(newUserId, java.util.List.of(roleId));
+                    }
+                    if ("admin".equals(roleParam)) {
+                        String sql = "INSERT INTO admin (admin_id) VALUES (?)";
+                        try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
+                            ps.setInt(1, newUserId);
+                            ps.executeUpdate();
+                        }
+                    }
+                }
                 request.getSession().setAttribute("message", "User added successfully!");
             } else {
                 request.getSession().setAttribute("message", "Failed to add user!");
@@ -180,7 +241,17 @@ public class UserManagementController extends HttpServlet {
                 user.setUpdatedBy(1);
 
                 boolean isUpdated = userDAO.update(user);
+
+                //add role
                 if (isUpdated) {
+                    String[] roleIds = request.getParameterValues("roleIds");
+                    List<Integer> roleIdList = new ArrayList<>();
+                    if (roleIds != null) {
+                        for (String r : roleIds) {
+                            roleIdList.add(Integer.parseInt(r));
+                        }
+                    }
+                    userDAO.updateUserRoles(userId, roleIdList);
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
@@ -195,7 +266,7 @@ public class UserManagementController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
     }
 
-    private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
+  private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
         Map<String, String> errors = new HashMap<>();
         UserDAO userDAO = new UserDAO();
 
@@ -245,7 +316,7 @@ public class UserManagementController extends HttpServlet {
         return errors;
     }
 
-    private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+  private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
@@ -262,7 +333,7 @@ public class UserManagementController extends HttpServlet {
                 boolean isAdmin = false;
                 if (userRoles != null) {
                     for (Role role : userRoles) {
-                        if (role.equals("admin")) {
+                        if (role.getRoleName().equals("admin")) {
                             isAdmin = true;
                             break;
                         }
@@ -296,7 +367,7 @@ public class UserManagementController extends HttpServlet {
         }
 
         String userIdStr = request.getParameter("id");
-        if (userIdStr != null || !userIdStr.isEmpty()) {
+        if (userIdStr != null && !userIdStr.isEmpty()) {
             int userId = Integer.parseInt(userIdStr);
             UserDAO userDAO = new UserDAO();
             boolean check = userDAO.activateAccount(userId);
@@ -310,6 +381,7 @@ public class UserManagementController extends HttpServlet {
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
+
 
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String searchFilter = request.getParameter("search");
@@ -331,12 +403,12 @@ public class UserManagementController extends HttpServlet {
         }
 
         UserDAO userDAO = new UserDAO();
-        // TODO: temporarily disable role filter for testing
-        List<User> users = userDAO.findUsersWithFilters(null, statusFilter, searchFilter, page, pageSize);
+        List<User> users = userDAO.findUsersWithRoles(roleFilter, statusFilter, searchFilter, page, pageSize);
+        prepareUserDisplayData(users, request);
         int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
-        //request.setAttribute("users", users);
+        request.setAttribute("users", users);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalUsers", totalUsers);
@@ -352,4 +424,41 @@ public class UserManagementController extends HttpServlet {
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
+    
+     private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
+        List<String> userInitials = new ArrayList<>();
+        List<String> userAvatarClass = new ArrayList<>();
+        List<String> userCreatedDate = new ArrayList<>();
+        List<String> userCreatedTime = new ArrayList<>();
+        String[] avatarColors = {"green", "blue", "orange", "purple", "pink", "teal", "grey"};
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+
+        for (int i = 0; i < users.size(); i++) {
+            User u = users.get(i);
+            String name = u.getName() != null ? u.getName().trim() : "";
+            int lastSpace = name.lastIndexOf(' ');
+            String initials = name.isEmpty() ? "?"
+                    : (name.substring(0, 1)
+                            + (lastSpace >= 0 && lastSpace + 1 < name.length()
+                            ? name.substring(lastSpace + 1, lastSpace + 2) : ""))
+                            .toUpperCase();
+            userInitials.add(initials);
+            userAvatarClass.add(avatarColors[i % 7]);
+            if (u.getCreatedAt() != null) {
+                userCreatedDate.add(u.getCreatedAt().format(dateFmt));
+                userCreatedTime.add(u.getCreatedAt().format(timeFmt));
+            } else {
+                userCreatedDate.add("—");
+                userCreatedTime.add("");
+            }
+        }
+        request.setAttribute("userInitials", userInitials);
+        request.setAttribute("userAvatarClass", userAvatarClass);
+        request.setAttribute("userCreatedDate", userCreatedDate);
+        request.setAttribute("userCreatedTime", userCreatedTime);
+        request.setAttribute("nowFormatted",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+    }
+
 }
