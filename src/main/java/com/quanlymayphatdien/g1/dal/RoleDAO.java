@@ -53,7 +53,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     public List<Role> getRolesByUserId(int userId) {
         List<Role> roles = new ArrayList<>();
-        String sql = "SELECT r.* FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = ?";
+        String sql = "SELECT r.* FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = ? AND r.status = 'active'";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setInt(1, userId);
@@ -82,6 +82,24 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public List<Role> searchByName(String keyword) {
+        List<Role> list = new ArrayList<>();
+        String sql = "SELECT * FROM roles WHERE name LIKE ? OR description LIKE ? ORDER BY id";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            String likeKeyword = "%" + keyword + "%";
+            p.setString(1, likeKeyword);
+            p.setString(2, likeKeyword);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(getFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     @Override
