@@ -5,11 +5,8 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-
-
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@taglib prefix = "fn" uri = "http://java.sun.com/jsp/jstl/functions"%>
-<%@taglib prefix = "fmt" uri = "http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -25,179 +22,59 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <style>
 
-            [data-theme="dark"] {
-                --bg: oklch(16% 0.012 250);
-                --surface: oklch(20% 0.014 250);
-                --surface-2: oklch(22% 0.014 250);
-                --surface-3: oklch(24% 0.014 250);
-                --fg: oklch(96% 0.005 240);
-                --fg-soft: oklch(82% 0.008 240);
-                --muted: oklch(65% 0.012 240);
-                --muted-2: oklch(50% 0.012 240);
-                --border: oklch(28% 0.014 240);
-                --border-strong: oklch(36% 0.016 240);
-                --accent: oklch(70% 0.18 145);
-                --accent-soft: oklch(28% 0.06 145);
-                --danger: oklch(68% 0.20 25);
-                --danger-soft: oklch(28% 0.06 25);
-                --warn: oklch(75% 0.16 75);
-                --warn-soft: oklch(28% 0.06 75);
-                --info: oklch(70% 0.15 250);
-                --info-soft: oklch(28% 0.05 250);
-                --purple: oklch(72% 0.16 295);
-                --purple-soft: oklch(28% 0.06 295);
-            }
-            * {
-                box-sizing: border-box;
-            }
-            html, body {
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family: var(--font-ui);
-                font-size: 14px;
-                line-height: 1.5;
-                font-weight: 450;
-                color: var(--fg);
-                background: var(--bg);
-                font-variant-numeric: tabular-nums;
-                font-feature-settings: var(--font-feature);
-                -webkit-font-smoothing: antialiased;
-                -moz-osx-font-smoothing: grayscale;
-                text-rendering: optimizeLegibility;
-            }
-            .mono {
-                font-family: var(--font-mono);
-            }
-            .app {
-                display: grid;
-                grid-template-columns: 240px 1fr;
-                min-height: 100vh;
-            }
-            aside.sidebar {
-                background: var(--surface);
-                border-right: 1px solid var(--border);
-                position: sticky;
-                top: 0;
-                height: 100vh;
-                display: flex;
-                flex-direction: column;
-                padding: 20px 12px 16px;
-            }
-            .brand {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 4px 10px 18px;
-                font-weight: 700;
-                font-size: 14px;
-                letter-spacing: -0.01em;
-            }
-            .brand-mark {
-                width: 22px;
-                height: 22px;
-                border-radius: 5px;
-                background: var(--fg);
-                color: var(--bg);
-                display: grid;
-                place-items: center;
-                font-family: var(--font-mono);
-                font-size: 11px;
-                font-weight: 700;
-            }
-            nav.nav {
-                display: flex;
-                flex-direction: column;
-                gap: 1px;
-                flex: 1;
-            }
-            .nav-section {
-                font-size: 10.5px;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                color: var(--muted);
-                padding: 14px 10px 6px;
-                font-weight: 700;
-            }
-            .nav a {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 7px 10px;
-                border-radius: var(--radius-sm);
-                color: var(--fg-soft);
-                text-decoration: none;
-                font-size: 13px;
-                font-weight: 600;
-            }
-            .nav a:hover {
-                background: var(--surface-2);
-                color: var(--fg);
-            }
-            .nav a.active {
-                background: var(--accent-soft);
-                color: var(--accent);
-                font-weight: 700;
-            }
-            .nav a .icon {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 1.8;
-                flex-shrink: 0;
-            }
-            .nav a .count {
-                margin-left: auto;
-                font-family: var(--font-mono);
-                font-size: 11px;
-                color: var(--muted);
-                background: var(--surface-2);
-                padding: 1px 6px;
-                border-radius: 999px;
-                border: 1px solid var(--border);
-                font-weight: 600;
-            }
-            .nav a.active .count {
-                color: var(--accent);
-                background: transparent;
-                border-color: transparent;
-            }
-            .sidebar-footer {
-                border-top: 1px solid var(--border);
-                padding: 12px 10px 4px;
-                margin-top: 8px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .avatar {
-                width: 28px;
-                height: 28px;
-                border-radius: 50%;
-                background: var(--surface-2);
-                border: 1px solid var(--border);
-                display: grid;
-                place-items: center;
-                font-size: 11px;
-                font-weight: 700;
-                color: var(--fg-soft);
-            }
-            .user-meta {
-                line-height: 1.2;
-                flex: 1;
-                min-width: 0;
-            }
-            .user-meta .name {
-                font-size: 12.5px;
-                font-weight: 700;
-            }
-            .user-meta .role {
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 500;
-            }
+  [data-theme="dark"] {
+    --bg: oklch(16% 0.012 250);
+    --surface: oklch(20% 0.014 250);
+    --surface-2: oklch(22% 0.014 250);
+    --surface-3: oklch(24% 0.014 250);
+    --fg: oklch(96% 0.005 240);
+    --fg-soft: oklch(82% 0.008 240);
+    --muted: oklch(65% 0.012 240);
+    --muted-2: oklch(50% 0.012 240);
+    --border: oklch(28% 0.014 240);
+    --border-strong: oklch(36% 0.016 240);
+    --accent: oklch(70% 0.18 145);
+    --accent-soft: oklch(28% 0.06 145);
+    --danger: oklch(68% 0.20 25);
+    --danger-soft: oklch(28% 0.06 25);
+    --warn: oklch(75% 0.16 75);
+    --warn-soft: oklch(28% 0.06 75);
+    --info: oklch(70% 0.15 250);
+    --info-soft: oklch(28% 0.05 250);
+    --purple: oklch(72% 0.16 295);
+    --purple-soft: oklch(28% 0.06 295);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-ui); font-size: 14px; line-height: 1.5; font-weight: 450;
+    color: var(--fg); background: var(--bg); font-variant-numeric: tabular-nums;
+    font-feature-settings: var(--font-feature);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  .mono { font-family: var(--font-mono); }
+  .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  aside.sidebar {
+    background: var(--surface); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    padding: 20px 12px 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; font-weight: 700; font-size: 14px; letter-spacing: -0.01em; }
+  .brand-mark { width: 22px; height: 22px; border-radius: 5px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
+  nav.nav { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .nav-section { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 14px 10px 6px; font-weight: 700; }
+  .nav a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-sm); color: var(--fg-soft); text-decoration: none; font-size: 13px; font-weight: 600; }
+  .nav a:hover { background: var(--surface-2); color: var(--fg); }
+  .nav a.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .nav a .icon { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; flex-shrink: 0; }
+  .nav a .count { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--muted); background: var(--surface-2); padding: 1px 6px; border-radius: 999px; border: 1px solid var(--border); font-weight: 600; }
+  .nav a.active .count { color: var(--accent); background: transparent; border-color: transparent; }
+  .sidebar-footer { border-top: 1px solid var(--border); padding: 12px 10px 4px; margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--fg-soft); }
+  .user-meta { line-height: 1.2; flex: 1; min-width: 0; }
+  .user-meta .name { font-size: 12.5px; font-weight: 700; }
+  .user-meta .role { font-size: 11px; color: var(--muted); font-weighta: 500; }
 
             header.topbar {
                 position: sticky;
@@ -1075,14 +952,182 @@
         <div class="app">
             <jsp:include page="../common/dashboard/aside.jsp"></jsp:include>
 
-                <div>
-                    <header class="topbar">
-                        <h1>Người dùng</h1>
-                        <span class="crumb">/ <a href="#">Quản trị</a> / Người dùng</span>
-                        <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
-                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+  <div>
+    <header class="topbar">
+      <h1>Người dùng</h1>
+      <span class="crumb">/ <a href="#">Quản trị</a> / Người dùng</span>
+      <div class="top-actions">
+        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+        </button>
+        <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users?action=create">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+          Thêm người dùng
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <div class="page-head">
+        <div class="left">
+          <div class="eyebrow">Quản trị · Super Admin</div>
+          <h2 class="page-title">Quản lý người dùng</h2>
+          <div class="page-sub">${totalUsers} tài khoản · Cập nhật <fmt:formatDate value="${now}" pattern="dd/MM/yyyy HH:mm" /></div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat"><div class="lbl">Tổng người dùng</div><div class="val">${totalUsers}</div></div>
+        <div class="stat"><div class="lbl">Đang hoạt động</div><div class="val">${activeCount}</div></div>
+        <div class="stat"><div class="lbl">Chờ kích hoạt</div><div class="val">${pendingCount}</div></div>
+        <div class="stat"><div class="lbl">Bị khoá</div><div class="val">${lockedCount}</div></div>
+        <div class="stat"><div class="lbl">Vô hiệu</div><div class="val">${inactiveCount}</div></div>
+      </div>
+
+      <div class="toolbar">
+        <form method="get" action="${pageContext.request.contextPath}/admin/users" id="filterForm" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+          <input type="hidden" name="action" value="list" />
+          <input type="hidden" name="page" id="filterPage" value="1" />
+          <div class="search-input">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input name="search" id="searchInput" value="${searchFilter != null ? searchFilter : ''}" placeholder="Tìm theo tên hoặc email…" autocomplete="off" />
+          </div>
+          <select class="filter-select" name="role" id="filterRole" style="display:none;">
+            <option value="">Vai trò: Tất cả</option>
+            <option value="admin" ${roleFilter == 'admin' ? 'selected' : ''}>Admin</option>
+            <option value="warehouse_manager" ${roleFilter == 'warehouse_manager' ? 'selected' : ''}>Quản lý kho</option>
+            <option value="warehouse_staff" ${roleFilter == 'warehouse_staff' ? 'selected' : ''}>Thủ kho</option>
+            <option value="accountant" ${roleFilter == 'accountant' ? 'selected' : ''}>Kế toán</option>
+            <option value="sales_staff" ${roleFilter == 'sales_staff' ? 'selected' : ''}>Nhân viên</option>
+            <option value="technician" ${roleFilter == 'technician' ? 'selected' : ''}>Kỹ thuật</option>
+            <option value="customer" ${roleFilter == 'customer' ? 'selected' : ''}>Khách hàng</option>
+            <option value="driver" ${roleFilter == 'driver' ? 'selected' : ''}>Tài xế</option>
+          </select>
+          <select class="filter-select" name="status" id="filterStatus">
+            <option value="">Trạng thái: Tất cả</option>
+            <option value="active" ${statusFilter == 'active' ? 'selected' : ''}>Đang hoạt động</option>
+            <option value="inactive" ${statusFilter == 'inactive' ? 'selected' : ''}>Vô hiệu</option>
+            <option value="pending" ${statusFilter == 'pending' ? 'selected' : ''}>Chờ kích hoạt</option>
+            <option value="locked" ${statusFilter == 'locked' ? 'selected' : ''}>Bị khoá</option>
+          </select>
+          <div class="spacer"></div>
+          <button type="button" class="btn" id="clearFilters" title="Xoá bộ lọc">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Xoá lọc
+          </button>
+        </form>
+      </div>
+
+      <div class="bulk-bar" id="bulkBar">
+        <span class="count-pill" id="bulkCount">0</span>
+        <span>người dùng đã chọn</span>
+        <div class="bulk-actions">
+          <button class="btn-tiny" data-bulk="role"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Đổi vai trò</button>
+          <button class="btn-tiny" data-bulk="lock"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</button>
+          <button class="btn-tiny danger" data-bulk="delete"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Xoá</button>
+          <button class="btn-tiny" id="bulkClear">Bỏ chọn</button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table class="users" id="usersTable">
+          <thead>
+            <tr>
+              <th class="col-check"><input type="checkbox" class="checkbox" id="checkAll" /></th>
+              <th>Người dùng</th>
+              <%-- <th>Vai trò</th> --%>
+              <th>Trạng thái</th>
+              <th>Tham gia</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <c:choose>
+              <c:when test="${empty users}">
+                <tr>
+                  <td colspan="5" class="empty-state">
+                    <div class="icon-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+                    <strong>Không tìm thấy người dùng</strong>
+                    Thử bỏ bộ lọc hoặc đổi từ khoá tìm kiếm
+                  </td>
+                </tr>
+              </c:when>
+              <c:otherwise>
+                <c:forEach var="user" items="${users}" varStatus="loop">
+                  <tr data-id="${user.id}">
+                    <td class="col-check"><input type="checkbox" class="checkbox row-check" value="${user.id}" /></td>
+                    <td>
+                      <div class="user-cell">
+                        <div class="user-avatar ${loop.index % 7 == 0 ? 'green' : loop.index % 7 == 1 ? 'blue' : loop.index % 7 == 2 ? 'orange' : loop.index % 7 == 3 ? 'purple' : loop.index % 7 == 4 ? 'pink' : loop.index % 7 == 5 ? 'teal' : 'grey'}">
+                          ${user.name.substring(0, 1).toUpperCase()}
+                        </div>
+                        <div class="user-name-block">
+                          <div class="user-name">${user.name}</div>
+                          <div class="user-email">${user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <%-- 
+                    <td>
+                      <c:choose>
+                        <c:when test="${empty user.roles}">
+                          <span class="pill role-staff"><span class="pdot"></span>Chưa gán</span>
+                        </c:when>
+                        <c:otherwise>
+                          <c:forEach var="role" items="${user.roles}" varStatus="rs">
+                            <span class="pill role-${role.roleName}"><span class="pdot"></span>
+                              <c:choose>
+                                <c:when test="${role.roleName == 'admin'}">Admin</c:when>
+                                <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
+                                <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
+                                <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
+                                <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
+                                <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
+                                <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
+                                <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
+                                <c:otherwise>${role.roleName}</c:otherwise>
+                              </c:choose>
+                            </span>
+                          </c:forEach>
+                        </c:otherwise>
+                      </c:choose>
+                    </td>
+                    --%>
+                    <td>
+                      <c:choose>
+                        <c:when test="${user.status == 'active'}">
+                          <span class="status active"><span class="sdot"></span>Hoạt động</span>
+                        </c:when>
+                        <c:when test="${user.status == 'inactive'}">
+                          <span class="status disabled"><span class="sdot"></span>Vô hiệu</span>
+                        </c:when>
+                        <c:when test="${user.status == 'pending'}">
+                          <span class="status pending"><span class="sdot"></span>Chờ kích hoạt</span>
+                        </c:when>
+                        <c:when test="${user.status == 'locked'}">
+                          <span class="status locked"><span class="sdot"></span>Bị khoá</span>
+                        </c:when>
+                        <c:otherwise>
+                          <span class="status disabled"><span class="sdot"></span>${user.status}</span>
+                        </c:otherwise>
+                      </c:choose>
+                    </td>
+                    <td class="last-login">
+                      <div><fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy" /></div>
+                      <c:if test="${user.createdAt != null}">
+                        <div class="when"><fmt:formatDate value="${user.createdAt}" pattern="HH:mm" /></div>
+                      </c:if>
+                    </td>
+                    <td class="col-actions">
+                      <div class="row-actions">
+                        <button class="icon-mini" onclick="location.href='${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
+                          <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                        </button>
+                        <c:choose>
+                          <c:when test="${user.status == 'active'}">
+                            <button class="icon-mini" onclick="confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
+                              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             </button>
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
@@ -1139,169 +1184,36 @@
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 Xoá lọc
                             </button>
-                        </form>
-                    </div>
-
-                    <div class="bulk-bar" id="bulkBar">
-                        <span class="count-pill" id="bulkCount">0</span>
-                        <span>người dùng đã chọn</span>
-                        <div class="bulk-actions">
-                            <button class="btn-tiny" data-bulk="role"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Đổi vai trò</button>
-                            <button class="btn-tiny" data-bulk="lock"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</button>
-                            <button class="btn-tiny danger" data-bulk="delete"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Xoá</button>
-                            <button class="btn-tiny" id="bulkClear">Bỏ chọn</button>
-                        </div>
-                    </div>
-
-                    <div class="table-card">
-                        <table class="users" id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th class="col-check"><input type="checkbox" class="checkbox" id="checkAll" /></th>
-                                    <th>Người dùng</th>
-                                        <%-- <th>Vai trò</th> --%>
-                                    <th>Trạng thái</th>
-                                    <th>Tham gia</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <c:choose>
-                                    <c:when test="${empty users}">
-                                        <tr>
-                                            <td colspan="5" class="empty-state">
-                                                <div class="icon-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
-                                                <strong>Không tìm thấy người dùng</strong>
-                                                Thử bỏ bộ lọc hoặc đổi từ khoá tìm kiếm
-                                            </td>
-                                        </tr>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach var="user" items="${users}" varStatus="loop">
-                                            <tr data-id="${user.id}">
-                                                <td class="col-check"><input type="checkbox" class="checkbox row-check" value="${user.id}" /></td>
-                                                <td>
-                                                    <div class="user-cell">
-                                                        <div class="user-avatar ${loop.index % 7 == 0 ? 'green' : loop.index % 7 == 1 ? 'blue' : loop.index % 7 == 2 ? 'orange' : loop.index % 7 == 3 ? 'purple' : loop.index % 7 == 4 ? 'pink' : loop.index % 7 == 5 ? 'teal' : 'grey'}">
-                                                            <c:set var="words" value="${fn:split(fn:trim(user.name), ' ')}" />
-                                                            <c:choose>
-                                                                <c:when test="${fn:length(words) >= 2}">
-                                                                    ${fn:toUpperCase(fn:substring(words[0], 0, 1))}${fn:toUpperCase(fn:substring(words[1], 0, 1))}
-                                                                </c:when>
-                                                                <c:when test="${fn:length(user.name) >= 2}">
-                                                                    ${fn:toUpperCase(fn:substring(user.name, 0, 2))}
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    ${fn:toUpperCase(user.name)}
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                        </div>
-                                                        <div class="user-name-block">
-                                                            <div class="user-name">${user.name}</div>
-                                                            <div class="user-email">${user.email}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <%-- 
-                                                <td>
-                                                  <c:choose>
-                                                    <c:when test="${empty user.roles}">
-                                                      <span class="pill role-staff"><span class="pdot"></span>Chưa gán</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                      <c:forEach var="role" items="${user.roles}" varStatus="rs">
-                                                        <span class="pill role-${role.roleName}"><span class="pdot"></span>
-                                                          <c:choose>
-                                                            <c:when test="${role.roleName == 'admin'}">Admin</c:when>
-                                                            <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
-                                                            <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
-                                                            <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
-                                                            <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
-                                                            <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
-                                                            <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
-                                                            <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
-                                                            <c:otherwise>${role.roleName}</c:otherwise>
-                                                          </c:choose>
-                                                        </span>
-                                                      </c:forEach>
-                                                    </c:otherwise>
-                                                  </c:choose>
-                                                </td>
-                                                --%>
-                                                <td>
-                                                    <c:choose>
-                                                        <c:when test="${user.status == 'active'}">
-                                                            <span class="status active"><span class="sdot"></span>Hoạt động</span>
-                                                        </c:when>
-                                                        <c:when test="${user.status == 'inactive'}">
-                                                            <span class="status disabled"><span class="sdot"></span>Vô hiệu</span>
-                                                        </c:when>
-                                                        <c:when test="${user.status == 'pending'}">
-                                                            <span class="status pending"><span class="sdot"></span>Chờ kích hoạt</span>
-                                                        </c:when>
-                                                        <c:when test="${user.status == 'locked'}">
-                                                            <span class="status locked"><span class="sdot"></span>Bị khoá</span>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <span class="status disabled"><span class="sdot"></span>${user.status}</span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                </td>
-                                                <td class="last-login">
-                                                    <div>${user.createdDateStr}</div>
-                                                    <c:if test="${not empty user.createdTimeStr}">
-                                                        <div class="when">${user.createdTimeStr}</div>
-                                                    </c:if>
-                                                </td>
-                                                <td class="col-actions">
-                                                    <div class="row-actions">
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
-                                                            <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                        </button>
-                                                        <c:choose>
-                                                            <c:when test="${user.status == 'active'}">
-                                                                <button class="icon-mini" onclick="confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
-                                                                    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                                                </button>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <button class="icon-mini" onclick="confirmActivate(${user.id}, ${currentPage})" title="Kích hoạt">
-                                                                    <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-                                                                </button>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tbody>
-                        </table>
-                        <div class="pagination">
-                            <div class="info">Hiển thị <strong id="rangeFrom">${(currentPage - 1) * 10 + 1}</strong>–<strong id="rangeTo">${currentPage * 10 > totalUsers ? totalUsers : currentPage * 10}</strong> / <strong id="totalFiltered">${totalUsers}</strong> kết quả</div>
-                            <div class="controls">
-                                <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">‹</a>
-                                </c:if>
-                                <c:forEach begin="1" end="${totalPages}" var="p">
-                                    <c:choose>
-                                        <c:when test="${p == currentPage}">
-                                            <span class="page-btn active">${p}</span>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <a href="?action=list&page=${p}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">${p}</a>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
-                                <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">›</a>
-                                </c:if>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                    </td>
+                  </tr>
+                </c:forEach>
+              </c:otherwise>
+            </c:choose>
+          </tbody>
+        </table>
+        <div class="pagination">
+          <div class="info">Hiển thị <strong id="rangeFrom">${(currentPage - 1) * 10 + 1}</strong>–<strong id="rangeTo">${currentPage * 10 > totalUsers ? totalUsers : currentPage * 10}</strong> / <strong id="totalFiltered">${totalUsers}</strong> kết quả</div>
+          <div class="controls">
+            <c:if test="${currentPage > 1}">
+              <a href="?action=list&amp;page=${currentPage - 1}${searchFilter != null ? '&amp;search=' : ''}${searchFilter}${roleFilter != null ? '&amp;role=' : ''}${roleFilter}${statusFilter != null ? '&amp;status=' : ''}${statusFilter}" class="page-btn">‹</a>
+            </c:if>
+            <c:forEach begin="1" end="${totalPages}" var="p">
+              <c:choose>
+                <c:when test="${p == currentPage}">
+                  <span class="page-btn active">${p}</span>
+                </c:when>
+                <c:otherwise>
+                  <a href="?action=list&amp;page=${p}${searchFilter != null ? '&amp;search=' : ''}${searchFilter}${roleFilter != null ? '&amp;role=' : ''}${roleFilter}${statusFilter != null ? '&amp;status=' : ''}${statusFilter}" class="page-btn">${p}</a>
+                </c:otherwise>
+              </c:choose>
+            </c:forEach>
+            <c:if test="${currentPage < totalPages}">
+              <a href="?action=list&amp;page=${currentPage + 1}${searchFilter != null ? '&amp;search=' : ''}${searchFilter}${roleFilter != null ? '&amp;role=' : ''}${roleFilter}${statusFilter != null ? '&amp;status=' : ''}${statusFilter}" class="page-btn">›</a>
+            </c:if>
+          </div>
         </div>
 
         <div class="toast-host" id="toastHost"></div>
@@ -1317,21 +1229,38 @@
             </div>
         </div>
 
-        <script>
-            window.APP_CTX = '${pageContext.request.contextPath}';
-        </script>
-        <script src="${pageContext.request.contextPath}/view/admin/admin-js.js"></script>
+<script>
+  window.APP_CTX = '${pageContext.request.contextPath}';
+</script>
 
-        <c:if test="${not empty sessionScope.message}">
-            <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                toast('${fn:escapeXml(sessionScope.message)}', 'success');
-            });
-            </script>
-            <c:remove var="message" scope="session" />
-        </c:if>
+<c:if test="${not empty sessionScope.message}">
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var host = document.getElementById('toastHost')
+    var t = document.createElement('div')
+    t.className = 'toast success'
+    t.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" fill="none" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg><span><c:out value="${sessionScope.message}"/></span>'
+    host.appendChild(t)
+    requestAnimationFrame(function () { t.classList.add('show') })
+    setTimeout(function () { t.classList.remove('show'); setTimeout(function () { t.remove() }, 200) }, 2800)
+  })
+</script>
+<c:remove var="message" scope="session"/>
+</c:if>
 
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-    </body>
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+  function confirmDeactivate(userId, page) {
+    if (confirm('Vô hiệu hoá người dùng này?')) {
+      location.href = APP_CTX + '/admin/users?action=deactivate&id=' + userId + '&page=' + page
+    }
+  }
+  function confirmActivate(userId, page) {
+    if (confirm('Kích hoạt người dùng này?')) {
+      location.href = APP_CTX + '/admin/users?action=activate&id=' + userId + '&page=' + page
+    }
+  }
+</script>
+</body>
 </html>
 
