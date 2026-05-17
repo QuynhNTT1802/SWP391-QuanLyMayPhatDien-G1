@@ -7,7 +7,6 @@ package com.quanlymayphatdien.g1.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-import javax.management.relation.Role;
 
 /**
  *
