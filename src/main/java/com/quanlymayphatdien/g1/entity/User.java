@@ -150,6 +150,24 @@ public abstract class User {
         this.updatedBy = updatedBy;
     }
 
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
+
+    public Set<String> getEffectivePermissions() {
+        return effectivePermissions;
+    }
+
+    public void setEffectivePermissions(Set<String> effectivePermissions) {
+        this.effectivePermissions = effectivePermissions;
+    }
+    
+    
+
     @Override
     public String toString() {
         return "User{"
