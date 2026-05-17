@@ -4,12 +4,11 @@
  */
 package com.quanlymayphatdien.g1.controller;
 
-import com.quanlymayphatdien.g1.dal.AdminDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
-import com.quanlymayphatdien.g1.entity.Admin;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -30,7 +29,6 @@ public class AuthenServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         String action = request.getParameter("action") != null
                 ? request.getParameter("action")
                 : "";
@@ -42,6 +40,13 @@ public class AuthenServlet extends HttpServlet {
             case "forgotpass":
                 url = "view/authen/forgotpass.jsp";
                 break;
+            case "logout":
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    session.invalidate();
+                }
+                response.sendRedirect(request.getContextPath() + "/authen?action=login");
+                return;
             default:
                 throw new AssertionError();
         }
@@ -67,7 +72,6 @@ public class AuthenServlet extends HttpServlet {
             default:
                 throw new AssertionError();
         }
-
         if (url != null && !url.isEmpty()) {
             if (url.startsWith("redirect:")) {
 
@@ -80,32 +84,6 @@ public class AuthenServlet extends HttpServlet {
         }
     }
 
-    private String loginDoPost(HttpServletRequest request, HttpServletResponse response) {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-
-        AdminDAO adminDao = new AdminDAO();
-        List<Admin> listAdmin = adminDao.findAll();
-        for (Admin admin : listAdmin) {
-            if (admin.getUsername().equals(username.trim())
-                    && admin.getPassword().equals(password.trim())) {
-                if (!"active".equalsIgnoreCase(admin.getStatus())) {
-                    request.setAttribute("error", "Tài khoản của bạn đã bị khóa!");
-                    return "/view/authen/login.jsp";
-                }
-
-                HttpSession session = request.getSession();
-                session.setAttribute("admin", admin);
-
-                return "/view/authen/user.jsp";
-            }
-        }
-
-        request.setAttribute("error", "Username hoặc mật khẩu không chính xác!");
-        request.setAttribute("username", username);
-        return "/view/authen/login.jsp";
-    }
-
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
         String username = request.getParameter("username");
         UserDAO userDAO = new UserDAO();
@@ -116,6 +94,8 @@ public class AuthenServlet extends HttpServlet {
         }
         PasswordResetRequest req = new PasswordResetRequest();
         req.setUserId(user.getId());
+        req.setUsername(user.getUsername());
+        req.setCreatedAt(java.time.LocalDateTime.now());
         PasswordResetRequestDAO reqDao = new PasswordResetRequestDAO();
         int result = reqDao.insert(req);
         if (result > 0) {
@@ -124,6 +104,51 @@ public class AuthenServlet extends HttpServlet {
             request.setAttribute("error", "Có lỗi xảy ra, vui lòng thử lại sau");
         }
         return "/view/authen/forgotpass.jsp";
+    }
+
+    private boolean passwordMatches(String plain, String stored) {
+        if (stored == null) {
+            return false;
+        }
+        if (stored.startsWith("$2a$") || stored.startsWith("$2b$")) {
+            return BCryptUtils.verify(plain, stored);
+        }
+        return stored.equals(plain);
+    }
+
+    private String loginDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
+            request.setAttribute("error", "Vui lòng nhập thông tin đầy đủ");
+            return "view/authen/login.jsp";
+        }
+        try {
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findByUsername(username);
+
+            if (user == null || !passwordMatches(password, user.getPassword())) {
+                request.setAttribute("error", "Sai tên đăng nhập hoặc mật khẩu!");
+                return "view/authen/login.jsp";
+            }
+
+            if (!"active".equals(user.getStatus())) {
+                request.setAttribute("error", "Tài khoản đã bị khóa!");
+                return "view/authen/login.jsp";
+            }
+
+            HttpSession session = request.getSession();
+            session.setAttribute("loggedUser", user);
+            session.setAttribute("username", user.getUsername());
+
+            return "view/admin/admin-user.jsp";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
+            return "view/authen/login.jsp";
+        }
+
     }
 
 }

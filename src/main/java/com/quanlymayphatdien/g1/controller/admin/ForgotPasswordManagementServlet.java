@@ -9,6 +9,7 @@ import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.Admin;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -64,20 +65,28 @@ public class ForgotPasswordManagementServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/forgot-password");
             return;
         }
-        User user = userDAO.findById(req.getUserId());
-        if (user != null) {
-            user.setPassword(newPassword);
-            user.setUpdatedAt(LocalDateTime.now());
-            userDAO.update(user);
+        try {
+            String hashedPassword = BCryptUtils.hash(newPassword);
+
+            User user = userDAO.findById(req.getUserId());
+            if (user != null) {
+                userDAO.updatePassword(user.getId(), hashedPassword);
+            }
+
+            req.setStatus("approved");
+            req.setProcessedBy(3);
+            req.setNote(note);
+            req.setProcessedAt(LocalDateTime.now());
+            boolean updated = requestDAO.update(req);
+            if (updated) {
+                session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + " thành công");
+            } else {
+                session.setAttribute("error", "Không thể cập nhật yêu cầu. Vui lòng thử lại.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Lỗi hệ thống khi cấp mật khẩu: " + e.getMessage());
         }
-        req.setStatus("approved");
-//        req.setProcessedBy(admin.getId());
-        req.setProcessedBy(3);
-        req.setNewPassword(newPassword);
-        req.setNote(note);
-        req.setProcessedAt(LocalDateTime.now());
-        requestDAO.update(req);
-        session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + " thành công");
         response.sendRedirect(request.getContextPath() + "/admin/forgot-password");
     }
 

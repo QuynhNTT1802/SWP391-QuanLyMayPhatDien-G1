@@ -31,7 +31,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
     @Override
     public boolean update(User user) {
-        String sql = "UPDATE user SET name = ?, username = ?, password = ?, email = ?, phone = ?, "
+        String sql = "UPDATE user SET name = ?, username = ?, email = ?, phone = ?, "
                 + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
         try {
             connection = getConnection();
@@ -47,6 +47,20 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setInt(9, user.getUpdatedBy());
             statement.setInt(10, user.getId());
 
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean updatePassword(int userId, String password) {
+        String sql = "UPDATE user SET password = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, password);
+            statement.setInt(2, userId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
