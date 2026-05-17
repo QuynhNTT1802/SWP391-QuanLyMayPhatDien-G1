@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql);
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, user.getName());
             statement.setString(2, user.getUsername());
             statement.setString(3, user.getPassword());
