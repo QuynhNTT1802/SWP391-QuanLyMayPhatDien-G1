@@ -133,7 +133,7 @@
             </main>
         </div>
 
-        <script src="assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script>
                                     function togglePw(btn) {
                                         var input = btn.previousElementSibling;
