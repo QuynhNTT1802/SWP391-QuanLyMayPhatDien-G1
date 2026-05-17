@@ -241,10 +241,29 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/view/admin/admin-js.js"></script>
         <script src="${pageContext.request.contextPath}/view/admin/theme.js"></script>
     </body>
+=======
+<script>
+  window.APP_CTX = '${pageContext.request.contextPath}';
+</script>
+<script src="${pageContext.request.contextPath}/assets/js/admin-js.js"></script>
+
+<c:if test="${not empty sessionScope.message}">
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    toast('${fn:escapeXml(sessionScope.message)}', 'success');
+  });
+</script>
+<c:remove var="message" scope="session" />
+</c:if>
+
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+</body>
+>>>>>>> origin/feature/homepage
 </html>
 
