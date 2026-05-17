@@ -84,6 +84,24 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
         return false;
     }
 
+    public List<Role> searchByName(String keyword) {
+        List<Role> list = new ArrayList<>();
+        String sql = "SELECT * FROM roles WHERE name LIKE ? OR description LIKE ? ORDER BY id";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            String likeKeyword = "%" + keyword + "%";
+            p.setString(1, likeKeyword);
+            p.setString(2, likeKeyword);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(getFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     @Override
     public List<Role> findAll() {
         List<Role> list = new ArrayList<>();

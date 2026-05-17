@@ -1,6 +1,8 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.User;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -79,7 +81,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(5, user.getPhone());
             statement.setString(6, user.getAddress());
             statement.setString(7, user.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
+            statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
             statement.setInt(9, user.getCreatedBy());
 
             int affectedRows = statement.executeUpdate();
@@ -113,20 +115,144 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         return null;
     }
 
-    public User findByName(String name) {
-        String sql = "SELECT * FROM user WHERE username = ?";
+    public boolean activateAccount(int userId) {
+        String sql = "UPDATE user SET status = ? WHERE id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, name);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return getFromResultSet(resultSet);
-            }
+            statement.setString(1, "active");
+            statement.setInt(2, userId);
+
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return false;
         }
-        return null;
+    }
+
+    public boolean deactivateAccount(int userId) {
+        String sql = "UPDATE user SET status = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, "inactive");
+            statement.setInt(2, userId);
+
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            return false;
+        }
+    }
+
+    public List<User> findUsersWithFilters(String roleFilter, String statusFilter, String searchFilter, int page, int pageSize) {
+        List<User> allUsers = new ArrayList<>();
+        String sql = "SELECT u.* FROM user u WHERE 1=1 ";
+        List<String> inputs = new ArrayList<>();
+
+        if (roleFilter != null && !roleFilter.isEmpty()) {
+            sql += "AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
+            inputs.add(roleFilter);
+        }
+
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            sql += "AND u.status = ? ";
+            inputs.add(statusFilter);
+        }
+
+        if (searchFilter != null && !searchFilter.trim().isEmpty()) {
+            sql += "AND (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?) ";
+            String searchPattern = "%" + searchFilter.trim() + "%";
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+        }
+
+        sql += "ORDER BY u.created_at DESC";
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+
+            for (int i = 0; i < inputs.size(); i++) {
+                statement.setString(i + 1, inputs.get(i));
+            }
+
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                allUsers.add(getFromResultSet(resultSet));
+            }
+
+            if (allUsers.isEmpty()) {
+                return allUsers;
+            }
+
+            int start = (page - 1) * pageSize;
+            int end = Math.min(start + pageSize, allUsers.size());
+
+            if (start > allUsers.size()) {
+                return new ArrayList<>();
+            }
+
+            return allUsers.subList(start, end);
+
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        }
+        return new ArrayList<>();
+    }
+
+
+    public List<User> findUsersWithRoles(String roleFilter, String statusFilter,
+            String searchFilter, int page, int pageSize) {
+        List<User> users = findUsersWithFilters(roleFilter, statusFilter, searchFilter, page, pageSize);
+        RoleDAO roleDAO = new RoleDAO();
+        for (User user : users) {
+            user.setRoles(roleDAO.getRolesByUserId(user.getId()));
+        }
+        return users;
+    }
+
+    public int getTotalFilteredUsers(String roleFilter, String statusFilter, String searchFilter) {
+        String sql = "SELECT COUNT(*) FROM user u WHERE 1=1 ";
+        List<String> inputs = new ArrayList<>();
+
+        if (roleFilter != null && !roleFilter.isEmpty()) {
+            sql += "AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
+            inputs.add(roleFilter);
+        }
+
+        if (statusFilter != null && !statusFilter.isEmpty()) {
+            sql += "AND u.status = ? ";
+            inputs.add(statusFilter);
+        }
+
+        if (searchFilter != null && !searchFilter.trim().isEmpty()) {
+            sql += "AND (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?) ";
+            String searchPattern = "%" + searchFilter.trim() + "%";
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
+        }
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+
+            for (int i = 0; i < inputs.size(); i++) {
+                statement.setString(i + 1, inputs.get(i));
+            }
+
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+        } 
+        return 0;
     }
 
     @Override
@@ -178,16 +304,14 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
-        }
+        } 
         return false;
     }
 
     public boolean isEmailExists(String email, Integer userId) {
         String sql = "SELECT COUNT(*) FROM user WHERE email = ?";
         if (userId != null) {
-            sql += " AND user_id != ?";
+            sql += " AND id != ?";
         }
         try {
             connection = getConnection();
@@ -201,17 +325,15 @@ public class UserDAO extends DBContext implements I_DAO<User> {
                 return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.out.println("Error checking email existence: " + e.getMessage());
-        } finally {
-            closeResources();
-        }
+            System.out.println(e.getMessage());
+        } 
         return false;
     }
 
     public boolean isPhoneExists(String phone, Integer userId) {
         String sql = "SELECT COUNT(*) FROM user WHERE phone = ?";
         if (userId != null) {
-            sql += " AND user_id != ?";
+            sql += " AND id != ?";
         }
         try {
             connection = getConnection();
@@ -225,11 +347,83 @@ public class UserDAO extends DBContext implements I_DAO<User> {
                 return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            System.out.println("Error checking phone existence: " + e.getMessage());
-        } finally {
-            closeResources();
+            System.out.println(e.getMessage());
         }
         return false;
     }
 
+    public int countUsersByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM user WHERE status = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, status);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countAllUsers() {
+        String sql = "SELECT COUNT(*) FROM user";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+    
+    public void updateUserRoles(int userId, List<Integer> roleIds) throws SQLException {
+        String deleteOld = "delete from user_roles where user_id = ?";
+        String insertNew = "insert into user_roles (user_id, role_id) values (?,?)";
+        
+        try (Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                PreparedStatement del = c.prepareStatement(deleteOld);
+                del.setInt(1, userId);
+                del.executeUpdate();
+                
+                if (roleIds != null && !roleIds.isEmpty()){
+                    PreparedStatement ins = c.prepareStatement(insertNew);
+                    for (Integer roleId : roleIds) {
+                        ins.setInt(1, userId);
+                        ins.setInt(2, roleId);
+                        ins.addBatch();
+                    }
+                    ins.executeBatch();
+                }
+                c.commit();
+            } catch (Exception e) {
+                c.rollback();
+                throw e;
+            }
+        }
+    }
+    
+     public User findByName(String name) {
+        String sql = "SELECT * FROM user WHERE username = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, name);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
 }
