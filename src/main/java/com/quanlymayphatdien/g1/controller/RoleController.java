@@ -57,7 +57,13 @@ public class RoleController extends HttpServlet {
 
     //TASK 12: VIEW ROLE LIST
     private void viewRoleList(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        List<Role> roleList = roleDAO.findAll();
+        String search = request.getParameter("search");
+        List<Role> roleList;
+        if (search != null && !search.trim().isEmpty()) {
+            roleList = roleDAO.searchByName(search.trim());
+        } else {
+            roleList = roleDAO.findAll();
+        }
         request.setAttribute("roleList", roleList);
 
         request.getRequestDispatcher("/view/admin/rbac-roles.jsp").forward(request, response);
@@ -66,12 +72,18 @@ public class RoleController extends HttpServlet {
     //TASK 13: VIEW ROLE EDIT
     private void viewRolePermission(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String idParam = request.getParameter("id");
+        String permSearch = request.getParameter("permSearch");
         
         List<Permission> allPermissions = perDAO.findAll();
         
         // Ví dụ: "users" -> [Xem, Tạo, Sửa, Xoá]
         Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
         for (Permission p : allPermissions) {
+            if (permSearch != null && !permSearch.trim().isEmpty()) {
+                if (!p.getResource().toLowerCase().contains(permSearch.trim().toLowerCase())) {
+                    continue;
+                }
+            }
             groupedPerms.computeIfAbsent(p.getResource(), k -> new ArrayList<>()).add(p);
         }
         request.setAttribute("groupedPerms", groupedPerms);

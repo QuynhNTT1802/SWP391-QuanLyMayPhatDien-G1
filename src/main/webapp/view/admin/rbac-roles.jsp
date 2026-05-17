@@ -5,7 +5,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Phân quyền (RBAC) — Warehouse OS</title>
+        <title>Phân quyền</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,15 +58,17 @@
                         <p>Quản lý các vai trò trong hệ thống. Mỗi vai trò định nghĩa quyền truy cập tới các module qua các hành động tương ứng.</p>
                     </div>
 
-                    <div class="search-bar">
+                    <form method="GET" action="${pageContext.request.contextPath}/admin/roles" class="search-bar">
                         <div class="input has-icon" style="max-width: 360px;">
                             <span class="leading">
                                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                             </span>
-                            <input type="text" id="roleSearch" placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..." autocomplete="off">
+                            <input type="text" name="search" id="roleSearch" placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..." value="${param.search}" autocomplete="off">
                         </div>
-                        <span class="search-count" id="searchCount"></span>
-                    </div>
+                        <c:if test="${not empty param.search}">
+                            <span class="search-count">${roleList.size()} vai trò</span>
+                        </c:if>
+                    </form>
 
                     <section id="view-list">
                         <div class="roles-grid" id="rolesGrid">

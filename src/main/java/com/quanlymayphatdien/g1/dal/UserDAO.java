@@ -1,6 +1,8 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.User;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -93,7 +95,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(5, user.getPhone());
             statement.setString(6, user.getAddress());
             statement.setString(7, user.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
+            statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
             statement.setInt(9, user.getCreatedBy());
 
             int affectedRows = statement.executeUpdate();
@@ -233,14 +235,16 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         return new ArrayList<>();
     }
 
-//    public List<User> findUsersWithRoles(String roleFilter, String statusFilter, String searchFilter, int page, int pageSize) {
-//        List<User> users = findUsersWithFilters(roleFilter, statusFilter, searchFilter, page, pageSize);
-//        RoleDAO roleDAO = new RoleDAO();
-//        for (User user : users) {
-//            user.setRoles(roleDAO.getRolesByUserId(user.getId()));
-//        }
-//        return users;
-//    }
+
+    public List<User> findUsersWithRoles(String roleFilter, String statusFilter,
+            String searchFilter, int page, int pageSize) {
+        List<User> users = findUsersWithFilters(roleFilter, statusFilter, searchFilter, page, pageSize);
+        RoleDAO roleDAO = new RoleDAO();
+        for (User user : users) {
+            user.setRoles(roleDAO.getRolesByUserId(user.getId()));
+        }
+        return users;
+    }
 
     public int getTotalFilteredUsers(String roleFilter, String statusFilter, String searchFilter) {
         String sql = "SELECT COUNT(*) FROM user u WHERE 1=1 ";
@@ -409,5 +413,34 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
         return 0;
     }
+    
+    public void updateUserRoles(int userId, List<Integer> roleIds) throws SQLException {
+        String deleteOld = "delete from user_roles where user_id = ?";
+        String insertNew = "insert into user_roles (user_id, role_id) values (?,?)";
+        
+        try (Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                PreparedStatement del = c.prepareStatement(deleteOld);
+                del.setInt(1, userId);
+                del.executeUpdate();
+                
+                if (roleIds != null && !roleIds.isEmpty()){
+                    PreparedStatement ins = c.prepareStatement(insertNew);
+                    for (Integer roleId : roleIds) {
+                        ins.setInt(1, userId);
+                        ins.setInt(2, roleId);
+                        ins.addBatch();
+                    }
+                    ins.executeBatch();
+                }
+                c.commit();
+            } catch (Exception e) {
+                c.rollback();
+                throw e;
+            }
+        }
+    }
+    
 
 }
