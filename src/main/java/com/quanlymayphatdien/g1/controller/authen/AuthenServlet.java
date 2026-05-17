@@ -4,6 +4,7 @@
  */
 package com.quanlymayphatdien.g1.controller.authen;
 
+import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
@@ -18,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -137,6 +139,10 @@ public class AuthenServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("loggedUser", user);
             session.setAttribute("username", user.getUsername());
+
+            PermissionDAO perDAO = new PermissionDAO();
+            Set<String> perms = perDAO.getEffectPermissions(user.getId());
+            session.setAttribute("userPermissions", perms);
 
             return "redirect:/admin/dashboard";
 

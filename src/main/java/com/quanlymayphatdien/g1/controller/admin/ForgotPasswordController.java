@@ -31,6 +31,11 @@ public class ForgotPasswordController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         PasswordResetRequestDAO passwordResetRequestDAO = new PasswordResetRequestDAO();
         List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll();
         List<PasswordResetRequest> pendingList = passwordResetRequestDAO.findByStatus("pending");
@@ -44,11 +49,14 @@ public class ForgotPasswordController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String requestIdStr = request.getParameter("requestId");
         String newPassword = request.getParameter("newPassword");
         String note = request.getParameter("note");
-        HttpSession session = request.getSession();
-//        Admin admin = (Admin) session.getAttribute("admin");
 
         if (requestIdStr == null || newPassword == null || newPassword.trim().isEmpty()) {
             session.setAttribute("error", "Vui lòng nhập mật khẩu mới");
