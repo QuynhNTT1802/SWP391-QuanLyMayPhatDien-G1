@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -114,6 +115,23 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
         return null;
     }
+    
+    public User findByUsername(String username) {
+        String sql = "SELECT * FROM user WHERE username = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, username);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } 
+        return null;
+    }
+    
 
     public boolean activateAccount(int userId) {
         String sql = "UPDATE user SET status = ? WHERE id = ?";
