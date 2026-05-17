@@ -69,6 +69,12 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
+        if (!phone.trim().matches("^(0[3|5|7|8|9])[0-9]{8}$")) {
+            request.setAttribute("error", "SĐT không hợp lệ (10 số, bắt đầu 03/05/07/08/09).");
+            doGet(request, response);
+            return;
+        }
+
         UserDAO userDAO = new UserDAO();
         User user = userDAO.findById(currentUser.getId());
 
