@@ -9,5 +9,5 @@
 <html>
     <h1>403 — Không có quyền truy cập</h1>
     <p>Bạn không có quyền "${requiredPerm}" để truy cập trang này.</p>
-    <a href="${pageContext.request.contextPath}/admin/dashboard">Về Dashboard</a>
+    <a href="${pageContext.request.contextPath}/dashboard">Về Dashboard</a>
 </html>

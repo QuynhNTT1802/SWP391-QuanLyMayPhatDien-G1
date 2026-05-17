@@ -25,7 +25,7 @@ import java.util.Map;
  * @author Aadmin
  */
 @WebServlet(name = "UserManagementServlet", urlPatterns = {"/admin/users"})
-public class UserManagementServlet extends HttpServlet {
+public class UserManagementController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

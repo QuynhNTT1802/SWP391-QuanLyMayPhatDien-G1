@@ -92,7 +92,7 @@
 <body>
 <div class="app">
 
-  <jsp:include page="../common/dashboard/aside.jsp" />
+  <jsp:include page="../common/admin/aside.jsp" />
 
   <div>
     <header class="topbar" data-od-id="topbar">

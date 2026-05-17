@@ -58,9 +58,6 @@ public class AuthenServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "";
-        }
         String url = "";
         switch (action) {
             case "login":
@@ -141,7 +138,7 @@ public class AuthenServlet extends HttpServlet {
             session.setAttribute("loggedUser", user);
             session.setAttribute("username", user.getUsername());
 
-            return "view/admin/dashboard.jsp";
+            return "redirect:/dashboard";
 
         } catch (Exception e) {
             e.printStackTrace();
