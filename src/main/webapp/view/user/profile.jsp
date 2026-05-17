@@ -667,6 +667,7 @@
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cur.email)) errors.email = 'Email không hợp lệ.';
 
     if (!cur.phone) errors.phone = 'SĐT không được để trống.';
+    else if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(cur.phone)) errors.phone = 'SĐT không hợp lệ (10 số, bắt đầu 03/05/07/08/09).';
 
     return errors;
   }
