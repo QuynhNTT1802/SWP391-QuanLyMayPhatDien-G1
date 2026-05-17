@@ -1,5 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
