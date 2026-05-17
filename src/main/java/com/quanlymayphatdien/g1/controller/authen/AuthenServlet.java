@@ -138,7 +138,7 @@ public class AuthenServlet extends HttpServlet {
             session.setAttribute("loggedUser", user);
             session.setAttribute("username", user.getUsername());
 
-            return "redirect:/dashboard";
+            return "redirect:/admin/dashboard";
 
         } catch (Exception e) {
             e.printStackTrace();
