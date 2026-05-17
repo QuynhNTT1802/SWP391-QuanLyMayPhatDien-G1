@@ -35,7 +35,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         String sql = "UPDATE user SET name = ?, username = ?, email = ?, phone = ?, "
                 + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
         try {
+            
             connection = getConnection();
+            statement = connection.prepareStatement(sql); 
             statement.setString(1, user.getName());
             statement.setString(2, user.getUsername());
             statement.setString(3, user.getEmail());
