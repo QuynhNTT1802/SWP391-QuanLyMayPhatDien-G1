@@ -34,7 +34,7 @@ public class UserManagementServlet extends HttpServlet {
         if (action == null) {
             action = "list";
         }
-String url = null;
+        String url = null;
         switch (action) {
             case "create":
                 showCreateForm(request, response);
