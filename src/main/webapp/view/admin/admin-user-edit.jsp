@@ -6,7 +6,6 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="jakarta.tags.core" %>
-<%@taglib prefix="fn" uri="jakarta.tags.functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -215,7 +214,7 @@
 
       <div class="edit-hero">
         <div class="edit-avatar">
-          ${fn:substring(user.name, 0, 1)}
+          ${user.name.substring(0, 1)}
           <button class="avatar-edit-btn" title="Đổi ảnh"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
         </div>
         <div class="edit-hero-body">
@@ -239,7 +238,7 @@
       </div>
 
       <div class="form-layout">
-        <form class="form-card" id="editForm" action="${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}" method="POST" autocomplete="off">
+        <form class="form-card" id="editForm" action="${pageContext.request.contextPath}/admin/users?action=update&amp;id=${user.id}" method="POST" autocomplete="off">
           <input type="hidden" name="page" value="${param.page != null ? param.page : 1}" />
           <div class="form-section">
             <div class="form-section-head">
@@ -281,12 +280,6 @@
                 <label class="field-label">Chức danh</label>
                 <input class="input" name="title" data-orig="Quản lý kho" value="Quản lý kho" />
                 <div class="field-help">Hiển thị trong hồ sơ và phiếu nhập/xuất</div>
-              </div>
-              <div class="field">
-                <label class="field-label">Mật khẩu mới</label>
-                <input class="input mono" type="password" name="password" data-orig="" value="" autocomplete="new-password" />
-                <div class="field-help">Để trống nếu không đổi. Tối thiểu 6 ký tự, gồm chữ hoa, chữ thường và số.</div>
-                <c:if test="${not empty errors['password']}"><div class="field-error" style="display:block">${errors['password']}</div></c:if>
               </div>
             </div>
           </div>
@@ -432,8 +425,8 @@
 
   const form = document.getElementById('editForm');
   const original = {
-    name: '${user.name}', phone: '${user.phone}', address: '${user.address}', title: 'Quản lý kho',
-    role: 'manager', warehouse: 'HN-01', status: '${user.status}'
+    name: '<c:out value="${user.name}"/>', phone: '<c:out value="${user.phone}"/>', address: '<c:out value="${user.address}"/>', title: 'Quản lý kho',
+    role: 'manager', warehouse: 'HN-01', status: '<c:out value="${user.status}"/>'
   };
   const current = { ...original };
 
