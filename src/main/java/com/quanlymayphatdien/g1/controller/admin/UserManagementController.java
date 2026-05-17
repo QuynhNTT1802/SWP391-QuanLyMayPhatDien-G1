@@ -22,7 +22,7 @@ import java.util.Map;
  * @author Aadmin
  */
 @WebServlet(name = "UserManagementServlet", urlPatterns = {"/admin/users"})
-public class UserManagementServlet extends HttpServlet {
+public class UserManagementController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -31,7 +31,7 @@ public class UserManagementServlet extends HttpServlet {
         if (action == null) {
             action = "list";
         }
-String url = null;
+        String url = null;
         switch (action) {
             case "create":
                 showCreateForm(request, response);

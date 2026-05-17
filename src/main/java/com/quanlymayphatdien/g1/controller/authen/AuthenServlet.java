@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
  */
-package com.quanlymayphatdien.g1.controller;
+package com.quanlymayphatdien.g1.controller.authen;
 
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
@@ -58,9 +58,6 @@ public class AuthenServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "";
-        }
         String url = "";
         switch (action) {
             case "login":
@@ -141,7 +138,7 @@ public class AuthenServlet extends HttpServlet {
             session.setAttribute("loggedUser", user);
             session.setAttribute("username", user.getUsername());
 
-            return "view/admin/admin-user.jsp";
+            return "redirect:/dashboard";
 
         } catch (Exception e) {
             e.printStackTrace();

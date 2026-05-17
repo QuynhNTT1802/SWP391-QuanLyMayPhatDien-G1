@@ -1,4 +1,4 @@
-package com.quanlymayphatdien.g1.controller;
+package com.quanlymayphatdien.g1.controller.admin;
 
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;

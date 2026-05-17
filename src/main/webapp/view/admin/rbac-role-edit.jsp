@@ -18,28 +18,7 @@
 <body>
 <div class="app">
 
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-mark">WH</div>
-            <div>Warehouse OS</div>
-        </div>
-        <nav class="nav">
-            <div class="nav-section">Tổng quan</div>
-            <a href="#">Dashboard</a>
-            <a href="#">Tồn kho</a>
-            <div class="nav-section">Quản trị</div>
-            <a href="#">Người dùng</a>
-            <a href="${pageContext.request.contextPath}/admin/roles" style="color: var(--accent); font-weight: 600;">Phân quyền</a>
-            <a href="#">Nhà cung cấp</a>
-        </nav>
-        <div class="sidebar-footer">
-            <div class="avatar">MH</div>
-            <div class="user-meta">
-                <div class="name">Mai Hoàng</div>
-                <div class="role">Super Admin</div>
-            </div>
-        </div>
-    </aside>
+   <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
     <div>
         <header class="topbar topbar-edit">
