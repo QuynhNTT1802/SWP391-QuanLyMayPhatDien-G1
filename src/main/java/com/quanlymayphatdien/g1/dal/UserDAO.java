@@ -29,22 +29,35 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
     @Override
     public boolean update(User user) {
-        String sql = "UPDATE user SET name = ?, username = ?, password = ?, email = ?, phone = ?, "
+        String sql = "UPDATE user SET name = ?, username = ?, email = ?, phone = ?, "
                 + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, user.getName());
             statement.setString(2, user.getUsername());
-            statement.setString(3, user.getPassword());
-            statement.setString(4, user.getEmail());
-            statement.setString(5, user.getPhone());
-            statement.setString(6, user.getAddress());
-            statement.setString(7, user.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(user.getUpdatedAt()));
-            statement.setNull(9, Types.INTEGER);  
-            statement.setInt(10, user.getId());
+            statement.setString(3, user.getEmail());
+            statement.setString(4, user.getPhone());
+            statement.setString(5, user.getAddress());
+            statement.setString(6, user.getStatus());
+            statement.setTimestamp(7, Timestamp.valueOf(user.getUpdatedAt()));
+            statement.setNull(8, Types.INTEGER);
+            statement.setInt(9, user.getId());
 
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean updatePassword(int userId, String password) {
+        String sql = "UPDATE user SET password = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, password);
+            statement.setInt(2, userId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -119,7 +132,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, username);
             statement.setString(1, username);
             resultSet = statement.executeQuery();
             if (resultSet.next()) {

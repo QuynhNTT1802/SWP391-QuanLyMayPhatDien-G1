@@ -117,7 +117,7 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
             statement.setInt(6, req.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         } finally {
             closeResources();
         }

@@ -5,8 +5,8 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -548,7 +548,7 @@
           <div class="info">Hiển thị <strong id="rangeFrom">${(currentPage - 1) * 10 + 1}</strong>–<strong id="rangeTo">${currentPage * 10 > totalUsers ? totalUsers : currentPage * 10}</strong> / <strong id="totalFiltered">${totalUsers}</strong> kết quả</div>
           <div class="controls">
             <c:if test="${currentPage > 1}">
-              <a href="?action=list&page=${currentPage - 1}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">‹</a>
+              <a href="?action=list&amp;page=${currentPage - 1}${searchFilter != null ? '&amp;search=' : ''}${searchFilter}${roleFilter != null ? '&amp;role=' : ''}${roleFilter}${statusFilter != null ? '&amp;status=' : ''}${statusFilter}" class="page-btn">‹</a>
             </c:if>
             <c:forEach begin="1" end="${totalPages}" var="p">
               <c:choose>
@@ -556,12 +556,12 @@
                   <span class="page-btn active">${p}</span>
                 </c:when>
                 <c:otherwise>
-                  <a href="?action=list&page=${p}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">${p}</a>
+                  <a href="?action=list&amp;page=${p}${searchFilter != null ? '&amp;search=' : ''}${searchFilter}${roleFilter != null ? '&amp;role=' : ''}${roleFilter}${statusFilter != null ? '&amp;status=' : ''}${statusFilter}" class="page-btn">${p}</a>
                 </c:otherwise>
               </c:choose>
             </c:forEach>
             <c:if test="${currentPage < totalPages}">
-              <a href="?action=list&page=${currentPage + 1}${searchFilter != null ? '&search=' : ''}${searchFilter}${roleFilter != null ? '&role=' : ''}${roleFilter}${statusFilter != null ? '&status=' : ''}${statusFilter}" class="page-btn">›</a>
+              <a href="?action=list&amp;page=${currentPage + 1}${searchFilter != null ? '&amp;search=' : ''}${searchFilter}${roleFilter != null ? '&amp;role=' : ''}${roleFilter}${statusFilter != null ? '&amp;status=' : ''}${statusFilter}" class="page-btn">›</a>
             </c:if>
           </div>
         </div>
