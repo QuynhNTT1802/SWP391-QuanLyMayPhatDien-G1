@@ -590,7 +590,7 @@
 <script>
   window.APP_CTX = '${pageContext.request.contextPath}';
 </script>
-<script src="${pageContext.request.contextPath}/view/admin/admin-js.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/admin-js.js"></script>
 
 <c:if test="${not empty sessionScope.message}">
 <script>

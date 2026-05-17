@@ -414,173 +414,24 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
-  const ctx = '${pageContext.request.contextPath}';
-  const ROLE_LABEL = { admin: 'Admin', manager: 'Quản lý kho', keeper: 'Thủ kho', account: 'Kế toán', staff: 'Nhân viên', viewer: 'Viewer' };
-  const STATUS_LABEL = { active: 'Hoạt động', inactive: 'Chưa kích hoạt', pending: 'Chờ duyệt', locked: 'Bị khoá' };
-  const WH_LABEL = { 'HN-01': 'HN-01 Hà Nội', 'HCM-03': 'HCM-03 TP.HCM', 'DN-02': 'DN-02 Đà Nẵng', 'ALL': 'Toàn hệ thống' };
-  const FIELD_LABEL = {
-    name: 'Họ và tên', phone: 'Số điện thoại', address: 'Địa chỉ', title: 'Chức danh',
-    role: 'Vai trò', warehouse: 'Kho phụ trách', status: 'Trạng thái'
+  window.CTX = '${pageContext.request.contextPath}';
+  window.USER_DATA = {
+    name: '<c:out value="${user.name}"/>',
+    phone: '<c:out value="${user.phone}"/>',
+    address: '<c:out value="${user.address}"/>',
+    status: '<c:out value="${user.status}"/>'
   };
-
-  const form = document.getElementById('editForm');
-  const original = {
-    name: '<c:out value="${user.name}"/>', phone: '<c:out value="${user.phone}"/>', address: '<c:out value="${user.address}"/>', title: 'Quản lý kho',
-    role: 'manager', warehouse: 'HN-01', status: '<c:out value="${user.status}"/>'
-  };
-  const current = { ...original };
-
-  // role cards
-  document.querySelectorAll('.role-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      card.querySelector('input').checked = true;
-      current.role = card.dataset.role;
-      diffField('role');
-      updateUI();
-    });
-  });
-
-  // status segmented
-  const statusSeg = document.querySelector('.seg[data-name="status"]');
-  statusSeg.addEventListener('click', e => {
-    const btn = e.target.closest('.seg-opt');
-    if (!btn) return;
-    statusSeg.querySelectorAll('.seg-opt').forEach(o => o.classList.remove('active'));
-    btn.classList.add('active');
-    current.status = btn.dataset.val;
-    document.querySelector('input[name="status"]').value = btn.dataset.val;
-    diffField('status');
-    updateUI();
-  });
-
-  // input watchers
-  ['name', 'phone', 'address', 'title'].forEach(name => {
-    const el = form.elements[name];
-    if (el) el.addEventListener('input', () => { current[name] = el.value; diffField(name); updateUI(); });
-  });
-  form.elements.warehouse.addEventListener('change', e => { current.warehouse = e.target.value; diffField('warehouse'); updateUI(); });
-
-  function diffField(name) {
-    const isDirty = String(current[name]).trim() !== String(original[name]).trim();
-    const inputName = (name === 'status') ? null : name;
-    if (inputName) {
-      const el = form.elements[inputName];
-      if (el) el.classList.toggle('dirty', isDirty);
-    }
-  }
-
-  function getDirtyFields() {
-    return Object.keys(original).filter(k => String(current[k]).trim() !== String(original[k]).trim());
-  }
-  function isValid() {
-    const name = current.name.trim();
-    const phone = current.phone.trim();
-    const phoneOk = !phone || /^(\+84|0)\s?[3-9]\d{1}[\s\d]{6,12}$/.test(phone);
-    document.querySelector('[name="name"]').classList.toggle('error', name.length > 0 && name.length < 2);
-    document.querySelector('[name="name"]').closest('.field').classList.toggle('invalid', name.length > 0 && name.length < 2);
-    document.querySelector('[name="phone"]').classList.toggle('error', !phoneOk);
-    document.querySelector('[name="phone"]').closest('.field').classList.toggle('invalid', !phoneOk);
-    return name.length >= 2 && phoneOk;
-  }
-
-  function updateUI() {
-    const dirty = getDirtyFields();
-    document.body.classList.toggle('has-changes', dirty.length > 0);
-    document.getElementById('dirtyPill').textContent = dirty.length + ' trường';
-    const badge = document.getElementById('changeBadge');
-    badge.textContent = dirty.length;
-    badge.classList.toggle('has-changes', dirty.length > 0);
-
-    const list = document.getElementById('changesList');
-    if (dirty.length === 0) {
-      list.innerHTML = '<div class="changes-empty">Chưa có thay đổi nào.<br>Sửa thông tin để xem diff.</div>';
-    } else {
-      list.innerHTML = dirty.map(k => {
-        const from = formatValue(k, original[k]);
-        const to = formatValue(k, current[k]);
-        return `<div class="change-item"><span class="field">${FIELD_LABEL[k]}</span><span class="from">${from}</span><span class="arrow">→</span><span class="to">${to}</span></div>`;
-      }).join('');
-    }
-  }
-  function formatValue(field, value) {
-    if (field === 'role') return ROLE_LABEL[value] || value;
-    if (field === 'status') return STATUS_LABEL[value] || value;
-    if (field === 'warehouse') return WH_LABEL[value] || value;
-    return value || '—';
-  }
-
-  // save / cancel
-  document.getElementById('saveBtn').addEventListener('click', save);
-  document.getElementById('cancelBtn').addEventListener('click', cancel);
-
-  function save() {
-    if (!isValid()) { toast('Vui lòng kiểm tra các trường được tô đỏ', 'danger'); return; }
-    form.submit();
-  }
-  function cancel() {
-    const dirty = getDirtyFields();
-    if (dirty.length === 0) { location.href = ctx + '/admin/users?action=list'; return; }
-    confirmAction('Huỷ thay đổi?', `Bạn có ${dirty.length} thay đổi chưa lưu. Tất cả sẽ bị mất nếu rời khỏi.`, () => {
-      location.href = ctx + '/admin/users?action=list';
-    });
-  }
-
-  // keyboard
-  document.addEventListener('keydown', e => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); save(); }
-    else if (e.key === 'Escape') { cancel(); }
-  });
-  window.addEventListener('beforeunload', e => {
-    if (getDirtyFields().length > 0) { e.preventDefault(); e.returnValue = ''; }
-  });
-
-  // danger actions
-  document.querySelectorAll('[data-danger]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.danger;
-      if (action === 'reset-pw') confirmAction('Gửi reset mật khẩu?', 'Email sẽ gửi link đặt lại mật khẩu.', () => toast('Đã gửi email reset mật khẩu', 'success'));
-      else if (action === 'logout-all') confirmAction('Đăng xuất mọi thiết bị?', 'User phải đăng nhập lại.', () => toast('Đã đăng xuất tất cả thiết bị', 'success'));
-      else if (action === 'delete') confirmAction('Xoá tài khoản?', 'Soft delete · có thể khôi phục trong 30 ngày.', () => { toast('Đã xoá tài khoản', 'success'); setTimeout(() => location.href = ctx + '/admin/users?action=list', 1200); });
-    });
-  });
-
-  // modal
-  let confirmCb = null;
-  function confirmAction(title, text, cb) {
-    document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalText').textContent = text;
-    confirmCb = cb;
-    document.getElementById('confirmModal').classList.add('open');
-  }
-  document.getElementById('modalCancel').addEventListener('click', () => { document.getElementById('confirmModal').classList.remove('open'); confirmCb = null; });
-  document.getElementById('modalConfirm').addEventListener('click', () => { if (confirmCb) confirmCb(); document.getElementById('confirmModal').classList.remove('open'); confirmCb = null; });
-  document.getElementById('confirmModal').addEventListener('click', e => { if (e.target.id === 'confirmModal') { document.getElementById('confirmModal').classList.remove('open'); confirmCb = null; } });
-
-  function toast(msg, type = 'default') {
-    const host = document.getElementById('toastHost');
-    const t = document.createElement('div');
-    t.className = 'toast ' + type;
-    const icon = type === 'success' ? '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>' : type === 'danger' ? '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>' : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
-    t.innerHTML = icon + '<span>' + msg + '</span>';
-    host.appendChild(t);
-    requestAnimationFrame(() => t.classList.add('show'));
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 200); }, 2800);
-  }
-
-  updateUI();
-
-  // show session message as toast
+  window.SESSION_DATA = {};
   <c:if test="${not empty sessionScope.message}">
-  toast('${sessionScope.message}', 'success');
+  window.SESSION_DATA.message = '${sessionScope.message}';
   <c:remove var="message" scope="session"/>
   </c:if>
   <c:if test="${not empty sessionScope.errors}">
-  toast('Vui lòng kiểm tra lại thông tin', 'danger');
+  window.SESSION_DATA.error = true;
   <c:remove var="errors" scope="session"/>
   <c:remove var="formData" scope="session"/>
   </c:if>
 </script>
+<script src="${pageContext.request.contextPath}/assets/js/admin-user-edit.js"></script>
 </body>
 </html>
