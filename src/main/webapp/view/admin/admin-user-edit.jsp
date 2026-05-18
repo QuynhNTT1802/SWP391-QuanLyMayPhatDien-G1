@@ -276,11 +276,6 @@
                 <input class="input" name="address" data-orig="${user.address}" value="${not empty formData ? formData['address'][0] : user.address}" />
                 <div class="field-help">Địa chỉ liên hệ</div>
               </div>
-              <div class="field">
-                <label class="field-label">Chức danh</label>
-                <input class="input" name="title" data-orig="Quản lý kho" value="Quản lý kho" />
-                <div class="field-help">Hiển thị trong hồ sơ và phiếu nhập/xuất</div>
-              </div>
             </div>
           </div>
 
@@ -365,13 +360,13 @@
                         <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px dashed var(--border);">
                           <span style="flex: 1; font-size: 12px; font-weight: 600;">${perm.description != null ? perm.description : perm.action}</span>
                           <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--muted);">
-                            <input type="radio" name="perOverride_${perm.permissionId}" value="default" ${empty ovType ? 'checked' : ''} /> Mac dinh
+                            <input type="radio" name="perOverride_${perm.permissionId}" value="default" data-resource="${perm.resource}" data-action="${perm.action}" ${empty ovType ? 'checked' : ''} /> Mac dinh
                           </label>
                           <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--accent); font-weight: 600;">
-                            <input type="radio" name="perOverride_${perm.permissionId}" value="GRANT" ${ovType == 'GRANT' ? 'checked' : ''} /> GRANT
+                            <input type="radio" name="perOverride_${perm.permissionId}" value="GRANT" data-resource="${perm.resource}" data-action="${perm.action}" ${ovType == 'GRANT' ? 'checked' : ''} /> GRANT
                           </label>
                           <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--danger); font-weight: 600;">
-                            <input type="radio" name="perOverride_${perm.permissionId}" value="DENY" ${ovType == 'DENY' ? 'checked' : ''} /> DENY
+                            <input type="radio" name="perOverride_${perm.permissionId}" value="DENY" data-resource="${perm.resource}" data-action="${perm.action}" ${ovType == 'DENY' ? 'checked' : ''} /> DENY
                           </label>
                         </div>
                       </c:forEach>

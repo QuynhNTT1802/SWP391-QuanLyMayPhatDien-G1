@@ -57,7 +57,6 @@
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
             Ton kho
-            <span class="count">12.4k</span>
         </a>
         <% } %>
         <% if (hasImportExport) { %>
@@ -79,15 +78,28 @@
         <a href="<%=request.getContextPath()%>/admin/users">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Nguoi dung
-            <span class="count">142</span>
         </a>
         <% } %>
+
         <% if (hasRoles) { %>
         <a href="<%=request.getContextPath()%>/admin/roles">
             <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Phan quyen
         </a>
         <% } %>
+
+        <% if (hasRoles) { %>
+        <a href="<%=request.getContextPath()%>/admin/forgot-password">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M3 21v-5h5"></path>
+            </svg>
+            Cấp mật khẩu
+        </a>
+        <% } %>
+
         <% if (hasSuppliers) { %>
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
