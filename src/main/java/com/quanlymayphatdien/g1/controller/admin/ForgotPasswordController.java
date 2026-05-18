@@ -54,15 +54,16 @@ public class ForgotPasswordController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
+        
         String requestIdStr = request.getParameter("requestId");
-        String newPassword = request.getParameter("newPassword");
         String note = request.getParameter("note");
 
-        if (requestIdStr == null || newPassword == null || newPassword.trim().isEmpty()) {
-            session.setAttribute("error", "Vui lòng nhập mật khẩu mới");
+        if (requestIdStr == null) {
+            session.setAttribute("error", "Thiếu thông tin");
             response.sendRedirect(request.getContextPath() + "/admin/forgot-password");
             return;
         }
+        
         int requestId = Integer.parseInt(requestIdStr);
 
         PasswordResetRequestDAO requestDAO = new PasswordResetRequestDAO();
@@ -74,8 +75,8 @@ public class ForgotPasswordController extends HttpServlet {
             return;
         }
         try {
-            String hashedPassword = BCryptUtils.hash(newPassword);
-
+            String generatedPassword = BCryptUtils.generatePassword();
+            String hashedPassword = BCryptUtils.hash(generatedPassword);
             User user = userDAO.findById(req.getUserId());
             if (user != null) {
                 userDAO.updatePassword(user.getId(), hashedPassword);
@@ -87,7 +88,7 @@ public class ForgotPasswordController extends HttpServlet {
             req.setProcessedAt(LocalDateTime.now());
             boolean updated = requestDAO.update(req);
             if (updated) {
-                session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + " thành công");
+                session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + ": " + generatedPassword);
             } else {
                 session.setAttribute("error", "Không thể cập nhật yêu cầu. Vui lòng thử lại.");
             }
