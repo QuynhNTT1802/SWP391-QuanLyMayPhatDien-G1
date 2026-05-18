@@ -18,10 +18,10 @@ import java.util.Set;
 public class SecurityFilter implements Filter {
 
     private static final Map<String, String> perMap = Map.ofEntries(
-        Map.entry("/admin/dashboard",     "dashboard.view"),
-        Map.entry("/admin/users",         "users.view"),
-        Map.entry("/admin/roles",         "roles.view"),
-        Map.entry("/admin/role/edit",     "roles.edit"),
+        Map.entry("/admin/dashboard","dashboard.view"),
+        Map.entry("/admin/users","users.view"),
+        Map.entry("/admin/roles","roles.view"),
+        Map.entry("/admin/role/edit","roles.edit"),
         Map.entry("/admin/role/save",     "roles.edit"),
         Map.entry("/admin/forgot-password","forgot_pw.process")
     );

@@ -289,7 +289,7 @@
               <div class="form-section-head-left">
                 <div class="form-section-num">02 — VAI TRÒ &amp; KHO</div>
                 <h3 class="form-section-title">Phân quyền hệ thống</h3>
-                <div class="form-section-desc">Đổi vai trò sẽ áp dụng bộ quyền mới. Thay đổi này được ghi vào audit log.</div>
+                <div class="form-section-desc">Chon nhieu vai tro de phan quyen linh hoat. Bo check de go bo vai tro.</div>
               </div>
             </div>
             <div class="form-grid single">
@@ -299,13 +299,15 @@
                   <c:forEach var="role" items="${allRoles}">
                     <c:if test="${role.status == 'active'}">
                       <c:set var="isSelected" value="false" />
-                      <c:forEach var="userRole" items="${user.roles}">
-                        <c:if test="${userRole.roleId == role.roleId}">
-                          <c:set var="isSelected" value="true" />
-                        </c:if>
-                      </c:forEach>
-                      <label class="role-card ${isSelected ? 'selected' : ''}">
-                        <input type="checkbox" name="roleIds" value="${role.roleId}" ${isSelected ? 'checked' : ''} />
+                      <c:if test="${not empty user.roles}">
+                        <c:forEach var="userRole" items="${user.roles}">
+                          <c:if test="${userRole.roleId == role.roleId}">
+                            <c:set var="isSelected" value="true" />
+                          </c:if>
+                        </c:forEach>
+                      </c:if>
+                      <label class="role-card ${isSelected ? 'selected' : ''}" data-role-id="${role.roleId}" data-orig-checked="${isSelected}">
+                        <input type="radio" name="roleIds" value="${role.roleId}" ${isSelected ? 'checked' : ''} />
                         <div class="role-card-name">${role.roleName}</div>
                         <div class="role-card-desc">${role.description}</div>
                       </label>
