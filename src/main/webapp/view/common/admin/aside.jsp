@@ -57,14 +57,14 @@
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
             Ton kho
-            <span class="count">12.4k</span>
+            <span class="count"></span>
         </a>
         <% } %>
         <% if (hasImportExport) { %>
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
             Phieu nhap/xuat
-            <span class="count">23</span>
+            <span class="count"></span>
         </a>
         <% } %>
         <% if (hasOrders) { %>
@@ -79,7 +79,7 @@
         <a href="<%=request.getContextPath()%>/admin/users">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Nguoi dung
-            <span class="count">142</span>
+            <span class="count"></span>
         </a>
         <% } %>
         <% if (hasRoles) { %>
