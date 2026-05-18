@@ -5,6 +5,7 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -84,6 +85,11 @@
                 line-height: 1.45;
             }
 
+            .alert { padding: 12px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+            .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+            .alert-success { background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+            .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); }
+
             .icon-badge {
                 width: 44px;
                 height: 44px;
@@ -115,28 +121,28 @@
                 <div class="visual-body">
                     <div class="vis-eyebrow"><span class="dot"></span>Khôi phục</div>
                     <h2 class="vis-title">Lấy lại quyền <em>truy cập</em> kho.</h2>
-                    <p class="vis-sub">Chúng tôi sẽ gửi một liên kết khôi phục đến email của bạn. Liên kết hết hạn sau 15 phút.</p>
+                    <p class="vis-sub">Gửi yêu cầu cấp lại mật khẩu — admin sẽ xử lý và cấp mật khẩu mới cho bạn.</p>
 
                     <div class="steps">
                         <div class="step active">
                             <div class="step-num">1</div>
                             <div class="step-body">
-                                <div class="step-title">Nhập email</div>
-                                <div class="step-sub">Email bạn đã dùng để tạo tài khoản.</div>
+                                <div class="step-title">Nhập tên đăng nhập</div>
+                                <div class="step-sub">Tên đăng nhập bạn đã dùng để tạo tài khoản.</div>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-num">2</div>
                             <div class="step-body">
-                                <div class="step-title">Mở email và bấm vào liên kết</div>
-                                <div class="step-sub">Nếu không thấy, kiểm tra thư mục Spam / Quảng cáo.</div>
+                                <div class="step-title">Admin xét duyệt</div>
+                                <div class="step-sub">Yêu cầu của bạn được gửi đến admin để xử lý.</div>
                             </div>
                         </div>
                         <div class="step">
                             <div class="step-num">3</div>
                             <div class="step-body">
-                                <div class="step-title">Đặt mật khẩu mới</div>
-                                <div class="step-sub">Tối thiểu 8 ký tự, có chữ và số.</div>
+                                <div class="step-title">Admin cấp mật khẩu mới</div>
+                                <div class="step-sub">Đăng nhập với mật khẩu mới do admin cung cấp.</div>
                             </div>
                         </div>
                     </div>
@@ -145,7 +151,7 @@
 
             <main class="form-side">
                 <div class="form-top">
-                    <a href="login.html" class="back">
+                    <a href="authen?action=login" class="back">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại đăng nhập
                     </a>
@@ -163,22 +169,35 @@
 
                         <div class="form-head">
                             <h1>Quên mật khẩu?</h1>
-                            <p>Nhập email tài khoản — chúng tôi sẽ gửi liên kết khôi phục trong vòng 1 phút.</p>
+                            <p>Nhập tên đăng nhập — admin sẽ cấp lại mật khẩu mới cho bạn.</p>
                         </div>
 
-                        <div class="field">
-                            <label for="email">Email tài khoản</label>
-                            <div class="input has-icon">
-                                <span class="leading"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
+                        <c:if test="${not empty message}">
+                        <div class="alert alert-success">
+                            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                            <span>${message}</span>
+                        </div>
+                        </c:if>
+                        <c:if test="${not empty error}">
+                        <div class="alert alert-error">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                            <span>${error}</span>
+                        </div>
+                        </c:if>
 
-                                <input name="username" id="email" type="email" placeholder="ban@congty.vn" autocomplete="email" required>
+                        <div class="field">
+                            <label for="username">Tên đăng nhập</label>
+                            <div class="input has-icon">
+                                <span class="leading"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></span>
+
+                                <input name="username" id="username" type="text" placeholder="Nhập tên đăng nhập" required>
                             </div>
 
                         </div>
-                        <button type="submit" class="btn-primary">Gửi liên kết khôi phục</button>   
+                        <button type="submit" class="btn-primary">Gửi yêu cầu</button>   
 
                         <div class="form-foot">
-                            Nhớ mật khẩu rồi? <a href="authen?action=">Đăng nhập</a>
+                            Nhớ mật khẩu rồi? <a href="authen?action=login">Đăng nhập</a>
                         </div>
                         <div class="form-bottom">
                             <a href="auth-gallery.html">Xem tất cả màn auth</a>
