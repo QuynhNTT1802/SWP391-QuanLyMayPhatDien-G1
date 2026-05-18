@@ -5,7 +5,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Phân quyền (RBAC) — Warehouse OS</title>
+        <title>Phân quyền</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,32 +19,17 @@
     <body>
         <div class="app">
 
-            <aside class="sidebar">
-                <div class="brand">
-                    <div class="brand-mark">WH</div>
-                    <div>Warehouse OS</div>
-                </div>
-                <nav class="nav">
-                    <div class="nav-section">Tổng quan</div>
-                    <a href="index.html">Dashboard</a>
-                    <a href="#">Tồn kho</a>
-
-                    <div class="nav-section">Quản trị</div>
-                    <a href="#">Người dùng</a>
-                    <a href="#" style="color: var(--accent); font-weight: 600;">Phân quyền</a> <a href="#">Nhà cung cấp</a>
-                </nav>
-            </aside>
-
-            <div>
-                <header class="topbar">
-                    <h1>Phân quyền</h1>
-                    <span class="crumb">/ <a href="#">Quản trị</a> / Phân quyền</span>
-                    <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
-                        <a href="${pageContext.request.contextPath}/admin/role/edit" class="btn btn-primary" style="text-decoration: none;">
+            <jsp:include page="../common/admin/aside.jsp"></jsp:include>
+                <div>
+                    <header class="topbar">
+                        <h1>Phân quyền</h1>
+                        <span class="crumb">/ <a href="#">Quản trị</a> / Phân quyền</span>
+                        <div class="top-actions">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            </button>
+                            <a href="${pageContext.request.contextPath}/admin/role/edit" class="btn btn-primary" style="text-decoration: none;">
                             <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M12 5v14M5 12h14"/></svg>
                             Tạo vai trò mới
                         </a>
@@ -58,15 +43,17 @@
                         <p>Quản lý các vai trò trong hệ thống. Mỗi vai trò định nghĩa quyền truy cập tới các module qua các hành động tương ứng.</p>
                     </div>
 
-                    <div class="search-bar">
+                    <form method="GET" action="${pageContext.request.contextPath}/admin/roles" class="search-bar">
                         <div class="input has-icon" style="max-width: 360px;">
                             <span class="leading">
                                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                             </span>
-                            <input type="text" id="roleSearch" placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..." autocomplete="off">
+                            <input type="text" name="search" id="roleSearch" placeholder="Tìm kiếm vai trò theo tên hoặc mô tả..." value="${param.search}" autocomplete="off">
                         </div>
-                        <span class="search-count" id="searchCount"></span>
-                    </div>
+                        <c:if test="${not empty param.search}">
+                            <span class="search-count">${roleList.size()} vai trò</span>
+                        </c:if>
+                    </form>
 
                     <section id="view-list">
                         <div class="roles-grid" id="rolesGrid">

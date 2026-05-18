@@ -23,7 +23,7 @@
 </head>
 <body>
 <div class="app">
-    <jsp:include page="../common/dashboard/aside.jsp"></jsp:include>
+    <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
     <div>
         <header class="topbar">

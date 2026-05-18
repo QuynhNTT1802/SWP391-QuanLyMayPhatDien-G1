@@ -10,8 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-@WebServlet(name = "ChangePasswordServlet", urlPatterns = {"/changepass"})
-public class ChangePasswordServlet extends HttpServlet {
+@WebServlet(name = "ProfileServlet", urlPatterns = {"/profile"})
+public class ProfileServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -28,11 +28,12 @@ public class ChangePasswordServlet extends HttpServlet {
 
         if (latestUser != null) {
             request.setAttribute("user", latestUser);
+            session.setAttribute("loggedUser", latestUser);
         } else {
             request.setAttribute("user", user);
         }
 
-        request.getRequestDispatcher("/view/user/changepass.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/user/profile.jsp").forward(request, response);
     }
 
     @Override
@@ -45,24 +46,31 @@ public class ChangePasswordServlet extends HttpServlet {
         }
 
         User currentUser = (User) session.getAttribute("loggedUser");
-        String currentPassword = request.getParameter("currentPassword");
-        String newPassword = request.getParameter("newPassword");
-        String confirmPassword = request.getParameter("confirmPassword");
+        String name = request.getParameter("fullName");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String address = request.getParameter("address");
 
-        if (currentPassword == null || currentPassword.trim().isEmpty()) {
-            request.setAttribute("error", "Vui lòng nhập mật khẩu hiện tại.");
+        if (name == null || name.trim().isEmpty()) {
+            request.setAttribute("error", "Họ tên không được để trống.");
             doGet(request, response);
             return;
         }
 
-        if (newPassword == null || newPassword.trim().length() < 6) {
-            request.setAttribute("error", "Mật khẩu mới phải có ít nhất 6 ký tự.");
+        if (email == null || email.trim().isEmpty()) {
+            request.setAttribute("error", "Email không được để trống.");
             doGet(request, response);
             return;
         }
 
-        if (!newPassword.equals(confirmPassword)) {
-            request.setAttribute("error", "Mật khẩu xác nhận không khớp.");
+        if (phone == null || phone.trim().isEmpty()) {
+            request.setAttribute("error", "Số điện thoại không được để trống.");
+            doGet(request, response);
+            return;
+        }
+
+        if (!phone.trim().matches("^(0[3|5|7|8|9])[0-9]{8}$")) {
+            request.setAttribute("error", "SĐT không hợp lệ (10 số, bắt đầu 03/05/07/08/09).");
             doGet(request, response);
             return;
         }
@@ -70,26 +78,25 @@ public class ChangePasswordServlet extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.findById(currentUser.getId());
 
-        if (user == null || !user.getPassword().equals(currentPassword)) {
-            request.setAttribute("error", "Mật khẩu hiện tại không đúng.");
-            doGet(request, response);
-            return;
-        }
+        if (user != null) {
+            user.setName(name.trim());
+            user.setEmail(email.trim());
+            user.setPhone(phone.trim());
+            user.setAddress(address != null ? address.trim() : "");
+            user.setUpdatedAt(LocalDateTime.now());
+            user.setUpdatedBy(currentUser.getId());
 
-        user.setPassword(newPassword);
-        user.setUpdatedAt(LocalDateTime.now());
-        user.setUpdatedBy(currentUser.getId());
+            boolean updated = userDAO.update(user);
 
-        boolean updated = userDAO.update(user);
-
-        if (updated) {
-            session.setAttribute("loggedUser", user);
-            request.setAttribute("success", "Đổi mật khẩu thành công!");
-        } else {
-            request.setAttribute("error", "Có lỗi xảy ra khi đổi mật khẩu.");
+            if (updated) {
+                session.setAttribute("loggedUser", user);
+                request.setAttribute("success", "Cập nhật hồ sơ thành công!");
+            } else {
+                request.setAttribute("error", "Có lỗi xảy ra khi cập nhật hồ sơ.");
+            }
         }
 
         request.setAttribute("user", user);
-        request.getRequestDispatcher("/view/user/changepass.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/user/profile.jsp").forward(request, response);
     }
 }

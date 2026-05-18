@@ -1,10 +1,12 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
+import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.utils.PasswordUtils;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -12,22 +14,30 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/**
- * @author Aadmin
- */
 @WebServlet(name = "UserManagementServlet", urlPatterns = {"/admin/users"})
-public class UserManagementServlet extends HttpServlet {
+public class UserManagementController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -41,8 +51,15 @@ public class UserManagementServlet extends HttpServlet {
                 showCreateForm(request, response);
                 break;
             case "update":
-                showUpdateForm(request, response);
+            {
+                try {
+                    showUpdateForm(request, response);
+                } catch (SQLException ex) {
+                    Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
                 break;
+
             case "deactivate":
                 deactivateUser(request, response);
                 break;
@@ -59,6 +76,11 @@ public class UserManagementServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -83,12 +105,47 @@ public class UserManagementServlet extends HttpServlet {
         }
     }
 
+    private void viewDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String userIdStr = request.getParameter("id");
+        if (userIdStr != null && !userIdStr.isEmpty()) {
+            int userId = Integer.parseInt(userIdStr);
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findById(userId);
+            if (user != null) {
+                RoleDAO roleDAO = new RoleDAO();
+                user.setRoles(roleDAO.getRolesByUserId(userId));
+                request.setAttribute("user", user);
+
+                // Tính initials
+                String name = user.getName() != null ? user.getName().trim() : "";
+                int sp = name.lastIndexOf(' ');
+                request.setAttribute("userInitials",
+                        name.isEmpty() ? "?" : (name.substring(0, 1)
+                        + (sp >= 0 && sp + 1 < name.length() ? name.substring(sp + 1, sp + 2) : ""))
+                        .toUpperCase());
+
+                // Format dates
+                java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(df) : "—");
+                request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
+
+                request.getRequestDispatcher("/view/admin/admin-user-detail.jsp").forward(request, response);
+                return;
+            }
+        }
+        response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
+    }
+
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/create-user.jsp");
+        RoleDAO roleDAO = new RoleDAO();
+        request.setAttribute("allRoles", roleDAO.findAll());
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/admin-user-create.jsp");
         dispatcher.forward(request, response);
     }
 
-    private void createUser(HttpServletRequest request, HttpServletResponse response)
+ private void createUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String username = request.getParameter("username");
@@ -113,7 +170,7 @@ public class UserManagementServlet extends HttpServlet {
             };
             newUser.setUsername(username);
             newUser.setEmail(email);
-            newUser.setPassword(PasswordUtils.hash(password));
+            newUser.setPassword(BCryptUtils.hash(password));
             newUser.setName(name);
             newUser.setPhone(phone);
             newUser.setAddress(address);
@@ -125,24 +182,25 @@ public class UserManagementServlet extends HttpServlet {
             UserDAO userDAO = new UserDAO();
             int newUserId = userDAO.insert(newUser);
             if (newUserId > 0) {
-                String roleParam = request.getParameter("role");
-                if (roleParam != null && !roleParam.isEmpty()) {
+                String[] roleIdsParam = request.getParameterValues("roleIds");
+                List<Integer> roleIdList = new ArrayList<>();
+                if (roleIdsParam != null) {
+                    for (String r : roleIdsParam) {
+                        roleIdList.add(Integer.parseInt(r));
+                    }
+                }
+                if (!roleIdList.isEmpty()) {
+                    userDAO.updateUserRoles(newUserId, roleIdList);
+
                     RoleDAO roleDAO = new RoleDAO();
-                    int roleId = -1;
                     for (Role r : roleDAO.findAll()) {
-                        if (r.getRoleName().equals(roleParam)) {
-                            roleId = r.getRoleId();
+                        if (roleIdList.contains(r.getRoleId()) && "admin".equals(r.getRoleName())) {
+                            String sql = "INSERT INTO admin (admin_id) VALUES (?)";
+                            try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
+                                ps.setInt(1, newUserId);
+                                ps.executeUpdate();
+                            }
                             break;
-                        }
-                    }
-                    if (roleId > 0) {
-                        userDAO.updateUserRoles(newUserId, java.util.List.of(roleId));
-                    }
-                    if ("admin".equals(roleParam)) {
-                        String sql = "INSERT INTO admin (admin_id) VALUES (?)";
-                        try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
-                            ps.setInt(1, newUserId);
-                            ps.executeUpdate();
                         }
                     }
                 }
@@ -158,14 +216,29 @@ public class UserManagementServlet extends HttpServlet {
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, SQLException {
         String userIdStr = request.getParameter("id");
         if (userIdStr != null && !userIdStr.isEmpty()) {
             int userId = Integer.parseInt(userIdStr);
             UserDAO userDAO = new UserDAO();
             User user = userDAO.findById(userId);
             if (user != null) {
+                RoleDAO roleDAO = new RoleDAO();
+                user.setRoles(roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
+                request.setAttribute("allRoles", roleDAO.findAll());
+
+                PermissionDAO perDAO = new PermissionDAO();
+                List<Permission> allPermissions = perDAO.findAll();
+                List<String[]> userOverrides = perDAO.getUserOverrides(userId);
+
+                Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
+                for (Permission p : allPermissions) {
+                    groupedPerms.computeIfAbsent(p.getResource(), k -> new ArrayList<>()).add(p);
+                }
+                request.setAttribute("groupedPerms", groupedPerms);
+                request.setAttribute("userOverrides", userOverrides);
+
                 request.getRequestDispatcher("/view/admin/admin-user-edit.jsp").forward(request, response);
                 return;
             }
@@ -211,7 +284,32 @@ public class UserManagementServlet extends HttpServlet {
                 user.setUpdatedBy(1);
 
                 boolean isUpdated = userDAO.update(user);
+
+                //add role
                 if (isUpdated) {
+                    String[] roleIds = request.getParameterValues("roleIds");
+                    List<Integer> roleIdList = new ArrayList<>();
+                    if (roleIds != null) {
+                        for (String r : roleIds) {
+                            roleIdList.add(Integer.parseInt(r));
+                        }
+                    }
+                    userDAO.updateUserRoles(userId, roleIdList);
+
+                    String overrideSubmitted = request.getParameter("perOverride_submitted");
+                    if ("1".equals(overrideSubmitted)) {
+                        PermissionDAO perDAO = new PermissionDAO();
+                        List<Permission> allPermissions = perDAO.findAll();
+                        for (Permission perm : allPermissions) {
+                            String overrideType = request.getParameter("perOverride_" + perm.getPermissionId());
+                            if ("GRANT".equals(overrideType) || "DENY".equals(overrideType)) {
+                                perDAO.setUserOverride(userId, perm.getPermissionId(), overrideType);
+                            } else if ("default".equals(overrideType)) {
+                                perDAO.removeUserOverride(userId, perm.getPermissionId());
+                            }
+                        }
+                    }
+
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
@@ -226,7 +324,7 @@ public class UserManagementServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
     }
 
-    private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
+  private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
         Map<String, String> errors = new HashMap<>();
         UserDAO userDAO = new UserDAO();
 
@@ -234,7 +332,7 @@ public class UserManagementServlet extends HttpServlet {
             if (username.length() < 3 || username.length() > 50) {
                 errors.put("username", "Tên đăng nhập phải có độ dài từ 3 đến 50 ký tự");
             } else if (!username.matches("^[a-zA-Z0-9_]+$")) {
-                errors.put("username", "Tên đăng nhập phải chứa chứa chữ cái, số và dấu gạch dưới");
+                errors.put("username", "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới");
             } else if (userDAO.isUsernameExists(username)) {
                 errors.put("username", "Tên đăng nhập đã tồn tại");
             }
@@ -276,7 +374,7 @@ public class UserManagementServlet extends HttpServlet {
         return errors;
     }
 
-    private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+  private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
@@ -342,38 +440,6 @@ public class UserManagementServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
 
-    private void viewDetail(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String userIdStr = request.getParameter("id");
-        if (userIdStr != null && !userIdStr.isEmpty()) {
-            int userId = Integer.parseInt(userIdStr);
-            UserDAO userDAO = new UserDAO();
-            User user = userDAO.findById(userId);
-            if (user != null) {
-                RoleDAO roleDAO = new RoleDAO();
-                user.setRoles(roleDAO.getRolesByUserId(userId));
-                request.setAttribute("user", user);
-
-                // Tính initials
-                String name = user.getName() != null ? user.getName().trim() : "";
-                int sp = name.lastIndexOf(' ');
-                request.setAttribute("userInitials",
-                        name.isEmpty() ? "?" : (name.substring(0, 1)
-                        + (sp >= 0 && sp + 1 < name.length() ? name.substring(sp + 1, sp + 2) : ""))
-                        .toUpperCase());
-
-                // Format dates
-                java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(df) : "—");
-                request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
-
-                request.getRequestDispatcher("/view/admin/user-detail.jsp").forward(request, response);
-                return;
-            }
-        }
-        response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
-    }
 
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String searchFilter = request.getParameter("search");
@@ -416,8 +482,8 @@ public class UserManagementServlet extends HttpServlet {
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
-
-    private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
+    
+     private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
         List<String> userInitials = new ArrayList<>();
         List<String> userAvatarClass = new ArrayList<>();
         List<String> userCreatedDate = new ArrayList<>();
@@ -452,4 +518,5 @@ public class UserManagementServlet extends HttpServlet {
         request.setAttribute("nowFormatted",
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
     }
+
 }
