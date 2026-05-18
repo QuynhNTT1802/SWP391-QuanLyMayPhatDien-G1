@@ -18,6 +18,7 @@ public class Admin extends User {
     private LocalDateTime lastLogin;
 
    
+
     public Admin(int id, String name, String username, String password, String email, String phone, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer createdBy, Integer updatedBy, List<Role> roles, Set<String> effectPermissions, String department1, LocalDateTime lastLogin1) {
         super();
     }
@@ -26,12 +27,11 @@ public class Admin extends User {
         this.department = department;
         this.lastLogin = lastLogin;
     }
+    
+    
+    
 
-    public Admin(String department, LocalDateTime lastLogin, Integer id, String name, String username, String password, String email, String phone, String address, String status, LocalDateTime createdAt, LocalDateTime updatedAt, Integer createdBy, Integer updatedBy, List<Role> roles, Set<String> effectivePermissions) {
-        super(id, name, username, password, email, phone, address, status, createdAt, updatedAt, createdBy, updatedBy, roles, effectivePermissions);
-        this.department = department;
-        this.lastLogin = lastLogin;
-    }
+
 
     
     

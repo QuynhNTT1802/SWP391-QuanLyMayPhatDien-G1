@@ -9,6 +9,7 @@ import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.Admin;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -25,11 +26,16 @@ import java.util.List;
  * @author FPTShop
  */
 @WebServlet(name = "ForgotPasswordManagementServlet", urlPatterns = {"/admin/forgot-password"})
-public class ForgotPasswordManagementServlet extends HttpServlet {
+public class ForgotPasswordController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         PasswordResetRequestDAO passwordResetRequestDAO = new PasswordResetRequestDAO();
         List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll();
         List<PasswordResetRequest> pendingList = passwordResetRequestDAO.findByStatus("pending");
@@ -43,11 +49,14 @@ public class ForgotPasswordManagementServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String requestIdStr = request.getParameter("requestId");
         String newPassword = request.getParameter("newPassword");
         String note = request.getParameter("note");
-        HttpSession session = request.getSession();
-//        Admin admin = (Admin) session.getAttribute("admin");
 
         if (requestIdStr == null || newPassword == null || newPassword.trim().isEmpty()) {
             session.setAttribute("error", "Vui lòng nhập mật khẩu mới");
@@ -64,20 +73,28 @@ public class ForgotPasswordManagementServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/forgot-password");
             return;
         }
-        User user = userDAO.findById(req.getUserId());
-        if (user != null) {
-            user.setPassword(newPassword);
-            user.setUpdatedAt(LocalDateTime.now());
-            userDAO.update(user);
+        try {
+            String hashedPassword = BCryptUtils.hash(newPassword);
+
+            User user = userDAO.findById(req.getUserId());
+            if (user != null) {
+                userDAO.updatePassword(user.getId(), hashedPassword);
+            }
+
+            req.setStatus("approved");
+            req.setProcessedBy(3);
+            req.setNote(note);
+            req.setProcessedAt(LocalDateTime.now());
+            boolean updated = requestDAO.update(req);
+            if (updated) {
+                session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + " thành công");
+            } else {
+                session.setAttribute("error", "Không thể cập nhật yêu cầu. Vui lòng thử lại.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            session.setAttribute("error", "Lỗi hệ thống khi cấp mật khẩu: " + e.getMessage());
         }
-        req.setStatus("approved");
-//        req.setProcessedBy(admin.getId());
-        req.setProcessedBy(3);
-        req.setNewPassword(newPassword);
-        req.setNote(note);
-        req.setProcessedAt(LocalDateTime.now());
-        requestDAO.update(req);
-        session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + " thành công");
         response.sendRedirect(request.getContextPath() + "/admin/forgot-password");
     }
 

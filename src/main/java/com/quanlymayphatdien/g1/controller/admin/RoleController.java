@@ -1,4 +1,4 @@
-package com.quanlymayphatdien.g1.controller;
+package com.quanlymayphatdien.g1.controller.admin;
 
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
@@ -9,6 +9,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +30,11 @@ public class RoleController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String action = request.getServletPath();
         try {
             if ("/admin/roles".equals(action)) {
@@ -46,6 +52,11 @@ public class RoleController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         try {
             if ("/admin/role/save".equals(request.getServletPath())) {
                 saveRoleFull(request, response);
@@ -57,21 +68,33 @@ public class RoleController extends HttpServlet {
 
     //TASK 12: VIEW ROLE LIST
     private void viewRoleList(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        List<Role> roleList = roleDAO.findAll();
+        String search = request.getParameter("search");
+        List<Role> roleList;
+        if (search != null && !search.trim().isEmpty()) {
+            roleList = roleDAO.searchByName(search.trim());
+        } else {
+            roleList = roleDAO.findAll();
+        }
         request.setAttribute("roleList", roleList);
 
-        request.getRequestDispatcher("/view/admin/rbac-roles.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-role.jsp").forward(request, response);
     }
 
     //TASK 13: VIEW ROLE EDIT
     private void viewRolePermission(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String idParam = request.getParameter("id");
+        String permSearch = request.getParameter("permSearch");
         
         List<Permission> allPermissions = perDAO.findAll();
         
         // Ví dụ: "users" -> [Xem, Tạo, Sửa, Xoá]
         Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
         for (Permission p : allPermissions) {
+            if (permSearch != null && !permSearch.trim().isEmpty()) {
+                if (!p.getResource().toLowerCase().contains(permSearch.trim().toLowerCase())) {
+                    continue;
+                }
+            }
             groupedPerms.computeIfAbsent(p.getResource(), k -> new ArrayList<>()).add(p);
         }
         request.setAttribute("groupedPerms", groupedPerms);
@@ -87,7 +110,7 @@ public class RoleController extends HttpServlet {
             request.setAttribute("role", curRole);
             request.setAttribute("rolePermissions", rolePermissions);
         }
-        request.getRequestDispatcher("/view/admin/rbac-role-edit.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-role-edit.jsp").forward(request, response);
     }
 
     //TASK 14 & 16: SAVE EVERYTHING
