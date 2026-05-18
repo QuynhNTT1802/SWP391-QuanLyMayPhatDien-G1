@@ -102,7 +102,6 @@
                         <span class="count-pill" id="bulkCount">0</span>
                         <span>người dùng đã chọn</span>
                         <div class="bulk-actions">
-                            <button class="btn-tiny" data-bulk="role"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Đổi vai trò</button>
                             <button class="btn-tiny" data-bulk="lock"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</button>
                             <button class="btn-tiny" id="bulkClear">Bỏ chọn</button>
                         </div>
