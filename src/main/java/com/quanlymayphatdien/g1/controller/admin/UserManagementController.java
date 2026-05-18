@@ -1,7 +1,9 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
+import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
@@ -12,12 +14,18 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet(name = "UserManagementServlet", urlPatterns = {"/admin/users"})
 public class UserManagementController extends HttpServlet {
@@ -25,6 +33,11 @@ public class UserManagementController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -38,8 +51,15 @@ public class UserManagementController extends HttpServlet {
                 showCreateForm(request, response);
                 break;
             case "update":
-                showUpdateForm(request, response);
+            {
+                try {
+                    showUpdateForm(request, response);
+                } catch (SQLException ex) {
+                    Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
                 break;
+
             case "deactivate":
                 deactivateUser(request, response);
                 break;
@@ -56,6 +76,11 @@ public class UserManagementController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
         String action = request.getParameter("action");
         if (action == null) {
             action = "list";
@@ -114,6 +139,8 @@ public class UserManagementController extends HttpServlet {
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        RoleDAO roleDAO = new RoleDAO();
+        request.setAttribute("allRoles", roleDAO.findAll());
         RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/admin-user-create.jsp");
         dispatcher.forward(request, response);
     }
@@ -155,24 +182,25 @@ public class UserManagementController extends HttpServlet {
             UserDAO userDAO = new UserDAO();
             int newUserId = userDAO.insert(newUser);
             if (newUserId > 0) {
-                String roleParam = request.getParameter("role");
-                if (roleParam != null && !roleParam.isEmpty()) {
+                String[] roleIdsParam = request.getParameterValues("roleIds");
+                List<Integer> roleIdList = new ArrayList<>();
+                if (roleIdsParam != null) {
+                    for (String r : roleIdsParam) {
+                        roleIdList.add(Integer.parseInt(r));
+                    }
+                }
+                if (!roleIdList.isEmpty()) {
+                    userDAO.updateUserRoles(newUserId, roleIdList);
+
                     RoleDAO roleDAO = new RoleDAO();
-                    int roleId = -1;
                     for (Role r : roleDAO.findAll()) {
-                        if (r.getRoleName().equals(roleParam)) {
-                            roleId = r.getRoleId();
+                        if (roleIdList.contains(r.getRoleId()) && "admin".equals(r.getRoleName())) {
+                            String sql = "INSERT INTO admin (admin_id) VALUES (?)";
+                            try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
+                                ps.setInt(1, newUserId);
+                                ps.executeUpdate();
+                            }
                             break;
-                        }
-                    }
-                    if (roleId > 0) {
-                        userDAO.updateUserRoles(newUserId, java.util.List.of(roleId));
-                    }
-                    if ("admin".equals(roleParam)) {
-                        String sql = "INSERT INTO admin (admin_id) VALUES (?)";
-                        try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
-                            ps.setInt(1, newUserId);
-                            ps.executeUpdate();
                         }
                     }
                 }
@@ -188,14 +216,29 @@ public class UserManagementController extends HttpServlet {
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws ServletException, IOException, SQLException {
         String userIdStr = request.getParameter("id");
         if (userIdStr != null && !userIdStr.isEmpty()) {
             int userId = Integer.parseInt(userIdStr);
             UserDAO userDAO = new UserDAO();
             User user = userDAO.findById(userId);
             if (user != null) {
+                RoleDAO roleDAO = new RoleDAO();
+                user.setRoles(roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
+                request.setAttribute("allRoles", roleDAO.findAll());
+
+                PermissionDAO perDAO = new PermissionDAO();
+                List<Permission> allPermissions = perDAO.findAll();
+                List<String[]> userOverrides = perDAO.getUserOverrides(userId);
+
+                Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
+                for (Permission p : allPermissions) {
+                    groupedPerms.computeIfAbsent(p.getResource(), k -> new ArrayList<>()).add(p);
+                }
+                request.setAttribute("groupedPerms", groupedPerms);
+                request.setAttribute("userOverrides", userOverrides);
+
                 request.getRequestDispatcher("/view/admin/admin-user-edit.jsp").forward(request, response);
                 return;
             }
@@ -252,6 +295,21 @@ public class UserManagementController extends HttpServlet {
                         }
                     }
                     userDAO.updateUserRoles(userId, roleIdList);
+
+                    String overrideSubmitted = request.getParameter("perOverride_submitted");
+                    if ("1".equals(overrideSubmitted)) {
+                        PermissionDAO perDAO = new PermissionDAO();
+                        List<Permission> allPermissions = perDAO.findAll();
+                        for (Permission perm : allPermissions) {
+                            String overrideType = request.getParameter("perOverride_" + perm.getPermissionId());
+                            if ("GRANT".equals(overrideType) || "DENY".equals(overrideType)) {
+                                perDAO.setUserOverride(userId, perm.getPermissionId(), overrideType);
+                            } else if ("default".equals(overrideType)) {
+                                perDAO.removeUserOverride(userId, perm.getPermissionId());
+                            }
+                        }
+                    }
+
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
