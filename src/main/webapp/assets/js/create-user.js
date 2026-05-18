@@ -67,85 +67,85 @@ form.addEventListener('input', e => {
     validate();
 });
 
-// password generator
-document.getElementById('pwGen').addEventListener('click', () => {
-    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-    const lower = 'abcdefghjkmnpqrstuvwxyz';
-    const nums = '23456789';
-    const syms = '!@#$%&*?';
-    const all = upper + lower + nums + syms;
-    let pw = upper[Math.floor(Math.random() * upper.length)] + lower[Math.floor(Math.random() * lower.length)] + nums[Math.floor(Math.random() * nums.length)] + syms[Math.floor(Math.random() * syms.length)];
-    for (let i = 0; i < 10; i++)
-        pw += all[Math.floor(Math.random() * all.length)];
-    pw = pw.split('').sort(() => Math.random() - 0.5).join('');
-    form.password.value = pw;
-    updatePwStrength();
-    validate();
-});
+//// password generator
+//document.getElementById('pwGen').addEventListener('click', () => {
+//    const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+//    const lower = 'abcdefghjkmnpqrstuvwxyz';
+//    const nums = '23456789';
+//    const syms = '!@#$%&*?';
+//    const all = upper + lower + nums + syms;
+//    let pw = upper[Math.floor(Math.random() * upper.length)] + lower[Math.floor(Math.random() * lower.length)] + nums[Math.floor(Math.random() * nums.length)] + syms[Math.floor(Math.random() * syms.length)];
+//    for (let i = 0; i < 10; i++)
+//        pw += all[Math.floor(Math.random() * all.length)];
+//    pw = pw.split('').sort(() => Math.random() - 0.5).join('');
+//    form.password.value = pw;
+//    updatePwStrength();
+//    validate();
+//});
 
-function updatePwStrength() {
-    const v = form.password.value;
-    let score = 0;
-    if (v.length >= 10)
-        score++;
-    if (/[A-Z]/.test(v) && /[a-z]/.test(v))
-        score++;
-    if (/[0-9]/.test(v))
-        score++;
-    if (/[^A-Za-z0-9]/.test(v))
-        score++;
-    if (v.length >= 14)
-        score = Math.min(4, score + (score === 4 ? 0 : 0));
-    const bars = document.querySelectorAll('#pwStrength .bar');
-    bars.forEach((b, i) => {
-        b.className = 'bar';
-        if (i < score)
-            b.classList.add('lv' + score);
-    });
-    const label = document.getElementById('pwLabel');
-    label.className = 'strength';
-    if (!v) {
-        label.textContent = 'Chưa nhập';
-        return;
-    }
-    const map = {1: ['Rất yếu', 1], 2: ['Yếu', 2], 3: ['Khá', 3], 4: ['Mạnh', 4]};
-    if (map[score]) {
-        label.textContent = map[score][0];
-        label.classList.add('lv' + map[score][1]);
-    } else {
-        label.textContent = 'Rất yếu';
-        label.classList.add('lv1');
-    }
-}
-
-// validate
-function validate() {
-    const name = form.fullName.value.trim();
-    const email = form.email.value.trim();
-    const phone = form.phone.value.trim();
-    const wh = form.warehouse.value;
-    const pw = form.password.value;
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const phoneOk = !phone || /^(\+84|0)\s?[3-9]\d{1}[\s\d]{6,12}$/.test(phone);
-    const pwOk = mode !== 'create' || (pw.length >= 10 && /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw));
-    const ok = name.length >= 2 && emailOk && phoneOk && wh && pwOk;
-    document.getElementById('submitBtn').disabled = !ok;
-    document.getElementById('saveSub').textContent = ok
-            ? (mode === 'create' ? 'Sẵn sàng tạo · Người dùng có thể đăng nhập ngay' : 'Sẵn sàng gửi · Email kích hoạt có hiệu lực 24 giờ')
-            : 'Điền họ tên + email + chọn kho để bật nút lưu';
-
-    // field-level validation visuals
-    setFieldInvalid('fullName', name.length > 0 && name.length < 2);
-    setFieldInvalid('email', email.length > 0 && !emailOk);
-    setFieldInvalid('phone', phone.length > 0 && !phoneOk);
-}
-function setFieldInvalid(fieldName, isInvalid) {
-    const input = form.querySelector(`[name="${fieldName}"]`);
-    if (!input)
-        return;
-    input.classList.toggle('error', isInvalid);
-    input.closest('.field').classList.toggle('invalid', isInvalid);
-}
+//function updatePwStrength() {
+//    const v = form.password.value;
+//    let score = 0;
+//    if (v.length >= 10)
+//        score++;
+//    if (/[A-Z]/.test(v) && /[a-z]/.test(v))
+//        score++;
+//    if (/[0-9]/.test(v))
+//        score++;
+//    if (/[^A-Za-z0-9]/.test(v))
+//        score++;
+//    if (v.length >= 14)
+//        score = Math.min(4, score + (score === 4 ? 0 : 0));
+//    const bars = document.querySelectorAll('#pwStrength .bar');
+//    bars.forEach((b, i) => {
+//        b.className = 'bar';
+//        if (i < score)
+//            b.classList.add('lv' + score);
+//    });
+//    const label = document.getElementById('pwLabel');
+//    label.className = 'strength';
+//    if (!v) {
+//        label.textContent = 'Chưa nhập';
+//        return;
+//    }
+//    const map = {1: ['Rất yếu', 1], 2: ['Yếu', 2], 3: ['Khá', 3], 4: ['Mạnh', 4]};
+//    if (map[score]) {
+//        label.textContent = map[score][0];
+//        label.classList.add('lv' + map[score][1]);
+//    } else {
+//        label.textContent = 'Rất yếu';
+//        label.classList.add('lv1');
+//    }
+//}
+//
+//// validate
+//function validate() {
+//    const name = form.fullName.value.trim();
+//    const email = form.email.value.trim();
+//    const phone = form.phone.value.trim();
+//    const wh = form.warehouse.value;
+//    const pw = form.password.value;
+//    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+//    const phoneOk = !phone || /^(\+84|0)\s?[3-9]\d{1}[\s\d]{6,12}$/.test(phone);
+//    const pwOk = mode !== 'create' || (pw.length >= 10 && /[A-Z]/.test(pw) && /[0-9]/.test(pw) && /[^A-Za-z0-9]/.test(pw));
+//    const ok = name.length >= 2 && emailOk && phoneOk && wh && pwOk;
+//    document.getElementById('submitBtn').disabled = !ok;
+//    document.getElementById('saveSub').textContent = ok
+//            ? (mode === 'create' ? 'Sẵn sàng tạo · Người dùng có thể đăng nhập ngay' : 'Sẵn sàng gửi · Email kích hoạt có hiệu lực 24 giờ')
+//            : 'Điền họ tên + email + chọn kho để bật nút lưu';
+//
+//    // field-level validation visuals
+//    setFieldInvalid('fullName', name.length > 0 && name.length < 2);
+//    setFieldInvalid('email', email.length > 0 && !emailOk);
+//    setFieldInvalid('phone', phone.length > 0 && !phoneOk);
+//}
+//function setFieldInvalid(fieldName, isInvalid) {
+//    const input = form.querySelector(`[name="${fieldName}"]`);
+//    if (!input)
+//        return;
+//    input.classList.toggle('error', isInvalid);
+//    input.closest('.field').classList.toggle('invalid', isInvalid);
+//}
 
 // submit
 document.getElementById('submitBtn').addEventListener('click', () => {

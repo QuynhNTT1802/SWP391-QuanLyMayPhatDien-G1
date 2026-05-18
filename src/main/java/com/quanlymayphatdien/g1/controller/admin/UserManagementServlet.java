@@ -234,7 +234,7 @@ public class UserManagementServlet extends HttpServlet {
             if (username.length() < 3 || username.length() > 50) {
                 errors.put("username", "Tên đăng nhập phải có độ dài từ 3 đến 50 ký tự");
             } else if (!username.matches("^[a-zA-Z0-9_]+$")) {
-                errors.put("username", "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới");
+                errors.put("username", "Tên đăng nhập phải chứa chứa chữ cái, số và dấu gạch dưới");
             } else if (userDAO.isUsernameExists(username)) {
                 errors.put("username", "Tên đăng nhập đã tồn tại");
             }
