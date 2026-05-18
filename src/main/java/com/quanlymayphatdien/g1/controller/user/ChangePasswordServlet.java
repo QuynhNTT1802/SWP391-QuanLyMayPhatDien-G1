@@ -1,6 +1,8 @@
 package com.quanlymayphatdien.g1.controller.user;
+import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PASSWORD;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import jakarta.servlet.ServletException;
@@ -61,6 +63,12 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
 
+        if (!newPassword.matches(REGEX_PASSWORD)) {
+            request.setAttribute("error", "Mật khẩu mới phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số.");
+            doGet(request, response);
+            return;
+        }
+
         if (!newPassword.equals(confirmPassword)) {
             request.setAttribute("error", "Mật khẩu xác nhận không khớp.");
             doGet(request, response);
@@ -70,17 +78,30 @@ public class ChangePasswordServlet extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.findById(currentUser.getId());
 
-        if (user == null || !user.getPassword().equals(currentPassword)) {
+        if (user == null) {
+            request.setAttribute("error", "Không tìm thấy người dùng.");
+            doGet(request, response);
+            return;
+        }
+
+        boolean passwordCorrect = false;
+        if (user.getPassword().startsWith("$2a$") || user.getPassword().startsWith("$2b$")) {
+            passwordCorrect = BCryptUtils.verify(currentPassword, user.getPassword());
+        } else {
+            passwordCorrect = user.getPassword().equals(currentPassword);
+        }
+
+        if (!passwordCorrect) {
             request.setAttribute("error", "Mật khẩu hiện tại không đúng.");
             doGet(request, response);
             return;
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(BCryptUtils.hash(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         user.setUpdatedBy(currentUser.getId());
 
-        boolean updated = userDAO.update(user);
+        boolean updated = userDAO.updatePassword(user.getId(), user.getPassword());
 
         if (updated) {
             session.setAttribute("loggedUser", user);
