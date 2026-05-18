@@ -73,6 +73,12 @@ public class ProfileServlet extends HttpServlet {
         }
 
         UserDAO userDAO = new UserDAO();
+        if (userDAO.isPhoneExists(phone.trim(), currentUser.getId())) {
+            request.setAttribute("error", "Số điện thoại đã được sử dụng bởi tài khoản khác.");
+            doGet(request, response);
+            return;
+        }
+
         User user = userDAO.findById(currentUser.getId());
 
         if (user != null) {
