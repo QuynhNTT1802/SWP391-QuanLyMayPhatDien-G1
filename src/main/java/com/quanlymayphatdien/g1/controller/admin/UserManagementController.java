@@ -223,9 +223,9 @@ public class UserManagementController extends HttpServlet {
             UserDAO userDAO = new UserDAO();
             User user = userDAO.findById(userId);
             if (user != null) {
-                request.setAttribute("user", user);
-
                 RoleDAO roleDAO = new RoleDAO();
+                user.setRoles(roleDAO.getRolesByUserId(userId));
+                request.setAttribute("user", user);
                 request.setAttribute("allRoles", roleDAO.findAll());
 
                 PermissionDAO perDAO = new PermissionDAO();

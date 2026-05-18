@@ -113,7 +113,7 @@
                                             <c:forEach var="role" items="${allRoles}">
                                                 <c:if test="${role.status == 'active'}">
                                                     <label class="role-card">
-                                                        <input type="checkbox" name="roleIds" value="${role.roleId}" />
+                                                        <input type="radio" name="roleIds" value="${role.roleId}" />
                                                         <div class="role-card-name">${role.roleName}</div>
                                                         <div class="role-card-desc">${role.description}</div>
                                                     </label>
@@ -153,5 +153,20 @@
 
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script>
+          ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (card) {
+            card.addEventListener('click', function (e) {
+              e.preventDefault()
+              if (e.target.tagName === 'INPUT') return
+              if (card.classList.contains('selected')) return
+              ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (c) {
+                c.classList.remove('selected')
+                c.querySelector('input').checked = false
+              })
+              card.classList.add('selected')
+              card.querySelector('input').checked = true
+            })
+          })
+        </script>
     </body>
 </html>
