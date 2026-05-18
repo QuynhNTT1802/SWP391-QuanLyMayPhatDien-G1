@@ -124,7 +124,6 @@
                                             <label class="field-label">Trạng thái</label>
                                             <select class="select" name="status">
                                                 <option value="active">Hoạt động</option>
-                                                <option value="inactive">Không hoạt động</option>
                                                 <option value="locked">Bị khoá</option>
                                             </select>
                                         </div>

@@ -474,8 +474,6 @@ public class UserManagementController extends HttpServlet {
         request.setAttribute("searchFilter", searchFilter);
 
         request.setAttribute("activeCount", userDAO.countUsersByStatus("active"));
-        request.setAttribute("inactiveCount", userDAO.countUsersByStatus("inactive"));
-        request.setAttribute("pendingCount", userDAO.countUsersByStatus("pending"));
         request.setAttribute("lockedCount", userDAO.countUsersByStatus("locked"));
         request.setAttribute("now", LocalDateTime.now());
 
