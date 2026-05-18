@@ -16,28 +16,6 @@
     window.location.href = APP_CTX + '/admin/users?action=list';
   });
 
-  // check all checkboxes
-  document.getElementById('checkAll').addEventListener('change', e => {
-    document.querySelectorAll('.row-check').forEach(cb => {
-      cb.checked = e.target.checked;
-      cb.closest('tr').classList.toggle('selected', e.target.checked);
-    });
-    syncBulkBar();
-  });
-
-  document.getElementById('usersBody')?.addEventListener('change', e => {
-    if (e.target.classList.contains('row-check')) {
-      e.target.closest('tr').classList.toggle('selected', e.target.checked);
-      syncBulkBar();
-    }
-  });
-
-  function syncBulkBar() {
-    const n = document.querySelectorAll('.row-check:checked').length;
-    document.body.classList.toggle('has-selection', n > 0);
-    document.getElementById('bulkCount').textContent = n;
-  }
-
   // confirm actions
   function confirmDeactivate(userId, page) {
     confirmAction('Vô hiệu hoá tài khoản', 'Người dùng sẽ không thể đăng nhập cho tới khi bạn kích hoạt lại. Tiếp tục?', () => {
