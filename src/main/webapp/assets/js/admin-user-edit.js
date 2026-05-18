@@ -7,23 +7,46 @@
   var STATUS_LABEL = { active: 'Hoạt động', inactive: 'Chưa kích hoạt', pending: 'Chờ duyệt', locked: 'Bị khoá' }
   var WH_LABEL = { 'HN-01': 'HN-01 Hà Nội', 'HCM-03': 'HCM-03 TP.HCM', 'DN-02': 'DN-02 Đà Nẵng', 'ALL': 'Toàn hệ thống' }
   var FIELD_LABEL = {
-    name: 'Họ và tên', phone: 'Số điện thoại', address: 'Địa chỉ', status: 'Trạng thái'
+    name: 'Họ và tên', phone: 'Số điện thoại', address: 'Địa chỉ', status: 'Trạng thái',
+    role: 'Vai trò', permissions: 'Ghi đè quyền'
   }
 
   var form = document.getElementById('editForm')
+  function getSelectedRoleName() {
+    var sel = document.querySelector('.role-card.selected .role-card-name')
+    return sel ? sel.textContent.trim() : ''
+  }
+  function getPermissionSnapshot() {
+    var map = {}
+    ;[].slice.call(document.querySelectorAll('input[name^="perOverride_"]')).forEach(function (r) {
+      if (r.checked) map[r.name] = r.value
+    })
+    return JSON.stringify(map)
+  }
   var original = {
     name: USER.name,
     phone: USER.phone,
     address: USER.address,
-    status: USER.status
+    status: USER.status,
+    role: getSelectedRoleName(),
+    permissions: getPermissionSnapshot()
   }
-  var current = { name: USER.name, phone: USER.phone, address: USER.address, status: USER.status }
+  var current = { name: USER.name, phone: USER.phone, address: USER.address, status: USER.status, role: original.role, permissions: original.permissions }
 
   ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (card) {
-    card.addEventListener('click', function () {
-      ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (c) { c.classList.remove('selected') })
+    card.addEventListener('click', function (e) {
+      e.preventDefault()
+      if (e.target.tagName === 'INPUT') return
+      if (card.classList.contains('selected')) return
+      ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (c) {
+        c.classList.remove('selected')
+        c.querySelector('input').checked = false
+      })
       card.classList.add('selected')
       card.querySelector('input').checked = true
+      current.role = getSelectedRoleName()
+      diffField('role')
+      updateUI()
     })
   })
 
@@ -44,9 +67,17 @@
     if (el) el.addEventListener('input', function () { current[name] = el.value; diffField(name); updateUI() })
   })
 
+  ;[].slice.call(document.querySelectorAll('input[name^="perOverride_"]')).forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      current.permissions = getPermissionSnapshot()
+      diffField('permissions')
+      updateUI()
+    })
+  })
+
   function diffField(name) {
+    if (name === 'status' || name === 'role' || name === 'permissions') return
     var isDirty = String(current[name]).trim() !== String(original[name]).trim()
-    if (name === 'status') return
     var el = form.elements[name]
     if (el) el.classList.toggle('dirty', isDirty)
   }
@@ -70,6 +101,24 @@
     return name.length >= 2 && phoneOk
   }
 
+  function getPermissionsDiffItems() {
+    var oldMap = {}
+    try { oldMap = JSON.parse(original.permissions) } catch (e) {}
+    var curMap = {}
+    try { curMap = JSON.parse(current.permissions) } catch (e) {}
+    var allKeys = Object.keys(oldMap).concat(Object.keys(curMap).filter(function (k) { return !(k in oldMap) }))
+    var items = []
+    allKeys.forEach(function (key) {
+      var oldVal = oldMap[key] || 'default'
+      var curVal = curMap[key] || 'default'
+      if (oldVal !== curVal) {
+        var permLabel = key.replace('perOverride_', '')
+        items.push({ label: permLabel, from: oldVal, to: curVal })
+      }
+    })
+    return items
+  }
+
   function updateUI() {
     var dirty = getDirtyFields()
     document.body.classList.toggle('has-changes', dirty.length > 0)
@@ -81,14 +130,23 @@
     if (dirty.length === 0) {
       list.innerHTML = '<div class="changes-empty">Chưa có thay đổi nào.<br>Sửa thông tin để xem diff.</div>'
     } else {
-      list.innerHTML = dirty.map(function (k) {
-        return '<div class="change-item"><span class="field">' + FIELD_LABEL[k] + '</span><span class="from">' + formatValue(k, original[k]) + '</span><span class="arrow">→</span><span class="to">' + formatValue(k, current[k]) + '</span></div>'
-      }).join('')
+      var html = ''
+      dirty.forEach(function (k) {
+        if (k === 'permissions') {
+          var permDiffs = getPermissionsDiffItems()
+          permDiffs.forEach(function (d) {
+            html += '<div class="change-item"><span class="field">Ghi đè ' + d.label + '</span><span class="from">' + d.from + '</span><span class="arrow">→</span><span class="to">' + d.to + '</span></div>'
+          })
+        } else {
+          html += '<div class="change-item"><span class="field">' + FIELD_LABEL[k] + '</span><span class="from">' + formatValue(k, original[k]) + '</span><span class="arrow">→</span><span class="to">' + formatValue(k, current[k]) + '</span></div>'
+        }
+      })
+      list.innerHTML = html
     }
   }
 
   function formatValue(field, value) {
-    if (field === 'role') return ROLE_LABEL[value] || value
+    if (field === 'role') return value || '—'
     if (field === 'status') return STATUS_LABEL[value] || value
     if (field === 'warehouse') return WH_LABEL[value] || value
     return value || '—'
@@ -159,3 +217,4 @@
   if (SESSION.message) toast(SESSION.message, 'success')
   if (SESSION.error) toast('Vui lòng kiểm tra lại thông tin', 'danger')
 })()
+

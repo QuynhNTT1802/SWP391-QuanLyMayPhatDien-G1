@@ -289,23 +289,34 @@
               <div class="form-section-head-left">
                 <div class="form-section-num">02 — VAI TRÒ &amp; KHO</div>
                 <h3 class="form-section-title">Phân quyền hệ thống</h3>
-                <div class="form-section-desc">Đổi vai trò sẽ áp dụng bộ quyền mới. Thay đổi này được ghi vào audit log.</div>
+                <div class="form-section-desc">Chon nhieu vai tro de phan quyen linh hoat. Bo check de go bo vai tro.</div>
               </div>
             </div>
             <div class="form-grid single">
               <div class="field">
-                <label class="field-label">Vai trò <span class="req">*</span></label>
+                <label class="field-label">Vai tro <span class="req">*</span></label>
                 <div class="role-grid">
-                  <label class="role-card" data-role="admin"><input type="radio" name="role" value="admin"/><div class="role-card-name">Admin</div><div class="role-card-desc">Toàn quyền quản trị</div></label>
-                  <label class="role-card selected" data-role="manager"><input type="radio" name="role" value="manager" checked/><div class="role-card-name">Quản lý kho</div><div class="role-card-desc">Duyệt phiếu, quản lý nhân sự</div></label>
-                  <label class="role-card" data-role="keeper"><input type="radio" name="role" value="keeper"/><div class="role-card-name">Thủ kho</div><div class="role-card-desc">Tạo &amp; thực hiện phiếu</div></label>
-                  <label class="role-card" data-role="account"><input type="radio" name="role" value="account"/><div class="role-card-name">Kế toán</div><div class="role-card-desc">Xem báo cáo &amp; đối soát</div></label>
-                  <label class="role-card" data-role="staff"><input type="radio" name="role" value="staff"/><div class="role-card-name">Nhân viên</div><div class="role-card-desc">Soạn phiếu</div></label>
-                  <label class="role-card" data-role="viewer"><input type="radio" name="role" value="viewer"/><div class="role-card-name">Viewer</div><div class="role-card-desc">Chỉ xem</div></label>
+                  <c:forEach var="role" items="${allRoles}">
+                    <c:if test="${role.status == 'active'}">
+                      <c:set var="isSelected" value="false" />
+                      <c:if test="${not empty user.roles}">
+                        <c:forEach var="userRole" items="${user.roles}">
+                          <c:if test="${userRole.roleId == role.roleId}">
+                            <c:set var="isSelected" value="true" />
+                          </c:if>
+                        </c:forEach>
+                      </c:if>
+                      <label class="role-card ${isSelected ? 'selected' : ''}" data-role-id="${role.roleId}" data-orig-checked="${isSelected}">
+                        <input type="radio" name="roleIds" value="${role.roleId}" ${isSelected ? 'checked' : ''} />
+                        <div class="role-card-name">${role.roleName}</div>
+                        <div class="role-card-desc">${role.description}</div>
+                      </label>
+                    </c:if>
+                  </c:forEach>
                 </div>
               </div>
               <div class="field">
-                <label class="field-label">Kho phụ trách <span class="req">*</span></label>
+                <label class="field-label">Kho phu trach <span class="req">*</span></label>
                 <select class="select" name="warehouse" data-orig="HN-01">
                   <option value="HN-01" selected>HN-01 · Hà Nội (Cầu Giấy)</option>
                   <option value="HCM-03">HCM-03 · TP.HCM (Tân Bình)</option>
@@ -331,7 +342,53 @@
           <div class="form-section">
             <div class="form-section-head">
               <div class="form-section-head-left">
-                <div class="form-section-num">03 — VÙNG NGUY HIỂM</div>
+                <div class="form-section-num">02b — QUYEN CA NHAN (Override)</div>
+                <h3 class="form-section-title">Ghi de quyen nguoi dung</h3>
+                <div class="form-section-desc">GRANT cap them quyen, DENY tu choi quyen (uu tien cao hon role). De trong = theo role.</div>
+              </div>
+            </div>
+            <input type="hidden" name="perOverride_submitted" value="1" />
+            <div class="form-grid single">
+              <div class="field">
+                <c:set var="overrideMap" value="${requestScope.userOverrides}" />
+                <c:forEach var="entry" items="${groupedPerms}">
+                  <div style="margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px;">
+                    <div style="font-weight: 700; font-size: 13px; margin-bottom: 10px; color: var(--accent);">${entry.key}</div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <c:forEach var="perm" items="${entry.value}">
+                        <c:set var="ovType" value="" />
+                        <c:forEach var="ov" items="${overrideMap}">
+                          <c:if test="${ov[0] == perm.resource.concat('.').concat(perm.action)}">
+                            <c:set var="ovType" value="${ov[1]}" />
+                          </c:if>
+                        </c:forEach>
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px dashed var(--border);">
+                          <span style="flex: 1; font-size: 12px; font-weight: 600;">${perm.description != null ? perm.description : perm.action}</span>
+                          <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--muted);">
+                            <input type="radio" name="perOverride_${perm.permissionId}" value="default" ${empty ovType ? 'checked' : ''} /> Mac dinh
+                          </label>
+                          <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--accent); font-weight: 600;">
+                            <input type="radio" name="perOverride_${perm.permissionId}" value="GRANT" ${ovType == 'GRANT' ? 'checked' : ''} /> GRANT
+                          </label>
+                          <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--danger); font-weight: 600;">
+                            <input type="radio" name="perOverride_${perm.permissionId}" value="DENY" ${ovType == 'DENY' ? 'checked' : ''} /> DENY
+                          </label>
+                        </div>
+                      </c:forEach>
+                    </div>
+                  </div>
+                </c:forEach>
+                <c:if test="${empty groupedPerms}">
+                  <div style="font-size: 12px; color: var(--muted); padding: 16px; text-align: center;">Khong co quyen nao trong he thong.</div>
+                </c:if>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-head">
+              <div class="form-section-head-left">
+                <div class="form-section-num">03 — VUNG NGUY HIEM</div>
                 <h3 class="form-section-title">Hành động không thể hoàn tác</h3>
                 <div class="form-section-desc">Các thao tác bên dưới cần xác nhận và sẽ ghi audit log toàn cục.</div>
               </div>

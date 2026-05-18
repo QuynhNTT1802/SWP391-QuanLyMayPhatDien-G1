@@ -108,16 +108,17 @@
                                 </div>
                                 <div class="form-grid single">
                                     <div class="field">
-                                        <label class="field-label">Vai trò <span class="req">*</span></label>
+                                        <label class="field-label">Vai tro <span class="req">*</span></label>
                                         <div class="role-grid">
-                                            <label class="role-card"><input type="radio" name="role" value="admin"/>Admin</label>
-                                            <label class="role-card"><input type="radio" name="role" value="warehouse_manager"/>Quản lý kho</label>
-                                            <label class="role-card"><input type="radio" name="role" value="warehouse_staff"/>Thủ kho</label>
-                                            <label class="role-card"><input type="radio" name="role" value="accountant"/>Kế toán</label>
-                                            <label class="role-card"><input type="radio" name="role" value="sales_staff"/>Nhân viên</label>
-                                            <label class="role-card"><input type="radio" name="role" value="technician"/>Kỹ thuật</label>
-                                            <label class="role-card"><input type="radio" name="role" value="customer"/>Khách hàng</label>
-                                            <label class="role-card"><input type="radio" name="role" value="driver"/>Tài xế</label>
+                                            <c:forEach var="role" items="${allRoles}">
+                                                <c:if test="${role.status == 'active'}">
+                                                    <label class="role-card">
+                                                        <input type="radio" name="roleIds" value="${role.roleId}" />
+                                                        <div class="role-card-name">${role.roleName}</div>
+                                                        <div class="role-card-desc">${role.description}</div>
+                                                    </label>
+                                                </c:if>
+                                            </c:forEach>
                                         </div>
                                         <div class="field">
                                             <label class="field-label">Trạng thái</label>
@@ -152,5 +153,20 @@
 
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script>
+          ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (card) {
+            card.addEventListener('click', function (e) {
+              e.preventDefault()
+              if (e.target.tagName === 'INPUT') return
+              if (card.classList.contains('selected')) return
+              ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (c) {
+                c.classList.remove('selected')
+                c.querySelector('input').checked = false
+              })
+              card.classList.add('selected')
+              card.querySelector('input').checked = true
+            })
+          })
+        </script>
     </body>
 </html>
