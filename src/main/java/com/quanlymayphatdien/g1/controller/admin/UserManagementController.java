@@ -375,7 +375,7 @@ public class UserManagementController extends HttpServlet {
         return errors;
     }
 
-    private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
