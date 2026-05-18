@@ -1,5 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="com.quanlymayphatdien.g1.entity.User"%>
+<%@page import="com.quanlymayphatdien.g1.entity.Role"%>
+<%@page import="java.util.List"%>
 <%
     User user = (User) request.getAttribute("user");
     if (user == null) {
@@ -15,6 +17,9 @@
     String phone = user.getPhone() != null ? user.getPhone() : "";
     String address = user.getAddress() != null ? user.getAddress() : "";
     String status = user.getStatus() != null ? user.getStatus() : "active";
+
+    List<Role> roles = user.getRoles();
+    if (roles == null) roles = List.of();
 
     String initials = "";
     String[] nameParts = fullName.trim().split("\\s+");
@@ -263,38 +268,6 @@
   .date-row { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 6px; }
   .select { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; background-size: 14px; padding-inline-end: 32px; cursor: pointer; }
 
-  /* Permissions matrix */
-  .perm-summary { display: flex; gap: 16px; padding: 14px 16px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 18px; flex-wrap: wrap; }
-  .perm-stat { display: flex; align-items: baseline; gap: 6px; }
-  .perm-stat .num { font-family: var(--font-mono); font-weight: 600; font-size: 16px; }
-  .perm-stat .num.ok { color: var(--accent); }
-  .perm-stat .num.warn { color: var(--warn); }
-  .perm-stat .num.muted { color: var(--muted); }
-  .perm-stat .lbl { font-size: 12px; color: var(--muted); }
-  .perm-divider { width: 1px; background: var(--border); }
-  .perm-scope { margin-inline-start: auto; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .perm-scope .mono { color: var(--fg-soft); }
-
-  table.perms { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.perms th, table.perms td { padding: 10px 12px; text-align: start; border-bottom: 1px solid var(--border); }
-  table.perms th { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); }
-  table.perms td.center, table.perms th.center { text-align: center; }
-  table.perms tbody tr:hover { background: var(--surface-2); }
-  table.perms tbody tr:last-child td { border-bottom: 0; }
-  .resource { font-weight: 600; }
-  .resource-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .perm-cell { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 5px; }
-  .perm-cell svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-  .perm-cell.allow { background: var(--accent-soft); color: var(--accent); }
-  .perm-cell.partial { background: var(--warn-soft); color: var(--warn); }
-  .perm-cell.deny { background: var(--surface-2); color: var(--muted-2); }
-  .perm-legend { display: flex; gap: 16px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); font-size: 11.5px; color: var(--muted); }
-  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
-  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
-  .legend-swatch.allow { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
-  .legend-swatch.partial { background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
-  .legend-swatch.deny { background: var(--surface-2); border: 1px solid var(--border); }
-
   /* Save bar */
   .save-bar {
     position: fixed; bottom: 0; inset-inline-start: 240px; inset-inline-end: 0;
@@ -506,13 +479,17 @@
                     <div class="help">Không thể thay đổi tên đăng nhập.</div>
                   </div>
 
-                  <!-- Email -->
+                  <!-- Email (locked) -->
                   <div class="field">
                     <label class="field-label" for="email">
                       <span>Email <span class="req">*</span></span>
+                      <span class="badge lock">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Khoá
+                      </span>
                     </label>
-                    <input type="email" class="input" id="email" name="email" value="<%=email%>" />
-                    <div class="help" data-help-for="email">Email dùng để đăng nhập và nhận thông báo.</div>
+                    <input type="email" class="input readonly" id="email" name="email" value="<%=email%>" readonly />
+                    <div class="help">Không thể thay đổi email. Liên hệ admin để hỗ trợ.</div>
                   </div>
 
                   <!-- Phone -->
@@ -548,53 +525,24 @@
             </div>
           </section>
 
-          <!-- Section 03: Permissions -->
+          <!-- Section 03: Roles -->
           <section class="section" id="sec-perms">
             <div class="section-head">
               <div class="section-head-left">
-                <h3>03 — Quyền hạn &amp; vai trò</h3>
+                <h3>03 — Vai trò</h3>
                 <span class="sub">Read-only · Liên hệ admin để thay đổi</span>
               </div>
             </div>
             <div class="section-body">
-              <div class="perm-summary">
-                <div class="perm-stat"><span class="num ok">—</span><span class="lbl">quyền cấp</span></div>
-                <div class="perm-divider"></div>
-                <div class="perm-stat"><span class="num muted">—</span><span class="lbl">không truy cập</span></div>
-                <div class="perm-scope">Liên hệ admin để xem chi tiết</div>
+              <% if (roles.isEmpty()) { %>
+              <div style="color:var(--muted); font-size:13px;">Chưa có vai trò nào được gán.</div>
+              <% } else { %>
+              <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                <% for (Role role : roles) { %>
+                <div class="pill ok"><span class="pdot"></span><%=role.getRoleName()%></div>
+                <% } %>
               </div>
-
-              <table class="perms">
-                <thead>
-                  <tr>
-                    <th style="width:40%">Tài nguyên</th>
-                    <th class="center">Xem</th>
-                    <th class="center">Tạo</th>
-                    <th class="center">Sửa</th>
-                    <th class="center">Xoá</th>
-                    <th class="center">Duyệt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div class="resource">Thông tin cá nhân</div>
-                      <div class="resource-sub">Xem và chỉnh sửa hồ sơ</div>
-                    </td>
-                    <td class="center"><span class="perm-cell allow"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span></td>
-                    <td class="center"><span class="perm-cell allow"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span></td>
-                    <td class="center"><span class="perm-cell allow"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span></td>
-                    <td class="center"><span class="perm-cell deny"><svg viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12"/></svg></span></td>
-                    <td class="center"><span class="perm-cell deny"><svg viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12"/></svg></span></td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div class="perm-legend">
-                <span class="legend-item"><span class="legend-swatch allow"></span>Cấp đầy đủ</span>
-                <span class="legend-item"><span class="legend-swatch partial"></span>Có điều kiện</span>
-                <span class="legend-item"><span class="legend-swatch deny"></span>Không cấp</span>
-              </div>
+              <% } %>
             </div>
           </section>
 
@@ -628,15 +576,13 @@
   // ===== Server values for dirty tracking =====
   const SERVER_VALUES = {
     fullName: '<%=fullName%>',
-    email: '<%=email%>',
     phone: '<%=phone%>',
     address: '<%=address%>'
   };
 
-  const FIELD_IDS = ['fullName', 'email', 'phone', 'address'];
+  const FIELD_IDS = ['fullName', 'phone', 'address'];
   const FIELD_LABELS = {
     fullName: 'Họ tên',
-    email: 'Email',
     phone: 'SĐT',
     address: 'Địa chỉ'
   };
@@ -644,7 +590,6 @@
   function currentInputValues() {
     return {
       fullName: document.getElementById('fullName').value.trim(),
-      email: document.getElementById('email').value.trim(),
       phone: document.getElementById('phone').value.trim(),
       address: document.getElementById('address').value.trim()
     };
@@ -663,11 +608,8 @@
     if (!cur.fullName) errors.fullName = 'Họ tên không được để trống.';
     else if (cur.fullName.length < 2) errors.fullName = 'Họ tên cần ít nhất 2 ký tự.';
 
-    if (!cur.email) errors.email = 'Email không được để trống.';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cur.email)) errors.email = 'Email không hợp lệ.';
-
     if (!cur.phone) errors.phone = 'SĐT không được để trống.';
-    else if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(cur.phone)) errors.phone = 'SĐT không hợp lệ (10 số, bắt đầu 03/05/07/08/09).';
+    else if (!/^0[0-9]{9,10}$/.test(cur.phone)) errors.phone = 'SĐT không hợp lệ (10-11 số, bắt đầu là 0).';
 
     return errors;
   }
@@ -696,7 +638,6 @@
         } else {
           const defaults = {
             fullName: 'Tên hiển thị trên hệ thống.',
-            email: 'Email dùng để đăng nhập và nhận thông báo.',
             phone: 'Dùng để liên hệ và nhận thông báo.',
             address: 'Dùng cho liên hệ và chứng từ.'
           };
@@ -733,7 +674,6 @@
   // ===== Cancel =====
   document.getElementById('cancelBtn').addEventListener('click', () => {
     document.getElementById('fullName').value = SERVER_VALUES.fullName;
-    document.getElementById('email').value = SERVER_VALUES.email;
     document.getElementById('phone').value = SERVER_VALUES.phone;
     document.getElementById('address').value = SERVER_VALUES.address;
     updateDirtyUI();
