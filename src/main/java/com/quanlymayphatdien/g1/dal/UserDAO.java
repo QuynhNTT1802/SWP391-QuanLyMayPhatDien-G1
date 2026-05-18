@@ -150,33 +150,41 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
     public boolean activateAccount(int userId) {
         String sql = "UPDATE user SET status = ? WHERE id = ?";
+        PreparedStatement ps = null;
         try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, "active");
-            statement.setInt(2, userId);
+            Connection conn = getConnection();
+            if (conn == null) return false;
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, "active");
+            ps.setInt(2, userId);
 
-            int affectedRows = statement.executeUpdate();
+            int affectedRows = ps.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            try { if (ps != null) ps.close(); } catch (SQLException e) { }
         }
     }
 
     public boolean deactivateAccount(int userId) {
         String sql = "UPDATE user SET status = ? WHERE id = ?";
+        PreparedStatement ps = null;
         try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, "inactive");
-            statement.setInt(2, userId);
+            Connection conn = getConnection();
+            if (conn == null) return false;
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, "locked");
+            ps.setInt(2, userId);
 
-            int affectedRows = statement.executeUpdate();
+            int affectedRows = ps.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
             return false;
+        } finally {
+            try { if (ps != null) ps.close(); } catch (SQLException e) { }
         }
     }
 

@@ -1,5 +1,6 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
+import com.quanlymayphatdien.g1.config.GlobalConfig;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
@@ -50,15 +51,14 @@ public class UserManagementController extends HttpServlet {
             case "create":
                 showCreateForm(request, response);
                 break;
-            case "update":
-            {
+            case "update": {
                 try {
                     showUpdateForm(request, response);
                 } catch (SQLException ex) {
                     Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-                break;
+            break;
 
             case "deactivate":
                 deactivateUser(request, response);
@@ -145,7 +145,7 @@ public class UserManagementController extends HttpServlet {
         dispatcher.forward(request, response);
     }
 
- private void createUser(HttpServletRequest request, HttpServletResponse response)
+    private void createUser(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String username = request.getParameter("username");
@@ -300,16 +300,16 @@ public class UserManagementController extends HttpServlet {
                     if ("1".equals(overrideSubmitted)) {
                         PermissionDAO perDAO = new PermissionDAO();
                         List<Permission> allPermissions = perDAO.findAll();
+                        Map<Integer, String> overrides = new HashMap<>();
                         for (Permission perm : allPermissions) {
                             String overrideType = request.getParameter("perOverride_" + perm.getPermissionId());
-                            if ("GRANT".equals(overrideType) || "DENY".equals(overrideType)) {
-                                perDAO.setUserOverride(userId, perm.getPermissionId(), overrideType);
-                            } else if ("default".equals(overrideType)) {
-                                perDAO.removeUserOverride(userId, perm.getPermissionId());
+                            if (overrideType != null && !overrideType.isEmpty()) {
+                                overrides.put(perm.getPermissionId(), overrideType);
                             }
                         }
+                        perDAO.applyUserOverrides(userId, allPermissions, overrides);
                     }
-
+                    request.getServletContext().setAttribute("perm_refresh_" + userId, true);
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
@@ -324,14 +324,15 @@ public class UserManagementController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
     }
 
-  private Map<String, String> validateForm(String username, String password, String email, String phone, Integer userId) {
+    private Map<String, String> validateForm(String username, String password,
+            String email, String phone, Integer userId) {
         Map<String, String> errors = new HashMap<>();
         UserDAO userDAO = new UserDAO();
 
         if (username != null && !username.isEmpty()) {
             if (username.length() < 3 || username.length() > 50) {
                 errors.put("username", "Tên đăng nhập phải có độ dài từ 3 đến 50 ký tự");
-            } else if (!username.matches("^[a-zA-Z0-9_]+$")) {
+            } else if (!username.matches(GlobalConfig.REGEX_USERNAME)) {
                 errors.put("username", "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới");
             } else if (userDAO.isUsernameExists(username)) {
                 errors.put("username", "Tên đăng nhập đã tồn tại");
@@ -343,7 +344,7 @@ public class UserManagementController extends HttpServlet {
         if (password != null && !password.isEmpty()) {
             if (password.length() < 6) {
                 errors.put("password", "Mật khẩu phải có ít nhất 6 ký tự");
-            } else if (!password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$")) {
+            } else if (!password.matches(GlobalConfig.REGEX_PASSWORD)) {
                 errors.put("password", "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
             }
         } else if (userId == null) {
@@ -351,8 +352,7 @@ public class UserManagementController extends HttpServlet {
         }
 
         if (email != null && !email.isEmpty()) {
-            String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-            if (!email.matches(emailRegex)) {
+            if (!email.matches(GlobalConfig.REGEX_EMAIL)) {
                 errors.put("email", "Định dạng email không hợp lệ");
             } else if (userDAO.isEmailExists(email, userId)) {
                 errors.put("email", "Email đã được sử dụng");
@@ -362,8 +362,8 @@ public class UserManagementController extends HttpServlet {
         }
 
         if (phone != null && !phone.isEmpty()) {
-            if (!phone.matches("^0[0-9]{9,10}$")) {
-                errors.put("phone", "Số điện thoại phải bắt đầu bằng số 0 và có 10 hoặc 11 chữ số");
+            if (!phone.matches(GlobalConfig.REGEX_PHONE)) {
+                errors.put("phone", "Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số");
             } else if (userDAO.isPhoneExists(phone, userId)) {
                 errors.put("phone", "Số điện thoại này đã được sử dụng");
             }
@@ -374,7 +374,7 @@ public class UserManagementController extends HttpServlet {
         return errors;
     }
 
-  private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
@@ -440,7 +440,6 @@ public class UserManagementController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
 
-
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String searchFilter = request.getParameter("search");
         String statusFilter = request.getParameter("status");
@@ -475,15 +474,13 @@ public class UserManagementController extends HttpServlet {
         request.setAttribute("searchFilter", searchFilter);
 
         request.setAttribute("activeCount", userDAO.countUsersByStatus("active"));
-        request.setAttribute("inactiveCount", userDAO.countUsersByStatus("inactive"));
-        request.setAttribute("pendingCount", userDAO.countUsersByStatus("pending"));
         request.setAttribute("lockedCount", userDAO.countUsersByStatus("locked"));
         request.setAttribute("now", LocalDateTime.now());
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
-    
-     private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
+
+    private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
         List<String> userInitials = new ArrayList<>();
         List<String> userAvatarClass = new ArrayList<>();
         List<String> userCreatedDate = new ArrayList<>();
