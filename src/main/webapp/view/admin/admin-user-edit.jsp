@@ -276,11 +276,6 @@
                 <input class="input" name="address" data-orig="${user.address}" value="${not empty formData ? formData['address'][0] : user.address}" />
                 <div class="field-help">Địa chỉ liên hệ</div>
               </div>
-              <div class="field">
-                <label class="field-label">Chức danh</label>
-                <input class="input" name="title" data-orig="Quản lý kho" value="Quản lý kho" />
-                <div class="field-help">Hiển thị trong hồ sơ và phiếu nhập/xuất</div>
-              </div>
             </div>
           </div>
 
