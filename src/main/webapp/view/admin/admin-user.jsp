@@ -55,7 +55,6 @@
                         <div class="stat"><div class="lbl">Tổng người dùng</div><div class="val">${totalUsers}</div></div>
                         <div class="stat"><div class="lbl">Đang hoạt động</div><div class="val">${activeCount}</div></div>
                         <div class="stat"><div class="lbl">Bị khoá</div><div class="val">${lockedCount}</div></div>
-                        <div class="stat"><div class="lbl">Không hoạt động</div><div class="val">${inactiveCount}</div></div>
                     </div>
 
                     <c:if test="${not empty sessionScope.message}">
@@ -88,7 +87,6 @@
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
                                 <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
-                            <option value="inactive" <c:if test="${statusFilter == 'inactive'}">selected</c:if>>Không hoạt động</option>
                             <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khoá</option>
                             </select>
                             <div class="spacer"></div>
@@ -98,22 +96,10 @@
                         </button>
                     </form>
 
-                    <div class="bulk-bar" id="bulkBar">
-                        <span class="count-pill" id="bulkCount">0</span>
-                        <span>người dùng đã chọn</span>
-                        <div class="bulk-actions">
-                            <button class="btn-tiny" data-bulk="role"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Đổi vai trò</button>
-                            <button class="btn-tiny" data-bulk="lock"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Khoá</button>
-                            <button class="btn-tiny danger" data-bulk="delete"><svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" fill="none" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Xoá</button>
-                            <button class="btn-tiny" id="bulkClear">Bỏ chọn</button>
-                        </div>
-                    </div>
-
                     <div class="table-card">
                         <table class="users" id="usersTable">
                             <thead>
                                 <tr>
-                                    <th class="col-check"><input type="checkbox" class="checkbox" id="checkAll" /></th>
                                     <th class="sortable" data-sort="name">Người dùng <span class="sort-ind"></span></th>
                                     <th>Vai trò</th>
                                     <th>Trạng thái</th>
@@ -129,7 +115,6 @@
                                             <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a'))
                                                         location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'"
                                                 style="cursor:pointer;">
-                                                <td class="col-check"><input type="checkbox" class="checkbox row-check" value="${user.id}"/></td>
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-avatar <c:out value="${userAvatarClass[loop.index]}"/>">
@@ -160,27 +145,26 @@
                                                     <td>
                                                     <c:choose>
                                                         <c:when test="${user.status == 'active'}"><span class="status active"><span class="sdot"></span>Hoạt động</span></c:when>
-                                                        <c:when test="${user.status == 'inactive'}"><span class="status disabled"><span class="sdot"></span>Không hoạt động</span></c:when>
                                                         <c:when test="${user.status == 'locked'}"><span class="status locked"><span class="sdot"></span>Bị khoá</span></c:when>
                                                         <c:otherwise><span class="status disabled"><span class="sdot"></span><c:out value="${user.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'" title="Xem chi tiết">
+                                                        <button class="icon-mini" onclick="event.stopPropagation(); location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'" title="Xem chi tiết">
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </button>
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
+                                                        <button class="icon-mini" onclick="event.stopPropagation(); location.href = '${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
                                                             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                         </button>
                                                         <c:choose>
                                                             <c:when test="${user.status == 'active'}">
-                                                                <button class="icon-mini" onclick="confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
+                                                                <button class="icon-mini" onclick="event.stopPropagation(); confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
                                                                     <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                                                 </button>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <button class="icon-mini" onclick="confirmActivate(${user.id}, ${currentPage})" title="Kích hoạt">
+                                                                <button class="icon-mini" onclick="event.stopPropagation(); confirmActivate(${user.id}, ${currentPage})" title="Kích hoạt">
                                                                     <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                                                                 </button>
                                                             </c:otherwise>

@@ -10,8 +10,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -22,10 +24,30 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     
     //ABAC override -> RBAC
     public Set<String> getEffectPermissions(int userId) throws SQLException {
-        Set<String> permissions = getRolePermissions(userId);
-        applyOverrides(userId,permissions);
-        return permissions;
+    Set<String> permissions = getRolePermissions(userId);
+    Set<String> denies = applyOverrides(userId, permissions);
+    autoGrantViews(permissions, denies);
+    return permissions;
+
+}
+
+    private void autoGrantViews(Set<String> permissions, Set<String> denies) {
+    Set<String> toAdd = new HashSet<>();
+    for (String perm : permissions) {
+        int dot = perm.lastIndexOf('.');
+        if (dot > 0) {
+            String action = perm.substring(dot + 1);
+            if (!"view".equals(action)) {              
+                String viewPerm = perm.substring(0, dot) + ".view";
+                if (!denies.contains(viewPerm)             
+                    && !permissions.contains(viewPerm)) {     
+                    toAdd.add(viewPerm);
+                }
+            }
+        }
     }
+    permissions.addAll(toAdd);
+}
     
     //lay quyen dua tren role goc
     public Set<String> getRolePermissions(int userId) throws SQLException {
@@ -50,7 +72,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     }
 
     // xu li quyen ngoai le overide uu tien cao nhat
-    public void applyOverrides(int userId, Set<String> permissions) throws SQLException {
+    public Set<String> applyOverrides(int userId, Set<String> permissions) throws SQLException {
         Set<String> grants = new HashSet<>();
         Set<String> denies = new HashSet<>();
 
@@ -77,6 +99,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
         }
         permissions.addAll(grants);
         permissions.removeAll(denies);
+        return denies;
     }
 
     //xem detail cua mot role cu the co nhung quyen j
@@ -156,6 +179,39 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public void applyUserOverrides(int userId, List<Permission> allPermissions,
+                                    Map<Integer, String> overrides) throws SQLException {
+        Map<Integer, Permission> permById = new HashMap<>();
+        Map<String, Integer> resourceViewPermId = new HashMap<>();
+        for (Permission p : allPermissions) {
+            permById.put(p.getPermissionId(), p);
+            if ("view".equals(p.getAction())) {
+                resourceViewPermId.put(p.getResource(), p.getPermissionId());
+            }
+        }
+
+        for (Map.Entry<Integer, String> e : overrides.entrySet()) {
+            int permId = e.getKey();
+            String type = e.getValue();
+
+            if ("GRANT".equals(type) || "DENY".equals(type)) {
+                setUserOverride(userId, permId, type);
+            } else {
+                removeUserOverride(userId, permId);
+            }
+
+            Permission perm = permById.get(permId);
+            if (perm != null && !"view".equals(perm.getAction())) {
+                Integer viewPermId = resourceViewPermId.get(perm.getResource());
+                if (viewPermId != null && !overrides.containsKey(viewPermId)) {
+                    if ("GRANT".equals(type)) {
+                        setUserOverride(userId, viewPermId, "GRANT");
+                    }
+                }
+            }
+        }
     }
 
     @Override
