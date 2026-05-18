@@ -69,6 +69,13 @@
 
   ;[].slice.call(document.querySelectorAll('input[name^="perOverride_"]')).forEach(function (radio) {
     radio.addEventListener('change', function () {
+      var action = this.dataset.action
+      if (this.value !== 'DENY' && action !== 'view') {
+        var viewRadio = document.querySelector(
+          'input[name^="perOverride_"][data-resource="' + this.dataset.resource + '"][data-action="view"][value="' + this.value + '"]'
+        )
+        if (viewRadio) viewRadio.checked = true
+      }
       current.permissions = getPermissionSnapshot()
       diffField('permissions')
       updateUI()

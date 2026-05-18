@@ -13,9 +13,12 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet(name = "RoleController", urlPatterns = {
     "/admin/roles", 
@@ -115,6 +118,10 @@ public class RoleController extends HttpServlet {
 
     //TASK 14 & 16: SAVE EVERYTHING
     private void saveRoleFull(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        HttpSession session = request.getSession(false);
+        @SuppressWarnings("unchecked")
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+
         String idParam = request.getParameter("id");
         String name = request.getParameter("name");
         String desc = request.getParameter("description");
@@ -127,9 +134,16 @@ public class RoleController extends HttpServlet {
 
         int roleId;
         if (idParam == null || idParam.isEmpty()) {
+            if (permissions == null || !permissions.contains("roles.create")) {
+                request.getRequestDispatcher("/view/error/role-error.jsp").forward(request, response);
+                return;
+            }
             roleId = roleDAO.insert(role);
         } else {
-
+            if (permissions == null || !permissions.contains("roles.edit")) {
+                request.getRequestDispatcher("/view/error/role-error.jsp").forward(request, response);
+                return;
+            }
             roleId = Integer.parseInt(idParam);
             role.setRoleId(roleId);
             roleDAO.update(role);
@@ -141,7 +155,28 @@ public class RoleController extends HttpServlet {
         if (perIdsString != null) {
             for (String pId : perIdsString) { perIds.add(Integer.parseInt(pId)); }
         }
-        roleDAO.updatePermissionRole(roleId, perIds);
+
+        List<Permission> allPerms = perDAO.findAll();
+        Map<Integer, Permission> permById = new HashMap<>();
+        Map<String, Integer> resourceViewPermId = new HashMap<>();
+        for (Permission p : allPerms) {
+            permById.put(p.getPermissionId(), p);
+            if ("view".equals(p.getAction())) {
+                resourceViewPermId.put(p.getResource(), p.getPermissionId());
+            }
+        }
+
+        Set<Integer> expanded = new HashSet<>(perIds);
+        for (int pid : perIds) {
+            Permission perm = permById.get(pid);
+            if (perm != null && !"view".equals(perm.getAction())) {
+                Integer viewPid = resourceViewPermId.get(perm.getResource());
+                if (viewPid != null) {
+                    expanded.add(viewPid);
+                }
+            }
+        }
+        roleDAO.updatePermissionRole(roleId, new ArrayList<>(expanded));
 
         response.sendRedirect(request.getContextPath() + "/admin/roles?msg=success");
     }
