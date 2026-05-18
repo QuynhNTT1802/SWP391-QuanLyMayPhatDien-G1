@@ -1,4 +1,6 @@
 package com.quanlymayphatdien.g1.controller.user;
+import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PHONE;
+import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.User;
 import java.io.IOException;
@@ -27,6 +29,8 @@ public class ProfileServlet extends HttpServlet {
         User latestUser = userDAO.findById(user.getId());
 
         if (latestUser != null) {
+            RoleDAO roleDAO = new RoleDAO();
+            latestUser.setRoles(roleDAO.getRolesByUserId(latestUser.getId()));
             request.setAttribute("user", latestUser);
             session.setAttribute("loggedUser", latestUser);
         } else {
@@ -47,18 +51,11 @@ public class ProfileServlet extends HttpServlet {
 
         User currentUser = (User) session.getAttribute("loggedUser");
         String name = request.getParameter("fullName");
-        String email = request.getParameter("email");
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
 
         if (name == null || name.trim().isEmpty()) {
             request.setAttribute("error", "Họ tên không được để trống.");
-            doGet(request, response);
-            return;
-        }
-
-        if (email == null || email.trim().isEmpty()) {
-            request.setAttribute("error", "Email không được để trống.");
             doGet(request, response);
             return;
         }
@@ -69,18 +66,23 @@ public class ProfileServlet extends HttpServlet {
             return;
         }
 
-        if (!phone.trim().matches("^(0[3|5|7|8|9])[0-9]{8}$")) {
-            request.setAttribute("error", "SĐT không hợp lệ (10 số, bắt đầu 03/05/07/08/09).");
+        if (!phone.trim().matches(REGEX_PHONE)) {
+            request.setAttribute("error", "SĐT không hợp lệ (10-11 số, bắt đầu là 0).");
             doGet(request, response);
             return;
         }
 
         UserDAO userDAO = new UserDAO();
+        if (userDAO.isPhoneExists(phone.trim(), currentUser.getId())) {
+            request.setAttribute("error", "Số điện thoại đã được sử dụng bởi tài khoản khác.");
+            doGet(request, response);
+            return;
+        }
+
         User user = userDAO.findById(currentUser.getId());
 
         if (user != null) {
             user.setName(name.trim());
-            user.setEmail(email.trim());
             user.setPhone(phone.trim());
             user.setAddress(address != null ? address.trim() : "");
             user.setUpdatedAt(LocalDateTime.now());

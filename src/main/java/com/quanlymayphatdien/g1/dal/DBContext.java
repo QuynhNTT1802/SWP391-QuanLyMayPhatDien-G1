@@ -48,7 +48,18 @@ public class DBContext {
     }
 
     public Connection getConnection() {
-        return new DBContext().connection;
+        try {
+            if (connection == null || connection.isClosed()) {
+                String username = "root";
+                String password = "1234";
+                String url = "jdbc:mysql://localhost:3306/warehousedb";
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                connection = DriverManager.getConnection(url, username, password);
+            }
+        } catch (ClassNotFoundException | SQLException ex) {
+            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return connection;
     }
 
     public static void main(String[] args) {
