@@ -283,7 +283,7 @@
 <body>
 <% request.setAttribute("activePage", "changepass"); %>
 <div class="app">
-  <jsp:include page="../common/dashboard/aside.jsp"/>
+  <jsp:include page="../common/admin/aside.jsp"/>
 
   <div>
     <header class="topbar">
@@ -731,7 +731,7 @@
   // Init
   refresh();
 </script>
-<script src="assets/js/sidebar.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 </body>
 </html>
 
