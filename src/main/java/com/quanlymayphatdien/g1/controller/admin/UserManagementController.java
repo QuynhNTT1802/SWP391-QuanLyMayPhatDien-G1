@@ -308,8 +308,9 @@ public class UserManagementController extends HttpServlet {
                             }
                         }
                         perDAO.applyUserOverrides(userId, allPermissions, overrides);
+                        request.getServletContext().setAttribute("perm_refresh_" + userId, true);
                     }
-                    request.getServletContext().setAttribute("perm_refresh_" + userId, true);
+                   
                     request.getSession().setAttribute("message", "Update successfully");
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
