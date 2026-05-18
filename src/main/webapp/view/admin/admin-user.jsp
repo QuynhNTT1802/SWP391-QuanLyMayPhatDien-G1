@@ -151,20 +151,20 @@
                                                 </td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
-                                                        <button class="icon-mini" onclick="event.stopPropagation(); location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'" title="Xem chi tiết">
+                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'" title="Xem chi tiết">
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </button>
-                                                        <button class="icon-mini" onclick="event.stopPropagation(); location.href = '${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
+                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}&page=${currentPage}'" title="Chỉnh sửa">
                                                             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                         </button>
                                                         <c:choose>
                                                             <c:when test="${user.status == 'active'}">
-                                                                <button class="icon-mini" onclick="event.stopPropagation(); confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
+                                                                <button class="icon-mini" onclick="confirmDeactivate(${user.id}, ${currentPage})" title="Vô hiệu hoá">
                                                                     <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                                                 </button>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <button class="icon-mini" onclick="event.stopPropagation(); confirmActivate(${user.id}, ${currentPage})" title="Kích hoạt">
+                                                                <button class="icon-mini" onclick="confirmActivate(${user.id}, ${currentPage})" title="Kích hoạt">
                                                                     <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                                                                 </button>
                                                             </c:otherwise>
