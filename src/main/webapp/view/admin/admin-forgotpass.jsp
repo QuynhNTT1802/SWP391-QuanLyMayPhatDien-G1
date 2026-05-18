@@ -201,10 +201,6 @@
         <input class="input" type="text" id="username" readonly>
       </div>
       <div class="field">
-        <label class="field-label">Mật khẩu mới</label>
-        <input class="input" type="password" name="newPassword" placeholder="Nhập mật khẩu mới..." required>
-      </div>
-      <div class="field">
         <label class="field-label">Ghi chú</label>
         <textarea name="note" placeholder="Ví dụ: vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên"></textarea>
       </div>
