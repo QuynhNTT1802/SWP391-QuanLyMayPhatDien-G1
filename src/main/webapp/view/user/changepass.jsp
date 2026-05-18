@@ -421,7 +421,7 @@
                   <div class="field" id="field-new">
                     <label class="field-label" for="newPw">
                       <span>Mật khẩu mới <span class="req">*</span></span>
-                      <span class="hint-mini">Tối thiểu 6 ký tự</span>
+                      <span class="hint-mini">Tối thiểu 6 ký tự, có chữ hoa, thường và số</span>
                     </label>
                     <div class="input-wrap">
                       <input type="password" class="input" id="newPw" name="newPassword" placeholder="Tạo mật khẩu mới" autocomplete="new-password" />
@@ -460,10 +460,6 @@
                       <div class="rule" data-rule="number">
                         <span class="rdot"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
                         Có chữ số (0–9)
-                      </div>
-                      <div class="rule" data-rule="symbol">
-                        <span class="rdot"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
-                        Có ký tự đặc biệt (!@#$…)
                       </div>
                       <div class="rule" data-rule="not-same">
                         <span class="rdot"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
@@ -569,7 +565,6 @@
     upper:  pw => /[A-Z]/.test(pw),
     lower:  pw => /[a-z]/.test(pw),
     number: pw => /[0-9]/.test(pw),
-    symbol: pw => /[^A-Za-z0-9]/.test(pw),
     'not-same': pw => pw.length > 0 && pw !== currentPw.value
   };
 
