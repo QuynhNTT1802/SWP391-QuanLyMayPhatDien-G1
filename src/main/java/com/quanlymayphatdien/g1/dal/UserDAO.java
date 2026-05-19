@@ -290,8 +290,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
     @Override
     public User getFromResultSet(ResultSet resultSet) throws SQLException {
-        User user = new User() {
-        };
+        User user = new User(){};
 
         user.setId(resultSet.getInt("id"));
         user.setName(resultSet.getString("name"));
