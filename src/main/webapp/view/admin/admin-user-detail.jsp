@@ -90,7 +90,6 @@
                         </c:forEach>
                         <c:choose>
                             <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
                             <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khoá</span></c:when>
                         </c:choose>
                     </div>
