@@ -169,7 +169,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, "locked");
+            statement.setString(1, "inactive");
             statement.setInt(2, userId);
 
             int affectedRows = statement.executeUpdate();
