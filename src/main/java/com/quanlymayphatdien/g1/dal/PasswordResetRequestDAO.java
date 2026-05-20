@@ -59,6 +59,55 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
         return list;
     }
 
+    public List<PasswordResetRequest> findAll(int page, int pageSize, String status) {
+        List<PasswordResetRequest> list = new ArrayList<>();
+        String sql = "SELECT pr.*, u.name AS user_name, u.username, u.phone "
+                + "FROM password_reset_request pr "
+                + "JOIN user u ON pr.user_id = u.id "
+                + (status != null && !status.isEmpty() ? " WHERE pr.status = ?" : "")
+                + " ORDER BY pr.created_at DESC LIMIT ? OFFSET ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            int i = 1;
+            if (status != null && !status.isEmpty()) {
+                statement.setString(i++, status);
+            }
+            statement.setInt(i++, pageSize);
+            statement.setInt(i, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int getTotalCountByStatus(String status) {
+        List<PasswordResetRequest> list = new ArrayList<>();
+        String sql = "SELECT COUNT(*) FROM password_reset_request " + (status != null && !status.isEmpty() ? "WHERE status = ? " : "");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            if (status != null && !status.isEmpty()) {
+                statement.setString(1, status);
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
     public List<PasswordResetRequest> findByStatus(String status) {
         List<PasswordResetRequest> list = new ArrayList<>();
         String sql = "SELECT pr.*, u.name AS user_name, u.username, u.phone "
@@ -79,6 +128,27 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
             closeResources();
         }
         return list;
+    }
+
+    public boolean hasPendingRequest(int id) {
+        List<PasswordResetRequest> list = new ArrayList<>();
+        String sql = "SELECT * "
+                + "FROM password_reset_request "
+                + "WHERE status = 'pending' and user_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                return true;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return false;
     }
 
     public PasswordResetRequest findById(int id) {

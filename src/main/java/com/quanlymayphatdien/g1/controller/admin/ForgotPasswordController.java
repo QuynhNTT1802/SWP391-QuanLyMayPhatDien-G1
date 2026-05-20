@@ -36,14 +36,30 @@ public class ForgotPasswordController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
+        int page = 1;
+        String pageRaw = request.getParameter("page");
+        if(pageRaw!= null && !pageRaw.isEmpty()){
+            page = Integer.parseInt(pageRaw);
+            if(page < 1){
+                page = 1;
+            }
+        }
+        String statusFilter = request.getParameter("status");
         PasswordResetRequestDAO passwordResetRequestDAO = new PasswordResetRequestDAO();
-        List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll();
+        int pageSize = 10;
+        List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll(page, pageSize, statusFilter);
         List<PasswordResetRequest> pendingList = passwordResetRequestDAO.findByStatus("pending");
+        int totalRequests = passwordResetRequestDAO.getTotalCountByStatus(statusFilter);
+        int totalPages = (int) Math.ceil((double) totalRequests / pageSize);
+        
         request.setAttribute("pendingCount", pendingList.size());
         request.setAttribute("listRequests", listRequests);
-        request.setAttribute("totalRequests", listRequests.size());
+        request.setAttribute("totalRequests", totalRequests);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("pendingList", pendingList);
-        request.setAttribute("doneRequests", listRequests.size() - pendingList.size());
+        request.setAttribute("doneRequests", totalRequests - pendingList.size());
         request.getRequestDispatcher("/view/admin/admin-forgotpass.jsp").forward(request, response);
     }
 
