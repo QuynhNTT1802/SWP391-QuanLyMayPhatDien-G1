@@ -104,7 +104,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-label">Đang chờ</div>
-          <div class="stat-value">${pendingList.size()}</div>
+          <div class="stat-value">${pendingCount}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Đã cấp lại</div>
@@ -173,10 +173,6 @@
       <input class="input" id="detailStatus" readonly>
     </div>
     <div class="field">
-      <label class="field-label">Mật khẩu đã cấp</label>
-      <input class="input" id="detailNewPassword" readonly>
-    </div>
-    <div class="field">
       <label class="field-label">Ghi chú</label>
       <textarea id="detailNote" readonly></textarea>
     </div>
@@ -234,7 +230,6 @@
     detailModal.classList.add('open');
     document.getElementById('detailUsername').value = username;
     document.getElementById('detailStatus').value = status === 'approved' ? 'Đã cấp lại' : status;
-    document.getElementById('detailNewPassword').value = '***';
     document.getElementById('detailNote').value = note || '';
     document.getElementById('detailProcessedAt').value = processedAt || '';
   }
