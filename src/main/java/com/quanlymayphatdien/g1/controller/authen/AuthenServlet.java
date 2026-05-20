@@ -86,9 +86,14 @@ public class AuthenServlet extends HttpServlet {
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
         String username = request.getParameter("username");
         UserDAO userDAO = new UserDAO();
+        PasswordResetRequestDAO prDAO = new PasswordResetRequestDAO();
         User user = userDAO.findByUsername(username);
         if (user == null) {
             request.setAttribute("error", "Không có tài khoản trong hệ thống");
+            return "/view/authen/forgotpass.jsp";
+        }
+        if(prDAO.hasPendingRequest(user.getId())){
+            request.setAttribute("error", "Bạn đã gửi yêu cầu, hãy chờ đợi để được cấp mật khẩu");
             return "/view/authen/forgotpass.jsp";
         }
         PasswordResetRequest req = new PasswordResetRequest();
