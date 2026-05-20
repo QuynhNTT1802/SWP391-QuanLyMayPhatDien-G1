@@ -54,7 +54,7 @@
                     <div class="stats-row">
                         <div class="stat"><div class="lbl">Tổng người dùng</div><div class="val">${totalUsers}</div></div>
                         <div class="stat"><div class="lbl">Đang hoạt động</div><div class="val">${activeCount}</div></div>
-                        <div class="stat"><div class="lbl">Bị khoá</div><div class="val">${lockedCount}</div></div>
+                        <div class="stat"><div class="lbl">Bị vô hiệu hoá</div><div class="val">${inactiveCount}</div></div>
                     </div>
 
                     <c:if test="${not empty sessionScope.message}">
@@ -76,18 +76,15 @@
                             <option value="">Vai trò: Tất cả</option>
                             <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Admin</option>
                             <option value="warehouse_manager" <c:if test="${roleFilter == 'warehouse_manager'}">selected</c:if>>Quản lý kho</option>
-                            <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
-                            <option value="accountant" <c:if test="${roleFilter == 'accountant'}">selected</c:if>>Kế toán</option>
-                            <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên</option>
-                            <option value="technician" <c:if test="${roleFilter == 'technician'}">selected</c:if>>Kỹ thuật</option>
-                            <option value="customer" <c:if test="${roleFilter == 'customer'}">selected</c:if>>Khách hàng</option>
-                            <option value="driver" <c:if test="${roleFilter == 'driver'}">selected</c:if>>Tài xế</option>
+                            <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Nhân viên kho</option>
+                            <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên kinh doanh</option>
+                            <option value="sale_manager" <c:if test="${roleFilter == 'sale_manager'}">selected</c:if>>Trưởng phòng kinh doanh</option>
                             </select>
 
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
                                 <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
-                            <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khoá</option>
+                            <option value="inactive" <c:if test="${statusFilter == 'inactive'}">selected</c:if>>Bị vô hiệu hoá</option>
                             </select>
                             <div class="spacer"></div>
                             <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=list'">
@@ -132,11 +129,10 @@
                                                             <c:when test="${role.roleName == 'admin'}"><span class="pill role-admin"><span class="pdot"></span>Admin</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kho</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Thủ kho</span></c:when>
-                                                            <c:when test="${role.roleName == 'accountant'}"><span class="pill role-account"><span class="pdot"></span>Kế toán</span></c:when>
-                                                            <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên</span></c:when>
-                                                            <c:when test="${role.roleName == 'technician'}"><span class="pill role-staff"><span class="pdot"></span>Kỹ thuật</span></c:when>
-                                                            <c:when test="${role.roleName == 'customer'}"><span class="pill role-viewer"><span class="pdot"></span>Khách hàng</span></c:when>
-                                                            <c:when test="${role.roleName == 'driver'}"><span class="pill role-viewer"><span class="pdot"></span>Tài xế</span></c:when>
+   
+                                                            <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Nhân viên buôn bán</span></c:when>
+                                                            <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Trưởng phòng kinh doanh</span></c:when>
+    
                                                             <c:otherwise><span class="pill role-staff"><span class="pdot"></span><c:out value="${role.roleName}"/></span></c:otherwise>
                                                             </c:choose>
                                                         </c:forEach>
@@ -145,7 +141,7 @@
                                                     <td>
                                                     <c:choose>
                                                         <c:when test="${user.status == 'active'}"><span class="status active"><span class="sdot"></span>Hoạt động</span></c:when>
-                                                        <c:when test="${user.status == 'locked'}"><span class="status locked"><span class="sdot"></span>Bị khoá</span></c:when>
+                                                        <c:when test="${user.status == 'inactive'}"><span class="status locked"><span class="sdot"></span>Bị vô hiệu hoá</span></c:when>
                                                         <c:otherwise><span class="status disabled"><span class="sdot"></span><c:out value="${user.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
