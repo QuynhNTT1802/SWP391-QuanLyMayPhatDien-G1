@@ -44,3 +44,25 @@ main { padding: 20px 24px 40px; }
 .summary-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 12.5px; }
 .summary-stat .v { font-family: var(--font-mono); font-weight: 700; }
 .summary-stat .v.on { color: var(--accent); }
+
+.error-box {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    color: #dc2626;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.error-box-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.error-box ul {
+    margin: 0;
+    padding-left: 18px;
+}
+.error-box li {
+    margin-bottom: 3px;
+}

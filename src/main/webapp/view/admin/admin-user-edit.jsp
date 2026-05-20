@@ -120,8 +120,8 @@
   .seg-opt .sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted-2); }
   .seg-opt.active { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px oklch(0% 0 0 / 0.05); }
   .seg-opt.active[data-val="active"] .sdot { background: var(--accent); }
-  .seg-opt.active[data-val="locked"] { color: var(--danger); }
-  .seg-opt.active[data-val="locked"] .sdot { background: var(--danger); }
+  .seg-opt.active[data-val="inactive"] { color: var(--danger); }
+  .seg-opt.active[data-val="inactive"] .sdot { background: var(--danger); }
   .seg-opt.active[data-val="disabled"] { color: var(--muted); }
   .seg-opt.active[data-val="disabled"] .sdot { background: var(--muted-2); }
 
@@ -230,7 +230,7 @@
               <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Hoạt động</span></c:when>
               <c:when test="${user.status == 'inactive'}"><span class="pill"><span class="pdot"></span>Chưa kích hoạt</span></c:when>
               <c:when test="${user.status == 'pending'}"><span class="pill"><span class="pdot"></span>Chờ duyệt</span></c:when>
-              <c:when test="${user.status == 'locked'}"><span class="pill"><span class="pdot"></span>Khoá</span></c:when>
+              <c:when test="${user.status == 'inactive'}"><span class="pill"><span class="pdot"></span>Vô hiệu hoá</span></c:when>
               <c:otherwise><span class="pill"><span class="pdot"></span>${user.status}</span></c:otherwise>
             </c:choose>
           </div>
@@ -326,7 +326,7 @@
                   <button type="button" class="seg-opt <c:if test='${user.status == "active"}'>active</c:if>" data-val="active"><span class="sdot"></span>Hoạt động</button>
                   <button type="button" class="seg-opt <c:if test='${user.status == "inactive"}'>active</c:if>" data-val="inactive"><span class="sdot"></span>Chưa kích hoạt</button>
                   <button type="button" class="seg-opt <c:if test='${user.status == "pending"}'>active</c:if>" data-val="pending"><span class="sdot"></span>Chờ duyệt</button>
-                  <button type="button" class="seg-opt <c:if test='${user.status == "locked"}'>active</c:if>" data-val="locked"><span class="sdot"></span>Khoá</button>
+                  <button type="button" class="seg-opt <c:if test='${user.status == "inactive"}'>active</c:if>" data-val="inactive"><span class="sdot"></span>Vô hiệu hoá</button>
                 </div>
                 <input type="hidden" name="status" value="${user.status}" />
                 <div class="field-help">"Khoá" tạm thời không thể đăng nhập.</div>
