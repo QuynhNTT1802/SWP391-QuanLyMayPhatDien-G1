@@ -39,6 +39,7 @@ public class ForgotPasswordController extends HttpServlet {
         PasswordResetRequestDAO passwordResetRequestDAO = new PasswordResetRequestDAO();
         List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll();
         List<PasswordResetRequest> pendingList = passwordResetRequestDAO.findByStatus("pending");
+        request.setAttribute("pendingCount", pendingList.size());
         request.setAttribute("listRequests", listRequests);
         request.setAttribute("totalRequests", listRequests.size());
         request.setAttribute("pendingList", pendingList);
