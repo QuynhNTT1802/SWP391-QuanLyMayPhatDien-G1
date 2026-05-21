@@ -28,7 +28,7 @@
     <div>
         <header class="topbar">
             <h1>Chi tiết người dùng</h1>
-            <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users?action=list">Người dùng</a> / <span id="crumbId"><c:out value="${user.name}"/></span></span>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users?action=list">Người dùng</a> / <span id="crumbId"><c:out value="${user.username}"/></span></span>
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}">
@@ -62,7 +62,7 @@
                     <h2 class="hero-name">
                         <c:out value="${user.name}"/>
                         <c:if test="${user.status == 'active'}">
-                            <span class="verified"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+                            <span class="verified"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Đã xác thực</span>
                         </c:if>
                     </h2>
                     <div class="hero-meta">
@@ -76,29 +76,46 @@
                         <c:forEach var="role" items="${user.roles}">
                             <span class="pill role-admin"><span class="pdot"></span>
                                 <c:choose>
-                                    <c:when test="${role.roleName == 'admin'}">Quản trị viên</c:when>
+                                    <c:when test="${role.roleName == 'admin'}">Admin</c:when>
                                     <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
                                     <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
-                                    <c:when test="${role.roleName == 'sales_staff'}">Nhân viên bán hàng</c:when>
-                                    <c:when test="${role.roleName == 'sale_manager'}">Trưởng phòng bán hàng</c:when>
+                                    <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
+                                    <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
+                                    <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
+                                    <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
+                                    <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
                                     <c:otherwise><c:out value="${role.roleName}"/></c:otherwise>
                                 </c:choose>
                             </span>
                         </c:forEach>
                         <c:choose>
                             <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khoá</span></c:when>
+                            <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
                         </c:choose>
                     </div>
+                </div>
+                <!-- PHẦN THIẾU 1: hero-actions -->
+                <div class="hero-actions">
+                    
                 </div>
             </div>
 
             <div class="layout">
+                <!-- PHẦN THIẾU 2: toc (sidebar trái) -->
+                <div class="toc">
+                    <a class="toc-item active" data-toc="info"><span class="toc-num">01</span><span>Thông tin cá nhân</span></a>
+                    <div class="toc-meta">
+                        <strong>#<c:out value="${user.id}"/></strong><br>
+                        Tạo: <c:out value="${createdDate}"/><br>
+                        Cập nhật: <c:out value="${updatedDate}"/>
+                    </div>
+                </div>
+
                 <div class="content">
                     <section class="section" id="info">
                         <div class="section-head">
                             <div>
-                                <div class="section-num">THÔNG TIN CÁ NHÂN</div>
+                                <div class="section-num">01 — THÔNG TIN CÁ NHÂN</div>
                                 <h3 class="section-title">Hồ sơ liên hệ &amp; nhân sự</h3>
                             </div>
                             <div class="section-update">Cập nhật <c:out value="${updatedDate}"/></div>
@@ -130,11 +147,14 @@
                                     <c:forEach var="role" items="${user.roles}">
                                         <span class="pill role-admin"><span class="pdot"></span>
                                             <c:choose>
-                                                <c:when test="${role.roleName == 'admin'}">Quản trị viên</c:when>
+                                                <c:when test="${role.roleName == 'admin'}">Admin</c:when>
                                                 <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
                                                 <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
-                                                <c:when test="${role.roleName == 'sales_staff'}">Nhân viên bán hàng</c:when>
-                                                <c:when test="${role.roleName == 'sale_manager'}">Trưởng phòng bán hàng</c:when>
+                                                <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
+                                                <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
+                                                <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
+                                                <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
+                                                <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
                                                 <c:otherwise><c:out value="${role.roleName}"/></c:otherwise>
                                             </c:choose>
                                         </span>
@@ -146,7 +166,7 @@
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                        <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khoá</span></c:when>
+                                        <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
                                     </c:choose>
                                 </div>
                             </div>
