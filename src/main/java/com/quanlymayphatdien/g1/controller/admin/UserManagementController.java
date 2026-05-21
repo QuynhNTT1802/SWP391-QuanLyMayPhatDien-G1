@@ -191,18 +191,6 @@ public class UserManagementController extends HttpServlet {
                 }
                 if (!roleIdList.isEmpty()) {
                     userDAO.updateUserRoles(newUserId, roleIdList);
-
-                    RoleDAO roleDAO = new RoleDAO();
-                    for (Role r : roleDAO.findAll()) {
-                        if (roleIdList.contains(r.getRoleId()) && "admin".equals(r.getRoleName())) {
-                            String sql = "INSERT INTO admin (admin_id) VALUES (?)";
-                            try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
-                                ps.setInt(1, newUserId);
-                                ps.executeUpdate();
-                            }
-                            break;
-                        }
-                    }
                 }
                 request.getSession().setAttribute("message", "User added successfully!");
             } else {
