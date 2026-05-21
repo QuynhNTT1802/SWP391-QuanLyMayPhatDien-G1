@@ -117,15 +117,19 @@ public class UserManagementController extends HttpServlet {
                 user.setRoles(roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
 
-                // Tính initials
                 String name = user.getName() != null ? user.getName().trim() : "";
-                int sp = name.lastIndexOf(' ');
-                request.setAttribute("userInitials",
-                        name.isEmpty() ? "?" : (name.substring(0, 1)
-                        + (sp >= 0 && sp + 1 < name.length() ? name.substring(sp + 1, sp + 2) : ""))
-                        .toUpperCase());
+                String initials = "";
 
-                // Format dates
+                if (!name.isEmpty()) {
+                    String[] parts = name.split(" ");
+                    if (parts.length == 1) {
+                        initials = parts[0].substring(0, 1);
+                    } else {
+                        initials = parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1);
+                    }
+                }
+                request.setAttribute("userInitials", initials.toUpperCase());
+
                 java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(df) : "—");
