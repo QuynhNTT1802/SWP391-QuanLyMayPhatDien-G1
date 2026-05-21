@@ -17,7 +17,6 @@ public class PasswordResetRequest {
     private String username;
     private String status;
     private Integer processedBy;
-    private String newPassword;
     private String note;
     private LocalDateTime createdAt;
     private LocalDateTime processedAt;
@@ -25,13 +24,12 @@ public class PasswordResetRequest {
     public PasswordResetRequest() {
     }
 
-    public PasswordResetRequest(int id, int userId, String username, String status, Integer processedBy, String newPassword, String note, LocalDateTime createdAt, LocalDateTime processedAt) {
+    public PasswordResetRequest(int id, int userId, String username, String status, Integer processedBy, String note, LocalDateTime createdAt, LocalDateTime processedAt) {
         this.id = id;
         this.userId = userId;
         this.username = username;
         this.status = status;
         this.processedBy = processedBy;
-        this.newPassword = newPassword;
         this.note = note;
         this.createdAt = createdAt;
         this.processedAt = processedAt;
@@ -67,14 +65,6 @@ public class PasswordResetRequest {
 
     public void setProcessedBy(Integer processedBy) {
         this.processedBy = processedBy;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
     }
 
     public String getNote() {
