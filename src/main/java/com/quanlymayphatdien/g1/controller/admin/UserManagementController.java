@@ -129,10 +129,8 @@ public class UserManagementController extends HttpServlet {
                     }
                 }
                 request.setAttribute("userInitials", initials.toUpperCase());
-
-                java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(df) : "—");
+                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(dtf) : "—");
                 request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
 
                 request.getRequestDispatcher("/view/admin/admin-user-detail.jsp").forward(request, response);
