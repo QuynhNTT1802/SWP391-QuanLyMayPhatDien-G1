@@ -175,15 +175,15 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
     @Override
     public boolean update(PasswordResetRequest req) {
         String sql = "UPDATE password_reset_request SET status = ?, processed_by = ?, "
-                + "new_password = ?, note = ?, processed_at = ? WHERE id = ?";
+                + " note = ?, processed_at = ? WHERE id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, req.getStatus());
             statement.setInt(2, req.getProcessedBy());
-            statement.setString(4, req.getNote());
-            statement.setObject(5, req.getProcessedAt());
-            statement.setInt(6, req.getId());
+            statement.setString(3, req.getNote());
+            statement.setObject(4, req.getProcessedAt());
+            statement.setInt(5, req.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
