@@ -120,8 +120,8 @@
   .seg-opt .sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted-2); }
   .seg-opt.active { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px oklch(0% 0 0 / 0.05); }
   .seg-opt.active[data-val="active"] .sdot { background: var(--accent); }
-  .seg-opt.active[data-val="locked"] { color: var(--danger); }
-  .seg-opt.active[data-val="locked"] .sdot { background: var(--danger); }
+  .seg-opt.active[data-val="inactive"] { color: var(--danger); }
+  .seg-opt.active[data-val="inactive"] .sdot { background: var(--danger); }
   .seg-opt.active[data-val="disabled"] { color: var(--muted); }
   .seg-opt.active[data-val="disabled"] .sdot { background: var(--muted-2); }
 
@@ -230,7 +230,7 @@
               <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Hoạt động</span></c:when>
               <c:when test="${user.status == 'inactive'}"><span class="pill"><span class="pdot"></span>Chưa kích hoạt</span></c:when>
               <c:when test="${user.status == 'pending'}"><span class="pill"><span class="pdot"></span>Chờ duyệt</span></c:when>
-              <c:when test="${user.status == 'locked'}"><span class="pill"><span class="pdot"></span>Khoá</span></c:when>
+              <c:when test="${user.status == 'inactive'}"><span class="pill"><span class="pdot"></span>Vô hiệu hoá</span></c:when>
               <c:otherwise><span class="pill"><span class="pdot"></span>${user.status}</span></c:otherwise>
             </c:choose>
           </div>
@@ -311,22 +311,10 @@
                 </div>
               </div>
               <div class="field">
-                <label class="field-label">Kho phu trach <span class="req">*</span></label>
-                <select class="select" name="warehouse" data-orig="HN-01">
-                  <option value="HN-01" selected>HN-01 · Hà Nội (Cầu Giấy)</option>
-                  <option value="HCM-03">HCM-03 · TP.HCM (Tân Bình)</option>
-                  <option value="DN-02">DN-02 · Đà Nẵng (Thanh Khê)</option>
-                  <option value="ALL">Toàn hệ thống (chỉ Admin)</option>
-                </select>
-                <div class="field-help">Người dùng chỉ thao tác trên kho được gán</div>
-              </div>
-              <div class="field">
                 <label class="field-label">Trạng thái tài khoản</label>
                 <div class="seg" data-name="status" data-orig="${user.status}">
                   <button type="button" class="seg-opt <c:if test='${user.status == "active"}'>active</c:if>" data-val="active"><span class="sdot"></span>Hoạt động</button>
                   <button type="button" class="seg-opt <c:if test='${user.status == "inactive"}'>active</c:if>" data-val="inactive"><span class="sdot"></span>Chưa kích hoạt</button>
-                  <button type="button" class="seg-opt <c:if test='${user.status == "pending"}'>active</c:if>" data-val="pending"><span class="sdot"></span>Chờ duyệt</button>
-                  <button type="button" class="seg-opt <c:if test='${user.status == "locked"}'>active</c:if>" data-val="locked"><span class="sdot"></span>Khoá</button>
                 </div>
                 <input type="hidden" name="status" value="${user.status}" />
                 <div class="field-help">"Khoá" tạm thời không thể đăng nhập.</div>
@@ -337,7 +325,7 @@
           <div class="form-section">
             <div class="form-section-head">
               <div class="form-section-head-left">
-                <div class="form-section-num">02b — QUYEN CA NHAN (Override)</div>
+                <div class="form-section-num">03 — QUYEN CA NHAN</div>
                 <h3 class="form-section-title">Ghi de quyen nguoi dung</h3>
                 <div class="form-section-desc">GRANT cap them quyen, DENY tu choi quyen (uu tien cao hon role). De trong = theo role.</div>
               </div>
@@ -380,47 +368,7 @@
             </div>
           </div>
 
-          <div class="form-section">
-            <div class="form-section-head">
-              <div class="form-section-head-left">
-                <div class="form-section-num">03 — VUNG NGUY HIEM</div>
-                <h3 class="form-section-title">Hành động không thể hoàn tác</h3>
-                <div class="form-section-desc">Các thao tác bên dưới cần xác nhận và sẽ ghi audit log toàn cục.</div>
-              </div>
-            </div>
-            <div class="danger-zone">
-              <div class="danger-row">
-                <div class="danger-text">
-                  <div class="t">Reset mật khẩu</div>
-                  <div class="d">Gửi email link đặt lại mật khẩu tới ${user.email}. Link hết hạn sau 24 giờ.</div>
-                </div>
-                <button type="button" class="btn" data-danger="reset-pw">
-                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.81 1 6.5 2.62L21 8M21 3v5h-5"/></svg>
-                  Gửi reset
-                </button>
-              </div>
-              <div class="danger-row">
-                <div class="danger-text">
-                  <div class="t">Đăng xuất khỏi mọi thiết bị</div>
-                  <div class="d">Vô hiệu hoá toàn bộ 3 phiên đang hoạt động (MacBook, iPhone, Dell). Người dùng phải đăng nhập lại.</div>
-                </div>
-                <button type="button" class="btn" data-danger="logout-all">
-                  <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                  Đăng xuất
-                </button>
-              </div>
-              <div class="danger-row">
-                <div class="danger-text">
-                  <div class="t">Xoá tài khoản</div>
-                  <div class="d">Soft delete · Có thể khôi phục trong 30 ngày. Phiếu đã tạo bởi user sẽ giữ nguyên audit trail.</div>
-                </div>
-                <button type="button" class="btn btn-danger" data-danger="delete">
-                  <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  Xoá tài khoản
-                </button>
-              </div>
-            </div>
-          </div>
+
         </form>
 
         <aside>

@@ -5,9 +5,11 @@
 package com.quanlymayphatdien.g1.controller.authen;
 
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
+import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
+import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
@@ -86,9 +88,14 @@ public class AuthenServlet extends HttpServlet {
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
         String username = request.getParameter("username");
         UserDAO userDAO = new UserDAO();
+        PasswordResetRequestDAO prDAO = new PasswordResetRequestDAO();
         User user = userDAO.findByUsername(username);
         if (user == null) {
             request.setAttribute("error", "Không có tài khoản trong hệ thống");
+            return "/view/authen/forgotpass.jsp";
+        }
+        if(prDAO.hasPendingRequest(user.getId())){
+            request.setAttribute("error", "Bạn đã gửi yêu cầu, hãy chờ đợi để được cấp mật khẩu");
             return "/view/authen/forgotpass.jsp";
         }
         PasswordResetRequest req = new PasswordResetRequest();
@@ -139,6 +146,10 @@ public class AuthenServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("loggedUser", user);
             session.setAttribute("username", user.getUsername());
+
+            RoleDAO roleDAO = new RoleDAO();
+            List<Role> roles = roleDAO.getRolesByUserId(user.getId());
+            user.setRoles(roles);
 
             PermissionDAO perDAO = new PermissionDAO();
             Set<String> perms = perDAO.getEffectPermissions(user.getId());
