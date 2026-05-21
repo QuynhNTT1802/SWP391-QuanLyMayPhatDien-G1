@@ -29,7 +29,7 @@
                 <div>
                     <header class="topbar">
                         <h1>Người dùng</h1>
-                        <span class="crumb">/ <a href="#">Quản trị</a> / Người dùng</span>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users">Quản trị</a> / Người dùng</span>
                         <div class="top-actions">
                             <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -45,9 +45,9 @@
                 <main>
                     <div class="page-head">
                         <div class="left">
-                            <div class="eyebrow">Quản trị · Super Admin</div>
+                            <div class="eyebrow">Quản trị · Admin</div>
                             <h2 class="page-title">Quản lý người dùng</h2>
-                            <div class="page-sub">${totalUsers} tài khoản · Cập nhật <c:out value="${nowFormatted}"/></div>
+                            <div class="page-sub">${totalUsers} tài khoản</div>
                         </div>
                     </div>
 
@@ -72,21 +72,17 @@
                             <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo tên hoặc email…" autocomplete="off" />
                         </div>
 
-                        <select class="filter-select" name="role" onchange="this.form.submit()">
-                            <option value="">Vai trò: Tất cả</option>
-                            <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Admin</option>
-                            <option value="warehouse_manager" <c:if test="${roleFilter == 'warehouse_manager'}">selected</c:if>>Quản lý kho</option>
-                            <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
-                            <option value="accountant" <c:if test="${roleFilter == 'accountant'}">selected</c:if>>Kế toán</option>
-                            <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên</option>
-                            <option value="technician" <c:if test="${roleFilter == 'technician'}">selected</c:if>>Kỹ thuật</option>
-                            <option value="customer" <c:if test="${roleFilter == 'customer'}">selected</c:if>>Khách hàng</option>
-                            <option value="driver" <c:if test="${roleFilter == 'driver'}">selected</c:if>>Tài xế</option>
+                            <select class="filter-select" name="role" onchange="this.form.submit()">
+                                <option value="">Vai trò: Tất cả</option>
+                                <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Admin</option>
+                                <option value="warehouse_manager" <c:if test="${roleFilter == 'warehouse_manager'}">selected</c:if>>Quản lý kho</option>
+                                <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
+                                <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên bán hàng</option>
+                                <option value="sale_manager" <c:if test="${roleFilter == 'sale_manager'}">selected</c:if>>Quản lý bán hàng</option>
                             </select>
-
-                            <select class="filter-select" name="status" onchange="this.form.submit()">
-                                <option value="">Trạng thái: Tất cả</option>
-                                <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
+                                <select class="filter-select" name="status" onchange="this.form.submit()">
+                                    <option value="">Trạng thái: Tất cả</option>
+                                    <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
                             <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khoá</option>
                             </select>
                             <div class="spacer"></div>
@@ -132,17 +128,14 @@
                                                             <c:when test="${role.roleName == 'admin'}"><span class="pill role-admin"><span class="pdot"></span>Admin</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kho</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Thủ kho</span></c:when>
-                                                            <c:when test="${role.roleName == 'accountant'}"><span class="pill role-account"><span class="pdot"></span>Kế toán</span></c:when>
+                                                            <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý bán hàng</span></c:when>
                                                             <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên</span></c:when>
-                                                            <c:when test="${role.roleName == 'technician'}"><span class="pill role-staff"><span class="pdot"></span>Kỹ thuật</span></c:when>
-                                                            <c:when test="${role.roleName == 'customer'}"><span class="pill role-viewer"><span class="pdot"></span>Khách hàng</span></c:when>
-                                                            <c:when test="${role.roleName == 'driver'}"><span class="pill role-viewer"><span class="pdot"></span>Tài xế</span></c:when>
                                                             <c:otherwise><span class="pill role-staff"><span class="pdot"></span><c:out value="${role.roleName}"/></span></c:otherwise>
                                                             </c:choose>
                                                         </c:forEach>
                                                         <c:if test="${empty user.roles}"><span class="pill role-staff"><span class="pdot"></span>—</span></c:if>
-                                                    </td>
-                                                    <td>
+                                                </td>
+                                                <td>
                                                     <c:choose>
                                                         <c:when test="${user.status == 'active'}"><span class="status active"><span class="sdot"></span>Hoạt động</span></c:when>
                                                         <c:when test="${user.status == 'locked'}"><span class="status locked"><span class="sdot"></span>Bị khoá</span></c:when>

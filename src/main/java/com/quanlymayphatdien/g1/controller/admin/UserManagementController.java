@@ -397,20 +397,20 @@ public class UserManagementController extends HttpServlet {
                 }
 
                 if (isAdmin) {
-                    request.getSession().setAttribute("message", "Cannot deactivate admin");
+                    request.getSession().setAttribute("message", "Không thể khóa Quản trị viên");
                 } else {
                     boolean check = userDAO.deactivateAccount(userId);
                     if (check) {
-                        request.getSession().setAttribute("message", "Deactivate successfully");
+                        request.getSession().setAttribute("message", "Khóa người dùng thành công");
                     } else {
-                        request.getSession().setAttribute("message", "Fail to deactivate");
+                        request.getSession().setAttribute("message", "Khóa người dùng thất bại");
                     }
                 }
             } else {
-                request.getSession().setAttribute("message", "User not found");
+                request.getSession().setAttribute("message", "Không tìm thấy người dùng");
             }
         } else {
-            request.getSession().setAttribute("message", "UserID not found");
+            request.getSession().setAttribute("message", "Không tìm thấy ID");
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
@@ -428,17 +428,18 @@ public class UserManagementController extends HttpServlet {
             UserDAO userDAO = new UserDAO();
             boolean check = userDAO.activateAccount(userId);
             if (check) {
-                request.getSession().setAttribute("message", "Activate user  successfully");
+                request.getSession().setAttribute("message", "Kích hoạt người dùng thành công");
             } else {
-                request.getSession().setAttribute("message", "Fail to activate user");
+                request.getSession().setAttribute("message", "Kích hoạt người dùng thất bại");
             }
         } else {
-            request.getSession().setAttribute("message", "UserID not found");
+            request.getSession().setAttribute("message", "Không tìm thấy ID");
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
 
-    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void listUsers(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String searchFilter = request.getParameter("search");
         String statusFilter = request.getParameter("status");
         String roleFilter = request.getParameter("role");
@@ -459,8 +460,10 @@ public class UserManagementController extends HttpServlet {
 
         UserDAO userDAO = new UserDAO();
         List<User> users = userDAO.findUsersWithRoles(roleFilter, statusFilter, searchFilter, page, pageSize);
+
         prepareUserDisplayData(users, request);
-        int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
+
+        int totalUsers = userDAO.getTotalFilteredUsers(roleFilter, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
         request.setAttribute("users", users);
@@ -470,10 +473,8 @@ public class UserManagementController extends HttpServlet {
         request.setAttribute("roleFilter", roleFilter);
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("searchFilter", searchFilter);
-
         request.setAttribute("activeCount", userDAO.countUsersByStatus("active"));
         request.setAttribute("lockedCount", userDAO.countUsersByStatus("locked"));
-        request.setAttribute("now", LocalDateTime.now());
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
@@ -481,37 +482,31 @@ public class UserManagementController extends HttpServlet {
     private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
         List<String> userInitials = new ArrayList<>();
         List<String> userAvatarClass = new ArrayList<>();
-        List<String> userCreatedDate = new ArrayList<>();
-        List<String> userCreatedTime = new ArrayList<>();
         String[] avatarColors = {"green", "blue", "orange", "purple", "pink", "teal", "grey"};
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
 
         for (int i = 0; i < users.size(); i++) {
             User u = users.get(i);
+
             String name = u.getName() != null ? u.getName().trim() : "";
-            int lastSpace = name.lastIndexOf(' ');
-            String initials = name.isEmpty() ? "?"
-                    : (name.substring(0, 1)
-                            + (lastSpace >= 0 && lastSpace + 1 < name.length()
-                            ? name.substring(lastSpace + 1, lastSpace + 2) : ""))
-                            .toUpperCase();
-            userInitials.add(initials);
-            userAvatarClass.add(avatarColors[i % 7]);
-            if (u.getCreatedAt() != null) {
-                userCreatedDate.add(u.getCreatedAt().format(dateFmt));
-                userCreatedTime.add(u.getCreatedAt().format(timeFmt));
+            String initials = "";
+
+            if (!name.isEmpty()) {
+                String[] parts = name.split(" ");
+                if (parts.length == 1) {
+                    initials = parts[0].substring(0, 1);
+                } else {
+                    initials = parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1);
+                }
             } else {
-                userCreatedDate.add("—");
-                userCreatedTime.add("");
+                initials = "?";
             }
+
+            userInitials.add(initials.toUpperCase());
+            userAvatarClass.add(avatarColors[i % avatarColors.length]);
         }
+
         request.setAttribute("userInitials", userInitials);
         request.setAttribute("userAvatarClass", userAvatarClass);
-        request.setAttribute("userCreatedDate", userCreatedDate);
-        request.setAttribute("userCreatedTime", userCreatedTime);
-        request.setAttribute("nowFormatted",
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
     }
 
 }
