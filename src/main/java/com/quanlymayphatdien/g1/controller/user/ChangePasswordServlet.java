@@ -97,15 +97,20 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
 
-        user.setPassword(BCryptUtils.hash(newPassword));
-        user.setUpdatedAt(LocalDateTime.now());
-        user.setUpdatedBy(currentUser.getId());
+        if (BCryptUtils.hash(newPassword).equals(user.getPassword())
+                || (!user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$") && newPassword.equals(user.getPassword()))) {
+            request.setAttribute("error", "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+            doGet(request, response);
+            return;
+        }
 
-        boolean updated = userDAO.updatePassword(user.getId(), user.getPassword());
+        String newHashedPassword = BCryptUtils.hash(newPassword);
+        boolean updated = userDAO.updatePassword(user.getId(), newHashedPassword);
 
         if (updated) {
-            session.setAttribute("loggedUser", user);
-            request.setAttribute("success", "Đổi mật khẩu thành công!");
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
         } else {
             request.setAttribute("error", "Có lỗi xảy ra khi đổi mật khẩu.");
         }
