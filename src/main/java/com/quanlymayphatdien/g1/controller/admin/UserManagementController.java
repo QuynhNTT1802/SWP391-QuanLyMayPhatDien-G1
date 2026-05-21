@@ -141,8 +141,7 @@ public class UserManagementController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         RoleDAO roleDAO = new RoleDAO();
         request.setAttribute("allRoles", roleDAO.findAll());
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/admin-user-create.jsp");
-        dispatcher.forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-user-create.jsp").forward(request, response);
     }
 
     private void createUser(HttpServletRequest request, HttpServletResponse response)
