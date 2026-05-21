@@ -288,7 +288,7 @@
   <div>
     <header class="topbar">
       <h1>Bảo mật</h1>
-      <span class="crumb">/ <a href="profile.html">Hồ sơ</a> · Đổi mật khẩu</span>
+      <span class="crumb">/ <a href="<%=request.getContextPath()%>/profile">Hồ sơ</a> · Đổi mật khẩu</span>
 
       <div class="top-actions">
         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
@@ -321,7 +321,7 @@
       <div class="page-head">
         <div class="eyebrow">Bảo mật tài khoản</div>
         <h1 class="title">Đổi <em>mật khẩu</em> đăng nhập</h1>
-        <div class="lede">Đặt mật khẩu mới ít nhất <em>10 ký tự</em>, có cả chữ hoa, chữ thường, số và ký tự đặc biệt. Sau khi đổi, các thiết bị khác sẽ bị đăng xuất tự động — bạn vẫn ở lại phiên này.</div>
+        <div class="lede">Đặt mật khẩu mới ít nhất <em>10 ký tự</em>, có cả chữ hoa, chữ thường, số và ký tự đặc biệt.</div>
       </div>
 
       <div class="tabs-row">
@@ -348,12 +348,7 @@
               Đổi mật khẩu
             </a>
           </div>
-          <div class="toc-meta">
-            <div class="row"><span>Mật khẩu</span><span id="pwAgeMeta">87 ngày</span></div>
-            <div class="row"><span>2FA</span><span style="color:var(--accent)">Bật</span></div>
-            <div class="row"><span>Thiết bị</span><span>3 đang on</span></div>
-            <div class="row"><span>Đăng nhập gần nhất</span><span>13/05 14:18</span></div>
-          </div>
+          
         </aside>
 
         <div class="content">
@@ -376,14 +371,8 @@
                     Tài khoản đang an toàn
                     <span class="pill-tiny">Khoá HSM</span>
                   </div>
-                  <div class="status-desc">
-                    Mật khẩu hiện tại đặt cách đây <strong style="color:var(--fg)">87 ngày</strong>. Nên đổi mỗi 90 ngày theo chính sách công ty (PSC-04).
-                  </div>
-                  <div class="status-meta">
-                    <span>2FA<strong>SMS + Authenticator</strong></span>
-                    <span>IP cuối<strong>27.71.•••.42 / Hà Nội</strong></span>
-                    <span>Backup codes<strong>còn 8 / 10</strong></span>
-                  </div>
+                  
+                  
                 </div>
               </div>
             </div>
