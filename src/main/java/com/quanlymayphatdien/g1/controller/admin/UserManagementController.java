@@ -40,7 +40,7 @@ public class UserManagementController extends HttpServlet {
             return;
         }
         String action = request.getParameter("action");
-        if (action == null) {
+        if (action == null || action.isEmpty()) {
             action = "list";
         }
 
@@ -67,7 +67,6 @@ public class UserManagementController extends HttpServlet {
                 activateUser(request, response);
                 break;
             case "list":
-            default:
                 listUsers(request, response);
                 break;
         }
@@ -99,7 +98,6 @@ public class UserManagementController extends HttpServlet {
                 activateUser(request, response);
                 break;
             case "list":
-            default:
                 listUsers(request, response);
                 break;
         }
@@ -205,9 +203,9 @@ public class UserManagementController extends HttpServlet {
                         }
                     }
                 }
-                request.getSession().setAttribute("message", "User added successfully!");
+                request.getSession().setAttribute("message", "Tạo người dùng thành công!");
             } else {
-                request.getSession().setAttribute("message", "Failed to add user!");
+                request.getSession().setAttribute("message", "Tạo người dùng thất bại!");
             }
 
         } catch (Exception e) {
@@ -286,7 +284,6 @@ public class UserManagementController extends HttpServlet {
 
                 boolean isUpdated = userDAO.update(user);
 
-                //add role
                 if (isUpdated) {
                     String[] roleIds = request.getParameterValues("roleIds");
                     List<Integer> roleIdList = new ArrayList<>();
