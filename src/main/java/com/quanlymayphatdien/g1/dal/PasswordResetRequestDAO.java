@@ -181,7 +181,6 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
             statement = connection.prepareStatement(sql);
             statement.setString(1, req.getStatus());
             statement.setInt(2, req.getProcessedBy());
-            statement.setString(3, req.getNewPassword());
             statement.setString(4, req.getNote());
             statement.setObject(5, req.getProcessedAt());
             statement.setInt(6, req.getId());
@@ -207,7 +206,6 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
         req.setUsername(rs.getString("username"));
         req.setStatus(rs.getString("status"));
         req.setProcessedBy(rs.getObject("processed_by") != null ? rs.getInt("processed_by") : null);
-        req.setNewPassword(rs.getString("new_password"));
         req.setNote(rs.getString("note"));
         req.setCreatedAt(rs.getTimestamp("created_at") != null
                 ? rs.getTimestamp("created_at").toLocalDateTime() : null);
