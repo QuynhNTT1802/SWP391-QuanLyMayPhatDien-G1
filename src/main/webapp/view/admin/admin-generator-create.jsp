@@ -11,7 +11,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Them may phat dien — Warehouse OS</title>
+        <title>Thêm máy phát điện — Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,8 +26,8 @@
 
             <div>
                 <header class="topbar">
-                    <h1>Them may phat dien</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/generators?action=list">May phat dien</a> / Them moi</span>
+                    <h1>Thêm máy phát điện</h1>
+                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/generators?action=list">Máy phát điện</a> / Thêm mới</span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                     </div>
@@ -43,70 +43,70 @@
 
                     <a class="back-link" href="${pageContext.request.contextPath}/admin/generators?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Quay lai danh sach
+                        Quay lại danh sách
                     </a>
 
                     <div class="page-head">
-                        <div class="eyebrow">Quan tri · May phat dien moi</div>
-                        <h2 class="page-title">Them may phat dien</h2>
+                        <div class="eyebrow">Quản trị · Máy phát điện mới</div>
+                        <h2 class="page-title">Thêm máy phát điện</h2>
                     </div>
 
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/admin/generators?action=create">
                             <div class="form-section">
                                 <div class="form-section-head">
-                                    <div class="form-section-num">01 — THONG TIN CO BAN</div>
-                                    <h3 class="form-section-title">Mau may &amp; thong so</h3>
+                                    <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
+                                    <h3 class="form-section-title">Mẫu máy &amp; thông số</h3>
                                 </div>
                                 <div class="form-grid">
                                     <div class="field">
-                                        <label class="field-label">Mau may <span class="req">*</span></label>
+                                        <label class="field-label">Mẫu máy <span class="req">*</span></label>
                                         <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value="${param.model}"/>" required />
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Thuong hieu <span class="req">*</span></label>
+                                        <label class="field-label">Thương hiệu <span class="req">*</span></label>
                                         <input class="input" name="brand" placeholder="VD: Honda" value="<c:out value="${param.brand}"/>" required />
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Cong suat (kVA) <span class="req">*</span></label>
+                                        <label class="field-label">Công suất (kVA) <span class="req">*</span></label>
                                         <input class="input mono" name="powerRating" type="number" step="0.01" min="0" placeholder="VD: 5.0" value="<c:out value="${param.powerRating}"/>" required />
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Don gia (VND) <span class="req">*</span></label>
+                                        <label class="field-label">Đơn giá (VND) <span class="req">*</span></label>
                                         <input class="input mono" name="unitPrice" type="number" step="1" min="0" placeholder="VD: 15000000" value="<c:out value="${param.unitPrice}"/>" required />
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">So luong ton kho <span class="req">*</span></label>
+                                        <label class="field-label">Số lượng tồn kho <span class="req">*</span></label>
                                         <input class="input mono" name="stockQuantity" type="number" min="0" placeholder="VD: 10" value="<c:out value="${param.stockQuantity}"/>" required />
                                     </div>
                                     <div class="field full-width">
-                                        <label class="field-label">Mo ta</label>
-                                        <textarea class="input" name="description" rows="3" placeholder="Mo ta chi tiet ve may phat dien..."><c:out value="${param.description}"/></textarea>
+                                        <label class="field-label">Mô tả</label>
+                                        <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${param.description}"/></textarea>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-section">
                                 <div class="form-section-head">
-                                    <div class="form-section-num">02 — TRANG THAI</div>
-                                    <h3 class="form-section-title">Kich hoat may</h3>
+                                    <div class="form-section-num">02 — TRẠNG THÁI</div>
+                                    <h3 class="form-section-title">Kích hoạt máy</h3>
                                 </div>
                                 <div class="form-grid single">
                                     <div class="field">
-                                        <label class="field-label">Trang thai</label>
+                                        <label class="field-label">Trạng thái</label>
                                         <select class="select" name="status">
-                                            <option value="active">Hoat dong</option>
-                                            <option value="locked">Bi khoa</option>
+                                            <option value="active">Hoạt động</option>
+                                            <option value="locked">Bị khóa</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
-                                <a class="btn" href="${pageContext.request.contextPath}/admin/generators?action=list">Huy</a>
+                                <a class="btn" href="${pageContext.request.contextPath}/admin/generators?action=list">Hủy</a>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                    Tao may phat dien
+                                    Tạo máy phát điện
                                 </button>
                             </div>
                         </form>
