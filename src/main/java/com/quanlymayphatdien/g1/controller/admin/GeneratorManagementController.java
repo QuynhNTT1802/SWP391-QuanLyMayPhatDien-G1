@@ -117,7 +117,7 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("activeCount", dao.countByStatus("active"));
         request.setAttribute("lockedCount", dao.countByStatus("locked"));
 
-        request.getRequestDispatcher("/view/admin/generator-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-generator.jsp").forward(request, response);
     }
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -134,7 +134,7 @@ public class GeneratorManagementController extends HttpServlet {
                         ? g.getCreatedAt().format(df) : "—");
                 request.setAttribute("updatedDate", g.getUpdatedAt() != null
                         ? g.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "—");
-                request.getRequestDispatcher("/view/admin/generator-detail.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/admin/admin-generator-detail.jsp").forward(request, response);
                 return;
             }
         }
@@ -143,7 +143,7 @@ public class GeneratorManagementController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/view/admin/generator-create.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-generator-create.jsp").forward(request, response);
     }
 
     private void createGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -177,12 +177,12 @@ public class GeneratorManagementController extends HttpServlet {
             GeneratorDAO dao = new GeneratorDAO();
             int newId = dao.insert(g);
             if (newId > 0) {
-                request.getSession().setAttribute("message", "Them may phat dien thanh cong!");
+                request.getSession().setAttribute("message", "Thêm máy phát điện thành công!");
             } else {
-                request.getSession().setAttribute("message", "Them may phat dien that bai!");
+                request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
             }
         } catch (Exception e) {
-            request.getSession().setAttribute("message", "Loi: " + e.getMessage());
+            request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/generators?action=list");
     }
@@ -196,7 +196,7 @@ public class GeneratorManagementController extends HttpServlet {
             Generator g = dao.findById(id);
             if (g != null) {
                 request.setAttribute("generator", g);
-                request.getRequestDispatcher("/view/admin/generator-edit.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/admin/admin-generator-edit.jsp").forward(request, response);
                 return;
             }
         }
@@ -230,9 +230,9 @@ public class GeneratorManagementController extends HttpServlet {
 
                 boolean ok = dao.update(g);
                 if (ok) {
-                    request.getSession().setAttribute("message", "Cap nhat thanh cong!");
+                    request.getSession().setAttribute("message", "Cập nhật thành công!");
                 } else {
-                    request.getSession().setAttribute("message", "Cap nhat that bai!");
+                    request.getSession().setAttribute("message", "Cập nhật thất bại!");
                 }
             }
         } catch (Exception e) {
@@ -252,7 +252,7 @@ public class GeneratorManagementController extends HttpServlet {
             GeneratorDAO dao = new GeneratorDAO();
             boolean ok = dao.activate(id);
             request.getSession().setAttribute("message",
-                    ok ? "Kich hoat thanh cong!" : "Kich hoat that bai!");
+                    ok ? "Kích hoạt thành công!" : "Kích hoạt thất bại!");
         }
         response.sendRedirect(request.getContextPath() + "/admin/generators?action=list&page=" + currentPage);
     }
@@ -268,7 +268,7 @@ public class GeneratorManagementController extends HttpServlet {
             GeneratorDAO dao = new GeneratorDAO();
             boolean ok = dao.deactivate(id);
             request.getSession().setAttribute("message",
-                    ok ? "Khoa thanh cong!" : "Khoa that bai!");
+                    ok ? "Khóa thành công!" : "Khóa thất bại!");
         }
         response.sendRedirect(request.getContextPath() + "/admin/generators?action=list&page=" + currentPage);
     }

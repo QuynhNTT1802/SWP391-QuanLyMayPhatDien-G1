@@ -17,14 +17,14 @@
 
   // confirm deactivate
   function confirmDeactivateGenerator(id, page) {
-    confirmAction('Khoa may phat dien', 'Mau may nay se khong kha dung cho don hang. Tiep tuc?', () => {
+    confirmAction('Khóa máy phát điện', 'Mẫu máy này sẽ không khả dụng cho đơn hàng. Tiếp tục?', () => {
       window.location.href = APP_CTX + '/admin/generators?action=deactivate&id=' + id + '&page=' + page;
     });
   }
 
   // confirm activate
   function confirmActivateGenerator(id, page) {
-    confirmAction('Kich hoat may phat dien', 'Mau may nay se kha dung tro lai. Tiep tuc?', () => {
+    confirmAction('Kích hoạt máy phát điện', 'Mẫu máy này sẽ khả dụng trở lại. Tiếp tục?', () => {
       window.location.href = APP_CTX + '/admin/generators?action=activate&id=' + id + '&page=' + page;
     });
   }
