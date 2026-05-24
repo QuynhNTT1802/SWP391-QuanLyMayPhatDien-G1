@@ -28,6 +28,7 @@
     boolean hasUsers        = userPermissions != null && userPermissions.contains("users.view");
     boolean hasRoles        = userPermissions != null && userPermissions.contains("roles.view");
     boolean hasForgotPw     = userPermissions != null && userPermissions.contains("forgot_pw.process");
+    boolean hasCategories   = userPermissions != null && userPermissions.contains("categories.view");
     boolean hasProfile      = userPermissions != null && userPermissions.contains("profile.view");
     boolean hasPassword     = userPermissions != null && userPermissions.contains("password.change");
 
@@ -75,6 +76,15 @@
         <% } %>
 
         <div class="nav-section">Quan tri</div>
+        <% if (hasCategories) { %>
+        <a href="<%=request.getContextPath()%>/admin/categories">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            Danh mục
+        </a>
+        <% } %>
         <% if (hasUsers) { %>
         <a href="<%=request.getContextPath()%>/admin/users">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>

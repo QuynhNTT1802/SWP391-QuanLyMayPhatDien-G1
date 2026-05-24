@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     public List<String> getDistrictTypes() {
         List<String> types = new ArrayList<>();
-        String sql = "select district type from categories order by type";
+        String sql = "select distinct type from categories order by type";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             ResultSet rs = p.executeQuery();
@@ -69,7 +70,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     }
 
     @Override
-    public List findAll() {
+    public List<Category> findAll() {
         List<Category> list = new ArrayList<>();
         String sql = "select * from categories order by type,name ";
         try (Connection c = getConnection()) {
@@ -104,7 +105,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     @Override
     public boolean delete(Category t) {
-        String sql = "update categories set status = 'inactive', update_at = ? where id = ?";
+        String sql = "update categories set status = 'inactive', updated_at = ? where id = ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setObject(1, LocalDateTime.now());
@@ -120,7 +121,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     public int insert(Category t) {
         String sql = "insert into categories (name, type, description, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             p.setString(1, t.getName());
             p.setString(2, t.getType());
             p.setString(3, t.getDescription());
