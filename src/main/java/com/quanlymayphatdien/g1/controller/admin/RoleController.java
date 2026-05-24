@@ -21,8 +21,8 @@ import java.util.Map;
 import java.util.Set;
 
 @WebServlet(name = "RoleController", urlPatterns = {
-    "/admin/roles", 
-    "/admin/role/edit", 
+    "/admin/roles",
+    "/admin/role/edit",
     "/admin/role/save"
 })
 public class RoleController extends HttpServlet {
@@ -87,9 +87,9 @@ public class RoleController extends HttpServlet {
     private void viewRolePermission(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String idParam = request.getParameter("id");
         String permSearch = request.getParameter("permSearch");
-        
+
         List<Permission> allPermissions = perDAO.findAll();
-        
+
         // Ví dụ: "users" -> [Xem, Tạo, Sửa, Xoá]
         Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
         for (Permission p : allPermissions) {
@@ -106,10 +106,13 @@ public class RoleController extends HttpServlet {
             int roleId = Integer.parseInt(idParam);
             Role curRole = null;
             for (Role r : roleDAO.findAll()) {
-                if (r.getRoleId() == roleId) { curRole = r; break; }
+                if (r.getRoleId() == roleId) {
+                    curRole = r;
+                    break;
+                }
             }
             List<Permission> rolePermissions = perDAO.getPermissionByRoleId(roleId);
-            
+
             request.setAttribute("role", curRole);
             request.setAttribute("rolePermissions", rolePermissions);
         }

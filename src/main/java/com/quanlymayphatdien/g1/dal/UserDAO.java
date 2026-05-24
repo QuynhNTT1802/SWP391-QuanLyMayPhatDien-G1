@@ -35,9 +35,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         String sql = "UPDATE user SET name = ?, username = ?, email = ?, phone = ?, "
                 + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
         try {
-            
+
             connection = getConnection();
-            statement = connection.prepareStatement(sql); 
+            statement = connection.prepareStatement(sql);
             statement.setString(1, user.getName());
             statement.setString(2, user.getUsername());
             statement.setString(3, user.getEmail());
@@ -130,7 +130,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
         return null;
     }
-    
+
     public User findByUsername(String username) {
         String sql = "SELECT * FROM user WHERE username = ?";
         try {
@@ -143,10 +143,9 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        }
         return null;
     }
-    
 
     public boolean activateAccount(int userId) {
         String sql = "UPDATE user SET status = ? WHERE id = ?";
@@ -169,7 +168,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, "inactive");
+            statement.setString(1, "locked");
             statement.setInt(2, userId);
 
             int affectedRows = statement.executeUpdate();
@@ -237,7 +236,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         return new ArrayList<>();
     }
 
-
     public List<User> findUsersWithRoles(String roleFilter, String statusFilter,
             String searchFilter, int page, int pageSize) {
         List<User> users = findUsersWithFilters(roleFilter, statusFilter, searchFilter, page, pageSize);
@@ -249,21 +247,35 @@ public class UserDAO extends DBContext implements I_DAO<User> {
     }
 
     public int getTotalFilteredUsers(String roleFilter, String statusFilter, String searchFilter) {
-        String sql = "SELECT COUNT(*) FROM user u WHERE 1=1 ";
+        String sql = "SELECT COUNT(*) FROM user u";
         List<String> inputs = new ArrayList<>();
+        boolean hasCondition = false;
 
         if (roleFilter != null && !roleFilter.isEmpty()) {
-            sql += "AND EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
+            sql += " WHERE EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?)";
             inputs.add(roleFilter);
+            hasCondition = true;
         }
 
         if (statusFilter != null && !statusFilter.isEmpty()) {
-            sql += "AND u.status = ? ";
+            if (hasCondition) {
+                sql += " AND";
+            } else {
+                sql += " WHERE";
+                hasCondition = true;
+            }
+            sql += " u.status = ?";
             inputs.add(statusFilter);
         }
 
         if (searchFilter != null && !searchFilter.trim().isEmpty()) {
-            sql += "AND (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?) ";
+            if (hasCondition) {
+                sql += " AND";
+            } else {
+                sql += " WHERE";
+                hasCondition = true;
+            }
+            sql += " (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?)";
             String searchPattern = "%" + searchFilter.trim() + "%";
             inputs.add(searchPattern);
             inputs.add(searchPattern);
@@ -284,7 +296,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
-        } 
+        }
         return 0;
     }
 
@@ -337,7 +349,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        }
         return false;
     }
 
@@ -359,7 +371,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } 
+        }
         return false;
     }
 
@@ -415,19 +427,19 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
         return 0;
     }
-    
+
     public void updateUserRoles(int userId, List<Integer> roleIds) throws SQLException {
         String deleteOld = "delete from user_roles where user_id = ?";
         String insertNew = "insert into user_roles (user_id, role_id) values (?,?)";
-        
+
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
             try {
                 PreparedStatement del = c.prepareStatement(deleteOld);
                 del.setInt(1, userId);
                 del.executeUpdate();
-                
-                if (roleIds != null && !roleIds.isEmpty()){
+
+                if (roleIds != null && !roleIds.isEmpty()) {
                     PreparedStatement ins = c.prepareStatement(insertNew);
                     for (Integer roleId : roleIds) {
                         ins.setInt(1, userId);
@@ -443,6 +455,5 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         }
     }
-    
 
 }
