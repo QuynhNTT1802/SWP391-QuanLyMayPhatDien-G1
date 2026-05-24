@@ -25,7 +25,8 @@ public class SecurityFilter implements Filter {
         Map.entry("/admin/roles",          "roles.view"),
         Map.entry("/admin/role/edit",      "roles.update"),
         Map.entry("/admin/role/save",      "roles.update"),
-        Map.entry("/admin/forgot-password","forgot_pw.process")
+        Map.entry("/admin/forgot-password","forgot_pw.process"),
+        Map.entry("/admin/categories",     "categories.view")
     );
 
     @Override
@@ -84,6 +85,17 @@ public class SecurityFilter implements Filter {
                 requiredPer = "roles.update";
             } else if ("edit_permissions".equals(action)) {
                 requiredPer = "roles.edit_permissions";
+            }
+        }
+        
+        if("/admin/categories".equals(servletPath)){
+            String action = req.getParameter("action");
+            if("create".equals(action)) {
+                requiredPer = "categories.create";
+            } else if ("update".equals(action)) {
+                requiredPer = "categories.update";
+            } else if("delete".equals(action)){
+                requiredPer = "categories.delete";
             }
         }
 
