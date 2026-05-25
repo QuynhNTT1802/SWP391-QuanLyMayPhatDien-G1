@@ -28,21 +28,21 @@
     <div>
         <header class="topbar">
             <h1>Chi tiết máy phát điện</h1>
-            <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/generators?action=list">Máy phát điện</a> / <span id="crumbId"><c:out value="${generator.model}"/></span></span>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/generators?action=list">Máy phát điện</a> / <span id="crumbId"><c:out value="${generator.model}"/></span></span>
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                <a class="btn" href="${pageContext.request.contextPath}/admin/generators?action=update&id=${generator.id}">
+                <a class="btn" href="${pageContext.request.contextPath}/warehouse/generators?action=update&id=${generator.id}">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                     Chỉnh sửa
                 </a>
                 <c:choose>
                     <c:when test="${generator.status == 'active'}">
-                        <a class="btn btn-danger" href="${pageContext.request.contextPath}/admin/generators?action=deactivate&id=${generator.id}">
+                        <a class="btn btn-danger" href="${pageContext.request.contextPath}/warehouse/generators?action=deactivate&id=${generator.id}">
                             Khóa
                         </a>
                     </c:when>
                     <c:otherwise>
-                        <a class="btn" href="${pageContext.request.contextPath}/admin/generators?action=activate&id=${generator.id}">
+                        <a class="btn" href="${pageContext.request.contextPath}/warehouse/generators?action=activate&id=${generator.id}">
                             Kích hoạt
                         </a>
                     </c:otherwise>
@@ -51,7 +51,7 @@
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/admin/generators?action=list">
+            <a class="back-link" href="${pageContext.request.contextPath}/warehouse/generators?action=list">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Quay lại danh sách
             </a>

@@ -34,7 +34,7 @@
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
-                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/generators?action=create">
+                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/warehouse/generators?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm máy phát điện
                         </a>
@@ -44,7 +44,7 @@
                 <main>
                     <div class="page-head">
                         <div class="left">
-                            <div class="eyebrow">Quản trị · Admin</div>
+                            <div class="eyebrow">Quản trị</div>
                             <h2 class="page-title">Quản lý máy phát điện</h2>
                             <div class="page-sub">${totalGenerators} máy</div>
                         </div>
@@ -63,7 +63,7 @@
                         <c:remove var="message" scope="session"/>
                     </c:if>
 
-                    <form method="get" action="${pageContext.request.contextPath}/admin/generators" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                    <form method="get" action="${pageContext.request.contextPath}/warehouse/generators" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                         <input type="hidden" name="action" value="list" />
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
@@ -77,7 +77,7 @@
                             <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khóa</option>
                         </select>
                         <div class="spacer"></div>
-                        <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/admin/generators?action=list'">
+                        <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=list'">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Xóa lọc
                         </button>
@@ -107,7 +107,7 @@
                                     <c:otherwise>
                                         <c:forEach var="g" items="${generators}">
                                             <tr onclick="if (!event.target.closest('button,a'))
-                                                        location.href = '${pageContext.request.contextPath}/admin/generators?action=view&id=${g.id}'"
+                                                        location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'"
                                                 style="cursor:pointer;">
                                                 <td>
                                                     <div class="user-cell">
@@ -129,10 +129,10 @@
                                                 </td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/generators?action=view&id=${g.id}'" title="Xem chi tiết">
+                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'" title="Xem chi tiết">
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </button>
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/admin/generators?action=update&id=${g.id}&page=${currentPage}'" title="Chỉnh sửa">
+                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=update&id=${g.id}&page=${currentPage}'" title="Chỉnh sửa">
                                                             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                         </button>
                                                         <c:choose>
