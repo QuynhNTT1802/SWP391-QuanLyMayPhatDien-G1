@@ -199,17 +199,6 @@
 
                         </form>
 
-                        <aside>
-                            <div class="summary-card">
-                                <div class="summary-title">
-                                    Thay đổi pending
-                                    <span class="badge" id="changeBadge">0</span>
-                                </div>
-                                <div class="changes-list" id="changesList">
-                                    <div class="changes-empty">Chưa có thay đổi nào.<br>Sửa thông tin để xem diff.</div>
-                                </div>
-                            </div>
-                        </aside>
                     </div>
                 </main>
             </div>
