@@ -78,7 +78,34 @@ public class RoleController extends HttpServlet {
         } else {
             roleList = roleDAO.findAll();
         }
-        request.setAttribute("roleList", roleList);
+
+        int page = 1;
+        int pageSize = 12;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int totalItems = roleList.size();
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        int fromIndex = (page - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+        List<Role> pageList = roleList.subList(fromIndex, toIndex);
+
+        request.setAttribute("roleList", pageList);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex + 1);
+        request.setAttribute("toIndex", toIndex);
 
         request.getRequestDispatcher("/view/admin/admin-role.jsp").forward(request, response);
     }
