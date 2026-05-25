@@ -103,7 +103,7 @@ public class SecurityFilter implements Filter {
             Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
             if (permissions == null || !permissions.contains(requiredPer)) {
                 req.setAttribute("requiredPerm", requiredPer);
-                request.getRequestDispatcher("/view/error/role-error.jsp").forward(req, res);
+                request.getRequestDispatcher("/view/error/403.jsp").forward(req, res);
                 return;
             }
         }
