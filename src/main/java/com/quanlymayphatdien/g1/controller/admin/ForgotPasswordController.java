@@ -100,6 +100,7 @@ public class ForgotPasswordController extends HttpServlet {
             }
 
             req.setStatus("approved");
+            //hard code
             req.setProcessedBy(3);
             req.setNote(note);
             req.setProcessedAt(LocalDateTime.now());
