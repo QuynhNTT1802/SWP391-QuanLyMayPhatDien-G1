@@ -253,8 +253,8 @@ public class RoleController extends HttpServlet {
             }
             roleId = roleDAO.insert(role);
         } else {
-            if (permissions == null || !permissions.contains("roles.edit")) {
-                request.getRequestDispatcher("/view/error/role-error.jsp").forward(request, response);
+            if (permissions == null || !permissions.contains("roles.update")) {
+                request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
                 return;
             }
             roleId = excludeId;

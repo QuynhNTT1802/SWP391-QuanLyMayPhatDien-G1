@@ -42,7 +42,7 @@ CREATE TABLE `category` (
 
 LOCK TABLES `category` WRITE;
 /*!40000 ALTER TABLE `category` DISABLE KEYS */;
-INSERT INTO `category` VALUES (1,'Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-25 06:46:40'),(2,'Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54',NULL),(3,'Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54',NULL),(4,'Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54',NULL),(5,'Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54',NULL),(6,'Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54',NULL),(7,'Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 19:15:54',NULL),(8,'2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 19:15:54',NULL),(9,'5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 19:15:54',NULL),(10,'Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 19:15:54',NULL),(11,'Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54',NULL),(17,'Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54',NULL),(18,'Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 23:55:55',NULL),(19,'Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 23:55:55',NULL),(20,'Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 23:55:55',NULL),(21,'Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 23:55:55',NULL),(22,'Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 23:55:55',NULL),(23,'Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 23:55:55',NULL),(24,'Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 23:55:55',NULL),(25,'2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 23:55:55',NULL),(26,'5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 23:55:55',NULL),(27,'Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 23:55:55',NULL),(28,'Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 23:55:55',NULL),(29,'Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 23:55:55',NULL),(30,'Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 23:55:55',NULL),(31,'1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 23:55:55',NULL),(32,'3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 23:55:55',NULL),(33,'Mới','condition','Máy mới 100%','active','2026-05-23 23:55:55',NULL),(34,'Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 23:55:55',NULL);
+INSERT INTO `category` VALUES (1,'Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-25 06:46:40'),(2,'Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54',NULL),(3,'Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54',NULL),(4,'Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54',NULL),(5,'Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54',NULL),(6,'Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54',NULL),(7,'Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 19:15:54',NULL),(8,'2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 19:15:54',NULL),(9,'5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 19:15:54',NULL),(10,'Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 19:15:54',NULL),(11,'Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54',NULL),(17,'Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54',NULL);
 /*!40000 ALTER TABLE `category` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -54,7 +54,7 @@ DROP TABLE IF EXISTS `generator`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `generator` (
-  `generator_id` int NOT NULL AUTO_INCREMENT,
+  `id` int NOT NULL AUTO_INCREMENT,
   `model` varchar(100) NOT NULL,
   `brand` varchar(100) DEFAULT NULL,
   `power_rating` decimal(10,2) DEFAULT NULL,
@@ -66,8 +66,8 @@ CREATE TABLE `generator` (
   `created_by` int DEFAULT NULL,
   `stock_quantity` int DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
-  PRIMARY KEY (`generator_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -76,7 +76,7 @@ CREATE TABLE `generator` (
 
 LOCK TABLES `generator` WRITE;
 /*!40000 ALTER TABLE `generator` DISABLE KEYS */;
-INSERT INTO `generator` VALUES (1,'EG4500CX','Honda',4.50,25000000.00,'Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL,NULL),(2,'EF6000','Yamaha',6.00,35000000.00,'Máy phát điện Yamaha 6.0kVA, chạy xăng, 1 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL,NULL),(3,'DHY8000','Hyundai',8.00,48000000.00,'Máy phát điện Hyundai 8.0kVA, chạy dầu diesel, 3 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL,NULL),(4,'C10D5','Cummins',10.00,85000000.00,'Máy phát điện Cummins 10kVA, chạy dầu diesel, 3 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL,NULL),(5,'MGP-15','Mitsubishi',15.00,120000000.00,'Máy phát điện Mitsubishi 15kVA, chạy dầu diesel, 3 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL,NULL);
+INSERT INTO `generator` VALUES (1,'EG4500CX','Honda',4.50,25000000.00,'Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha','locked','2026-05-20 08:00:00','2026-05-25 20:00:45',NULL,10,1),(2,'EF6000','Yamaha',6.00,35000000.00,'Máy phát điện Yamaha 6.0kVA, chạy xăng, 1 pha','active','2026-05-20 08:00:00','2026-05-25 20:17:13',NULL,20,1),(3,'DHY8000','Hyundai',8.00,48000000.00,'Máy phát điện Hyundai 8.0kVA, chạy dầu diesel, 3 pha','active','2026-05-20 08:00:00','2026-05-25 19:59:33',NULL,10,NULL),(4,'C10D5','Cummins',10.00,85000000.00,'Máy phát điện Cummins 10kVA, chạy dầu diesel, 3 pha','active','2026-05-20 08:00:00','2026-05-25 19:59:33',NULL,10,NULL),(5,'MGP-15','Mitsubishi',15.00,120000000.00,'Máy phát điện Mitsubishi 15kVA, chạy dầu diesel, 3 pha','active','2026-05-20 08:00:00','2026-05-25 19:59:33',NULL,10,NULL),(6,'GX-25040','Yamaha',50.00,1500000.00,'Mạnh mẽ','active','2026-05-25 20:17:45','2026-05-25 20:17:44',1,20,NULL);
 /*!40000 ALTER TABLE `generator` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -92,7 +92,7 @@ CREATE TABLE `generator_category` (
   `category_id` int NOT NULL,
   PRIMARY KEY (`generator_id`,`category_id`),
   KEY `category_id` (`category_id`),
-  CONSTRAINT `generator_category_ibfk_1` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`generator_id`),
+  CONSTRAINT `generator_category_ibfk_1` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`),
   CONSTRAINT `generator_category_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -123,7 +123,7 @@ CREATE TABLE `inventory` (
   UNIQUE KEY `uk_inventory_wh_gen` (`warehouse_id`,`generator_id`),
   KEY `idx_inv_warehouse` (`warehouse_id`),
   KEY `idx_inv_generator` (`generator_id`),
-  CONSTRAINT `fk_inv_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`generator_id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_inv_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_inv_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -155,7 +155,7 @@ CREATE TABLE `order_detail` (
   PRIMARY KEY (`order_detail_id`),
   KEY `idx_od_order` (`order_id`),
   KEY `idx_od_generator` (`generator_id`),
-  CONSTRAINT `fk_od_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`generator_id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_od_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_od_order` FOREIGN KEY (`order_id`) REFERENCES `sale_order` (`order_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -292,7 +292,7 @@ CREATE TABLE `receipt_detail` (
   UNIQUE KEY `uk_serial_receipt` (`serial_number`,`receipt_id`),
   KEY `idx_rd_receipt` (`receipt_id`),
   KEY `idx_rd_generator` (`generator_id`),
-  CONSTRAINT `fk_rd_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`generator_id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_rd_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_rd_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -332,7 +332,7 @@ CREATE TABLE `role` (
 
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-INSERT INTO `role` VALUES (1,'admin','Quản trị hệ thống','active','2026-05-15 16:43:03','2026-05-18 13:44:28'),(2,'warehouse_manager','Quản lý kho - Duyệt phiếu xuất/nhập','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(3,'warehouse_staff','Nhân viên kho - Tạo phiếu, quét serial','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(5,'sales_staff','Nhân viên kinh doanh - Tạo đơn hàng','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(10,'sale_manager','Trưởng phòng kinh doanh - Duyệt đơn hàng','active','2026-05-21 00:00:00','2026-05-21 00:00:00'),(11,'Logger','Track System Status','active','2026-05-22 17:18:39','2026-05-22 17:18:39');
+INSERT INTO `role` VALUES (1,'admin','Quản trị hệ thống','active','2026-05-15 16:43:03','2026-05-18 13:44:28'),(2,'warehouse_manager','Quản lý kho - Duyệt phiếu xuất/nhập','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(3,'warehouse_staff','Nhân viên kho - Tạo phiếu, quét serial','active','2026-05-15 16:43:03','2026-05-25 20:36:37'),(5,'sales_staff','Nhân viên kinh doanh - Tạo đơn hàng','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(10,'sale_manager','Trưởng phòng kinh doanh - Duyệt đơn hàng','active','2026-05-21 00:00:00','2026-05-21 00:00:00'),(11,'Logger','Track System Status','active','2026-05-22 17:18:39','2026-05-22 17:18:39');
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -435,7 +435,7 @@ CREATE TABLE `stock_card` (
   KEY `idx_sc_created_at` (`created_at`),
   KEY `fk_sc_created_by` (`created_by`),
   CONSTRAINT `fk_sc_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_sc_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`generator_id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sc_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_sc_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_sc_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -583,4 +583,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-25 17:38:43
+-- Dump completed on 2026-05-25 20:43:06
