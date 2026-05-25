@@ -59,14 +59,12 @@
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
             Tồn kho
-            <span class="count"></span>
         </a>
         <% } %>
         <% if (hasReceipts) { %>
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
             Phiếu nhập/xuất
-            <span class="count"></span>
         </a>
         <% } %>
         <% if (hasOrders) { %>
@@ -90,14 +88,13 @@
         <a href="<%=request.getContextPath()%>/admin/users">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Người dùng
-            <span class="count"></span>
         </a>
         <% } %>
 
         <% if (hasRoles) { %>
         <a href="<%=request.getContextPath()%>/admin/roles">
             <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Phan quyen
+            Phân quyền
         </a>
         <% } %>
 
@@ -109,7 +106,7 @@
             <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
             <path d="M3 21v-5h5"></path>
             </svg>
-            Cap mat khau
+            Cấp mật khẩu
         </a>
         <% } %>
 
@@ -117,18 +114,18 @@
         <% if (hasProfile) { %>
         <a href="<%=request.getContextPath()%>/profile" class="<%= "profile".equals(activePage) ? "active" : "" %>">
             <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Ho so cua toi
+            Hồ sơ của tôi
         </a>
         <% } %>
         <% if (hasPassword) { %>
         <a href="<%=request.getContextPath()%>/changepass" class="<%= "changepass".equals(activePage) ? "active" : "" %>">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Doi mat khau
+            Đổi mật khẩu
         </a>
         <% } %>
         <a href="<%=request.getContextPath()%>/authen?action=logout">
             <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            Dang xuat
+            Đăng xuất
         </a>
     </nav>
     <div class="sidebar-footer">
