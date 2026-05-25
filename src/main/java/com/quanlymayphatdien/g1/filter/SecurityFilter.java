@@ -23,9 +23,10 @@ public class SecurityFilter implements Filter {
         Map.entry("/admin/dashboard",      "dashboard.view"),
         Map.entry("/admin/users",          "users.view"),
         Map.entry("/admin/roles",          "roles.view"),
-        Map.entry("/admin/role/edit",      "roles.edit"),
-        Map.entry("/admin/role/save",      "roles.edit"),
-        Map.entry("/admin/forgot-password","forgot_pw.process")
+        Map.entry("/admin/role/edit",      "roles.update"),
+        Map.entry("/admin/role/save",      "roles.update"),
+        Map.entry("/admin/forgot-password","forgot_pw.process"),
+        Map.entry("/admin/categories",     "categories.view")
     );
 
     @Override
@@ -73,6 +74,28 @@ public class SecurityFilter implements Filter {
                 requiredPer = "users.create";
             } else if ("deactivate".equals(action) || "activate".equals(action)) {
                 requiredPer = "users.deactivate";
+            } else if ("edit".equals(action)) {
+                requiredPer = "users.update";
+            }
+        }
+
+        if ("/admin/roles".equals(servletPath)) {
+            String action = req.getParameter("action");
+            if ("update".equals(action) || "create".equals(action) || "edit".equals(action)) {
+                requiredPer = "roles.update";
+            } else if ("edit_permissions".equals(action)) {
+                requiredPer = "roles.edit_permissions";
+            }
+        }
+        
+        if("/admin/categories".equals(servletPath)){
+            String action = req.getParameter("action");
+            if("create".equals(action)) {
+                requiredPer = "categories.create";
+            } else if ("update".equals(action)) {
+                requiredPer = "categories.update";
+            } else if("delete".equals(action)){
+                requiredPer = "categories.delete";
             }
         }
 
@@ -80,7 +103,7 @@ public class SecurityFilter implements Filter {
             Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
             if (permissions == null || !permissions.contains(requiredPer)) {
                 req.setAttribute("requiredPerm", requiredPer);
-                request.getRequestDispatcher("/view/error/role-error.jsp").forward(req, res);
+                request.getRequestDispatcher("/view/error/403.jsp").forward(req, res);
                 return;
             }
         }

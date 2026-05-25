@@ -36,6 +36,17 @@
         <form id="roleForm" action="${pageContext.request.contextPath}/admin/role/save" method="POST">
             <input type="hidden" name="id" value="${role.roleId}">
 
+            <c:if test="${not empty errors}">
+                <div class="error-box">
+                    <div class="error-box-title">Vui lòng sửa các lỗi sau:</div>
+                    <ul>
+                        <c:forEach var="err" items="${errors}">
+                            <li>${err}</li>
+                        </c:forEach>
+                    </ul>
+                </div>
+            </c:if>
+
             <main>
                 <div class="page-head">
                     <div class="head-left">
@@ -72,7 +83,7 @@
 
                         <div class="section">
                             <div class="section-head">
-                                <h3>Ma trận quyền (RBAC)</h3>
+                                <h3>Danh sách các quyền</h3>
                                 <div class="input has-icon" style="width:220px;">
                                     <span class="leading">
                                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>

@@ -62,6 +62,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 Role role = new Role();
                 role.setRoleId(rs.getInt("id"));
                 role.setRoleName(rs.getString("name"));
+                role.setDescription(rs.getString("description"));
                 roles.add(role);
             }
         } catch (SQLException e) {
@@ -78,6 +79,22 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
             p.setString(1, status);
             p.setInt(2, roleId);
             return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean isRoleNameExists(String name, int excludeRoleId) {
+        String sql = "SELECT COUNT(*) FROM roles WHERE name = ? AND id != ?";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setString(1, name);
+            p.setInt(2, excludeRoleId);
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

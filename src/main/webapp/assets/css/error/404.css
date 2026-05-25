@@ -1,0 +1,168 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : May 25, 2026, 3:38:23 PM
+    Author     : LENOVO
+*/
+
+  :root {
+    --bg:      oklch(98% 0.005 250);
+    --surface: oklch(100% 0 0);
+    --surface-2: oklch(98.5% 0.004 250);
+    --fg:      oklch(20% 0.018 240);
+    --fg-soft: oklch(36% 0.016 240);
+    --muted:   oklch(54% 0.014 240);
+    --muted-2: oklch(72% 0.01 240);
+    --border:  oklch(91% 0.008 240);
+    --border-strong: oklch(83% 0.012 240);
+    --accent:  oklch(58% 0.16 145);
+    --accent-soft: oklch(95% 0.04 145);
+    --accent-strong: oklch(48% 0.16 145);
+    --warning: oklch(72% 0.14 85);
+    --warning-soft: oklch(96% 0.04 85);
+
+    --font-ui:      'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-display: 'Be Vietnam Pro', sans-serif;
+    --font-mono:    'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+    --radius: 8px;
+    --radius-sm: 5px;
+    --container: 1180px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100vh; }
+  body {
+    font-family: var(--font-ui);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--fg);
+    background: var(--bg);
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+  }
+  .container { max-width: var(--container); margin-inline: auto; padding-inline: 32px; }
+
+  /* Nav */
+  header.site-nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 85%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; gap: 28px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: -0.01em; text-decoration: none; color: var(--fg); }
+  .brand-mark { width: 26px; height: 26px; border-radius: 6px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .nav-links { display: flex; gap: 4px; margin-inline-start: 12px; }
+  .nav-links a { color: var(--fg-soft); text-decoration: none; font-size: 14px; font-weight: 450; padding: 6px 12px; border-radius: 5px; }
+  .nav-links a:hover { color: var(--fg); background: var(--surface-2); }
+  .nav-cta { margin-inline-start: auto; display: flex; align-items: center; gap: 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); padding: 8px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 500; cursor: pointer; font-family: var(--font-ui); text-decoration: none; transition: background .15s; }
+  .btn:hover { background: var(--surface-2); }
+  .btn-primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .btn-primary:hover { background: var(--fg-soft); border-color: var(--fg-soft); }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: var(--surface-2); }
+  .btn .arrow { transition: transform .2s; }
+  .btn:hover .arrow { transform: translateX(2px); }
+
+  /* Error content */
+  .error-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .error-section::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(to right, var(--border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  .error-content {
+    position: relative;
+    text-align: center;
+    max-width: 520px;
+  }
+  .error-code {
+    font-family: var(--font-mono);
+    font-size: clamp(80px, 12vw, 140px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--border-strong);
+    margin-bottom: 16px;
+  }
+  .error-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(24px, 3vw, 32px);
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .error-desc {
+    font-size: 15.5px;
+    color: var(--fg-soft);
+    line-height: 1.6;
+    margin: 0 0 32px;
+  }
+  .error-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .error-hint {
+    margin-top: 40px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-align: start;
+  }
+  .error-hint-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--fg);
+  }
+  .error-hint ul {
+    margin: 0;
+    padding-inline-start: 18px;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* Footer */
+  .site-footer { border-top: 1px solid var(--border); padding: 56px 0 32px; margin-top: auto; }
+  .foot-top { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+  .foot-brand p { font-size: 13.5px; color: var(--muted); margin: 10px 0 0; max-width: 260px; line-height: 1.5; }
+  .foot-col h5 { font-size: 13px; font-weight: 600; margin: 0 0 14px; letter-spacing: -0.01em; }
+  .foot-col ul { list-style: none; margin: 0; padding: 0; }
+  .foot-col li { margin-bottom: 8px; }
+  .foot-col a { color: var(--muted); text-decoration: none; font-size: 13.5px; }
+  .foot-col a:hover { color: var(--fg); }
+  .foot-bot { display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+  .socials { display: flex; gap: 16px; }
+  .socials a { color: var(--muted); text-decoration: none; font-size: 12.5px; }
+  .socials a:hover { color: var(--fg); }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .foot-top { grid-template-columns: 1fr 1fr; }
+    .error-code { font-size: 80px; }
+  }
+
