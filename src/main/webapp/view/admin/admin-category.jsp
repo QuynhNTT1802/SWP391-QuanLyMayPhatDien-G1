@@ -48,21 +48,38 @@
             </div>
 
             <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                <form method="GET" action="${pageContext.request.contextPath}/admin/categories" class="search-bar" style="flex:1;">
+                <form method="GET" action="${pageContext.request.contextPath}/admin/categories" style="display:flex;gap:12px;align-items:center;flex:1;flex-wrap:wrap;">
                     <div class="input has-icon" style="max-width: 360px;">
                         <span class="leading">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                         </span>
                         <input type="text" name="search" placeholder="Tìm theo tên hoặc mô tả..." value="${param.search}" autocomplete="off">
                     </div>
+                    <select name="filterType" onchange="this.form.submit()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer;">
+                        <option value="">Tất cả loại</option>
+                        <c:forEach var="t" items="${types}">
+                            <option value="${t}" ${param.filterType == t ? 'selected' : ''}>
+                                <c:choose>
+                                    <c:when test="${t=='brand'}">Hãng sản xuất</c:when>
+                                    <c:when test="${t=='fuel_type'}">Nhiên liệu</c:when>
+                                    <c:when test="${t=='power_range'}">Dải công suất</c:when>
+                                    <c:when test="${t=='generator_type'}">Loại máy</c:when>
+                                    <c:when test="${t=='phase'}">Loại pha</c:when>
+                                    <c:when test="${t=='condition'}">Tình trạng</c:when>
+                                    <c:otherwise>${t}</c:otherwise>
+                                </c:choose>
+                            </option>
+                        </c:forEach>
+                    </select>
                 </form>
-                <c:if test="${not empty param.search}">
+                <c:if test="${not empty param.search || not empty param.filterType}">
                     <span style="font-size:13px;color:var(--muted);">${categoryList.size()} kết quả</span>
                     <a href="${pageContext.request.contextPath}/admin/categories" class="btn" style="font-size:13px;">Xóa bộ lọc</a>
                 </c:if>
             </div>
 
             <section id="view-list" style="margin-top:20px;">
+                <div class="card-table">
                 <div class="roles-grid" id="rolesGrid">
                     <c:forEach var="cat" items="${categoryList}">
                         <div class="role-card tone-info">
@@ -109,6 +126,27 @@
                             </div>
                         </div>
                     </c:forEach>
+                </div>
+
+                <c:if test="${totalPages > 1}">
+                    <div class="pagination">
+                        <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> danh mục</div>
+                        <div class="controls">
+                            <c:if test="${currentPage > 1}">
+                                <a href="?page=${currentPage - 1}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if><c:if test="${not empty param.filterType}">&filterType=<c:out value="${param.filterType}"/></c:if>" class="page-btn">‹</a>
+                            </c:if>
+                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                <c:choose>
+                                    <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                    <c:otherwise><a href="?page=${p}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if><c:if test="${not empty param.filterType}">&filterType=<c:out value="${param.filterType}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                            <c:if test="${currentPage < totalPages}">
+                                <a href="?page=${currentPage + 1}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if><c:if test="${not empty param.filterType}">&filterType=<c:out value="${param.filterType}"/></c:if>" class="page-btn">›</a>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:if>
                 </div>
             </section>
         </main>
