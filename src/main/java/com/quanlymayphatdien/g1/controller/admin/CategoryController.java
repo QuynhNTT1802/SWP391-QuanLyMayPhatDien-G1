@@ -90,9 +90,45 @@ public class CategoryController extends HttpServlet {
             list = cateDAO.findAll();
         }
 
+        if (filterType != null && !filterType.trim().isEmpty()) {
+            List<Category> filtered = new ArrayList<>();
+            for (Category c : list) {
+                if (filterType.equals(c.getType())) {
+                    filtered.add(c);
+                }
+            }
+            list = filtered;
+        }
+
+        int page = 1;
+        int pageSize = 12;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int totalItems = list.size();
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        int fromIndex = (page - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+        List<Category> pageList = list.subList(fromIndex, toIndex);
+
         List<String> types = cateDAO.getDistrictTypes();
-        request.setAttribute("categoryList", list);
+        request.setAttribute("categoryList", pageList);
         request.setAttribute("types", types);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex + 1);
+        request.setAttribute("toIndex", toIndex);
         request.getRequestDispatcher("/view/admin/admin-category.jsp").forward(request, response);
     }
 
