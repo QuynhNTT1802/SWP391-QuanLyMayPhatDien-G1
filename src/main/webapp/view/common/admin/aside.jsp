@@ -23,11 +23,12 @@
 
     boolean hasDashboard    = userPermissions != null && userPermissions.contains("dashboard.view");
     boolean hasInventory    = userPermissions != null && userPermissions.contains("inventory.view");
-    boolean hasImportExport = userPermissions != null && userPermissions.contains("import_export.view");
+    boolean hasReceipts     = userPermissions != null && userPermissions.contains("receipts.view");
     boolean hasOrders       = userPermissions != null && userPermissions.contains("orders.view");
     boolean hasUsers        = userPermissions != null && userPermissions.contains("users.view");
     boolean hasRoles        = userPermissions != null && userPermissions.contains("roles.view");
-    boolean hasSuppliers    = userPermissions != null && userPermissions.contains("suppliers.view");
+    boolean hasForgotPw     = userPermissions != null && userPermissions.contains("forgot_pw.process");
+    boolean hasCategories   = userPermissions != null && userPermissions.contains("categories.view");
     boolean hasProfile      = userPermissions != null && userPermissions.contains("profile.view");
     boolean hasPassword     = userPermissions != null && userPermissions.contains("password.change");
 
@@ -59,11 +60,10 @@
             Ton kho
         </a>
         <% } %>
-        <% if (hasImportExport) { %>
+        <% if (hasReceipts) { %>
         <a href="#">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
             Phieu nhap/xuat
-            <span class="count">23</span>
         </a>
         <% } %>
         <% if (hasOrders) { %>
@@ -74,6 +74,15 @@
         <% } %>
 
         <div class="nav-section">Quan tri</div>
+        <% if (hasCategories) { %>
+        <a href="<%=request.getContextPath()%>/admin/categories">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            Danh mục
+        </a>
+        <% } %>
         <% if (hasUsers) { %>
         <a href="<%=request.getContextPath()%>/admin/users">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
@@ -88,7 +97,7 @@
         </a>
         <% } %>
 
-        <% if (hasRoles) { %>
+        <% if (hasForgotPw) { %>
         <a href="<%=request.getContextPath()%>/admin/forgot-password">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
@@ -96,14 +105,7 @@
             <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
             <path d="M3 21v-5h5"></path>
             </svg>
-            Cấp mật khẩu
-        </a>
-        <% } %>
-
-        <% if (hasSuppliers) { %>
-        <a href="#">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Nha cung cap
+            Cap mat khau
         </a>
         <% } %>
 
@@ -128,7 +130,7 @@
     <div class="sidebar-footer">
         <div class="user-meta">
             <div class="name"><%=fullName%></div>
-            <div class="role"><%= sidebarUser != null && sidebarUser.getRoles() != null && !sidebarUser.getRoles().isEmpty() ? sidebarUser.getRoles().get(0).getRoleName() : "Nguoi dung" %></div>
+            <div class="role"><%= sidebarUser != null && sidebarUser.getRoles() != null && !sidebarUser.getRoles().isEmpty() ? sidebarUser.getRoles().get(0).getDescription() : "Nguoi dung" %></div>
         </div>
     </div>
 </aside>

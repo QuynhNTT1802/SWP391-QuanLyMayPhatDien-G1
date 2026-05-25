@@ -71,12 +71,12 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên đăng nhập <span class="req">*</span></label>
-                                        <input class="input" name="username" placeholder="VD: nguyenvana" value="<c:out value="${param.username}"/>" />
+                                        <input class="input" name="username" placeholder="VD: Nguyenvana_" value="<c:out value="${param.username}"/>" />
                                         <c:if test="${not empty errors.username}"><div class="field-error"><c:out value="${errors.username}"/></div></c:if>
                                         </div>
                                         <div class="field">
                                             <label class="field-label">Mật khẩu <span class="req">*</span></label>
-                                            <input class="input" type="password" name="password" placeholder="Ít nhất 6 ký tự" />
+                                            <input class="input" type="password" name="password" placeholder="Ít nhất 6 ký tự, có chữ, có số" />
                                         <c:if test="${not empty errors.password}"><div class="field-error"><c:out value="${errors.password}"/></div></c:if>
                                         </div>
                                         <div class="field">
@@ -114,7 +114,16 @@
                                                 <c:if test="${role.status == 'active'}">
                                                     <label class="role-card">
                                                         <input type="radio" name="roleIds" value="${role.roleId}" />
-                                                        <div class="role-card-name">${role.roleName}</div>
+                                                        <div class="role-card-name">
+                                                            <c:choose>
+                                                                <c:when test="${role.roleName == 'admin'}">Quản trị viên</c:when>
+                                                                <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
+                                                                <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
+                                                                <c:when test="${role.roleName == 'sales_staff'}">Nhân viên bán hàng</c:when>
+                                                                <c:when test="${role.roleName == 'sale_manager'}">Trưởng phòng bán hàng</c:when>
+                                                                <c:otherwise><c:out value="${role.roleName}"/></c:otherwise>
+                                                            </c:choose>
+                                                        </div>
                                                         <div class="role-card-desc">${role.description}</div>
                                                     </label>
                                                 </c:if>
@@ -124,7 +133,6 @@
                                             <label class="field-label">Trạng thái</label>
                                             <select class="select" name="status">
                                                 <option value="active">Hoạt động</option>
-                                                <option value="inactive">Không hoạt động</option>
                                                 <option value="locked">Bị khoá</option>
                                             </select>
                                         </div>
