@@ -17,7 +17,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
     @Override
     public List<Generator> findAll() {
         List<Generator> list = new ArrayList<>();
-        String sql = "SELECT * FROM generator ORDER BY id DESC";
+        String sql = "SELECT * FROM generator";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -152,9 +152,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return false;
     }
 
-    public List<Generator> findByFilters(String search, String status,
-            int page, int pageSize) {
-        List<Generator> all = new ArrayList<>();
+    public List<Generator> findGeneratorsByFilters(String search, String status, int page, int pageSize) {
+        List<Generator> allGenerators = new ArrayList<>();
         String sql = "SELECT * FROM generator WHERE 1=1 ";
         List<String> params = new ArrayList<>();
 
@@ -178,18 +177,18 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                all.add(getFromResultSet(resultSet));
+                allGenerators.add(getFromResultSet(resultSet));
             }
 
-            if (all.isEmpty()) {
-                return all;
+            if (allGenerators.isEmpty()) {
+                return allGenerators;
             }
             int start = (page - 1) * pageSize;
-            int end = Math.min(start + pageSize, all.size());
-            if (start > all.size()) {
+            int end = Math.min(start + pageSize, allGenerators.size());
+            if (start > allGenerators.size()) {
                 return new ArrayList<>();
             }
-            return all.subList(start, end);
+            return allGenerators.subList(start, end);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -197,24 +196,32 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
     }
 
     public int getTotalFiltered(String search, String status) {
-        String sql = "SELECT COUNT(*) FROM generator WHERE 1=1 ";
-        List<String> params = new ArrayList<>();
+        String sql = "SELECT COUNT(*) FROM generator";
+        List<String> inputs = new ArrayList<>();
+        boolean hasCondition = false;
 
         if (status != null && !status.isEmpty()) {
-            sql += "AND status = ? ";
-            params.add(status);
+            sql += " WHERE status = ?";
+            inputs.add(status);
+            hasCondition = true;
         }
+
         if (search != null && !search.trim().isEmpty()) {
-            sql += "AND (model LIKE ? OR brand LIKE ?) ";
-            String p = "%" + search.trim() + "%";
-            params.add(p);
-            params.add(p);
+            if (hasCondition) {
+                sql += " AND (model LIKE ? OR brand LIKE ?)";
+            } else {
+                sql += " WHERE (model LIKE ? OR brand LIKE ?)";
+            }
+            String searchPattern = "%" + search.trim() + "%";
+            inputs.add(searchPattern);
+            inputs.add(searchPattern);
         }
+
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            for (int i = 0; i < params.size(); i++) {
-                statement.setString(i + 1, params.get(i));
+            for (int i = 0; i < inputs.size(); i++) {
+                statement.setString(i + 1, inputs.get(i));
             }
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -274,4 +281,5 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
 
         return g;
     }
+
 }

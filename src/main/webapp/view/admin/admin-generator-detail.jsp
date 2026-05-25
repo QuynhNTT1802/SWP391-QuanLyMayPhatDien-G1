@@ -61,9 +61,7 @@
                 <div class="hero-body">
                     <h2 class="hero-name">
                         <c:out value="${generator.model}"/>
-                        <c:if test="${generator.status == 'active'}">
-                            <span class="verified"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg> Đang hoạt động</span>
-                        </c:if>
+
                     </h2>
                     <div class="hero-meta">
                         <span><c:out value="${generator.brand}"/></span>
@@ -79,12 +77,6 @@
                             <c:when test="${generator.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
                         </c:choose>
                     </div>
-                </div>
-                <div class="hero-actions">
-                    <a class="btn" href="${pageContext.request.contextPath}/admin/generators?action=update&id=${generator.id}">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                        Chỉnh sửa
-                    </a>
                 </div>
             </div>
 
