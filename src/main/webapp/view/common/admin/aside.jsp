@@ -87,7 +87,7 @@
             <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Phân quyền
         </a>
-        <a href="<%=request.getContextPath()%>/admin/generators">
+        <a href="<%=request.getContextPath()%>/warehouse/generators">
             <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             Máy phát điện
         </a>

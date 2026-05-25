@@ -282,4 +282,25 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return g;
     }
 
+    public boolean isModelExists(String model, Integer id) {
+        String sql = "SELECT COUNT(*) FROM generator WHERE model = ?";
+        if (id != null) {
+            sql += " AND id != ?";
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, model.trim());
+            if (id != null) {
+                statement.setInt(2, id);
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
 }
