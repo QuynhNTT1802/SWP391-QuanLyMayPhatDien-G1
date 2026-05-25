@@ -22,7 +22,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     public List<Category> findByType(String type) {
         List<Category> list = new ArrayList<>();
-        String sql = "select * from categories where type = ? and status = 'active' order by name";
+        String sql = "select * from category where type = ? and status = 'active' order by name";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setString(1, type);
@@ -38,7 +38,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     public List<String> getDistrictTypes() {
         List<String> types = new ArrayList<>();
-        String sql = "select distinct type from categories order by type";
+        String sql = "select distinct type from category order by type";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             ResultSet rs = p.executeQuery();
@@ -53,7 +53,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     public List<Category> searchByName(String name) {
         List<Category> list = new ArrayList<>();
-        String sql = "select * from categories where name like ? or description like ? order by type, name";
+        String sql = "select * from category where name like ? or description like ? order by type, name";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             String keyword = "%" + name + "%";
@@ -72,7 +72,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     @Override
     public List<Category> findAll() {
         List<Category> list = new ArrayList<>();
-        String sql = "select * from categories order by type,name ";
+        String sql = "select * from category order by type,name ";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             ResultSet rs = p.executeQuery();
@@ -87,7 +87,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     @Override
     public boolean update(Category category) {
-        String sql = "update categories set name = ?, type = ?, description = ?, status = ?, updated_at = ? where id = ? ";
+        String sql = "update category set name = ?, type = ?, description = ?, status = ?, updated_at = ? where id = ? ";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setString(1, category.getName());
@@ -105,7 +105,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     @Override
     public boolean delete(Category t) {
-        String sql = "update categories set status = 'inactive', updated_at = ? where id = ?";
+        String sql = "update category set status = 'inactive', updated_at = ? where id = ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setObject(1, LocalDateTime.now());
@@ -119,7 +119,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     @Override
     public int insert(Category t) {
-        String sql = "insert into categories (name, type, description, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)";
+        String sql = "insert into category (name, type, description, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             p.setString(1, t.getName());
