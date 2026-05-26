@@ -116,7 +116,6 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             sc.setCreatedAt(ca.toLocalDateTime());
         }
         sc.setCreatedBy((Integer) rs.getObject("created_by"));
-
         try {
             sc.setWarehouseName(rs.getString("warehouse_name"));
         } catch (SQLException ignored) {
