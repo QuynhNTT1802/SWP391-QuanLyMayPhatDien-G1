@@ -1,0 +1,142 @@
+<%-- 
+    Document   : create-order
+    Created on : May 26, 2026
+--%>
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!doctype html>
+<html lang="vi" data-theme="light">
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Tạo đơn hàng — Warehouse OS</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+    </head>
+    <body>
+        <div class="app">
+            <jsp:include page="../common/admin/aside.jsp"></jsp:include>
+
+            <div>
+                <header class="topbar">
+                    <h1>Tạo đơn hàng</h1>
+                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Thêm mới</span>
+                    <div class="top-actions">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                        </button>
+                    </div>
+                </header>
+
+                <main>
+                    <c:if test="${not empty sessionScope.message}">
+                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                            <c:out value="${sessionScope.message}"/>
+                        </div>
+                        <c:remove var="message" scope="session"/>
+                    </c:if>
+                    
+                    <c:if test="${not empty error}">
+                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                            <c:out value="${error}"/>
+                        </div>
+                    </c:if>
+
+                    <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Quay lại danh sách
+                    </a>
+
+                    <div class="page-head">
+                        <div class="eyebrow">Kinh doanh · Đơn hàng mới</div>
+                        <h2 class="page-title">Tạo đơn hàng bán ra</h2>
+                    </div>
+
+                    <div class="form-layout">
+                        <form class="form-card" method="post" action="${pageContext.request.contextPath}/order?action=create">
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
+                                    <h3 class="form-section-title">Người nhận hàng</h3>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label class="field-label">Tên khách hàng <span class="req">*</span></label>
+                                        <input class="input" name="customerName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${param.customerName}"/>" required />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                                        <input class="input mono" name="customerPhone" placeholder="VD: 0912345678" value="<c:out value="${param.customerPhone}"/>" required />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Email</label>
+                                        <input class="input mono" name="customerEmail" type="email" placeholder="email@example.com" value="<c:out value="${param.customerEmail}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Địa chỉ giao hàng</label>
+                                        <input class="input" name="customerAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${param.customerAddress}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Mã số thuế (Nếu là công ty)</label>
+                                        <input class="input mono" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tên công ty</label>
+                                        <input class="input" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-num">02 — THÔNG TIN ĐƠN HÀNG</div>
+                                    <h3 class="form-section-title">Chi tiết giao dịch</h3>
+                                    <div class="form-section-desc">Mã đơn hàng sẽ tự sinh nếu bạn để trống.</div>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label class="field-label">Mã đơn hàng</label>
+                                        <input class="input mono" name="orderCode" placeholder="VD: ORD-20260526-001" value="<c:out value="${param.orderCode}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Ngày đặt hàng</label>
+                                        <input class="input" type="date" name="orderDate" value="<c:out value="${param.orderDate}"/>" />
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label class="field-label">Ghi chú của khách hàng</label>
+                                        <textarea class="input" name="customerNote" rows="3" placeholder="VD: Giao giờ hành chính, gọi trước khi giao..."><c:out value="${param.customerNote}"/></textarea>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label class="field-label">Ghi chú nội bộ (Chỉ nhân viên thấy)</label>
+                                        <textarea class="input" name="internalNote" rows="2" placeholder="VD: Khách quen, giảm giá 5%..."><c:out value="${param.internalNote}"/></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                                <a class="btn" href="${pageContext.request.contextPath}/order?action=list">Huỷ</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                    Tạo đơn hàng
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <div class="toast-host" id="toastHost"></div>
+
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+    </body>
+</html>
