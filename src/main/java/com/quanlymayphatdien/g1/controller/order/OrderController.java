@@ -277,7 +277,7 @@ public class OrderController extends HttpServlet {
         request.getRequestDispatcher("/view/order/reject.jsp").forward(request, response);
     }
 
-    // UC-35: Xử lý từ chối
+   
     private void rejectOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("orderId"));
