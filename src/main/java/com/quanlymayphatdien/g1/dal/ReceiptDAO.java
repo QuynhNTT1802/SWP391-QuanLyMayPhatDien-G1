@@ -4,7 +4,6 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.StockCard;
