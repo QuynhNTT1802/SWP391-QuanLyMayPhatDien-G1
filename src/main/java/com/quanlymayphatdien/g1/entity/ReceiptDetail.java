@@ -22,14 +22,67 @@ public class ReceiptDetail {
     public ReceiptDetail() {
     }
 
-    public ReceiptDetail(int receiptDetailId, int receiptId, int generatorId, String serialNumber, int quantity, String note, String generatorModel, String generatorBrand) {
+    public int getReceiptDetailId() {
+        return receiptDetailId;
+    }
+    
+    public void setReceiptDetailId(int receiptDetailId) {
         this.receiptDetailId = receiptDetailId;
+    }
+
+    public int getReceiptId() {
+        return receiptId;
+    }
+
+    public void setReceiptId(int receiptId) {
         this.receiptId = receiptId;
+    }
+
+    public int getGeneratorId() {
+        return generatorId;
+    }
+
+    public void setGeneratorId(int generatorId) {
         this.generatorId = generatorId;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
         this.serialNumber = serialNumber;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getGeneratorModel() {
+        return generatorModel;
+    }
+
+    public void setGeneratorModel(String generatorModel) {
         this.generatorModel = generatorModel;
+    }
+
+    public String getGeneratorBrand() {
+        return generatorBrand;
+    }
+
+    public void setGeneratorBrand(String generatorBrand) {
         this.generatorBrand = generatorBrand;
     }
     
