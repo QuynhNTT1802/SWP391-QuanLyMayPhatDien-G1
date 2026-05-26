@@ -18,6 +18,7 @@ public class Receipt {
     private Integer orderId;
     private int warehouseId;
     private int createdBy;
+    private Integer approvedBy; 
     private String status;
     private String note;
     private LocalDateTime approvedAt;
@@ -31,6 +32,14 @@ public class Receipt {
     private String customerName;
     
     private List<ReceiptDetail> details;
+
+    public Integer getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(Integer approvedBy) {
+        this.approvedBy = approvedBy;
+    }
 
     public Receipt() {
     }
