@@ -24,7 +24,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> findByStatus(String status) {
         List<SaleOrder> list = new ArrayList<>();
-
         String sql = "SELECT * FROM sale_order WHERE status = ? ORDER BY created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -466,7 +465,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
         s.setRejectReason(rs.getString("reject_reason"));
-
         if (rs.getTimestamp("order_date") != null) {
             s.setOrderDate(new Date(rs.getTimestamp("order_date").getTime()));
         }

@@ -183,7 +183,6 @@ public class OrderController extends HttpServlet {
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         SaleOrder order = saleorderdao.findById(id);
-
         if (order == null) {
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
