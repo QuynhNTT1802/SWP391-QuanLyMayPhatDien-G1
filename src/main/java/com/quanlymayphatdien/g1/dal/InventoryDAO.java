@@ -67,7 +67,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return ps.executeUpdate() > 0;
     }
 
-
     @Override
     public List<Inventory> findAll() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
