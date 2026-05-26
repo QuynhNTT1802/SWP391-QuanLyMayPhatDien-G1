@@ -4,7 +4,6 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.StockCard;
@@ -233,8 +232,15 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 int qty = detail.getQuantity();
                 int change = "IMPORT".equals(receiptType) ? qty : -qty;
                 invDAO.updateQuantity(connection, warehouseId, genId, change);
-                Inventory currentInv = invDAO.findByWarehouseAndGenerator(warehouseId, genId);
-                int qtyAfter = (currentInv != null) ? currentInv.getQuantity() : change;
+                int qtyAfter = change;
+                String qtySql = "SELECT quantity FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
+                try (PreparedStatement qtyPs = connection.prepareStatement(qtySql)) {
+                    qtyPs.setInt(1, warehouseId);
+                    qtyPs.setInt(2, genId);
+                    try (ResultSet qtyRs = qtyPs.executeQuery()) {
+                        if (qtyRs.next()) qtyAfter = qtyRs.getInt("quantity");
+                    }
+                }
                 StockCard sc = new StockCard();
                 sc.setWarehouseId(warehouseId);
                 sc.setGeneratorId(genId);
