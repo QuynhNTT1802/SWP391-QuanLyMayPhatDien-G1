@@ -38,7 +38,7 @@ public class DBContext {
         try {
             if (connection == null || connection.isClosed()) {
                 String username = "root";
-                String password = "root";
+                String password = "123456789";
                 String url = "jdbc:mysql://localhost:3306/warehousedb";
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 connection = DriverManager.getConnection(url, username, password);
