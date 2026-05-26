@@ -8,10 +8,10 @@ import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.Receipt;
+import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -66,6 +66,29 @@ public class ReceiptController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+        String action = request.getParameter("action");
+        try {
+            switch (action) {
+                case "save":
+                    saveReceipt(request, response);
+                    break;
+                case "approve":
+                    approveReceipt(request, response);
+                    break;
+                case "reject":
+                    rejectReceipt(request, response);
+                    break;
+                default:
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void viewReceiptList(HttpServletRequest request, HttpServletResponse response)
@@ -124,7 +147,7 @@ public class ReceiptController extends HttpServlet {
         User loggedUser = (User) session.getAttribute("loggedUser");
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/receipts");
+            response.sendRedirect(request.getContextPath() + "/receipt");
             return;
         }
         int id = Integer.parseInt(idStr);
@@ -146,5 +169,122 @@ public class ReceiptController extends HttpServlet {
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
         request.getRequestDispatcher("/view/receipt/receipt-detail.jsp").forward(request, response);
+    }
+
+    private void saveReceipt(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+
+        String receiptType = request.getParameter("receiptType");
+        String whIdStr = request.getParameter("warehouseId");
+        String note = request.getParameter("note");
+        int warehouseId = 0;
+        List<String> errors = new ArrayList<>();
+
+        if (receiptType == null || receiptType.trim().isEmpty()) {
+            errors.add("Vui lòng chọn loại phiếu");
+        } else if (!"IMPORT".equals(receiptType) && !"EXPORT".equals(receiptType)) {
+            errors.add("Loại phiếu không hợp lệ");
+        }
+        try {
+            warehouseId = Integer.parseInt(whIdStr);
+            if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
+        } catch (NumberFormatException e) {
+            errors.add("Kho không hợp lệ");
+        }
+
+        String[] genIds = request.getParameterValues("generatorId");
+        String[] serials = request.getParameterValues("serialNumber");
+        String[] qtys = request.getParameterValues("quantity");
+        String[] detailNotes = request.getParameterValues("detailNote");
+
+        List<ReceiptDetail> details = new ArrayList<>();
+        if (genIds != null) {
+            for (int i = 0; i < genIds.length; i++) {
+                int genId = 0, qty = 0;
+                try { genId = Integer.parseInt(genIds[i]); } catch (NumberFormatException ignored) {}
+                try { qty = Integer.parseInt(qtys[i]); } catch (NumberFormatException ignored) {}
+                if (genId <= 0 || qty <= 0) continue;
+
+                ReceiptDetail d = new ReceiptDetail();
+                d.setGeneratorId(genId);
+                d.setSerialNumber(serials != null && i < serials.length ? serials[i] : null);
+                d.setQuantity(qty);
+                d.setNote(detailNotes != null && i < detailNotes.length ? detailNotes[i] : null);
+                details.add(d);
+            }
+        }
+        if (details.isEmpty()) errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
+
+        if (!errors.isEmpty()) {
+            Receipt form = new Receipt();
+            form.setReceiptType(receiptType);
+            form.setWarehouseId(warehouseId);
+            form.setNote(note);
+            request.setAttribute("receipt", form);
+            request.setAttribute("errors", errors);
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", new ArrayList<>());
+            request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
+            return;
+        }
+
+        Receipt r = new Receipt();
+        r.setReceiptCode(receiptDAO.generateReceiptCode(receiptType));
+        r.setReceiptType(receiptType);
+        r.setWarehouseId(warehouseId);
+        r.setCreatedBy(loggedUser.getId());
+        r.setNote(note);
+
+        int receiptId = receiptDAO.insert(r);
+        if (receiptId <= 0) {
+            errors.add("Không thể tạo phiếu, vui lòng thử lại");
+            request.setAttribute("errors", errors);
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", new ArrayList<>());
+            request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
+            return;
+        }
+
+        for (ReceiptDetail d : details) {
+            d.setReceiptId(receiptId);
+            detailDAO.insert(d);
+        }
+
+        response.sendRedirect(request.getContextPath() + "/receipt?msg=created");
+    }
+
+    private void approveReceipt(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        boolean ok = receiptDAO.approveReceipt(id, loggedUser.getId());
+
+        if (ok) {
+            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=approved");
+        } else {
+            request.setAttribute("error", "Không thể duyệt phiếu (phiếu không ở trạng thái chờ duyệt)");
+            viewDetail(request, response);
+        }
+    }
+
+    private void rejectReceipt(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        String reason = request.getParameter("reason");
+        boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reason);
+
+        if (ok) {
+            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=rejected");
+        } else {
+            request.setAttribute("error", "Không thể từ chối phiếu (phiếu không ở trạng thái chờ duyệt)");
+            viewDetail(request, response);
+        }
     }
 }
