@@ -65,10 +65,6 @@
                                         <input class="input" name="model" value="<c:out value="${generator.model}"/>" required />
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Thương hiệu <span class="req">*</span></label>
-                                        <input class="input" name="brand" value="<c:out value="${generator.brand}"/>" required />
-                                    </div>
-                                    <div class="field">
                                         <label class="field-label">Công suất (kVA) <span class="req">*</span></label>
                                         <input class="input mono" name="powerRating" type="number" step="0.01" min="0" value="<c:out value="${generator.powerRating}"/>" required />
                                     </div>
@@ -81,6 +77,14 @@
                                         <input class="input mono" name="stockQuantity" type="number" min="0" value="<c:out value="${generator.stockQuantity}"/>" required />
                                     </div>
                                     <div class="field">
+                                        <label class="field-label">Tần số (Hz)</label>
+                                        <input class="input mono" name="frequency" placeholder="VD: 50Hz" value="<c:out value="${generator.frequency}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Cân nặng (kg)</label>
+                                        <input class="input mono" name="weight" type="number" step="0.1" min="0" value="<c:out value="${generator.weight}"/>" />
+                                    </div>
+                                    <div class="field">
                                         <label class="field-label">Mô tả</label>
                                         <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${generator.description}"/></textarea>
                                     </div>
@@ -89,7 +93,39 @@
 
                             <div class="form-section">
                                 <div class="form-section-head">
-                                    <div class="form-section-num">02 — TRẠNG THÁI</div>
+                                    <div class="form-section-num">02 — PHÂN LOẠI</div>
+                                    <h3 class="form-section-title">Danh mục máy</h3>
+                                </div>
+                                <div class="form-grid">
+                                    <c:set var="types" value="brand,phase,fuel_type,generator_type,power_range,condition,origin"/>
+                                    <c:set var="labels" value="Thương hiệu,Pha,Nhiên liệu,Loại máy,Dải công suất,Tình trạng,Xuất xứ"/>
+                                    <c:forEach var="i" begin="1" end="7">
+                                        <div class="field">
+                                            <label class="field-label"><c:forTokens items="${labels}" delims="," varStatus="ls"><c:if test="${ls.index == i}">${ls.current}</c:if></c:forTokens></label>
+                                            <select class="select" name="categoryIds">
+                                                <option value="">-- Chọn --</option>
+                                                <c:forEach var="cat" items="${allCategories}">
+                                                    <c:forTokens items="${types}" delims="," varStatus="ts">
+                                                        <c:if test="${ts.index == i && cat.type == ts.current}">
+                                                            <c:set var="isSelected" value="false"/>
+                                                            <c:forEach var="gcat" items="${generator.categories}">
+                                                                <c:if test="${gcat.id == cat.id}">
+                                                                    <c:set var="isSelected" value="true"/>
+                                                                </c:if>
+                                                            </c:forEach>
+                                                            <option value="${cat.id}" ${isSelected ? 'selected' : ''}>${cat.name}</option>
+                                                        </c:if>
+                                                    </c:forTokens>
+                                                </c:forEach>
+                                            </select>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-num">03 — TRẠNG THÁI</div>
                                     <h3 class="form-section-title">Kích hoạt máy</h3>
                                 </div>
                                 <div class="form-grid single">
