@@ -74,7 +74,7 @@
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo mẫu hoặc thương hiệu..." autocomplete="off" />
+                            <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo mẫu máy..." autocomplete="off" />
                         </div>
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
@@ -119,7 +119,11 @@
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
                                                             <div class="user-name"><c:out value="${g.model}"/></div>
-                                                            <div class="user-email"><c:out value="${g.brand}"/></div>
+                                                            <div class="user-email">
+                                                                <c:forEach var="cat" items="${g.categories}" varStatus="loop">
+                                                                    ${cat.name}<c:if test="${!loop.last}"> · </c:if>
+                                                                </c:forEach>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>

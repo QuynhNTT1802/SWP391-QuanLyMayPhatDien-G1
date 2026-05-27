@@ -2,12 +2,12 @@ package com.quanlymayphatdien.g1.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Generator {
 
     private int id;
     private String model;
-    private String brand;
     private BigDecimal powerRating;
     private BigDecimal unitPrice;
     private int stockQuantity;
@@ -17,17 +17,19 @@ public class Generator {
     private LocalDateTime updatedAt;
     private Integer createdBy;
     private Integer updatedBy;
+    private String frequency;
+    private BigDecimal weight;
+    private List<Category> categories;
 
     public Generator() {
     }
 
-    public Generator(int id, String model, String brand, BigDecimal powerRating,
+    public Generator(int id, String model, BigDecimal powerRating,
             BigDecimal unitPrice, int stockQuantity, String description,
             String status, LocalDateTime createdAt, LocalDateTime updatedAt,
             Integer createdBy, Integer updatedBy) {
         this.id = id;
         this.model = model;
-        this.brand = brand;
         this.powerRating = powerRating;
         this.unitPrice = unitPrice;
         this.stockQuantity = stockQuantity;
@@ -53,14 +55,6 @@ public class Generator {
 
     public void setModel(String model) {
         this.model = model;
-    }
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
     }
 
     public BigDecimal getPowerRating() {
@@ -135,16 +129,48 @@ public class Generator {
         this.updatedBy = updatedBy;
     }
 
+    public String getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(String frequency) {
+        this.frequency = frequency;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
+    }
+
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
+
+    public String getCategoryName(String type) {
+        if (categories == null) return null;
+        for (Category c : categories) {
+            if (type.equals(c.getType())) {
+                return c.getName();
+            }
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "Generator{"
                 + "id=" + id
                 + ", model='" + model + '\''
-                + ", brand='" + brand + '\''
                 + ", powerRating=" + powerRating
                 + ", unitPrice=" + unitPrice
                 + ", stockQuantity=" + stockQuantity
-                + ", description='" + description + '\''
                 + ", status='" + status + '\''
                 + '}';
     }
