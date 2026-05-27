@@ -22,7 +22,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> findByStatus(String status) {
         List<SaleOrder> list = new ArrayList<>();
-        
+
         String sql = "SELECT * FROM sale_order WHERE status = ? ORDER BY created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -36,6 +36,58 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public int countStatusApproved() {
+        String sql = "select count(*)\n"
+                + "from sale_order\n"
+                + "where status = 'approved'";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+        }
+        return 0;
+    }
+
+    public int countStatusRejected() {
+        String sql = "select count(*)\n"
+                + "from sale_order\n"
+                + "where status = 'rejected'";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+        }
+        return 0;
+    }
+
+    public int countStatusPending() {
+        String sql = "select count(*)\n"
+                + "from sale_order\n"
+                + "where status = 'pending'";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+        }
+        return 0;
+    }
+    
+    public int countStatusCancelled() {
+        String sql = "select count(*)\n"
+                + "from sale_order\n"
+                + "where status = 'cancelled'";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+        }
+        return 0;
     }
 
     public List<SaleOrder> findAll() {
@@ -191,17 +243,16 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public SaleOrder findById(int id) {
-        String sql = "SELECT * FROM sale_order WHERE id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, id);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return getFromResultSet(resultSet);
+        String sql = "SELECT * FROM sale_order WHERE order_id = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return getFromResultSet(rs);
+                }
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
@@ -237,6 +288,18 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public int countTodayOrders() {
+        String sql = "SELECT COUNT(*) FROM sale_order WHERE DATE(created_at) = CURDATE()";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
