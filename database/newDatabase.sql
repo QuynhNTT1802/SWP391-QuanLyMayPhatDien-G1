@@ -1,6 +1,4 @@
-CREATE DATABASE  IF NOT EXISTS `warehousedb` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `warehousedb`;
--- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
+﻿-- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
 --
 -- Host: localhost    Database: warehousedb
 -- ------------------------------------------------------
@@ -26,14 +24,15 @@ DROP TABLE IF EXISTS `category`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `category` (
   `id` int NOT NULL AUTO_INCREMENT,
+  `module` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `category` VALUES (1,'quản lý vật tư','Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-25 06:46:40'),(2,'quản lý vật tư','Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54',NULL),(3,'quản lý vật tư','Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54',NULL),(4,'quản lý vật tư','Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54',NULL),(5,'quản lý vật tư','Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54',NULL),(6,'quản lý vật tư','Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54',NULL),(7,'quản lý vật tư','Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 19:15:54',NULL),(8,'quản lý vật tư','2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 19:15:54',NULL),(9,'quản lý vật tư','5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 19:15:54',NULL),(10,'quản lý vật tư','Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 19:15:54',NULL),(11,'quản lý vật tư','Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'quản lý vật tư','Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'quản lý vật tư','Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'quản lý vật tư','1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'quản lý vật tư','3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'quản lý vật tư','Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54',NULL),(17,'quản lý vật tư','Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54',NULL),(18,'quản lý vật tư','Nhật Bản','origin','Xuất xứ Nhật Bản','active','2026-05-23 19:15:54',NULL),(19,'quản lý vật tư','Trung Quốc','origin','Xuất xứ Trung Quốc','active','2026-05-23 19:15:54',NULL),(20,'quản lý vật tư','Việt Nam','origin','Xuất xứ Việt Nam','active','2026-05-23 19:15:54',NULL),(21,'quản lý vật tư','Hàn Quốc','origin','Xuất xứ Hàn Quốc','active','2026-05-23 19:15:54',NULL),(22,'quản lý vật tư','Mỹ','origin','Xuất xứ Mỹ','active','2026-05-23 19:15:54',NULL),(23,'quản lý phiếu xuất nhập','Nhập kho','receipt_type','Phiếu nhập kho','active','2026-05-23 19:15:54',NULL),(24,'quản lý phiếu xuất nhập','Xuất kho','receipt_type','Phiếu xuất kho','active','2026-05-23 19:15:54',NULL),(25,'quản lý phiếu xuất nhập','Chờ đối soát','receipt_status','Trạng thái chờ đối soát','active','2026-05-23 19:15:54',NULL),(26,'quản lý phiếu xuất nhập','Hoàn thành','receipt_status','Trạng thái hoàn thành','active','2026-05-23 19:15:54',NULL),(27,'quản lý phiếu xuất nhập','Đã hủy','receipt_status','Trạng thái đã hủy','active','2026-05-23 19:15:54',NULL),(28,'quản lý phiếu mua bán','Chờ duyệt','order_status','Trạng thái chờ duyệt','active','2026-05-23 19:15:54',NULL),(29,'quản lý phiếu mua bán','Đã duyệt','order_status','Trạng thái đã duyệt','active','2026-05-23 19:15:54',NULL),(30,'quản lý phiếu mua bán','Từ chối','order_status','Trạng thái từ chối','active','2026-05-23 19:15:54',NULL),(31,'quản lý phiếu mua bán','Đã hủy','order_status','Trạng thái đã hủy','active','2026-05-23 19:15:54',NULL),(32,'quản lý phiếu mua bán','Cá nhân','customer_type','Khách hàng cá nhân','active','2026-05-23 19:15:54',NULL),(33,'quản lý phiếu mua bán','Doanh nghiệp','customer_type','Khách hàng doanh nghiệp','active','2026-05-23 19:15:54',NULL),(34,'quản lý kiểm kê','Hao hụt','adjust_reason','Lý do hao hụt','active','2026-05-23 19:15:54',NULL),(35,'quản lý kiểm kê','Hư hỏng','adjust_reason','Lý do hư hỏng','active','2026-05-23 19:15:54',NULL),(36,'quản lý kiểm kê','Điều chỉnh khác','adjust_reason','Lý do điều chỉnh khác','active','2026-05-23 19:15:54',NULL),(44,'quản lý vật tư','Mitsubishi','brand','Hãng sản xuất máy phát điện Mitsubishi','active','2026-05-23 19:15:54',NULL);
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,8 +40,8 @@ CREATE TABLE `category` (
 --
 
 LOCK TABLES `category` WRITE;
-/*!40000 ALTER TABLE `category` DISABLE KEYS */;
-INSERT INTO `category` VALUES (1,'Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-25 06:46:40'),(2,'Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54',NULL),(3,'Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54',NULL),(4,'Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54',NULL),(5,'Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54',NULL),(6,'Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54',NULL),(7,'Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 19:15:54',NULL),(8,'2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 19:15:54',NULL),(9,'5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 19:15:54',NULL),(10,'Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 19:15:54',NULL),(11,'Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54',NULL),(17,'Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54',NULL);
+INSERT INTO `category` VALUES (1,'quản lý vật tư','Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-25 06:46:40'),(2,'quản lý vật tư','Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54',NULL),(3,'quản lý vật tư','Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54',NULL),(4,'quản lý vật tư','Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54',NULL),(5,'quản lý vật tư','Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54',NULL),(6,'quản lý vật tư','Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54',NULL),(7,'quản lý vật tư','Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 19:15:54',NULL),(8,'quản lý vật tư','2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 19:15:54',NULL),(9,'quản lý vật tư','5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 19:15:54',NULL),(10,'quản lý vật tư','Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 19:15:54',NULL),(11,'quản lý vật tư','Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'quản lý vật tư','Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'quản lý vật tư','Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'quản lý vật tư','1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'quản lý vật tư','3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'quản lý vật tư','Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54',NULL),(17,'quản lý vật tư','Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54',NULL),(18,'quản lý vật tư','Nhật Bản','origin','Xuất xứ Nhật Bản','active','2026-05-23 19:15:54',NULL),(19,'quản lý vật tư','Trung Quốc','origin','Xuất xứ Trung Quốc','active','2026-05-23 19:15:54',NULL),(20,'quản lý vật tư','Việt Nam','origin','Xuất xứ Việt Nam','active','2026-05-23 19:15:54',NULL),(21,'quản lý vật tư','Hàn Quốc','origin','Xuất xứ Hàn Quốc','active','2026-05-23 19:15:54',NULL),(22,'quản lý vật tư','Mỹ','origin','Xuất xứ Mỹ','active','2026-05-23 19:15:54',NULL),(23,'quản lý phiếu xuất nhập','Nhập kho','receipt_type','Phiếu nhập kho','active','2026-05-23 19:15:54',NULL),(24,'quản lý phiếu xuất nhập','Xuất kho','receipt_type','Phiếu xuất kho','active','2026-05-23 19:15:54',NULL),(25,'quản lý phiếu xuất nhập','Chờ đối soát','receipt_status','Trạng thái chờ đối soát','active','2026-05-23 19:15:54',NULL),(26,'quản lý phiếu xuất nhập','Hoàn thành','receipt_status','Trạng thái hoàn thành','active','2026-05-23 19:15:54',NULL),(27,'quản lý phiếu xuất nhập','Đã hủy','receipt_status','Trạng thái đã hủy','active','2026-05-23 19:15:54',NULL),(28,'quản lý phiếu mua bán','Chờ duyệt','order_status','Trạng thái chờ duyệt','active','2026-05-23 19:15:54',NULL),(29,'quản lý phiếu mua bán','Đã duyệt','order_status','Trạng thái đã duyệt','active','2026-05-23 19:15:54',NULL),(30,'quản lý phiếu mua bán','Từ chối','order_status','Trạng thái từ chối','active','2026-05-23 19:15:54',NULL),(31,'quản lý phiếu mua bán','Đã hủy','order_status','Trạng thái đã hủy','active','2026-05-23 19:15:54',NULL),(32,'quản lý phiếu mua bán','Cá nhân','customer_type','Khách hàng cá nhân','active','2026-05-23 19:15:54',NULL),(33,'quản lý phiếu mua bán','Doanh nghiệp','customer_type','Khách hàng doanh nghiệp','active','2026-05-23 19:15:54',NULL),(34,'quản lý kiểm kê','Hao hụt','adjust_reason','Lý do hao hụt','active','2026-05-23 19:15:54',NULL),(35,'quản lý kiểm kê','Hư hỏng','adjust_reason','Lý do hư hỏng','active','2026-05-23 19:15:54',NULL),(36,'quản lý kiểm kê','Điều chỉnh khác','adjust_reason','Lý do điều chỉnh khác','active','2026-05-23 19:15:54',NULL),(44,'quản lý vật tư','Mitsubishi','brand','Hãng sản xuất máy phát điện Mitsubishi','active','2026-05-23 19:15:54',NULL);
+INSERT INTO `category` VALUES (1,'Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-25 06:46:40'),(2,'Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54',NULL),(3,'Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54',NULL),(4,'Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54',NULL),(5,'Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54',NULL),(6,'Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54',NULL),(7,'Dưới 2kW','power_range','Công suất dưới 2kW','active','2026-05-23 19:15:54',NULL),(8,'2kW - 5kW','power_range','Công suất từ 2kW đến 5kW','active','2026-05-23 19:15:54',NULL),(9,'5kW - 10kW','power_range','Công suất từ 5kW đến 10kW','active','2026-05-23 19:15:54',NULL),(10,'Trên 10kW','power_range','Công suất trên 10kW','active','2026-05-23 19:15:54',NULL),(11,'Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54',NULL),(17,'Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54',NULL),(18,'Nhật Bản','origin','Xuất xứ Nhật Bản','active','2026-05-23 19:15:54',NULL),(19,'Trung Quốc','origin','Xuất xứ Trung Quốc','active','2026-05-23 19:15:54',NULL),(20,'Việt Nam','origin','Xuất xứ Việt Nam','active','2026-05-23 19:15:54',NULL),(21,'Hàn Quốc','origin','Xuất xứ Hàn Quốc','active','2026-05-23 19:15:54',NULL),(22,'Mỹ','origin','Xuất xứ Mỹ','active','2026-05-23 19:15:54',NULL);
 /*!40000 ALTER TABLE `category` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -56,18 +55,18 @@ DROP TABLE IF EXISTS `generator`;
 CREATE TABLE `generator` (
   `id` int NOT NULL AUTO_INCREMENT,
   `model` varchar(100) NOT NULL,
-  `brand` varchar(100) DEFAULT NULL,
   `power_rating` decimal(10,2) DEFAULT NULL,
   `unit_price` decimal(15,2) NOT NULL,
+  `frequency` varchar(20) DEFAULT NULL,
+  `weight` decimal(10,2) DEFAULT NULL,
   `description` text,
   `status` varchar(20) NOT NULL DEFAULT 'available',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_by` int DEFAULT NULL,
-  `stock_quantity` int DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -76,7 +75,7 @@ CREATE TABLE `generator` (
 
 LOCK TABLES `generator` WRITE;
 /*!40000 ALTER TABLE `generator` DISABLE KEYS */;
-INSERT INTO `generator` VALUES (1,'EG4500CX','Honda',4.50,25000000.00,'Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha','locked','2026-05-20 08:00:00','2026-05-25 20:00:45',NULL,10,1),(2,'EF6000','Yamaha',6.00,35000000.00,'Máy phát điện Yamaha 6.0kVA, chạy xăng, 1 pha','active','2026-05-20 08:00:00','2026-05-25 20:17:13',NULL,20,1),(3,'DHY8000','Hyundai',8.00,48000000.00,'Máy phát điện Hyundai 8.0kVA, chạy dầu diesel, 3 pha','active','2026-05-20 08:00:00','2026-05-25 19:59:33',NULL,10,NULL),(4,'C10D5','Cummins',10.00,85000000.00,'Máy phát điện Cummins 10kVA, chạy dầu diesel, 3 pha','active','2026-05-20 08:00:00','2026-05-25 19:59:33',NULL,10,NULL),(5,'MGP-15','Mitsubishi',15.00,120000000.00,'Máy phát điện Mitsubishi 15kVA, chạy dầu diesel, 3 pha','active','2026-05-20 08:00:00','2026-05-25 19:59:33',NULL,10,NULL),(6,'GX-25040','Yamaha',50.00,1500000.00,'Mạnh mẽ','active','2026-05-25 20:17:45','2026-05-25 20:17:44',1,20,NULL);
+INSERT INTO `generator` VALUES (1,'EG4500CX',4.50,25000000.00,NULL,NULL,'Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL),(2,'EF6000',6.00,35000000.00,NULL,NULL,'Máy phát điện Yamaha 6.0kVA, chạy xăng, 1 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL),(3,'DHY8000',8.00,48000000.00,NULL,NULL,'Máy phát điện Hyundai 8.0kVA, chạy dầu diesel, 3 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL),(4,'C10D5',10.00,85000000.00,NULL,NULL,'Máy phát điện Cummins 10kVA, chạy dầu diesel, 3 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL),(5,'MGP-15',15.00,120000000.00,NULL,NULL,'Máy phát điện Mitsubishi 15kVA, chạy dầu diesel, 3 pha','available','2026-05-20 08:00:00','2026-05-20 08:00:00',NULL,NULL);
 /*!40000 ALTER TABLE `generator` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -103,6 +102,7 @@ CREATE TABLE `generator_category` (
 
 LOCK TABLES `generator_category` WRITE;
 /*!40000 ALTER TABLE `generator_category` DISABLE KEYS */;
+INSERT INTO `generator_category` VALUES (1,1),(1,5),(1,14),(1,13),(1,8),(1,16),(2,2),(2,5),(2,14),(2,13),(2,8),(2,16),(3,3),(3,6),(3,15),(3,12),(3,9),(3,16),(4,4),(4,6),(4,15),(4,12),(4,10),(4,16),(5,44),(5,6),(5,15),(5,12),(5,10),(5,16);
 /*!40000 ALTER TABLE `generator_category` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -332,7 +332,7 @@ CREATE TABLE `role` (
 
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-INSERT INTO `role` VALUES (1,'admin','Quản trị hệ thống','active','2026-05-15 16:43:03','2026-05-18 13:44:28'),(2,'warehouse_manager','Quản lý kho - Duyệt phiếu xuất/nhập','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(3,'warehouse_staff','Nhân viên kho - Tạo phiếu, quét serial','active','2026-05-15 16:43:03','2026-05-25 20:36:37'),(5,'sales_staff','Nhân viên kinh doanh - Tạo đơn hàng','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(10,'sale_manager','Trưởng phòng kinh doanh - Duyệt đơn hàng','active','2026-05-21 00:00:00','2026-05-21 00:00:00'),(11,'Logger','Track System Status','active','2026-05-22 17:18:39','2026-05-22 17:18:39');
+INSERT INTO `role` VALUES (1,'admin','Quản trị hệ thống','active','2026-05-15 16:43:03','2026-05-18 13:44:28'),(2,'warehouse_manager','Quản lý kho - Duyệt phiếu xuất/nhập','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(3,'warehouse_staff','Nhân viên kho - Tạo phiếu, quét serial','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(5,'sales_staff','Nhân viên kinh doanh - Tạo đơn hàng','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(10,'sale_manager','Trưởng phòng kinh doanh - Duyệt đơn hàng','active','2026-05-21 00:00:00','2026-05-21 00:00:00'),(11,'Logger','Track System Status','active','2026-05-22 17:18:39','2026-05-22 17:18:39');
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -583,4 +583,135 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-25 20:43:06
+-- Dump completed on 2026-05-26 20:53:32
+
+--
+-- Table structure for table category_brand
+--
+
+DROP TABLE IF EXISTS `category_brand`;
+CREATE TABLE `category_brand` (
+  `category_id` int NOT NULL,
+  `country` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `founded_year` int DEFAULT NULL,
+  `warranty_period` int DEFAULT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cb_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_fuel_type
+--
+
+DROP TABLE IF EXISTS `category_fuel_type`;
+CREATE TABLE `category_fuel_type` (
+  `category_id` int NOT NULL,
+  `unit` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `typical_price` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cft_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_origin
+--
+
+DROP TABLE IF EXISTS `category_origin`;
+CREATE TABLE `category_origin` (
+  `category_id` int NOT NULL,
+  `country_code` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_co_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_customer_type
+--
+
+DROP TABLE IF EXISTS `category_customer_type`;
+CREATE TABLE `category_customer_type` (
+  `category_id` int NOT NULL,
+  `tax_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cct_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_generator_type
+--
+
+DROP TABLE IF EXISTS `category_generator_type`;
+CREATE TABLE `category_generator_type` (
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cgt_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_phase
+--
+
+DROP TABLE IF EXISTS `category_phase`;
+CREATE TABLE `category_phase` (
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cp_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_condition
+--
+
+DROP TABLE IF EXISTS `category_condition`;
+CREATE TABLE `category_condition` (
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cc_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_receipt_status
+--
+
+DROP TABLE IF EXISTS `category_receipt_status`;
+CREATE TABLE `category_receipt_status` (
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_crs_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_receipt_reason
+--
+
+DROP TABLE IF EXISTS `category_receipt_reason`;
+CREATE TABLE `category_receipt_reason` (
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_crr_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table category_order_status
+--
+
+DROP TABLE IF EXISTS `category_order_status`;
+CREATE TABLE `category_order_status` (
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`category_id`),
+  CONSTRAINT `fk_cos_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table order_category
+--
+
+DROP TABLE IF EXISTS `order_category`;
+CREATE TABLE `order_category` (
+  `order_id` int NOT NULL,
+  `category_id` int NOT NULL,
+  PRIMARY KEY (`order_id`,category_id`),
+  CONSTRAINT `fk_oc_order` FOREIGN KEY (`order_id`) REFERENCES `sale_order` (`order_id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_oc_category` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
