@@ -34,6 +34,23 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
         return null;
     }
 
+    public boolean existsByNameAndTypeAndModule(String name, String type, String module, int excludeId) {
+        String sql = "select count(*) from category where name = ? and type = ? and module = ? and id != ?";
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            p.setString(1, name);
+            p.setString(2, type);
+            p.setString(3, module);
+            p.setInt(4, excludeId);
+            try (ResultSet rs = p.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public List<Category> findByType(String type) {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category where type = ? and status = 'active' order by name";
