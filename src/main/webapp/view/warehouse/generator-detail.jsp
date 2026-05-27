@@ -72,7 +72,11 @@
                         </c:if>
                     </h2>
                     <div class="hero-meta">
-                        <span><c:out value="${generator.brand}"/></span>
+                        <span>
+                            <c:forEach var="cat" items="${generator.categories}" varStatus="loop">
+                                ${cat.name}<c:if test="${!loop.last}"> · </c:if>
+                            </c:forEach>
+                        </span>
                         <span class="sep">·</span>
                         <span class="id">#<c:out value="${generator.id}"/></span>
                         <span class="sep">·</span>
@@ -120,7 +124,11 @@
                             </div>
                             <div class="info-field">
                                 <div class="info-label">Thương hiệu</div>
-                                <div class="info-value"><c:out value="${generator.brand}"/></div>
+                                <div class="info-value">
+                                    <c:forEach var="cat" items="${generator.categories}" varStatus="loop">
+                                        ${cat.name}<c:if test="${!loop.last}">, </c:if>
+                                    </c:forEach>
+                                </div>
                             </div>
                             <div class="info-field">
                                 <div class="info-label">Công suất</div>

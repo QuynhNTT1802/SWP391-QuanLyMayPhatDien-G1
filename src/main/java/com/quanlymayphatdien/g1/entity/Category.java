@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
  */
 public class Category {
     private int id;
+    private String module;
     private String name;
     private String type;
     private String description;
@@ -22,8 +23,9 @@ public class Category {
     public Category() {
     }
 
-    public Category(int id, String name, String type, String description, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Category(int id, String module, String name, String type, String description, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.module = module;
         this.name = name;
         this.type = type;
         this.description = description;
@@ -38,6 +40,14 @@ public class Category {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
     }
 
     public String getName() {
@@ -87,6 +97,5 @@ public class Category {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
     
 }

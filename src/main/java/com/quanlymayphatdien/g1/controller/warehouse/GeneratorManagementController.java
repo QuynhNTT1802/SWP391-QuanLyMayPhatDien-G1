@@ -1,6 +1,9 @@
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.quanlymayphatdien.g1.dal.CategoryDAO;
+import com.quanlymayphatdien.g1.dal.GeneratorCategoryDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
+import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
@@ -13,7 +16,6 @@ import jakarta.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "GeneratorManagementServlet", urlPatterns = {"/warehouse/generators"})
@@ -105,6 +107,7 @@ public class GeneratorManagementController extends HttpServlet {
 
         GeneratorDAO dao = new GeneratorDAO();
         List<Generator> generators = dao.findByFilters(search, status, page, pageSize);
+        dao.attachCategories(generators);
         int total = dao.getTotalFiltered(search, status);
         int totalPages = (int) Math.ceil((double) total / pageSize);
 
@@ -128,6 +131,7 @@ public class GeneratorManagementController extends HttpServlet {
             GeneratorDAO dao = new GeneratorDAO();
             Generator g = dao.findById(id);
             if (g != null) {
+                dao.attachCategories(g);
                 request.setAttribute("generator", g);
                 DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                 request.setAttribute("createdDate", g.getCreatedAt() != null
@@ -143,6 +147,7 @@ public class GeneratorManagementController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setAttribute("allCategories", loadAllCategories());
         request.getRequestDispatcher("/view/warehouse/generator-create.jsp").forward(request, response);
     }
 
@@ -150,25 +155,27 @@ public class GeneratorManagementController extends HttpServlet {
             throws ServletException, IOException {
         try {
             String model = request.getParameter("model");
-            String brand = request.getParameter("brand");
             String powerStr = request.getParameter("powerRating");
             String priceStr = request.getParameter("unitPrice");
             String stockStr = request.getParameter("stockQuantity");
+            String frequency = request.getParameter("frequency");
+            String weightStr = request.getParameter("weight");
             String desc = request.getParameter("description");
             String status = request.getParameter("status");
+            String[] categoryIds = request.getParameterValues("categoryIds");
             if (status == null || status.isEmpty()) {
                 status = "active";
             }
-            BigDecimal power = new BigDecimal(powerStr);
-            BigDecimal price = new BigDecimal(priceStr);
-            int stock = Integer.parseInt(stockStr);
 
             Generator g = new Generator();
             g.setModel(model);
-            g.setBrand(brand);
-            g.setPowerRating(power);
-            g.setUnitPrice(price);
-            g.setStockQuantity(stock);
+            g.setPowerRating(new BigDecimal(powerStr));
+            g.setUnitPrice(new BigDecimal(priceStr));
+            g.setStockQuantity(Integer.parseInt(stockStr));
+            g.setFrequency(frequency);
+            if (weightStr != null && !weightStr.trim().isEmpty()) {
+                g.setWeight(new BigDecimal(weightStr));
+            }
             g.setDescription(desc);
             g.setStatus(status);
             g.setCreatedAt(LocalDateTime.now());
@@ -177,6 +184,8 @@ public class GeneratorManagementController extends HttpServlet {
             GeneratorDAO dao = new GeneratorDAO();
             int newId = dao.insert(g);
             if (newId > 0) {
+                GeneratorCategoryDAO gcDAO = new GeneratorCategoryDAO();
+                gcDAO.saveCategories(newId, categoryIds);
                 request.getSession().setAttribute("message", "Thêm máy phát điện thành công!");
             } else {
                 request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
@@ -195,7 +204,9 @@ public class GeneratorManagementController extends HttpServlet {
             GeneratorDAO dao = new GeneratorDAO();
             Generator g = dao.findById(id);
             if (g != null) {
+                dao.attachCategories(g);
                 request.setAttribute("generator", g);
+                request.setAttribute("allCategories", loadAllCategories());
                 request.getRequestDispatcher("/view/warehouse/generator-edit.jsp").forward(request, response);
                 return;
             }
@@ -208,21 +219,26 @@ public class GeneratorManagementController extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String model = request.getParameter("model");
-            String brand = request.getParameter("brand");
             String powerStr = request.getParameter("powerRating");
             String priceStr = request.getParameter("unitPrice");
             String stockStr = request.getParameter("stockQuantity");
+            String frequency = request.getParameter("frequency");
+            String weightStr = request.getParameter("weight");
             String desc = request.getParameter("description");
             String status = request.getParameter("status");
+            String[] categoryIds = request.getParameterValues("categoryIds");
 
             GeneratorDAO dao = new GeneratorDAO();
             Generator g = dao.findById(id);
             if (g != null) {
                 g.setModel(model);
-                g.setBrand(brand);
                 g.setPowerRating(new BigDecimal(powerStr));
                 g.setUnitPrice(new BigDecimal(priceStr));
                 g.setStockQuantity(Integer.parseInt(stockStr));
+                g.setFrequency(frequency);
+                if (weightStr != null && !weightStr.trim().isEmpty()) {
+                    g.setWeight(new BigDecimal(weightStr));
+                }
                 g.setDescription(desc);
                 g.setStatus(status);
                 g.setUpdatedAt(LocalDateTime.now());
@@ -230,6 +246,8 @@ public class GeneratorManagementController extends HttpServlet {
 
                 boolean ok = dao.update(g);
                 if (ok) {
+                    GeneratorCategoryDAO gcDAO = new GeneratorCategoryDAO();
+                    gcDAO.saveCategories(id, categoryIds);
                     request.getSession().setAttribute("message", "Cập nhật thành công!");
                 } else {
                     request.getSession().setAttribute("message", "Cập nhật thất bại!");
@@ -271,5 +289,10 @@ public class GeneratorManagementController extends HttpServlet {
                     ok ? "Khóa thành công!" : "Khóa thất bại!");
         }
         response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
+    }
+
+    private List<Category> loadAllCategories() {
+        CategoryDAO cateDAO = new CategoryDAO();
+        return cateDAO.findAll();
     }
 }

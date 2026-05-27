@@ -20,6 +20,20 @@ import java.util.List;
  */
 public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
+    public Category findById(int id) {
+        String sql = "select * from category where id = ?";
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            p.setInt(1, id);
+            try (ResultSet rs = p.executeQuery()) {
+                if (rs.next()) return getFromResultSet(rs);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public List<Category> findByType(String type) {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category where type = ? and status = 'active' order by name";
@@ -41,6 +55,91 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
         String sql = "select distinct type from category order by type";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                types.add(rs.getString("type"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return types;
+    }
+
+    public List<Category> searchByTypeAndModule(String type, String module, String keyword) {
+        List<Category> list = new ArrayList<>();
+        String extTable = getExtensionTable(type);
+        String sql;
+        if (extTable != null) {
+            sql = "SELECT c.* FROM category c LEFT JOIN " + extTable + " e ON c.id = e.category_id "
+                + "WHERE c.module = ? AND c.type = ? AND (c.name LIKE ? OR c.description LIKE ? "
+                + getExtSearchConditions(type) + ") ORDER BY c.name";
+        } else {
+            sql = "SELECT * FROM category WHERE module = ? AND type = ? "
+                + "AND (name LIKE ? OR description LIKE ?) ORDER BY name";
+        }
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            String k = "%" + keyword + "%";
+            p.setString(1, module);
+            p.setString(2, type);
+            p.setString(3, k);
+            p.setString(4, k);
+            int idx = 5;
+            if ("brand".equals(type)) {
+                p.setString(idx++, k); p.setString(idx++, k);
+            } else if ("fuel_type".equals(type)) {
+                p.setString(idx++, k);
+            }
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) list.add(getFromResultSet(rs));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return list;
+    }
+
+    private String getExtSearchConditions(String type) {
+        switch (type) {
+            case "brand": return "OR e.country LIKE ? OR e.website LIKE ?";
+            case "fuel_type": return "OR e.unit LIKE ?";
+            default: return "";
+        }
+    }
+
+    private String getExtensionTable(String type) {
+        switch (type) {
+            case "brand": return "category_brand";
+            case "fuel_type": return "category_fuel_type";
+            case "origin": return "category_origin";
+            case "customer_type": return "category_customer_type";
+            case "generator_type": return "category_generator_type";
+            case "phase": return "category_phase";
+            case "condition": return "category_condition";
+            case "receipt_reason": return "category_receipt_reason";
+            default: return null;
+        }
+    }
+
+    public List<Category> findByModule(String module) {
+        List<Category> list = new ArrayList<>();
+        String sql = "select * from category where module = ? order by type, name";
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            p.setString(1, module);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(getFromResultSet(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<String> getTypesByModule(String module) {
+        List<String> types = new ArrayList<>();
+        String sql = "select distinct type from category where module = ? order by type";
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            p.setString(1, module);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
                 types.add(rs.getString("type"));
@@ -87,15 +186,16 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     @Override
     public boolean update(Category category) {
-        String sql = "update category set name = ?, type = ?, description = ?, status = ?, updated_at = ? where id = ? ";
+        String sql = "update category set module = ?, name = ?, type = ?, description = ?, status = ?, updated_at = ? where id = ? ";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, category.getName());
-            p.setString(2, category.getType());
-            p.setString(3, category.getDescription());
-            p.setString(4, category.getStatus());
-            p.setObject(5, LocalDateTime.now());
-            p.setInt(6, category.getId());
+            p.setString(1, category.getModule());
+            p.setString(2, category.getName());
+            p.setString(3, category.getType());
+            p.setString(4, category.getDescription());
+            p.setString(5, category.getStatus());
+            p.setObject(6, LocalDateTime.now());
+            p.setInt(7, category.getId());
             return p.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -119,16 +219,17 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     @Override
     public int insert(Category t) {
-        String sql = "insert into category (name, type, description, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?)";
+        String sql = "insert into category (module, name, type, description, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setString(1, t.getName());
-            p.setString(2, t.getType());
-            p.setString(3, t.getDescription());
-            p.setString(4, t.getStatus() != null ? t.getStatus() : "active");
+            p.setString(1, t.getModule());
+            p.setString(2, t.getName());
+            p.setString(3, t.getType());
+            p.setString(4, t.getDescription());
+            p.setString(5, t.getStatus() != null ? t.getStatus() : "active");
             LocalDateTime now = LocalDateTime.now();
-            p.setObject(5, now);
             p.setObject(6, now);
+            p.setObject(7, now);
 
             if (p.executeUpdate() > 0) {
                 try (ResultSet rs = p.getGeneratedKeys()) {
@@ -146,13 +247,14 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     @Override
     public Category getFromResultSet(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
+        String module = rs.getString("module");
         String name = rs.getString("name");
         String type = rs.getString("type");
         String desc = rs.getString("description");
         String status = rs.getString("status");
         LocalDateTime createdAt = rs.getObject("created_at", LocalDateTime.class);
         LocalDateTime updatedAt = rs.getObject("updated_at", LocalDateTime.class);
-        return new Category(id, name, type, desc, status, createdAt, updatedAt);
+        return new Category(id, module, name, type, desc, status, createdAt, updatedAt);
     }
 
 }
