@@ -185,7 +185,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         List<String> inputs = new ArrayList<>();
 
         if (roleFilter != null && !roleFilter.isEmpty()) {
-            sql += "AND EXISTS (SELECT 1 FROM user_role ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
+            sql += "AND EXISTS (SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
             inputs.add(roleFilter);
         }
 

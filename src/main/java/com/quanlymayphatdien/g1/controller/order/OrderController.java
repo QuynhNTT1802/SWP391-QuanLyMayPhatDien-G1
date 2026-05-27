@@ -17,6 +17,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @WebServlet(name = "OrderController", urlPatterns = {"/order"})
 public class OrderController extends HttpServlet {
@@ -69,7 +71,7 @@ public class OrderController extends HttpServlet {
         }
     }
 
-    // --- POST: Xử lý các form submit dữ liệu ---
+ 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -107,30 +109,61 @@ public class OrderController extends HttpServlet {
     }
 
    
-
-    // UC-30: Xem danh sách
     private void listOrders(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String statusFilter = request.getParameter("status");
-        List<SaleOrder> orders;
+        List<SaleOrder> allOrders;
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
+    
         if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-            orders = saleorderdao.findByStatus(statusFilter);
+            allOrders = saleorderdao.findByStatus(statusFilter);
         } else {
-            orders = saleorderdao.findAll();
+            allOrders = saleorderdao.findAll();
         }
 
-        request.setAttribute("orders", orders);
-        request.setAttribute("totalOrders", orders.size());
+       
+        int page = 1;
+        int pageSize = 10;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int totalOrders = allOrders.size();
+        int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
+        if (page > totalPages && totalPages > 0) page = totalPages;
+
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, totalOrders);
+        
+        List<SaleOrder> pagedOrders = allOrders.subList(startIndex, endIndex);
+
+ 
+        request.setAttribute("orders", pagedOrders);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalOrders", totalOrders);
         request.setAttribute("statusFilter", statusFilter);
         
-    
-        request.setAttribute("pendingCount", 0); 
-        request.setAttribute("approvedCount", 0);
+        int pendding = saleorderdao.countStatusPending();
+        int approved = saleorderdao.countStatusApproved();
+        int rejected = saleorderdao.countStatusRejected();
+        int cancelled = saleorderdao.countStatusCancelled();
+        
+        request.setAttribute("pendingCount", pendding); 
+        request.setAttribute("approvedCount", approved);
+        request.setAttribute("rejectedCount", rejected);
+        request.setAttribute("cancelledCount", cancelled);
         
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
+     
 
   
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -152,13 +185,13 @@ public class OrderController extends HttpServlet {
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
 
-    // UC-32: Hiển thị form tạo
+    
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
     }
 
-    // UC-32: Xử lý lưu đơn mới
+
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, ParseException {
         
@@ -171,7 +204,14 @@ public class OrderController extends HttpServlet {
 
         SaleOrder order = new SaleOrder();
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
-        order.setOrderCode(request.getParameter("orderCode"));
+        
+        String orderCode = request.getParameter("orderCode");
+        if (orderCode == null || orderCode.trim().isEmpty()) {
+            String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            int todayCount = saleorderdao.countTodayOrders() + 1;
+            orderCode = String.format("ORD-%s-%03d", dateStr, todayCount);
+        }
+        order.setOrderCode(orderCode);
         order.setCustomerName(request.getParameter("customerName"));
         order.setCustomerPhone(request.getParameter("customerPhone"));
         order.setCustomerEmail(request.getParameter("customerEmail"));
@@ -205,7 +245,7 @@ public class OrderController extends HttpServlet {
         }
     }
 
-    // UC-33: Hiển thị form sửa
+   
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -221,7 +261,7 @@ public class OrderController extends HttpServlet {
         }
     }
 
-    // UC-33: Xử lý cập nhật
+ 
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
@@ -252,7 +292,7 @@ public class OrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
-    // UC-34: Duyệt đơn
+   
     private void approveOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -269,7 +309,7 @@ public class OrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
-    // UC-35: Hiển thị form nhập lý do từ chối
+   
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -277,7 +317,7 @@ public class OrderController extends HttpServlet {
         request.getRequestDispatcher("/view/order/reject.jsp").forward(request, response);
     }
 
-   
+    
     private void rejectOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("orderId"));
@@ -301,7 +341,7 @@ public class OrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
-    // UC-36: Hủy đơn
+   
     private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
