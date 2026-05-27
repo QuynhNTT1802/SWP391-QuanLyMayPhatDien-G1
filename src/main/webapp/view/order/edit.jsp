@@ -1,121 +1,130 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chỉnh sửa đơn hàng — Warehouse OS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
-    <style>
-        :root {
-            --bg: #f8fafc; --card-bg: #ffffff; --text: #0f172a; --muted: #64748b;
-            --border: #e2e8f0; --accent: #3b82f6; --accent-hover: #2563eb;
-            --radius: 8px;
-        }
-        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); }
-        .app { display: flex; min-height: 100vh; }
-        main { flex: 1; padding: 24px; }
-        
-        .topbar { background: var(--card-bg); padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
-        .topbar h1 { margin: 0; font-size: 20px; font-weight: 700; }
-        .crumb { font-size: 13px; color: var(--muted); }
-        .crumb a { color: var(--accent); text-decoration: none; }
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Chỉnh sửa đơn hàng — Warehouse OS</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+    </head>
+    <body>
+        <div class="app">
+            <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 24px; }
-        .card h3 { margin: 0 0 16px 0; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group.full { grid-column: span 2; }
-        
-        label { font-size: 13px; font-weight: 500; color: var(--muted); }
-        input, textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; transition: 0.2s; background: #fff; color: var(--text); width: 100%; box-sizing: border-box; }
-        input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-        input[readonly] { background: #f1f5f9; color: var(--muted); cursor: not-allowed; }
-        
-        .btn-group { display: flex; gap: 12px; margin-top: 8px; }
-        .btn { padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; border: 1px solid transparent; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-primary { background: var(--accent); color: #fff; }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-secondary { background: #f1f5f9; color: var(--text); border-color: var(--border); }
-        .btn-secondary:hover { background: #e2e8f0; }
-        
-        .error-msg { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #fecaca; }
-    </style>
-</head>
-<body>
-    <div class="app">
-        <jsp:include page="../common/admin/aside.jsp"></jsp:include>
-        <div style="flex: 1; display: flex; flex-direction: column;">
-            <header class="topbar">
-                <h1>Chỉnh sửa đơn hàng</h1>
-                <span class="crumb">/ <a href="${pageContext.request.contextPath}/order">Đơn hàng</a> / Sửa</span>
-            </header>
-            
-            <main>
-                <c:if test="${not empty error}">
-                    <div class="error-msg"><c:out value="${error}"/></div>
-                </c:if>
+            <div>
+                <header class="topbar">
+                    <h1>Chỉnh sửa đơn hàng</h1>
+                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Chỉnh sửa</span>
+                    <div class="top-actions">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                        </button>
+                    </div>
+                </header>
 
-                <form method="post" action="${pageContext.request.contextPath}/order?action=update">
-                    <input type="hidden" name="orderId" value="${order.orderId}" />
+                <main>
+                    <c:if test="${not empty sessionScope.message}">
+                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                            <c:out value="${sessionScope.message}"/>
+                        </div>
+                        <c:remove var="message" scope="session"/>
+                    </c:if>
                     
-                    <div class="card">
-                        <h3>Thông tin khách hàng</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Tên khách hàng *</label>
-                                <input type="text" name="customerName" value="${order.customerName}" required />
-                            </div>
-                            <div class="form-group">
-                                <label>Số điện thoại *</label>
-                                <input type="text" name="customerPhone" value="${order.customerPhone}" required />
-                            </div>
-                            <div class="form-group">
-                                <label>Email</label>
-                                <input type="email" name="customerEmail" value="${order.customerEmail}" />
-                            </div>
-                            <div class="form-group">
-                                <label>Địa chỉ</label>
-                                <input type="text" name="customerAddress" value="${order.customerAddress}" />
-                            </div>
-                            <div class="form-group">
-                                <label>Mã số thuế</label>
-                                <input type="text" name="customerTaxCode" value="${order.customerTaxCode}" />
-                            </div>
-                            <div class="form-group">
-                                <label>Tên công ty</label>
-                                <input type="text" name="customerCompany" value="${order.customerCompany}" />
-                            </div>
+                    <c:if test="${not empty error}">
+                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                            <c:out value="${error}"/>
                         </div>
+                    </c:if>
+
+                    <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Quay lại danh sách
+                    </a>
+
+                    <div class="page-head">
+                        <div class="eyebrow">Kinh doanh · Đơn hàng #${order.orderId}</div>
+                        <h2 class="page-title">Chỉnh sửa thông tin đơn hàng</h2>
                     </div>
 
-                    <div class="card">
-                        <h3>Thông tin đơn hàng</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Mã đơn hàng</label>
-                                <input type="text" name="orderCode" value="${order.orderCode}" readonly />
+                    <div class="form-layout">
+                        <form class="form-card" method="post" action="${pageContext.request.contextPath}/order?action=update">
+                            <input type="hidden" name="orderId" value="${order.orderId}" />
+                            
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
+                                    <h3 class="form-section-title">Người nhận hàng</h3>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label class="field-label">Tên khách hàng <span class="req">*</span></label>
+                                        <input class="input" name="customerName" value="<c:out value="${order.customerName}"/>" required />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                                        <input class="input mono" name="customerPhone" value="<c:out value="${order.customerPhone}"/>" required />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Email</label>
+                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${order.customerEmail}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Địa chỉ giao hàng</label>
+                                        <input class="input" name="customerAddress" value="<c:out value="${order.customerAddress}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Mã số thuế</label>
+                                        <input class="input mono" name="customerTaxCode" value="<c:out value="${order.customerTaxCode}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tên công ty</label>
+                                        <input class="input" name="customerCompany" value="<c:out value="${order.customerCompany}"/>" />
+                                    </div>
+                                </div>
                             </div>
-                            <div class="form-group full">
-                                <label>Ghi chú khách hàng</label>
-                                <textarea name="customerNote" rows="3">${order.customerNote}</textarea>
-                            </div>
-                            <div class="form-group full">
-                                <label>Ghi chú nội bộ</label>
-                                <textarea name="internalNote" rows="2">${order.note}</textarea>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="btn-group">
-                        <button type="submit" class="btn btn-primary">Cập nhật thay đổi</button>
-                        <a href="${pageContext.request.contextPath}/order" class="btn btn-secondary">Hủy bỏ</a>
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-num">02 — GHI CHÚ ĐƠN HÀNG</div>
+                                    <h3 class="form-section-title">Thông tin bổ sung</h3>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label class="field-label">Ghi chú của khách hàng</label>
+                                        <textarea class="input" name="customerNote" rows="3"><c:out value="${order.customerNote}"/></textarea>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label class="field-label">Ghi chú nội bộ</label>
+                                        <textarea class="input" name="internalNote" rows="2"><c:out value="${order.note}"/></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                                <a class="btn" href="${pageContext.request.contextPath}/order?action=list">Huỷ</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                    Cập nhật đơn hàng
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </form>
-            </main>
+                </main>
+            </div>
         </div>
-    </div>
-    <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-</body>
+
+        <div class="toast-host" id="toastHost"></div>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+    </body>
 </html>
