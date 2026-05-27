@@ -12,20 +12,20 @@
 
   // clear filters
   document.getElementById('clearFilters').addEventListener('click', () => {
-    window.location.href = APP_CTX + '/admin/generators?action=list';
+    window.location.href = APP_CTX + '/warehouse/generators?action=list';
   });
 
   // confirm deactivate
   function confirmDeactivateGenerator(id, page) {
     confirmAction('Khóa máy phát điện', 'Mẫu máy này sẽ không khả dụng cho đơn hàng. Tiếp tục?', () => {
-      window.location.href = APP_CTX + '/admin/generators?action=deactivate&id=' + id + '&page=' + page;
+      window.location.href = APP_CTX + '/warehouse/generators?action=deactivate&id=' + id + '&page=' + page;
     });
   }
 
   // confirm activate
   function confirmActivateGenerator(id, page) {
     confirmAction('Kích hoạt máy phát điện', 'Mẫu máy này sẽ khả dụng trở lại. Tiếp tục?', () => {
-      window.location.href = APP_CTX + '/admin/generators?action=activate&id=' + id + '&page=' + page;
+      window.location.href = APP_CTX + '/warehouse/generators?action=activate&id=' + id + '&page=' + page;
     });
   }
 

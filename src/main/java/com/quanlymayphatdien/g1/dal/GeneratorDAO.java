@@ -236,7 +236,11 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             if (start > all.size()) {
                 return new ArrayList<>();
             }
-            return all.subList(start, end);
+            List<Generator> pageList = new ArrayList<>(all.subList(start, end));
+            for (Generator g : pageList) {
+                g.setCategories(categoryDAO.getCategoriesByGeneratorId(g.getId()));
+            }
+            return pageList;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }

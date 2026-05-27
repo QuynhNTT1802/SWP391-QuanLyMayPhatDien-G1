@@ -12,7 +12,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Quan ly may phat dien — Warehouse OS</title>
+        <title>Quản lý máy phát điện — Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -27,16 +27,16 @@
 
                 <div>
                     <header class="topbar">
-                        <h1>May phat dien</h1>
-                        <span class="crumb">/ <a href="#">Quan tri</a> / May phat dien</span>
+                        <h1>Máy phát điện</h1>
+                        <span class="crumb">/ <a href="#">Quản trị</a> / Máy phát điện</span>
                         <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Doi giao dien">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                                 <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             </button>
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/warehouse/generators?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                            Them may phat dien
+                            Thêm máy phát điện
                         </a>
                     </div>
                 </header>
@@ -44,16 +44,16 @@
                 <main>
                     <div class="page-head">
                         <div class="left">
-                            <div class="eyebrow">Quan tri</div>
-                            <h2 class="page-title">Quan ly may phat dien</h2>
-                            <div class="page-sub">${totalGenerators} may</div>
+                            <div class="eyebrow">Quản trị</div>
+                            <h2 class="page-title">Quản lý máy phát điện</h2>
+                            <div class="page-sub">${totalGenerators} máy</div>
                         </div>
                     </div>
 
                     <div class="stats-row">
-                        <div class="stat"><div class="lbl">Tong may</div><div class="val">${totalGenerators}</div></div>
-                        <div class="stat"><div class="lbl">Dang hoat dong</div><div class="val">${activeCount}</div></div>
-                        <div class="stat"><div class="lbl">Bi khoa</div><div class="val">${lockedCount}</div></div>
+                        <div class="stat"><div class="lbl">Tổng máy</div><div class="val">${totalGenerators}</div></div>
+                        <div class="stat"><div class="lbl">Đang hoạt động</div><div class="val">${activeCount}</div></div>
+                        <div class="stat"><div class="lbl">Bị khóa</div><div class="val">${lockedCount}</div></div>
                     </div>
 
                     <c:if test="${not empty sessionScope.message}">
@@ -68,18 +68,18 @@
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tim theo mau may..." autocomplete="off" />
+                            <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo mẫu máy..." autocomplete="off" />
                         </div>
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
-                            <option value="">Trang thai: Tat ca</option>
-                            <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Dang hoat dong</option>
-                            <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bi khoa</option>
+                            <option value="">Trạng thái: Tất cả</option>
+                            <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
+                            <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khóa</option>
                             </select>
                             <div class="spacer"></div>
                             <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=list'">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            Xoa loc
+                            Xóa lọc
                         </button>
                     </form>
 
@@ -87,13 +87,13 @@
                         <table class="users" id="generatorsTable">
                             <thead>
                                 <tr>
-                                    <th>Mau may</th>
-                                    <th>Thuong hieu</th>
-                                    <th>Cong suat</th>
-                                    <th>Don gia</th>
-                                    <th>Loai may</th>
-                                    <th>Trang thai</th>
-                                    <th class="col-actions">Hanh dong</th>
+                                    <th>Mẫu máy</th>
+                                    <th>Thương hiệu</th>
+                                    <th>Công suất</th>
+                                    <th>Đơn giá</th>
+                                    <th>Loại máy</th>
+                                    <th>Trạng thái</th>
+                                    <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -101,7 +101,7 @@
                                     <c:when test="${empty generators}">
                                         <tr><td colspan="7">
                                                 <div class="empty-state">
-                                                    <strong>Khong tim thay may phat dien</strong>
+                                                    <strong>Không tìm thấy máy phát điện</strong>
                                                 </div>
                                             </td></tr>
                                         </c:when>
@@ -125,7 +125,7 @@
                                                     <c:out value="${not empty foundBrand ? foundBrand : '—'}"/>
                                                 </td>
                                                 <td><span class="mono"><c:out value="${g.powerRating}"/> kVA</span></td>
-                                                <td><span class="mono"><fmt:formatNumber value="${g.unitPrice}" pattern="#,###"/> d</span></td>
+                                                <td><span class="mono"><fmt:formatNumber value="${g.unitPrice}" pattern="#,###"/> đ</span></td>
                                                 <td>
                                                     <c:set var="foundType" value=""/>
                                                     <c:forEach var="cat" items="${g.categories}">
@@ -135,27 +135,27 @@
                                                 </td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${g.status == 'active'}"><span class="status active"><span class="sdot"></span>Hoat dong</span></c:when>
-                                                        <c:when test="${g.status == 'locked'}"><span class="status locked"><span class="sdot"></span>Bi khoa</span></c:when>
+                                                        <c:when test="${g.status == 'active'}"><span class="status active"><span class="sdot"></span>Hoạt động</span></c:when>
+                                                        <c:when test="${g.status == 'locked'}"><span class="status locked"><span class="sdot"></span>Bị khóa</span></c:when>
                                                         <c:otherwise><span class="status disabled"><span class="sdot"></span><c:out value="${g.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'" title="Xem chi tiet">
+                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'" title="Xem chi tiết">
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </button>
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=update&id=${g.id}&page=${currentPage}'" title="Chinh sua">
+                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=update&id=${g.id}&page=${currentPage}'" title="Chỉnh sửa">
                                                             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                         </button>
                                                         <c:choose>
                                                             <c:when test="${g.status == 'active'}">
-                                                                <button class="icon-mini" onclick="confirmDeactivateGenerator(${g.id}, ${currentPage})" title="Khoa">
+                                                                <button class="icon-mini" onclick="confirmDeactivateGenerator(${g.id}, ${currentPage})" title="Khóa">
                                                                     <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                                                                 </button>
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <button class="icon-mini" onclick="confirmActivateGenerator(${g.id}, ${currentPage})" title="Kich hoat">
+                                                                <button class="icon-mini" onclick="confirmActivateGenerator(${g.id}, ${currentPage})" title="Kích hoạt">
                                                                     <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                                                                 </button>
                                                             </c:otherwise>
@@ -169,7 +169,7 @@
                             </tbody>
                         </table>
                         <div class="pagination">
-                            <div class="info">Hien thi <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalGenerators ? totalGenerators : currentPage * 10}</strong> / <strong>${totalGenerators}</strong> ket qua</div>
+                            <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalGenerators ? totalGenerators : currentPage * 10}</strong> / <strong>${totalGenerators}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
                                     <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">‹</a>
@@ -194,11 +194,11 @@
 
         <div class="modal-host" id="confirmModal">
             <div class="modal">
-                <h3 id="modalTitle">Xac nhan hanh dong</h3>
-                <p id="modalText">Ban co chac muon thuc hien hanh dong nay?</p>
+                <h3 id="modalTitle">Xác nhận hành động</h3>
+                <p id="modalText">Bạn có chắc muốn thực hiện hành động này?</p>
                 <div class="actions">
-                    <button class="btn" id="modalCancel">Huy</button>
-                    <button class="btn btn-danger" id="modalConfirm">Xac nhan</button>
+                    <button class="btn" id="modalCancel">Hủy</button>
+                    <button class="btn btn-danger" id="modalConfirm">Xác nhận</button>
                 </div>
             </div>
         </div>
