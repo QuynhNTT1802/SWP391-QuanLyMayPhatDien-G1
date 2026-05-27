@@ -39,7 +39,6 @@ public class CategoryController extends HttpServlet {
         TYPE_LABELS.put("generator_type", "Loại máy");
         TYPE_LABELS.put("condition", "Tình trạng");
         TYPE_LABELS.put("origin", "Xuất xứ");
-        TYPE_LABELS.put("receipt_type", "Loại phiếu");
         TYPE_LABELS.put("receipt_reason", "Lý do X/N");
         TYPE_LABELS.put("receipt_status", "Trạng thái phiếu");
         TYPE_LABELS.put("customer_type", "Loại KH");
@@ -245,6 +244,35 @@ public class CategoryController extends HttpServlet {
             return;
         }
 
+        int existingId = 0;
+        if (idVar != null && !idVar.isEmpty() && !"0".equals(idVar)) {
+            existingId = Integer.parseInt(idVar);
+        }
+        if (cateDAO.existsByNameAndTypeAndModule(name, type, module, existingId)) {
+            errors.add("Danh mục \"" + name + "\" đã tồn tại trong cùng loại và module");
+            Category c = new Category();
+            c.setName(name);
+            c.setType(type);
+            c.setDescription(desc);
+            c.setStatus(status);
+            c.setModule(module);
+            if (existingId > 0) c.setId(existingId);
+            request.setAttribute("category", c);
+            request.setAttribute("errors", errors);
+            List<String> types;
+            if (module != null && !module.trim().isEmpty()) {
+                types = cateDAO.getTypesByModule(module);
+            } else {
+                types = cateDAO.getDistrictTypes();
+            }
+            request.setAttribute("types", types);
+            request.setAttribute("typeLabels", TYPE_LABELS);
+            request.setAttribute("currentModule", module);
+            request.setAttribute("moduleLabel", getModuleLabel(module));
+            request.getRequestDispatcher("/view/admin/admin-category-edit.jsp").forward(request, response);
+            return;
+        }
+
         Category category = new Category();
         category.setName(name);
         category.setType(type);
@@ -253,7 +281,8 @@ public class CategoryController extends HttpServlet {
         category.setModule(module);
 
         int categoryId;
-        if (idVar != null && !idVar.isEmpty()) {
+        boolean isUpdate = idVar != null && !idVar.isEmpty() && !"0".equals(idVar);
+        if (isUpdate) {
             categoryId = Integer.parseInt(idVar);
             category.setId(categoryId);
             cateDAO.update(category);

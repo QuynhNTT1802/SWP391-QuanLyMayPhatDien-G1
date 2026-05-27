@@ -310,13 +310,7 @@ tbody tr:hover .row-actions { opacity: 1; }
 .summary-value { color: var(--fg); font-weight: 600; text-align: end; }
 .summary-value.empty { color: var(--muted-2); font-weight: 500; }
 
-.save-bar { position: fixed; bottom: 16px; left: 256px; right: 24px; z-index: 30; background: var(--fg); color: var(--bg); border-radius: var(--radius); padding: 12px 16px 12px 18px; box-shadow: 0 8px 28px oklch(0% 0 0 / 0.18); display: flex; align-items: center; gap: 14px; }
-.save-bar .info { flex: 1; line-height: 1.3; font-size: 13px; font-weight: 600; }
-.save-bar .info .sub { font-size: 11.5px; opacity: 0.7; font-weight: 500; margin-top: 1px; }
-.save-bar .btn { background: transparent; color: var(--bg); border-color: oklch(100% 0 0 / 0.25); }
-.save-bar .btn:hover { background: oklch(100% 0 0 / 0.1); }
-.save-bar .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-.save-bar .btn-primary:hover { background: color-mix(in srgb, var(--accent) 88%, white); }
+
 
 .ext-section { display: none; }
 .ext-section.visible { display: block; }
@@ -341,6 +335,5 @@ textarea.input { resize: vertical; min-height: 70px; }
     main { padding: 16px 16px 100px; }
     .form-grid { grid-template-columns: 1fr; }
     .field.span-2 { grid-column: auto; }
-    .save-bar { left: 12px; right: 12px; }
     .cat-grid { grid-template-columns: 1fr; }
 }

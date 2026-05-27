@@ -47,14 +47,13 @@
                 Quay lại danh sách
             </a>
 
-            <div class="page-head">
-                <div class="eyebrow">Quản trị · ${empty category ? 'Danh mục mới' : 'Danh mục'} · ${moduleLabel}</div>
-                <h2 class="page-title">${empty category ? 'Thêm danh mục' : category.name}</h2>
-            </div>
+            
 
             <div class="form-layout">
                 <form class="form-card" id="categoryForm" method="post" action="${pageContext.request.contextPath}/admin/category/save">
+                    <c:if test="${category.id > 0}">
                     <input type="hidden" name="id" value="${category.id}">
+                    </c:if>
                     <input type="hidden" name="module" value="${currentModule}">
 
                     <div class="form-section">
@@ -96,6 +95,7 @@
                     <c:set var="extType" value="${not empty category ? category.type : param.type}"/>
 
                     <div class="ext-section ${extType == 'brand' ? 'visible' : ''}" id="ext-brand">
+                        <c:if test="${extType == 'brand'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN HÃNG</div>
@@ -120,9 +120,11 @@
                                 </div>
                             </div>
                         </div>
+                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'fuel_type' ? 'visible' : ''}" id="ext-fuel">
+                        <c:if test="${extType == 'fuel_type'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN NHIÊN LIỆU</div>
@@ -139,9 +141,11 @@
                                 </div>
                             </div>
                         </div>
+                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'origin' ? 'visible' : ''}" id="ext-origin">
+                        <c:if test="${extType == 'origin'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN XUẤT XỨ</div>
@@ -154,9 +158,11 @@
                                 </div>
                             </div>
                         </div>
+                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'customer_type' ? 'visible' : ''}" id="ext-customer">
+                        <c:if test="${extType == 'customer_type'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN LOẠI KHÁCH</div>
@@ -176,9 +182,10 @@
                                 </div>
                             </div>
                         </div>
+                        </c:if>
                     </div>
 
-                    <div class="ext-section ${extType == 'receipt_type' or extType == 'receipt_reason' or extType == 'receipt_status' or extType == 'order_status' or extType == 'generator_type' or extType == 'phase' or extType == 'condition' ? 'visible' : ''}" id="ext-simple">
+                    <div class="ext-section ${extType == 'receipt_reason' or extType == 'receipt_status' or extType == 'order_status' or extType == 'generator_type' or extType == 'phase' or extType == 'condition' ? 'visible' : ''}" id="ext-simple">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN BỔ SUNG</div>
@@ -187,7 +194,6 @@
                                         <c:when test="${extType == 'generator_type'}">Loại máy phát</c:when>
                                         <c:when test="${extType == 'phase'}">Pha điện</c:when>
                                         <c:when test="${extType == 'condition'}">Tình trạng</c:when>
-                                        <c:when test="${extType == 'receipt_type'}">Loại phiếu</c:when>
                                         <c:when test="${extType == 'receipt_reason'}">Lý do xuất/nhập</c:when>
                                         <c:when test="${extType == 'receipt_status'}">Trạng thái phiếu</c:when>
                                         <c:when test="${extType == 'order_status'}">Trạng thái đơn hàng</c:when>
@@ -269,15 +275,6 @@
     </div>
 </div>
 
-<div class="save-bar" id="saveBar" style="display:none;">
-    <div class="info">
-        <div>Bạn có thay đổi chưa lưu</div>
-        <div class="sub">Nhấn Lưu để áp dụng hoặc Huỷ để bỏ qua</div>
-    </div>
-    <button class="btn" onclick="location.href='${pageContext.request.contextPath}/admin/categories?module=${currentModule}<c:if test="${not empty param.type}">&type=${param.type}</c:if>'">Huỷ</button>
-    <button class="btn btn-primary" onclick="document.getElementById('categoryForm').submit()">Lưu</button>
-</div>
-
 <script>
 function toggleExtensionSections() {
     var type = document.getElementById('fieldType').value;
@@ -291,7 +288,6 @@ function toggleExtensionSections() {
         'generator_type': 'ext-simple',
         'phase': 'ext-simple',
         'condition': 'ext-simple',
-        'receipt_type': 'ext-simple',
         'receipt_reason': 'ext-simple',
         'receipt_status': 'ext-simple',
         'order_status': 'ext-simple'
@@ -348,13 +344,6 @@ document.getElementById('categoryForm').addEventListener('submit', function(e) {
     }
 });
 
-var form = document.getElementById('categoryForm');
-var formDirty = false;
-form.addEventListener('input', function() { formDirty = true; showSaveBar(); });
-form.addEventListener('change', function() { formDirty = true; showSaveBar(); });
-function showSaveBar() {
-    if (formDirty) document.getElementById('saveBar').style.display = 'flex';
-}
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
