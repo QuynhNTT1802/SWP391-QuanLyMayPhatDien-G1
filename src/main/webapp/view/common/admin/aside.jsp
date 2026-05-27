@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="com.quanlymayphatdien.g1.entity.User"%>
 <%@page import="java.util.Set"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
     String activePage = (String) request.getAttribute("activePage");
     if (activePage == null) activePage = "";
@@ -47,7 +48,7 @@
         <div>Warehouse OS</div>
     </div>
     <nav class="nav">
-        <div class="nav-section">Tong quan</div>
+        <div class="nav-section">Tổng quan</div>
         <% if (hasDashboard) { %>
         <a href="<%=request.getContextPath()%>/admin/dashboard">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -73,13 +74,13 @@
         </a>
         <% } %>
         <% if (hasOrders) { %>
-        <a href="#">
+        <a href="<%=request.getContextPath()%>/order">
             <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            Don hang
+            Đơn hàng
         </a>
         <% } %>
 
-        <div class="nav-section">Quan tri</div>
+        <div class="nav-section">Quản trị</div>
         <% if (hasCategories) { %>
         <a href="<%=request.getContextPath()%>/admin/categories">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -115,7 +116,7 @@
         </a>
         <% } %>
 
-        <div class="nav-section">Tai khoan</div>
+        <div class="nav-section">Tài khoản</div>
         <% if (hasProfile) { %>
         <a href="<%=request.getContextPath()%>/profile" class="<%= "profile".equals(activePage) ? "active" : "" %>">
             <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
