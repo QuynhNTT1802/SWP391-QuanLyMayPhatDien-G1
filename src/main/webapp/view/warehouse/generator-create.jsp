@@ -24,10 +24,10 @@
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-            <div>
-                <header class="topbar">
-                    <h1>Thêm máy phát điện</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/generators?action=list">Máy phát điện</a> / Thêm mới</span>
+                <div>
+                    <header class="topbar">
+                        <h1>Thêm máy phát điện</h1>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/generators?action=list">Máy phát điện</a> / Thêm mới</span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                     </div>
@@ -48,58 +48,131 @@
                         </c:forEach>
                         <c:remove var="errors" scope="session"/>
                     </c:if>
-                    <a class="back-link" href="${pageContext.request.contextPath}/admin/generators?action=list">
+
+                    <a class="back-link" href="${pageContext.request.contextPath}/warehouse/generators?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại danh sách
                     </a>
 
                     <div class="page-head">
-                        <div class="eyebrow">Quản trị · Máy phát điện mới</div>
+                        <div class="eyebrow">Quản lý kho · Máy phát điện mới</div>
                         <h2 class="page-title">Thêm máy phát điện</h2>
                     </div>
 
                     <div class="form-layout">
-                        <form class="form-card" method="post" action="${pageContext.request.contextPath}/admin/generators?action=create">
+                        <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/generators?action=create">
+
+                            <%-- ============ SECTION 01: THÔNG TIN CƠ BẢN ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
-                                    <h3 class="form-section-title">Mẫu máy &amp; thông số</h3>
+                                    <h3 class="form-section-title">Mẫu máy &amp; danh mục</h3>
                                 </div>
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Mẫu máy <span class="req">*</span></label>
-                                        <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value="${param.model}"/>" required />
+                                        <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value="${sessionScope.fieldModel}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Thương hiệu <span class="req">*</span></label>
-                                        <input class="input" name="brand" placeholder="VD: Honda" value="<c:out value="${param.brand}"/>" required />
+                                        <select class="select" name="brandId">
+                                            <option value="">-- Chọn thương hiệu --</option>
+                                            <c:forEach var="c" items="${brands}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldBrandId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Công suất (kVA) <span class="req">*</span></label>
-                                        <input class="input mono" name="powerRating" type="number" step="0.01" min="0" placeholder="VD: 5.0" value="<c:out value="${param.powerRating}"/>" required />
+                                        <label class="field-label">Loại máy</label>
+                                        <select class="select" name="genTypeId">
+                                            <option value="">-- Chọn loại máy --</option>
+                                            <c:forEach var="c" items="${genTypes}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldGenTypeId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Đơn giá (VND) <span class="req">*</span></label>
-                                        <input class="input mono" name="unitPrice" type="number" step="1" min="0" placeholder="VD: 15000000" value="<c:out value="${param.unitPrice}"/>" required />
+                                        <label class="field-label">Xuất xứ</label>
+                                        <select class="select" name="originId">
+                                            <option value="">-- Chọn xuất xứ --</option>
+                                            <c:forEach var="c" items="${origins}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldOriginId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Số lượng tồn kho <span class="req">*</span></label>
-                                        <input class="input mono" name="stockQuantity" type="number" min="0" placeholder="VD: 10" value="<c:out value="${param.stockQuantity}"/>" required />
+                                        <label class="field-label">Tình trạng</label>
+                                        <select class="select" name="conditionId">
+                                            <option value="">-- Chọn tình trạng --</option>
+                                            <c:forEach var="c" items="${conditions}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldConditionId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Đơn giá (VNĐ) <span class="req">*</span></label>
+                                        <input class="input mono" name="unitPrice" type="number" step="1" min="0" placeholder="VD: 15000000" value="<c:out value="${sessionScope.fieldPrice}"/>" required />
                                     </div>
                                     <div class="field full-width">
                                         <label class="field-label">Mô tả</label>
-                                        <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${param.description}"/></textarea>
-                                    </div>
-                                    <div class="field full-width">
-                                        <label class="field-label">Pha</label>
-                                        <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${param.description}"/></textarea>
+                                        <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${sessionScope.fieldDesc}"/></textarea>
                                     </div>
                                 </div>
                             </div>
 
+                            <%-- ============ SECTION 02: THÔNG TIN KỸ THUẬT ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
-                                    <div class="form-section-num">02 — TRẠNG THÁI</div>
+                                    <div class="form-section-num">02 — THÔNG TIN KỸ THUẬT</div>
+                                    <h3 class="form-section-title">Thông số vận hành</h3>
+                                </div>
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label class="field-label">Công suất (kVA) <span class="req">*</span></label>
+                                        <input class="input mono" name="powerRating" type="number" step="0.01" min="0" placeholder="VD: 5.0" value="<c:out value="${sessionScope.fieldPower}"/>" required />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tần số</label>
+                                        <input class="input mono" name="frequency" placeholder="VD: 50Hz" value="<c:out value="${sessionScope.fieldFrequency}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Trọng lượng (kg)</label>
+                                        <input class="input mono" name="weight" type="number" step="0.01" min="0" placeholder="VD: 85.5" value="<c:out value="${sessionScope.fieldWeight}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Nhiên liệu</label>
+                                        <select class="select" name="fuelTypeId">
+                                            <option value="">-- Chọn nhiên liệu --</option>
+                                            <c:forEach var="c" items="${fuelTypes}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldFuelTypeId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Pha</label>
+                                        <select class="select" name="phaseId">
+                                            <option value="">-- Chọn pha --</option>
+                                            <c:forEach var="c" items="${phases}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldPhaseId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Dải công suất</label>
+                                        <select class="select" name="powerRangeId">
+                                            <option value="">-- Chọn dải công suất --</option>
+                                            <c:forEach var="c" items="${powerRanges}">
+                                                <option value="${c.id}" <c:if test="${sessionScope.fieldPowerRangeId == c.id}">selected</c:if>>${c.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <%-- ============ SECTION 03: TRẠNG THÁI ============ --%>
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-num">03 — TRẠNG THÁI</div>
                                     <h3 class="form-section-title">Kích hoạt máy</h3>
                                 </div>
                                 <div class="form-grid single">
@@ -114,7 +187,7 @@
                             </div>
 
                             <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
-                                <a class="btn" href="${pageContext.request.contextPath}/admin/generators?action=list">Hủy</a>
+                                <a class="btn" href="${pageContext.request.contextPath}/warehouse/generators?action=list">Hủy</a>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                     Tạo máy phát điện
@@ -125,6 +198,20 @@
                 </main>
             </div>
         </div>
+
+        <c:remove var="fieldModel" scope="session"/>
+        <c:remove var="fieldBrandId" scope="session"/>
+        <c:remove var="fieldGenTypeId" scope="session"/>
+        <c:remove var="fieldOriginId" scope="session"/>
+        <c:remove var="fieldConditionId" scope="session"/>
+        <c:remove var="fieldPrice" scope="session"/>
+        <c:remove var="fieldDesc" scope="session"/>
+        <c:remove var="fieldPower" scope="session"/>
+        <c:remove var="fieldFrequency" scope="session"/>
+        <c:remove var="fieldWeight" scope="session"/>
+        <c:remove var="fieldFuelTypeId" scope="session"/>
+        <c:remove var="fieldPhaseId" scope="session"/>
+        <c:remove var="fieldPowerRangeId" scope="session"/>
 
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>

@@ -2,41 +2,45 @@ package com.quanlymayphatdien.g1.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Generator {
 
     private int id;
     private String model;
-    private String brand;
     private BigDecimal powerRating;
     private BigDecimal unitPrice;
-    private int stockQuantity;
+    private String frequency;
+    private BigDecimal weight;
     private String description;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer createdBy;
     private Integer updatedBy;
+    private List<Category> categories;
 
     public Generator() {
     }
 
-    public Generator(int id, String model, String brand, BigDecimal powerRating,
-            BigDecimal unitPrice, int stockQuantity, String description,
-            String status, LocalDateTime createdAt, LocalDateTime updatedAt,
-            Integer createdBy, Integer updatedBy) {
+    public Generator(int id, String model, BigDecimal powerRating,
+            BigDecimal unitPrice, String frequency, BigDecimal weight,
+            String description, String status, LocalDateTime createdAt,
+            LocalDateTime updatedAt, Integer createdBy, Integer updatedBy,
+            List<Category> categories) {
         this.id = id;
         this.model = model;
-        this.brand = brand;
         this.powerRating = powerRating;
         this.unitPrice = unitPrice;
-        this.stockQuantity = stockQuantity;
+        this.frequency = frequency;
+        this.weight = weight;
         this.description = description;
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.createdBy = createdBy;
         this.updatedBy = updatedBy;
+        this.categories = categories;
     }
 
     public int getId() {
@@ -55,14 +59,6 @@ public class Generator {
         this.model = model;
     }
 
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
-
     public BigDecimal getPowerRating() {
         return powerRating;
     }
@@ -79,12 +75,20 @@ public class Generator {
         this.unitPrice = unitPrice;
     }
 
-    public int getStockQuantity() {
-        return stockQuantity;
+    public String getFrequency() {
+        return frequency;
     }
 
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
+    public void setFrequency(String frequency) {
+        this.frequency = frequency;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
     }
 
     public String getDescription() {
@@ -135,15 +139,23 @@ public class Generator {
         this.updatedBy = updatedBy;
     }
 
+    public List<Category> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<Category> categories) {
+        this.categories = categories;
+    }
+
     @Override
     public String toString() {
         return "Generator{"
                 + "id=" + id
                 + ", model='" + model + '\''
-                + ", brand='" + brand + '\''
                 + ", powerRating=" + powerRating
                 + ", unitPrice=" + unitPrice
-                + ", stockQuantity=" + stockQuantity
+                + ", frequency='" + frequency + '\''
+                + ", weight=" + weight
                 + ", description='" + description + '\''
                 + ", status='" + status + '\''
                 + '}';
