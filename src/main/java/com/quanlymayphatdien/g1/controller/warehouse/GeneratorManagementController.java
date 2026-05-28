@@ -1,4 +1,4 @@
-package com.quanlymayphatdien.g1.controller.admin;
+package com.quanlymayphatdien.g1.controller.warehouse;
 
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
@@ -142,8 +142,8 @@ public class GeneratorManagementController extends HttpServlet {
                 request.setAttribute("updatedDate", g.getUpdatedAt() != null
                         ? g.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "—");
 
-                CategoryDAO catDAO = new CategoryDAO();
-                List<Category> cats = catDAO.getCategoriesByGeneratorId(id);
+                GeneratorDAO generatorDAO = new GeneratorDAO();   
+                List<Category> cats = generatorDAO.getCategoriesByGeneratorId(id);
                 request.setAttribute("genBrand", getCatName(cats, "brand"));
                 request.setAttribute("genOrigin", getCatName(cats, "origin"));
                 request.setAttribute("genCondition", getCatName(cats, "condition"));
@@ -259,7 +259,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.setAttribute("phases", catDAO.findByType("phase"));
                 request.setAttribute("conditions", catDAO.findByType("condition"));
                 request.setAttribute("origins", catDAO.findByType("origin"));
-                List<Category> selectedCats = catDAO.getCategoriesByGeneratorId(id);
+                List<Category> selectedCats = dao.getCategoriesByGeneratorId(id);
                 List<Integer> selectedIds = selectedCats.stream()
                         .map(Category::getId).collect(Collectors.toList());
                 request.setAttribute("selectedCatIds", selectedIds);

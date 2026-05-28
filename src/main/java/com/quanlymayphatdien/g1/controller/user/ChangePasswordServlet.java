@@ -1,6 +1,8 @@
 package com.quanlymayphatdien.g1.controller.user;
+import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PASSWORD;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import jakarta.servlet.ServletException;
@@ -61,6 +63,12 @@ public class ChangePasswordServlet extends HttpServlet {
             return;
         }
 
+        if (!newPassword.matches(REGEX_PASSWORD)) {
+            request.setAttribute("error", "Mật khẩu mới phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số.");
+            doGet(request, response);
+            return;
+        }
+
         if (!newPassword.equals(confirmPassword)) {
             request.setAttribute("error", "Mật khẩu xác nhận không khớp.");
             doGet(request, response);
@@ -70,21 +78,39 @@ public class ChangePasswordServlet extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         User user = userDAO.findById(currentUser.getId());
 
-        if (user == null || !user.getPassword().equals(currentPassword)) {
+        if (user == null) {
+            request.setAttribute("error", "Không tìm thấy người dùng.");
+            doGet(request, response);
+            return;
+        }
+
+        boolean passwordCorrect = false;
+        if (user.getPassword().startsWith("$2a$") || user.getPassword().startsWith("$2b$")) {
+            passwordCorrect = BCryptUtils.verify(currentPassword, user.getPassword());
+        } else {
+            passwordCorrect = user.getPassword().equals(currentPassword);
+        }
+
+        if (!passwordCorrect) {
             request.setAttribute("error", "Mật khẩu hiện tại không đúng.");
             doGet(request, response);
             return;
         }
 
-        user.setPassword(newPassword);
-        user.setUpdatedAt(LocalDateTime.now());
-        user.setUpdatedBy(currentUser.getId());
+        if (BCryptUtils.hash(newPassword).equals(user.getPassword())
+                || (!user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$") && newPassword.equals(user.getPassword()))) {
+            request.setAttribute("error", "Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+            doGet(request, response);
+            return;
+        }
 
-        boolean updated = userDAO.update(user);
+        String newHashedPassword = BCryptUtils.hash(newPassword);
+        boolean updated = userDAO.updatePassword(user.getId(), newHashedPassword);
 
         if (updated) {
-            session.setAttribute("loggedUser", user);
-            request.setAttribute("success", "Đổi mật khẩu thành công!");
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
         } else {
             request.setAttribute("error", "Có lỗi xảy ra khi đổi mật khẩu.");
         }

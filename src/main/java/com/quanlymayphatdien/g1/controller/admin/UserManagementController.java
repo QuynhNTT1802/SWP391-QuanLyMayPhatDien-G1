@@ -177,7 +177,7 @@ public class UserManagementController extends HttpServlet {
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
             newUser.setCreatedBy(1);
-
+            
             UserDAO userDAO = new UserDAO();
             int newUserId = userDAO.insert(newUser);
             if (newUserId > 0) {
@@ -190,22 +190,10 @@ public class UserManagementController extends HttpServlet {
                 }
                 if (!roleIdList.isEmpty()) {
                     userDAO.updateUserRoles(newUserId, roleIdList);
-
-                    RoleDAO roleDAO = new RoleDAO();
-                    for (Role r : roleDAO.findAll()) {
-                        if (roleIdList.contains(r.getRoleId()) && "admin".equals(r.getRoleName())) {
-                            String sql = "INSERT INTO admin (admin_id) VALUES (?)";
-                            try (java.sql.Connection c = userDAO.getConnection(); java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
-                                ps.setInt(1, newUserId);
-                                ps.executeUpdate();
-                            }
-                            break;
-                        }
-                    }
                 }
-                request.getSession().setAttribute("message", "Tạo người dùng thành công!");
+                request.getSession().setAttribute("message", "User added successfully!");
             } else {
-                request.getSession().setAttribute("message", "Tạo người dùng thất bại!");
+                request.getSession().setAttribute("message", "Failed to add user!");
             }
 
         } catch (Exception e) {

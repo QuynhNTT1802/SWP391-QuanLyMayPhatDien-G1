@@ -5,15 +5,18 @@
 package com.quanlymayphatdien.g1.controller.authen;
 
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
+import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
+import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +40,14 @@ public class AuthenServlet extends HttpServlet {
         String url = "";
         switch (action) {
             case "login":
+                HttpSession existingSession = request.getSession(false);
+                if (existingSession != null && existingSession.getAttribute("loggedUser") != null) {
+                    response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+                    return;
+                }
+                if (tryAutoLogin(request, response)) {
+                    return;
+                }
                 url = "view/authen/login.jsp";
                 break;
             case "forgotpass":
@@ -46,6 +57,16 @@ public class AuthenServlet extends HttpServlet {
                 HttpSession session = request.getSession(false);
                 if (session != null) {
                     session.invalidate();
+                }
+                Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (Cookie c : cookies) {
+                        if ("rememberUser".equals(c.getName())) {
+                            c.setMaxAge(0);
+                            c.setPath("/");
+                            response.addCookie(c);
+                        }
+                    }
                 }
                 response.sendRedirect(request.getContextPath() + "/authen?action=login");
                 return;
@@ -86,9 +107,14 @@ public class AuthenServlet extends HttpServlet {
     private String forgotpassDoPost(HttpServletRequest request, HttpServletResponse response) {
         String username = request.getParameter("username");
         UserDAO userDAO = new UserDAO();
+        PasswordResetRequestDAO prDAO = new PasswordResetRequestDAO();
         User user = userDAO.findByUsername(username);
         if (user == null) {
             request.setAttribute("error", "Không có tài khoản trong hệ thống");
+            return "/view/authen/forgotpass.jsp";
+        }
+        if(prDAO.hasPendingRequest(user.getId())){
+            request.setAttribute("error", "Bạn đã gửi yêu cầu, hãy chờ đợi để được cấp mật khẩu");
             return "/view/authen/forgotpass.jsp";
         }
         PasswordResetRequest req = new PasswordResetRequest();
@@ -115,9 +141,45 @@ public class AuthenServlet extends HttpServlet {
         return stored.equals(plain);
     }
 
+    private boolean tryAutoLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return false;
+
+        String rememberToken = null;
+        for (Cookie c : cookies) {
+            if ("rememberUser".equals(c.getName())) {
+                rememberToken = c.getValue();
+                break;
+            }
+        }
+        if (rememberToken == null || !rememberToken.contains(":")) return false;
+
+        String username = rememberToken.split(":")[0];
+        try {
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findByUsername(username);
+            if (user == null || !"active".equals(user.getStatus())) return false;
+
+            HttpSession session = request.getSession(true);
+            session.setAttribute("loggedUser", user);
+            session.setAttribute("username", user.getUsername());
+
+            PermissionDAO perDAO = new PermissionDAO();
+            Set<String> perms = perDAO.getEffectPermissions(user.getId());
+            session.setAttribute("userPermissions", perms);
+
+            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private String loginDoPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
+        String remember = request.getParameter("remember");
         if (username == null || password == null || username.trim().isEmpty() || password.trim().isEmpty()) {
             request.setAttribute("error", "Vui lòng nhập thông tin đầy đủ");
             return "view/authen/login.jsp";
@@ -136,13 +198,30 @@ public class AuthenServlet extends HttpServlet {
                 return "view/authen/login.jsp";
             }
 
-            HttpSession session = request.getSession();
+            HttpSession oldSession = request.getSession(false);
+            if (oldSession != null) {
+                oldSession.invalidate();
+            }
+            HttpSession session = request.getSession(true);
             session.setAttribute("loggedUser", user);
             session.setAttribute("username", user.getUsername());
+
+            RoleDAO roleDAO = new RoleDAO();
+            List<Role> roles = roleDAO.getRolesByUserId(user.getId());
+            user.setRoles(roles);
 
             PermissionDAO perDAO = new PermissionDAO();
             Set<String> perms = perDAO.getEffectPermissions(user.getId());
             session.setAttribute("userPermissions", perms);
+
+            if (remember != null) {
+                String token = username + ":" + BCryptUtils.hash(username + System.currentTimeMillis());
+                Cookie rememberCookie = new Cookie("rememberUser", token);
+                rememberCookie.setMaxAge(7 * 24 * 60 * 60);
+                rememberCookie.setPath("/");
+                rememberCookie.setHttpOnly(true);
+                response.addCookie(rememberCookie);
+            }
 
             return "redirect:/admin/dashboard";
 

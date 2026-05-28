@@ -22,8 +22,8 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     //cap nhat permission cho 1 role
     public boolean updatePermissionRole(int roleId, List<Integer> perIds) throws SQLException {
-        String deleteOld = "delete from role_permissions where role_id = ?";
-        String insertNew = "insert into role_permissions (role_id, permission_id) values (?, ?)";
+        String deleteOld = "delete from role_permission where role_id = ?";
+        String insertNew = "insert into role_permission (role_id, permission_id) values (?, ?)";
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
             try {
@@ -53,7 +53,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     public List<Role> getRolesByUserId(int userId) {
         List<Role> roles = new ArrayList<>();
-        String sql = "SELECT r.* FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = ? AND r.status = 'active'";
+        String sql = "SELECT r.* FROM role r JOIN user_role ur ON r.id = ur.role_id WHERE ur.user_id = ? AND r.status = 'active'";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setInt(1, userId);
@@ -62,6 +62,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 Role role = new Role();
                 role.setRoleId(rs.getInt("id"));
                 role.setRoleName(rs.getString("name"));
+                role.setDescription(rs.getString("description"));
                 roles.add(role);
             }
         } catch (SQLException e) {
@@ -72,7 +73,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     //deactive or active
     public boolean updateStatus(int roleId, String status) {
-        String sql = "UPDATE roles SET status = ? WHERE id = ?";
+        String sql = "UPDATE role SET status = ? WHERE id = ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setString(1, status);
@@ -84,9 +85,25 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
         return false;
     }
 
+    public boolean isRoleNameExists(String name, int excludeRoleId) {
+        String sql = "SELECT COUNT(*) FROM role WHERE name = ? AND id != ?";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setString(1, name);
+            p.setInt(2, excludeRoleId);
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public List<Role> searchByName(String keyword) {
         List<Role> list = new ArrayList<>();
-        String sql = "SELECT * FROM roles WHERE name LIKE ? OR description LIKE ? ORDER BY id";
+        String sql = "SELECT * FROM role WHERE name LIKE ? OR description LIKE ? ORDER BY id";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             String likeKeyword = "%" + keyword + "%";
@@ -105,7 +122,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     @Override
     public List<Role> findAll() {
         List<Role> list = new ArrayList<>();
-        String sql = "SELECT * FROM roles ORDER BY id";
+        String sql = "SELECT * FROM role ORDER BY id";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             ResultSet rs = p.executeQuery();
@@ -120,7 +137,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     @Override
     public boolean update(Role role) {
-        String sql = "UPDATE roles SET name = ?, description = ?, status = ?, updated_at = ? WHERE id = ?";
+        String sql = "UPDATE role SET name = ?, description = ?, status = ?, updated_at = ? WHERE id = ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setString(1, role.getRoleName());
@@ -137,7 +154,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     @Override
     public boolean delete(Role role) {
-        String sql = "UPDATE roles SET status = 'inactive', updated_at = ? WHERE id = ?";
+        String sql = "UPDATE role SET status = 'inactive', updated_at = ? WHERE id = ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setObject(1, LocalDateTime.now());
@@ -151,7 +168,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
 
     @Override
     public int insert(Role role) {
-        String sql = "INSERT INTO roles (name, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO role (name, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             p.setString(1, role.getRoleName());
