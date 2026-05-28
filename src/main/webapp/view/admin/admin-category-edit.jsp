@@ -55,6 +55,7 @@
                     <input type="hidden" name="id" value="${category.id}">
                     </c:if>
                     <input type="hidden" name="module" value="${currentModule}">
+                    <input type="hidden" name="redirectType" value="${not empty category ? category.type : param.type}">
 
                     <div class="form-section">
                         <div class="form-section-head">
@@ -217,7 +218,7 @@
                 <c:set var="catInitials">
                     <c:choose>
                         <c:when test="${empty category}">?</c:when>
-                        <c:otherwise><c:out value="${fn:toUpperCase(fn:substring(category.name, 0, 2))}"/></c:otherwise>
+                        <c:otherwise><c:out value="${fn:toUpperCase(fn:substring(category.name, 0, 1))}"/></c:otherwise>
                     </c:choose>
                 </c:set>
                 <div class="summary-card">
