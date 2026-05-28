@@ -109,21 +109,14 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 s.setCustomerNote(rs.getString("customer_note"));
                 s.setCreatedBy(rs.getInt("created_by"));
                 s.setApprovedBy(rs.getInt("approved_by"));
-                s.setCancelledBy(rs.getInt("cancelled_by"));
-                s.setUpdatedBy(rs.getInt("updated_by"));
                 s.setStatus(rs.getString("status"));
                 s.setTotalAmount(rs.getDouble("total_amount"));
                 s.setNote(rs.getString("note"));
-                s.setRejectReason(rs.getString("reject_reason"));
-                // Xử lý ngày giờ (chuyển từ Timestamp sang Date)
                 if (rs.getTimestamp("order_date") != null) {
                     s.setOrderDate(new Date(rs.getTimestamp("order_date").getTime()));
                 }
                 if (rs.getTimestamp("approved_at") != null) {
                     s.setApprovedAt(new Date(rs.getTimestamp("approved_at").getTime()));
-                }
-                if (rs.getTimestamp("cancelled_at") != null) {
-                    s.setCancelledAt(new Date(rs.getTimestamp("cancelled_at").getTime()));
                 }
                 if (rs.getTimestamp("created_at") != null) {
                     s.setCreatedAt(new Date(rs.getTimestamp("created_at").getTime()));
@@ -145,8 +138,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         String sql = "UPDATE sale_order SET order_code = ?, customer_name = ?, customer_phone = ?, "
                 + "customer_email = ?, customer_address = ?, customer_tax_code = ?, customer_type = ?, "
                 + "customer_company_name = ?, customer_note = ?, created_by = ?, approved_by = ?, "
-                + "cancelled_by = ?, updated_by = ?, status = ?, total_amount = ?, note = ?, "
-                + "reject_reason = ?, order_date = ?, approved_at = ?, cancelled_at = ?, updated_at = ? "
+                + "status = ?, total_amount = ?, note = ?, "
+                + "order_date = ?, approved_at = ?, updated_at = ? "
                 + "WHERE order_id = ?";
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -162,17 +155,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 ps.setString(9, s.getCustomerNote());
                 ps.setInt(10, s.getCreatedBy());
                 ps.setInt(11, s.getApprovedBy());
-                ps.setInt(12, s.getCancelledBy());
-                ps.setInt(13, s.getUpdatedBy());
-                ps.setString(14, s.getStatus());
-                ps.setDouble(15, s.getTotalAmount());
-                ps.setString(16, s.getNote());
-                ps.setString(17, s.getRejectReason());
-                ps.setTimestamp(18, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
-                ps.setTimestamp(19, s.getApprovedAt() != null ? new java.sql.Timestamp(s.getApprovedAt().getTime()) : null);
-                ps.setTimestamp(20, s.getCancelledAt() != null ? new java.sql.Timestamp(s.getCancelledAt().getTime()) : null);
-                ps.setTimestamp(21, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
-                ps.setInt(22, s.getOrderId());
+                ps.setString(12, s.getStatus());
+                ps.setDouble(13, s.getTotalAmount());
+                ps.setString(14, s.getNote());
+                ps.setTimestamp(15, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
+                ps.setTimestamp(16, s.getApprovedAt() != null ? new java.sql.Timestamp(s.getApprovedAt().getTime()) : null);
+                ps.setTimestamp(17, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
+                ps.setInt(18, s.getOrderId());
                 ps.executeUpdate();
                 conn.commit();
                 return true;
@@ -191,13 +180,12 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public boolean cancelOrder(int orderId, int cancelledBy) {
 
-        String sql = "UPDATE sale_order SET status = 'CANCELLED', cancelled_by = ?, cancelled_at = NOW() "
+        String sql = "UPDATE sale_order SET status = 'CANCELLED', updated_at = NOW() "
                 + "WHERE order_id = ? AND status IN ('PENDING', 'APPROVED')";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, cancelledBy);
-            ps.setInt(2, orderId);
+            ps.setInt(1, orderId);
 
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
@@ -227,13 +215,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public boolean rejectOrder(int orderId, int rejectedBy, String rejectReason) {
 
-        String sql = "UPDATE sale_order SET status = 'REJECTED', reject_reason = ?, updated_by = ?, updated_at = NOW() "
+        String sql = "UPDATE sale_order SET status = 'REJECTED', "
+                + "note = CONCAT(COALESCE(note, ''), ' | Lý do từ chối: ', ?), "
+                + "updated_at = NOW() "
                 + "WHERE order_id = ? AND status = 'PENDING'";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            // Set tham số đúng thứ tự dấu ? trong SQL
             ps.setString(1, rejectReason);
-            ps.setInt(2, rejectedBy);
-            ps.setInt(3, orderId);
+            ps.setInt(2, orderId);
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -323,22 +311,15 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
         s.setCreatedBy(rs.getInt("created_by"));
         s.setApprovedBy(rs.getInt("approved_by"));
-        s.setCancelledBy(rs.getInt("cancelled_by"));
-        s.setUpdatedBy(rs.getInt("updated_by"));
 
         s.setStatus(rs.getString("status"));
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
-        s.setRejectReason(rs.getString("reject_reason"));
-        // Xử lý ngày giờ an toàn (tránh lỗi null)
         if (rs.getTimestamp("order_date") != null) {
             s.setOrderDate(new Date(rs.getTimestamp("order_date").getTime()));
         }
         if (rs.getTimestamp("approved_at") != null) {
             s.setApprovedAt(new Date(rs.getTimestamp("approved_at").getTime()));
-        }
-        if (rs.getTimestamp("cancelled_at") != null) {
-            s.setCancelledAt(new Date(rs.getTimestamp("cancelled_at").getTime()));
         }
         if (rs.getTimestamp("created_at") != null) {
             s.setCreatedAt(new Date(rs.getTimestamp("created_at").getTime()));
