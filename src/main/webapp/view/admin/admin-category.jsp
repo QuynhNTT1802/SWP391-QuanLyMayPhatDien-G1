@@ -208,51 +208,32 @@
                         </div>
                     </div>
 
-                    <div class="cat-grid">
-                        <c:forEach var="t" items="${types}">
-                            <a href="?module=${currentModule}&type=${t}">
-                                <div class="cat-card type-${t}">
-                                    <div class="card-icon">
-                                        <c:choose>
-                                            <c:when test="${t == 'brand'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'fuel_type'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'phase'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'generator_type'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'condition'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'origin'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'customer_type'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'receipt_type' or t == 'receipt_reason' or t == 'receipt_status'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                            </c:when>
-                                            <c:when test="${t == 'order_status'}">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                    <h3>${typeLabels[t] != null ? typeLabels[t] : t}</h3>
-                                    <div class="card-meta">
-                                        <span class="count">${typeCounts[t] != null ? typeCounts[t] : 0} mục</span>
-                                    </div>
-                                </div>
-                            </a>
-                        </c:forEach>
+                    <div class="table-card">
+                        <table>
+                            <thead><tr>
+                                <th>Loại danh mục</th>
+                                <th style="width:80px;text-align:right;">Số mục</th>
+                                <th style="width:40px;"></th>
+                            </tr></thead>
+                            <tbody>
+                                <c:forEach var="t" items="${types}">
+                                    <tr onclick="location.href='?module=${currentModule}&type=${t}'" style="cursor:pointer;">
+                                        <td>
+                                            <div style="display:flex;align-items:center;gap:10px;">
+                                                <span class="sdot" style="<c:choose><c:when test="${t == 'brand'}">background:var(--brand-color);box-shadow:0 0 0 3px var(--brand-soft)</c:when><c:when test="${t == 'fuel_type'}">background:var(--fuel-color);box-shadow:0 0 0 3px var(--fuel-soft)</c:when><c:when test="${t == 'phase'}">background:var(--phase-color);box-shadow:0 0 0 3px var(--phase-soft)</c:when><c:when test="${t == 'generator_type'}">background:var(--gen-color);box-shadow:0 0 0 3px var(--gen-soft)</c:when><c:when test="${t == 'condition'}">background:var(--condition-color);box-shadow:0 0 0 3px var(--condition-soft)</c:when><c:when test="${t == 'origin'}">background:var(--origin-color);box-shadow:0 0 0 3px var(--origin-soft)</c:when><c:when test="${t == 'customer_type'}">background:var(--customer-color);box-shadow:0 0 0 3px var(--customer-soft)</c:when><c:when test="${t == 'receipt_type' or t == 'receipt_reason' or t == 'receipt_status'}">background:var(--receipt-color);box-shadow:0 0 0 3px var(--receipt-soft)</c:when><c:when test="${t == 'order_status'}">background:var(--order-color);box-shadow:0 0 0 3px var(--order-soft)</c:when><c:otherwise>background:var(--muted);box-shadow:0 0 0 3px var(--surface-2)</c:otherwise></c:choose>"></span>
+                                                <span style="font-weight:600;color:var(--fg);">${typeLabels[t] != null ? typeLabels[t] : t}</span>
+                                            </div>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <span style="font-family:var(--font-mono);font-weight:600;color:var(--muted);">${typeCounts[t] != null ? typeCounts[t] : 0}</span>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <svg style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
                     </div>
                 </c:otherwise>
             </c:choose>
