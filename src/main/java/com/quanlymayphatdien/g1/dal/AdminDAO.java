@@ -33,13 +33,10 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     @Override
     public boolean update(Admin t) {
         String updateUser = "UPDATE user SET name=?, username=?, password=?, email=?, phone=?, address=?, status=?, updated_by=? WHERE id=?";
-        String updateAdmin = "UPDATE admin SET department=?, last_login=? WHERE admin_id=?";
         // Nên dùng transaction để đảm bảo toàn vẹn dữ liệu
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psUser = conn.prepareStatement(updateUser);
-                 PreparedStatement psAdmin = conn.prepareStatement(updateAdmin)) {
-
+            try (PreparedStatement psUser = conn.prepareStatement(updateUser)) {
                 // Update user
                 psUser.setString(1, t.getName());
                 psUser.setString(2, t.getUsername());
@@ -55,18 +52,6 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 }
                 psUser.setInt(9, t.getId());
                 psUser.executeUpdate();
-
-                // Update admin
-                psAdmin.setString(1, t.getDepartment());
-                if (t.getLastLogin() != null) {
-                    psAdmin.setTimestamp(2, Timestamp.valueOf(t.getLastLogin()));
-                } else {
-                    psAdmin.setNull(2, Types.TIMESTAMP);
-                }
-                psAdmin.setInt(3, t.getId());
-                psAdmin.executeUpdate();
-
-                conn.commit();
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
@@ -83,6 +68,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
     @Override
     public boolean delete(Admin t) {
+        // Xóa admin trước vì khóa ngoại, sau đó xóa user
         String deleteAdmin = "DELETE FROM admin WHERE admin_id=?";
         String deleteUser = "DELETE FROM user WHERE id=?";
         try (Connection conn = getConnection()) {
@@ -113,6 +99,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
     @Override
     public int insert(Admin t) {
+        // Insert user trước, lấy ID, rồi insert admin
         String insertUser = "INSERT INTO user (name, username, password, email, phone, address, status, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String insertAdmin = "INSERT INTO admin (admin_id, department, last_login) VALUES (?, ?, ?)";
         try (Connection conn = getConnection()) {
@@ -147,6 +134,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                     throw new SQLException("Không lấy được ID sau khi insert user.");
                 }
 
+                // Insert admin
                 psAdmin.setInt(1, generatedId);
                 psAdmin.setString(2, t.getDepartment());
                 if (t.getLastLogin() != null) {
@@ -173,6 +161,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
     @Override
     public Admin getFromResultSet(ResultSet rs) throws SQLException {
+        // Các cột từ user
         int id = rs.getInt("id");
         String name = rs.getString("name");
         String username = rs.getString("username");
@@ -190,11 +179,13 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
         Integer createdBy = rs.getObject("created_by") != null ? rs.getInt("created_by") : null;
         Integer updatedBy = rs.getObject("updated_by") != null ? rs.getInt("updated_by") : null;
 
+        // Các cột từ admin
         String department = rs.getString("department");
         LocalDateTime lastLogin = rs.getTimestamp("last_login") != null
                 ? rs.getTimestamp("last_login").toLocalDateTime() : null;
         
         
+        // phan quyen Hybrid
         PermissionDAO perDAO = new PermissionDAO();
         RoleDAO roleDAO = new RoleDAO();
         
@@ -207,6 +198,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                          department, lastLogin);
     }
 
+    // Tiện ích: tìm Admin theo ID
     public Admin findById(int id) {
         String sql = "SELECT u.id, u.name, u.username, u.password, u.email, u.phone, u.address, u.status, " +
                      "u.created_at, u.updated_at, u.created_by, u.updated_by, " +

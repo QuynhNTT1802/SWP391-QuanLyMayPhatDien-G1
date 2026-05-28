@@ -130,7 +130,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 Generator g = getFromResultSet(resultSet);
-                g.setCategories(categoryDAO.getCategoriesByGeneratorId(id));
+                g.setCategories(getCategoriesByGeneratorId(id));
                 return g;
             }
         } catch (SQLException e) {
@@ -238,7 +238,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
             List<Generator> pageList = new ArrayList<>(all.subList(start, end));
             for (Generator g : pageList) {
-                g.setCategories(categoryDAO.getCategoriesByGeneratorId(g.getId()));
+                g.setCategories(getCategoriesByGeneratorId(g.getId()));
             }
             return pageList;
         } catch (SQLException e) {
@@ -315,6 +315,25 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             System.out.println(e.getMessage());
         }
         return false;
+    }
+    
+    public List<Category> getCategoriesByGeneratorId(int generatorId) {
+        List<Category> list = new ArrayList<>();
+        String sql = "SELECT c.* FROM category c "
+                + "JOIN generator_category gc ON c.id = gc.category_id "
+                + "WHERE gc.generator_id = ? ORDER BY c.type, c.name";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(categoryDAO.getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
     }
 
     @Override

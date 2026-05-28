@@ -8,46 +8,36 @@ import java.time.LocalDateTime;
 
 /**
  *
- * @author LENOVO
+ * @author FPTShop
  */
-public class Category {
-    private int id;
-    private String module;
+public class Warehouse {
+    private int warehouseId;
     private String name;
-    private String type;
+    private String address;
     private String description;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Category() {
+    public Warehouse() {
     }
 
-    public Category(int id, String module, String name, String type, String description, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.module = module;
+    public Warehouse(int warehouseId, String name, String address, String description, String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.warehouseId = warehouseId;
         this.name = name;
-        this.type = type;
+        this.address = address;
         this.description = description;
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public int getId() {
-        return id;
+    public int getWarehouseId() {
+        return warehouseId;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getModule() {
-        return module;
-    }
-
-    public void setModule(String module) {
-        this.module = module;
+    public void setWarehouseId(int warehouseId) {
+        this.warehouseId = warehouseId;
     }
 
     public String getName() {
@@ -58,12 +48,12 @@ public class Category {
         this.name = name;
     }
 
-    public String getType() {
-        return type;
+    public String getAddress() {
+        return address;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getDescription() {

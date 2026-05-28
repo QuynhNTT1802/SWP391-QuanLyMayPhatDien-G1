@@ -36,13 +36,30 @@ public class ForgotPasswordController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
+        int page = 1;
+        String pageRaw = request.getParameter("page");
+        if(pageRaw!= null && !pageRaw.isEmpty()){
+            page = Integer.parseInt(pageRaw);
+            if(page < 1){
+                page = 1;
+            }
+        }
+        String statusFilter = request.getParameter("status");
         PasswordResetRequestDAO passwordResetRequestDAO = new PasswordResetRequestDAO();
-        List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll();
+        int pageSize = 10;
+        List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll(page, pageSize, statusFilter);
         List<PasswordResetRequest> pendingList = passwordResetRequestDAO.findByStatus("pending");
+        int totalRequests = passwordResetRequestDAO.getTotalCountByStatus(statusFilter);
+        int totalPages = (int) Math.ceil((double) totalRequests / pageSize);
+        
+        request.setAttribute("pendingCount", pendingList.size());
         request.setAttribute("listRequests", listRequests);
-        request.setAttribute("totalRequests", listRequests.size());
+        request.setAttribute("totalRequests", totalRequests);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("pendingList", pendingList);
-        request.setAttribute("doneRequests", listRequests.size() - pendingList.size());
+        request.setAttribute("doneRequests", totalRequests - pendingList.size());
         request.getRequestDispatcher("/view/admin/admin-forgotpass.jsp").forward(request, response);
     }
 
@@ -54,15 +71,16 @@ public class ForgotPasswordController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
+        
         String requestIdStr = request.getParameter("requestId");
-        String newPassword = request.getParameter("newPassword");
         String note = request.getParameter("note");
 
-        if (requestIdStr == null || newPassword == null || newPassword.trim().isEmpty()) {
-            session.setAttribute("error", "Vui lòng nhập mật khẩu mới");
+        if (requestIdStr == null) {
+            session.setAttribute("error", "Thiếu thông tin");
             response.sendRedirect(request.getContextPath() + "/admin/forgot-password");
             return;
         }
+        
         int requestId = Integer.parseInt(requestIdStr);
 
         PasswordResetRequestDAO requestDAO = new PasswordResetRequestDAO();
@@ -74,20 +92,21 @@ public class ForgotPasswordController extends HttpServlet {
             return;
         }
         try {
-            String hashedPassword = BCryptUtils.hash(newPassword);
-
+            String generatedPassword = BCryptUtils.generatePassword();
+            String hashedPassword = BCryptUtils.hash(generatedPassword);
             User user = userDAO.findById(req.getUserId());
             if (user != null) {
                 userDAO.updatePassword(user.getId(), hashedPassword);
             }
 
             req.setStatus("approved");
+            //hard code
             req.setProcessedBy(3);
             req.setNote(note);
             req.setProcessedAt(LocalDateTime.now());
             boolean updated = requestDAO.update(req);
             if (updated) {
-                session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + " thành công");
+                session.setAttribute("message", "Đã cấp lại mật khẩu cho " + req.getUsername() + ": " + generatedPassword);
             } else {
                 session.setAttribute("error", "Không thể cập nhật yêu cầu. Vui lòng thử lại.");
             }

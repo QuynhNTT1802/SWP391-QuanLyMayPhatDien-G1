@@ -1,13 +1,13 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.quanlymayphatdien.g1.utils;
 
-/**
- *
- * @author Aadmin
- */
 public class GlobalUtils {
-    
+
+    public static final String PHONE_REGEX = "^0[0-9]{9,10}$";
+    public static final String PHONE_ERROR_MSG = "SĐT không hợp lệ (10-11 số, bắt đầu là 0).";
+
+    public static final String PASSWORD_MIN_LENGTH_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+    public static final String PASSWORD_ERROR_MSG = "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số.";
+
+    public static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    public static final String EMAIL_ERROR_MSG = "Email không hợp lệ.";
 }

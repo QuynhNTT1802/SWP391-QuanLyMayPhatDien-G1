@@ -181,42 +181,28 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
     public List<User> findUsersWithFilters(String roleFilter, String statusFilter, String searchFilter, int page, int pageSize) {
         List<User> allUsers = new ArrayList<>();
-        String sql = "SELECT u.* FROM user u";
+        String sql = "SELECT u.* FROM user u WHERE 1=1 ";
         List<String> inputs = new ArrayList<>();
-        boolean hasCondition = false;
 
         if (roleFilter != null && !roleFilter.isEmpty()) {
-            sql += " WHERE EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?)";
+            sql += "AND EXISTS (SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?) ";
             inputs.add(roleFilter);
-            hasCondition = true;
         }
 
         if (statusFilter != null && !statusFilter.isEmpty()) {
-            if (hasCondition) {
-                sql += " AND";
-            } else {
-                sql += " WHERE";
-                hasCondition = true;
-            }
-            sql += " u.status = ?";
+            sql += "AND u.status = ? ";
             inputs.add(statusFilter);
         }
 
         if (searchFilter != null && !searchFilter.trim().isEmpty()) {
-            if (hasCondition) {
-                sql += " AND";
-            } else {
-                sql += " WHERE";
-                hasCondition = true;
-            }
-            sql += " (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?)";
+            sql += "AND (u.email LIKE ? OR u.username LIKE ? OR u.name LIKE ?) ";
             String searchPattern = "%" + searchFilter.trim() + "%";
             inputs.add(searchPattern);
             inputs.add(searchPattern);
             inputs.add(searchPattern);
         }
 
-        sql += " ORDER BY u.created_at DESC";
+        sql += "ORDER BY u.created_at DESC";
 
         try {
             connection = getConnection();
@@ -266,7 +252,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         boolean hasCondition = false;
 
         if (roleFilter != null && !roleFilter.isEmpty()) {
-            sql += " WHERE EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?)";
+            sql += " WHERE EXISTS (SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id WHERE ur.user_id = u.id AND r.name = ?)";
             inputs.add(roleFilter);
             hasCondition = true;
         }
@@ -443,8 +429,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
     }
 
     public void updateUserRoles(int userId, List<Integer> roleIds) throws SQLException {
-        String deleteOld = "delete from user_roles where user_id = ?";
-        String insertNew = "insert into user_roles (user_id, role_id) values (?,?)";
+        String deleteOld = "delete from user_role where user_id = ?";
+        String insertNew = "insert into user_role (user_id, role_id) values (?,?)";
 
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
