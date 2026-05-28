@@ -99,7 +99,7 @@
                                         <th>Đơn vị</th><th>Giá tham khảo</th>
                                     </c:when>
                                     <c:when test="${currentType == 'origin'}">
-                                        <th>Mã QG</th>
+                                        <th>Mã quốc gia</th>
                                     </c:when>
                                     <c:when test="${currentType == 'customer_type'}">
                                         <th>Loại thuế</th>
@@ -263,7 +263,7 @@
 <div class="modal-host" id="deleteModal">
     <div class="modal">
         <h3>Xác nhận xoá</h3>
-        <p id="deleteMsg">Bạn có chắc muốn xoá danh mục này? Danh mục sẽ bị chuyển sang trạng thái không hoạt động.</p>
+        <p id="deleteMsg">Bạn có chắc muốn khoá danh mục này? Danh mục sẽ bị chuyển sang trạng thái không hoạt động.</p>
         <div class="actions">
             <button class="btn" onclick="closeDeleteModal()">Huỷ</button>
             <form id="deleteForm" method="post" action="${pageContext.request.contextPath}/admin/category/delete" style="display:inline;">

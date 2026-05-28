@@ -39,9 +39,9 @@ public class CategoryController extends HttpServlet {
         TYPE_LABELS.put("generator_type", "Loại máy");
         TYPE_LABELS.put("condition", "Tình trạng");
         TYPE_LABELS.put("origin", "Xuất xứ");
-        TYPE_LABELS.put("receipt_reason", "Lý do X/N");
+        TYPE_LABELS.put("receipt_reason", "Lý do xuất nhập");
         TYPE_LABELS.put("receipt_status", "Trạng thái phiếu");
-        TYPE_LABELS.put("customer_type", "Loại KH");
+        TYPE_LABELS.put("customer_type", "Loại khách hàng");
         TYPE_LABELS.put("order_status", "Trạng thái đơn");
     }
 
