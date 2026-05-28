@@ -112,17 +112,11 @@ public class OrderController extends HttpServlet {
     private void listOrders(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String statusFilter = request.getParameter("status");
-        List<SaleOrder> allOrders;
+        String searchFilter = request.getParameter("search");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
-    
-        if (statusFilter != null && !statusFilter.trim().isEmpty()) {
-            allOrders = saleorderdao.findByStatus(statusFilter);
-        } else {
-            allOrders = saleorderdao.findAll();
-        }
+        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter);
 
-       
         int page = 1;
         int pageSize = 10;
         String pageStr = request.getParameter("page");
@@ -144,12 +138,12 @@ public class OrderController extends HttpServlet {
         
         List<SaleOrder> pagedOrders = allOrders.subList(startIndex, endIndex);
 
- 
         request.setAttribute("orders", pagedOrders);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalOrders", totalOrders);
         request.setAttribute("statusFilter", statusFilter);
+        request.setAttribute("searchFilter", searchFilter);
         
         int pendding = saleorderdao.countStatusPending();
         int approved = saleorderdao.countStatusApproved();
