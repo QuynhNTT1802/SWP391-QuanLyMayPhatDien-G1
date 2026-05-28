@@ -58,7 +58,6 @@
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/generators?action=update">
                             <input type="hidden" name="id" value="${generator.id}" />
 
-                            <%-- ============ SECTION 01: THÔNG TIN CƠ BẢN ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
@@ -72,7 +71,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Thương hiệu <span class="req">*</span></label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="brandId">
                                             <option value="">-- Chọn thương hiệu --</option>
                                             <c:forEach var="c" items="${brands}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -81,7 +80,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại máy</label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="genTypeId">
                                             <option value="">-- Chọn loại máy --</option>
                                             <c:forEach var="c" items="${genTypes}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -90,7 +89,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Xuất xứ</label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="originId">
                                             <option value="">-- Chọn xuất xứ --</option>
                                             <c:forEach var="c" items="${origins}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -99,7 +98,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Tình trạng</label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="conditionId">
                                             <option value="">-- Chọn tình trạng --</option>
                                             <c:forEach var="c" items="${conditions}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -119,7 +118,6 @@
                                 </div>
                             </div>
 
-                            <%-- ============ SECTION 02: THÔNG TIN KỸ THUẬT ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">02 — THÔNG TIN KỸ THUẬT</div>
@@ -143,7 +141,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Nhiên liệu</label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="fuelTypeId">
                                             <option value="">-- Chọn nhiên liệu --</option>
                                             <c:forEach var="c" items="${fuelTypes}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -152,7 +150,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Pha</label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="phaseId">
                                             <option value="">-- Chọn pha --</option>
                                             <c:forEach var="c" items="${phases}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -161,7 +159,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Dải công suất</label>
-                                        <select class="select" name="categoryIds">
+                                        <select class="select" name="powerRangeId">
                                             <option value="">-- Chọn dải công suất --</option>
                                             <c:forEach var="c" items="${powerRanges}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
@@ -171,7 +169,6 @@
                                 </div>
                             </div>
 
-                            <%-- ============ SECTION 03: TRẠNG THÁI ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">03 — TRẠNG THÁI</div>
