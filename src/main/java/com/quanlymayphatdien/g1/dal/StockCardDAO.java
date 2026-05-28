@@ -24,7 +24,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 + "g.model AS generator_model, r.receipt_code "
                 + "FROM stock_card sc "
                 + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
-                + "LEFT JOIN generator g ON sc.generator_id = g.generator_id "
+                + "LEFT JOIN generator g ON sc.generator_id = g.id "
                 + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id "
                 + "WHERE sc.warehouse_id = ? AND sc.generator_id = ? ";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
