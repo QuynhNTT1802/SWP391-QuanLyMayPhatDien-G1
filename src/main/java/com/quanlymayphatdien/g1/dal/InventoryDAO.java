@@ -19,11 +19,9 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     public List<Inventory> findByWarehouseId(int warehouseId) {
         List<Inventory> list = new ArrayList<>();
-        String sql = "SELECT i.*, g.model AS generator_model, cat.name AS generator_brand "
+        String sql = "SELECT i.*, g.model AS generator_model "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
-                + "LEFT JOIN generator_category gc ON g.id = gc.generator_id "
-                + "LEFT JOIN category cat ON gc.category_id = cat.id AND cat.type = 'brand' "
                 + "WHERE i.warehouse_id = ?";
         try {
             connection = getConnection();
