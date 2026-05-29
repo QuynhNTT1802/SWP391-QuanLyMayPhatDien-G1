@@ -1,10 +1,4 @@
 <%-- 
-    Document   : generator
-    Created on : May 25, 2026, 5:01:27 PM
-    Author     : LENOVO
---%>
-
-<%-- 
     Document   : generator-list
     Created on : May 23, 2026
     Author     : Admin
@@ -31,16 +25,16 @@
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-            <div>
-                <header class="topbar">
-                    <h1>Máy phát điện</h1>
-                    <span class="crumb">/ <a href="#">Quản trị</a> / Máy phát điện</span>
-                    <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
-                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/warehouse/generators?action=create">
+                <div>
+                    <header class="topbar">
+                        <h1>Máy phát điện</h1>
+                        <span class="crumb">/ <a href="#">Quản trị</a> / Máy phát điện</span>
+                        <div class="top-actions">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
+                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            </button>
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/warehouse/generators?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm máy phát điện
                         </a>
@@ -50,7 +44,7 @@
                 <main>
                     <div class="page-head">
                         <div class="left">
-                            <div class="eyebrow">Quản trị · Admin</div>
+                            <div class="eyebrow">Quản trị</div>
                             <h2 class="page-title">Quản lý máy phát điện</h2>
                             <div class="page-sub">${totalGenerators} máy</div>
                         </div>
@@ -81,9 +75,9 @@
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
                             <option value="locked" <c:if test="${statusFilter == 'locked'}">selected</c:if>>Bị khóa</option>
-                        </select>
-                        <div class="spacer"></div>
-                        <button type="button" class="btn" id="clearFilters">
+                            </select>
+                            <div class="spacer"></div>
+                            <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/warehouse/generators?action=list'">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Xóa lọc
                         </button>
@@ -94,9 +88,10 @@
                             <thead>
                                 <tr>
                                     <th>Mẫu máy</th>
+                                    <th>Thương hiệu</th>
                                     <th>Công suất</th>
                                     <th>Đơn giá</th>
-                                    <th>Tồn kho</th>
+                                    <th>Loại máy</th>
                                     <th>Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
@@ -104,14 +99,14 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty generators}">
-                                        <tr><td colspan="6">
+                                        <tr><td colspan="7">
                                                 <div class="empty-state">
                                                     <strong>Không tìm thấy máy phát điện</strong>
                                                 </div>
-                                        </td></tr>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach var="g" items="${generators}">
+                                            </td></tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="g" items="${generators}">
                                             <tr onclick="if (!event.target.closest('button,a'))
                                                         location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'"
                                                 style="cursor:pointer;">
@@ -119,23 +114,31 @@
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
                                                             <div class="user-name"><c:out value="${g.model}"/></div>
-                                                            <div class="user-email">
-                                                                <c:forEach var="cat" items="${g.categories}" varStatus="loop">
-                                                                    ${cat.name}<c:if test="${!loop.last}"> · </c:if>
-                                                                </c:forEach>
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
+                                                <td>
+                                                    <c:set var="foundBrand" value=""/>
+                                                    <c:forEach var="cat" items="${g.categories}">
+                                                        <c:if test="${cat.type == 'brand'}"><c:set var="foundBrand" value="${cat.name}"/></c:if>
+                                                    </c:forEach>
+                                                    <c:out value="${not empty foundBrand ? foundBrand : '—'}"/>
+                                                </td>
                                                 <td><span class="mono"><c:out value="${g.powerRating}"/> kVA</span></td>
-                                                <td><span class="mono"><fmt:formatNumber value="${g.unitPrice}" pattern="#,###"/> ₫</span></td>
-                                                <td><c:out value="${g.stockQuantity}"/></td>
+                                                <td><span class="mono"><fmt:formatNumber value="${g.unitPrice}" pattern="#,###"/> đ</span></td>
+                                                <td>
+                                                    <c:set var="foundType" value=""/>
+                                                    <c:forEach var="cat" items="${g.categories}">
+                                                        <c:if test="${cat.type == 'generator_type'}"><c:set var="foundType" value="${cat.name}"/></c:if>
+                                                    </c:forEach>
+                                                    <c:out value="${not empty foundType ? foundType : '—'}"/>
+                                                </td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${g.status == 'active'}"><span class="status active"><span class="sdot"></span>Hoạt động</span></c:when>
                                                         <c:when test="${g.status == 'locked'}"><span class="status locked"><span class="sdot"></span>Bị khóa</span></c:when>
                                                         <c:otherwise><span class="status disabled"><span class="sdot"></span><c:out value="${g.status}"/></span></c:otherwise>
-                                                    </c:choose>
+                                                        </c:choose>
                                                 </td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
@@ -200,8 +203,8 @@
             </div>
         </div>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/generator-js.js"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js" charset="UTF-8"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/generator-js.js" charset="UTF-8"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js" charset="UTF-8"></script>
     </body>
 </html>
