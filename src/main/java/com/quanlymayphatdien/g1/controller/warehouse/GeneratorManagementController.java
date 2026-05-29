@@ -1,9 +1,12 @@
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -152,6 +155,9 @@ public class GeneratorManagementController extends HttpServlet {
                 request.setAttribute("genPhase", getCatName(cats, "phase"));
                 request.setAttribute("genPowerRange", getCatName(cats, "power_range"));
 
+                ActivityLogDAO logDAO = new ActivityLogDAO();
+                List<ActivityLog> logs = logDAO.findByEntityTypeAndId("generator", id, 1, 20);
+                request.setAttribute("activityLogs", logs);
                 request.getRequestDispatcher("/view/warehouse/generator-detail.jsp").forward(request, response);
                 return;
             }
@@ -196,7 +202,6 @@ public class GeneratorManagementController extends HttpServlet {
                 status = "active";
             }
 
-            // === Đọc category dropdowns (FIX #1) ===
             String brandIdStr = request.getParameter("brandId");
             String genTypeIdStr = request.getParameter("genTypeId");
             String originIdStr = request.getParameter("originId");
@@ -233,6 +238,8 @@ public class GeneratorManagementController extends HttpServlet {
             if (newId > 0) {
                 saveGeneratorCategories(request, dao, newId);
                 request.getSession().setAttribute("message", "Thêm máy phát điện thành công!");
+                logActivity(request, "generator", newId, model.trim(), "CREATE",
+                        "Tạo máy phát điện: " + model.trim() + ", Công suất: " + powerStr + "kVA");
             } else {
                 request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
             }
@@ -282,7 +289,6 @@ public class GeneratorManagementController extends HttpServlet {
             String desc = request.getParameter("description");
             String status = request.getParameter("status");
 
-            // === Đọc category dropdowns (FIX #5) ===
             String brandIdStr = request.getParameter("brandId");
             String genTypeIdStr = request.getParameter("genTypeId");
             String originIdStr = request.getParameter("originId");
@@ -322,6 +328,8 @@ public class GeneratorManagementController extends HttpServlet {
                     dao.deleteGeneratorCategories(id);
                     saveGeneratorCategories(request, dao, id);
                     request.getSession().setAttribute("message", "Cập nhật thành công!");
+                    logActivity(request, "generator", id, model.trim(), "UPDATE",
+                            "Cập nhật thông tin máy phát điện: " + model.trim());
                 } else {
                     request.getSession().setAttribute("message", "Cập nhật thất bại!");
                 }
@@ -381,9 +389,7 @@ public class GeneratorManagementController extends HttpServlet {
         request.getSession().setAttribute("fieldPowerRangeId", powerRangeIdStr);
     }
 
-    // ============================================
-    // ACTIVATE / DEACTIVATE
-    // ============================================
+    
     private void activateGenerator(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String currentPage = request.getParameter("page");
@@ -395,8 +401,16 @@ public class GeneratorManagementController extends HttpServlet {
             int id = Integer.parseInt(idStr);
             GeneratorDAO dao = new GeneratorDAO();
             boolean ok = dao.activate(id);
-            request.getSession().setAttribute("message",
-                    ok ? "Kích hoạt thành công!" : "Kích hoạt thất bại!");
+            if (ok) {
+                request.getSession().setAttribute("message","Kích hoạt thành công!");
+                Generator gen = dao.findById(id);
+                if (gen != null) {
+                    logActivity(request, "generator", id, gen.getModel(), "ACTIVATE",
+                            "Kích hoạt máy phát điện: " + gen.getModel());
+                }
+            } else {
+                request.getSession().setAttribute("message", "Kích hoạt thất bại!");
+            }
         }
         response.sendRedirect(request.getContextPath()
                 + "/warehouse/generators?action=list&page=" + currentPage);
@@ -413,16 +427,21 @@ public class GeneratorManagementController extends HttpServlet {
             int id = Integer.parseInt(idStr);
             GeneratorDAO dao = new GeneratorDAO();
             boolean ok = dao.deactivate(id);
-            request.getSession().setAttribute("message",
-                    ok ? "Khóa thành công!" : "Khóa thất bại!");
+            if (ok) {
+                request.getSession().setAttribute("message","Khóa thành công!");
+                Generator gen = dao.findById(id);
+                if (gen != null) {
+                    logActivity(request, "generator", id, gen.getModel(), "DEACTIVATE",
+                            "Khóa máy phát điện: " + gen.getModel());
+                }
+            } else {
+                request.getSession().setAttribute("message", "Khóa thất bại!");
+            }
         }
         response.sendRedirect(request.getContextPath()
                 + "/warehouse/generators?action=list&page=" + currentPage);
     }
 
-    // ============================================
-    // VALIDATE
-    // ============================================
     private Map<String, String> validateGeneratorForm(String model,
             String powerRatingStr, String unitPriceStr,
             String frequency, String weightStr, Integer excludeId) {
@@ -483,5 +502,19 @@ public class GeneratorManagementController extends HttpServlet {
         }
 
         return errors;
+    }
+    
+    private void logActivity(HttpServletRequest request, String entityType,
+            int entityId, String entityName, String action, String details) {
+        User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+        ActivityLog log = new ActivityLog();
+        log.setUserId(loggedUser.getId());
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setEntityName(entityName);
+        log.setAction(action);
+        log.setDetails(details);
+        log.setCreatedAt(LocalDateTime.now());
+        new ActivityLogDAO().insert(log);
     }
 }

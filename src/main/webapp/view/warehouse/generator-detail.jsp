@@ -105,6 +105,7 @@
                         <div class="toc">
                             <a class="toc-item active" data-toc="basic"><span class="toc-num">01</span><span>Thông tin cơ bản</span></a>
                             <a class="toc-item" data-toc="technical"><span class="toc-num">02</span><span>Thông tin kỹ thuật</span></a>
+                            <a class="toc-item" data-toc="logs"><span class="toc-num">03</span><span>Nhật ký hoạt động</span></a>
                             <div class="toc-meta">
                                 <strong>#<c:out value="${generator.id}"/></strong><br>
                                 Tạo: <c:out value="${createdDate}"/><br>
@@ -207,6 +208,51 @@
                                     </div>
                                 </div>
                             </section>
+                            
+                                        <section class="section" id="logs">
+                                            <div class="section-head">
+                                                <div>
+                                                    <div class="section-num">03 — NHẬT KÝ HOẠT ĐỘNG</div>
+                                                    <h3 class="section-title">Lịch sử thao tác</h3>
+                                                </div>
+                                            </div>
+                                            <div class="info-grid">
+                                                <c:choose>
+                                                    <c:when test="${empty activityLogs}">
+                                                        <p>Chưa có hoạt động nào.</p>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <table class="users">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Thời gian</th>
+                                                                    <th>Người thực hiện</th>
+                                                                    <th>Hành động</th>
+                                                                    <th>Chi tiết</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <c:forEach var="log" items="${activityLogs}">
+                                                                    <tr>
+                                                                        <td><fmt:formatDate value="${log.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                                        <td><c:out value="${log.username}"/></td>
+                                                                        <td>
+                                                                            <c:choose>
+                                                                                <c:when test="${log.action == 'CREATE'}"><span class="pill status-active">Tạo mới</span></c:when>
+                                                                                <c:when test="${log.action == 'UPDATE'}"><span class="pill role-admin">Cập nhật</span></c:when>
+                                                                                <c:when test="${log.action == 'ACTIVATE'}"><span class="pill status-active">Kích hoạt</span></c:when>
+                                                                                <c:when test="${log.action == 'DEACTIVATE'}"><span class="pill status-active" style="color:var(--danger)">Khóa</span></c:when>
+                                                                            </c:choose>
+                                                                        </td>
+                                                                        <td><c:out value="${log.details}"/></td>
+                                                                    </tr>
+                                                                </c:forEach>
+                                                            </tbody>
+                                                        </table>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </section>
                         </div>
                     </div>
                 </main>
