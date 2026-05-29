@@ -34,29 +34,28 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
     @Override
     public boolean update(Generator g) {
         String sql = "UPDATE generator SET model=?, power_rating=?, "
-                + "unit_price=?, stock_quantity=?, description=?, status=?, "
+                + "unit_price=?, description=?, status=?, "
                 + "frequency=?, weight=?, updated_at=?, updated_by=? WHERE id=?";
         try (Connection c = getConnection();
              PreparedStatement p = c.prepareStatement(sql)) {
             p.setString(1, g.getModel());
             p.setBigDecimal(2, g.getPowerRating());
             p.setBigDecimal(3, g.getUnitPrice());
-            p.setInt(4, g.getStockQuantity());
-            p.setString(5, g.getDescription());
-            p.setString(6, g.getStatus());
-            p.setString(7, g.getFrequency());
+            p.setString(4, g.getDescription());
+            p.setString(5, g.getStatus());
+            p.setString(6, g.getFrequency());
             if (g.getWeight() != null) {
-                p.setBigDecimal(8, g.getWeight());
+                p.setBigDecimal(7, g.getWeight());
             } else {
-                p.setNull(8, Types.DECIMAL);
+                p.setNull(7, Types.DECIMAL);
             }
-            p.setTimestamp(9, g.getUpdatedAt() != null ? Timestamp.valueOf(g.getUpdatedAt()) : null);
+            p.setTimestamp(8, g.getUpdatedAt() != null ? Timestamp.valueOf(g.getUpdatedAt()) : null);
             if (g.getUpdatedBy() != null) {
-                p.setInt(10, g.getUpdatedBy());
+                p.setInt(9, g.getUpdatedBy());
             } else {
-                p.setNull(10, Types.INTEGER);
+                p.setNull(9, Types.INTEGER);
             }
-            p.setInt(11, g.getId());
+            p.setInt(10, g.getId());
             return p.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -80,27 +79,25 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
     @Override
     public int insert(Generator g) {
         String sql = "INSERT INTO generator (model, power_rating, unit_price, "
-                + "stock_quantity, description, status, frequency, weight, created_at, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                + "description, status, frequency, weight, created_at, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             p.setString(1, g.getModel());
             p.setBigDecimal(2, g.getPowerRating());
             p.setBigDecimal(3, g.getUnitPrice());
-            p.setInt(4, g.getStockQuantity());
-            p.setString(5, g.getDescription());
-            p.setString(6, g.getStatus());
-            p.setString(7, g.getFrequency());
+            p.setString(4, g.getDescription());
+            p.setString(5, g.getStatus());
+            p.setString(6, g.getFrequency());
             if (g.getWeight() != null) {
-                p.setBigDecimal(8, g.getWeight());
+                p.setBigDecimal(7, g.getWeight());
             } else {
-                p.setNull(8, Types.DECIMAL);
+                p.setNull(7, Types.DECIMAL);
             }
-            p.setTimestamp(9, g.getCreatedAt() != null ? Timestamp.valueOf(g.getCreatedAt()) : null);
+            p.setTimestamp(8, g.getCreatedAt() != null ? Timestamp.valueOf(g.getCreatedAt()) : null);
             if (g.getCreatedBy() != null) {
-                p.setInt(10, g.getCreatedBy());
+                p.setInt(9, g.getCreatedBy());
             } else {
-                p.setNull(10, Types.INTEGER);
+                p.setNull(9, Types.INTEGER);
             }
             p.executeUpdate();
             try (ResultSet rs = p.getGeneratedKeys()) {
@@ -152,6 +149,26 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             System.out.println(e.getMessage());
         }
         return false;
+    }
+
+    public List<Generator> findByCategoryId(int categoryId) {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT g.* FROM generator g "
+                + "JOIN generator_category gc ON g.id = gc.generator_id "
+                + "WHERE gc.category_id = ? AND g.status = 'active'";
+        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+            p.setInt(1, categoryId);
+            try (ResultSet rs = p.executeQuery()) {
+                while (rs.next()) {
+                    Generator g = getFromResultSet(rs);
+                    list.add(g);
+                }
+            }
+            attachCategories(list);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
     }
 
     public List<Generator> findByFilters(String search, String status,
@@ -276,7 +293,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         g.setModel(rs.getString("model"));
         g.setPowerRating(rs.getBigDecimal("power_rating"));
         g.setUnitPrice(rs.getBigDecimal("unit_price"));
-        g.setStockQuantity(rs.getInt("stock_quantity"));
         g.setDescription(rs.getString("description"));
         g.setStatus(rs.getString("status"));
         g.setFrequency(rs.getString("frequency"));
