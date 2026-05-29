@@ -180,6 +180,43 @@
                             </div>
                         </div>
                     </section>
+
+                    <section class="section" id="activity">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">02 — NHẬT KÝ HOẠT ĐỘNG</div>
+                                <h3 class="section-title">Lịch sử thao tác</h3>
+                            </div>
+                        </div>
+                        <c:choose>
+                            <c:when test="${empty activityLogs}">
+                                <div class="actlog-empty">Chưa có hoạt động nào.</div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="actlog">
+                                    <c:forEach var="log" items="${activityLogs}" varStatus="st">
+                                        <div class="actlog-row">
+                                            <div class="actlog-time"><c:out value="${logDates[st.index]}"/></div>
+                                            <div class="actlog-user">
+                                                <span class="avatar-dot"><c:out value="${fn:substring(log.username,0,1)}"/></span>
+                                                <c:out value="${log.username}"/>
+                                            </div>
+                                            <div class="actlog-main">
+                                                <c:choose>
+                                                    <c:when test="${log.action == 'CREATE'}"><span class="act-badge act-create">Tạo mới</span></c:when>
+                                                    <c:when test="${log.action == 'UPDATE'}"><span class="act-badge act-update">Cập nhật</span></c:when>
+                                                    <c:when test="${log.action == 'ACTIVATE'}"><span class="act-badge act-activate">Kích hoạt</span></c:when>
+                                                    <c:when test="${log.action == 'DEACTIVATE'}"><span class="act-badge act-deactivate">Khóa</span></c:when>
+                                                    <c:otherwise><span class="act-badge act-update"><c:out value="${log.action}"/></span></c:otherwise>
+                                                </c:choose>
+                                                <div class="actlog-detail"><c:out value="${log.details}"/></div>
+                                            </div>
+                                        </div>
+                                    </c:forEach>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </section>
                 </div>
             </div>
         </main>

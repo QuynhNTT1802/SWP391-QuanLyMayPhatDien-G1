@@ -63,6 +63,72 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return -1;
     }
 
+   public int insertLog(ActivityLog t) {
+        String sql = "insert into activity_log(user_id, username, action, entity_type, entity_id, description, created_at) "
+                   + "values(?, ?, ?, ?, ?, ?, ?)";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            p.setInt(1, t.getUserId());
+            p.setString(2, t.getUsername());
+            p.setString(3, t.getAction());
+            p.setString(4, t.getEntityType());
+            if (t.getEntityId() != null) {
+                p.setInt(5, t.getEntityId());
+            } else {
+                p.setNull(5, Types.INTEGER);
+            }
+            p.setString(6, t.getDetails());
+            p.setObject(7, LocalDateTime.now());
+
+            if (p.executeUpdate() > 0) {
+                try (ResultSet rs = p.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    private ActivityLog getLogFromResultSet(ResultSet rs) throws SQLException {
+        ActivityLog log = new ActivityLog();
+        log.setId(rs.getInt("id"));
+        log.setUserId(rs.getInt("user_id"));
+        log.setUsername(rs.getString("username"));
+        log.setAction(rs.getString("action"));
+        log.setEntityType(rs.getString("entity_type"));
+        log.setEntityId(rs.getObject("entity_id", Integer.class));
+        log.setDetails(rs.getString("description"));
+        log.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
+        return log;
+    }
+
+    public List<ActivityLog> getLogsByEntity(String entityType, int entityId,
+            int page, int pageSize) {
+        List<ActivityLog> list = new ArrayList<>();
+        String sql = "select * from activity_log "
+                   + "where entity_type = ? and entity_id = ? "
+                   + "order by created_at desc "
+                   + "limit ? offset ?";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setString(1, entityType);
+            p.setInt(2, entityId);
+            p.setInt(3, pageSize);
+            p.setInt(4, (page - 1) * pageSize);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(getLogFromResultSet(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     @Override
     public ActivityLog getFromResultSet(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
