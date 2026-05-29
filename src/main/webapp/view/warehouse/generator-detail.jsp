@@ -186,10 +186,7 @@
                                         <div class="info-label">Công suất</div>
                                         <div class="info-value mono"><c:out value="${generator.powerRating}"/> kVA</div>
                                     </div>
-                                    <div class="info-field">
-                                        <div class="info-label">Dải công suất</div>
-                                        <div class="info-value"><c:out value="${catPowerRange}"/></div>
-                                    </div>
+                                   
                                     <div class="info-field">
                                         <div class="info-label">Tần số</div>
                                         <div class="info-value mono"><c:out value="${generator.frequency}"/></div>

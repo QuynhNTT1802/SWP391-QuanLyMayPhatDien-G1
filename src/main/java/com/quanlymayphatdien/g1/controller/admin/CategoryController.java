@@ -4,6 +4,7 @@
  */
 package com.quanlymayphatdien.g1.controller.admin;
 
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CategoryExtensionDAO;
 import com.quanlymayphatdien.g1.entity.Category;
@@ -29,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 public class CategoryController extends HttpServlet {
 
     private final CategoryDAO cateDAO = new CategoryDAO();
+    private final ActivityLogDAO logDAO= new ActivityLogDAO();
 
     private static final Map<String, String> TYPE_LABELS = new LinkedHashMap<>();
 
@@ -85,6 +87,12 @@ public class CategoryController extends HttpServlet {
         if (module == null || module.trim().isEmpty()) {
             module = "quản lý vật tư";
         }
+        
+        String tab = request.getParameter("tab");
+        if("history".equals(tab)){
+            showHistory(request, response, module);
+            return;
+        }
 
         List<Category> list;
         if (typeFilter != null && !typeFilter.trim().isEmpty() && search != null && !search.trim().isEmpty()) {
@@ -106,6 +114,18 @@ public class CategoryController extends HttpServlet {
             List<Category> filtered = new ArrayList<>();
             for (Category c : list) {
                 if (typeFilter.equals(c.getType())) {
+                    filtered.add(c);
+                }
+            }
+            list = filtered;
+        }
+
+        // --- Filter theo trạng thái (active / inactive / tất cả) ---
+        String statusFilter = request.getParameter("status");
+        if (statusFilter != null && !statusFilter.trim().isEmpty() && !"all".equals(statusFilter)) {
+            List<Category> filtered = new ArrayList<>();
+            for (Category c : list) {
+                if (statusFilter.equals(c.getStatus())) {
                     filtered.add(c);
                 }
             }
@@ -137,6 +157,8 @@ public class CategoryController extends HttpServlet {
             request.setAttribute("toIndex", to);
             request.setAttribute("currentType", typeFilter);
             request.setAttribute("typeLabel", TYPE_LABELS.getOrDefault(typeFilter, typeFilter));
+            // Giữ state statusFilter cho JSP
+            request.setAttribute("currentStatus", statusFilter != null ? statusFilter : "");
 
             List<Integer> catIds = new ArrayList<>();
             for (Category c : list) catIds.add(c.getId());
@@ -147,13 +169,14 @@ public class CategoryController extends HttpServlet {
             for (Category c : list) typeCounts.merge(c.getType(), 1, Integer::sum);
             request.setAttribute("typeCounts", typeCounts);
         }
-
+        
         List<String> types = cateDAO.getTypesByModule(module);
         request.setAttribute("types", types);
         request.setAttribute("typeLabels", TYPE_LABELS);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("currentModule", module);
         request.setAttribute("moduleLabel", getModuleLabel(module));
+        logActivity(request,"VIEW_LIST",null,null,module);
         request.getRequestDispatcher("/view/admin/admin-category.jsp").forward(request, response);
     }
 
@@ -168,6 +191,7 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("category", found);
                     CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
                     request.setAttribute("extension", extDAO.findExtension(found.getType(), id));
+                    logActivity(request,"VIEW_DETAIL",found.getId(),found.getName(),found.getType());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -183,6 +207,7 @@ public class CategoryController extends HttpServlet {
         request.setAttribute("typeLabels", TYPE_LABELS);
         request.setAttribute("currentModule", module);
         request.setAttribute("moduleLabel", getModuleLabel(module));
+        
         request.getRequestDispatcher("/view/admin/admin-category-edit.jsp").forward(request, response);
     }
 
@@ -289,6 +314,8 @@ public class CategoryController extends HttpServlet {
         } else {
             categoryId = cateDAO.insert(category);
         }
+        logActivity(request, isUpdate ? "UPDATE" : "CREATE", categoryId, name, type);
+        
 
         if (categoryId > 0) {
             saveExtensionData(request, categoryId, type);
@@ -315,6 +342,7 @@ public class CategoryController extends HttpServlet {
                 Category c = cateDAO.findById(id);
                 if (c != null) {
                     cateDAO.delete(c);
+                    logActivity(request, "DELETE", id, c.getName(), c.getType());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -397,5 +425,76 @@ public class CategoryController extends HttpServlet {
             case "quản lý kiểm kê":            return "Danh mục kiểm kê";
             default:                           return "Danh mục";
         }
+    }
+    
+    private void logActivity(HttpServletRequest request, String action, Integer entityId, String entityName, String details) {
+        try {
+            User user = (User) request.getSession().getAttribute("loggedUser");
+            if (user == null){
+                return;
+            }
+            
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("categories");
+            log.setAction(action);
+            log.setEntityId(entityId);
+            log.setEntityName(entityName);
+            log.setDetails(details);
+            logDAO.insert(log);
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void showHistory(HttpServletRequest request, HttpServletResponse response, String module) 
+        throws ServletException, IOException {
+
+        // --- Đọc các tham số filter ---
+        String logSearch  = request.getParameter("logSearch");   // từ khóa: tên đối tượng / người dùng
+        String logAction  = request.getParameter("logAction");   // hành động: CREATE, UPDATE, DELETE...
+        String dateFrom   = request.getParameter("dateFrom");    // ngày bắt đầu yyyy-MM-dd
+        String dateTo     = request.getParameter("dateTo");      // ngày kết thúc yyyy-MM-dd
+
+        // --- Đọc trang hiện tại ---
+        int page = 1;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Math.max(1, Integer.parseInt(pageStr));
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int pageSize = 20;
+
+        // --- Gọi DAO có filter thay vì findByEntityType ---
+        List<ActivityLog> logs = logDAO.findByFilter(
+                "categories", logSearch, logAction, dateFrom, dateTo, page, pageSize);
+        int totalLogs = logDAO.countByFilter(
+                "categories", logSearch, logAction, dateFrom, dateTo);
+
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+        if (page > totalPages) {
+            page = totalPages;
+        }
+
+        // --- Set attributes cho JSP ---
+        request.setAttribute("logList",        logs);
+        request.setAttribute("logPage",        page);
+        request.setAttribute("logTotalPages",  totalPages);
+        request.setAttribute("totalLogs",      totalLogs);
+        request.setAttribute("currentTab",     "history");
+        request.setAttribute("currentModule",  module);
+        request.setAttribute("moduleLabel",    getModuleLabel(module));
+
+        // Trả state filter về JSP để giữ giá trị form + link phân trang
+        request.setAttribute("logSearch",  logSearch  != null ? logSearch  : "");
+        request.setAttribute("logAction",  logAction  != null ? logAction  : "");
+        request.setAttribute("dateFrom",   dateFrom   != null ? dateFrom   : "");
+        request.setAttribute("dateTo",     dateTo     != null ? dateTo     : "");
+
+        request.getRequestDispatcher("/view/admin/admin-category.jsp").forward(request, response);
     }
 }
