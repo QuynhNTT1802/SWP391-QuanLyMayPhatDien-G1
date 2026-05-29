@@ -6,6 +6,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -71,7 +72,7 @@
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
-                        <c:if test="${userPermissions.contains('orders.create')}">
+                        <c:if test="${canCreateOrder}">
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=create">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                 Tạo đơn hàng
@@ -181,26 +182,26 @@
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </button>
 
-                                                        <c:if test="${userPermissions.contains('orders.update') && order.status == 'PENDING'}">
+                                                        <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
                                                             <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}'" title="Chỉnh sửa">
                                                                 <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                             </button>
                                                         </c:if>
 
-                                                        <c:if  test="${userPermissions.contains('orders.approve') && order.status == 'PENDING'}">
+                                                        <c:if  test="${canApproveOrder && order.status == 'PENDING'}">
                                                             <button class="icon-mini" style="color: #28a745;" onclick="confirmApprove(${order.orderId})" title="Duyệt đơn">
                                                                 <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
                                                             </button>
 
                                                         </c:if>
 
-                                                        <c:if test="${userPermissions.contains('orders.reject') && order.status == 'PENDING'}">
+                                                        <c:if test="${canRejectOrder && order.status == 'PENDING'}">
                                                             <button class="icon-mini" style="color: #ffc107;" onclick="confirmReject(${order.orderId})" title="Từ chối đơn">
                                                                 <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                             </button>
                                                         </c:if>
 
-                                                        <c:if  test="${userPermissions.contains('orders.cancel') && (order.status == 'PENDING' || order.status == 'APPROVED')}">
+                                                        <c:if  test="${canCancelOrder && (order.status == 'PENDING' || order.status == 'APPROVED')}">
                                                             <button class="icon-mini" style="color: #dc3545;" onclick="confirmCancel(${order.orderId})" title="Hủy đơn">
                                                                 <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                                             </button>
