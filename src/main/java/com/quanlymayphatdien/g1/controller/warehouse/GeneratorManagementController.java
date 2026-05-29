@@ -156,7 +156,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.setAttribute("genPowerRange", getCatName(cats, "power_range"));
 
                 ActivityLogDAO logDAO = new ActivityLogDAO();
-                List<ActivityLog> logs = logDAO.findByEntityTypeAndId("generator", id, 1, 20);
+                List<ActivityLog> logs = logDAO.getLogsByEntity("generator", id, 1, 20);
                 request.setAttribute("activityLogs", logs);
                 request.getRequestDispatcher("/view/warehouse/generator-detail.jsp").forward(request, response);
                 return;
@@ -342,10 +342,7 @@ public class GeneratorManagementController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
-    // ============================================
-    // CATEGORY HELPERS (FIX #2)
-    // ============================================
-    private void saveGeneratorCategories(HttpServletRequest request,
+   private void saveGeneratorCategories(HttpServletRequest request,
             GeneratorDAO dao, int generatorId) {
         List<Integer> idList = new ArrayList<>();
         addIfPresent(idList, request.getParameter("brandId"));
@@ -366,9 +363,6 @@ public class GeneratorManagementController extends HttpServlet {
         }
     }
 
-    // ============================================
-    // SAVE FORM FIELDS (FIX #3)
-    // ============================================
     private void saveFormFields(HttpServletRequest request, String model,
             String powerStr, String priceStr, String freq, String weightStr,
             String desc, String brandIdStr, String genTypeIdStr,
@@ -509,12 +503,13 @@ public class GeneratorManagementController extends HttpServlet {
         User loggedUser = (User) request.getSession().getAttribute("loggedUser");
         ActivityLog log = new ActivityLog();
         log.setUserId(loggedUser.getId());
+        log.setUsername(loggedUser.getUsername());
         log.setEntityType(entityType);
         log.setEntityId(entityId);
         log.setEntityName(entityName);
         log.setAction(action);
         log.setDetails(details);
         log.setCreatedAt(LocalDateTime.now());
-        new ActivityLogDAO().insert(log);
+        new ActivityLogDAO().insertLog(log);
     }
 }
