@@ -162,7 +162,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + "customer_email = ?, customer_address = ?, customer_tax_code = ?, customer_type = ?, "
                 + "customer_company_name = ?, customer_note = ?, created_by = ?, approved_by = ?, "
                 + "cancelled_by = ?, updated_by = ?, status = ?, total_amount = ?, note = ?, "
-                + "reject_reason = ?, order_date = ?, approved_at = ?, cancelled_at = ?, updated_at = ? "
+                + "reject_reason = ?, order_date = ?, approved_at = ?, cancelled_at = ?, updated_at = ?, customer_type_id = ? "
                 + "WHERE order_id = ?";
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
@@ -188,7 +188,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 ps.setTimestamp(19, s.getApprovedAt() != null ? new java.sql.Timestamp(s.getApprovedAt().getTime()) : null);
                 ps.setTimestamp(20, s.getCancelledAt() != null ? new java.sql.Timestamp(s.getCancelledAt().getTime()) : null);
                 ps.setTimestamp(21, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
-                ps.setInt(22, s.getOrderId());
+                ps.setInt(22, s.getCustomerTypeId());
+                ps.setInt(23, s.getOrderId());
                 ps.executeUpdate();
                 conn.commit();
                 return true;
@@ -287,8 +288,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public int insert(SaleOrder s) {
         String sql = "INSERT INTO sale_order (order_code, customer_name, customer_phone, customer_email, "
                 + "customer_address, customer_tax_code, customer_type, customer_company_name, customer_note, "
-                + "created_by, status, total_amount, note, order_date) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '" + GlobalUtils.STATUS_PENDING + "', ?, ?, ?)";
+                + "created_by, status, total_amount, note, order_date, customer_type_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '" + GlobalUtils.STATUS_PENDING + "', ?, ?, ?, ?)";
         try (Connection conn = getConnection(); 
                  PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, s.getOrderCode());
@@ -304,6 +305,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             ps.setDouble(11, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
             ps.setString(12, s.getNote());
             ps.setTimestamp(13, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
+            ps.setInt(14, s.getCustomerTypeId());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -367,6 +369,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
+        s.setCustomerTypeId(rs.getObject("customer_type_id", Integer.class));
         return s;
     }
 
