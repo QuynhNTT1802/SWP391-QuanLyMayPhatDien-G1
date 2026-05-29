@@ -20,7 +20,7 @@ const detailModal = document.getElementById('detailModal');
 function openDetailModal(username, status, note, processedAt) {
     detailModal.classList.add('open');
     document.getElementById('detailUsername').value = username;
-    document.getElementById('detailStatus').value = status === 'approved' ? 'Đã cấp lại' : status;
+    document.getElementById('detailStatus').value = status === 'approved' ? '\u0110\u00e3 c\u1ea5p l\u1ea1i' : status;
     document.getElementById('detailNote').value = note || '';
     document.getElementById('detailProcessedAt').value = processedAt || '';
 }
