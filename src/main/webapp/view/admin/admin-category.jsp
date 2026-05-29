@@ -56,6 +56,19 @@
                 </div>
             </c:if>
 
+            <c:if test="${empty currentType}">
+            <div class="tab-bar">
+                <a href="?module=${currentModule}" class="tab ${empty currentTab or currentTab != 'history' ? 'active' : ''}">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Tổng quan vật tư
+                </a>
+                <a href="?module=${currentModule}&tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Lịch sử hoạt động
+                </a>
+            </div>
+            </c:if>
+
             <c:choose>
                 <c:when test="${not empty currentType}">
                     <a class="back-link" href="${pageContext.request.contextPath}/admin/categories?module=${currentModule}">
@@ -78,10 +91,16 @@
                                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                 <input name="search" value="<c:out value="${param.search}"/>" placeholder="Tìm ${typeLabel}..." autocomplete="off"/>
                             </div>
-                            <c:if test="${not empty param.search}">
-                                <button type="button" class="btn" onclick="location.href='${pageContext.request.contextPath}/admin/categories?module=${currentModule}&type=${currentType}'">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    Xoá lọc
+                            <%-- Dropdown filter trạng thái --%>
+                            <select name="status" class="filter-select" onchange="this.form.submit()">
+                                <option value="all" ${empty currentStatus or currentStatus == 'all' ? 'selected' : ''}>Tất cả</option>
+                                <option value="active"   ${currentStatus == 'active'   ? 'selected' : ''}>Hoạt động</option>
+                                <option value="inactive" ${currentStatus == 'inactive' ? 'selected' : ''}>Không hoạt động</option>
+                            </select>
+                            <c:if test="${not empty param.search or (not empty currentStatus and currentStatus != 'all')}">
+                                <button type="button" class="btn" onclick="location.href='${pageContext.request.contextPath}/admin/categories?module=${currentModule}&amp;type=${currentType}'">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                    Xóa lọc
                                 </button>
                             </c:if>
                         </form>
@@ -182,16 +201,16 @@
                             <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?page=${currentPage - 1}&module=${currentModule}&type=${currentType}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if>" class="page-btn">‹</a>
+                                    <a href="?page=${currentPage - 1}&amp;module=${currentModule}&amp;type=${currentType}<c:if test="${not empty param.search}">&amp;search=<c:out value="${param.search}"/></c:if><c:if test="${not empty currentStatus and currentStatus != 'all'}">&amp;status=${currentStatus}</c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?page=${p}&module=${currentModule}&type=${currentType}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?page=${p}&amp;module=${currentModule}&amp;type=${currentType}<c:if test="${not empty param.search}">&amp;search=<c:out value="${param.search}"/></c:if><c:if test="${not empty currentStatus and currentStatus != 'all'}">&amp;status=${currentStatus}</c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?page=${currentPage + 1}&module=${currentModule}&type=${currentType}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if>" class="page-btn">›</a>
+                                    <a href="?page=${currentPage + 1}&amp;module=${currentModule}&amp;type=${currentType}<c:if test="${not empty param.search}">&amp;search=<c:out value="${param.search}"/></c:if><c:if test="${not empty currentStatus and currentStatus != 'all'}">&amp;status=${currentStatus}</c:if>" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>
@@ -200,41 +219,165 @@
                 </c:when>
 
                 <c:otherwise>
-                    <div class="page-head">
-                        <div class="left">
-                            <div class="eyebrow">Quản trị · Danh mục</div>
-                            <h2 class="page-title">${moduleLabel}</h2>
-                            <div class="page-sub">${totalItems} danh mục · ${types.size()} loại</div>
-                        </div>
-                    </div>
+                    <c:choose>
 
-                    <div class="table-card">
-                        <table>
-                            <thead><tr>
-                                <th>Loại danh mục</th>
-                                <th style="width:80px;text-align:right;">Số mục</th>
-                                <th style="width:40px;"></th>
-                            </tr></thead>
-                            <tbody>
-                                <c:forEach var="t" items="${types}">
-                                    <tr onclick="location.href='?module=${currentModule}&type=${t}'" style="cursor:pointer;">
-                                        <td>
-                                            <div style="display:flex;align-items:center;gap:10px;">
-                                                <span class="sdot" style="<c:choose><c:when test="${t == 'brand'}">background:var(--brand-color);box-shadow:0 0 0 3px var(--brand-soft)</c:when><c:when test="${t == 'fuel_type'}">background:var(--fuel-color);box-shadow:0 0 0 3px var(--fuel-soft)</c:when><c:when test="${t == 'phase'}">background:var(--phase-color);box-shadow:0 0 0 3px var(--phase-soft)</c:when><c:when test="${t == 'generator_type'}">background:var(--gen-color);box-shadow:0 0 0 3px var(--gen-soft)</c:when><c:when test="${t == 'condition'}">background:var(--condition-color);box-shadow:0 0 0 3px var(--condition-soft)</c:when><c:when test="${t == 'origin'}">background:var(--origin-color);box-shadow:0 0 0 3px var(--origin-soft)</c:when><c:when test="${t == 'customer_type'}">background:var(--customer-color);box-shadow:0 0 0 3px var(--customer-soft)</c:when><c:when test="${t == 'receipt_type' or t == 'receipt_reason' or t == 'receipt_status'}">background:var(--receipt-color);box-shadow:0 0 0 3px var(--receipt-soft)</c:when><c:when test="${t == 'order_status'}">background:var(--order-color);box-shadow:0 0 0 3px var(--order-soft)</c:when><c:otherwise>background:var(--muted);box-shadow:0 0 0 3px var(--surface-2)</c:otherwise></c:choose>"></span>
-                                                <span style="font-weight:600;color:var(--fg);">${typeLabels[t] != null ? typeLabels[t] : t}</span>
-                                            </div>
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <span style="font-family:var(--font-mono);font-weight:600;color:var(--muted);">${typeCounts[t] != null ? typeCounts[t] : 0}</span>
-                                        </td>
-                                        <td style="text-align:right;">
-                                            <svg style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                                        </td>
-                                    </tr>
-                                </c:forEach>
-                            </tbody>
-                        </table>
-                    </div>
+                        <%-- ====== TAB LỊCH SỬ ====== --%>
+                        <c:when test="${currentTab == 'history'}">
+                            <div class="table-card history-card">
+
+                                <%-- Form filter --%>
+                                <form method="get" action="${pageContext.request.contextPath}/admin/categories" class="history-filter-bar">
+                                    <input type="hidden" name="module" value="${currentModule}"/>
+                                    <input type="hidden" name="tab"    value="history"/>
+                                    <input type="hidden" name="page"   value="1"/>
+
+                                    <%-- Ô tìm kiếm tự do --%>
+                                    <div class="search-input hf-search">
+                                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        <input name="logSearch" value="${logSearch}" placeholder="Tìm đối tượng, người dùng..." autocomplete="off"/>
+                                    </div>
+
+                                    <%-- Dropdown hành động --%>
+                                    <select name="logAction" class="filter-select">
+                                        <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
+                                        <option value="CREATE"      ${logAction == 'CREATE'      ? 'selected' : ''}>Tạo mới</option>
+                                        <option value="UPDATE"      ${logAction == 'UPDATE'      ? 'selected' : ''}>Cập nhật</option>
+                                        <option value="DELETE"      ${logAction == 'DELETE'      ? 'selected' : ''}>Xóa</option>
+                                        <option value="VIEW_LIST"   ${logAction == 'VIEW_LIST'   ? 'selected' : ''}>Xem danh sách</option>
+                                        <option value="VIEW_DETAIL" ${logAction == 'VIEW_DETAIL' ? 'selected' : ''}>Xem chi tiết</option>
+                                    </select>
+
+                                    <%-- Khoảng ngày --%>
+                                    <div class="date-range">
+                                        <label class="date-label">Từ</label>
+                                        <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
+                                        <label class="date-label">đến</label>
+                                        <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        Áp dụng
+                                    </button>
+                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                        <a href="?module=${currentModule}&amp;tab=history" class="btn">
+                                            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            Xóa lọc
+                                        </a>
+                                    </c:if>
+                                </form>
+
+                                <%-- Thông tin tổng số kết quả --%>
+                                <div class="result-summary">
+                                    Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                        &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                                    </c:if>
+                                </div>
+
+                                <table>
+                                    <thead><tr>
+                                        <th style="width:140px;">Thời gian</th>
+                                        <th style="width:160px;">Người dùng</th>
+                                        <th style="width:120px;">Hành động</th>
+                                        <th>Đối tượng</th>
+                                        <th>Chi tiết</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <c:choose>
+                                        <c:when test="${empty logList}">
+                                            <tr><td colspan="5">
+                                                <div class="empty-state">
+                                                    <div class="icon-wrap">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                    </div>
+                                                    <strong>Không có bản ghi nào</strong>
+                                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                                        <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="?module=${currentModule}&amp;tab=history">xóa lọc</a></span>
+                                                    </c:if>
+                                                </div>
+                                            </td></tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="log" items="${logList}">
+                                                <tr>
+                                                    <td><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td>
+                                                        <div style="font-weight:600;color:var(--fg);">${log.username}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>">${log.action}</span>
+                                                    </td>
+                                                    <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
+                                                    <td style="color:var(--muted);">${log.details}</td>
+                                                </tr>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    </tbody>
+                                </table>
+
+                                <c:if test="${logTotalPages > 1}">
+                                <div class="pagination">
+                                    <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
+                                    <div class="controls">
+                                        <c:if test="${logPage > 1}">
+                                            <a href="?module=${currentModule}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                                        </c:if>
+                                        <c:forEach begin="1" end="${logTotalPages}" var="p">
+                                            <c:choose>
+                                                <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
+                                                <c:otherwise><a href="?module=${currentModule}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                        <c:if test="${logPage < logTotalPages}">
+                                            <a href="?module=${currentModule}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                                        </c:if>
+                                    </div>
+                                </div>
+                                </c:if>
+                            </div>
+                        </c:when>
+
+                        <%-- ====== TAB TỔNG QUAN (mặc định) ====== --%>
+                        <c:otherwise>
+                            <div class="page-head">
+                                <div class="left">
+                                    <div class="eyebrow">Quản trị · Danh mục</div>
+                                    <h2 class="page-title">${moduleLabel}</h2>
+                                    <div class="page-sub">${totalItems} danh mục · ${types.size()} loại</div>
+                                </div>
+                            </div>
+
+                            <div class="table-card">
+                                <table>
+                                    <thead><tr>
+                                        <th>Loại danh mục</th>
+                                        <th style="width:80px;text-align:right;">Số mục</th>
+                                        <th style="width:40px;"></th>
+                                    </tr></thead>
+                                    <tbody>
+                                        <c:forEach var="t" items="${types}">
+                                            <tr onclick="location.href='?module=${currentModule}&type=${t}'" style="cursor:pointer;">
+                                                <td>
+                                                    <div style="display:flex;align-items:center;gap:10px;">
+                                                        <span class="sdot" style="<c:choose><c:when test="${t == 'brand'}">background:var(--brand-color);box-shadow:0 0 0 3px var(--brand-soft)</c:when><c:when test="${t == 'fuel_type'}">background:var(--fuel-color);box-shadow:0 0 0 3px var(--fuel-soft)</c:when><c:when test="${t == 'phase'}">background:var(--phase-color);box-shadow:0 0 0 3px var(--phase-soft)</c:when><c:when test="${t == 'generator_type'}">background:var(--gen-color);box-shadow:0 0 0 3px var(--gen-soft)</c:when><c:when test="${t == 'condition'}">background:var(--condition-color);box-shadow:0 0 0 3px var(--condition-soft)</c:when><c:when test="${t == 'origin'}">background:var(--origin-color);box-shadow:0 0 0 3px var(--origin-soft)</c:when><c:when test="${t == 'customer_type'}">background:var(--customer-color);box-shadow:0 0 0 3px var(--customer-soft)</c:when><c:when test="${t == 'receipt_type' or t == 'receipt_reason' or t == 'receipt_status'}">background:var(--receipt-color);box-shadow:0 0 0 3px var(--receipt-soft)</c:when><c:when test="${t == 'order_status'}">background:var(--order-color);box-shadow:0 0 0 3px var(--order-soft)</c:when><c:otherwise>background:var(--muted);box-shadow:0 0 0 3px var(--surface-2)</c:otherwise></c:choose>"></span>
+                                                        <span style="font-weight:600;color:var(--fg);">${typeLabels[t] != null ? typeLabels[t] : t}</span>
+                                                    </div>
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <span style="font-family:var(--font-mono);font-weight:600;color:var(--muted);">${typeCounts[t] != null ? typeCounts[t] : 0}</span>
+                                                </td>
+                                                <td style="text-align:right;">
+                                                    <svg style="width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                 </c:otherwise>
             </c:choose>
         </main>
