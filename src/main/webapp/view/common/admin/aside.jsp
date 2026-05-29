@@ -54,14 +54,14 @@
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('inventory.view')}">
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/inventory">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
             Tồn kho
         </a>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/receipt">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
             Phiếu nhập/xuất
         </a>
