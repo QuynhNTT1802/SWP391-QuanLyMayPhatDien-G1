@@ -115,6 +115,11 @@ public class OrderController extends HttpServlet {
         String searchFilter = request.getParameter("search");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
+        int pendding = saleorderdao.countStatusPending();
+        int approved = saleorderdao.countStatusApproved();
+        int rejected = saleorderdao.countStatusRejected();
+        int cancelled = saleorderdao.countStatusCancelled();
+
         List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter);
 
         int page = 1;
@@ -144,17 +149,19 @@ public class OrderController extends HttpServlet {
         request.setAttribute("totalOrders", totalOrders);
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("searchFilter", searchFilter);
-        
-        int pendding = saleorderdao.countStatusPending();
-        int approved = saleorderdao.countStatusApproved();
-        int rejected = saleorderdao.countStatusRejected();
-        int cancelled = saleorderdao.countStatusCancelled();
-        
-        request.setAttribute("pendingCount", pendding); 
+
+        request.setAttribute("pendingCount", pendding);
         request.setAttribute("approvedCount", approved);
         request.setAttribute("rejectedCount", rejected);
         request.setAttribute("cancelledCount", cancelled);
-        
+
+        Set<String> userPermissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        request.setAttribute("canCreateOrder", userPermissions != null && userPermissions.contains("orders.create"));
+        request.setAttribute("canUpdateOrder", userPermissions != null && userPermissions.contains("orders.update"));
+        request.setAttribute("canApproveOrder", userPermissions != null && userPermissions.contains("orders.approve"));
+        request.setAttribute("canRejectOrder", userPermissions != null && userPermissions.contains("orders.reject"));
+        request.setAttribute("canCancelOrder", userPermissions != null && userPermissions.contains("orders.cancel"));
+
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
      
