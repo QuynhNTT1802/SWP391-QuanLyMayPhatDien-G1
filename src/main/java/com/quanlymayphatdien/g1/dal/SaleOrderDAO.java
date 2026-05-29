@@ -63,12 +63,18 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 ps.setObject(i + 1, param.get(i));
             }
 
+            System.out.println("SQL: " + sql.toString());
+            System.out.println("Params: " + param);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    list.add(getFromResultSet(rs));
+                    SaleOrder order = getFromResultSet(rs);
+                    System.out.println("Loaded order: " + order.getOrderId() + " - " + order.getOrderCode());
+                    list.add(order);
                 }
             }
         } catch (Exception e) {
+            System.err.println("ERROR in searchByNameCode: " + e.getMessage());
             e.printStackTrace();
         }
         return list;
@@ -343,15 +349,21 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setCustomerNote(rs.getString("customer_note"));
 
         s.setCreatedBy(rs.getInt("created_by"));
-        s.setApprovedBy(rs.getInt("approved_by"));
-        s.setCancelledBy(rs.getInt("cancelled_by"));
-        s.setUpdatedBy(rs.getInt("updated_by"));
+        
+        int approvedBy = rs.getInt("approved_by");
+        s.setApprovedBy(rs.wasNull() ? 0 : approvedBy);
+        
+        int cancelledBy = rs.getInt("cancelled_by");
+        s.setCancelledBy(rs.wasNull() ? 0 : cancelledBy);
+        
+        int updatedBy = rs.getInt("updated_by");
+        s.setUpdatedBy(rs.wasNull() ? 0 : updatedBy);
 
         s.setStatus(rs.getString("status"));
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
         s.setRejectReason(rs.getString("reject_reason"));
-        // Xử lý ngày giờ an toàn (tránh lỗi null)
+        
         if (rs.getTimestamp("order_date") != null) {
             s.setOrderDate(new Date(rs.getTimestamp("order_date").getTime()));
         }
@@ -366,6 +378,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
+        }
+        
+        Object customerTypeIdObj = rs.getObject("customer_type_id");
+        if (customerTypeIdObj != null) {
+            s.setCustomerTypeId(((Number) customerTypeIdObj).intValue());
         }
         return s;
     }
