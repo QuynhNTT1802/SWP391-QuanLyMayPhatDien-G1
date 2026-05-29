@@ -137,7 +137,7 @@
                                                 <select name="generatorId" required>
                                                     <option value="">-- Chọn máy --</option>
                                                     <c:forEach var="g" items="${generators}">
-                                                        <option value="${g.generatorId}">${g.model} (${g.brand})</option>
+                                                        <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                     </c:forEach>
                                                 </select>
                                             </td>
@@ -160,7 +160,7 @@
                                             <select name="generatorId">
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
-                                                    <option value="${g.generatorId}">${g.model} (${g.brand})</option>
+                                                    <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                 </c:forEach>
                                             </select>
                                         </td>

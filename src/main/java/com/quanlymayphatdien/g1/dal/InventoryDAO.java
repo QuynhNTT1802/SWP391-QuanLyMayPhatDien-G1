@@ -19,11 +19,9 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     public List<Inventory> findByWarehouseId(int warehouseId) {
         List<Inventory> list = new ArrayList<>();
-        String sql = "SELECT i.*, g.model AS generator_model, cat.name AS generator_brand "
+        String sql = "SELECT i.*, g.model AS generator_model "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
-                + "LEFT JOIN generator_category gc ON g.id = gc.generator_id "
-                + "LEFT JOIN category cat ON gc.category_id = cat.id AND cat.type = 'brand' "
                 + "WHERE i.warehouse_id = ?";
         try {
             connection = getConnection();
@@ -90,8 +88,22 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     @Override
-    public Inventory getFromResultSet(ResultSet resultSet) throws SQLException {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public Inventory getFromResultSet(ResultSet rs) throws SQLException {
+        Inventory inv = new Inventory();
+        inv.setInventoryId(rs.getInt("inventory_id"));
+        inv.setWarehouseId(rs.getInt("warehouse_id"));
+        inv.setGeneratorId(rs.getInt("generator_id"));
+        inv.setQuantity(rs.getInt("quantity"));
+        // joined fields
+        try {
+            inv.setGeneratorModel(rs.getString("generator_model"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            inv.setGeneratorBrand(rs.getString("generator_brand"));
+        } catch (SQLException ignored) {
+        }
+        return inv;
     }
 
 }

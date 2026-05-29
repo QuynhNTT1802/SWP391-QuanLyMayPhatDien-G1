@@ -4,12 +4,17 @@
  */
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
+import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.Role;
+import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -19,7 +24,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -54,6 +61,9 @@ public class ReceiptController extends HttpServlet {
                     break;
                 case "detail":
                     viewDetail(request, response);
+                    break;
+                case "selectOrder":
+                    selectOrder(request, response);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -137,7 +147,25 @@ public class ReceiptController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setAttribute("warehouses", warehouseDAO.findAll());
-        request.setAttribute("generators", new ArrayList<>());
+
+        GeneratorDAO genDAO = new GeneratorDAO();
+        List<Generator> generators = genDAO.findAll();
+        Map<Integer, String> brandMap = new LinkedHashMap<>();
+        for (Generator g : generators) {
+            List<Category> cats = genDAO.getCategoriesByGeneratorId(g.getId());
+            g.setCategories(cats);
+            String brand = "";
+            for (Category c : cats) {
+                if ("brand".equals(c.getType())) {
+                    brand = c.getName();
+                    break;
+                }
+            }
+            brandMap.put(g.getId(), brand);
+        }
+        request.setAttribute("generators", generators);
+        request.setAttribute("brandMap", brandMap);
+
         request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
     }
 
@@ -286,5 +314,12 @@ public class ReceiptController extends HttpServlet {
             request.setAttribute("error", "Không thể từ chối phiếu (phiếu không ở trạng thái chờ duyệt)");
             viewDetail(request, response);
         }
+    }
+
+    private void selectOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        SaleOrderDAO soDAO = new SaleOrderDAO();
+        List<SaleOrder> approvedOrders = soDAO.findByStatus("APPROVED");
+        request.setAttribute("approvedOrders", approvedOrders);
+        request.getRequestDispatcher("/view/receipt/receipt-select-order.jsp").forward(request, response);
     }
 }
