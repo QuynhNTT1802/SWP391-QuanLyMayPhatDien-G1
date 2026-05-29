@@ -157,15 +157,6 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Dải công suất</label>
-                                        <select class="select" name="powerRangeId">
-                                            <option value="">-- Chọn dải công suất --</option>
-                                            <c:forEach var="c" items="${powerRanges}">
-                                                <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
                                 </div>
                             </div>
 

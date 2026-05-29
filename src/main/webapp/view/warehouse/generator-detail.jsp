@@ -113,7 +113,6 @@
                         </div>
 
                         <div class="content">
-                            <%-- ===== SECTION 01: THÔNG TIN CƠ BẢN ===== --%>
                             <section class="section" id="basic">
                                 <div class="section-head">
                                     <div>
@@ -173,7 +172,6 @@
                                 </div>
                             </section>
 
-                            <%-- ===== SECTION 02: THÔNG TIN KỸ THUẬT ===== --%>
                             <section class="section" id="technical">
                                 <div class="section-head">
                                     <div>
@@ -185,10 +183,6 @@
                                     <div class="info-field">
                                         <div class="info-label">Công suất</div>
                                         <div class="info-value mono"><c:out value="${generator.powerRating}"/> kVA</div>
-                                    </div>
-                                    <div class="info-field">
-                                        <div class="info-label">Dải công suất</div>
-                                        <div class="info-value"><c:out value="${catPowerRange}"/></div>
                                     </div>
                                     <div class="info-field">
                                         <div class="info-label">Tần số</div>

@@ -62,7 +62,6 @@
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/generators?action=create">
 
-                            <%-- ============ SECTION 01: THÔNG TIN CƠ BẢN ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
@@ -120,7 +119,6 @@
                                 </div>
                             </div>
 
-                            <%-- ============ SECTION 02: THÔNG TIN KỸ THUẬT ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">02 — THÔNG TIN KỸ THUẬT</div>
@@ -157,19 +155,9 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Dải công suất</label>
-                                        <select class="select" name="powerRangeId">
-                                            <option value="">-- Chọn dải công suất --</option>
-                                            <c:forEach var="c" items="${powerRanges}">
-                                                <option value="${c.id}" <c:if test="${sessionScope.fieldPowerRangeId == c.id}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
                                 </div>
                             </div>
 
-                            <%-- ============ SECTION 03: TRẠNG THÁI ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">03 — TRẠNG THÁI</div>
