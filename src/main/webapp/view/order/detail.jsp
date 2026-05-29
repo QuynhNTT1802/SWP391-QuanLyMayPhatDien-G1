@@ -177,9 +177,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:forEach value="${d.generatorModel}" items="${details}">
+                                <c:forEach var="d" items="${details}">
                                     <tr>
-                                        <td><c:out value=></c:out></td>
+                                        <td><c:out value="${d.generatorModel}"/></td>
                                         <td>${d.quantity}</td>
                                         <td class="text-right"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
                                         <td class="text-right"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
