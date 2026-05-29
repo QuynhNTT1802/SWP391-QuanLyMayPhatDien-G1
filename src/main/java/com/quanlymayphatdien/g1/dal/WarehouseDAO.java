@@ -25,6 +25,7 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
         String sql = "SELECT w.*, COALESCE(SUM(i.quantity), 0) AS total_inventory "
                 + "FROM warehouse w "
                 + "LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id "
+                + "WHERE w.status = 'active' "
                 + "GROUP BY w.warehouse_id ";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
