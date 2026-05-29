@@ -477,7 +477,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
-
         Object customerTypeIdObj = rs.getObject("customer_type_id");
         if (customerTypeIdObj != null) {
             s.setCustomerTypeId(((Number) customerTypeIdObj).intValue());
