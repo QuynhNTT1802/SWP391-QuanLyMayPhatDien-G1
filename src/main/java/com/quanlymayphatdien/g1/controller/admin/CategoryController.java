@@ -176,7 +176,6 @@ public class CategoryController extends HttpServlet {
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("currentModule", module);
         request.setAttribute("moduleLabel", getModuleLabel(module));
-        logActivity(request,"VIEW_LIST",null,null,module);
         request.getRequestDispatcher("/view/admin/admin-category.jsp").forward(request, response);
     }
 
@@ -191,7 +190,7 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("category", found);
                     CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
                     request.setAttribute("extension", extDAO.findExtension(found.getType(), id));
-                    logActivity(request,"VIEW_DETAIL",found.getId(),found.getName(),found.getType());
+                    // không log VIEW_DETAIL vào lịch sử
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -309,13 +308,15 @@ public class CategoryController extends HttpServlet {
         boolean isUpdate = idVar != null && !idVar.isEmpty() && !"0".equals(idVar);
         if (isUpdate) {
             categoryId = Integer.parseInt(idVar);
+            // Đọc giá trị cũ TRƯỚC khi lưu để so sánh trước → sau
+            Category oldCategory = cateDAO.findById(categoryId);
             category.setId(categoryId);
             cateDAO.update(category);
+            logUpdate(request, categoryId, name, type, status, oldCategory, module);
         } else {
             categoryId = cateDAO.insert(category);
+            logCreate(request, categoryId, name, type, status, module);
         }
-        logActivity(request, isUpdate ? "UPDATE" : "CREATE", categoryId, name, type);
-        
 
         if (categoryId > 0) {
             saveExtensionData(request, categoryId, type);
@@ -342,7 +343,7 @@ public class CategoryController extends HttpServlet {
                 Category c = cateDAO.findById(id);
                 if (c != null) {
                     cateDAO.delete(c);
-                    logActivity(request, "DELETE", id, c.getName(), c.getType());
+                    logDelete(request, id, c.getName(), c.getType(), c.getStatus(), c.getModule());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -427,24 +428,118 @@ public class CategoryController extends HttpServlet {
         }
     }
     
-    private void logActivity(HttpServletRequest request, String action, Integer entityId, String entityName, String details) {
+    // --------------- Hệ thống ghi log ---------------
+
+    /** Nhãn hiển thị tiếng Việt cho trạng thái */
+    private String statusLabel(String status) {
+        if ("active".equals(status))   return "Hoạt động";
+        if ("inactive".equals(status)) return "Không hoạt động";
+        return status != null ? status : "";
+    }
+
+    /**
+     * Log thêm mới danh mục.
+     * Định dạng: Thêm mới: 'Honda' (Thương hiệu) — Trạng thái: Hoạt động
+     */
+    private void logCreate(HttpServletRequest request, Integer entityId,
+                           String name, String type, String status, String module) {
         try {
             User user = (User) request.getSession().getAttribute("loggedUser");
-            if (user == null){
-                return;
-            }
-            
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("categories");
-            log.setAction(action);
-            log.setEntityId(entityId);
-            log.setEntityName(entityName);
-            log.setDetails(details);
-            logDAO.insert(log);
-        } catch(Exception e){
+            if (user == null) return;
+
+            String typeLabel   = TYPE_LABELS.getOrDefault(type, type);
+            String statusLabel = statusLabel(status);
+
+            String description = "Thêm mới: '" + name + "' (" + typeLabel + ") — Trạng thái: " + statusLabel;
+
+            insertLog(user, entityId, name, "CREATE", description);
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Log cập nhật danh mục: chỉ mô tả các trường thực sự thay đổi (tên và trạng thái).
+     * Định dạng ví dụ:
+     *   - Chỉ đổi tên: Nguyễn Văn A đã cập nhật 'Honda' thành 'Honda Generator' (Thương hiệu)
+     *   - Chỉ đổi trạng thái: Nguyễn Văn A đã cập nhật 'Honda' (Thương hiệu) — Trạng thái: Hoạt động thành Không hoạt động
+     *   - Cả hai: Nguyễn Văn A đã cập nhật 'Honda' thành 'Honda Generator' (Thương hiệu) — Trạng thái: Hoạt động thành Không hoạt động
+     */
+    private void logUpdate(HttpServletRequest request, Integer entityId,
+                           String newName, String type, String newStatus,
+                           Category oldCategory, String module) {
+        try {
+            User user = (User) request.getSession().getAttribute("loggedUser");
+            if (user == null) return;
+
+            String username  = user.getName() != null ? user.getName() : user.getUsername();
+            String typeLabel = TYPE_LABELS.getOrDefault(type, type);
+
+            String oldName   = oldCategory != null ? oldCategory.getName()   : newName;
+            String oldStatus = oldCategory != null ? oldCategory.getStatus() : newStatus;
+
+            boolean nameChanged   = !newName.equals(oldName);
+            boolean statusChanged = !newStatus.equals(oldStatus);
+
+            // Nếu không có gì thay đổi, không cần ghi log
+            if (!nameChanged && !statusChanged) return;
+
+            StringBuilder desc = new StringBuilder();
+            desc.append(username).append(" đã cập nhật '");
+
+            if (nameChanged) {
+                desc.append(oldName).append("' thành '").append(newName).append("' (").append(typeLabel).append(")");
+            } else {
+                desc.append(newName).append("' (").append(typeLabel).append(")");
+            }
+
+            if (statusChanged) {
+                desc.append(" — Trạng thái: ")
+                    .append(statusLabel(oldStatus))
+                    .append(" thành ")
+                    .append(statusLabel(newStatus));
+            }
+
+            insertLog(user, entityId, newName, "UPDATE", desc.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Log xóa danh mục.
+     * Định dạng: Xóa: 'Honda' (Thương hiệu) — Trạng thái trước: Hoạt động
+     */
+    private void logDelete(HttpServletRequest request, Integer entityId,
+                           String name, String type, String status, String module) {
+        try {
+            User user = (User) request.getSession().getAttribute("loggedUser");
+            if (user == null) return;
+
+            String typeLabel   = TYPE_LABELS.getOrDefault(type, type);
+            String statusLabel = statusLabel(status);
+
+            // Nhúng module vào details để fallback khi category đã xóa khỏi DB
+            String description = "Xóa: '" + name + "' (" + typeLabel + ") — Trạng thái trước: " + statusLabel
+                               + " | module:" + (module != null ? module : "");
+
+            insertLog(user, entityId, name, "DELETE", description);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Hàm nội bộ để insert ActivityLog vào DB */
+    private void insertLog(User user, Integer entityId, String entityName,
+                           String action, String description) {
+        ActivityLog log = new ActivityLog();
+        log.setUserId(user.getId());
+        log.setEntityType("categories");
+        log.setAction(action);
+        log.setEntityId(entityId);
+        log.setEntityName(entityName);
+        log.setDetails(description);
+        logDAO.insert(log);
     }
 
     private void showHistory(HttpServletRequest request, HttpServletResponse response, String module) 
@@ -470,10 +565,10 @@ public class CategoryController extends HttpServlet {
         int pageSize = 20;
 
         // --- Gọi DAO có filter thay vì findByEntityType ---
-        List<ActivityLog> logs = logDAO.findByFilter(
-                "categories", logSearch, logAction, dateFrom, dateTo, page, pageSize);
-        int totalLogs = logDAO.countByFilter(
-                "categories", logSearch, logAction, dateFrom, dateTo);
+        List<ActivityLog> logs = logDAO.findByModuleFilter(
+                module, logSearch, logAction, dateFrom, dateTo, page, pageSize);
+        int totalLogs = logDAO.countByModuleFilter(
+                module, logSearch, logAction, dateFrom, dateTo);
 
         int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
         if (page > totalPages) {
