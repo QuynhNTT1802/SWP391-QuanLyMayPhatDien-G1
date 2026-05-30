@@ -176,6 +176,7 @@ public class ReceiptController extends HttpServlet {
                 List<OrderDetail> ods = new OrderDetailDAO().findByOrderId(orderId);
                 Receipt prefill = new Receipt();
                 prefill.setOrderId(orderId);
+                prefill.setReceiptType("EXPORT");
                 prefill.setNote("Tạo từ đơn " + order.getOrderCode());
                 List<ReceiptDetail> ds = new ArrayList<>();
                 for (OrderDetail od : ods) {
