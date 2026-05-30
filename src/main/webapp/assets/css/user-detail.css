@@ -1235,3 +1235,47 @@ main {
         gap: 6px;
     }
 }
+
+.actlog-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-size: 13px;
+}
+.actlog-table th,
+.actlog-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.actlog-table th {
+    background: var(--surface-2);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+.actlog-table th + th,
+.actlog-table td + td {
+    border-left: 1px solid var(--border);
+}
+.actlog-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.actlog-table tbody tr:hover {
+    background: var(--surface-2);
+}
+.actlog-table .col-time {
+    font-family: var(--font-mono);
+    color: var(--muted);
+    white-space: nowrap;
+    width: 1%;
+}
+.actlog-table .col-user {
+    font-weight: 600;
+    width: 180px;
+}
