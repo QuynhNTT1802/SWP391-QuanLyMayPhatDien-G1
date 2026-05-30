@@ -32,12 +32,16 @@ public class SystemLogController extends HttpServlet {
         }
 
         String level = request.getParameter("level");
+        String module = request.getParameter("module");
         String search = request.getParameter("search");
         String dateFrom = request.getParameter("dateFrom");
         String dateTo = request.getParameter("dateTo");
 
         if (level != null && level.trim().isEmpty()) {
             level = null;
+        }
+        if (module != null && module.trim().isEmpty()) {
+            module = null;
         }
         if (search != null && search.trim().isEmpty()) {
             search = null;
@@ -49,6 +53,7 @@ public class SystemLogController extends HttpServlet {
             dateTo = null;
         }
 
+        // ---- Phân trang ----
         int page = 1;
         try {
             String p = request.getParameter("page");
@@ -58,8 +63,8 @@ public class SystemLogController extends HttpServlet {
         } catch (NumberFormatException ignored) {
         }
 
-        List<SystemLog> logs = logDAO.findByFilter(level, search, dateFrom, dateTo, page, PAGE_SIZE);
-        int total = logDAO.countByFilter(level, search, dateFrom, dateTo);
+        List<SystemLog> logs = logDAO.findByFilter(level, module, search, dateFrom, dateTo, page, PAGE_SIZE);
+        int total = logDAO.countByFilter(level, module, search, dateFrom, dateTo);
         int totalPages = Math.max(1, (int) Math.ceil((double) total / PAGE_SIZE));
         if (page > totalPages) {
             page = totalPages;
@@ -70,6 +75,7 @@ public class SystemLogController extends HttpServlet {
         request.setAttribute("logPage", page);
         request.setAttribute("logTotalPages", totalPages);
         request.setAttribute("level", level != null ? level : "");
+        request.setAttribute("module", module != null ? module : "");
         request.setAttribute("search", search != null ? search : "");
         request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
         request.setAttribute("dateTo", dateTo != null ? dateTo : "");

@@ -8,6 +8,7 @@ import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -197,6 +198,8 @@ public class UserManagementController extends HttpServlet {
             }
 
         } catch (Exception e) {
+            SystemLogger.warn("quản lý người dùng", "UserManagementController.createUser",
+                "Lỗi khi tạo user: " + e.getMessage());
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -304,6 +307,8 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Account not found!");
             }
         } catch (Exception e) {
+            SystemLogger.warn("quản lý người dùng", "UserManagementController.updateUser",
+                "Lỗi khi cập nhật user id=" + userId + ": " + e.getMessage());
             request.getSession().setAttribute("Error", e.getMessage());
         }
 

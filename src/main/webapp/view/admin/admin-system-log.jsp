@@ -207,23 +207,34 @@
                           action="${pageContext.request.contextPath}/admin/system-log"
                           class="syslog-filter">
 
-
+                        <%-- Dropdown mức độ --%>
                         <select id="levelFilter" name="level" class="filter-select"
                                 onchange="document.getElementById('syslogFilterForm').submit()">
                             <option value="" ${empty level ? 'selected' : ''}>Tất cả mức độ</option>
-                            <option value="ERROR"   ${level == 'ERROR'   ? 'selected' : ''}>ERROR</option>
-                            <option value="WARNING" ${level == 'WARNING' ? 'selected' : ''}>WARNING</option>
-                            <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>INFO</option>
+                            <option value="ERROR"   ${level == 'ERROR'   ? 'selected' : ''}>🔴 ERROR</option>
+                            <option value="WARNING" ${level == 'WARNING' ? 'selected' : ''}>🟡 WARNING</option>
+                            <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>🔵 INFO</option>
                         </select>
 
+                        <%-- Dropdown module --%>
+                        <select id="moduleFilter" name="module" class="filter-select"
+                                onchange="document.getElementById('syslogFilterForm').submit()">
+                            <option value="" ${empty module ? 'selected' : ''}>Tất cả module</option>
+                            <option value="quản lý danh mục"   ${module == 'quản lý danh mục'   ? 'selected' : ''}>Quản lý danh mục</option>
+                            <option value="quản lý người dùng" ${module == 'quản lý người dùng' ? 'selected' : ''}>Quản lý người dùng</option>
+                            <option value="quản lý phân quyền" ${module == 'quản lý phân quyền' ? 'selected' : ''}>Quản lý phân quyền</option>
+                            <option value="quản lý mật khẩu"   ${module == 'quản lý mật khẩu'   ? 'selected' : ''}>Quản lý mật khẩu</option>
+                            <option value="hệ thống"            ${module == 'hệ thống'            ? 'selected' : ''}>Hệ thống</option>
+                        </select>
 
+                        <%-- Tìm kiếm nội dung --%>
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
                             <input id="syslogSearch" name="search" value="${search}"
                                    placeholder="Tìm nội dung, nguồn lỗi..."/>
                         </div>
 
-
+                        <%-- Khoảng ngày --%>
                         <div class="date-range">
                             <span class="date-label">Từ</span>
                             <input id="dateFrom" type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
@@ -236,7 +247,7 @@
                             Lọc
                         </button>
 
-                        <c:if test="${not empty level or not empty search or not empty dateFrom or not empty dateTo}">
+                        <c:if test="${not empty level or not empty module or not empty search or not empty dateFrom or not empty dateTo}">
                             <a href="${pageContext.request.contextPath}/admin/system-log" class="btn">Xóa lọc</a>
                             <span class="filter-active-badge">Đang lọc</span>
                         </c:if>
@@ -248,16 +259,18 @@
                             <div class="result-summary">
                                 Tổng <strong>${totalLogs}</strong> bản ghi
                                 <c:if test="${not empty level}"> — mức <strong>${level}</strong></c:if>
+                                <c:if test="${not empty module}"> — module <strong>${module}</strong></c:if>
                                 <c:if test="${not empty search}"> — tìm "<strong>${search}</strong>"</c:if>
-                                </div>
+                            </div>
                         </c:if>
 
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width:155px">Thời gian</th>
-                                    <th style="width:100px">Mức độ</th>
-                                    <th style="width:200px">Nguồn</th>
+                                    <th style="width:140px">Thời gian</th>
+                                    <th style="width:90px">Mức độ</th>
+                                    <th style="width:160px">Module</th>
+                                    <th style="width:175px">Nguồn</th>
                                     <th>Nội dung</th>
                                 </tr>
                             </thead>
@@ -265,14 +278,14 @@
                                 <c:choose>
                                     <c:when test="${empty logList}">
                                         <tr>
-                                            <td colspan="4">
+                                            <td colspan="5">
                                                 <div class="empty-state">
                                                     <div class="icon-wrap">
                                                         <svg viewBox="0 0 24 24"><path d="M9 12h6M9 16h6M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/></svg>
                                                     </div>
                                                     <strong>Không có log nào</strong>
                                                     <c:choose>
-                                                        <c:when test="${not empty level or not empty search or not empty dateFrom or not empty dateTo}">
+                                                        <c:when test="${not empty level or not empty module or not empty search or not empty dateFrom or not empty dateTo}">
                                                             Không tìm thấy kết quả phù hợp với bộ lọc hiện tại
                                                         </c:when>
                                                         <c:otherwise>
@@ -286,6 +299,7 @@
                                     <c:otherwise>
                                         <c:forEach var="log" items="${logList}">
                                             <tr>
+                                                <%-- Thời gian --%>
                                                 <td style="font-family:var(--font-mono);font-size:12px;color:var(--muted);white-space:nowrap">
                                                     <fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy"/>
                                                     <br/>
@@ -294,17 +308,25 @@
                                                     </span>
                                                 </td>
 
-
+                                                <%-- Mức độ --%>
                                                 <td>
                                                     <span class="level-badge level-${log.level}">${log.level}</span>
                                                 </td>
 
+                                                <%-- Module --%>
+                                                <td>
+                                                    <a href="?module=${log.module}" title="Lọc theo module này"
+                                                       style="font-size:12px;color:var(--primary);text-decoration:none;font-weight:500">
+                                                        ${fn:escapeXml(log.module)}
+                                                    </a>
+                                                </td>
 
+                                                <%-- Nguồn --%>
                                                 <td>
                                                     <div class="source-cell" title="${log.source}">${log.source}</div>
                                                 </td>
 
-
+                                                <%-- Nội dung + Stack trace --%>
                                                 <td class="message-cell">
                                                     <div class="message-text">${fn:escapeXml(log.message)}</div>
                                                     <c:if test="${not empty log.stackTrace}">
@@ -312,7 +334,7 @@
                                                             <summary>Xem stack trace</summary>
                                                             <pre>${fn:escapeXml(fn:substring(log.stackTrace, 0, 2000))}<c:if test="${fn:length(log.stackTrace) > 2000}">
 ... (đã rút gọn)</c:if></pre>
-                                                            </details>
+                                                        </details>
                                                     </c:if>
                                                 </td>
                                             </tr>
@@ -334,7 +356,7 @@
                                     <c:choose>
                                         <c:when test="${logPage > 1}">
                                             <a class="page-btn"
-                                               href="?page=${logPage-1}&level=${level}&search=${search}&dateFrom=${dateFrom}&dateTo=${dateTo}">‹</a>
+                                               href="?page=${logPage-1}&level=${level}&module=${module}&search=${search}&dateFrom=${dateFrom}&dateTo=${dateTo}">‹</a>
                                         </c:when>
                                         <c:otherwise>
                                             <button class="page-btn" disabled>‹</button>
@@ -345,7 +367,7 @@
                                     <c:forEach begin="1" end="${logTotalPages}" var="p">
                                         <c:if test="${p >= logPage - 2 and p <= logPage + 2}">
                                             <a class="page-btn ${p == logPage ? 'active' : ''}"
-                                               href="?page=${p}&level=${level}&search=${search}&dateFrom=${dateFrom}&dateTo=${dateTo}">${p}</a>
+                                               href="?page=${p}&level=${level}&module=${module}&search=${search}&dateFrom=${dateFrom}&dateTo=${dateTo}">${p}</a>
                                         </c:if>
                                     </c:forEach>
 
@@ -353,7 +375,7 @@
                                     <c:choose>
                                         <c:when test="${logPage < logTotalPages}">
                                             <a class="page-btn"
-                                               href="?page=${logPage+1}&level=${level}&search=${search}&dateFrom=${dateFrom}&dateTo=${dateTo}">›</a>
+                                               href="?page=${logPage+1}&level=${level}&module=${module}&search=${search}&dateFrom=${dateFrom}&dateTo=${dateTo}">›</a>
                                         </c:when>
                                         <c:otherwise>
                                             <button class="page-btn" disabled>›</button>
