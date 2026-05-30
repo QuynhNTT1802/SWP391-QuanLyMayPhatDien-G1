@@ -240,11 +240,9 @@
                                     <%-- Dropdown hành động --%>
                                     <select name="logAction" class="filter-select">
                                         <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
-                                        <option value="CREATE"      ${logAction == 'CREATE'      ? 'selected' : ''}>Tạo mới</option>
-                                        <option value="UPDATE"      ${logAction == 'UPDATE'      ? 'selected' : ''}>Cập nhật</option>
-                                        <option value="DELETE"      ${logAction == 'DELETE'      ? 'selected' : ''}>Xóa</option>
-                                        <option value="VIEW_LIST"   ${logAction == 'VIEW_LIST'   ? 'selected' : ''}>Xem danh sách</option>
-                                        <option value="VIEW_DETAIL" ${logAction == 'VIEW_DETAIL' ? 'selected' : ''}>Xem chi tiết</option>
+                                        <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Thêm mới</option>
+                                        <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                                        <option value="DELETE" ${logAction == 'DELETE' ? 'selected' : ''}>Xóa</option>
                                     </select>
 
                                     <%-- Khoảng ngày --%>
@@ -309,7 +307,7 @@
                                                         <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>">${log.action}</span>
                                                     </td>
                                                     <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
-                                                    <td style="color:var(--muted);">${log.details}</td>
+                                                    <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">${log.details}</td>
                                                 </tr>
                                             </c:forEach>
                                         </c:otherwise>

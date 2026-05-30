@@ -265,7 +265,157 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         }
         return 0;
     }
-    
-    
-    
+
+    /**
+     * Tìm log của danh mục theo module (phân trang + filter động).
+     * Dùng LEFT JOIN với bảng category để lọc theo module.
+     * Với log DELETE (category đã xóa), fallback: kiểm tra details có chứa "module:[module]".
+     * Luôn loại bỏ các log VIEW_LIST, VIEW_DETAIL khỏi kết quả.
+     *
+     * @param module   tên module, VD "quản lý vật tư"
+     * @param search   từ khóa tìm theo entity_name hoặc username, có thể null
+     * @param action   loại hành động (CREATE/UPDATE/DELETE), có thể null
+     * @param dateFrom ngày bắt đầu yyyy-MM-dd, có thể null
+     * @param dateTo   ngày kết thúc yyyy-MM-dd, có thể null
+     * @param page     trang hiện tại (bắt đầu từ 1)
+     * @param pageSize số bản ghi mỗi trang
+     */
+    public List<ActivityLog> findByModuleFilter(String module, String search, String action,
+                                                String dateFrom, String dateTo,
+                                                int page, int pageSize) {
+        List<ActivityLog> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+
+        // WHERE cơ bản: entity_type + lọc module qua JOIN hoặc fallback trong details
+        StringBuilder where = new StringBuilder(
+            "WHERE al.entity_type = 'categories' "
+          + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
+          + "AND (c.module = ? OR (c.module IS NULL AND al.details LIKE ?)) "
+        );
+        params.add(module);
+        params.add("%module:" + module + "%");
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT al.*, u.name AS user_name "
+                   + "FROM activity_log al "
+                   + "JOIN user u ON al.user_id = u.id "
+                   + "LEFT JOIN category c ON al.entity_id = c.id "
+                   + where
+                   + "ORDER BY al.created_at DESC "
+                   + "LIMIT ? OFFSET ?";
+
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+            p.setInt(idx++, pageSize);
+            p.setInt(idx,   (page - 1) * pageSize);
+
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                ActivityLog log = getFromResultSet(rs);
+                log.setUsername(rs.getString("user_name"));
+                list.add(log);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Đếm tổng số log theo module — dùng cho phân trang.
+     * Cùng logic WHERE với findByModuleFilter.
+     */
+    public int countByModuleFilter(String module, String search, String action,
+                                   String dateFrom, String dateTo) {
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder where = new StringBuilder(
+            "WHERE al.entity_type = 'categories' "
+          + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
+          + "AND (c.module = ? OR (c.module IS NULL AND al.details LIKE ?)) "
+        );
+        params.add(module);
+        params.add("%module:" + module + "%");
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT COUNT(*) "
+                   + "FROM activity_log al "
+                   + "JOIN user u ON al.user_id = u.id "
+                   + "LEFT JOIN category c ON al.entity_id = c.id "
+                   + where;
+
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
