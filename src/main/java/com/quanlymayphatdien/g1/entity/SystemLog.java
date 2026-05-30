@@ -12,8 +12,10 @@ import java.util.Date;
  * @author LENOVO
  */
 public class SystemLog {
+
     private int id;
     private String level;
+    private String module;
     private String source;
     private String message;
     private String stackTrace;
@@ -22,32 +24,32 @@ public class SystemLog {
     public SystemLog() {
     }
 
-    public SystemLog(int id, String level, String source, String message, String stackTrace, LocalDateTime createdAt) {
-        this.id = id;
+    public SystemLog(String level, String module, String source, String message, String stackTrace) {
         this.level = level;
+        this.module = module;
         this.source = source;
         this.message = message;
         this.stackTrace = stackTrace;
-        this.createdAt = createdAt;
     }
 
-    /** Constructor dùng khi insert (DB tự sinh id và created_at) */
-    public SystemLog(String level, String source, String message, String stackTrace) {
-        this.level      = level;
-        this.source     = source;
-        this.message    = message;
-        this.stackTrace = stackTrace;
-    }
-
-    
-    
     public Date getCreatedAtDate() {
-        if(createdAt == null) return null;
+        if (createdAt == null) {
+            return null;
+        }
         return Date.from(createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
 
-    /** Alias cho JSP sử dụng: ${log.createdAtAsDate} */
-    public Date getCreatedAtAsDate() { return getCreatedAtDate(); }
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
+
+    public Date getCreatedAtAsDate() {
+        return getCreatedAtDate();
+    }
 
     public String getSource() {
         return source;
@@ -56,8 +58,6 @@ public class SystemLog {
     public void setSource(String source) {
         this.source = source;
     }
-    
-    
 
     public int getId() {
         return id;
@@ -98,8 +98,5 @@ public class SystemLog {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    
-    
-    
-    
+
 }

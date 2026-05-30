@@ -10,14 +10,8 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
-/**
- * Filter bắt mọi exception chưa được xử lý (uncaught) từ toàn bộ ứng dụng.
- * Khi phát hiện exception, ghi vào bảng system_log mức ERROR kèm stack trace,
- * sau đó re-throw để hệ thống tiếp tục xử lý lỗi bình thường (hiển thị trang lỗi).
- *
- * Vì là @WebFilter("/*"), filter này chạy SAU EncodingFilter và SecurityFilter.
- * Thứ tự thực thi phụ thuộc vào thứ tự khai báo trong web.xml hoặc thứ tự load.
- */
+
+
 @WebFilter("/*")
 public class SystemLogFilter implements Filter {
 
@@ -36,7 +30,9 @@ public class SystemLogFilter implements Filter {
             }
 
             String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
-            SystemLogger.error(source, message, e);
+            SystemLogger.error("hệ thống", source, message, e);
+
+            // Re-throw để server tiếp tục xử lý (hiển thị trang lỗi 500)
             throw e;
         }
     }

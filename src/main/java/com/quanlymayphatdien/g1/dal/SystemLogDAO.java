@@ -37,24 +37,43 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
 
     @Override
     public int insert(SystemLog t) {
-        String sql = "INSERT INTO system_log(level, source, message, stack_trace) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO system_log(level, module, source, message, stack_trace) VALUES(?,?,?,?,?)";
         try (Connection c = getConnection();
              PreparedStatement p = c.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-            p.setString(1, t.getLevel());
-            p.setString(2, t.getSource());
-            p.setString(3, t.getMessage());
-            p.setString(4, t.getStackTrace());
+
+
+            p.setString(1, t.getLevel() != null ? t.getLevel() : "ERROR");
+
+
+            p.setString(2, t.getModule() != null ? t.getModule() : "OTHER");
+            
+            if (t.getSource() != null) {
+                p.setString(3, t.getSource());
+            } else {
+                p.setNull(3, java.sql.Types.VARCHAR);
+            }
+
+            p.setString(4, t.getMessage() != null ? t.getMessage() : "(no message)");
+
+            if (t.getStackTrace() != null) {
+                p.setString(5, t.getStackTrace());
+            } else {
+                p.setNull(5, java.sql.Types.CLOB);
+            }
+
             p.executeUpdate();
             try (ResultSet rs = p.getGeneratedKeys()) {
                 if (rs.next()) return rs.getInt(1);
             }
         } catch (Exception e) {
-            e.printStackTrace(); 
+            e.printStackTrace();
         }
         return -1;
     }
 
-    public List<SystemLog> findByFilter(String level, String search, String dateFrom, String dateTo, int page, int pageSize) {
+
+    public List<SystemLog> findByFilter(String level, String module, String search,
+                                        String dateFrom, String dateTo, int page, int pageSize) {
         List<SystemLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
@@ -65,11 +84,15 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
             params.add(level.trim());
         }
 
+        if (module != null && !module.trim().isEmpty()) {
+            where.append("AND module = ? ");
+            params.add(module.trim());
+        }
+
         if (search != null && !search.trim().isEmpty()) {
-            where.append("AND (message LIKE ? OR source LIKE ?) ");
+            where.append("AND (message LIKE ? OR source LIKE ? OR module LIKE ?) ");
             String keyword = "%" + search.trim() + "%";
-            params.add(keyword);
-            params.add(keyword);
+            params.add(keyword); params.add(keyword); params.add(keyword);
         }
 
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
@@ -94,14 +117,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
             p.setInt(idx, (page - 1) * pageSize);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                SystemLog log = new SystemLog();
-                log.setId(rs.getInt("id"));
-                log.setLevel(rs.getString("level"));
-                log.setSource(rs.getString("source"));
-                log.setMessage(rs.getString("message"));
-                log.setStackTrace(rs.getString("stack_trace"));
-                log.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
-                list.add(log);
+                list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -114,6 +130,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         SystemLog log = new SystemLog();
         log.setId(rs.getInt("id"));
         log.setLevel(rs.getString("level"));
+        log.setModule(rs.getString("module"));
         log.setSource(rs.getString("source"));
         log.setMessage(rs.getString("message"));
         log.setStackTrace(rs.getString("stack_trace"));
@@ -121,8 +138,8 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         return log;
     }
 
-    /** Đếm tổng log theo filter — dùng cho phân trang*/
-    public int countByFilter(String level, String search, String dateFrom, String dateTo) {
+    /** Đếm tổng log theo filter — dùng cho phân trang */
+    public int countByFilter(String level, String module, String search, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder("WHERE 1=1 ");
 
@@ -130,10 +147,14 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
             where.append("AND level = ? ");
             params.add(level.trim());
         }
+        if (module != null && !module.trim().isEmpty()) {
+            where.append("AND module = ? ");
+            params.add(module.trim());
+        }
         if (search != null && !search.trim().isEmpty()) {
-            where.append("AND (message LIKE ? OR source LIKE ?) ");
+            where.append("AND (message LIKE ? OR source LIKE ? OR module LIKE ?) ");
             String kw = "%" + search.trim() + "%";
-            params.add(kw); params.add(kw);
+            params.add(kw); params.add(kw); params.add(kw);
         }
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
             where.append("AND created_at >= ? ");
