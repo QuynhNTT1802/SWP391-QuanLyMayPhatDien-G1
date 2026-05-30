@@ -4,6 +4,8 @@
  */
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
+import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
@@ -166,6 +168,28 @@ public class ReceiptController extends HttpServlet {
         request.setAttribute("generators", generators);
         request.setAttribute("brandMap", brandMap);
 
+        String orderIdStr = request.getParameter("orderId");
+        if (orderIdStr != null && !orderIdStr.isEmpty()) {
+            int orderId = Integer.parseInt(orderIdStr);
+            SaleOrder order = new SaleOrderDAO().findById(orderId);
+            if (order != null && "APPROVED".equalsIgnoreCase(order.getStatus())) {
+                List<OrderDetail> ods = new OrderDetailDAO().findByOrderId(orderId);
+                Receipt prefill = new Receipt();
+                prefill.setOrderId(orderId);
+                prefill.setNote("Tạo từ đơn " + order.getOrderCode());
+                List<ReceiptDetail> ds = new ArrayList<>();
+                for (OrderDetail od : ods) {
+                    ReceiptDetail rd = new ReceiptDetail();
+                    rd.setGeneratorId(od.getGeneratorId());
+                    rd.setQuantity(od.getQuantity());
+                    rd.setNote(od.getNote());
+                    ds.add(rd);
+                }
+                prefill.setDetails(ds);
+                request.setAttribute("receipt", prefill);
+                request.setAttribute("order", order);
+            }
+        }
         request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
     }
 
@@ -217,7 +241,9 @@ public class ReceiptController extends HttpServlet {
         }
         try {
             warehouseId = Integer.parseInt(whIdStr);
-            if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
+            if (warehouseId <= 0) {
+                errors.add("Vui lòng chọn kho");
+            }
         } catch (NumberFormatException e) {
             errors.add("Kho không hợp lệ");
         }
@@ -231,9 +257,17 @@ public class ReceiptController extends HttpServlet {
         if (genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
                 int genId = 0, qty = 0;
-                try { genId = Integer.parseInt(genIds[i]); } catch (NumberFormatException ignored) {}
-                try { qty = Integer.parseInt(qtys[i]); } catch (NumberFormatException ignored) {}
-                if (genId <= 0 || qty <= 0) continue;
+                try {
+                    genId = Integer.parseInt(genIds[i]);
+                } catch (NumberFormatException ignored) {
+                }
+                try {
+                    qty = Integer.parseInt(qtys[i]);
+                } catch (NumberFormatException ignored) {
+                }
+                if (genId <= 0 || qty <= 0) {
+                    continue;
+                }
 
                 ReceiptDetail d = new ReceiptDetail();
                 d.setGeneratorId(genId);
@@ -243,7 +277,9 @@ public class ReceiptController extends HttpServlet {
                 details.add(d);
             }
         }
-        if (details.isEmpty()) errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
+        if (details.isEmpty()) {
+            errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
+        }
 
         if (!errors.isEmpty()) {
             Receipt form = new Receipt();
@@ -264,7 +300,13 @@ public class ReceiptController extends HttpServlet {
         r.setWarehouseId(warehouseId);
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
-
+        String oid = request.getParameter("orderId");
+        if (oid != null && !oid.isEmpty()) {
+            try {
+                r.setOrderId(Integer.parseInt(oid));
+            } catch (NumberFormatException ignored) {
+            }
+        }
         int receiptId = receiptDAO.insert(r);
         if (receiptId <= 0) {
             errors.add("Không thể tạo phiếu, vui lòng thử lại");
