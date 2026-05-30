@@ -5,8 +5,9 @@
 --%>
 
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c"   uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn"  uri="http://java.sun.com/jsp/jstl/functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -304,10 +305,18 @@
                                                         <div style="font-weight:600;color:var(--fg);">${log.username}</div>
                                                     </td>
                                                     <td>
-                                                        <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>">${log.action}</span>
+                                                        <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>"><c:choose><c:when test="${log.action == 'CREATE'}">Thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${log.action == 'DELETE'}">Xoá</c:when><c:otherwise>${log.action}</c:otherwise></c:choose></span>
                                                     </td>
                                                     <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
-                                                    <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">${log.details}</td>
+                                                     <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                                         <%-- Ẩn đuôi '| module:...' là metadata nội bộ dùng cho fallback query --%>
+                                                         <c:choose>
+                                                             <c:when test="${fn:contains(log.details, ' | module:')}">
+                                                                 ${fn:substringBefore(log.details, ' | module:')}
+                                                             </c:when>
+                                                             <c:otherwise>${log.details}</c:otherwise>
+                                                         </c:choose>
+                                                     </td>
                                                 </tr>
                                             </c:forEach>
                                         </c:otherwise>

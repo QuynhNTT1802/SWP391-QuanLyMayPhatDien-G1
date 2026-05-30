@@ -26,8 +26,10 @@ public class SecurityFilter implements Filter {
         Map.entry("/admin/role/edit",      "roles.update"),
         Map.entry("/admin/role/save",      "roles.update"),
         Map.entry("/admin/forgot-password","forgot_pw.process"),
-        Map.entry("/admin/categories",     "categories.view")
+        Map.entry("/admin/categories",     "categories.view"),
+        Map.entry("/admin/system-log",     "system_log.view")
     );
+
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
