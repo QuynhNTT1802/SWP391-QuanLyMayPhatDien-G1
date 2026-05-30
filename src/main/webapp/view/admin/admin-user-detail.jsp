@@ -90,7 +90,7 @@
                         </c:forEach>
                         <c:choose>
                             <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
+                            <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
                         </c:choose>
                     </div>
                 </div>
@@ -166,7 +166,7 @@
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                        <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
+                                        <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
                                     </c:choose>
                                 </div>
                             </div>
@@ -193,27 +193,24 @@
                                 <div class="actlog-empty">Chưa có hoạt động nào.</div>
                             </c:when>
                             <c:otherwise>
-                                <div class="actlog">
-                                    <c:forEach var="log" items="${activityLogs}" varStatus="st">
-                                        <div class="actlog-row">
-                                            <div class="actlog-time"><c:out value="${logDates[st.index]}"/></div>
-                                            <div class="actlog-user">
-                                                <span class="avatar-dot"><c:out value="${fn:substring(log.username,0,1)}"/></span>
-                                                <c:out value="${log.username}"/>
-                                            </div>
-                                            <div class="actlog-main">
-                                                <c:choose>
-                                                    <c:when test="${log.action == 'CREATE'}"><span class="act-badge act-create">Tạo mới</span></c:when>
-                                                    <c:when test="${log.action == 'UPDATE'}"><span class="act-badge act-update">Cập nhật</span></c:when>
-                                                    <c:when test="${log.action == 'ACTIVATE'}"><span class="act-badge act-activate">Kích hoạt</span></c:when>
-                                                    <c:when test="${log.action == 'DEACTIVATE'}"><span class="act-badge act-deactivate">Khóa</span></c:when>
-                                                    <c:otherwise><span class="act-badge act-update"><c:out value="${log.action}"/></span></c:otherwise>
-                                                </c:choose>
-                                                <div class="actlog-detail"><c:out value="${log.details}"/></div>
-                                            </div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
+                                <table class="actlog-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-user">Người thực hiện</th>
+                                            <th>Hành động</th>
+                                            <th class="col-time">Thời gian</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach var="log" items="${activityLogs}" varStatus="st">
+                                            <tr>
+                                                <td class="col-user"><c:out value="${log.username}"/></td>
+                                                <td><c:out value="${log.details}"/></td>
+                                                <td class="col-time"><c:out value="${logDates[st.index]}"/></td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
                             </c:otherwise>
                         </c:choose>
                     </section>

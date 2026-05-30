@@ -216,42 +216,31 @@
                                                     <h3 class="section-title">Lịch sử thao tác</h3>
                                                 </div>
                                             </div>
-                                            <div class="info-grid">
-                                                <c:choose>
-                                                    <c:when test="${empty activityLogs}">
-                                                        <p>Chưa có hoạt động nào.</p>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <table class="users">
-                                                            <thead>
+                                            <c:choose>
+                                                <c:when test="${empty activityLogs}">
+                                                    <div class="actlog-empty">Chưa có hoạt động nào.</div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <table class="actlog-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="col-user">Người thực hiện</th>
+                                                                <th>Hành động</th>
+                                                                <th class="col-time">Thời gian</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <c:forEach var="log" items="${activityLogs}" varStatus="st">
                                                                 <tr>
-                                                                    <th>Thời gian</th>
-                                                                    <th>Người thực hiện</th>
-                                                                    <th>Hành động</th>
-                                                                    <th>Chi tiết</th>
+                                                                    <td class="col-user"><c:out value="${log.username}"/></td>
+                                                                    <td><c:out value="${log.details}"/></td>
+                                                                    <td class="col-time"><c:out value="${logDates[st.index]}"/></td>
                                                                 </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <c:forEach var="log" items="${activityLogs}">
-                                                                    <tr>
-                                                                        <td><fmt:formatDate value="${log.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                                                        <td><c:out value="${log.username}"/></td>
-                                                                        <td>
-                                                                            <c:choose>
-                                                                                <c:when test="${log.action == 'CREATE'}"><span class="pill status-active">Tạo mới</span></c:when>
-                                                                                <c:when test="${log.action == 'UPDATE'}"><span class="pill role-admin">Cập nhật</span></c:when>
-                                                                                <c:when test="${log.action == 'ACTIVATE'}"><span class="pill status-active">Kích hoạt</span></c:when>
-                                                                                <c:when test="${log.action == 'DEACTIVATE'}"><span class="pill status-active" style="color:var(--danger)">Khóa</span></c:when>
-                                                                            </c:choose>
-                                                                        </td>
-                                                                        <td><c:out value="${log.details}"/></td>
-                                                                    </tr>
-                                                                </c:forEach>
-                                                            </tbody>
-                                                        </table>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
+                                                            </c:forEach>
+                                                        </tbody>
+                                                    </table>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </section>
                         </div>
                     </div>

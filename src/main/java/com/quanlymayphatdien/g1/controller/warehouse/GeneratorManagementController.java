@@ -157,7 +157,13 @@ public class GeneratorManagementController extends HttpServlet {
 
                 ActivityLogDAO logDAO = new ActivityLogDAO();
                 List<ActivityLog> logs = logDAO.getLogsByEntity("generator", id, 1, 20);
+                DateTimeFormatter logFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                List<String> logDates = new ArrayList<>();
+                for (ActivityLog log : logs) {
+                    logDates.add(log.getCreatedAt() != null ? log.getCreatedAt().format(logFmt) : "—");
+                }
                 request.setAttribute("activityLogs", logs);
+                request.setAttribute("logDates", logDates);
                 request.getRequestDispatcher("/view/warehouse/generator-detail.jsp").forward(request, response);
                 return;
             }
