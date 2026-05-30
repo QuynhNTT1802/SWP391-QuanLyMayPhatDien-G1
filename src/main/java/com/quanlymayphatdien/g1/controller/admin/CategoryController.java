@@ -551,7 +551,7 @@ public class CategoryController extends HttpServlet {
     }
 
     /**
-     * Log xóa danh mục. Định dạng: Xóa: 'Honda' (Thương hiệu) — Trạng thái
+     * Log khóa danh mục. Định dạng: Khóa: 'Honda' (Thương hiệu) — Trạng thái
      * trước: Hoạt động
      */
     private void logDelete(HttpServletRequest request, Integer entityId,
@@ -565,7 +565,7 @@ public class CategoryController extends HttpServlet {
             String typeLabel = TYPE_LABELS.getOrDefault(type, type);
             String statusLabel = statusLabel(status);
 
-            String description = "Xóa: '" + name + "' (" + typeLabel + ") — Trạng thái trước: " + statusLabel
+            String description = "Khóa: '" + name + "' (" + typeLabel + ") — Trạng thái trước: " + statusLabel
                     + " | module:" + (module != null ? module : "");
 
             insertLog(user, entityId, name, "DELETE", description);
