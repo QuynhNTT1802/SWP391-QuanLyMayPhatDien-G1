@@ -265,11 +265,45 @@ public class OrderController extends HttpServlet {
  
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
+        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
+        GeneratorDAO generatorDao = new GeneratorDAO();
+
+        int orderId = Integer.parseInt(request.getParameter("orderId"));
+
         try {
-            SaleOrder order = new SaleOrder();
-            order.setOrderId(Integer.parseInt(request.getParameter("orderId")));
-            order.setOrderCode(request.getParameter("orderCode"));
+            // Bước 1: Tính total + chuẩn bị list detail mới
+            String[] generatorIds = request.getParameterValues("generatorIds");
+            List<OrderDetail> newDetails = new ArrayList<>();
+            double totalAmount = 0;
+
+            if (generatorIds != null) {
+                for (String genIdStr : generatorIds) {
+                    int genId = Integer.parseInt(genIdStr);
+                    String qtyStr = request.getParameter("quantity_" + genId);
+                    int qty = (qtyStr != null && !qtyStr.isEmpty()) ? Integer.parseInt(qtyStr) : 1;
+
+                    Generator gen = generatorDao.findById(genId);
+                    if (gen != null) {
+                        OrderDetail detail = new OrderDetail();
+                        detail.setOrderId(orderId);
+                        detail.setGeneratorId(genId);
+                        detail.setQuantity(qty);
+                        detail.setUnitPrice(gen.getUnitPrice().doubleValue());
+                        newDetails.add(detail);
+                        totalAmount += gen.getUnitPrice().doubleValue() * qty;
+                    }
+                }
+            }
+
+            // Bước 2: Load phiếu, set field mới
+            SaleOrder order = saleorderdao.findById(orderId);
+            if (order == null) {
+                request.getSession().setAttribute("message", "Không tìm thấy phiếu.");
+                response.sendRedirect(request.getContextPath() + "/order?action=list");
+                return;
+            }
             order.setCustomerName(request.getParameter("customerName"));
             order.setCustomerPhone(request.getParameter("customerPhone"));
             order.setCustomerEmail(request.getParameter("customerEmail"));
@@ -278,14 +312,18 @@ public class OrderController extends HttpServlet {
             order.setCustomerCompany(request.getParameter("customerCompany"));
             order.setCustomerNote(request.getParameter("customerNote"));
             order.setNote(request.getParameter("internalNote"));
+            order.setTotalAmount(totalAmount);
 
-            boolean success = saleorderdao.update(order);
+            // Bước 3: Update phiếu — DAO sẽ xử lý transaction nội bộ
+            boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 
-            if (success) {
+            if (ok) {
                 request.getSession().setAttribute("message", "Cập nhật đơn hàng thành công.");
             } else {
-                request.getSession().setAttribute("message", "Cập nhật thất bại.");
+                request.getSession().setAttribute("message",
+                        "Phiếu đã được duyệt hoặc thay đổi trạng thái. Vui lòng tải lại.");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());

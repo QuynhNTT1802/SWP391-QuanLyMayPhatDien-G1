@@ -5,6 +5,7 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Admin;
+import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.sql.Connection;
@@ -149,7 +150,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public List<SaleOrder> findAll() {
-        List<SaleOrder> list = new ArrayList<>();        
+        List<SaleOrder> list = new ArrayList<>();
         String sql = "SELECT * FROM sale_order ORDER BY created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
@@ -168,8 +169,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + "customer_email = ?, customer_address = ?, customer_tax_code = ?, customer_type = ?, "
                 + "customer_company_name = ?, customer_note = ?, created_by = ?, approved_by = ?, "
                 + "cancelled_by = ?, updated_by = ?, status = ?, total_amount = ?, note = ?, "
-                + "reject_reason = ?, order_date = ?, approved_at = ?, cancelled_at = ?, updated_at = ? "
-                + "WHERE order_id = ?";
+                + "reject_reason = ?, order_date = ?, approved_at = ?, cancelled_at = ?, updated_at = ?, customer_type_id = ? "
+                + "WHERE order_id = ? AND status = ?";
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -194,7 +195,9 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 ps.setTimestamp(19, s.getApprovedAt() != null ? new java.sql.Timestamp(s.getApprovedAt().getTime()) : null);
                 ps.setTimestamp(20, s.getCancelledAt() != null ? new java.sql.Timestamp(s.getCancelledAt().getTime()) : null);
                 ps.setTimestamp(21, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
-                ps.setInt(22, s.getOrderId());
+                ps.setInt(22, s.getCustomerTypeId());
+                ps.setInt(23, s.getOrderId());
+                ps.setString(24, GlobalUtils.STATUS_PENDING);
                 ps.executeUpdate();
                 conn.commit();
                 return true;
@@ -293,10 +296,9 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public int insert(SaleOrder s) {
         String sql = "INSERT INTO sale_order (order_code, customer_name, customer_phone, customer_email, "
                 + "customer_address, customer_tax_code, customer_type, customer_company_name, customer_note, "
-                + "created_by, status, total_amount, note, order_date) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '" + GlobalUtils.STATUS_PENDING + "', ?, ?, ?)";
-        try (Connection conn = getConnection(); 
-                 PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+                + "created_by, status, total_amount, note, order_date, customer_type_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '" + GlobalUtils.STATUS_PENDING + "', ?, ?, ?, ?)";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, s.getOrderCode());
             ps.setString(2, s.getCustomerName());
             ps.setString(3, s.getCustomerPhone());
@@ -349,13 +351,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setCustomerNote(rs.getString("customer_note"));
 
         s.setCreatedBy(rs.getInt("created_by"));
-        
+
         int approvedBy = rs.getInt("approved_by");
         s.setApprovedBy(rs.wasNull() ? 0 : approvedBy);
-        
+
         int cancelledBy = rs.getInt("cancelled_by");
         s.setCancelledBy(rs.wasNull() ? 0 : cancelledBy);
-        
+
         int updatedBy = rs.getInt("updated_by");
         s.setUpdatedBy(rs.wasNull() ? 0 : updatedBy);
 
@@ -363,7 +365,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
         s.setRejectReason(rs.getString("reject_reason"));
-        
+
         if (rs.getTimestamp("order_date") != null) {
             s.setOrderDate(new Date(rs.getTimestamp("order_date").getTime()));
         }
@@ -379,12 +381,81 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
-        
+
         Object customerTypeIdObj = rs.getObject("customer_type_id");
         if (customerTypeIdObj != null) {
             s.setCustomerTypeId(((Number) customerTypeIdObj).intValue());
         }
         return s;
+    }
+
+    public boolean updateWithDetails(SaleOrder s, List<OrderDetail> newDetails) {
+        String updateSql = "UPDATE sale_order SET customer_name = ?, customer_phone = ?, "
+                + "customer_email = ?, customer_address = ?, customer_tax_code = ?, "
+                + "customer_company_name = ?, customer_note = ?, total_amount = ?, note = ?, "
+                + "updated_at = NOW() "
+                + "WHERE order_id = ? AND status = ?";
+        String deleteDetailSql = "DELETE FROM order_detail WHERE order_id = ?";
+        String insertDetailSql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?)";
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. Update phiếu (chỉ khi vẫn PENDING)
+                try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                    ps.setString(1, s.getCustomerName());
+                    ps.setString(2, s.getCustomerPhone());
+                    ps.setString(3, s.getCustomerEmail());
+                    ps.setString(4, s.getCustomerAddress());
+                    ps.setString(5, s.getCustomerTaxCode());
+                    ps.setString(6, s.getCustomerCompany());
+                    ps.setString(7, s.getCustomerNote());
+                    ps.setDouble(8, s.getTotalAmount());
+                    ps.setString(9, s.getNote());
+                    ps.setInt(10, s.getOrderId());
+                    ps.setString(11, GlobalUtils.STATUS_PENDING);
+
+                    int rows = ps.executeUpdate();
+                    if (rows == 0) {
+                        conn.rollback();    // không match -> phiếu đã đổi status
+                        return false;
+                    }
+                }
+
+                // 2. Xóa detail cũ
+                try (PreparedStatement ps = conn.prepareStatement(deleteDetailSql)) {
+                    ps.setInt(1, s.getOrderId());
+                    ps.executeUpdate();
+                }
+
+                // 3. Insert detail mới
+                try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
+                    for (OrderDetail d : newDetails) {
+                        ps.setInt(1, d.getOrderId());
+                        ps.setInt(2, d.getGeneratorId());
+                        ps.setInt(3, d.getQuantity());
+                        ps.setDouble(4, d.getUnitPrice());
+                        ps.setString(5, d.getNote());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }
