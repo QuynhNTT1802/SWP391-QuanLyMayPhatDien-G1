@@ -51,7 +51,7 @@
                 <div class="alert alert-success">
                     <c:choose>
                         <c:when test="${param.msg == 'success'}">Lưu danh mục thành công!</c:when>
-                        <c:when test="${param.msg == 'deleted'}">Xoá danh mục thành công!</c:when>
+                        <c:when test="${param.msg == 'deleted'}">Khóa danh mục thành công!</c:when>
                         <c:otherwise>${param.msg}</c:otherwise>
                     </c:choose>
                 </div>
@@ -186,9 +186,18 @@
                                                     <button class="icon-mini" onclick="location.href='${pageContext.request.contextPath}/admin/category/edit?id=${cat.id}&module=${currentModule}'" title="Chỉnh sửa">
                                                         <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                     </button>
-                                                    <button class="icon-mini danger" onclick="confirmDelete(${cat.id}, '<c:out value="${cat.name}"/>')" title="Xoá">
-                                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                                    </button>
+                                                    <c:choose>
+                                                        <c:when test="${cat.status == 'active'}">
+                                                            <button class="icon-mini danger" onclick="confirmDelete(${cat.id}, '<c:out value="${cat.name}"/>')" title="Khóa">
+                                                                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            </button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <button class="icon-mini" disabled style="opacity:0.3;cursor:not-allowed;" title="Đã khóa">
+                                                                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            </button>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </div>
                                             </td>
                                         </tr>
@@ -243,7 +252,7 @@
                                         <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
                                         <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Thêm mới</option>
                                         <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
-                                        <option value="DELETE" ${logAction == 'DELETE' ? 'selected' : ''}>Xóa</option>
+                                        <option value="DELETE" ${logAction == 'DELETE' ? 'selected' : ''}>Khóa</option>
                                     </select>
 
                                     <%-- Khoảng ngày --%>
@@ -305,7 +314,7 @@
                                                         <div style="font-weight:600;color:var(--fg);">${log.username}</div>
                                                     </td>
                                                     <td>
-                                                        <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>"><c:choose><c:when test="${log.action == 'CREATE'}">Thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${log.action == 'DELETE'}">Xoá</c:when><c:otherwise>${log.action}</c:otherwise></c:choose></span>
+                                                        <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>"><c:choose><c:when test="${log.action == 'CREATE'}">Thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${log.action == 'DELETE'}">Khóa</c:when><c:otherwise>${log.action}</c:otherwise></c:choose></span>
                                                     </td>
                                                     <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
                                                      <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
@@ -393,7 +402,7 @@
 
 <div class="modal-host" id="deleteModal">
     <div class="modal">
-        <h3>Xác nhận xoá</h3>
+        <h3>Xác nhận khóa</h3>
         <p id="deleteMsg">Bạn có chắc muốn khoá danh mục này? Danh mục sẽ bị chuyển sang trạng thái không hoạt động.</p>
         <div class="actions">
             <button class="btn" onclick="closeDeleteModal()">Huỷ</button>
@@ -401,7 +410,7 @@
                 <input type="hidden" name="id" id="deleteId"/>
                 <input type="hidden" name="module" value="${currentModule}"/>
                 <input type="hidden" name="type" value="${currentType}"/>
-                <button type="submit" class="btn btn-danger">Xoá</button>
+                <button type="submit" class="btn btn-danger">Khóa</button>
             </form>
         </div>
     </div>
@@ -410,7 +419,7 @@
 <script>
 function confirmDelete(id, name) {
     document.getElementById('deleteId').value = id;
-    document.getElementById('deleteMsg').textContent = 'Bạn có chắc muốn xoá danh mục "' + name + '"?';
+    document.getElementById('deleteMsg').textContent = 'Bạn có chắc muốn khóa danh mục "' + name + '"?';
     document.getElementById('deleteModal').classList.add('open');
 }
 function closeDeleteModal() {
