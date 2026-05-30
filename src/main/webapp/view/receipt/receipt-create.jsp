@@ -159,16 +159,19 @@
                                         <div class="field-row-2">
                                             <div class="field">
                                                 <label>Loại phiếu</label>
-                                                <select name="receiptType" required>
-                                                    <option value="">-- Chọn loại --</option>
-                                                    <option value="IMPORT" <c:if test="${receipt.receiptType == 'IMPORT'}">selected</c:if>>Nhập kho</option>
+                                                <select name="receiptType" required <c:if test="${not empty receipt.orderId}">disabled</c:if>>
+                                                        <option value="">-- Chọn loại --</option>
+                                                        <option value="IMPORT" <c:if test="${receipt.receiptType == 'IMPORT'}">selected</c:if>>Nhập kho</option>
                                                     <option value="EXPORT" <c:if test="${receipt.receiptType == 'EXPORT'}">selected</c:if>>Xuất kho</option>
                                                     </select>
-                                                </div>
-                                                <div class="field">
-                                                    <label>Kho</label>
-                                                    <select name="warehouseId" required>
-                                                        <option value="">-- Chọn kho --</option>
+                                                <c:if test="${not empty receipt.orderId}">
+                                                    <input type="hidden" name="receiptType" value="EXPORT" />
+                                                </c:if>
+                                            </div>
+                                            <div class="field">
+                                                <label>Kho</label>
+                                                <select name="warehouseId" required>
+                                                    <option value="">-- Chọn kho --</option>
                                                     <c:forEach var="wh" items="${warehouses}">
                                                         <option value="${wh.warehouseId}" <c:if test="${receipt.warehouseId == wh.warehouseId}">selected</c:if>>${wh.name}</option>
                                                     </c:forEach>
