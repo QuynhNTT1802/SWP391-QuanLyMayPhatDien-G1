@@ -9,35 +9,37 @@ public class Generator {
     private String model;
     private BigDecimal powerRating;
     private BigDecimal unitPrice;
-    private int stockQuantity;
+    private String frequency;
+    private BigDecimal weight;
     private String description;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Integer createdBy;
     private Integer updatedBy;
-    private String frequency;
-    private BigDecimal weight;
     private List<Category> categories;
 
     public Generator() {
     }
 
     public Generator(int id, String model, BigDecimal powerRating,
-            BigDecimal unitPrice, int stockQuantity, String description,
-            String status, LocalDateTime createdAt, LocalDateTime updatedAt,
-            Integer createdBy, Integer updatedBy) {
+            BigDecimal unitPrice, String frequency, BigDecimal weight,
+            String description, String status, LocalDateTime createdAt,
+            LocalDateTime updatedAt, Integer createdBy, Integer updatedBy,
+            List<Category> categories) {
         this.id = id;
         this.model = model;
         this.powerRating = powerRating;
         this.unitPrice = unitPrice;
-        this.stockQuantity = stockQuantity;
+        this.frequency = frequency;
+        this.weight = weight;
         this.description = description;
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.createdBy = createdBy;
         this.updatedBy = updatedBy;
+        this.categories = categories;
     }
 
     public int getId() {
@@ -72,12 +74,20 @@ public class Generator {
         this.unitPrice = unitPrice;
     }
 
-    public int getStockQuantity() {
-        return stockQuantity;
+    public String getFrequency() {
+        return frequency;
     }
 
-    public void setStockQuantity(int stockQuantity) {
-        this.stockQuantity = stockQuantity;
+    public void setFrequency(String frequency) {
+        this.frequency = frequency;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
     }
 
     public String getDescription() {
@@ -128,38 +138,12 @@ public class Generator {
         this.updatedBy = updatedBy;
     }
 
-    public String getFrequency() {
-        return frequency;
-    }
-
-    public void setFrequency(String frequency) {
-        this.frequency = frequency;
-    }
-
-    public BigDecimal getWeight() {
-        return weight;
-    }
-
-    public void setWeight(BigDecimal weight) {
-        this.weight = weight;
-    }
-
     public List<Category> getCategories() {
         return categories;
     }
 
     public void setCategories(List<Category> categories) {
         this.categories = categories;
-    }
-
-    public String getCategoryName(String type) {
-        if (categories == null) return null;
-        for (Category c : categories) {
-            if (type.equals(c.getType())) {
-                return c.getName();
-            }
-        }
-        return null;
     }
 
     @Override
@@ -169,9 +153,10 @@ public class Generator {
                 + ", model='" + model + '\''
                 + ", powerRating=" + powerRating
                 + ", unitPrice=" + unitPrice
-                + ", stockQuantity=" + stockQuantity
+                + ", frequency='" + frequency + '\''
+                + ", weight=" + weight
+                + ", description='" + description + '\''
                 + ", status='" + status + '\''
                 + '}';
     }
-
 }

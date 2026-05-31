@@ -98,4 +98,14 @@ public class Warehouse {
     public void setTotalInventory(int totalInventory) {
         this.totalInventory = totalInventory;
     }
+
+    private int itemCount;
+
+    public int getItemCount() {
+        return itemCount;
+    }
+
+    public void setItemCount(int itemCount) {
+        this.itemCount = itemCount;
+    }
 }

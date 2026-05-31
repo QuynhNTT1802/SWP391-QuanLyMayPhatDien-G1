@@ -1,8 +1,6 @@
-
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-
 
 <c:set var="activePage" value="${requestScope.activePage}"/>
 
@@ -48,24 +46,22 @@
     <nav class="nav">
         <div class="nav-section">Tổng quan</div>
 
-
         <c:if test="${not empty perms and perms.contains('dashboard.view')}">
         <a href="${pageContext.request.contextPath}/admin/dashboard">
-
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Dashboard
         </a>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('inventory.view')}">
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/inventory">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
             Tồn kho
         </a>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
-        <a href="#">
+        <a href="${pageContext.request.contextPath}/receipt">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
             Phiếu nhập/xuất
         </a>
@@ -122,6 +118,11 @@
             Phân quyền
         </a>
         </c:if>
+        
+        <a href="${pageContext.request.contextPath}/warehouse/generators">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Máy phát điện
+        </a>
 
         <c:if test="${not empty perms and perms.contains('forgot_pw.process')}">
         <a href="${pageContext.request.contextPath}/admin/forgot-password">
