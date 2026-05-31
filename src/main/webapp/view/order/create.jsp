@@ -5,6 +5,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -24,10 +25,10 @@
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-            <div>
-                <header class="topbar">
-                    <h1>Tạo đơn hàng</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Thêm mới</span>
+                <div>
+                    <header class="topbar">
+                        <h1>Tạo đơn hàng</h1>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Thêm mới</span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -43,7 +44,7 @@
                         </div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
-                    
+
                     <c:if test="${not empty error}">
                         <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
                             <c:out value="${error}"/>
@@ -120,90 +121,39 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="form-section">
-                                <div class="form-section-head">
-                                    <div class="form-section-num">03 — CHỌN MÁY PHÁT ĐIỆN</div>
-                                    <h3 class="form-section-title">Sản phẩm đặt hàng</h3>
-                                    <div class="form-section-desc">Chọn máy phát điện cần bán.</div>
-                                </div>
-                                <div id="generator-list">
+                            <div id="generator-list">
+                                <c:forEach var="gen" items="${generators}">
                                     <div class="generator-item" style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
                                         <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-                                            <input type="checkbox" name="generatorIds" value="1" style="width:18px;height:18px;accent-color:var(--accent);" />
+                                            <!-- Checkbox lấy ID máy -->
+                                            <input type="checkbox" name="generatorIds" value="${gen.id}" style="width:18px;height:18px;accent-color:var(--accent);" />
                                             <div style="flex:1;">
-                                                <div style="font-weight:600;font-size:15px;">Honda EU2200i</div>
-                                                <div style="font-size:13px;color:var(--muted);margin-top:2px;">Hãng: Honda | Công suất: 2.2kW</div>
+                                                <div style="font-weight:600;font-size:15px;">
+                                                    <c:out value="${gen.model}"/>
+                                                </div>
+                                                <div style="font-size:13px;color:var(--muted);margin-top:2px;">
+                                                    Công suất: <c:out value="${gen.powerRating}"/> kW
+                                                </div>
                                             </div>
-                                            <div style="font-weight:600;color:var(--accent);font-size:15px;">25.000.000 ₫</div>
+                                            <!-- Hiển thị giá -->
+                                            <div style="font-weight:600;color:var(--accent);font-size:15px;">
+                                                <fmt:formatNumber value="${gen.unitPrice}" type="currency" currencySymbol="₫"/>
+                                            </div>
                                         </label>
-                                        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
-                                            <label class="field-label" style="margin:0;">Số lượng:</label>
-                                            <input type="number" name="quantities[1]" min="1" value="1" class="input" style="width:100px;" />
-                                        </div>
-                                    </div>
 
-                                    <div class="generator-item" style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
-                                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-                                            <input type="checkbox" name="generatorIds" value="2" style="width:18px;height:18px;accent-color:var(--accent);" />
-                                            <div style="flex:1;">
-                                                <div style="font-weight:600;font-size:15px;">Yamaha EF2000</div>
-                                                <div style="font-size:13px;color:var(--muted);margin-top:2px;">Hãng: Yamaha | Công suất: 2.0kW</div>
-                                            </div>
-                                            <div style="font-weight:600;color:var(--accent);font-size:15px;">22.000.000 ₫</div>
-                                        </label>
+                                        <!-- Input số lượng: Tên phải là quantity_ID để khớp với Controller -->
                                         <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
                                             <label class="field-label" style="margin:0;">Số lượng:</label>
-                                            <input type="number" name="quantities[2]" min="1" value="1" class="input" style="width:100px;" />
+                                            <input type="number" name="quantity_${gen.id}" min="1" value="1" class="input" style="width:100px;" />
                                         </div>
                                     </div>
-
-                                    <div class="generator-item" style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
-                                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-                                            <input type="checkbox" name="generatorIds" value="3" style="width:18px;height:18px;accent-color:var(--accent);" />
-                                            <div style="flex:1;">
-                                                <div style="font-weight:600;font-size:15px;">Kawasaki KLR250</div>
-                                                <div style="font-size:13px;color:var(--muted);margin-top:2px;">Hãng: Kawasaki | Công suất: 2.5kW</div>
-                                            </div>
-                                            <div style="font-weight:600;color:var(--accent);font-size:15px;">30.000.000 ₫</div>
-                                        </label>
-                                        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
-                                            <label class="field-label" style="margin:0;">Số lượng:</label>
-                                            <input type="number" name="quantities[3]" min="1" value="1" class="input" style="width:100px;" />
-                                        </div>
-                                    </div>
-
-                                    <div class="generator-item" style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
-                                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-                                            <input type="checkbox" name="generatorIds" value="4" style="width:18px;height:18px;accent-color:var(--accent);" />
-                                            <div style="flex:1;">
-                                                <div style="font-weight:600;font-size:15px;">Mitsubishi MGD25SS</div>
-                                                <div style="font-size:13px;color:var(--muted);margin-top:2px;">Hãng: Mitsubishi | Công suất: 2.5kW</div>
-                                            </div>
-                                            <div style="font-weight:600;color:var(--accent);font-size:15px;">28.000.000 ₫</div>
-                                        </label>
-                                        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
-                                            <label class="field-label" style="margin:0;">Số lượng:</label>
-                                            <input type="number" name="quantities[4]" min="1" value="1" class="input" style="width:100px;" />
-                                        </div>
-                                    </div>
-
-                                    <div class="generator-item" style="border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
-                                        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-                                            <input type="checkbox" name="generatorIds" value="5" style="width:18px;height:18px;accent-color:var(--accent);" />
-                                            <div style="flex:1;">
-                                                <div style="font-weight:600;font-size:15px;">Hyundai HG7500i</div>
-                                                <div style="font-size:13px;color:var(--muted);margin-top:2px;">Hãng: Hyundai | Công suất: 7.5kW</div>
-                                            </div>
-                                            <div style="font-weight:600;color:var(--accent);font-size:15px;">45.000.000 ₫</div>
-                                        </label>
-                                        <div style="margin-top:12px;display:flex;gap:12px;align-items:center;">
-                                            <label class="field-label" style="margin:0;">Số lượng:</label>
-                                            <input type="number" name="quantities[5]" min="1" value="1" class="input" style="width:100px;" />
-                                        </div>
-                                    </div>
-                                </div>
+                                </c:forEach>
+                                <c:if test="${empty generators}">
+                                    <div style="padding:20px;text-align:center;color:var(--muted);">Không có máy phát điện nào đang hoạt động.</div>
+                                </c:if>
                             </div>
+
+
 
                             <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
                                 <a class="btn" href="${pageContext.request.contextPath}/order?action=list">Huỷ</a>
