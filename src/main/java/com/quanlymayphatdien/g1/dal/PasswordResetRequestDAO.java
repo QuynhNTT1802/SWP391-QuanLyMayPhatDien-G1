@@ -59,22 +59,40 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
         return list;
     }
 
-    public List<PasswordResetRequest> findAll(int page, int pageSize, String status) {
+    public List<PasswordResetRequest> findAll(int page, int pageSize, String status,
+            String search, String fromDate, String toDate) {
         List<PasswordResetRequest> list = new ArrayList<>();
-        String sql = "SELECT pr.*, u.name AS user_name, u.username, u.phone "
+        StringBuilder sql = new StringBuilder(
+                "SELECT pr.*, u.name AS user_name, u.username, u.phone "
                 + "FROM password_reset_request pr "
                 + "JOIN user u ON pr.user_id = u.id "
-                + (status != null && !status.isEmpty() ? " WHERE pr.status = ?" : "")
-                + " ORDER BY pr.created_at DESC LIMIT ? OFFSET ?";
+                + "WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND pr.status = ? ");
+            params.add(status);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND u.username LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(pr.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(pr.created_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY pr.created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            int i = 1;
-            if (status != null && !status.isEmpty()) {
-                statement.setString(i++, status);
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
             }
-            statement.setInt(i++, pageSize);
-            statement.setInt(i, (page - 1) * pageSize);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 list.add(getFromResultSet(resultSet));
@@ -87,14 +105,37 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
         return list;
     }
 
-    public int getTotalCountByStatus(String status) {
-        List<PasswordResetRequest> list = new ArrayList<>();
-        String sql = "SELECT COUNT(*) FROM password_reset_request " + (status != null && !status.isEmpty() ? "WHERE status = ? " : "");
+    public List<PasswordResetRequest> findAll(int page, int pageSize, String status) {
+        return findAll(page, pageSize, status, null, null, null);
+    }
+
+    public int getTotalCountByStatus(String status, String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM password_reset_request pr "
+                + "JOIN user u ON pr.user_id = u.id "
+                + "WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND pr.status = ? ");
+            params.add(status);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND u.username LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(pr.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(pr.created_at) <= ? ");
+            params.add(toDate);
+        }
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            if (status != null && !status.isEmpty()) {
-                statement.setString(1, status);
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
             }
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -106,6 +147,10 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
             closeResources();
         }
         return 0;
+    }
+
+    public int getTotalCountByStatus(String status) {
+        return getTotalCountByStatus(status, null, null, null);
     }
 
     public List<PasswordResetRequest> findByStatus(String status) {

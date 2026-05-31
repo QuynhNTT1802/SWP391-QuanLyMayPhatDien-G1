@@ -14,10 +14,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <style>
-        .wh-group { margin-bottom: 28px; }
-        .wh-group-header { display:flex; align-items:center; gap:12px; padding: 10px 0; border-bottom: 2px solid var(--accent); margin-bottom: 8px; }
-        .wh-group-header h3 { font-size: 15px; font-weight: 700; color: var(--accent); margin: 0; }
-        .wh-group-header .badge { background: var(--accent); color: #fff; font-size: 12px; padding: 2px 10px; border-radius: 20px; font-weight: 600; }
         .qty-cell { font-weight: 700; }
         .qty-low { color: var(--danger); }
         .qty-ok { color: var(--accent); }
@@ -46,14 +42,21 @@
                 </div>
             </div>
             <form method="get" action="${pageContext.request.contextPath}/inventory" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo model hoặc hãng" autocomplete="off" />
+                </div>
                 <select class="filter-select" name="warehouse" onchange="this.form.submit()">
                     <option value="">Kho: Tất cả</option>
                     <c:forEach var="wh" items="${warehouses}">
                         <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
                     </c:forEach>
                 </select>
-                <div class="spacer"></div>
-                <c:if test="${not empty selectedWarehouse}">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    Tìm kiếm
+                </button>
+                <c:if test="${not empty selectedWarehouse or not empty search}">
                     <a href="${pageContext.request.contextPath}/inventory" class="btn">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Xoá lọc
@@ -61,51 +64,67 @@
                 </c:if>
             </form>
             <div class="table-card" style="margin-top:16px;">
-                <c:choose>
-                    <c:when test="${empty inventoryList}">
-                        <div class="empty-state"><strong>Không có dữ liệu tồn kho</strong></div>
-                    </c:when>
-                    <c:otherwise>
-                        <c:forEach var="wh" items="${warehouseGroups}">
-                            <div class="wh-group">
-                                <div class="wh-group-header">
-                                    <h3>${wh.name}</h3>
-                                    <span class="badge">${wh.itemCount} mặt hàng</span>
-                                </div>
-                                <table class="users">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:40px;">#</th>
-                                            <th>Model</th>
-                                            <th>Hãng</th>
-                                            <th style="width:100px;">Số lượng</th>
-                                            <th style="width:160px;">Cập nhật</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:set var="idx" value="0"/>
-                                        <c:forEach var="item" items="${inventoryList}">
-                                            <c:if test="${item.warehouseId == wh.warehouseId}">
-                                                <c:set var="idx" value="${idx + 1}"/>
-                                                <tr>
-                                                    <td>${idx}</td>
-                                                    <td><strong>${item.generatorModel}</strong></td>
-                                                    <td>${item.generatorBrand}</td>
-                                                    <td>
-                                                        <span class="qty-cell ${item.quantity <= 3 ? 'qty-low' : 'qty-ok'}">
-                                                            ${item.quantity}
-                                                        </span>
-                                                    </td>
-                                                    <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
-                                                </tr>
-                                            </c:if>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
+                <table class="users">
+                    <thead>
+                        <tr>
+                            <th style="width:40px;">#</th>
+                            <th>Kho</th>
+                            <th>Model</th>
+                            <th>Hãng</th>
+                            <th style="width:100px;">Số lượng</th>
+                            <th style="width:160px;">Cập nhật</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:choose>
+                            <c:when test="${empty inventoryList}">
+                                <tr><td colspan="6">
+                                    <div class="empty-state"><strong>Không có dữ liệu tồn kho</strong></div>
+                                </td></tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="item" items="${inventoryList}" varStatus="st">
+                                    <tr>
+                                        <td>${fromIndex + st.index}</td>
+                                        <td>${item.warehouseName}</td>
+                                        <td><strong>${item.generatorModel}</strong></td>
+                                        <td>${item.generatorBrand}</td>
+                                        <td>
+                                            <span class="qty-cell ${item.quantity <= 3 ? 'qty-low' : 'qty-ok'}">
+                                                ${item.quantity}
+                                            </span>
+                                        </td>
+                                        <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
+                                    </tr>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                    </tbody>
+                </table>
+                <c:set var="filterParams" value="" />
+                <c:if test="${not empty selectedWarehouse}">
+                    <c:set var="filterParams" value="${filterParams}&warehouse=${selectedWarehouse}" />
+                </c:if>
+                <c:if test="${not empty search}">
+                    <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                </c:if>
+                <div class="pagination">
+                    <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                    <div class="controls">
+                        <c:if test="${currentPage > 1}">
+                            <a href="?page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${totalPages}" var="p">
+                            <c:choose>
+                                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                <c:otherwise><a href="?page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                            </c:choose>
                         </c:forEach>
-                    </c:otherwise>
-                </c:choose>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="?page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                        </c:if>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

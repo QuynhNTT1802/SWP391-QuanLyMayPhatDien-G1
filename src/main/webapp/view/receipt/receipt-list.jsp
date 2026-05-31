@@ -52,6 +52,7 @@
                                 <c:when test="${param.msg == 'created'}">Đã tạo phiếu thành công.</c:when>
                                 <c:when test="${param.msg == 'approved'}">Đã duyệt phiếu thành công.</c:when>
                                 <c:when test="${param.msg == 'rejected'}">Đã từ chối phiếu.</c:when>
+                                <c:when test="${param.msg == 'resubmitted'}">Đã gửi lại phiếu để duyệt.</c:when>
                                 <c:otherwise>${param.msg}</c:otherwise>
                             </c:choose>
                         </div>
@@ -65,6 +66,10 @@
                     <form method="get" action="${pageContext.request.contextPath}/receipt" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <input type="hidden" name="action" value="list" />
                         <input type="hidden" name="page" value="1" />
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, đơn, khách hàng, người tạo" autocomplete="off" />
+                        </div>
                         <select class="filter-select" name="type" onchange="this.form.submit()">
                             <option value="">Loại: Tất cả</option>
                             <option value="IMPORT" <c:if test="${typeFilter == 'IMPORT'}">selected</c:if>>Nhập kho</option>
@@ -73,6 +78,7 @@
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
                                 <option value="PENDING_RECONCILIATION" <c:if test="${statusFilter == 'PENDING_RECONCILIATION'}">selected</c:if>>Chờ duyệt</option>
+                                <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
                                 <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                             </select>
@@ -83,7 +89,11 @@
                             </c:forEach>
                         </select>
                         <div class="spacer"></div>
-                        <c:if test="${not empty typeFilter or not empty statusFilter or not empty whFilter}">
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            Tìm kiếm
+                        </button>
+                        <c:if test="${not empty typeFilter or not empty statusFilter or not empty whFilter or not empty search}">
                             <a href="${pageContext.request.contextPath}/receipt" class="btn">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 Xoá lọc
@@ -144,6 +154,9 @@
                                                         <c:when test="${r.status == 'PENDING_RECONCILIATION'}">
                                                             <span class="status active" style="--dot:var(--warn);"><span class="sdot"></span>Chờ duyệt</span>
                                                         </c:when>
+                                                        <c:when test="${r.status == 'NEEDS_REVISION'}">
+                                                            <span class="status active" style="--dot:var(--warn);background:var(--warn-soft);color:var(--warn);"><span class="sdot"></span>Cần chỉnh sửa</span>
+                                                        </c:when>
                                                         <c:when test="${r.status == 'COMPLETED'}">
                                                             <span class="status active"><span class="sdot"></span>Hoàn thành</span>
                                                         </c:when>
@@ -159,6 +172,11 @@
                                                         <a href="${pageContext.request.contextPath}/receipt?action=detail&id=${r.receiptId}" class="icon-mini" title="Xem chi tiết">
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </a>
+                                                        <c:if test="${r.status == 'NEEDS_REVISION' && r.createdBy == sessionScope.loggedUser.id}">
+                                                            <a href="${pageContext.request.contextPath}/receipt?action=edit&id=${r.receiptId}" class="icon-mini" title="Chỉnh sửa và gửi lại" style="color:var(--warn);">
+                                                                <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                                            </a>
+                                                        </c:if>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -177,6 +195,9 @@
                         </c:if>
                         <c:if test="${not empty whFilter}">
                             <c:set var="filterParams" value="${filterParams}&warehouse=${whFilter}" />
+                        </c:if>
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
                         </c:if>
                         <div class="pagination">
                             <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
