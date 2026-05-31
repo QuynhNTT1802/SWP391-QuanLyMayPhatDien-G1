@@ -37,6 +37,90 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
+    public List<Inventory> findWithFilters(Integer warehouseId, String search, int page, int pageSize) {
+        List<Inventory> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT i.*, g.model AS generator_model, "
+                + "w.name AS warehouse_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "  JOIN category c ON gc.category_id = c.id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand "
+                + "FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (warehouseId != null) {
+            sql.append("AND i.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (g.model LIKE ? OR EXISTS ("
+                    + "  SELECT 1 FROM generator_category gc "
+                    + "  JOIN category c ON gc.category_id = c.id "
+                    + "  WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?"
+                    + ")) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        sql.append("ORDER BY w.name, g.model LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+
+    public int countWithFilters(Integer warehouseId, String search) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (warehouseId != null) {
+            sql.append("AND i.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (g.model LIKE ? OR EXISTS ("
+                    + "  SELECT 1 FROM generator_category gc "
+                    + "  JOIN category c ON gc.category_id = c.id "
+                    + "  WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?"
+                    + ")) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
     public Inventory findByWarehouseAndGenerator(int warehouseId, int generatorId) {
         String sql = "SELECT * FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
         try {
