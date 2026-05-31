@@ -180,24 +180,24 @@
                                         <input class="input" name="customerAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${param.customerAddress}"/>" required />
                                     </div>
                                     <div class="field">
-                                        <label class="field-label">Mã số thuế (Nếu là công ty)</label>
-                                        <input class="input mono" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tên công ty</label>
-                                        <input class="input" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
-                                    </div>
-                                    <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
-                                        <select class="input" name="customerTypeId" required>
+                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
                                             <option value="">-- Chọn loại khách hàng --</option>
                                             <c:forEach var="ct" items="${customerTypes}">
-                                                <option value="${ct.id}"
+                                                <option value="${ct.id}" data-name="${ct.name}"
                                                         <c:if test="${param.customerTypeId == ct.id}">selected</c:if>>
                                                     <c:out value="${ct.name}"/>
                                                 </option>
                                             </c:forEach>
                                         </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
                                     </div>
                                 </div>
                             </div>
@@ -267,6 +267,13 @@
                                             </td>
                                         </tr>
                                     </tbody>
+                                    <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="4" class="text-right">Tổng cộng:</td>
+                                            <td class="text-right mono" id="grandTotal">0₫</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
 
                                 <template id="rowTemplate">
@@ -296,10 +303,7 @@
                                     Thêm dòng
                                 </button>
 
-                                <div class="grand-total-box">
-                                    <span class="grand-total-label">TỔNG TIỀN ĐƠN HÀNG:</span>
-                                    <span class="grand-total-value mono" id="grandTotal">0₫</span>
-                                </div>
+
                             </div>
 
                             <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
@@ -318,7 +322,7 @@
         <div class="toast-host" id="toastHost"></div>
         <script>
             function formatVND(num) {
-                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
+                return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
             }
             function validateQty(input) {
                 // Loại bỏ ký tự không phải số (an toàn cho trình duyệt cũ)
@@ -386,7 +390,8 @@
                         qtyInput.focus();
                         return false;
                     }
-                    if (sel.value) hasValid = true;
+                    if (sel.value)
+                        hasValid = true;
                 }
                 if (!hasValid) {
                     e.preventDefault();
@@ -394,6 +399,20 @@
                     return false;
                 }
             });
+            // Tự tính ngay khi load (vì có dữ liệu pre-fill)
+            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty + MST
+            function onCustomerTypeChange() {
+                var sel = document.getElementById('customerTypeSelect');
+                var opt = sel.options[sel.selectedIndex];
+                var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
+                var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
+                document.getElementById('customerCompany').required = isCompany;
+                document.getElementById('customerTaxCode').required = isCompany;
+                document.querySelectorAll('.company-req').forEach(function (el) {
+                    el.style.display = isCompany ? 'inline' : 'none';
+                });
+            }
+            document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
 
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
