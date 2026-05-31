@@ -389,8 +389,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public boolean updateWithDetails(SaleOrder s, List<OrderDetail> newDetails) {
         String updateSql = "UPDATE sale_order SET customer_name = ?, customer_phone = ?, "
                 + "customer_email = ?, customer_address = ?, customer_tax_code = ?, "
-                + "customer_company_name = ?, customer_note = ?, total_amount = ?, note = ?, "
-                + "updated_at = NOW() "
+                + "customer_company_name = ?, customer_note = ?, customer_type_id = ?, "
+                + "total_amount = ?, note = ?, updated_at = NOW() "
                 + "WHERE order_id = ? AND status = ?";
         String deleteDetailSql = "DELETE FROM order_detail WHERE order_id = ?";
         String insertDetailSql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
@@ -408,10 +408,15 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     ps.setString(5, s.getCustomerTaxCode());
                     ps.setString(6, s.getCustomerCompany());
                     ps.setString(7, s.getCustomerNote());
-                    ps.setDouble(8, s.getTotalAmount());
-                    ps.setString(9, s.getNote());
-                    ps.setInt(10, s.getOrderId());
-                    ps.setString(11, GlobalUtils.STATUS_PENDING);
+                    if (s.getCustomerTypeId() > 0) {
+                        ps.setInt(8, s.getCustomerTypeId());
+                    } else {
+                        ps.setNull(8, java.sql.Types.INTEGER);
+                    }
+                    ps.setDouble(9, s.getTotalAmount());
+                    ps.setString(10, s.getNote());
+                    ps.setInt(11, s.getOrderId());
+                    ps.setString(12, GlobalUtils.STATUS_PENDING);
 
                     int rows = ps.executeUpdate();
                     if (rows == 0) {
