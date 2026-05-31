@@ -187,8 +187,17 @@ public class OrderController extends HttpServlet {
 
         List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
 
+        String customerTypeName = "";
+        if (order.getCustomerTypeId() > 0) {
+            Category ct = new CategoryDAO().findById(order.getCustomerTypeId());
+            if (ct != null) {
+                customerTypeName = ct.getName();
+            }
+        }
+
         request.setAttribute("order", order);
         request.setAttribute("details", details);
+        request.setAttribute("customerTypeName", customerTypeName);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
 
