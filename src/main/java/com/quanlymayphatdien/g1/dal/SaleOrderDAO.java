@@ -373,9 +373,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("approved_at") != null) {
             s.setApprovedAt(new Date(rs.getTimestamp("approved_at").getTime()));
         }
-        if (rs.getTimestamp("cancelled_at") != null) {
-            s.setCancelledAt(new Date(rs.getTimestamp("cancelled_at").getTime()));
-        }
         if (rs.getTimestamp("created_at") != null) {
             s.setCreatedAt(new Date(rs.getTimestamp("created_at").getTime()));
         }

@@ -18,13 +18,13 @@
 
   // confirm actions
   function confirmDeactivate(userId, page) {
-    confirmAction('Vô hiệu hoá tài khoản', 'Người dùng sẽ không thể đăng nhập cho tới khi bạn kích hoạt lại. Tiếp tục?', () => {
+    confirmAction('V\u00f4 hi\u1ec7u ho\u00e1 t\u00e0i kho\u1ea3n', 'Ng\u01b0\u1eddi d\u00f9ng s\u1ebd kh\u00f4ng th\u1ec3 \u0111\u0103ng nh\u1eadp cho t\u1edbi khi b\u1ea1n k\u00edch ho\u1ea1t l\u1ea1i. Ti\u1ebfp t\u1ee5c?', () => {
       window.location.href = APP_CTX + '/admin/users?action=deactivate&id=' + userId + '&page=' + page;
     });
   }
 
   function confirmActivate(userId, page) {
-    confirmAction('Kích hoạt tài khoản', 'Người dùng sẽ có thể đăng nhập trở lại. Tiếp tục?', () => {
+    confirmAction('K\u00edch ho\u1ea1t t\u00e0i kho\u1ea3n', 'Ng\u01b0\u1eddi d\u00f9ng s\u1ebd c\u00f3 th\u1ec3 \u0111\u0103ng nh\u1eadp tr\u1edf l\u1ea1i. Ti\u1ebfp t\u1ee5c?', () => {
       window.location.href = APP_CTX + '/admin/users?action=activate&id=' + userId + '&page=' + page;
     });
   }
