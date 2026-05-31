@@ -201,7 +201,9 @@ public class OrderController extends HttpServlet {
         List<Category> brands = categoryDao.findByType("brand");
         List<Category> fuelTypes = categoryDao.findByType("fuel_type");
         List<Category> phases = categoryDao.findByType("phase");
+        List<Category> customerTypes = categoryDao.findByType("customer_type");
 
+        request.setAttribute("customerTypes", customerTypes);
         request.setAttribute("generators", generators);
         request.setAttribute("brands", brands);
         request.setAttribute("fuelTypes", fuelTypes);
@@ -243,6 +245,14 @@ public class OrderController extends HttpServlet {
         order.setNote(request.getParameter("internalNote"));
         order.setCreatedBy(user.getId());
 
+        String ctIdStr = request.getParameter("customerTypeId");
+        if (ctIdStr != null && !ctIdStr.isEmpty()) {
+            try {
+                order.setCustomerTypeId(Integer.parseInt(ctIdStr));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         order.setStatus("PENDING");
         order.setTotalAmount(0.0);
 
@@ -253,31 +263,37 @@ public class OrderController extends HttpServlet {
         } else {
             order.setOrderDate(new Date());
         }
-
-        String[] generatorIds = request.getParameterValues("generatorIds");
-        List<OrderDetail> detailsList = new ArrayList<>(); // Đổi tên cho rõ ràng
+        String[] genIds = request.getParameterValues("generatorId");
+        String[] qtys = request.getParameterValues("quantity");
+        List<OrderDetail> detailsList = new ArrayList<>();
         double totalAmount = 0;
-        if (generatorIds != null) {
-            for (String genIdStr : generatorIds) {
-                int genId = Integer.parseInt(genIdStr);
-                String qtyStr = request.getParameter("quantity_" + genId);
-                int qty = 1;
-                if (qtyStr != null && !qtyStr.isEmpty()) {
-                    qty = Integer.parseInt(qtyStr);
+
+        if (genIds != null) {
+            for (int i = 0; i < genIds.length; i++) {
+                // Bỏ qua dòng trống (user thêm dòng nhưng chưa chọn máy)
+                if (genIds[i] == null || genIds[i].isEmpty()) {
+                    continue;
                 }
+
+                int genId = Integer.parseInt(genIds[i]);
+                int qty = 1;
+                if (qtys != null && i < qtys.length && qtys[i] != null && !qtys[i].isEmpty()) {
+                    qty = Integer.parseInt(qtys[i]);
+                }
+
                 Generator gen = generatorDao.findById(genId);
                 if (gen != null) {
-                    // Tạo đối tượng mới cho MỖI dòng chi tiết
                     OrderDetail detail = new OrderDetail();
                     detail.setGeneratorId(genId);
                     detail.setQuantity(qty);
                     detail.setUnitPrice(gen.getUnitPrice().doubleValue());
-                    detailsList.add(detail); // Thêm vào list
+                    detailsList.add(detail);
 
                     totalAmount += gen.getUnitPrice().doubleValue() * qty;
                 }
             }
         }
+
         order.setTotalAmount(totalAmount);
         order.setStatus("PENDING");
         int newId = saleorderdao.insert(order);
@@ -307,10 +323,13 @@ public class OrderController extends HttpServlet {
             List<OrderDetail> existingDetails = orderdetaildao.findGeneratorById(id);
 
             List<Generator> generator = generatordao.findAll();
+            CategoryDAO categoryDao = new CategoryDAO();
+            List<Category> customerTypes = categoryDao.findByType("customer_type");
 
             request.setAttribute("order", order);
             request.setAttribute("existingDetails", existingDetails);
             request.setAttribute("generators", generator);
+            request.setAttribute("customerTypes", customerTypes);
             request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
         } else {
             request.getSession().setAttribute("message", "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).");
@@ -329,15 +348,21 @@ public class OrderController extends HttpServlet {
 
         try {
             // Bước 1: Tính total + chuẩn bị list detail mới
-            String[] generatorIds = request.getParameterValues("generatorIds");
+            String[] genIds = request.getParameterValues("generatorId");
+            String[] qtys = request.getParameterValues("quantity");
             List<OrderDetail> newDetails = new ArrayList<>();
             double totalAmount = 0;
 
-            if (generatorIds != null) {
-                for (String genIdStr : generatorIds) {
-                    int genId = Integer.parseInt(genIdStr);
-                    String qtyStr = request.getParameter("quantity_" + genId);
-                    int qty = (qtyStr != null && !qtyStr.isEmpty()) ? Integer.parseInt(qtyStr) : 1;
+            if (genIds != null) {
+                for (int i = 0; i < genIds.length; i++) {
+                    if (genIds[i] == null || genIds[i].isEmpty()) {
+                        continue;
+                    }
+                    int genId = Integer.parseInt(genIds[i]);
+                    int qty = 1;
+                    if (qtys != null && i < qtys.length && qtys[i] != null && !qtys[i].isEmpty()) {
+                        qty = Integer.parseInt(qtys[i]);
+                    }
 
                     Generator gen = generatorDao.findById(genId);
                     if (gen != null) {
@@ -368,6 +393,14 @@ public class OrderController extends HttpServlet {
             order.setCustomerNote(request.getParameter("customerNote"));
             order.setNote(request.getParameter("internalNote"));
             order.setTotalAmount(totalAmount);
+
+            String ctIdStr = request.getParameter("customerTypeId");
+            if (ctIdStr != null && !ctIdStr.isEmpty()) {
+                try {
+                    order.setCustomerTypeId(Integer.parseInt(ctIdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
 
             // Bước 3: Update phiếu — DAO sẽ xử lý transaction nội bộ
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
