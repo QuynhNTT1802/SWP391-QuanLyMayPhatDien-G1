@@ -76,14 +76,11 @@
                         <c:forEach var="role" items="${user.roles}">
                             <span class="pill role-admin"><span class="pdot"></span>
                                 <c:choose>
-                                    <c:when test="${role.roleName == 'admin'}">Admin</c:when>
+                                    <c:when test="${role.roleName == 'admin'}">Quản trị viên</c:when>
                                     <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
                                     <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
-                                    <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
-                                    <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
-                                    <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
-                                    <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
-                                    <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
+                                    <c:when test="${role.roleName == 'sales_staff'}">Nhân viên bán hàng</c:when>
+                                    <c:when test="${role.roleName == 'sale_manager'}">Trưởng phòng bán hàng</c:when>
                                     <c:otherwise><c:out value="${role.roleName}"/></c:otherwise>
                                 </c:choose>
                             </span>

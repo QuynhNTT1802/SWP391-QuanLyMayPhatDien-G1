@@ -20,6 +20,7 @@ public class Inventory {
 
     private String generatorModel;
     private String generatorBrand;
+    private String warehouseName;
 
     public Inventory() {
     }
@@ -79,5 +80,13 @@ public class Inventory {
     public void setGeneratorBrand(String generatorBrand) {
         this.generatorBrand = generatorBrand;
     }
-    
+
+    public String getWarehouseName() {
+        return warehouseName;
+    }
+
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
+    }
+
 }

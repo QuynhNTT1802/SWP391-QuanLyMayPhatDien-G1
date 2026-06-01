@@ -28,7 +28,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public List<Receipt> findWithFilters(String typeFilter, String statusFilter, String whFilter,
-            int page, int pageSize) {
+            String search, int page, int pageSize) {
         List<Receipt> allReceipts = new ArrayList<>();
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
@@ -51,6 +51,15 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (whFilter != null && !whFilter.isEmpty()) {
             sql += "AND r.warehouse_id = ? ";
             inputs.add(whFilter);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
+                 + "OR so.customer_name LIKE ? OR u1.name LIKE ?) ";
+            String like = "%" + search.trim() + "%";
+            inputs.add(like);
+            inputs.add(like);
+            inputs.add(like);
+            inputs.add(like);
         }
         sql += "ORDER BY r.created_at DESC";
         try {
@@ -78,34 +87,32 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return new ArrayList<>();
     }
 
-    public int countWithFilters(String typeFilter, String statusFilter, String whFilter) {
-        String sql = "SELECT COUNT(*) FROM receipt r";
+    public int countWithFilters(String typeFilter, String statusFilter, String whFilter, String search) {
+        String sql = "SELECT COUNT(*) FROM receipt r "
+                + "LEFT JOIN user u1 ON r.created_by = u1.id "
+                + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
+                + "WHERE 1=1 ";
         List<String> inputs = new ArrayList<>();
-        boolean hasCondition = false;
         if (typeFilter != null && !typeFilter.isEmpty()) {
-            sql += " WHERE r.receipt_type = ?";
+            sql += "AND r.receipt_type = ? ";
             inputs.add(typeFilter);
-            hasCondition = true;
         }
         if (statusFilter != null && !statusFilter.isEmpty()) {
-            if (hasCondition) {
-                sql += " AND";
-            } else {
-                sql += " WHERE";
-                hasCondition = true;
-            }
-            sql += " r.status = ?";
+            sql += "AND r.status = ? ";
             inputs.add(statusFilter);
         }
         if (whFilter != null && !whFilter.isEmpty()) {
-            if (hasCondition) {
-                sql += " AND";
-            } else {
-                sql += " WHERE";
-                hasCondition = true;
-            }
-            sql += " r.warehouse_id = ?";
+            sql += "AND r.warehouse_id = ? ";
             inputs.add(whFilter);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
+                 + "OR so.customer_name LIKE ? OR u1.name LIKE ?) ";
+            String like = "%" + search.trim() + "%";
+            inputs.add(like);
+            inputs.add(like);
+            inputs.add(like);
+            inputs.add(like);
         }
         try {
             connection = getConnection();
@@ -293,6 +300,87 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             System.out.println(e.getMessage());
         }
         return false;
+    }
+
+    public boolean requestRevision(int receiptId, int managerId, String reason) {
+        String sql = "UPDATE receipt SET status = 'NEEDS_REVISION', approved_by = ?, "
+                + "note = CONCAT(COALESCE(note, ''), ' | Lý do yêu cầu chỉnh sửa: ', ?) "
+                + "WHERE receipt_id = ? AND status = 'PENDING_RECONCILIATION'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, managerId);
+            statement.setString(2, reason);
+            statement.setInt(3, receiptId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean updateReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId) {
+        String updateSql = "UPDATE receipt SET warehouse_id = ?, note = ?, "
+                + "status = 'PENDING_RECONCILIATION', approved_by = NULL "
+                + "WHERE receipt_id = ? AND status = 'NEEDS_REVISION' AND created_by = ?";
+        String deleteDetailSql = "DELETE FROM receipt_detail WHERE receipt_id = ?";
+        String insertDetailSql = "INSERT INTO receipt_detail "
+                + "(receipt_id, generator_id, serial_number, quantity, note) VALUES (?, ?, ?, ?, ?)";
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                ps.setInt(1, r.getWarehouseId());
+                ps.setString(2, r.getNote());
+                ps.setInt(3, r.getReceiptId());
+                ps.setInt(4, userId);
+                int affected = ps.executeUpdate();
+                if (affected == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(deleteDetailSql)) {
+                ps.setInt(1, r.getReceiptId());
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
+                for (ReceiptDetail d : newDetails) {
+                    ps.setInt(1, r.getReceiptId());
+                    ps.setInt(2, d.getGeneratorId());
+                    ps.setString(3, d.getSerialNumber());
+                    ps.setInt(4, d.getQuantity());
+                    ps.setString(5, d.getNote());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ignored) {
+                }
+            }
+        }
     }
 
     @Override
