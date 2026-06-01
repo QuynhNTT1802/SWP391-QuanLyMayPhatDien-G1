@@ -94,7 +94,6 @@
                         </c:choose>
                     </div>
                 </div>
-                <!-- PHẦN THIẾU 1: hero-actions -->
                 <div class="hero-actions">
                     
                 </div>

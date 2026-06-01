@@ -56,6 +56,7 @@
                     </form>
 
                     <section id="view-list">
+                        <div class="card-table">
                         <div class="roles-grid" id="rolesGrid">
 
                             <c:forEach var="role" items="${roleList}">
@@ -100,6 +101,27 @@
 
                             </c:forEach>
 
+                        </div>
+
+                        <c:if test="${totalPages > 1}">
+                            <div class="pagination">
+                                <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> vai trò</div>
+                                <div class="controls">
+                                    <c:if test="${currentPage > 1}">
+                                        <a href="?page=${currentPage - 1}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if>" class="page-btn">‹</a>
+                                    </c:if>
+                                    <c:forEach begin="1" end="${totalPages}" var="p">
+                                        <c:choose>
+                                            <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                            <c:otherwise><a href="?page=${p}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
+                                    <c:if test="${currentPage < totalPages}">
+                                        <a href="?page=${currentPage + 1}<c:if test="${not empty param.search}">&search=<c:out value="${param.search}"/></c:if>" class="page-btn">›</a>
+                                    </c:if>
+                                </div>
+                            </div>
+                        </c:if>
                         </div>
                     </section>
 

@@ -1,126 +1,172 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@page import="com.quanlymayphatdien.g1.entity.User"%>
-<%@page import="java.util.Set"%>
-<%
-    String activePage = (String) request.getAttribute("activePage");
-    if (activePage == null) activePage = "";
 
-    User sidebarUser = (User) request.getAttribute("sidebarUser");
-    if (sidebarUser == null) {
-        HttpSession sess = request.getSession(false);
-        if (sess != null) {
-            sidebarUser = (User) sess.getAttribute("loggedUser");
-        }
-    }
+<%@ page contentType="text/html" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-    Set<String> userPermissions = (Set<String>) request.getAttribute("sidebarPermissions");
-    if (userPermissions == null) {
-        HttpSession sess = request.getSession(false);
-        if (sess != null) {
-            userPermissions = (Set<String>) sess.getAttribute("userPermissions");
-        }
-    }
 
-    boolean hasDashboard    = userPermissions != null && userPermissions.contains("dashboard.view");
-    boolean hasInventory    = userPermissions != null && userPermissions.contains("inventory.view");
-    boolean hasImportExport = userPermissions != null && userPermissions.contains("import_export.view");
-    boolean hasOrders       = userPermissions != null && userPermissions.contains("orders.view");
-    boolean hasUsers        = userPermissions != null && userPermissions.contains("users.view");
-    boolean hasRoles        = userPermissions != null && userPermissions.contains("roles.view");
-    boolean hasSuppliers    = userPermissions != null && userPermissions.contains("suppliers.view");
-    boolean hasProfile      = userPermissions != null && userPermissions.contains("profile.view");
-    boolean hasPassword     = userPermissions != null && userPermissions.contains("password.change");
+<c:set var="activePage" value="${requestScope.activePage}"/>
 
-    String fullName = sidebarUser != null && sidebarUser.getName() != null ? sidebarUser.getName() : "Nguoi dung";
-    String initials = "";
-    String[] nameParts = fullName.trim().split("\\s+");
-    if (nameParts.length == 1) {
-        initials = nameParts[0].length() >= 2 ? nameParts[0].substring(0, 2).toUpperCase() : nameParts[0].toUpperCase();
-    } else {
-        initials = (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0) + "").toUpperCase();
-    }
-%>
+<c:set var="sidebarUser" value="${requestScope.sidebarUser}"/>
+<c:if test="${empty sidebarUser}">
+    <c:set var="sidebarUser" value="${sessionScope.loggedUser}"/>
+</c:if>
+
+<c:set var="perms" value="${requestScope.sidebarPermissions}"/>
+<c:if test="${empty perms}">
+    <c:set var="perms" value="${sessionScope.userPermissions}"/>
+</c:if>
+
+<c:if test="${not empty sidebarUser}">
+    <c:set var="fullName" value="${sidebarUser.name}"/>
+    <c:set var="nameParts" value="${fn:split(fullName, ' ')}"/>
+    <c:set var="initials">
+        <c:choose>
+            <c:when test="${fn:length(nameParts) == 1}">
+                ${fn:toUpperCase(fn:substring(fullName, 0, fn:length(fullName) < 2 ? fn:length(fullName) : 2))}
+            </c:when>
+            <c:otherwise>
+                ${fn:toUpperCase(fn:substring(nameParts[0], 0, 1))}${fn:toUpperCase(fn:substring(nameParts[fn:length(nameParts)-1], 0, 1))}
+            </c:otherwise>
+        </c:choose>
+    </c:set>
+
+    <c:set var="roleDesc">
+        <c:choose>
+            <c:when test="${not empty sidebarUser.roles and not empty sidebarUser.roles[0]}">
+                ${sidebarUser.roles[0].description}
+            </c:when>
+            <c:otherwise>Nguoi dung</c:otherwise>
+        </c:choose>
+    </c:set>
+</c:if>
+
 <aside class="sidebar">
     <div class="brand">
         <div class="brand-mark">WH</div>
         <div>Warehouse OS</div>
     </div>
     <nav class="nav">
-        <div class="nav-section">Tong quan</div>
-        <% if (hasDashboard) { %>
-        <a href="<%=request.getContextPath()%>/admin/dashboard">
+        <div class="nav-section">Tổng quan</div>
+
+
+        <c:if test="${not empty perms and perms.contains('dashboard.view')}">
+        <a href="${pageContext.request.contextPath}/admin/dashboard">
+
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Dashboard
         </a>
-        <% } %>
-        <% if (hasInventory) { %>
-        <a href="#">
+        </c:if>
+
+        <c:if test="${not empty perms and perms.contains('inventory.view')}">
+        <a href="${pageContext.request.contextPath}/inventory">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
             Tồn kho
-            <span class="count"></span>
         </a>
-        <% } %>
-        <% if (hasImportExport) { %>
-        <a href="#">
+        </c:if>
+
+        <c:if test="${not empty perms and perms.contains('receipts.view')}">
+        <a href="${pageContext.request.contextPath}/receipt">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-            Phiếu nhập/ xuất
-            <span class="count"></span>
+            Phiếu nhập/xuất
         </a>
-        <% } %>
-        <% if (hasOrders) { %>
-        <a href="#">
+
+        </c:if>
+
+        <c:if test="${not empty perms and perms.contains('orders.view')}">
+        <a href="${pageContext.request.contextPath}/order">
+
             <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
             Đơn hàng
         </a>
-        <% } %>
+        </c:if>
 
-        <div class="nav-section">Quan tri</div>
-        <% if (hasUsers) { %>
-        <a href="<%=request.getContextPath()%>/admin/users">
+        <div class="nav-section">Quản trị</div>
+
+
+        <c:if test="${not empty perms and perms.contains('categories.view')}">
+        <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Khai báo danh mục
+            <span class="arrow">▼</span>
+        </div>
+        <div class="nav-children">
+            <a href="${pageContext.request.contextPath}/admin/categories?module=qu%e1%ba%a3n%20l%c3%bd%20v%e1%ba%adt%20t%c6%b0">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                Quản lý vật tư
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/categories?module=qu%e1%ba%a3n%20l%c3%bd%20phi%e1%ba%bfu%20xu%e1%ba%a5t%20nh%e1%ba%adp">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Quản lý xuất nhập
+            </a>
+            <a href="${pageContext.request.contextPath}/admin/categories?module=qu%e1%ba%a3n%20l%c3%bd%20phi%e1%ba%bfu%20mua%20b%c3%a1n">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Quản lý mua bán
+            </a>
+        </div>
+        </c:if>
+
+        <c:if test="${not empty perms and perms.contains('users.view')}">
+        <a href="${pageContext.request.contextPath}/admin/users">
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Người dùng
-            <span class="count"></span>
         </a>
-        <% } %>
-        <% if (hasRoles) { %>
-        <a href="<%=request.getContextPath()%>/admin/roles">
+        </c:if>
+
+        <c:if test="${not empty perms and perms.contains('roles.view')}">
+        <a href="${pageContext.request.contextPath}/admin/roles">
             <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Phân quyền
         </a>
-        <a href="<%=request.getContextPath()%>/warehouse/generators">
+        </c:if>
+        
+        <a href="${pageContext.request.contextPath}/warehouse/generators">
             <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             Máy phát điện
         </a>
-        <% } %>
-        <% if (hasSuppliers) { %>
-        <a href="#">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Nhà cung cấp
-        </a>
-        <% } %>
 
-        <div class="nav-section">Tai khoan</div>
-        <% if (hasProfile) { %>
-        <a href="<%=request.getContextPath()%>/profile" class="<%= "profile".equals(activePage) ? "active" : "" %>">
+        <c:if test="${not empty perms and perms.contains('forgot_pw.process')}">
+        <a href="${pageContext.request.contextPath}/admin/forgot-password">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M3 21v-5h5"></path>
+            </svg>
+            Cấp mật khẩu
+        </a>
+        </c:if>
+
+        <div class="nav-section">Tài khoản</div>
+
+
+        <c:if test="${not empty perms and perms.contains('profile.view')}">
+        <a href="${pageContext.request.contextPath}/profile" class="${activePage == 'profile' ? 'active' : ''}">
+
             <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             Hồ sơ của tôi
         </a>
-        <% } %>
-        <% if (hasPassword) { %>
-        <a href="<%=request.getContextPath()%>/changepass" class="<%= "changepass".equals(activePage) ? "active" : "" %>">
+        </c:if>
+
+        <c:if test="${not empty perms and perms.contains('password.change')}">
+        <a href="${pageContext.request.contextPath}/changepass" class="${activePage == 'changepass' ? 'active' : ''}">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             Đổi mật khẩu
         </a>
-        <% } %>
-        <a href="<%=request.getContextPath()%>/authen?action=logout">
+        </c:if>
+
+        <a href="${pageContext.request.contextPath}/authen?action=logout">
             <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Đăng xuất
         </a>
     </nav>
     <div class="sidebar-footer">
         <div class="user-meta">
-            <div class="name"><%=fullName%></div>
-            <div class="role"><%= sidebarUser != null && sidebarUser.getRoles() != null && !sidebarUser.getRoles().isEmpty() ? sidebarUser.getRoles().get(0).getRoleName() : "Nguoi dung" %></div>
+            <div class="name"><c:out value="${fullName}"/></div>
+            <div class="role"><c:out value="${roleDesc}"/></div>
         </div>
     </div>
 </aside>
