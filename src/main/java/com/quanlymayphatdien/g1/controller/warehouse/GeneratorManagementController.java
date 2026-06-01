@@ -101,9 +101,9 @@ public class GeneratorManagementController extends HttpServlet {
         String brandIdStr = request.getParameter("brandId");
         String genTypeIdStr = request.getParameter("genTypeId");
         Integer brandId = (brandIdStr != null && !brandIdStr.isEmpty())
-                ? Integer.parseInt(brandIdStr) : null;
+                ? Integer.valueOf(brandIdStr) : null;
         Integer genTypeId = (genTypeIdStr != null && !genTypeIdStr.isEmpty())
-                ? Integer.parseInt(genTypeIdStr) : null;
+                ? Integer.valueOf(genTypeIdStr) : null;
 
         int page = 1;
         int pageSize = 10;
@@ -186,12 +186,14 @@ public class GeneratorManagementController extends HttpServlet {
         if (cats == null) {
             return "—";
         }
-        return cats.stream()
-                .filter(c -> type.equals(c.getType()))
-                .map(Category::getName)
-                .findFirst().orElse("—");
+        for (Category c : cats) {
+            if (type.equals(c.getType())) {
+                return c.getName();
+            }
+        }
+        return "—";
     }
-
+    
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         CategoryDAO catDAO = new CategoryDAO();
@@ -232,7 +234,7 @@ public class GeneratorManagementController extends HttpServlet {
             if (!errors.isEmpty()) {
                 saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc,
                         brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
-                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr); // FIX #4
+                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
                 response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=create");
                 return;
@@ -243,8 +245,7 @@ public class GeneratorManagementController extends HttpServlet {
             g.setPowerRating(new BigDecimal(powerStr.trim()));
             g.setUnitPrice(new BigDecimal(priceStr.trim()));
             g.setFrequency(freq != null ? freq.trim() : null);
-            g.setWeight(weightStr != null && !weightStr.trim().isEmpty()
-                    ? new BigDecimal(weightStr.trim()) : null);
+            g.setWeight(weightStr != null && !weightStr.trim().isEmpty() ? new BigDecimal(weightStr.trim()) : null);
             g.setDescription(desc);
             g.setStatus(status);
             g.setCreatedAt(LocalDateTime.now());
@@ -317,12 +318,9 @@ public class GeneratorManagementController extends HttpServlet {
             Map<String, String> errors = validateGeneratorForm(model, powerStr, priceStr,
                     freq, weightStr, id);
             if (!errors.isEmpty()) {
-                saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc,
-                        brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
-                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr); // FIX #4
+                saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath()
-                        + "/warehouse/generators?action=update&id=" + id);
+                response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=update&id=" + id);
                 return;
             }
 
@@ -359,27 +357,23 @@ public class GeneratorManagementController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
-   private void saveGeneratorCategories(HttpServletRequest request,
-            GeneratorDAO dao, int generatorId) {
+    private void saveGeneratorCategories(HttpServletRequest request, GeneratorDAO dao, int generatorId) {
         List<Integer> idList = new ArrayList<>();
-        addIfPresent(idList, request.getParameter("brandId"));
-        addIfPresent(idList, request.getParameter("genTypeId"));
-        addIfPresent(idList, request.getParameter("originId"));
-        addIfPresent(idList, request.getParameter("conditionId"));
-        addIfPresent(idList, request.getParameter("fuelTypeId"));
-        addIfPresent(idList, request.getParameter("phaseId"));
-        addIfPresent(idList, request.getParameter("powerRangeId"));
+
+        String[] inputs = {"brandId", "genTypeId", "originId", "conditionId", "fuelTypeId", "phaseId", "powerRangeId"};
+
+        for (String i : inputs) {
+            String value = request.getParameter(i);
+            if (value != null && !value.trim().isEmpty()) {
+                idList.add(Integer.valueOf(value.trim()));
+            }
+        }
+
         if (!idList.isEmpty()) {
             dao.saveGeneratorCategories(generatorId, idList);
         }
     }
-
-    private void addIfPresent(List<Integer> list, String value) {
-        if (value != null && !value.trim().isEmpty()) {
-            list.add(Integer.parseInt(value.trim()));
-        }
-    }
-
+    
     private void saveFormFields(HttpServletRequest request, String model,
             String powerStr, String priceStr, String freq, String weightStr,
             String desc, String brandIdStr, String genTypeIdStr,
@@ -416,15 +410,13 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message","Kích hoạt thành công!");
                 Generator gen = dao.findById(id);
                 if (gen != null) {
-                    logActivity(request, "generator", id, gen.getModel(), "ACTIVATE",
-                            "Kích hoạt máy phát điện: " + gen.getModel());
+                    logActivity(request, "generator", id, gen.getModel(), "ACTIVATE", "Kích hoạt máy phát điện: " + gen.getModel());
                 }
             } else {
                 request.getSession().setAttribute("message", "Kích hoạt thất bại!");
             }
         }
-        response.sendRedirect(request.getContextPath()
-                + "/warehouse/generators?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
     }
 
     private void deactivateGenerator(HttpServletRequest request, HttpServletResponse response)

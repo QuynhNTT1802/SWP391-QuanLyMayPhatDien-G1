@@ -5,7 +5,6 @@
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -28,7 +27,7 @@
                 <div>
                     <header class="topbar">
                         <h1>Máy phát điện</h1>
-                        <span class="crumb">/ <a href="#">Quản trị</a> / Máy phát điện</span>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/generators?action=list">Quản trị</a> / Máy phát điện</span>
                         <div class="top-actions">
                             <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -119,9 +118,7 @@
                                         </c:when>
                                         <c:otherwise>
                                             <c:forEach var="g" items="${generators}">
-                                            <tr onclick="if (!event.target.closest('button,a'))
-                                                        location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'"
-                                                style="cursor:pointer;">
+                                            <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'" style="cursor:pointer;">
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
@@ -137,7 +134,7 @@
                                                     <c:out value="${not empty foundBrand ? foundBrand : '—'}"/>
                                                 </td>
                                                 <td><span class="mono"><c:out value="${g.powerRating}"/> kVA</span></td>
-                                                <td><span class="mono"><fmt:formatNumber value="${g.unitPrice}" pattern="#,###"/> đ</span></td>
+                                                <td><span class="mono"><c:out value="${g.unitPrice}"/> đ</span></td>
                                                 <td>
                                                     <c:set var="foundType" value=""/>
                                                     <c:forEach var="cat" items="${g.categories}">
