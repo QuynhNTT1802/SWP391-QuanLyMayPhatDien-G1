@@ -101,9 +101,10 @@
             </div>
 
             <div class="layout">
-                <!-- PHẦN THIẾU 2: toc (sidebar trái) -->
                 <div class="toc">
                     <a class="toc-item active" data-toc="info"><span class="toc-num">01</span><span>Thông tin cá nhân</span></a>
+                    <a class="toc-item active" data-toc="info"><span class="toc-num">02</span><span>Nhật ký hoạt động</span></a>
+
                     <div class="toc-meta">
                         <strong>#<c:out value="${user.id}"/></strong><br>
                         Tạo: <c:out value="${createdDate}"/><br>

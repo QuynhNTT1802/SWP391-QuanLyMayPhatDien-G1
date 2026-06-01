@@ -70,7 +70,19 @@
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo mẫu máy..." autocomplete="off" />
                         </div>
+                            <select class="filter-select" name="brandId" onchange="this.form.submit()">
+                                <option value="">Thương hiệu: Tất cả</option>
+                                <c:forEach var="b" items="${brandList}">
+                                    <option value="${b.id}" <c:if test="${brandFilter == String.valueOf(b.id)}">selected</c:if>>${b.name}</option>
+                                </c:forEach>
+                            </select>
 
+                            <select class="filter-select" name="genTypeId" onchange="this.form.submit()">
+                                <option value="">Loại máy: Tất cả</option>
+                                <c:forEach var="t" items="${genTypeList}">
+                                    <option value="${t.id}" <c:if test="${genTypeFilter == String.valueOf(t.id)}">selected</c:if>>${t.name}</option>
+                                </c:forEach>
+                            </select>
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
@@ -183,10 +195,10 @@
                                 <c:if test="${currentPage < totalPages}">
                                     <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">›</a>
                                 </c:if>
-                            </div>
-                        </div>
-                    </div>
-                </main>
+                                    <c:if test="${not empty brandFilter}">&brandId=${brandFilter}</c:if>
+                                    
+                                    </main>
+
             </div>
         </div>
 
