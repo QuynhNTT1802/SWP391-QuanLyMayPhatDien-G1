@@ -188,19 +188,7 @@
                             <h2 class="page-title">System Log</h2>
                             <p class="page-sub">Theo dõi lỗi kỹ thuật, cảnh báo và thông tin hoạt động của hệ thống</p>
                         </div>
-                        <c:if test="${totalLogs > 0}">
-                            <div class="stat-chips">
-                                <a class="stat-chip sc-error"   href="?level=ERROR">
-                                    <span class="dot" style="background:currentColor"></span>ERROR
-                                </a>
-                                <a class="stat-chip sc-warning" href="?level=WARNING">
-                                    <span class="dot" style="background:currentColor"></span>WARNING
-                                </a>
-                                <a class="stat-chip sc-info"    href="?level=INFO">
-                                    <span class="dot" style="background:currentColor"></span>INFO
-                                </a>
-                            </div>
-                        </c:if>
+                        
                     </div>
 
                     <form id="syslogFilterForm" method="get"
@@ -211,9 +199,9 @@
                         <select id="levelFilter" name="level" class="filter-select"
                                 onchange="document.getElementById('syslogFilterForm').submit()">
                             <option value="" ${empty level ? 'selected' : ''}>Tất cả mức độ</option>
-                            <option value="ERROR"   ${level == 'ERROR'   ? 'selected' : ''}>🔴 ERROR</option>
-                            <option value="WARNING" ${level == 'WARNING' ? 'selected' : ''}>🟡 WARNING</option>
-                            <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>🔵 INFO</option>
+                            <option value="ERROR"   ${level == 'ERROR'   ? 'selected' : ''}>ERROR</option>
+                            <option value="WARNING" ${level == 'WARNING' ? 'selected' : ''}>WARNING</option>
+                            <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>INFO</option>
                         </select>
 
                         <%-- Dropdown module --%>
