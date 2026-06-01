@@ -30,18 +30,18 @@
 
                 <div class="visual-body">
                     <div class="vis-eyebrow"><span class="dot"></span>Đăng nhập</div>
-                    <h2 class="vis-title">Quản lý kho <em>biết suy nghĩ</em>.</h2>
-                    <p class="vis-sub">240+ doanh nghiệp Việt đang dùng Warehouse OS để theo dõi 4,8 triệu SKU mỗi tháng — không còn excel, không còn SKU âm.</p>
+                    <h2 class="vis-title">Hệ thống quản lý <em>hiện đại</em>.</h2>
+                    <p class="vis-sub">Nền tảng quản lý tập trung giúp doanh nghiệp tối ưu hóa quy trình vận hành — giao diện trực quan, dữ liệu đồng bộ, bảo mật đa lớp.</p>
 
                     <div class="mock" aria-hidden="true">
                         <div class="mock-head">
                             <div class="dots"><span></span><span></span><span></span></div>
-                            <div class="title">warehouse-os.app/dashboard</div>
+                            <div class="title">system.app/overview</div>
                         </div>
                         <div class="mock-kpis">
-                            <div class="mock-kpi"><div class="l">Tồn kho</div><div class="v">348,920</div></div>
-                            <div class="mock-kpi"><div class="l">Giá trị</div><div class="v">8.42<span style="font-size:10px;color:var(--muted);font-weight:500;margin-inline-start:2px">tỷ</span></div></div>
-                            <div class="mock-kpi"><div class="l">Sắp hết</div><div class="v acc">47</div></div>
+                            <div class="mock-kpi"><div class="l">Uptime</div><div class="v">99.9%</div></div>
+                            <div class="mock-kpi"><div class="l">Người dùng</div><div class="v">1,240</div></div>
+                            <div class="mock-kpi"><div class="l">Hiệu suất</div><div class="v acc">A+</div></div>
                         </div>
                         <div class="mock-chart">
                             <svg viewBox="0 0 240 48" preserveAspectRatio="none">
@@ -52,10 +52,10 @@
                     </div>
 
                     <div class="vis-quote">
-                        <div class="vis-avatar">PT</div>
+                        <div class="vis-avatar">TL</div>
                         <div>
-                            <p>"Sau 3 tháng, kho HN giảm 31% SKU âm. Đội ops không còn đối chiếu excel cuối tuần nữa."</p>
-                            <div class="who"><b>Phạm Tùng</b> · Giám đốc vận hành, An Phú Foods</div>
+                            <p>"Giao diện thân thiện, dễ sử dụng. Hệ thống hoạt động ổn định và đáp ứng tốt nhu cầu quản lý nội bộ."</p>
+                            <div class="who"><b>Thanh Lan</b> · Trưởng phòng IT, Tech Solutions</div>
                         </div>
                     </div>
                 </div>
@@ -114,20 +114,13 @@
 
                         <div class="row">
                             <label class="checkbox">
-                                <input type="checkbox"> Ghi nhớ đăng nhập 30 ngày
+                                <input type="checkbox" name="remember"> Ghi nhớ đăng nhập
                             </label>
                         </div>
 
                         <button type="submit" class="btn-primary">Đăng nhập</button>
 
-                        <div class="form-bottom">
-                            <a href="auth-gallery.html">Xem tất cả màn auth</a>
-                            <span>
-                                <a href="#">Điều khoản</a>
-                                <span class="dot-sep">·</span>
-                                <a href="#">Bảo mật</a>
-                            </span>
-                        </div>
+                        
                     </form>
                 </div>
             </main>

@@ -273,5 +273,4 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
         LocalDateTime updatedAt = rs.getObject("updated_at", LocalDateTime.class);
         return new Category(id, module, name, type, desc, status, createdAt, updatedAt);
     }
-
 }

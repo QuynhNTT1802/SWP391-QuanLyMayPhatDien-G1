@@ -56,7 +56,6 @@ public class GeneratorManagementController extends HttpServlet {
             case "deactivate":
                 deactivateGenerator(request, response);
                 break;
-            case "list":
             default:
                 listGenerators(request, response);
                 break;
@@ -441,8 +440,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Khóa thất bại!");
             }
         }
-        response.sendRedirect(request.getContextPath()
-                + "/warehouse/generators?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
     }
 
     private Map<String, String> validateGeneratorForm(String model,

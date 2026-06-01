@@ -1,0 +1,121 @@
+/*
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
+*/
+/* 
+    Created on : May 22, 2026, 1:09:03 AM
+    Author     : LENOVO
+*/
+
+.steps {
+    margin-top: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.step {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    position: relative;
+}
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 13px;
+    inset-block-start: 42px;
+    width: 1px;
+    height: calc(100% - 30px);
+    background: var(--border);
+}
+.step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fg-soft);
+    flex-shrink: 0;
+}
+.step.active .step-num {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+}
+.step.done .step-num {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: transparent;
+}
+.step.done .step-num svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.5;
+}
+.step-body {
+    padding-top: 3px;
+}
+.step-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+.step-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.alert {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.alert svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+.alert-success {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.alert-error {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+.icon-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+    margin-bottom: 18px;
+}
+.icon-badge svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+}

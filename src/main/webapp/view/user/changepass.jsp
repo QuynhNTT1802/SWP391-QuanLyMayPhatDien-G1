@@ -288,7 +288,7 @@
   <div>
     <header class="topbar">
       <h1>Bảo mật</h1>
-      <span class="crumb">/ <a href="profile.html">Hồ sơ</a> · Đổi mật khẩu</span>
+      <span class="crumb">/ <a href="<%=request.getContextPath()%>/profile">Hồ sơ</a> · Đổi mật khẩu</span>
 
       <div class="top-actions">
         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
@@ -321,7 +321,7 @@
       <div class="page-head">
         <div class="eyebrow">Bảo mật tài khoản</div>
         <h1 class="title">Đổi <em>mật khẩu</em> đăng nhập</h1>
-        <div class="lede">Đặt mật khẩu mới ít nhất <em>10 ký tự</em>, có cả chữ hoa, chữ thường, số và ký tự đặc biệt. Sau khi đổi, các thiết bị khác sẽ bị đăng xuất tự động — bạn vẫn ở lại phiên này.</div>
+        <div class="lede">Đặt mật khẩu mới ít nhất <em>10 ký tự</em>, có cả chữ hoa, chữ thường, số và ký tự đặc biệt.</div>
       </div>
 
       <div class="tabs-row">
@@ -348,12 +348,7 @@
               Đổi mật khẩu
             </a>
           </div>
-          <div class="toc-meta">
-            <div class="row"><span>Mật khẩu</span><span id="pwAgeMeta">87 ngày</span></div>
-            <div class="row"><span>2FA</span><span style="color:var(--accent)">Bật</span></div>
-            <div class="row"><span>Thiết bị</span><span>3 đang on</span></div>
-            <div class="row"><span>Đăng nhập gần nhất</span><span>13/05 14:18</span></div>
-          </div>
+          
         </aside>
 
         <div class="content">
@@ -376,14 +371,8 @@
                     Tài khoản đang an toàn
                     <span class="pill-tiny">Khoá HSM</span>
                   </div>
-                  <div class="status-desc">
-                    Mật khẩu hiện tại đặt cách đây <strong style="color:var(--fg)">87 ngày</strong>. Nên đổi mỗi 90 ngày theo chính sách công ty (PSC-04).
-                  </div>
-                  <div class="status-meta">
-                    <span>2FA<strong>SMS + Authenticator</strong></span>
-                    <span>IP cuối<strong>27.71.•••.42 / Hà Nội</strong></span>
-                    <span>Backup codes<strong>còn 8 / 10</strong></span>
-                  </div>
+                  
+                  
                 </div>
               </div>
             </div>
@@ -421,7 +410,7 @@
                   <div class="field" id="field-new">
                     <label class="field-label" for="newPw">
                       <span>Mật khẩu mới <span class="req">*</span></span>
-                      <span class="hint-mini">Tối thiểu 6 ký tự</span>
+                      <span class="hint-mini">Tối thiểu 6 ký tự, có chữ hoa, thường và số</span>
                     </label>
                     <div class="input-wrap">
                       <input type="password" class="input" id="newPw" name="newPassword" placeholder="Tạo mật khẩu mới" autocomplete="new-password" />
@@ -460,10 +449,6 @@
                       <div class="rule" data-rule="number">
                         <span class="rdot"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
                         Có chữ số (0–9)
-                      </div>
-                      <div class="rule" data-rule="symbol">
-                        <span class="rdot"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
-                        Có ký tự đặc biệt (!@#$…)
                       </div>
                       <div class="rule" data-rule="not-same">
                         <span class="rdot"><svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg></span>
@@ -569,7 +554,6 @@
     upper:  pw => /[A-Z]/.test(pw),
     lower:  pw => /[a-z]/.test(pw),
     number: pw => /[0-9]/.test(pw),
-    symbol: pw => /[^A-Za-z0-9]/.test(pw),
     'not-same': pw => pw.length > 0 && pw !== currentPw.value
   };
 

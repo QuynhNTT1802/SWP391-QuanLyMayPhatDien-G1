@@ -3,12 +3,12 @@
   var USER = window.USER_DATA || {}
   var SESSION = window.SESSION_DATA || {}
 
-  var ROLE_LABEL = { admin: 'Admin', manager: 'Quản lý kho', keeper: 'Thủ kho', account: 'Kế toán', staff: 'Nhân viên', viewer: 'Viewer' }
-  var STATUS_LABEL = { active: 'Hoạt động', inactive: 'Chưa kích hoạt', pending: 'Chờ duyệt', locked: 'Bị khoá' }
-  var WH_LABEL = { 'HN-01': 'HN-01 Hà Nội', 'HCM-03': 'HCM-03 TP.HCM', 'DN-02': 'DN-02 Đà Nẵng', 'ALL': 'Toàn hệ thống' }
+  var ROLE_LABEL = { admin: 'Admin', manager: 'Qu\u1ea3n l\u00fd kho', keeper: 'Th\u1ee7 kho', account: 'K\u1ebf to\u00e1n', staff: 'Nh\u00e2n vi\u00ean', viewer: 'Viewer' }
+  var STATUS_LABEL = { active: 'Ho\u1ea1t \u0111\u1ed9ng', inactive: 'Ch\u01b0a k\u00edch ho\u1ea1t', pending: 'Ch\u1edd duy\u1ec7t', locked: 'B\u1ecb kho\u00e1' }
+  var WH_LABEL = { 'HN-01': 'HN-01 H\u00e0 N\u1ed9i', 'HCM-03': 'HCM-03 TP.HCM', 'DN-02': 'DN-02 \u0110\u00e0 N\u1eb5ng', 'ALL': 'To\u00e0n h\u1ec7 th\u1ed1ng' }
   var FIELD_LABEL = {
-    name: 'Họ và tên', phone: 'Số điện thoại', address: 'Địa chỉ', status: 'Trạng thái',
-    role: 'Vai trò', permissions: 'Ghi đè quyền'
+    name: 'H\u1ecd v\u00e0 t\u00ean', phone: 'S\u1ed1 \u0111i\u1ec7n tho\u1ea1i', address: '\u0110\u1ecba ch\u1ec9', status: 'Tr\u1ea1ng th\u00e1i',
+    role: 'Vai tr\u00f2', permissions: 'Ghi \u0111\u00e8 quy\u1ec1n'
   }
 
   var form = document.getElementById('editForm')
@@ -69,6 +69,13 @@
 
   ;[].slice.call(document.querySelectorAll('input[name^="perOverride_"]')).forEach(function (radio) {
     radio.addEventListener('change', function () {
+      var action = this.dataset.action
+      if (this.value !== 'DENY' && action !== 'view') {
+        var viewRadio = document.querySelector(
+          'input[name^="perOverride_"][data-resource="' + this.dataset.resource + '"][data-action="view"][value="' + this.value + '"]'
+        )
+        if (viewRadio) viewRadio.checked = true
+      }
       current.permissions = getPermissionSnapshot()
       diffField('permissions')
       updateUI()
@@ -122,23 +129,23 @@
   function updateUI() {
     var dirty = getDirtyFields()
     document.body.classList.toggle('has-changes', dirty.length > 0)
-    document.getElementById('dirtyPill').textContent = dirty.length + ' trường'
+    document.getElementById('dirtyPill').textContent = dirty.length + ' tr\u01b0\u1eddng'
     var badge = document.getElementById('changeBadge')
     badge.textContent = dirty.length
     badge.classList.toggle('has-changes', dirty.length > 0)
     var list = document.getElementById('changesList')
     if (dirty.length === 0) {
-      list.innerHTML = '<div class="changes-empty">Chưa có thay đổi nào.<br>Sửa thông tin để xem diff.</div>'
+      list.innerHTML = '<div class="changes-empty">Ch\u01b0a c\u00f3 thay \u0111\u1ed5i n\u00e0o.<br>S\u1eeda th\u00f4ng tin \u0111\u1ec3 xem diff.</div>'
     } else {
       var html = ''
       dirty.forEach(function (k) {
         if (k === 'permissions') {
           var permDiffs = getPermissionsDiffItems()
           permDiffs.forEach(function (d) {
-            html += '<div class="change-item"><span class="field">Ghi đè ' + d.label + '</span><span class="from">' + d.from + '</span><span class="arrow">→</span><span class="to">' + d.to + '</span></div>'
+            html += '<div class="change-item"><span class="field">Ghi \u0111\u00e8 ' + d.label + '</span><span class="from">' + d.from + '</span><span class="arrow">\u2192</span><span class="to">' + d.to + '</span></div>'
           })
         } else {
-          html += '<div class="change-item"><span class="field">' + FIELD_LABEL[k] + '</span><span class="from">' + formatValue(k, original[k]) + '</span><span class="arrow">→</span><span class="to">' + formatValue(k, current[k]) + '</span></div>'
+          html += '<div class="change-item"><span class="field">' + FIELD_LABEL[k] + '</span><span class="from">' + formatValue(k, original[k]) + '</span><span class="arrow">\u2192</span><span class="to">' + formatValue(k, current[k]) + '</span></div>'
         }
       })
       list.innerHTML = html
@@ -146,24 +153,24 @@
   }
 
   function formatValue(field, value) {
-    if (field === 'role') return value || '—'
+    if (field === 'role') return value || '\u2014'
     if (field === 'status') return STATUS_LABEL[value] || value
     if (field === 'warehouse') return WH_LABEL[value] || value
-    return value || '—'
+    return value || '\u2014'
   }
 
   document.getElementById('saveBtn').addEventListener('click', save)
   document.getElementById('cancelBtn').addEventListener('click', cancel)
 
   function save() {
-    if (!isValid()) { toast('Vui lòng kiểm tra các trường được tô đỏ', 'danger'); return }
+    if (!isValid()) { toast('Vui l\u00f2ng ki\u1ec3m tra c\u00e1c tr\u01b0\u1eddng \u0111\u01b0\u1ee3c t\u00f4 \u0111\u1ecf', 'danger'); return }
     form.submit()
   }
 
   function cancel() {
     var dirty = getDirtyFields()
     if (dirty.length === 0) { window.location.href = CTX + '/admin/users?action=list'; return }
-    confirmAction('Huỷ thay đổi?', 'Bạn có ' + dirty.length + ' thay đổi chưa lưu. Tất cả sẽ bị mất nếu rời khỏi.', function () {
+    confirmAction('Hu\u1ef7 thay \u0111\u1ed5i?', 'B\u1ea1n c\u00f3 ' + dirty.length + ' thay \u0111\u1ed5i ch\u01b0a l\u01b0u. T\u1ea5t c\u1ea3 s\u1ebd b\u1ecb m\u1ea5t n\u1ebfu r\u1eddi kh\u1ecfi.', function () {
       window.location.href = CTX + '/admin/users?action=list'
     })
   }
@@ -179,9 +186,9 @@
   ;[].slice.call(document.querySelectorAll('[data-danger]')).forEach(function (btn) {
     btn.addEventListener('click', function () {
       var action = btn.dataset.danger
-      if (action === 'reset-pw') confirmAction('Gửi reset mật khẩu?', 'Email sẽ gửi link đặt lại mật khẩu.', function () { toast('Đã gửi email reset mật khẩu', 'success') })
-      else if (action === 'logout-all') confirmAction('Đăng xuất mọi thiết bị?', 'User phải đăng nhập lại.', function () { toast('Đã đăng xuất tất cả thiết bị', 'success') })
-      else if (action === 'delete') confirmAction('Xoá tài khoản?', 'Soft delete · có thể khôi phục trong 30 ngày.', function () { toast('Đã xoá tài khoản', 'success'); setTimeout(function () { window.location.href = CTX + '/admin/users?action=list' }, 1200) })
+      if (action === 'reset-pw') confirmAction('G\u1eedi reset m\u1eadt kh\u1ea9u?', 'Email s\u1ebd g\u1eedi link \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u.', function () { toast('\u0110\u00e3 g\u1eedi email reset m\u1eadt kh\u1ea9u', 'success') })
+      else if (action === 'logout-all') confirmAction('\u0110\u0103ng xu\u1ea5t m\u1ecdi thi\u1ebft b\u1ecb?', 'User ph\u1ea3i \u0111\u0103ng nh\u1eadp l\u1ea1i.', function () { toast('\u0110\u00e3 \u0111\u0103ng xu\u1ea5t t\u1ea5t c\u1ea3 thi\u1ebft b\u1ecb', 'success') })
+      else if (action === 'delete') confirmAction('Xo\u00e1 t\u00e0i kho\u1ea3n?', 'Soft delete \u00b7 c\u00f3 th\u1ec3 kh\u00f4i ph\u1ee5c trong 30 ng\u00e0y.', function () { toast('\u0110\u00e3 xo\u00e1 t\u00e0i kho\u1ea3n', 'success'); setTimeout(function () { window.location.href = CTX + '/admin/users?action=list' }, 1200) })
     })
   })
 
@@ -215,6 +222,6 @@
   updateUI()
 
   if (SESSION.message) toast(SESSION.message, 'success')
-  if (SESSION.error) toast('Vui lòng kiểm tra lại thông tin', 'danger')
+  if (SESSION.error) toast('Vui l\u00f2ng ki\u1ec3m tra l\u1ea1i th\u00f4ng tin', 'danger')
 })()
 
