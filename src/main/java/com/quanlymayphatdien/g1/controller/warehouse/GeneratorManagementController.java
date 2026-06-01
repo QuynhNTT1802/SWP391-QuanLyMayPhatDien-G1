@@ -121,7 +121,7 @@ public class GeneratorManagementController extends HttpServlet {
 
         GeneratorDAO dao = new GeneratorDAO();
         List<Generator> generators = dao.findGeneratorsByFilters(search, status, brandId, genTypeId, page, pageSize);
-        int total = dao.getTotalFiltered(search, status);
+        int total = dao.getTotalFiltered(search, status, brandId, genTypeId);
         int totalPages = (int) Math.ceil((double) total / pageSize);
 
         request.setAttribute("generators", generators);
