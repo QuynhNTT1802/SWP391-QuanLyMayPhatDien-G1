@@ -16,12 +16,12 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <style>
+        a.btn, a.back-link { text-decoration: none; }
         .product-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
         .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
         .product-table th { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; background: var(--surface-2); letter-spacing: 0.04em; }
         .product-table td { font-size: 13px; }
         .product-table tbody tr:hover { background: var(--surface-2); }
-        .text-right { text-align: right; }
         .text-center { text-align: center; }
         .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-pending { background: #fff3cd; color: #856404; }
@@ -39,22 +39,66 @@
         .alert-success { background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
         .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
         .alert-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
-        .action-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
-        .action-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; flex: 1; min-width: 280px; display: flex; flex-direction: column; }
-        .action-card h4 { margin: 0 0 4px; font-size: 13px; font-weight: 700; color: var(--fg); }
-        .action-card .action-sub { font-size: 11.5px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; flex: 1; }
-        .action-card form { display: flex; gap: 8px; flex-wrap: wrap; }
-        .action-card input[type="text"] { flex: 1; min-width: 160px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); }
-        .action-card input[type="text"]:focus { outline: none; border-color: var(--accent); }
+
+        /* Action bar trên đầu */
+        .action-bar-top { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 16px; }
         .btn-warn { background: var(--warn); color: white; border-color: var(--warn); }
         .btn-warn:hover { filter: brightness(1.05); }
         .btn-success { background: var(--accent); color: white; border-color: var(--accent); }
         .btn-success:hover { filter: brightness(1.05); }
         .btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
         .btn-danger:hover { filter: brightness(1.05); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+        .tab { padding: 10px 18px; border: none; background: transparent; color: var(--muted);
+            cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font-ui);
+            border-bottom: 2px solid transparent; margin-bottom: -1px; }
+        .tab:hover { color: var(--fg); }
+        .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
         .detail-pager { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 0 0; align-items: center; }
         .detail-pager .page-info { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
-        .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55; }
+        .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55;
+            padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
+
+        /* History timeline */
+        .history-list { display: flex; flex-direction: column; gap: 0; }
+        .history-item { display: grid; grid-template-columns: 36px 1fr; gap: 12px;
+            padding: 12px 0; border-bottom: 1px dashed var(--border); }
+        .history-item:last-child { border-bottom: 0; }
+        .history-icon { width: 32px; height: 32px; border-radius: 50%;
+            display: grid; place-items: center; flex-shrink: 0; }
+        .history-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .history-icon.create { background: var(--info-soft); color: var(--info); }
+        .history-icon.approve { background: var(--accent-soft); color: var(--accent); }
+        .history-icon.reject { background: var(--danger-soft); color: var(--danger); }
+        .history-icon.revision { background: var(--warn-soft); color: var(--warn); }
+        .history-body { line-height: 1.4; }
+        .history-title { font-size: 13px; font-weight: 600; color: var(--fg); }
+        .history-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+        /* Modal */
+        .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+            display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+        .modal-host.show { display: flex; }
+        .modal-card { background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
+        .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+        .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+        .modal-card label { display: block; font-size: 11px; color: var(--muted);
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+        .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
+            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
+            min-height: 80px; resize: vertical; }
+        .modal-card textarea:focus { outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
     </style>
 </head>
 <body>
@@ -114,7 +158,7 @@
                         <c:out value="${receipt.receiptCode}"/>
                         <c:choose>
                             <c:when test="${receipt.status == 'PENDING_RECONCILIATION'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                            <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
+                            <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                             <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
                             <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
                             <c:otherwise><span class="status-pill"><c:out value="${receipt.status}"/></span></c:otherwise>
@@ -135,209 +179,188 @@
                         </c:if>
                     </div>
                 </div>
-                <div class="hero-actions"></div>
             </div>
 
-            <div class="layout">
-                <div class="toc">
-                    <a class="toc-item active" data-toc="info"><span class="toc-num">01</span><span>Thông tin phiếu</span></a>
-                    <c:if test="${not empty receipt.note}">
-                        <a class="toc-item" data-toc="note"><span class="toc-num">02</span><span>Ghi chú &amp; lịch sử</span></a>
-                    </c:if>
-                    <a class="toc-item" data-toc="products"><span class="toc-num"><c:choose><c:when test="${not empty receipt.note}">03</c:when><c:otherwise>02</c:otherwise></c:choose></span><span>Chi tiết dòng hàng</span></a>
-                    <c:if test="${receipt.status == 'PENDING_RECONCILIATION' && isManager}">
-                        <a class="toc-item" data-toc="actions"><span class="toc-num"><c:choose><c:when test="${not empty receipt.note}">04</c:when><c:otherwise>03</c:otherwise></c:choose></span><span>Hành động</span></a>
-                    </c:if>
-                    <div class="toc-meta">
-                        <strong>#${receipt.receiptId}</strong><br>
-                        Tạo: ${receipt.createdAt}<br>
-                        <c:if test="${not empty receipt.approvedAt}">Duyệt: ${receipt.approvedAt}</c:if>
-                    </div>
+            <c:if test="${receipt.status == 'PENDING_RECONCILIATION' && isManager}">
+                <div class="action-bar-top">
+                    <form method="POST" action="${pageContext.request.contextPath}/receipt?action=approve" style="display:inline;">
+                        <input type="hidden" name="id" value="${receipt.receiptId}" />
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận duyệt phiếu này? Hệ thống sẽ cập nhật tồn kho.')">
+                            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                            Duyệt phiếu
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                        Yêu cầu chỉnh sửa
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Từ chối
+                    </button>
+                </div>
+            </c:if>
+
+            <div class="section" style="padding: 18px 22px;">
+                <div class="tabs">
+                    <button type="button" class="tab active" data-tab="info">Thông tin chung</button>
+                    <button type="button" class="tab" data-tab="history">Lịch sử cập nhật</button>
+                    <button type="button" class="tab" data-tab="products">Chi tiết dòng hàng</button>
                 </div>
 
-                <div class="content">
-                    <section class="section" id="info">
-                        <div class="section-head">
-                            <div>
-                                <div class="section-num">01 — THÔNG TIN CHUNG</div>
-                                <h3 class="section-title">Phiếu ${receipt.receiptType == 'IMPORT' ? 'nhập' : 'xuất'} kho &amp; tiến trình</h3>
-                            </div>
-                            <c:if test="${not empty receipt.approvedAt}">
-                                <div class="section-update">Duyệt ${receipt.approvedAt}</div>
-                            </c:if>
+                <div class="tab-panel active" id="tab-info">
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <div class="info-label">Loại phiếu</div>
+                            <div class="info-value">${receipt.receiptType == 'IMPORT' ? 'Nhập kho' : 'Xuất kho'}</div>
                         </div>
-                        <div class="info-grid">
-                            <div class="info-field">
-                                <div class="info-label">Loại phiếu</div>
-                                <div class="info-value">${receipt.receiptType == 'IMPORT' ? 'Nhập kho' : 'Xuất kho'}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Kho</div>
-                                <div class="info-value"><c:out value="${receipt.warehouseName}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Người tạo</div>
-                                <div class="info-value"><c:out value="${receipt.createdByName}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Ngày tạo</div>
-                                <div class="info-value mono">${receipt.createdAt}</div>
-                            </div>
-                            <c:if test="${not empty receipt.orderCode}">
-                                <div class="info-field">
-                                    <div class="info-label">Đơn hàng</div>
-                                    <div class="info-value mono"><c:out value="${receipt.orderCode}"/></div>
-                                </div>
-                                <div class="info-field">
-                                    <div class="info-label">Khách hàng</div>
-                                    <div class="info-value"><c:out value="${receipt.customerName}"/></div>
-                                </div>
-                            </c:if>
-                            <c:if test="${not empty receipt.approvedByName}">
-                                <div class="info-field">
-                                    <div class="info-label">Người duyệt</div>
-                                    <div class="info-value"><c:out value="${receipt.approvedByName}"/></div>
-                                </div>
-                            </c:if>
-                            <c:if test="${not empty receipt.approvedAt}">
-                                <div class="info-field">
-                                    <div class="info-label">Ngày duyệt</div>
-                                    <div class="info-value mono">${receipt.approvedAt}</div>
-                                </div>
-                            </c:if>
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
-                                    <c:choose>
-                                        <c:when test="${receipt.status == 'PENDING_RECONCILIATION'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                                        <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
-                                        <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
-                                        <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
-                                        <c:otherwise><span class="status-pill"><c:out value="${receipt.status}"/></span></c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
+                        <div class="info-field">
+                            <div class="info-label">Kho</div>
+                            <div class="info-value"><c:out value="${receipt.warehouseName}"/></div>
                         </div>
-                    </section>
-
-                    <c:if test="${not empty receipt.note}">
-                        <section class="section" id="note">
-                            <div class="section-head">
-                                <div>
-                                    <div class="section-num">02 — GHI CHÚ &amp; LỊCH SỬ</div>
-                                    <h3 class="section-title">Ghi chú nội bộ</h3>
-                                </div>
-                            </div>
-                            <c:if test="${receipt.status == 'NEEDS_REVISION'}">
-                                <div class="alert alert-warn" style="margin-bottom: 12px;">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                                    <span>Phiếu này đang chờ chỉnh sửa từ nhân viên tạo phiếu.</span>
-                                </div>
-                            </c:if>
-                            <c:if test="${receipt.status == 'CANCELLED'}">
-                                <div class="alert alert-error" style="margin-bottom: 12px;">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                                    <span>Phiếu đã bị từ chối.</span>
-                                </div>
-                            </c:if>
-                            <div class="note-soft"><c:out value="${receipt.note}"/></div>
-                        </section>
-                    </c:if>
-
-                    <section class="section" id="products">
-                        <div class="section-head">
-                            <div>
-                                <div class="section-num"><c:choose><c:when test="${not empty receipt.note}">03</c:when><c:otherwise>02</c:otherwise></c:choose> — CHI TIẾT DÒNG HÀNG</div>
-                                <h3 class="section-title">Danh sách máy phát điện</h3>
-                            </div>
-                            <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
-                                <span class="section-update" id="detailCount"></span>
-                            </c:if>
+                        <div class="info-field">
+                            <div class="info-label">Người tạo</div>
+                            <div class="info-value"><c:out value="${receipt.createdByName}"/></div>
                         </div>
-                        <table class="product-table" id="detailTable">
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px;">#</th>
-                                    <th>Máy phát / Hãng</th>
-                                    <th>Serial</th>
-                                    <th class="text-center" style="width: 80px;">SL</th>
-                                    <th>Ghi chú</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailBody">
-                                <c:choose>
-                                    <c:when test="${empty receipt.details}">
-                                        <tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                            <tr class="detail-row">
-                                                <td class="mono">${st.index + 1}</td>
-                                                <td><strong><c:out value="${d.generatorModel}"/></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
-                                                <td class="mono"><c:out value="${d.serialNumber}"/></td>
-                                                <td class="text-center">${d.quantity}</td>
-                                                <td><c:out value="${d.note}"/></td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tbody>
-                        </table>
-                        <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
-                            <div class="detail-pager" id="detailPagination">
-                                <button type="button" class="btn" id="prevDetailPage">‹ Trước</button>
-                                <span class="page-info" id="detailPageInfo"></span>
-                                <button type="button" class="btn" id="nextDetailPage">Sau ›</button>
+                        <div class="info-field">
+                            <div class="info-label">Ngày tạo</div>
+                            <div class="info-value mono">${receipt.createdAt}</div>
+                        </div>
+                        <c:if test="${not empty receipt.orderCode}">
+                            <div class="info-field">
+                                <div class="info-label">Đơn hàng</div>
+                                <div class="info-value mono"><c:out value="${receipt.orderCode}"/></div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Khách hàng</div>
+                                <div class="info-value"><c:out value="${receipt.customerName}"/></div>
                             </div>
                         </c:if>
-                    </section>
+                        <c:if test="${not empty receipt.approvedByName}">
+                            <div class="info-field">
+                                <div class="info-label">Người duyệt</div>
+                                <div class="info-value"><c:out value="${receipt.approvedByName}"/></div>
+                            </div>
+                        </c:if>
+                        <c:if test="${not empty receipt.approvedAt}">
+                            <div class="info-field">
+                                <div class="info-label">Ngày duyệt</div>
+                                <div class="info-value mono">${receipt.approvedAt}</div>
+                            </div>
+                        </c:if>
+                        <div class="info-field">
+                            <div class="info-label">Trạng thái</div>
+                            <div class="info-value">
+                                <c:choose>
+                                    <c:when test="${receipt.status == 'PENDING_RECONCILIATION'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
+                                    <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
+                                    <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
+                                    <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
+                                    <c:otherwise><span class="status-pill"><c:out value="${receipt.status}"/></span></c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+                    </div>
+                    <c:if test="${not empty receipt.note}">
+                        <div style="margin-top: 18px;">
+                            <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
+                            <div class="note-soft"><c:out value="${receipt.note}"/></div>
+                        </div>
+                    </c:if>
+                </div>
 
-                    <c:if test="${receipt.status == 'PENDING_RECONCILIATION' && isManager}">
-                        <section class="section" id="actions">
-                            <div class="section-head">
-                                <div>
-                                    <div class="section-num"><c:choose><c:when test="${not empty receipt.note}">04</c:when><c:otherwise>03</c:otherwise></c:choose> — HÀNH ĐỘNG</div>
-                                    <h3 class="section-title">Duyệt, từ chối hoặc yêu cầu chỉnh sửa</h3>
+                <div class="tab-panel" id="tab-history">
+                    <div class="history-list">
+                        <div class="history-item">
+                            <div class="history-icon create">
+                                <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                            </div>
+                            <div class="history-body">
+                                <div class="history-title">Tạo phiếu bởi <c:out value="${receipt.createdByName}"/></div>
+                                <div class="history-meta">${receipt.createdAt}</div>
+                            </div>
+                        </div>
+                        <c:if test="${receipt.status == 'NEEDS_REVISION'}">
+                            <div class="history-item">
+                                <div class="history-icon revision">
+                                    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                </div>
+                                <div class="history-body">
+                                    <div class="history-title">Yêu cầu chỉnh sửa<c:if test="${not empty receipt.approvedByName}"> bởi <c:out value="${receipt.approvedByName}"/></c:if></div>
+                                    <div class="history-meta">Phiếu chờ nhân viên tạo phiếu chỉnh sửa và gửi lại</div>
                                 </div>
                             </div>
-                            <div class="action-row">
-                                <div class="action-card">
-                                    <h4>Duyệt phiếu</h4>
-                                    <div class="action-sub">Hệ thống sẽ cập nhật tồn kho ngay sau khi duyệt. Không thể hoàn tác.</div>
-                                    <form method="POST" action="${pageContext.request.contextPath}/receipt?action=approve">
-                                        <input type="hidden" name="id" value="${receipt.receiptId}" />
-                                        <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận duyệt phiếu này?')">
-                                            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                            Duyệt phiếu
-                                        </button>
-                                    </form>
+                        </c:if>
+                        <c:if test="${receipt.status == 'COMPLETED' && not empty receipt.approvedAt}">
+                            <div class="history-item">
+                                <div class="history-icon approve">
+                                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                 </div>
-                                <div class="action-card">
-                                    <h4>Yêu cầu chỉnh sửa</h4>
-                                    <div class="action-sub">Gửi phiếu lại cho nhân viên tạo kèm lý do để chỉnh sửa và gửi lại.</div>
-                                    <form method="POST" action="${pageContext.request.contextPath}/receipt?action=requestRevision">
-                                        <input type="hidden" name="id" value="${receipt.receiptId}" />
-                                        <input type="text" name="reason" placeholder="Lý do yêu cầu chỉnh sửa..." required />
-                                        <button type="submit" class="btn btn-warn" onclick="return confirm('Yêu cầu nhân viên chỉnh sửa phiếu này?')">
-                                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                            Gửi yêu cầu
-                                        </button>
-                                    </form>
-                                </div>
-                                <div class="action-card">
-                                    <h4>Từ chối phiếu</h4>
-                                    <div class="action-sub">Phiếu sẽ bị huỷ và không cập nhật tồn kho. Không thể hoàn tác.</div>
-                                    <form method="POST" action="${pageContext.request.contextPath}/receipt?action=reject">
-                                        <input type="hidden" name="id" value="${receipt.receiptId}" />
-                                        <input type="text" name="reason" placeholder="Lý do từ chối..." required />
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận từ chối phiếu này?')">
-                                            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                            Từ chối
-                                        </button>
-                                    </form>
+                                <div class="history-body">
+                                    <div class="history-title">Duyệt phiếu bởi <c:out value="${receipt.approvedByName}"/></div>
+                                    <div class="history-meta">${receipt.approvedAt} — Tồn kho đã được cập nhật</div>
                                 </div>
                             </div>
-                        </section>
+                        </c:if>
+                        <c:if test="${receipt.status == 'CANCELLED' && not empty receipt.approvedAt}">
+                            <div class="history-item">
+                                <div class="history-icon reject">
+                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </div>
+                                <div class="history-body">
+                                    <div class="history-title">Từ chối phiếu bởi <c:out value="${receipt.approvedByName}"/></div>
+                                    <div class="history-meta">${receipt.approvedAt}</div>
+                                </div>
+                            </div>
+                        </c:if>
+                    </div>
+                    <c:if test="${not empty receipt.note}">
+                        <div style="margin-top: 18px;">
+                            <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú &amp; lý do</div>
+                            <div class="note-soft"><c:out value="${receipt.note}"/></div>
+                        </div>
+                    </c:if>
+                </div>
+
+                <div class="tab-panel" id="tab-products">
+                    <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
+                        <div style="margin-bottom: 8px; font-size: 12px; color: var(--muted);" id="detailCount"></div>
+                    </c:if>
+                    <table class="product-table" id="detailTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Máy phát / Hãng</th>
+                                <th>Serial</th>
+                                <th class="text-center" style="width: 80px;">SL</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailBody">
+                            <c:choose>
+                                <c:when test="${empty receipt.details}">
+                                    <tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:forEach var="d" items="${receipt.details}" varStatus="st">
+                                        <tr class="detail-row">
+                                            <td class="mono">${st.index + 1}</td>
+                                            <td><strong><c:out value="${d.generatorModel}"/></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
+                                            <td class="mono"><c:out value="${d.serialNumber}"/></td>
+                                            <td class="text-center">${d.quantity}</td>
+                                            <td><c:out value="${d.note}"/></td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
+                        </tbody>
+                    </table>
+                    <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
+                        <div class="detail-pager" id="detailPagination">
+                            <button type="button" class="btn" id="prevDetailPage">‹ Trước</button>
+                            <span class="page-info" id="detailPageInfo"></span>
+                            <button type="button" class="btn" id="nextDetailPage">Sau ›</button>
+                        </div>
                     </c:if>
                 </div>
             </div>
@@ -345,9 +368,58 @@
     </div>
 </div>
 
+<c:if test="${receipt.status == 'PENDING_RECONCILIATION' && isManager}">
+    <div class="modal-host" id="rejectModal">
+        <div class="modal-card">
+            <h3>Từ chối phiếu</h3>
+            <div class="modal-sub">Phiếu sẽ bị huỷ và không cập nhật tồn kho. Hành động này không thể hoàn tác.</div>
+            <form method="POST" action="${pageContext.request.contextPath}/receipt?action=reject">
+                <input type="hidden" name="id" value="${receipt.receiptId}" />
+                <label>Lý do từ chối</label>
+                <textarea name="reason" placeholder="Nhập lý do từ chối phiếu..." required></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
+                    <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-host" id="revisionModal">
+        <div class="modal-card">
+            <h3>Yêu cầu chỉnh sửa</h3>
+            <div class="modal-sub">Gửi phiếu lại cho nhân viên tạo phiếu kèm lý do để chỉnh sửa và gửi lại.</div>
+            <form method="POST" action="${pageContext.request.contextPath}/receipt?action=requestRevision">
+                <input type="hidden" name="id" value="${receipt.receiptId}" />
+                <label>Lý do yêu cầu chỉnh sửa</label>
+                <textarea name="reason" placeholder="Mô tả phần cần chỉnh sửa..." required></textarea>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
+                    <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</c:if>
+
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
+(function () {
+    var tabs = document.querySelectorAll('.tab');
+    var panels = document.querySelectorAll('.tab-panel');
+    tabs.forEach(function (t) {
+        t.addEventListener('click', function () {
+            var key = t.getAttribute('data-tab');
+            tabs.forEach(function (x) { x.classList.remove('active'); });
+            panels.forEach(function (p) { p.classList.remove('active'); });
+            t.classList.add('active');
+            var panel = document.getElementById('tab-' + key);
+            if (panel) panel.classList.add('active');
+        });
+    });
+})();
+
 (function () {
     var rows = document.querySelectorAll('#detailBody .detail-row');
     if (rows.length <= 10) return;
@@ -374,19 +446,19 @@
     render();
 })();
 
-(function () {
-    var items = document.querySelectorAll('.toc-item');
-    items.forEach(function (it) {
-        var key = it.getAttribute('data-toc');
-        var sec = document.getElementById(key);
-        it.addEventListener('click', function (e) {
-            e.preventDefault();
-            items.forEach(function (x) { x.classList.remove('active'); });
-            it.classList.add('active');
-            if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+function openModal(id) {
+    var m = document.getElementById(id);
+    if (m) m.classList.add('show');
+}
+function closeModal(id) {
+    var m = document.getElementById(id);
+    if (m) m.classList.remove('show');
+}
+document.querySelectorAll('.modal-host').forEach(function (m) {
+    m.addEventListener('click', function (e) {
+        if (e.target === m) m.classList.remove('show');
     });
-})();
+});
 </script>
 </body>
 </html>

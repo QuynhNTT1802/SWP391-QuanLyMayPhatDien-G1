@@ -78,7 +78,7 @@
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
                                 <option value="PENDING_RECONCILIATION" <c:if test="${statusFilter == 'PENDING_RECONCILIATION'}">selected</c:if>>Chờ duyệt</option>
-                                <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
+                                <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                                 <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                             </select>
@@ -155,7 +155,7 @@
                                                             <span class="status active" style="--dot:var(--warn);"><span class="sdot"></span>Chờ duyệt</span>
                                                         </c:when>
                                                         <c:when test="${r.status == 'NEEDS_REVISION'}">
-                                                            <span class="status active" style="--dot:var(--warn);background:var(--warn-soft);color:var(--warn);"><span class="sdot"></span>Cần chỉnh sửa</span>
+                                                            <span class="status active" style="--dot:var(--warn);background:var(--warn-soft);color:var(--warn);"><span class="sdot"></span>Yêu cầu chỉnh sửa</span>
                                                         </c:when>
                                                         <c:when test="${r.status == 'COMPLETED'}">
                                                             <span class="status active"><span class="sdot"></span>Hoàn thành</span>
