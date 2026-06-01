@@ -98,6 +98,12 @@ public class GeneratorManagementController extends HttpServlet {
             throws ServletException, IOException {
         String search = request.getParameter("search");
         String status = request.getParameter("status");
+        String brandIdStr = request.getParameter("brandId");
+        String genTypeIdStr = request.getParameter("genTypeId");
+        Integer brandId = (brandIdStr != null && !brandIdStr.isEmpty())
+                ? Integer.parseInt(brandIdStr) : null;
+        Integer genTypeId = (genTypeIdStr != null && !genTypeIdStr.isEmpty())
+                ? Integer.parseInt(genTypeIdStr) : null;
 
         int page = 1;
         int pageSize = 10;
@@ -114,7 +120,7 @@ public class GeneratorManagementController extends HttpServlet {
         }
 
         GeneratorDAO dao = new GeneratorDAO();
-        List<Generator> generators = dao.findGeneratorsByFilters(search, status, page, pageSize);
+        List<Generator> generators = dao.findGeneratorsByFilters(search, status, brandId, genTypeId, page, pageSize);
         int total = dao.getTotalFiltered(search, status);
         int totalPages = (int) Math.ceil((double) total / pageSize);
 
@@ -126,7 +132,12 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("statusFilter", status);
         request.setAttribute("activeCount", dao.countByStatus("active"));
         request.setAttribute("lockedCount", dao.countByStatus("locked"));
-
+        request.setAttribute("brandFilter", brandIdStr);    
+        request.setAttribute("genTypeFilter", genTypeIdStr);
+        CategoryDAO catDAO = new CategoryDAO();
+        request.setAttribute("brandList", catDAO.findByType("brand"));
+        request.setAttribute("genTypeList", catDAO.findByType("generator_type"));
+        
         request.getRequestDispatcher("/view/warehouse/generator-list.jsp").forward(request, response);
     }
 
