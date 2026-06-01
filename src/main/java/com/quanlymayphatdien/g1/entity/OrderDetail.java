@@ -6,36 +6,45 @@ package com.quanlymayphatdien.g1.entity;
 
 /**
  *
- * @author FPTShop
+ * @author Phuong Linh
  */
-public class ReceiptDetail {
-    private int receiptDetailId;
-    private int receiptId;
+public class OrderDetail {
+
+    private int orderDetailId;
+    private int orderId;
     private int generatorId;
-    private String serialNumber;
     private int quantity;
+    private Double unitPrice;
     private String note;
-    
     private String generatorModel;
-    private String generatorBrand;
 
-    public ReceiptDetail() {
+    public OrderDetail() {
     }
 
-    public int getReceiptDetailId() {
-        return receiptDetailId;
-    }
-    
-    public void setReceiptDetailId(int receiptDetailId) {
-        this.receiptDetailId = receiptDetailId;
-    }
-
-    public int getReceiptId() {
-        return receiptId;
+    public OrderDetail(int orderDetailId, int orderId, int generatorId, int quantity, Double unitPrice, String note, String generatorModel) {
+        this.orderDetailId = orderDetailId;
+        this.orderId = orderId;
+        this.generatorId = generatorId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.note = note;
+        this.generatorModel = generatorModel;
     }
 
-    public void setReceiptId(int receiptId) {
-        this.receiptId = receiptId;
+    public int getOrderDetailId() {
+        return orderDetailId;
+    }
+
+    public void setOrderDetailId(int orderDetailId) {
+        this.orderDetailId = orderDetailId;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(int orderId) {
+        this.orderId = orderId;
     }
 
     public int getGeneratorId() {
@@ -46,20 +55,20 @@ public class ReceiptDetail {
         this.generatorId = generatorId;
     }
 
-    public String getSerialNumber() {
-        return serialNumber;
-    }
-
-    public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
-    }
-
     public int getQuantity() {
         return quantity;
     }
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public Double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(Double unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
     public String getNote() {
@@ -77,13 +86,11 @@ public class ReceiptDetail {
     public void setGeneratorModel(String generatorModel) {
         this.generatorModel = generatorModel;
     }
-
-    public String getGeneratorBrand() {
-        return generatorBrand;
-    }
-
-    public void setGeneratorBrand(String generatorBrand) {
-        this.generatorBrand = generatorBrand;
-    }
+    
+ 
+    
     
 }
+    
+
+

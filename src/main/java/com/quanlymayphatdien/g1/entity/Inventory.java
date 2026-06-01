@@ -4,38 +4,41 @@
  */
 package com.quanlymayphatdien.g1.entity;
 
+import java.time.LocalDateTime;
+
 /**
  *
  * @author FPTShop
  */
-public class ReceiptDetail {
-    private int receiptDetailId;
-    private int receiptId;
+public class Inventory {
+
+    private int inventoryId;
+    private int warehouseId;
     private int generatorId;
-    private String serialNumber;
     private int quantity;
-    private String note;
-    
+    private LocalDateTime updatedAt;
+
     private String generatorModel;
     private String generatorBrand;
+    private String warehouseName;
 
-    public ReceiptDetail() {
+    public Inventory() {
     }
 
-    public int getReceiptDetailId() {
-        return receiptDetailId;
-    }
-    
-    public void setReceiptDetailId(int receiptDetailId) {
-        this.receiptDetailId = receiptDetailId;
+    public int getInventoryId() {
+        return inventoryId;
     }
 
-    public int getReceiptId() {
-        return receiptId;
+    public void setInventoryId(int inventoryId) {
+        this.inventoryId = inventoryId;
     }
 
-    public void setReceiptId(int receiptId) {
-        this.receiptId = receiptId;
+    public int getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(int warehouseId) {
+        this.warehouseId = warehouseId;
     }
 
     public int getGeneratorId() {
@@ -46,14 +49,6 @@ public class ReceiptDetail {
         this.generatorId = generatorId;
     }
 
-    public String getSerialNumber() {
-        return serialNumber;
-    }
-
-    public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
-    }
-
     public int getQuantity() {
         return quantity;
     }
@@ -62,12 +57,12 @@ public class ReceiptDetail {
         this.quantity = quantity;
     }
 
-    public String getNote() {
-        return note;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setNote(String note) {
-        this.note = note;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public String getGeneratorModel() {
@@ -85,5 +80,13 @@ public class ReceiptDetail {
     public void setGeneratorBrand(String generatorBrand) {
         this.generatorBrand = generatorBrand;
     }
-    
+
+    public String getWarehouseName() {
+        return warehouseName;
+    }
+
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
+    }
+
 }
