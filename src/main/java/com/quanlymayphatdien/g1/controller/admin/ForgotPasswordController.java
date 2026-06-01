@@ -45,19 +45,21 @@ public class ForgotPasswordController extends HttpServlet {
             }
         }
         String statusFilter = request.getParameter("status");
+        String search = request.getParameter("search");
         PasswordResetRequestDAO passwordResetRequestDAO = new PasswordResetRequestDAO();
         int pageSize = 10;
-        List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll(page, pageSize, statusFilter);
+        List<PasswordResetRequest> listRequests = passwordResetRequestDAO.findAll(page, pageSize, statusFilter, search, null, null);
         List<PasswordResetRequest> pendingList = passwordResetRequestDAO.findByStatus("pending");
-        int totalRequests = passwordResetRequestDAO.getTotalCountByStatus(statusFilter);
+        int totalRequests = passwordResetRequestDAO.getTotalCountByStatus(statusFilter, search, null, null);
         int totalPages = (int) Math.ceil((double) totalRequests / pageSize);
-        
+
         request.setAttribute("pendingCount", pendingList.size());
         request.setAttribute("listRequests", listRequests);
         request.setAttribute("totalRequests", totalRequests);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
         request.setAttribute("statusFilter", statusFilter);
+        request.setAttribute("search", search);
         request.setAttribute("pendingList", pendingList);
         request.setAttribute("doneRequests", totalRequests - pendingList.size());
         request.getRequestDispatcher("/view/admin/admin-forgotpass.jsp").forward(request, response);

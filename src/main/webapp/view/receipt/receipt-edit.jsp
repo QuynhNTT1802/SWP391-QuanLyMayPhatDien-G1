@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tạo phiếu — Warehouse OS</title>
+    <title>Chỉnh sửa phiếu — Warehouse OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -71,12 +71,15 @@
         .alert .alert-body { flex: 1; line-height: 1.5; }
         .alert .alert-title { font-weight: 700; margin-bottom: 4px; }
         .alert ul { margin: 4px 0 0 18px; padding: 0; }
+        .alert pre { margin: 6px 0 0; font-family: inherit; font-size: 13px;
+            white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
         .alert-error { background: var(--danger-soft); color: var(--danger);
             border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
         .alert-warn { background: var(--warn-soft); color: var(--warn);
             border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
 
         a.btn { text-decoration: none; }
+        .hero-avatar.edit { background: oklch(58% 0.16 75); }
 
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -89,37 +92,52 @@
 
     <div>
         <header class="topbar">
-            <h1>Tạo phiếu mới</h1>
-            <span class="crumb">/ <a href="${pageContext.request.contextPath}/receipt">Phiếu nhập/xuất</a> / Tạo mới</span>
+            <h1>Chỉnh sửa phiếu</h1>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/receipt">Phiếu nhập/xuất</a> / <c:out value="${receipt.receiptCode}"/> / Chỉnh sửa</span>
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                <a class="btn" href="${pageContext.request.contextPath}/receipt">Huỷ</a>
+                <a class="btn" href="${pageContext.request.contextPath}/receipt?action=detail&id=${receipt.receiptId}">Huỷ</a>
                 <button type="button" class="btn btn-primary" onclick="document.getElementById('receiptForm').submit()">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                    Lưu phiếu
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                    Gửi lại để duyệt
                 </button>
             </div>
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/receipt">
+            <a class="back-link" href="${pageContext.request.contextPath}/receipt?action=detail&id=${receipt.receiptId}">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Huỷ và quay lại danh sách
+                Huỷ và quay lại chi tiết phiếu
             </a>
 
             <div class="hero">
-                <div class="hero-avatar" style="background: oklch(58% 0.16 250);">+</div>
+                <div class="hero-avatar edit">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </div>
                 <div class="hero-body">
-                    <h2 class="hero-name">Phiếu nhập/xuất kho</h2>
+                    <h2 class="hero-name">
+                        <c:out value="${receipt.receiptCode}"/>
+                        <span class="status-pill" style="background: oklch(94% 0.04 75); color: oklch(50% 0.13 75); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Yêu cầu chỉnh sửa</span>
+                    </h2>
                     <div class="hero-meta">
-                        <span>Điền thông tin phiếu và chi tiết các dòng hàng</span>
-                        <c:if test="${not empty order}">
-                            <span class="sep">·</span>
-                            <span>Tạo từ đơn <span class="id">${order.orderCode}</span></span>
-                        </c:if>
+                        <span>${receipt.receiptType == 'IMPORT' ? 'Phiếu nhập kho' : 'Phiếu xuất kho'}</span>
+                        <span class="sep">·</span>
+                        <span class="id">#${receipt.receiptId}</span>
+                        <span class="sep">·</span>
+                        <span>Chỉnh sửa theo yêu cầu của quản lý rồi gửi lại</span>
                     </div>
                 </div>
             </div>
+
+            <c:if test="${not empty receipt.note}">
+                <div class="alert alert-warn">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    <div class="alert-body">
+                        <div class="alert-title">Ghi chú từ phiếu (gồm lý do quản lý yêu cầu chỉnh sửa)</div>
+                        <pre><c:out value="${receipt.note}"/></pre>
+                    </div>
+                </div>
+            </c:if>
 
             <c:if test="${not empty errors}">
                 <div class="alert alert-error">
@@ -135,10 +153,8 @@
                 </div>
             </c:if>
 
-            <form id="receiptForm" action="${pageContext.request.contextPath}/receipt?action=save" method="POST">
-                <c:if test="${not empty receipt.orderId}">
-                    <input type="hidden" name="orderId" value="${receipt.orderId}" />
-                </c:if>
+            <form id="receiptForm" action="${pageContext.request.contextPath}/receipt?action=update" method="POST">
+                <input type="hidden" name="receiptId" value="${receipt.receiptId}" />
 
                 <div class="content">
                     <section class="section">
@@ -150,15 +166,12 @@
                         </div>
                         <div class="form-grid">
                             <div class="form-field">
-                                <label>Loại phiếu *</label>
-                                <select name="receiptType" required <c:if test="${not empty receipt.orderId}">disabled</c:if>>
-                                    <option value="">-- Chọn loại --</option>
+                                <label>Loại phiếu</label>
+                                <select disabled>
                                     <option value="IMPORT" <c:if test="${receipt.receiptType == 'IMPORT'}">selected</c:if>>Nhập kho</option>
                                     <option value="EXPORT" <c:if test="${receipt.receiptType == 'EXPORT'}">selected</c:if>>Xuất kho</option>
                                 </select>
-                                <c:if test="${not empty receipt.orderId}">
-                                    <input type="hidden" name="receiptType" value="EXPORT" />
-                                </c:if>
+                                <input type="hidden" name="receiptType" value="${receipt.receiptType}" />
                             </div>
                             <div class="form-field">
                                 <label>Kho *</label>

@@ -35,9 +35,31 @@
                 <div class="left">
                     <div class="eyebrow">Kho</div>
                     <h2 class="page-title">Chọn phiếu mua bán đã duyệt</h2>
-                    <div class="page-sub">${empty approvedOrders ? 0 : approvedOrders.size()} đơn hàng</div>
+                    <div class="page-sub">${totalItems} đơn hàng</div>
                 </div>
             </div>
+
+            <form method="get" action="${pageContext.request.contextPath}/receipt" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
+                <input type="hidden" name="action" value="selectOrder" />
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã đơn hoặc tên khách" autocomplete="off" />
+                </div>
+                <label style="font-size:13px;color:var(--muted);">Từ:</label>
+                <input type="date" name="fromDate" class="filter-select" value="<c:out value='${fromDate}'/>" />
+                <label style="font-size:13px;color:var(--muted);">Đến:</label>
+                <input type="date" name="toDate" class="filter-select" value="<c:out value='${toDate}'/>" />
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    Tìm kiếm
+                </button>
+                <c:if test="${not empty search or not empty fromDate or not empty toDate}">
+                    <a href="${pageContext.request.contextPath}/receipt?action=selectOrder" class="btn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Xoá lọc
+                    </a>
+                </c:if>
+            </form>
 
             <c:choose>
                 <c:when test="${empty approvedOrders}">
@@ -75,6 +97,34 @@
                                 </c:forEach>
                             </tbody>
                         </table>
+
+                        <c:set var="filterParams" value="" />
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                        </c:if>
+                        <c:if test="${not empty fromDate}">
+                            <c:set var="filterParams" value="${filterParams}&fromDate=${fromDate}" />
+                        </c:if>
+                        <c:if test="${not empty toDate}">
+                            <c:set var="filterParams" value="${filterParams}&toDate=${toDate}" />
+                        </c:if>
+                        <div class="pagination">
+                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                            <div class="controls">
+                                <c:if test="${currentPage > 1}">
+                                    <a href="?action=selectOrder&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="?action=selectOrder&page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                                <c:if test="${currentPage < totalPages}">
+                                    <a href="?action=selectOrder&page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                                </c:if>
+                            </div>
+                        </div>
                     </div>
                 </c:otherwise>
             </c:choose>

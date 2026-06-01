@@ -9,14 +9,12 @@ import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,38 +35,49 @@ public class InventoryController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
+
         List<Warehouse> warehouses = warehouseDAO.findAll();
         request.setAttribute("warehouses", warehouses);
+
         String whParam = request.getParameter("warehouse");
         Integer selectedWarehouse = null;
         if (whParam != null && !whParam.isEmpty()) {
-            selectedWarehouse = Integer.parseInt(whParam);
-        }
-        List<Inventory> allItems = new ArrayList<>();
-        List<Warehouse> warehouseGroups = new ArrayList<>();
-        if (selectedWarehouse != null) {
-            allItems = inventoryDAO.findByWarehouseId(selectedWarehouse);
-            for (Warehouse wh : warehouses) {
-                if (wh.getWarehouseId() == selectedWarehouse) {
-                    wh.setItemCount(allItems.size());
-                    warehouseGroups.add(wh);
-                    break;
-                }
-            }
-        } else {
-            for (Warehouse wh : warehouses) {
-                List<Inventory> whItems = inventoryDAO.findByWarehouseId(wh.getWarehouseId());
-                if (!whItems.isEmpty()) {
-                    wh.setItemCount(whItems.size());
-                    warehouseGroups.add(wh);
-                    allItems.addAll(whItems);
-                }
+            try {
+                selectedWarehouse = Integer.parseInt(whParam);
+            } catch (NumberFormatException ignored) {
             }
         }
+        String search = request.getParameter("search");
+
+        int page = 1;
+        int pageSize = 10;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int totalItems = inventoryDAO.countWithFilters(selectedWarehouse, search);
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        List<Inventory> inventoryList = inventoryDAO.findWithFilters(selectedWarehouse, search, page, pageSize);
+        int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
+        int toIndex = Math.min(page * pageSize, totalItems);
+
         request.setAttribute("selectedWarehouse", selectedWarehouse);
-        request.setAttribute("warehouseGroups", warehouseGroups);
-        request.setAttribute("inventoryList", allItems);
-        request.setAttribute("totalItems", allItems.size());
+        request.setAttribute("search", search);
+        request.setAttribute("inventoryList", inventoryList);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
         request.getRequestDispatcher("/view/inventory/inventory-list.jsp").forward(request, response);
     }
 
