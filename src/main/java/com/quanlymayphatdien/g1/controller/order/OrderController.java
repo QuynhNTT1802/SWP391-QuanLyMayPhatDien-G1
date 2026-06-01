@@ -118,12 +118,12 @@ public class OrderController extends HttpServlet {
         String statusFilter = request.getParameter("status");
         String searchFilter = request.getParameter("search");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
-
+       
         int pendding = saleorderdao.countStatusPending();
-        int approved = saleorderdao.countStatusApproved();
         int rejected = saleorderdao.countStatusRejected();
+        int approved = saleorderdao.countStatusApproved();
         int cancelled = saleorderdao.countStatusCancelled();
-
+        
         List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter);
 
         int page = 1;
@@ -279,7 +279,7 @@ public class OrderController extends HttpServlet {
 
         if (genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
-                // Bỏ qua dòng trống (user thêm dòng nhưng chưa chọn máy)
+               
                 if (genIds[i] == null || genIds[i].isEmpty()) {
                     continue;
                 }
@@ -307,7 +307,7 @@ public class OrderController extends HttpServlet {
         order.setStatus("PENDING");
         int newId = saleorderdao.insert(order);
         if (newId > 0) {
-            // Lưu từng chi tiết vào DB
+            
             for (OrderDetail d : detailsList) {
                 d.setOrderId(newId);
                 orderdetaildao.insert(d);
@@ -356,7 +356,7 @@ public class OrderController extends HttpServlet {
         int orderId = Integer.parseInt(request.getParameter("orderId"));
 
         try {
-            // Bước 1: Tính total + chuẩn bị list detail mới
+            
             String[] genIds = request.getParameterValues("generatorId");
             String[] qtys = request.getParameterValues("quantity");
             List<OrderDetail> newDetails = new ArrayList<>();
@@ -386,7 +386,7 @@ public class OrderController extends HttpServlet {
                 }
             }
 
-            // Bước 2: Load phiếu, set field mới
+          
             SaleOrder order = saleorderdao.findById(orderId);
             if (order == null) {
                 request.getSession().setAttribute("message", "Không tìm thấy phiếu.");
@@ -411,7 +411,7 @@ public class OrderController extends HttpServlet {
                 }
             }
 
-            // Bước 3: Update phiếu — DAO sẽ xử lý transaction nội bộ
+           
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 
             if (ok) {
