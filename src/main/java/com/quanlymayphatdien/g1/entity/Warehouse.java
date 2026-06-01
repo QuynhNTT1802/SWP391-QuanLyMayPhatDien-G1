@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
  * @author FPTShop
  */
 public class Warehouse {
+
     private int warehouseId;
     private String name;
     private String address;
@@ -18,6 +19,8 @@ public class Warehouse {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private int totalInventory;
 
     public Warehouse() {
     }
@@ -87,5 +90,22 @@ public class Warehouse {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
+
+    public int getTotalInventory() {
+        return totalInventory;
+    }
+
+    public void setTotalInventory(int totalInventory) {
+        this.totalInventory = totalInventory;
+    }
+
+    private int itemCount;
+
+    public int getItemCount() {
+        return itemCount;
+    }
+
+    public void setItemCount(int itemCount) {
+        this.itemCount = itemCount;
+    }
 }

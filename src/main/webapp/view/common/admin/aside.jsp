@@ -1,6 +1,8 @@
+
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 
 <c:set var="activePage" value="${requestScope.activePage}"/>
 
@@ -46,6 +48,7 @@
     <nav class="nav">
         <div class="nav-section">Tổng quan</div>
 
+
         <c:if test="${not empty perms and perms.contains('dashboard.view')}">
             <a href="${pageContext.request.contextPath}/admin/dashboard">
                 <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -75,6 +78,7 @@
         </c:if>
 
         <div class="nav-section">Quản trị</div>
+
 
         <c:if test="${not empty perms and perms.contains('categories.view')}">
             <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
@@ -148,6 +152,7 @@
         </c:if>
 
         <div class="nav-section">Tài khoản</div>
+
 
         <c:if test="${not empty perms and perms.contains('profile.view')}">
             <a href="${pageContext.request.contextPath}/profile" class="${activePage == 'profile' ? 'active' : ''}">
