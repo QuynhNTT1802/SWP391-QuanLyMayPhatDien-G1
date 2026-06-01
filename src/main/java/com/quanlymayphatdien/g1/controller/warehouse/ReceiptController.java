@@ -274,11 +274,10 @@ public class ReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] qtys = request.getParameterValues("quantity");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = parseAndValidateDetails(
-                genIds, serials, qtys, detailNotes, receiptType, warehouseId, errors);
+                genIds, serials, detailNotes, receiptType, warehouseId, errors);
 
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
             errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
@@ -331,7 +330,7 @@ public class ReceiptController extends HttpServlet {
     }
 
     private List<ReceiptDetail> parseAndValidateDetails(String[] genIds, String[] serials,
-            String[] qtys, String[] detailNotes, String receiptType, int warehouseId,
+            String[] detailNotes, String receiptType, int warehouseId,
             List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) {
@@ -342,12 +341,10 @@ public class ReceiptController extends HttpServlet {
 
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
-            String qtyStr = (qtys != null && i < qtys.length) ? qtys[i] : null;
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
             String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
 
             boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
-                    && (qtyStr == null || qtyStr.trim().isEmpty())
                     && (serial == null || serial.trim().isEmpty());
             if (rowEmpty) {
                 continue;
@@ -363,22 +360,6 @@ public class ReceiptController extends HttpServlet {
             }
             if (genId <= 0) {
                 errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
-                continue;
-            }
-
-            int qty = 0;
-            try {
-                qty = Integer.parseInt(qtyStr);
-            } catch (NumberFormatException e) {
-                errors.add("Dòng " + rowNum + ": Số lượng phải là số nguyên");
-                continue;
-            }
-            if (qty <= 0) {
-                errors.add("Dòng " + rowNum + ": Số lượng phải lớn hơn 0");
-                continue;
-            }
-            if (qty > MAX_QUANTITY) {
-                errors.add("Dòng " + rowNum + ": Số lượng không được vượt quá " + MAX_QUANTITY);
                 continue;
             }
 
@@ -399,6 +380,11 @@ public class ReceiptController extends HttpServlet {
                 }
             }
 
+            if (serial == null) {
+                errors.add("Dòng " + rowNum + ": Vui lòng nhập số serial");
+                continue;
+            }
+
             if (detailNote != null && detailNote.length() > MAX_NOTE_LENGTH) {
                 errors.add("Dòng " + rowNum + ": Ghi chú không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
                 continue;
@@ -407,9 +393,8 @@ public class ReceiptController extends HttpServlet {
             if (isExport && warehouseId > 0) {
                 Inventory inv = inventoryDAO.findByWarehouseAndGenerator(warehouseId, genId);
                 int onHand = inv != null ? inv.getQuantity() : 0;
-                if (qty > onHand) {
-                    errors.add("Dòng " + rowNum + ": Số lượng xuất (" + qty
-                            + ") vượt quá tồn kho hiện tại (" + onHand + ")");
+                if (onHand < 1) {
+                    errors.add("Dòng " + rowNum + ": Máy phát này đã hết hàng trong kho");
                     continue;
                 }
             }
@@ -417,7 +402,7 @@ public class ReceiptController extends HttpServlet {
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);
-            d.setQuantity(qty);
+            d.setQuantity(1);
             d.setNote(detailNote);
             details.add(d);
         }
@@ -490,7 +475,9 @@ public class ReceiptController extends HttpServlet {
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
-                if (page < 1) page = 1;
+                if (page < 1) {
+                    page = 1;
+                }
             } catch (NumberFormatException e) {
                 page = 1;
             }
@@ -498,8 +485,12 @@ public class ReceiptController extends HttpServlet {
         SaleOrderDAO soDAO = new SaleOrderDAO();
         int totalItems = soDAO.countApprovedAvailableFiltered(search, fromDate, toDate);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-        if (totalPages < 1) totalPages = 1;
-        if (page > totalPages) page = totalPages;
+        if (totalPages < 1) {
+            totalPages = 1;
+        }
+        if (page > totalPages) {
+            page = totalPages;
+        }
         List<SaleOrder> approvedOrders = soDAO.findApprovedAvailableFiltered(search, fromDate, toDate, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
@@ -636,11 +627,10 @@ public class ReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] qtys = request.getParameterValues("quantity");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = parseAndValidateDetails(
-                genIds, serials, qtys, detailNotes,
+                genIds, serials, detailNotes,
                 existing.getReceiptType(), warehouseId, errors);
 
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
