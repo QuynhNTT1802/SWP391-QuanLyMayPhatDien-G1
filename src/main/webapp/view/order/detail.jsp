@@ -121,21 +121,31 @@
                                 <div class="info-label">Số điện thoại</div>
                                 <div class="info-value mono"><c:out value="${order.customerPhone}"/></div>
                             </div>
-                            <div class="info-field">
-                                <div class="info-label">Email</div>
-                                <div class="info-value mono"><c:out value="${order.customerEmail}"/></div>
-                            </div>
+                            <c:if test="${not empty order.customerEmail}">
+                                <div class="info-field">
+                                    <div class="info-label">Email</div>
+                                    <div class="info-value mono"><c:out value="${order.customerEmail}"/></div>
+                                </div>
+                            </c:if>
                             <div class="info-field">
                                 <div class="info-label">Địa chỉ giao hàng</div>
                                 <div class="info-value"><c:out value="${order.customerAddress}"/></div>
                             </div>
-                            <div class="info-field">
-                                <div class="info-label">Công ty / MST</div>
-                                <div class="info-value">
-                                    <c:out value="${order.customerCompany}"/>
-                                    <c:if test="${not empty order.customerTaxCode}"> (<c:out value="${order.customerTaxCode}"/>)</c:if>
+                            <c:if test="${not empty customerTypeName}">
+                                <div class="info-field">
+                                    <div class="info-label">Loại khách hàng</div>
+                                    <div class="info-value"><c:out value="${customerTypeName}"/></div>
                                 </div>
-                            </div>
+                            </c:if>
+                            <c:if test="${not empty order.customerCompany or not empty order.customerTaxCode}">
+                                <div class="info-field">
+                                    <div class="info-label">Công ty / MST</div>
+                                    <div class="info-value">
+                                        <c:out value="${order.customerCompany}"/>
+                                        <c:if test="${not empty order.customerTaxCode}"> (<c:out value="${order.customerTaxCode}"/>)</c:if>
+                                    </div>
+                                </div>
+                            </c:if>
                             <div class="info-field">
                                 <div class="info-label">Trạng thái</div>
                                 <div class="info-value">
@@ -153,10 +163,12 @@
                                     <div class="info-value" style="color: var(--danger);"><c:out value="${order.rejectReason}"/></div>
                                 </div>
                             </c:if>
-                            <div class="info-field" style="grid-column: span 2;">
-                                <div class="info-label">Ghi chú nội bộ</div>
-                                <div class="info-value"><c:out value="${order.note}"/></div>
-                            </div>
+                            <c:if test="${not empty order.note}">
+                                <div class="info-field" style="grid-column: span 2;">
+                                    <div class="info-label">Ghi chú nội bộ</div>
+                                    <div class="info-value"><c:out value="${order.note}"/></div>
+                                </div>
+                            </c:if>
                         </div>
                     </section>
 

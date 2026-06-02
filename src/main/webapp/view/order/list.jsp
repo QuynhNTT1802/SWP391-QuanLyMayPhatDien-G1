@@ -136,14 +136,14 @@
                                     <th>Ngày đặt</th>
                                     <th>Tổng tiền</th>
                                     <th>Trạng thái</th>
-                                    <th>Người tạo</th>
+                                    <th>Địa chỉ</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="ordersBody">
                                 <c:choose>
                                     <c:when test="${empty orders}">
-                                        <!-- THÊM DÒNG NÀY ĐỂ HIỆN THÔNG BÁO -->
+                                        
                                         <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
@@ -175,7 +175,7 @@
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${order.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
-                                                <td><span class="pill role-staff"><span class="pdot"></span>ID: ${order.createdBy}</span></td>
+                                                <td><span class="pill role-staff"><span class="pdot"></span> ${order.customerAddress}</span></td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
                                                         <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}'" title="Xem chi tiết">
