@@ -62,7 +62,6 @@
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/generators?action=create">
 
-                            <%-- ============ SECTION 01: THÔNG TIN CƠ BẢN ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
@@ -120,7 +119,6 @@
                                 </div>
                             </div>
 
-                            <%-- ============ SECTION 02: THÔNG TIN KỸ THUẬT ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">02 — THÔNG TIN KỸ THUẬT</div>
@@ -157,11 +155,9 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    
                                 </div>
                             </div>
 
-                            <%-- ============ SECTION 03: TRẠNG THÁI ============ --%>
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">03 — TRẠNG THÁI</div>
@@ -205,7 +201,7 @@
         <c:remove var="fieldPhaseId" scope="session"/>
         <c:remove var="fieldPowerRangeId" scope="session"/>
 
-        <script src="${pageContext.request.contextPath}/assets/js/theme.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js" charset="UTF-8"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     </body>
 </html>

@@ -583,7 +583,8 @@ public class CategoryController extends HttpServlet {
             String typeLabel = TYPE_LABELS.getOrDefault(type, type);
             String statusLabel = statusLabel(status);
 
-            String description = "Thêm mới: '" + name + "' (" + typeLabel + ") — Trạng thái: " + statusLabel;
+            String description = "Thêm mới: '" + name + "' (" + typeLabel + ") — Trạng thái: " + statusLabel
+                    + " | module:" + (module != null ? module : "");
 
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
