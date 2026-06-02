@@ -53,7 +53,6 @@
             font-size: 12px; font-weight: 600; padding-top: 14px; font-family: var(--font-mono); }
         .detail-table .col-gen { min-width: 200px; }
         .detail-table .col-serial { min-width: 130px; }
-        .detail-table .col-qty { width: 90px; }
         .detail-table .col-note { min-width: 130px; }
         .detail-table .col-del { width: 40px; text-align: center; }
 
@@ -211,7 +210,6 @@
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát</th>
                                     <th class="col-serial">Serial</th>
-                                    <th class="col-qty">Số lượng</th>
                                     <th class="col-note">Ghi chú</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -230,8 +228,7 @@
                                                         </c:forEach>
                                                     </select>
                                                 </td>
-                                                <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" /></td>
-                                                <td><input type="number" name="quantity" value="${d.quantity}" min="1" required /></td>
+                                                <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" required/></td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="${d.note}" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -252,8 +249,7 @@
                                                     </c:forEach>
                                                 </select>
                                             </td>
-                                            <td><input type="text" name="serialNumber" placeholder="S/N" /></td>
-                                            <td><input type="number" name="quantity" value="1" min="1" required /></td>
+                                            <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -277,8 +273,7 @@
                                         </c:forEach>
                                     </select>
                                 </td>
-                                <td><input type="text" name="serialNumber" placeholder="S/N" /></td>
-                                <td><input type="number" name="quantity" value="1" min="1" /></td>
+                                <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                 <td class="col-del">
                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">

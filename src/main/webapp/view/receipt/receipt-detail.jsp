@@ -204,8 +204,8 @@
             <div class="section" style="padding: 18px 22px;">
                 <div class="tabs">
                     <button type="button" class="tab active" data-tab="info">Thông tin chung</button>
-                    <button type="button" class="tab" data-tab="history">Lịch sử cập nhật</button>
                     <button type="button" class="tab" data-tab="products">Chi tiết dòng hàng</button>
+                    <button type="button" class="tab" data-tab="history">Lịch sử cập nhật</button>
                 </div>
 
                 <div class="tab-panel active" id="tab-info">
@@ -332,14 +332,13 @@
                                 <th style="width: 40px;">#</th>
                                 <th>Máy phát / Hãng</th>
                                 <th>Serial</th>
-                                <th class="text-center" style="width: 80px;">SL</th>
                                 <th>Ghi chú</th>
                             </tr>
                         </thead>
                         <tbody id="detailBody">
                             <c:choose>
                                 <c:when test="${empty receipt.details}">
-                                    <tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                    <tr><td colspan="4" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                 </c:when>
                                 <c:otherwise>
                                     <c:forEach var="d" items="${receipt.details}" varStatus="st">
@@ -347,7 +346,6 @@
                                             <td class="mono">${st.index + 1}</td>
                                             <td><strong><c:out value="${d.generatorModel}"/></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
                                             <td class="mono"><c:out value="${d.serialNumber}"/></td>
-                                            <td class="text-center">${d.quantity}</td>
                                             <td><c:out value="${d.note}"/></td>
                                         </tr>
                                     </c:forEach>

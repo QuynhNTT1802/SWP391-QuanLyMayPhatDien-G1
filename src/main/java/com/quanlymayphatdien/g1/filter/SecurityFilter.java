@@ -20,13 +20,14 @@ import java.util.Set;
 public class SecurityFilter implements Filter {
 
     private static final Map<String, String> perMap = Map.ofEntries(
-        Map.entry("/admin/dashboard",      "dashboard.view"),
-        Map.entry("/admin/users",          "users.view"),
-        Map.entry("/admin/roles",          "roles.view"),
-        Map.entry("/admin/role/edit",      "roles.update"),
-        Map.entry("/admin/role/save",      "roles.update"),
-        Map.entry("/admin/forgot-password","forgot_pw.process"),
-        Map.entry("/admin/categories",     "categories.view")
+            Map.entry("/admin/dashboard", "dashboard.view"),
+            Map.entry("/admin/users", "users.view"),
+            Map.entry("/admin/roles", "roles.view"),
+            Map.entry("/admin/role/edit", "roles.update"),
+            Map.entry("/admin/role/save", "roles.update"),
+            Map.entry("/admin/forgot-password", "forgot_pw.process"),
+            Map.entry("/admin/categories", "categories.view"),
+            Map.entry("/admin/system-log", "system_log.view")
     );
 
     @Override
@@ -87,14 +88,14 @@ public class SecurityFilter implements Filter {
                 requiredPer = "roles.edit_permissions";
             }
         }
-        
-        if("/admin/categories".equals(servletPath)){
+
+        if ("/admin/categories".equals(servletPath)) {
             String action = req.getParameter("action");
-            if("create".equals(action)) {
+            if ("create".equals(action)) {
                 requiredPer = "categories.create";
             } else if ("update".equals(action)) {
                 requiredPer = "categories.update";
-            } else if("delete".equals(action)){
+            } else if ("delete".equals(action)) {
                 requiredPer = "categories.delete";
             }
         }

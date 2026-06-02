@@ -104,7 +104,10 @@ public class ActivityLog {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-    
+    public java.util.Date getCreatedAtAsDate() {
+        if (createdAt == null) return null;
+        return java.util.Date.from(createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+    }
     
     
 }
