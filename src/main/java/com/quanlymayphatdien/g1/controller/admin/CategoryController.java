@@ -95,10 +95,6 @@ public class CategoryController extends HttpServlet {
         }
 
         String tab = request.getParameter("tab");
-        if ("history".equals(tab)) {
-            showHistory(request, response, module);
-            return;
-        }
 
         List<Category> list;
         if (typeFilter != null && !typeFilter.trim().isEmpty() && search != null && !search.trim().isEmpty()) {
@@ -126,6 +122,19 @@ public class CategoryController extends HttpServlet {
             list = filtered;
         }
 
+        // --- Tính toán KPI trước khi áp dụng statusFilter ---
+        int kpiTotal = list.size();
+        int kpiActive = 0;
+        int kpiInactive = 0;
+        for (Category c : list) {
+            if ("active".equals(c.getStatus())) kpiActive++;
+            else kpiInactive++;
+        }
+        request.setAttribute("kpiTotal", kpiTotal);
+        request.setAttribute("kpiActive", kpiActive);
+        request.setAttribute("kpiInactive", kpiInactive);
+
+
         // --- Filter theo trạng thái (active / inactive / tất cả) ---
         String statusFilter = request.getParameter("status");
         if (statusFilter != null && !statusFilter.trim().isEmpty() && !"all".equals(statusFilter)) {
@@ -141,19 +150,85 @@ public class CategoryController extends HttpServlet {
         int totalItems = list.size();
 
         if (typeFilter != null && !typeFilter.trim().isEmpty()) {
-            int page = 1, pageSize = 12;
+            request.setAttribute("currentType", typeFilter);
+            request.setAttribute("typeLabel", TYPE_LABELS.getOrDefault(typeFilter, typeFilter));
+            request.setAttribute("currentStatus", statusFilter != null ? statusFilter : "");
+            request.setAttribute("currentTab", tab);
+
+            if ("history".equals(tab)) {
+                String logSearch = request.getParameter("logSearch");
+                String logAction = request.getParameter("logAction");
+                String dateFrom = request.getParameter("dateFrom");
+                String dateTo = request.getParameter("dateTo");
+
+                int page = 1, pageSize = 20;
+                String pageStr = request.getParameter("page");
+                if (pageStr != null && !pageStr.isEmpty()) {
+                    try { page = Math.max(1, Integer.parseInt(pageStr)); } catch (NumberFormatException e) { page = 1; }
+                }
+
+                List<ActivityLog> logs = logDAO.findByTypeAndModuleFilter(module, typeFilter, logSearch, logAction, dateFrom, dateTo, page, pageSize);
+                int totalLogs = logDAO.countByTypeAndModuleFilter(module, typeFilter, logSearch, logAction, dateFrom, dateTo);
+
+                int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+                if (page > totalPages) page = totalPages;
+
+                request.setAttribute("logList", logs);
+                request.setAttribute("logPage", page);
+                request.setAttribute("logTotalPages", totalPages);
+                request.setAttribute("totalLogs", totalLogs);
+                request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+                request.setAttribute("logAction", logAction != null ? logAction : "");
+                request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+                request.setAttribute("dateTo", dateTo != null ? dateTo : "");
+            } else {
+                int page = 1, pageSize = 12;
+                String pageStr = request.getParameter("page");
+                if (pageStr != null && !pageStr.isEmpty()) {
+                    try {
+                        page = Math.max(1, Integer.parseInt(pageStr));
+                    } catch (NumberFormatException e) {
+                        page = 1;
+                    }
+                }
+                int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                int from = (page - 1) * pageSize;
+                int to = Math.min(from + pageSize, totalItems);
+
+                request.setAttribute("categoryList", list.subList(from, to));
+                request.setAttribute("currentPage", page);
+                request.setAttribute("totalPages", totalPages);
+                request.setAttribute("totalItems", totalItems);
+                request.setAttribute("fromIndex", from + 1);
+                request.setAttribute("toIndex", to);
+
+                List<Integer> catIds = new ArrayList<>();
+                for (Category c : list) {
+                    catIds.add(c.getId());
+                }
+                request.setAttribute("extensions", new CategoryExtensionDAO().loadExtensionsByType(typeFilter, catIds));
+            }
+        } else {
+            // Danh sách toàn bộ các danh mục (overview)
+            Map<String, Integer> typeCounts = new LinkedHashMap<>();
+            for (Category c : list) {
+                typeCounts.merge(c.getType(), 1, Integer::sum);
+            }
+            request.setAttribute("typeCounts", typeCounts);
+            request.setAttribute("typeMinIds", cateDAO.getMinIdByType(module));
+
+            // Phân trang cho danh sách chi tiết tất cả danh mục
+            int page = 1, pageSize = 10;
             String pageStr = request.getParameter("page");
             if (pageStr != null && !pageStr.isEmpty()) {
-                try {
-                    page = Math.max(1, Integer.parseInt(pageStr));
-                } catch (NumberFormatException e) {
-                    page = 1;
-                }
+                try { page = Math.max(1, Integer.parseInt(pageStr)); }
+                catch (NumberFormatException e) { page = 1; }
             }
             int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
-            if (page > totalPages) {
-                page = totalPages;
-            }
+            if (page > totalPages) page = totalPages;
             int from = (page - 1) * pageSize;
             int to = Math.min(from + pageSize, totalItems);
 
@@ -161,24 +236,11 @@ public class CategoryController extends HttpServlet {
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
             request.setAttribute("totalItems", totalItems);
-            request.setAttribute("fromIndex", from + 1);
+            request.setAttribute("fromIndex", totalItems > 0 ? from + 1 : 0);
             request.setAttribute("toIndex", to);
-            request.setAttribute("currentType", typeFilter);
-            request.setAttribute("typeLabel", TYPE_LABELS.getOrDefault(typeFilter, typeFilter));
+            
+            // Tránh NullPointerException cho status filter form
             request.setAttribute("currentStatus", statusFilter != null ? statusFilter : "");
-
-            List<Integer> catIds = new ArrayList<>();
-            for (Category c : list) {
-                catIds.add(c.getId());
-            }
-            request.setAttribute("extensions", new CategoryExtensionDAO().loadExtensionsByType(typeFilter, catIds));
-        } else {
-            request.setAttribute("categoryList", list);
-            Map<String, Integer> typeCounts = new LinkedHashMap<>();
-            for (Category c : list) {
-                typeCounts.merge(c.getType(), 1, Integer::sum);
-            }
-            request.setAttribute("typeCounts", typeCounts);
         }
 
         List<String> types = cateDAO.getTypesByModule(module);
@@ -201,6 +263,37 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("category", found);
                     CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
                     request.setAttribute("extension", extDAO.findExtension(found.getType(), id));
+
+                    // --- Tải lịch sử cấp 2 cho tab Lịch sử trong trang edit ---
+                    String histSearch = request.getParameter("histSearch");
+                    String historyAction = request.getParameter("historyAction");
+                    String histDateFrom = request.getParameter("histDateFrom");
+                    String histDateTo = request.getParameter("histDateTo");
+
+                    int histPage = 1;
+                    String histPageStr = request.getParameter("histPage");
+                    if (histPageStr != null && !histPageStr.isEmpty()) {
+                        try { histPage = Math.max(1, Integer.parseInt(histPageStr)); }
+                        catch (NumberFormatException ignored) { histPage = 1; }
+                    }
+                    int histPageSize = 10;
+                    List<ActivityLog> historyLogs = logDAO.findByEntityId(id, histSearch, historyAction, histDateFrom, histDateTo, histPage, histPageSize);
+                    int histTotalLogs = logDAO.countByEntityId(id, histSearch, historyAction, histDateFrom, histDateTo);
+                    int histTotalPages = Math.max(1, (int) Math.ceil((double) histTotalLogs / histPageSize));
+                    if (histPage > histTotalPages) histPage = histTotalPages;
+
+                    request.setAttribute("historyLogs",      historyLogs);
+                    request.setAttribute("histPage",         histPage);
+                    request.setAttribute("histTotalPages",   histTotalPages);
+                    request.setAttribute("histTotalLogs",    histTotalLogs);
+                    request.setAttribute("histSearch",       histSearch != null ? histSearch : "");
+                    request.setAttribute("historyAction",    historyAction != null ? historyAction : "");
+                    request.setAttribute("histDateFrom",     histDateFrom != null ? histDateFrom : "");
+                    request.setAttribute("histDateTo",       histDateTo != null ? histDateTo : "");
+
+                    // Giữ tab đang active (info hoặc history)
+                    String activeTab = request.getParameter("activeTab");
+                    request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -326,7 +419,7 @@ public class CategoryController extends HttpServlet {
             Category oldCategory = cateDAO.findById(categoryId);
             category.setId(categoryId);
             cateDAO.update(category);
-            logUpdate(request, categoryId, name, type, status, oldCategory, module);
+            logUpdate(request, categoryId, category, oldCategory, module);
         } else {
             categoryId = cateDAO.insert(category);
             logCreate(request, categoryId, name, type, status, module);
@@ -505,9 +598,16 @@ public class CategoryController extends HttpServlet {
      * 'Honda Generator' (Thương hiệu) — Trạng thái: Hoạt động thành Không hoạt
      * động
      */
+    private String normalizeLogString(String s) {
+        return (s == null || s.trim().isEmpty()) ? "(trống)" : s.trim();
+    }
+
+    private String normalizeLogNumber(Number n) {
+        return n == null ? "(trống)" : n.toString();
+    }
+
     private void logUpdate(HttpServletRequest request, Integer entityId,
-            String newName, String type, String newStatus,
-            Category oldCategory, String module) {
+            Category newCategory, Category oldCategory, String module) {
         try {
             User user = (User) request.getSession().getAttribute("loggedUser");
             if (user == null) {
@@ -515,36 +615,108 @@ public class CategoryController extends HttpServlet {
             }
 
             String username = user.getName() != null ? user.getName() : user.getUsername();
-            String typeLabel = TYPE_LABELS.getOrDefault(type, type);
+            String typeLabel = TYPE_LABELS.getOrDefault(newCategory.getType(), newCategory.getType());
 
-            String oldName = oldCategory != null ? oldCategory.getName() : newName;
-            String oldStatus = oldCategory != null ? oldCategory.getStatus() : newStatus;
+            String oldName = oldCategory != null ? oldCategory.getName() : newCategory.getName();
+            String oldStatus = oldCategory != null ? oldCategory.getStatus() : newCategory.getStatus();
+            String oldDesc = oldCategory != null && oldCategory.getDescription() != null ? oldCategory.getDescription() : "";
+            String newDesc = newCategory.getDescription() != null ? newCategory.getDescription() : "";
 
-            boolean nameChanged = !newName.equals(oldName);
-            boolean statusChanged = !newStatus.equals(oldStatus);
-
-            // Nếu không có gì thay đổi, không cần ghi log
-            if (!nameChanged && !statusChanged) {
-                return;
-            }
+            boolean nameChanged = !newCategory.getName().equals(oldName);
+            boolean statusChanged = !newCategory.getStatus().equals(oldStatus);
+            boolean descChanged = !newDesc.equals(oldDesc);
 
             StringBuilder desc = new StringBuilder();
-            desc.append(username).append(" đã cập nhật '");
+            desc.append(username).append(" đã cập nhật ");
 
             if (nameChanged) {
-                desc.append(oldName).append("' thành '").append(newName).append("' (").append(typeLabel).append(")");
+                desc.append("tên '").append(oldName).append("' thành '").append(newCategory.getName()).append("'");
             } else {
-                desc.append(newName).append("' (").append(typeLabel).append(")");
+                desc.append("'").append(newCategory.getName()).append("'");
             }
 
+            desc.append(" (").append(typeLabel).append(")");
+
+            List<String> changes = new ArrayList<>();
             if (statusChanged) {
-                desc.append(" — Trạng thái: ")
-                        .append(statusLabel(oldStatus))
-                        .append(" thành ")
-                        .append(statusLabel(newStatus));
+                changes.add("Trạng thái: " + statusLabel(oldStatus) + " → " + statusLabel(newCategory.getStatus()));
+            }
+            if (descChanged) {
+                changes.add("Mô tả: " + normalizeLogString(oldDesc) + " → " + normalizeLogString(newDesc));
             }
 
-            insertLog(user, entityId, newName, "UPDATE", desc.toString());
+            // So sánh các trường mở rộng (Extension)
+            CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
+            Object oldExt = extDAO.findExtension(newCategory.getType(), entityId);
+            
+            switch (newCategory.getType()) {
+                case "brand":
+                    CategoryBrand oldB = (CategoryBrand) oldExt;
+                    String newCountry = normalizeLogString(request.getParameter("country"));
+                    String oldCountry = normalizeLogString(oldB != null ? oldB.getCountry() : null);
+                    if (!newCountry.equals(oldCountry)) changes.add("Quốc gia: " + oldCountry + " → " + newCountry);
+                    
+                    String newWebsite = normalizeLogString(request.getParameter("website"));
+                    String oldWebsite = normalizeLogString(oldB != null ? oldB.getWebsite() : null);
+                    if (!newWebsite.equals(oldWebsite)) changes.add("Website: " + oldWebsite + " → " + newWebsite);
+                    
+                    String newFYStr = request.getParameter("foundedYear");
+                    String newFY = normalizeLogString(newFYStr);
+                    String oldFY = normalizeLogNumber(oldB != null ? oldB.getFoundedYear() : null);
+                    if (!newFY.equals(oldFY)) changes.add("Năm TL: " + oldFY + " → " + newFY);
+                    
+                    String newWPStr = request.getParameter("warrantyPeriod");
+                    String newWP = normalizeLogString(newWPStr);
+                    String oldWP = normalizeLogNumber(oldB != null ? oldB.getWarrantyPeriod() : null);
+                    if (!newWP.equals(oldWP)) changes.add("Bảo hành: " + oldWP + " → " + newWP);
+                    break;
+                case "fuel_type":
+                    CategoryFuelType oldF = (CategoryFuelType) oldExt;
+                    String newUnit = normalizeLogString(request.getParameter("unit"));
+                    String oldUnit = normalizeLogString(oldF != null ? oldF.getUnit() : null);
+                    if (!newUnit.equals(oldUnit)) changes.add("Đơn vị: " + oldUnit + " → " + newUnit);
+                    
+                    String newPriceStr = request.getParameter("typicalPrice");
+                    String newPrice = normalizeLogString(newPriceStr);
+                    String oldPrice = normalizeLogNumber(oldF != null ? oldF.getTypicalPrice() : null);
+                    // Bỏ số 0 vô nghĩa ở BigDecimal nếu có để so sánh chính xác hơn, tạm thời dùng chuỗi
+                    if (!newPrice.equals(oldPrice)) {
+                        try {
+                            java.math.BigDecimal np = newPrice.equals("(trống)") ? null : new java.math.BigDecimal(newPriceStr.trim());
+                            java.math.BigDecimal op = oldF != null ? oldF.getTypicalPrice() : null;
+                            if (np != null && op != null && np.compareTo(op) == 0) {
+                                // Bằng nhau về giá trị toán học
+                            } else {
+                                changes.add("Giá tham khảo: " + oldPrice + " → " + newPrice);
+                            }
+                        } catch (Exception e) {
+                            changes.add("Giá tham khảo: " + oldPrice + " → " + newPrice);
+                        }
+                    }
+                    break;
+                case "origin":
+                    CategoryOrigin oldO = (CategoryOrigin) oldExt;
+                    String newCode = normalizeLogString(request.getParameter("country_code"));
+                    String oldCode = normalizeLogString(oldO != null ? oldO.getCountryCode() : null);
+                    if (!newCode.equals(oldCode)) changes.add("Mã quốc gia: " + oldCode + " → " + newCode);
+                    break;
+                case "customer_type":
+                    CategoryCustomerType oldC = (CategoryCustomerType) oldExt;
+                    String newTax = normalizeLogString(request.getParameter("taxType"));
+                    String oldTax = normalizeLogString(oldC != null ? oldC.getTaxType() : null);
+                    if (!newTax.equals(oldTax)) changes.add("Loại thuế: " + oldTax + " → " + newTax);
+                    break;
+            }
+
+            if (!changes.isEmpty()) {
+                desc.append(" — ").append(String.join(", ", changes));
+            } else if (!nameChanged) {
+                return; // Không có bất kỳ thay đổi nào cả (cả cơ bản lẫn mở rộng), bỏ qua log
+            }
+
+            desc.append(" | module:").append(module != null ? module : "");
+
+            insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

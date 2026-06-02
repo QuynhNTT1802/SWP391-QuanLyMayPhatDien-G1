@@ -253,6 +253,17 @@ tbody tr:hover .row-actions { opacity: 1; }
 .cat-card .card-meta { display: flex; align-items: center; gap: 14px; padding-top: 10px; border-top: 1px dashed var(--border); }
 .cat-card .card-meta .count { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--muted); }
 
+/* Thống kê KPI trên cùng */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.kpi-card .kpi-title { font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.kpi-card .kpi-value { font-size: 28px; font-weight: 700; font-family: var(--font-mono); color: var(--fg); line-height: 1; margin: 4px 0; }
+.kpi-card .kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; align-self: flex-start; margin-bottom: 4px; }
+.kpi-card.kpi-total .kpi-icon { background: var(--info-soft); color: var(--info); }
+.kpi-card.kpi-active .kpi-icon { background: var(--accent-soft); color: var(--accent); }
+.kpi-card.kpi-inactive .kpi-icon { background: var(--danger-soft); color: var(--danger); }
+.kpi-card .kpi-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+
 .bulk-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--info-soft); border: 1px solid color-mix(in srgb, var(--info) 30%, transparent); border-bottom: 0; font-size: 13px; font-weight: 600; color: var(--fg); }
 
 .type-header { display: flex; align-items: center; gap: 12px; margin: 12px 0 16px; }
@@ -519,3 +530,29 @@ textarea.input { resize: vertical; min-height: 70px; }
     .date-range { flex-wrap: wrap; }
 }
 
+/* ===== Tab utility classes ===== */
+/* Ẩn nội dung tab khi không active */
+.tab-hidden { display: none !important; }
+
+/* Badge số lượng trên tab button */
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 10.5px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    line-height: 1;
+}
+.tab.active .tab-badge {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
