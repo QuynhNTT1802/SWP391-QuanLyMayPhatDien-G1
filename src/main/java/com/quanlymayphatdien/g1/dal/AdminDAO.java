@@ -33,13 +33,10 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     @Override
     public boolean update(Admin t) {
         String updateUser = "UPDATE user SET name=?, username=?, password=?, email=?, phone=?, address=?, status=?, updated_by=? WHERE id=?";
-        String updateAdmin = "UPDATE admin SET department=?, last_login=? WHERE admin_id=?";
         // Nên dùng transaction để đảm bảo toàn vẹn dữ liệu
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
-            try (PreparedStatement psUser = conn.prepareStatement(updateUser);
-                 PreparedStatement psAdmin = conn.prepareStatement(updateAdmin)) {
-
+            try (PreparedStatement psUser = conn.prepareStatement(updateUser)) {
                 // Update user
                 psUser.setString(1, t.getName());
                 psUser.setString(2, t.getUsername());
@@ -55,18 +52,6 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 }
                 psUser.setInt(9, t.getId());
                 psUser.executeUpdate();
-
-                // Update admin
-                psAdmin.setString(1, t.getDepartment());
-                if (t.getLastLogin() != null) {
-                    psAdmin.setTimestamp(2, Timestamp.valueOf(t.getLastLogin()));
-                } else {
-                    psAdmin.setNull(2, Types.TIMESTAMP);
-                }
-                psAdmin.setInt(3, t.getId());
-                psAdmin.executeUpdate();
-
-                conn.commit();
                 return true;
             } catch (SQLException e) {
                 conn.rollback();

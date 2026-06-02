@@ -76,35 +76,31 @@
                         <c:forEach var="role" items="${user.roles}">
                             <span class="pill role-admin"><span class="pdot"></span>
                                 <c:choose>
-                                    <c:when test="${role.roleName == 'admin'}">Admin</c:when>
+                                    <c:when test="${role.roleName == 'admin'}">Quản trị viên</c:when>
                                     <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
                                     <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
-                                    <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
-                                    <c:when test="${role.roleName == 'sales_staff'}">Nhân viên</c:when>
-                                    <c:when test="${role.roleName == 'technician'}">Kỹ thuật</c:when>
-                                    <c:when test="${role.roleName == 'customer'}">Khách hàng</c:when>
-                                    <c:when test="${role.roleName == 'driver'}">Tài xế</c:when>
+                                    <c:when test="${role.roleName == 'sales_staff'}">Nhân viên bán hàng</c:when>
+                                    <c:when test="${role.roleName == 'sale_manager'}">Trưởng phòng bán hàng</c:when>
                                     <c:otherwise><c:out value="${role.roleName}"/></c:otherwise>
                                 </c:choose>
                             </span>
                         </c:forEach>
                         <c:choose>
                             <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
+                            <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
                         </c:choose>
                     </div>
                 </div>
                 <div class="hero-actions">
-                    <a class="btn" href="${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                        Chỉnh sửa
-                    </a>
+                    
                 </div>
             </div>
 
             <div class="layout">
                 <div class="toc">
                     <a class="toc-item active" data-toc="info"><span class="toc-num">01</span><span>Thông tin cá nhân</span></a>
+                    <a class="toc-item active" data-toc="info"><span class="toc-num">02</span><span>Nhật ký hoạt động</span></a>
+
                     <div class="toc-meta">
                         <strong>#<c:out value="${user.id}"/></strong><br>
                         Tạo: <c:out value="${createdDate}"/><br>
@@ -167,7 +163,7 @@
                                 <div class="info-value">
                                     <c:choose>
                                         <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                        <c:when test="${user.status == 'inactive'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Không hoạt động</span></c:when>
+                                        <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
                                     </c:choose>
                                 </div>
                             </div>
@@ -180,6 +176,40 @@
                                 <div class="info-value mono"><c:out value="${updatedDate}"/></div>
                             </div>
                         </div>
+                    </section>
+
+                    <section class="section" id="activity">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">02 — NHẬT KÝ HOẠT ĐỘNG</div>
+                                <h3 class="section-title">Lịch sử thao tác</h3>
+                            </div>
+                        </div>
+                        <c:choose>
+                            <c:when test="${empty activityLogs}">
+                                <div class="actlog-empty">Chưa có hoạt động nào.</div>
+                            </c:when>
+                            <c:otherwise>
+                                <table class="actlog-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-user">Người thực hiện</th>
+                                            <th>Hành động</th>
+                                            <th class="col-time">Thời gian</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach var="log" items="${activityLogs}" varStatus="st">
+                                            <tr>
+                                                <td class="col-user"><c:out value="${log.username}"/></td>
+                                                <td><c:out value="${log.details}"/></td>
+                                                <td class="col-time"><c:out value="${logDates[st.index]}"/></td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+                            </c:otherwise>
+                        </c:choose>
                     </section>
                 </div>
             </div>
