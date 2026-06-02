@@ -141,7 +141,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         List<ActivityLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
-        // --- Xây dựng câu WHERE động ---
+
         StringBuilder where = new StringBuilder("WHERE al.entity_type = ? ");
         params.add(entityType);
 
