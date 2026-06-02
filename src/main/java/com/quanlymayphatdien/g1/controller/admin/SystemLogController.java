@@ -3,6 +3,7 @@ package com.quanlymayphatdien.g1.controller.admin;
 import com.quanlymayphatdien.g1.dal.SystemLogDAO;
 import com.quanlymayphatdien.g1.entity.SystemLog;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -61,6 +62,7 @@ public class SystemLogController extends HttpServlet {
                 page = Math.max(1, Integer.parseInt(p.trim()));
             }
         } catch (NumberFormatException ignored) {
+            SystemLogger.warn("System Log", "SystemLogController.doGet", "Lỗi định dạng trang: " + ignored.getMessage());
         }
 
         List<SystemLog> logs = logDAO.findByFilter(level, module, search, dateFrom, dateTo, page, PAGE_SIZE);
