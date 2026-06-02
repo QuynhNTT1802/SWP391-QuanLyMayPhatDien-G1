@@ -597,7 +597,6 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
             where.append("AND al.action = ? ");
             params.add(action.trim());
         }
-
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
             where.append("AND al.created_at >= ? ");
             params.add(LocalDate.parse(dateFrom).atStartOfDay());
@@ -663,7 +662,6 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
             where.append("AND al.action = ? ");
             params.add(action.trim());
         }
-
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
             where.append("AND al.created_at >= ? ");
             params.add(LocalDate.parse(dateFrom).atStartOfDay());
