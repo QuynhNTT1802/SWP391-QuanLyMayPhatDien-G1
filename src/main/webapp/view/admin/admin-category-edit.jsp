@@ -113,7 +113,6 @@
                     <c:set var="extType" value="${not empty category ? category.type : param.type}"/>
 
                     <div class="ext-section ${extType == 'brand' ? 'visible' : ''}" id="ext-brand">
-                        <c:if test="${extType == 'brand'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN HÃNG</div>
@@ -122,27 +121,25 @@
                             <div class="form-grid">
                                 <div class="field">
                                     <label class="field-label">Quốc gia</label>
-                                    <input class="input" name="country" placeholder="VD: Nhật Bản" value="<c:out value="${extension.country}"/>" />
+                                    <input class="input" name="country" placeholder="VD: Nhật Bản" value="<c:out value="${brandExt.country}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Website</label>
-                                    <input class="input" name="website" placeholder="VD: honda.com.vn" value="<c:out value="${extension.website}"/>" />
+                                    <input class="input" name="website" placeholder="VD: honda.com.vn" value="<c:out value="${brandExt.website}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Năm thành lập</label>
-                                    <input class="input mono" name="foundedYear" type="number" placeholder="VD: 1948" value="<c:out value="${extension.foundedYear}"/>" />
+                                    <input class="input mono" name="foundedYear" type="number" placeholder="VD: 1948" value="<c:out value="${brandExt.foundedYear}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Bảo hành (tháng)</label>
-                                    <input class="input mono" name="warrantyPeriod" type="number" placeholder="VD: 12" value="<c:out value="${extension.warrantyPeriod}"/>" />
+                                    <input class="input mono" name="warrantyPeriod" type="number" placeholder="VD: 12" value="<c:out value="${brandExt.warrantyPeriod}"/>" />
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'fuel_type' ? 'visible' : ''}" id="ext-fuel">
-                        <c:if test="${extType == 'fuel_type'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN NHIÊN LIỆU</div>
@@ -151,19 +148,17 @@
                             <div class="form-grid">
                                 <div class="field">
                                     <label class="field-label">Đơn vị</label>
-                                    <input class="input" name="unit" placeholder="VD: lít" value="<c:out value="${extension.unit}"/>" />
+                                    <input class="input" name="unit" placeholder="VD: lít" value="<c:out value="${fuelExt.unit}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Giá tham khảo (VND)</label>
-                                    <input class="input mono" name="typicalPrice" type="number" step="1" min="0" placeholder="VD: 25000" value="<c:out value="${extension.typicalPrice}"/>" />
+                                    <input class="input mono" name="typicalPrice" type="number" step="1" min="0" placeholder="VD: 25000" value="<c:out value="${fuelExt.typicalPrice}"/>" />
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'origin' ? 'visible' : ''}" id="ext-origin">
-                        <c:if test="${extType == 'origin'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN XUẤT XỨ</div>
@@ -172,15 +167,13 @@
                             <div class="form-grid">
                                 <div class="field">
                                     <label class="field-label">Mã quốc gia</label>
-                                    <input class="input mono" name="country_code" placeholder="VD: JP" maxlength="5" value="<c:out value="${extension.countryCode}"/>" />
+                                    <input class="input mono" name="country_code" placeholder="VD: JP" maxlength="5" value="<c:out value="${originExt.countryCode}"/>" />
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'customer_type' ? 'visible' : ''}" id="ext-customer">
-                        <c:if test="${extType == 'customer_type'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN LOẠI KHÁCH</div>
@@ -191,16 +184,15 @@
                                     <label class="field-label">Loại thuế</label>
                                     <select class="select" name="taxType">
                                         <option value="">-- Chọn --</option>
-                                        <option value="VAT 10%" ${extension.taxType == 'VAT 10%' ? 'selected' : ''}>VAT 10%</option>
-                                        <option value="VAT 8%"  ${extension.taxType == 'VAT 8%' ? 'selected' : ''}>VAT 8%</option>
-                                        <option value="VAT 5%"  ${extension.taxType == 'VAT 5%' ? 'selected' : ''}>VAT 5%</option>
-                                        <option value="VAT 0%"  ${extension.taxType == 'VAT 0%' ? 'selected' : ''}>VAT 0%</option>
-                                        <option value="Không chịu thuế" ${extension.taxType == 'Không chịu thuế' ? 'selected' : ''}>Không chịu thuế</option>
+                                        <option value="VAT 10%" ${customerExt.taxType == 'VAT 10%' ? 'selected' : ''}>VAT 10%</option>
+                                        <option value="VAT 8%"  ${customerExt.taxType == 'VAT 8%' ? 'selected' : ''}>VAT 8%</option>
+                                        <option value="VAT 5%"  ${customerExt.taxType == 'VAT 5%' ? 'selected' : ''}>VAT 5%</option>
+                                        <option value="VAT 0%"  ${customerExt.taxType == 'VAT 0%' ? 'selected' : ''}>VAT 0%</option>
+                                        <option value="Không chịu thuế" ${customerExt.taxType == 'Không chịu thuế' ? 'selected' : ''}>Không chịu thuế</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'receipt_reason' or extType == 'receipt_status' or extType == 'order_status' or extType == 'generator_type' or extType == 'phase' or extType == 'condition' ? 'visible' : ''}" id="ext-simple">

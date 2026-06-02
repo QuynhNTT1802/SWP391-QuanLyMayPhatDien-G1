@@ -122,7 +122,7 @@ public class CategoryController extends HttpServlet {
             list = filtered;
         }
 
-        // --- Tính toán KPI trước khi áp dụng statusFilter ---
+        //Tính toán KPI trước khi áp dụng statusFilter
         int kpiTotal = list.size();
         int kpiActive = 0;
         int kpiInactive = 0;
@@ -135,7 +135,7 @@ public class CategoryController extends HttpServlet {
         request.setAttribute("kpiInactive", kpiInactive);
 
 
-        // --- Filter theo trạng thái (active / inactive / tất cả) ---
+        //Filter theo trạng thái (active / inactive / tất cả) ---
         String statusFilter = request.getParameter("status");
         if (statusFilter != null && !statusFilter.trim().isEmpty() && !"all".equals(statusFilter)) {
             List<Category> filtered = new ArrayList<>();
@@ -239,7 +239,6 @@ public class CategoryController extends HttpServlet {
             request.setAttribute("fromIndex", totalItems > 0 ? from + 1 : 0);
             request.setAttribute("toIndex", to);
             
-            // Tránh NullPointerException cho status filter form
             request.setAttribute("currentStatus", statusFilter != null ? statusFilter : "");
         }
 
@@ -262,9 +261,12 @@ public class CategoryController extends HttpServlet {
                 if (found != null) {
                     request.setAttribute("category", found);
                     CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
-                    request.setAttribute("extension", extDAO.findExtension(found.getType(), id));
-
-                    // --- Tải lịch sử cấp 2 cho tab Lịch sử trong trang edit ---
+                    Object ext = extDAO.findExtension(found.getType(), id);
+                    if ("brand".equals(found.getType())) request.setAttribute("brandExt", ext);
+                    else if ("fuel_type".equals(found.getType())) request.setAttribute("fuelExt", ext);
+                    else if ("origin".equals(found.getType())) request.setAttribute("originExt", ext);
+                    else if ("customer_type".equals(found.getType())) request.setAttribute("customerExt", ext);
+                    
                     String histSearch = request.getParameter("histSearch");
                     String historyAction = request.getParameter("historyAction");
                     String histDateFrom = request.getParameter("histDateFrom");
@@ -415,7 +417,7 @@ public class CategoryController extends HttpServlet {
         boolean isUpdate = idVar != null && !idVar.isEmpty() && !"0".equals(idVar);
         if (isUpdate) {
             categoryId = Integer.parseInt(idVar);
-            // Đọc giá trị cũ TRƯỚC khi lưu để so sánh trước → sau
+            // Đọc giá trị cũ TRƯỚC khi lưu để so sánh trước và sau
             Category oldCategory = cateDAO.findById(categoryId);
             category.setId(categoryId);
             cateDAO.update(category);
@@ -630,7 +632,7 @@ public class CategoryController extends HttpServlet {
             desc.append(username).append(" đã cập nhật ");
 
             if (nameChanged) {
-                desc.append("tên '").append(oldName).append("' thành '").append(newCategory.getName()).append("'");
+                desc.append("tên ").append(oldName).append(" -> ").append(newCategory.getName());
             } else {
                 desc.append("'").append(newCategory.getName()).append("'");
             }
@@ -639,10 +641,10 @@ public class CategoryController extends HttpServlet {
 
             List<String> changes = new ArrayList<>();
             if (statusChanged) {
-                changes.add("Trạng thái: " + statusLabel(oldStatus) + " → " + statusLabel(newCategory.getStatus()));
+                changes.add("Trạng thái: " + statusLabel(oldStatus) + " -> " + statusLabel(newCategory.getStatus()));
             }
             if (descChanged) {
-                changes.add("Mô tả: " + normalizeLogString(oldDesc) + " → " + normalizeLogString(newDesc));
+                changes.add("Mô tả: " + normalizeLogString(oldDesc) + " -> " + normalizeLogString(newDesc));
             }
 
             // So sánh các trường mở rộng (Extension)
@@ -654,43 +656,43 @@ public class CategoryController extends HttpServlet {
                     CategoryBrand oldB = (CategoryBrand) oldExt;
                     String newCountry = normalizeLogString(request.getParameter("country"));
                     String oldCountry = normalizeLogString(oldB != null ? oldB.getCountry() : null);
-                    if (!newCountry.equals(oldCountry)) changes.add("Quốc gia: " + oldCountry + " → " + newCountry);
+                    if (!newCountry.equals(oldCountry)) changes.add("Quốc gia: " + oldCountry + " -> " + newCountry);
                     
                     String newWebsite = normalizeLogString(request.getParameter("website"));
                     String oldWebsite = normalizeLogString(oldB != null ? oldB.getWebsite() : null);
-                    if (!newWebsite.equals(oldWebsite)) changes.add("Website: " + oldWebsite + " → " + newWebsite);
+                    if (!newWebsite.equals(oldWebsite)) changes.add("Website: " + oldWebsite + " -> " + newWebsite);
                     
                     String newFYStr = request.getParameter("foundedYear");
                     String newFY = normalizeLogString(newFYStr);
                     String oldFY = normalizeLogNumber(oldB != null ? oldB.getFoundedYear() : null);
-                    if (!newFY.equals(oldFY)) changes.add("Năm TL: " + oldFY + " → " + newFY);
+                    if (!newFY.equals(oldFY)) changes.add("Năm TL: " + oldFY + " -> " + newFY);
                     
                     String newWPStr = request.getParameter("warrantyPeriod");
                     String newWP = normalizeLogString(newWPStr);
                     String oldWP = normalizeLogNumber(oldB != null ? oldB.getWarrantyPeriod() : null);
-                    if (!newWP.equals(oldWP)) changes.add("Bảo hành: " + oldWP + " → " + newWP);
+                    if (!newWP.equals(oldWP)) changes.add("Bảo hành: " + oldWP + " -> " + newWP);
                     break;
                 case "fuel_type":
                     CategoryFuelType oldF = (CategoryFuelType) oldExt;
                     String newUnit = normalizeLogString(request.getParameter("unit"));
                     String oldUnit = normalizeLogString(oldF != null ? oldF.getUnit() : null);
-                    if (!newUnit.equals(oldUnit)) changes.add("Đơn vị: " + oldUnit + " → " + newUnit);
+                    if (!newUnit.equals(oldUnit)) changes.add("Đơn vị: " + oldUnit + " -> " + newUnit);
                     
                     String newPriceStr = request.getParameter("typicalPrice");
                     String newPrice = normalizeLogString(newPriceStr);
                     String oldPrice = normalizeLogNumber(oldF != null ? oldF.getTypicalPrice() : null);
-                    // Bỏ số 0 vô nghĩa ở BigDecimal nếu có để so sánh chính xác hơn, tạm thời dùng chuỗi
+
                     if (!newPrice.equals(oldPrice)) {
                         try {
                             java.math.BigDecimal np = newPrice.equals("(trống)") ? null : new java.math.BigDecimal(newPriceStr.trim());
                             java.math.BigDecimal op = oldF != null ? oldF.getTypicalPrice() : null;
                             if (np != null && op != null && np.compareTo(op) == 0) {
-                                // Bằng nhau về giá trị toán học
+
                             } else {
-                                changes.add("Giá tham khảo: " + oldPrice + " → " + newPrice);
+                                changes.add("Giá tham khảo: " + oldPrice + " -> " + newPrice);
                             }
                         } catch (Exception e) {
-                            changes.add("Giá tham khảo: " + oldPrice + " → " + newPrice);
+                            changes.add("Giá tham khảo: " + oldPrice + " -> " + newPrice);
                         }
                     }
                     break;
@@ -698,13 +700,13 @@ public class CategoryController extends HttpServlet {
                     CategoryOrigin oldO = (CategoryOrigin) oldExt;
                     String newCode = normalizeLogString(request.getParameter("country_code"));
                     String oldCode = normalizeLogString(oldO != null ? oldO.getCountryCode() : null);
-                    if (!newCode.equals(oldCode)) changes.add("Mã quốc gia: " + oldCode + " → " + newCode);
+                    if (!newCode.equals(oldCode)) changes.add("Mã quốc gia: " + oldCode + " -> " + newCode);
                     break;
                 case "customer_type":
                     CategoryCustomerType oldC = (CategoryCustomerType) oldExt;
                     String newTax = normalizeLogString(request.getParameter("taxType"));
                     String oldTax = normalizeLogString(oldC != null ? oldC.getTaxType() : null);
-                    if (!newTax.equals(oldTax)) changes.add("Loại thuế: " + oldTax + " → " + newTax);
+                    if (!newTax.equals(oldTax)) changes.add("Loại thuế: " + oldTax + " -> " + newTax);
                     break;
             }
 
@@ -762,13 +764,13 @@ public class CategoryController extends HttpServlet {
     private void showHistory(HttpServletRequest request, HttpServletResponse response, String module)
             throws ServletException, IOException {
 
-        // --- Đọc các tham số filter ---
+        //Đọc các tham số filter
         String logSearch = request.getParameter("logSearch");   // từ khóa: tên đối tượng / người dùng
         String logAction = request.getParameter("logAction");   // hành động: CREATE, UPDATE, DELETE...
         String dateFrom = request.getParameter("dateFrom");    // ngày bắt đầu yyyy-MM-dd
         String dateTo = request.getParameter("dateTo");      // ngày kết thúc yyyy-MM-dd
 
-        // --- Đọc trang hiện tại ---
+        //Đọc trang hiện tại
         int page = 1;
         String pageStr = request.getParameter("page");
         if (pageStr != null && !pageStr.isEmpty()) {
