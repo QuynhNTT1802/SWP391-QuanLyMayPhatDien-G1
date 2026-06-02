@@ -54,6 +54,7 @@ public class CategoryController extends HttpServlet {
         String action = request.getServletPath();
 
         try {
+        
             if ("/admin/categories".equals(action)) {
                 viewCategoryList(request, response);
             } else if ("/admin/category/edit".equals(action)) {
@@ -299,7 +300,7 @@ public class CategoryController extends HttpServlet {
                 }
             } catch (Exception e) {
                 SystemLogger.error("Quản lý danh mục", "CategoryController.viewCategoryEdit", e.getMessage(), e);
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
 
@@ -457,7 +458,7 @@ public class CategoryController extends HttpServlet {
                 }
             } catch (Exception e) {
                 SystemLogger.error("Quản lý danh mục", "CategoryController.deleteCategory", e.getMessage(), e);
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
 
@@ -591,7 +592,7 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logCreate", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
@@ -724,7 +725,7 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logUpdate", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
@@ -749,7 +750,7 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, name, "DELETE", description);
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logDelete", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 

@@ -60,7 +60,7 @@ public class SecurityFilter implements Filter {
                 session.setAttribute("userPermissions", freshPerms);
                 req.getServletContext().removeAttribute("perm_refresh_" + userId);
             } catch (SQLException e) {
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
 

@@ -36,7 +36,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -95,7 +95,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         try (Connection c = getConnection()) {
             return insert(c, sc);   // gọi method bên trên
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }

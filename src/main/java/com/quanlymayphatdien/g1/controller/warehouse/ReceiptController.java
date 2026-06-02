@@ -84,7 +84,7 @@ public class ReceiptController extends HttpServlet {
             }
         } catch (Exception e) {
             SystemLogger.error("Quản lý kho", "ReceiptController.doGet", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
@@ -119,7 +119,7 @@ public class ReceiptController extends HttpServlet {
             }
         } catch (Exception e) {
             SystemLogger.error("Quản lý kho", "ReceiptController.doPost", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
