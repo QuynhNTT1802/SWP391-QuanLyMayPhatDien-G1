@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
@@ -52,10 +53,10 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     //lay quyen dua tren role goc
     public Set<String> getRolePermissions(int userId) throws SQLException {
         Set<String> permissions = new HashSet<>();
-        String sql = "select p.resource, p.action from permissions p "
-                + "join role_permissions rp on p.id = rp.permission_id "
-                + "join user_roles ur on rp.role_id = ur.role_id "
-                + "join roles r on r.id = ur.role_id "
+        String sql = "select p.resource, p.action from permission p "
+                + "join role_permission rp on p.id = rp.permission_id "
+                + "join user_role ur on rp.role_id = ur.role_id "
+                + "join role r on r.id = ur.role_id "
                 + "where ur.user_id = ? and r.status = 'active'";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
@@ -76,7 +77,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
         Set<String> grants = new HashSet<>();
         Set<String> denies = new HashSet<>();
 
-        String sql = "select * from permissions p join user_permissions up "
+        String sql = "select * from permission p join user_permission up "
                 + "on p.id = up.permission_id "
                 + "where up.user_id = ?";
         try (Connection c = getConnection()) {
@@ -105,7 +106,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     //xem detail cua mot role cu the co nhung quyen j
     public List<Permission> getPermissionByRoleId(int roleId) throws SQLException {
         List<Permission> list = new ArrayList<>();
-        String sql = "select * from permissions p join role_permissions rp "
+        String sql = "select * from permission p join role_permission rp "
                 + "on p.id = rp.permission_id "
                 + "where rp.role_id = ?";
         try (Connection c = getConnection()) {
@@ -128,8 +129,8 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     // lay danh sach quyen ngoai le cua 1 user
     public List<String[]> getUserOverrides(int userId) throws SQLException {
         List<String[]> list = new ArrayList<>();
-        String sql = "select p.resource, p.action, up.type from permissions p "
-                + "join user_permissions up "
+        String sql = "select p.resource, p.action, up.type from permission p "
+                + "join user_permission up "
                 + "on p.id = up.permission_id "
                 + "where up.user_id = ?";
 
@@ -151,7 +152,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
 
     //them moi hoac cap nhat quyen ngoai le cho user
     public boolean setUserOverride(int userId, int perId, String type) throws SQLException {
-        String sql = "INSERT INTO user_permissions (user_id, permission_id, type) "
+        String sql = "INSERT INTO user_permission (user_id, permission_id, type) "
                 + "VALUES (?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE type = ?";
         try (Connection c = getConnection()) {
@@ -169,7 +170,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
 
     // xoa bo quyen ngoai le ca nhan luc do user tro lai quyen mac dich RBAC
     public boolean removeUserOverride(int userId, int perId) throws SQLException {
-        String sql = "DELETE FROM user_permissions WHERE user_id = ? AND permission_id = ?";
+        String sql = "DELETE FROM user_permission WHERE user_id = ? AND permission_id = ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             p.setInt(1, userId);
@@ -217,7 +218,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     @Override
     public List<Permission> findAll() {
         List<Permission> list = new ArrayList<>();
-        String sql = "select * from permissions order by resource, action";
+        String sql = "select * from permission order by resource, action";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             ResultSet rs = p.executeQuery();

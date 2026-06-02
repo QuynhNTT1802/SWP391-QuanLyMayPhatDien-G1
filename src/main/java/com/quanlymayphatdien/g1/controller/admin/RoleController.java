@@ -4,6 +4,7 @@ import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -21,8 +22,8 @@ import java.util.Map;
 import java.util.Set;
 
 @WebServlet(name = "RoleController", urlPatterns = {
-    "/admin/roles", 
-    "/admin/role/edit", 
+    "/admin/roles",
+    "/admin/role/edit",
     "/admin/role/save"
 })
 public class RoleController extends HttpServlet {
@@ -48,7 +49,9 @@ public class RoleController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("quản lý phân quyền", "RoleController",
+                "Lỗi xử lý GET " + action + ": " + e.getMessage(), e);
+            throw new ServletException(e);
         }
     }
 
@@ -65,7 +68,9 @@ public class RoleController extends HttpServlet {
                 saveRoleFull(request, response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("quản lý phân quyền", "RoleController",
+                "Lỗi xử lý POST /admin/role/save: " + e.getMessage(), e);
+            throw new ServletException(e);
         }
     }
 
@@ -78,7 +83,34 @@ public class RoleController extends HttpServlet {
         } else {
             roleList = roleDAO.findAll();
         }
-        request.setAttribute("roleList", roleList);
+
+        int page = 1;
+        int pageSize = 12;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        int totalItems = roleList.size();
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        int fromIndex = (page - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, totalItems);
+        List<Role> pageList = roleList.subList(fromIndex, toIndex);
+
+        request.setAttribute("roleList", pageList);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex + 1);
+        request.setAttribute("toIndex", toIndex);
 
         request.getRequestDispatcher("/view/admin/admin-role.jsp").forward(request, response);
     }
@@ -87,9 +119,9 @@ public class RoleController extends HttpServlet {
     private void viewRolePermission(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String idParam = request.getParameter("id");
         String permSearch = request.getParameter("permSearch");
-        
+
         List<Permission> allPermissions = perDAO.findAll();
-        
+
         // Ví dụ: "users" -> [Xem, Tạo, Sửa, Xoá]
         Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
         for (Permission p : allPermissions) {
@@ -106,10 +138,13 @@ public class RoleController extends HttpServlet {
             int roleId = Integer.parseInt(idParam);
             Role curRole = null;
             for (Role r : roleDAO.findAll()) {
-                if (r.getRoleId() == roleId) { curRole = r; break; }
+                if (r.getRoleId() == roleId) {
+                    curRole = r;
+                    break;
+                }
             }
             List<Permission> rolePermissions = perDAO.getPermissionByRoleId(roleId);
-            
+
             request.setAttribute("role", curRole);
             request.setAttribute("rolePermissions", rolePermissions);
         }
@@ -223,8 +258,8 @@ public class RoleController extends HttpServlet {
             }
             roleId = roleDAO.insert(role);
         } else {
-            if (permissions == null || !permissions.contains("roles.edit")) {
-                request.getRequestDispatcher("/view/error/role-error.jsp").forward(request, response);
+            if (permissions == null || !permissions.contains("roles.update")) {
+                request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
                 return;
             }
             roleId = excludeId;

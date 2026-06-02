@@ -1,13 +1,16 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
 import com.quanlymayphatdien.g1.config.GlobalConfig;
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -40,7 +43,7 @@ public class UserManagementController extends HttpServlet {
             return;
         }
         String action = request.getParameter("action");
-        if (action == null) {
+        if (action == null || action.isEmpty()) {
             action = "list";
         }
 
@@ -67,7 +70,6 @@ public class UserManagementController extends HttpServlet {
                 activateUser(request, response);
                 break;
             case "list":
-            default:
                 listUsers(request, response);
                 break;
         }
@@ -99,7 +101,6 @@ public class UserManagementController extends HttpServlet {
                 activateUser(request, response);
                 break;
             case "list":
-            default:
                 listUsers(request, response);
                 break;
         }
@@ -117,19 +118,30 @@ public class UserManagementController extends HttpServlet {
                 user.setRoles(roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
 
-                // Tính initials
                 String name = user.getName() != null ? user.getName().trim() : "";
-                int sp = name.lastIndexOf(' ');
-                request.setAttribute("userInitials",
-                        name.isEmpty() ? "?" : (name.substring(0, 1)
-                        + (sp >= 0 && sp + 1 < name.length() ? name.substring(sp + 1, sp + 2) : ""))
-                        .toUpperCase());
+                String initials = "";
 
-                // Format dates
-                java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(df) : "—");
+                if (!name.isEmpty()) {
+                    String[] parts = name.split(" ");
+                    if (parts.length == 1) {
+                        initials = parts[0].substring(0, 1);
+                    } else {
+                        initials = parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1);
+                    }
+                }
+                request.setAttribute("userInitials", initials.toUpperCase());
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(dtf) : "—");
                 request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
+
+                ActivityLogDAO logDAO = new ActivityLogDAO();
+                List<ActivityLog> logs = logDAO.getLogsByEntity("user", userId, 1, 20);
+                List<String> logDates = new ArrayList<>();
+                for (ActivityLog log : logs) {
+                    logDates.add(log.getCreatedAt() != null ? log.getCreatedAt().format(dtf) : "—");
+                }
+                request.setAttribute("activityLogs", logs);
+                request.setAttribute("logDates", logDates);
 
                 request.getRequestDispatcher("/view/admin/admin-user-detail.jsp").forward(request, response);
                 return;
@@ -141,8 +153,7 @@ public class UserManagementController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         RoleDAO roleDAO = new RoleDAO();
         request.setAttribute("allRoles", roleDAO.findAll());
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/admin/admin-user-create.jsp");
-        dispatcher.forward(request, response);
+        request.getRequestDispatcher("/view/admin/admin-user-create.jsp").forward(request, response);
     }
 
     private void createUser(HttpServletRequest request, HttpServletResponse response)
@@ -178,7 +189,7 @@ public class UserManagementController extends HttpServlet {
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
             newUser.setCreatedBy(1);
-
+            
             UserDAO userDAO = new UserDAO();
             int newUserId = userDAO.insert(newUser);
             if (newUserId > 0) {
@@ -193,11 +204,15 @@ public class UserManagementController extends HttpServlet {
                     userDAO.updateUserRoles(newUserId, roleIdList);
                 }
                 request.getSession().setAttribute("message", "User added successfully!");
+                logActivity(request, "user", newUserId, name, "CREATE",
+                        "Tạo người dùng: " + username);
             } else {
                 request.getSession().setAttribute("message", "Failed to add user!");
             }
 
         } catch (Exception e) {
+            SystemLogger.warn("quản lý người dùng", "UserManagementController.createUser",
+                "Lỗi khi tạo user: " + e.getMessage());
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -273,7 +288,6 @@ public class UserManagementController extends HttpServlet {
 
                 boolean isUpdated = userDAO.update(user);
 
-                //add role
                 if (isUpdated) {
                     String[] roleIds = request.getParameterValues("roleIds");
                     List<Integer> roleIdList = new ArrayList<>();
@@ -288,18 +302,19 @@ public class UserManagementController extends HttpServlet {
                     if ("1".equals(overrideSubmitted)) {
                         PermissionDAO perDAO = new PermissionDAO();
                         List<Permission> allPermissions = perDAO.findAll();
-                        Map<Integer, String> overrides = new HashMap<>();
                         for (Permission perm : allPermissions) {
                             String overrideType = request.getParameter("perOverride_" + perm.getPermissionId());
-                            if (overrideType != null && !overrideType.isEmpty()) {
-                                overrides.put(perm.getPermissionId(), overrideType);
+                            if ("GRANT".equals(overrideType) || "DENY".equals(overrideType)) {
+                                perDAO.setUserOverride(userId, perm.getPermissionId(), overrideType);
+                            } else if ("default".equals(overrideType)) {
+                                perDAO.removeUserOverride(userId, perm.getPermissionId());
                             }
                         }
-                        perDAO.applyUserOverrides(userId, allPermissions, overrides);
-                        request.getServletContext().setAttribute("perm_refresh_" + userId, true);
                     }
-                   
+
                     request.getSession().setAttribute("message", "Update successfully");
+                    logActivity(request, "user", userId, name, "UPDATE",
+                            "Cập nhật người dùng: " + (name != null ? name : ("ID " + userId)));
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
                 }
@@ -307,6 +322,8 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Account not found!");
             }
         } catch (Exception e) {
+            SystemLogger.warn("quản lý người dùng", "UserManagementController.updateUser",
+                "Lỗi khi cập nhật user id=" + userId + ": " + e.getMessage());
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
@@ -363,7 +380,7 @@ public class UserManagementController extends HttpServlet {
         return errors;
     }
 
-        private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void deactivateUser(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
@@ -388,20 +405,22 @@ public class UserManagementController extends HttpServlet {
                 }
 
                 if (isAdmin) {
-                    request.getSession().setAttribute("message", "Cannot deactivate admin");
+                    request.getSession().setAttribute("message", "Không thể khóa Quản trị viên");
                 } else {
                     boolean check = userDAO.deactivateAccount(userId);
                     if (check) {
-                        request.getSession().setAttribute("message", "Deactivate successfully");
+                        request.getSession().setAttribute("message", "Khóa người dùng thành công");
+                        logActivity(request, "user", userId, user.getName(), "DEACTIVATE",
+                                "Khóa người dùng: " + user.getUsername());
                     } else {
-                        request.getSession().setAttribute("message", "Fail to deactivate");
+                        request.getSession().setAttribute("message", "Khóa người dùng thất bại");
                     }
                 }
             } else {
-                request.getSession().setAttribute("message", "User not found");
+                request.getSession().setAttribute("message", "Không tìm thấy người dùng");
             }
         } else {
-            request.getSession().setAttribute("message", "UserID not found");
+            request.getSession().setAttribute("message", "Không tìm thấy ID");
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
@@ -419,17 +438,23 @@ public class UserManagementController extends HttpServlet {
             UserDAO userDAO = new UserDAO();
             boolean check = userDAO.activateAccount(userId);
             if (check) {
-                request.getSession().setAttribute("message", "Activate user  successfully");
+                request.getSession().setAttribute("message", "Kích hoạt người dùng thành công");
+                User user = userDAO.findById(userId);
+                if (user != null) {
+                    logActivity(request, "user", userId, user.getName(), "ACTIVATE",
+                            "Kích hoạt người dùng: " + user.getUsername());
+                }
             } else {
-                request.getSession().setAttribute("message", "Fail to activate user");
+                request.getSession().setAttribute("message", "Kích hoạt người dùng thất bại");
             }
         } else {
-            request.getSession().setAttribute("message", "UserID not found");
+            request.getSession().setAttribute("message", "Không tìm thấy ID");
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list&page=" + currentPage);
     }
 
-    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void listUsers(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String searchFilter = request.getParameter("search");
         String statusFilter = request.getParameter("status");
         String roleFilter = request.getParameter("role");
@@ -450,8 +475,10 @@ public class UserManagementController extends HttpServlet {
 
         UserDAO userDAO = new UserDAO();
         List<User> users = userDAO.findUsersWithRoles(roleFilter, statusFilter, searchFilter, page, pageSize);
+
         prepareUserDisplayData(users, request);
-        int totalUsers = userDAO.getTotalFilteredUsers(null, statusFilter, searchFilter);
+
+        int totalUsers = userDAO.getTotalFilteredUsers(roleFilter, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
         request.setAttribute("users", users);
@@ -461,10 +488,8 @@ public class UserManagementController extends HttpServlet {
         request.setAttribute("roleFilter", roleFilter);
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("searchFilter", searchFilter);
-
         request.setAttribute("activeCount", userDAO.countUsersByStatus("active"));
-        request.setAttribute("inactiveCount", userDAO.countUsersByStatus("inactive"));
-        request.setAttribute("now", LocalDateTime.now());
+        request.setAttribute("lockedCount", userDAO.countUsersByStatus("locked"));
 
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
@@ -472,37 +497,49 @@ public class UserManagementController extends HttpServlet {
     private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
         List<String> userInitials = new ArrayList<>();
         List<String> userAvatarClass = new ArrayList<>();
-        List<String> userCreatedDate = new ArrayList<>();
-        List<String> userCreatedTime = new ArrayList<>();
         String[] avatarColors = {"green", "blue", "orange", "purple", "pink", "teal", "grey"};
-        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
 
         for (int i = 0; i < users.size(); i++) {
             User u = users.get(i);
+
             String name = u.getName() != null ? u.getName().trim() : "";
-            int lastSpace = name.lastIndexOf(' ');
-            String initials = name.isEmpty() ? "?"
-                    : (name.substring(0, 1)
-                            + (lastSpace >= 0 && lastSpace + 1 < name.length()
-                            ? name.substring(lastSpace + 1, lastSpace + 2) : ""))
-                            .toUpperCase();
-            userInitials.add(initials);
-            userAvatarClass.add(avatarColors[i % 7]);
-            if (u.getCreatedAt() != null) {
-                userCreatedDate.add(u.getCreatedAt().format(dateFmt));
-                userCreatedTime.add(u.getCreatedAt().format(timeFmt));
+            String initials = "";
+
+            if (!name.isEmpty()) {
+                String[] parts = name.split(" ");
+                if (parts.length == 1) {
+                    initials = parts[0].substring(0, 1);
+                } else {
+                    initials = parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1);
+                }
             } else {
-                userCreatedDate.add("—");
-                userCreatedTime.add("");
+                initials = "?";
             }
+
+            userInitials.add(initials.toUpperCase());
+            userAvatarClass.add(avatarColors[i % avatarColors.length]);
         }
+
         request.setAttribute("userInitials", userInitials);
         request.setAttribute("userAvatarClass", userAvatarClass);
-        request.setAttribute("userCreatedDate", userCreatedDate);
-        request.setAttribute("userCreatedTime", userCreatedTime);
-        request.setAttribute("nowFormatted",
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+    }
+
+    private void logActivity(HttpServletRequest request, String entityType,
+            int entityId, String entityName, String action, String details) {
+        User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+        if (loggedUser == null) {
+            return;
+        }
+        ActivityLog log = new ActivityLog();
+        log.setUserId(loggedUser.getId());
+        log.setUsername(loggedUser.getUsername());
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setEntityName(entityName);
+        log.setAction(action);
+        log.setDetails(details);
+        log.setCreatedAt(LocalDateTime.now());
+        new ActivityLogDAO().insertLog(log);
     }
 
 }
