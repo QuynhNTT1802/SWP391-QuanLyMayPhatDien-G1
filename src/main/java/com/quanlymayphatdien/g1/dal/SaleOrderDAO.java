@@ -34,7 +34,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -54,7 +54,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -96,7 +96,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -134,7 +134,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -175,7 +175,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             }
         } catch (Exception e) {
             System.err.println("ERROR in searchByNameCode: " + e.getMessage());
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -192,7 +192,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -209,7 +209,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -226,7 +226,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -243,7 +243,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -256,7 +256,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -302,13 +302,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
@@ -329,7 +329,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
@@ -348,7 +348,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
@@ -366,7 +366,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
@@ -381,7 +381,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return null;
     }
@@ -419,7 +419,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -431,7 +431,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -547,13 +547,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
             } catch (SQLException e) {
                 conn.rollback();
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }

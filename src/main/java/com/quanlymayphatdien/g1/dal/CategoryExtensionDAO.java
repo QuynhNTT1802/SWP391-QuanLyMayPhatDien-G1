@@ -22,7 +22,7 @@ public class CategoryExtensionDAO extends DBContext {
             if (brand.getWarrantyPeriod() != null) p.setInt(5, brand.getWarrantyPeriod());
             else p.setNull(5, java.sql.Types.INTEGER);
             p.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
     }
 
     public CategoryBrand findBrand(int categoryId) {
@@ -43,7 +43,7 @@ public class CategoryExtensionDAO extends DBContext {
                     return b;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
         return null;
     }
 
@@ -57,7 +57,7 @@ public class CategoryExtensionDAO extends DBContext {
             if (ft.getTypicalPrice() != null) p.setBigDecimal(3, ft.getTypicalPrice());
             else p.setNull(3, java.sql.Types.DECIMAL);
             p.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
     }
 
     public CategoryFuelType findFuelType(int categoryId) {
@@ -75,7 +75,7 @@ public class CategoryExtensionDAO extends DBContext {
                     return ft;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
         return null;
     }
 
@@ -87,7 +87,7 @@ public class CategoryExtensionDAO extends DBContext {
             p.setInt(1, origin.getCategoryId());
             p.setString(2, origin.getCountryCode());
             p.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
     }
 
     public CategoryOrigin findOrigin(int categoryId) {
@@ -103,7 +103,7 @@ public class CategoryExtensionDAO extends DBContext {
                     return o;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
         return null;
     }
 
@@ -115,7 +115,7 @@ public class CategoryExtensionDAO extends DBContext {
             p.setInt(1, ct.getCategoryId());
             p.setString(2, ct.getTaxType());
             p.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
     }
 
     public CategoryCustomerType findCustomerType(int categoryId) {
@@ -131,7 +131,7 @@ public class CategoryExtensionDAO extends DBContext {
                     return ct;
                 }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
         return null;
     }
 
@@ -141,7 +141,7 @@ public class CategoryExtensionDAO extends DBContext {
              PreparedStatement p = c.prepareStatement(sql)) {
             p.setInt(1, categoryId);
             p.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
     }
 
     public void deleteExtension(String tableName, int categoryId) {
@@ -154,7 +154,7 @@ public class CategoryExtensionDAO extends DBContext {
              PreparedStatement p = c.prepareStatement(sql)) {
             p.setInt(1, categoryId);
             p.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
     }
 
     public Object findExtension(String type, int categoryId) {
@@ -189,7 +189,7 @@ public class CategoryExtensionDAO extends DBContext {
                             map.put(cid, b);
                         }
                     }
-                } catch (SQLException e) { e.printStackTrace(); }
+                } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
                 break;
             }
             case "fuel_type": {
@@ -207,7 +207,7 @@ public class CategoryExtensionDAO extends DBContext {
                             map.put(cid, ft);
                         }
                     }
-                } catch (SQLException e) { e.printStackTrace(); }
+                } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
                 break;
             }
             case "origin": {
@@ -223,7 +223,7 @@ public class CategoryExtensionDAO extends DBContext {
                             map.put(cid, o);
                         }
                     }
-                } catch (SQLException e) { e.printStackTrace(); }
+                } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
                 break;
             }
             case "customer_type": {
@@ -239,7 +239,7 @@ public class CategoryExtensionDAO extends DBContext {
                             map.put(cid, ct);
                         }
                     }
-                } catch (SQLException e) { e.printStackTrace(); }
+                } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
                 break;
             }
         }

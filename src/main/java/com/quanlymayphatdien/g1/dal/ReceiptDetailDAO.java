@@ -39,7 +39,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -71,7 +71,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -90,7 +90,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
             }
             ps.executeBatch();
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
