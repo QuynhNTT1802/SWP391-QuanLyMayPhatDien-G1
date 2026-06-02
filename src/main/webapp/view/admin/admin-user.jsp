@@ -188,16 +188,16 @@
                             <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalUsers ? totalUsers : currentPage * 10}</strong> / <strong>${totalUsers}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">‹</a>
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty roleFilter}">&role=<c:out value="${roleFilter}"/></c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty roleFilter}">&role=<c:out value="${roleFilter}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">›</a>
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty roleFilter}">&role=<c:out value="${roleFilter}"/></c:if>" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>
