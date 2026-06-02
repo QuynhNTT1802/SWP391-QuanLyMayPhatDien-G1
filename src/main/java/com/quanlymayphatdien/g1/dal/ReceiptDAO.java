@@ -383,6 +383,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
     }
 
+
+
     @Override
     public List<Receipt> findAll() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
