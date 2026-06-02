@@ -418,4 +418,284 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         }
         return 0;
     }
+
+    /**
+     * Tìm log của danh mục theo loại (type) và module.
+     * Dùng cho tab Lịch sử cấp 1 bên trong danh sách loại danh mục.
+     */
+    public List<ActivityLog> findByTypeAndModuleFilter(String module, String type, String search, String action,
+                                                String dateFrom, String dateTo,
+                                                int page, int pageSize) {
+        List<ActivityLog> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder where = new StringBuilder(
+            "WHERE al.entity_type = 'categories' "
+          + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
+          + "AND ( (c.module = ? AND c.type = ?) OR (c.module IS NULL AND al.details LIKE ? AND al.details LIKE ?) ) "
+        );
+        params.add(module);
+        params.add(type);
+        params.add("%module:" + module + "%");
+        params.add("%type:" + type + "%"); // fallback trong tương lai nếu log delete lưu type
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT al.*, u.name AS user_name "
+                   + "FROM activity_log al "
+                   + "JOIN user u ON al.user_id = u.id "
+                   + "LEFT JOIN category c ON al.entity_id = c.id "
+                   + where
+                   + "ORDER BY al.created_at DESC "
+                   + "LIMIT ? OFFSET ?";
+
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+            p.setInt(idx++, pageSize);
+            p.setInt(idx,   (page - 1) * pageSize);
+
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                ActivityLog log = getFromResultSet(rs);
+                log.setUsername(rs.getString("user_name"));
+                list.add(log);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Đếm tổng số log theo loại và module — dùng cho phân trang Lịch sử cấp 1.
+     */
+    public int countByTypeAndModuleFilter(String module, String type, String search, String action,
+                                   String dateFrom, String dateTo) {
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder where = new StringBuilder(
+            "WHERE al.entity_type = 'categories' "
+          + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
+          + "AND ( (c.module = ? AND c.type = ?) OR (c.module IS NULL AND al.details LIKE ? AND al.details LIKE ?) ) "
+        );
+        params.add(module);
+        params.add(type);
+        params.add("%module:" + module + "%");
+        params.add("%type:" + type + "%");
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
+            String kw = "%" + search.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT COUNT(*) "
+                   + "FROM activity_log al "
+                   + "JOIN user u ON al.user_id = u.id "
+                   + "LEFT JOIN category c ON al.entity_id = c.id "
+                   + where;
+
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy lịch sử hoạt động của một danh mục cụ thể theo entity_id.
+     * Dùng cho tab "Lịch sử" cấp 2 trong trang edit danh mục.
+     *
+     * @param entityId  id của danh mục cụ thể
+     * @param search    tìm kiếm theo tên người dùng
+     * @param action    lọc theo hành động (CREATE/UPDATE/DELETE), null = tất cả
+     * @param dateFrom  từ ngày (yyyy-MM-dd)
+     * @param dateTo    đến ngày (yyyy-MM-dd)
+     * @param page      trang hiện tại (bắt đầu từ 1)
+     * @param pageSize  số bản ghi mỗi trang
+     */
+    public List<ActivityLog> findByEntityId(int entityId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
+        List<ActivityLog> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder where = new StringBuilder(
+            "WHERE al.entity_type = 'categories' "
+          + "AND al.entity_id = ? "
+          + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
+        );
+        params.add(entityId);
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND u.name LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+        
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT al.*, u.name AS user_name "
+                   + "FROM activity_log al "
+                   + "JOIN user u ON al.user_id = u.id "
+                   + where
+                   + "ORDER BY al.created_at DESC "
+                   + "LIMIT ? OFFSET ?";
+
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+            p.setInt(idx++, pageSize);
+            p.setInt(idx,   (page - 1) * pageSize);
+
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                ActivityLog log = getFromResultSet(rs);
+                log.setUsername(rs.getString("user_name"));
+                list.add(log);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Đếm số bản ghi lịch sử theo entity_id — dùng cho phân trang tab cấp 2.
+     */
+    public int countByEntityId(int entityId, String search, String action, String dateFrom, String dateTo) {
+        List<Object> params = new ArrayList<>();
+
+        StringBuilder where = new StringBuilder(
+            "WHERE al.entity_type = 'categories' "
+          + "AND al.entity_id = ? "
+          + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
+        );
+        params.add(entityId);
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND u.name LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+        
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT COUNT(*) "
+                   + "FROM activity_log al "
+                   + "JOIN user u ON al.user_id = u.id "
+                   + where;
+
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) return rs.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }
