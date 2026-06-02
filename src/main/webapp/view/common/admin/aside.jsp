@@ -64,17 +64,19 @@
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
-            <a href="${pageContext.request.contextPath}/receipt">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-                Phiếu nhập/xuất
-            </a>
+        <a href="${pageContext.request.contextPath}/receipt">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+            Phiếu nhập/xuất
+        </a>
+
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('orders.view')}">
-            <a href="#">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                Đơn hàng
-            </a>
+        <a href="${pageContext.request.contextPath}/order">
+
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Đơn hàng
+        </a>
         </c:if>
 
         <div class="nav-section">Quản trị</div>
