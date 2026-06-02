@@ -49,10 +49,7 @@ public abstract class User {
         this.updatedBy = updatedBy;
         this.roles = roles;
         this.effectivePermissions = effectivePermissions;
-    }
-    
-    
-   
+    }   
 
     public Integer getId() {
         return id;
@@ -164,9 +161,7 @@ public abstract class User {
 
     public void setEffectivePermissions(Set<String> effectivePermissions) {
         this.effectivePermissions = effectivePermissions;
-    }
-    
-    
+    }  
 
     @Override
     public String toString() {
