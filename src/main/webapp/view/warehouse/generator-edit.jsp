@@ -157,7 +157,6 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                   
                                 </div>
                             </div>
 
@@ -197,7 +196,7 @@
         <c:remove var="fieldWeight" scope="session"/>
         <c:remove var="fieldDesc" scope="session"/>
 
-        <script src="${pageContext.request.contextPath}/assets/js/theme.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js" charset="UTF-8"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     </body>
 </html>
