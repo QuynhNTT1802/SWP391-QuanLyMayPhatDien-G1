@@ -198,6 +198,26 @@
                                         <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
                                         <input class="input mono" id="customerTaxCode" name="customerTaxCode" value="<c:out value="${order.customerTaxCode}"/>" />
                                     </div>
+                                    <div class="field">
+                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
+                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
+                                            <option value="">-- Chọn loại khách hàng --</option>
+                                            <c:forEach var="ct" items="${customerTypes}">
+                                                <option value="${ct.id}" data-name="${ct.name}"
+                                                        <c:if test="${order.customerTypeId == ct.id}">selected</c:if>>
+                                                    <c:out value="${ct.name}"/>
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${order.customerCompany}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" value="<c:out value="${order.customerTaxCode}"/>" />
+                                    </div>
                                 </div>
                             </div>
 

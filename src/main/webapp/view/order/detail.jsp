@@ -169,6 +169,10 @@
                                     <div class="info-value"><c:out value="${order.note}"/></div>
                                 </div>
                             </c:if>
+                            <div class="info-field" style="grid-column: span 2;">
+                                <div class="info-label">Ghi chú nội bộ</div>
+                                <div class="info-value"><c:out value="${order.note}"/></div>
+                            </div>
                         </div>
                     </section>
 

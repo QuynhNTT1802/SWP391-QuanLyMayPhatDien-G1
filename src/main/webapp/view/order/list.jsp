@@ -254,27 +254,19 @@
                 var form = document.createElement('form');
                 form.method = 'POST';
                 form.action = window.APP_CTX + '/order';
-
                 var actionInput = document.createElement('input');
                 actionInput.type = 'hidden';
                 actionInput.name = 'action';
                 actionInput.value = 'reject';
-
                 var idInput = document.createElement('input');
                 idInput.type = 'hidden';
                 idInput.name = 'orderId';
                 idInput.value = orderId;
-
                 var reasonInput = document.createElement('input');
                 reasonInput.type = 'hidden';
                 reasonInput.name = 'rejectReason';
                 reasonInput.value = reason.trim();
-
-                form.appendChild(actionInput);
                 form.appendChild(idInput);
-                form.appendChild(reasonInput);
-                document.body.appendChild(form);
-                form.submit();
             }
         }
         function confirmCancel(orderId) {
