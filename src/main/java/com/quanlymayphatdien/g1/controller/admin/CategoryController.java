@@ -685,7 +685,6 @@ public class CategoryController extends HttpServlet {
                     String newPriceStr = request.getParameter("typicalPrice");
                     String newPrice = normalizeLogString(newPriceStr);
                     String oldPrice = normalizeLogNumber(oldF != null ? oldF.getTypicalPrice() : null);
-
                     if (!newPrice.equals(oldPrice)) {
                         try {
                             java.math.BigDecimal np = newPrice.equals("(trống)") ? null : new java.math.BigDecimal(newPriceStr.trim());
