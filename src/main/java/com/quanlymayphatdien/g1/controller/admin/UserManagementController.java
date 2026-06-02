@@ -10,6 +10,7 @@ import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -57,6 +58,7 @@ public class UserManagementController extends HttpServlet {
                 try {
                     showUpdateForm(request, response);
                 } catch (SQLException ex) {
+                    SystemLogger.error("Quản lý người dùng", "UserManagementController.showUpdateForm", ex.getMessage(), ex);
                     Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -210,6 +212,7 @@ public class UserManagementController extends HttpServlet {
             }
 
         } catch (Exception e) {
+            SystemLogger.error("Quản lý người dùng", "UserManagementController.createUser", e.getMessage(), e);
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -319,6 +322,7 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Account not found!");
             }
         } catch (Exception e) {
+            SystemLogger.error("Quản lý người dùng", "UserManagementController.updateUser", e.getMessage(), e);
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
@@ -464,6 +468,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
+                SystemLogger.warn("Quản lý người dùng", "UserManagementController.listUsers", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
