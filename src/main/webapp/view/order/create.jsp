@@ -139,7 +139,6 @@
                         </div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
-
                     <c:if test="${not empty error}">
                         <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
                             <c:out value="${error}"/>
@@ -179,6 +178,26 @@
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
                                         <input class="input" name="customerAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${param.customerAddress}"/>" required />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
+                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
+                                            <option value="">-- Chọn loại khách hàng --</option>
+                                            <c:forEach var="ct" items="${customerTypes}">
+                                                <option value="${ct.id}" data-name="${ct.name}"
+                                                        <c:if test="${param.customerTypeId == ct.id}">selected</c:if>>
+                                                    <c:out value="${ct.name}"/>
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
@@ -303,7 +322,6 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                     Thêm dòng
                                 </button>
-
 
                             </div>
 

@@ -20,6 +20,7 @@ import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -82,6 +83,7 @@ public class ReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
+            SystemLogger.error("Quản lý kho", "ReceiptController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -116,6 +118,7 @@ public class ReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
+            SystemLogger.error("Quản lý kho", "ReceiptController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -136,6 +139,7 @@ public class ReceiptController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
+                SystemLogger.warn("Quản lý kho", "ReceiptController.viewReceiptList", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
@@ -479,6 +483,7 @@ public class ReceiptController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
+                SystemLogger.warn("Quản lý kho", "ReceiptController.selectOrder", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
