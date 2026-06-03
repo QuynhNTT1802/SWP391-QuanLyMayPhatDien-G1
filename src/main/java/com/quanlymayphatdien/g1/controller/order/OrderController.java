@@ -172,14 +172,12 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
-
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         SaleOrder order = saleorderdao.findById(id);
-
         if (order == null) {
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
