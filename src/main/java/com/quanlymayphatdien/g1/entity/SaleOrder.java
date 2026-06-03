@@ -26,6 +26,7 @@ public class SaleOrder {
     private int approvedBy;
     private int cancelledBy;
     private int updatedBy;
+    private int customerTypeId;
     
     private String status; // PENDING, APPROVED, REJECTED, CANCELLED
     private Double totalAmount;
@@ -41,7 +42,7 @@ public class SaleOrder {
     public SaleOrder() {
     }
 
-    public SaleOrder(int orderId, String orderCode, String customerName, String customerPhone, String customerEmail, String customerAddress, String customerTaxCode, String customerType, String customerCompany, String customerNote, int createdBy, int approvedBy, int cancelledBy, int updatedBy, String status, Double totalAmount, String note, String rejectReason, Date orderDate, Date approvedAt, Date cancelledAt, Date createdAt, Date updatedAt) {
+    public SaleOrder(int orderId, String orderCode, String customerName, String customerPhone, String customerEmail, String customerAddress, String customerTaxCode, String customerType, String customerCompany, String customerNote, int createdBy, int approvedBy, int cancelledBy, int updatedBy, int customerTypeId, String status, Double totalAmount, String note, String rejectReason, Date orderDate, Date approvedAt, Date cancelledAt, Date createdAt, Date updatedAt) {
         this.orderId = orderId;
         this.orderCode = orderCode;
         this.customerName = customerName;
@@ -56,6 +57,7 @@ public class SaleOrder {
         this.approvedBy = approvedBy;
         this.cancelledBy = cancelledBy;
         this.updatedBy = updatedBy;
+        this.customerTypeId = customerTypeId;
         this.status = status;
         this.totalAmount = totalAmount;
         this.note = note;
@@ -179,6 +181,14 @@ public class SaleOrder {
         this.updatedBy = updatedBy;
     }
 
+    public int getCustomerTypeId() {
+        return customerTypeId;
+    }
+
+    public void setCustomerTypeId(int customerTypeId) {
+        this.customerTypeId = customerTypeId;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -250,6 +260,11 @@ public class SaleOrder {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
+    
+    
+    
+
+
     
     
 }

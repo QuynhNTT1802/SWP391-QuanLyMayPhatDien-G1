@@ -1,7 +1,11 @@
 package com.quanlymayphatdien.g1.controller.order;
 
+import com.quanlymayphatdien.g1.dal.CategoryDAO;
+import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
+import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
@@ -19,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Set;
 
 @WebServlet(name = "OrderController", urlPatterns = {"/order"})
 public class OrderController extends HttpServlet {
@@ -26,8 +32,8 @@ public class OrderController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-       HttpSession session = request.getSession(false);
+
+        HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loggedUser") == null) {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
@@ -71,11 +77,10 @@ public class OrderController extends HttpServlet {
         }
     }
 
- 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("loggedUser") == null) {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
@@ -108,7 +113,6 @@ public class OrderController extends HttpServlet {
         }
     }
 
-   
     private void listOrders(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String statusFilter = request.getParameter("status");
@@ -128,7 +132,9 @@ public class OrderController extends HttpServlet {
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
-                if (page < 1) page = 1;
+                if (page < 1) {
+                    page = 1;
+                }
             } catch (NumberFormatException e) {
                 page = 1;
             }
@@ -136,11 +142,13 @@ public class OrderController extends HttpServlet {
 
         int totalOrders = allOrders.size();
         int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
-        if (page > totalPages && totalPages > 0) page = totalPages;
+        if (page > totalPages && totalPages > 0) {
+            page = totalPages;
+        }
 
         int startIndex = (page - 1) * pageSize;
         int endIndex = Math.min(startIndex + pageSize, totalOrders);
-        
+
         List<SaleOrder> pagedOrders = allOrders.subList(startIndex, endIndex);
 
         request.setAttribute("orders", pagedOrders);
@@ -164,22 +172,18 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
-     
-
-  
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         SaleOrder order = saleorderdao.findById(id);
-        
         if (order == null) {
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
 
-        List<OrderDetail> details = orderdetaildao.findByOrderId(id);
+        List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
 
         String customerTypeName = "";
         if (order.getCustomerTypeId() > 0) {
@@ -195,7 +199,6 @@ public class OrderController extends HttpServlet {
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
 
-    
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         GeneratorDAO generatorDao = new GeneratorDAO();
@@ -216,10 +219,9 @@ public class OrderController extends HttpServlet {
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
     }
 
-
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, ParseException {
-        
+
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("loggedUser");
         if (user == null) {
@@ -228,8 +230,11 @@ public class OrderController extends HttpServlet {
         }
 
         SaleOrder order = new SaleOrder();
+
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
-        
+        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
+        GeneratorDAO generatorDao = new GeneratorDAO();
+
         String orderCode = request.getParameter("orderCode");
         if (orderCode == null || orderCode.trim().isEmpty()) {
             String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -256,7 +261,7 @@ public class OrderController extends HttpServlet {
         }
 
         order.setStatus("PENDING");
-        order.setTotalAmount(0.0); 
+        order.setTotalAmount(0.0);
 
         String dateStr = request.getParameter("orderDate");
         if (dateStr != null && !dateStr.isEmpty()) {
@@ -299,7 +304,6 @@ public class OrderController extends HttpServlet {
         order.setTotalAmount(totalAmount);
         order.setStatus("PENDING");
         int newId = saleorderdao.insert(order);
-
         if (newId > 0) {
             
             for (OrderDetail d : detailsList) {
@@ -314,13 +318,14 @@ public class OrderController extends HttpServlet {
         }
     }
 
-   
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         SaleOrder order = saleorderdao.findById(id);
-        
+        GeneratorDAO generatordao = new GeneratorDAO();
+        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
+
         if (order != null && "PENDING".equals(order.getStatus())) {
             List<OrderDetail> existingDetails = orderdetaildao.findGeneratorById(id);
 
@@ -339,7 +344,6 @@ public class OrderController extends HttpServlet {
         }
     }
 
- 
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -422,7 +426,6 @@ public class OrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
-   
     private void approveOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -439,7 +442,6 @@ public class OrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
-   
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -447,7 +449,6 @@ public class OrderController extends HttpServlet {
         request.getRequestDispatcher("/view/order/reject.jsp").forward(request, response);
     }
 
-    
     private void rejectOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("orderId"));
@@ -471,7 +472,6 @@ public class OrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
-   
     private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int id = Integer.parseInt(request.getParameter("id"));

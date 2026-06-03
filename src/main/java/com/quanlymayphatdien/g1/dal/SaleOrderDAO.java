@@ -312,6 +312,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             ps.setDouble(11, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
             ps.setString(12, s.getNote());
             ps.setTimestamp(13, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
+            ps.setInt(14, s.getCustomerTypeId());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {

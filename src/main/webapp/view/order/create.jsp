@@ -5,6 +5,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -119,10 +120,10 @@
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-            <div>
-                <header class="topbar">
-                    <h1>Tạo đơn hàng</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Thêm mới</span>
+                <div>
+                    <header class="topbar">
+                        <h1>Tạo đơn hàng</h1>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Thêm mới</span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -138,7 +139,6 @@
                         </div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
-                    
                     <c:if test="${not empty error}">
                         <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
                             <c:out value="${error}"/>
@@ -305,6 +305,8 @@
 
 
                             </div>
+
+
 
                             <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
                                 <a class="btn" href="${pageContext.request.contextPath}/order?action=list">Huỷ</a>
