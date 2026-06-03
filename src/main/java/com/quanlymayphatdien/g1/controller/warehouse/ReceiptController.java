@@ -234,6 +234,7 @@ public class ReceiptController extends HttpServlet {
             return;
         }
         boolean isManager = false;
+        boolean isOwner = receipt.getCreatedBy() == loggedUser.getId();
         if (loggedUser.getRoles() != null) {
             for (Role role : loggedUser.getRoles()) {
                 if ("warehouse_manager".equals(role.getRoleName())) {
@@ -244,6 +245,7 @@ public class ReceiptController extends HttpServlet {
         }
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
+        request.setAttribute("isOwner", isOwner);
         request.getRequestDispatcher("/view/receipt/receipt-detail.jsp").forward(request, response);
     }
 
