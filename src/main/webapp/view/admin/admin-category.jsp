@@ -33,6 +33,8 @@
                     <c:otherwise>${moduleLabel}</c:otherwise>
                 </c:choose>
             </h1>
+            
+            
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/categories?module=${currentModule}">Quản trị</a> / ${moduleLabel}<c:if test="${not empty currentType}"> / ${typeLabel}</c:if></span>
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
