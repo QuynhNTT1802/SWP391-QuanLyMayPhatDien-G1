@@ -176,8 +176,6 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
-     
-
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));

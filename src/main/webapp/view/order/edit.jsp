@@ -134,7 +134,6 @@
                         </div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
-
                     <c:if test="${not empty error}">
                         <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
                             <c:out value="${error}"/>
@@ -155,7 +154,6 @@
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/order?action=update">
                             <input type="hidden" name="orderId" value="${order.orderId}" />
-
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
