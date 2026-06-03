@@ -18,19 +18,6 @@ public class DBContext {
     protected ResultSet resultSet;
     protected PreparedStatement statement;
 
-    public DBContext() {
-        try {
-            String username = "root";
-            String password = "123456789";
-
-            String url = "jdbc:mysql://localhost:3306/warehousedb";
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, username, password);
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     public void closeResources() {
         try {
             if (resultSet != null && !resultSet.isClosed()) {
@@ -51,7 +38,10 @@ public class DBContext {
         try {
             if (connection == null || connection.isClosed()) {
                 String username = "root";
-                String password = "root";
+
+                String password = "123456789";
+
+
                 String url = "jdbc:mysql://localhost:3306/warehousedb";
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 connection = DriverManager.getConnection(url, username, password);

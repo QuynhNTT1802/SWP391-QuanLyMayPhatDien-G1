@@ -49,6 +49,26 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
         }
         return list;
     }
+    
+    public List<OrderDetail> findGeneratorById(int orderId) {
+        List<OrderDetail> list = new ArrayList<>();
+         String sql = "SELECT od.*, g.model FROM order_detail od "
+               + "JOIN generator g ON od.generator_id = g.id "
+               + "WHERE od.order_id = ?";
+        try(Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try(ResultSet rs = ps.executeQuery()) {
+                while(rs.next()) {
+                    OrderDetail d = getFromResultSet(rs);
+                    d.setGeneratorModel(rs.getString("model"));
+                    list.add(d);
+                }
+            } 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 
     @Override
     public boolean update(OrderDetail t) {
@@ -57,7 +77,15 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
 
     @Override
     public boolean delete(OrderDetail t) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "DELETE FROM order_detail WHERE order_id = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)){
+            ps.setInt(1, t.getOrderId());
+            ps.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override

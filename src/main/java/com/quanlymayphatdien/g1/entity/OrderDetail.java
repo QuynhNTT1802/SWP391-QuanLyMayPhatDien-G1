@@ -16,17 +16,19 @@ public class OrderDetail {
     private int quantity;
     private Double unitPrice;
     private String note;
+    private String generatorModel;
 
     public OrderDetail() {
     }
 
-    public OrderDetail(int orderDetailId, int orderId, int generatorId, int quantity, Double unitPrice, String note) {
+    public OrderDetail(int orderDetailId, int orderId, int generatorId, int quantity, Double unitPrice, String note, String generatorModel) {
         this.orderDetailId = orderDetailId;
         this.orderId = orderId;
         this.generatorId = generatorId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.note = note;
+        this.generatorModel = generatorModel;
     }
 
     public int getOrderDetailId() {
@@ -76,6 +78,19 @@ public class OrderDetail {
     public void setNote(String note) {
         this.note = note;
     }
+
+    public String getGeneratorModel() {
+        return generatorModel;
+    }
+
+    public void setGeneratorModel(String generatorModel) {
+        this.generatorModel = generatorModel;
+    }
+    
+ 
+    
+    
+}
     
 
-}
+

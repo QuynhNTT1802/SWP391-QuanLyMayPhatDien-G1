@@ -192,7 +192,6 @@
                                                             <button class="icon-mini" style="color: #28a745;" onclick="confirmApprove(${order.orderId})" title="Duyệt đơn">
                                                                 <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
                                                             </button>
-                                                                
                                                         </c:if>
 
                                                         <c:if test="${canRejectOrder && order.status == 'PENDING'}">
@@ -254,22 +253,18 @@
                 var form = document.createElement('form');
                 form.method = 'POST';
                 form.action = window.APP_CTX + '/order';
-                
                 var actionInput = document.createElement('input');
                 actionInput.type = 'hidden';
                 actionInput.name = 'action';
                 actionInput.value = 'reject';
-                
                 var idInput = document.createElement('input');
                 idInput.type = 'hidden';
                 idInput.name = 'orderId';
                 idInput.value = orderId;
-                
                 var reasonInput = document.createElement('input');
                 reasonInput.type = 'hidden';
                 reasonInput.name = 'rejectReason';
                 reasonInput.value = reason.trim();
-                
                 form.appendChild(actionInput);
                 form.appendChild(idInput);
                 form.appendChild(reasonInput);
