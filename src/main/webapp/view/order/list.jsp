@@ -192,7 +192,6 @@
                                                             <button class="icon-mini" style="color: #28a745;" onclick="confirmApprove(${order.orderId})" title="Duyệt đơn">
                                                                 <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
                                                             </button>
-
                                                         </c:if>
 
                                                         <c:if test="${canRejectOrder && order.status == 'PENDING'}">
@@ -266,6 +265,7 @@
                 reasonInput.type = 'hidden';
                 reasonInput.name = 'rejectReason';
                 reasonInput.value = reason.trim();
+                form.appendChild(actionInput);
                 form.appendChild(idInput);
             }
         }
