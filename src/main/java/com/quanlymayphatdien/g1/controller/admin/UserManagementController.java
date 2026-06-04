@@ -58,6 +58,7 @@ public class UserManagementController extends HttpServlet {
                 try {
                     showUpdateForm(request, response);
                 } catch (SQLException ex) {
+                    SystemLogger.error("Quản lý người dùng", "UserManagementController.showUpdateForm", ex.getMessage(), ex);
                     Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -211,8 +212,7 @@ public class UserManagementController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            SystemLogger.warn("quản lý người dùng", "UserManagementController.createUser",
-                "Lỗi khi tạo user: " + e.getMessage());
+            SystemLogger.error("Quản lý người dùng", "UserManagementController.createUser", e.getMessage(), e);
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -322,8 +322,7 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Account not found!");
             }
         } catch (Exception e) {
-            SystemLogger.warn("quản lý người dùng", "UserManagementController.updateUser",
-                "Lỗi khi cập nhật user id=" + userId + ": " + e.getMessage());
+            SystemLogger.error("Quản lý người dùng", "UserManagementController.updateUser", e.getMessage(), e);
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
@@ -469,6 +468,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
+                SystemLogger.warn("Quản lý người dùng", "UserManagementController.listUsers", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }

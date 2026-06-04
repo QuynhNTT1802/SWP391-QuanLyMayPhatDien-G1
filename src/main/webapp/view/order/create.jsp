@@ -199,6 +199,26 @@
                                         <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
                                         <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
                                     </div>
+                                    <div class="field">
+                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
+                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
+                                            <option value="">-- Chọn loại khách hàng --</option>
+                                            <c:forEach var="ct" items="${customerTypes}">
+                                                <option value="${ct.id}" data-name="${ct.name}"
+                                                        <c:if test="${param.customerTypeId == ct.id}">selected</c:if>>
+                                                    <c:out value="${ct.name}"/>
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
+                                    </div>
+                                    <div class="field">
+                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
+                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -302,7 +322,6 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                     Thêm dòng
                                 </button>
-
 
                             </div>
 
