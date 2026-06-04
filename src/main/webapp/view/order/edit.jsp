@@ -128,17 +128,17 @@
                 </header>
 
                 <main>
-                    <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
+                    <script>
+                        <c:if test="${not empty sessionScope.message}">
+                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.message}"/>', type: 'success' };
                         <c:remove var="message" scope="session"/>
-                    </c:if>
-                    <c:if test="${not empty error}">
-                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${error}"/>
-                        </div>
-                    </c:if>
+                        </c:if>
+                        <c:if test="${not empty error}">
+                        window.SESSION_DATA = window.SESSION_DATA || {};
+                        window.SESSION_DATA.message = '<c:out value="${error}"/>';
+                        window.SESSION_DATA.type = 'danger';
+                        </c:if>
+                    </script>
 
                     <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 
@@ -334,6 +334,7 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
