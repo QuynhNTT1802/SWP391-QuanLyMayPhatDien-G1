@@ -150,7 +150,7 @@ public class CustomerController extends HttpServlet {
                 request.setAttribute("customerTypeName", typeName);
 
                 ActivityLogDAO logDAO = new ActivityLogDAO();
-                List<ActivityLog> logs = logDAO.getLogsByEntity("customer", id, 1, 20);
+                List<ActivityLog> logs = logDAO.findByEntityTypeAndId("customer", id, 1, 20);
                 DateTimeFormatter logFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 List<String> logDates = new ArrayList<>();
                 for (ActivityLog log : logs) {
