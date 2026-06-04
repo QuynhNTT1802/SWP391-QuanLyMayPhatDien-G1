@@ -118,13 +118,18 @@ public class OrderController extends HttpServlet {
         String statusFilter = request.getParameter("status");
         String searchFilter = request.getParameter("search");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
-       
-        int pendding = saleorderdao.countStatusPending();
-        int rejected = saleorderdao.countStatusRejected();
-        int approved = saleorderdao.countStatusApproved();
-        int cancelled = saleorderdao.countStatusCancelled();
+
+        User user = (User) request.getSession().getAttribute("loggedUser");
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        boolean canViewAllOrders = permissions != null && permissions.contains("orders.approve");
+        int userId = canViewAllOrders ? 0 : user.getId();
+
+        int pendding = saleorderdao.countStatusPending(userId);
+        int rejected = saleorderdao.countStatusRejected(userId);
+        int approved = saleorderdao.countStatusApproved(userId);
+        int cancelled = saleorderdao.countStatusCancelled(userId);
         
-        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter);
+        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId);
 
         int page = 1;
         int pageSize = 10;
@@ -277,7 +282,7 @@ public class OrderController extends HttpServlet {
 
         if (genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
-               
+
                 if (genIds[i] == null || genIds[i].isEmpty()) {
                     continue;
                 }

@@ -23,6 +23,7 @@ public class SaleOrder {
     private String customerNote;
     
     private int createdBy;
+    private String createdByName;
     private int approvedBy;
     private int cancelledBy;
     private int updatedBy;
@@ -155,6 +156,14 @@ public class SaleOrder {
 
     public void setCreatedBy(int createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
     }
 
     public int getApprovedBy() {
