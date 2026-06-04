@@ -112,12 +112,12 @@
                         <div class="stat"><div class="lbl">Đã hủy</div><div class="val">${cancelledCount}</div></div>
                     </div>
 
-                    <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
+                    <script>
+                        <c:if test="${not empty sessionScope.message}">
+                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.message}"/>', type: 'success' };
                         <c:remove var="message" scope="session"/>
-                    </c:if>
+                        </c:if>
+                    </script>
 
                     <form method="get" action="${pageContext.request.contextPath}/order" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                         <input type="hidden" name="action" value="list" />
@@ -257,6 +257,7 @@
     <div class="toast-host" id="toastHost"></div>
 
     <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     <script>
