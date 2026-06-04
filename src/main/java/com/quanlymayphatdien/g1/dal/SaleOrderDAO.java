@@ -40,13 +40,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return list;
     }
 
-    public List<SaleOrder> searchByNameCode(String search, String status) {
+    public List<SaleOrder> searchByNameCode(String search, String status, int userId) {
         List<SaleOrder> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM sale_order WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT so.*, u.name AS created_by_name FROM sale_order so LEFT JOIN user u ON so.created_by = u.id WHERE 1=1");
         List<Object> param = new ArrayList<>();
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND status = ?");
+            sql.append(" AND so.status = ?");
             param.add(status);
         }
 
@@ -57,20 +57,21 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             param.add(pattern);
         }
 
-        sql.append(" ORDER BY created_at DESC");
+        if (userId > 0) {
+            sql.append(" AND so.created_by = ?");
+            param.add(userId);
+        }
+
+        sql.append(" ORDER BY so.created_at DESC");
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < param.size(); i++) {
                 ps.setObject(i + 1, param.get(i));
             }
 
-            System.out.println("SQL: " + sql.toString());
-            System.out.println("Params: " + param);
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     SaleOrder order = getFromResultSet(rs);
-                    System.out.println("Loaded order: " + order.getOrderId() + " - " + order.getOrderCode());
                     list.add(order);
                 }
             }
@@ -81,12 +82,16 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return list;
     }
 
-    public int countStatusApproved() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
+    private int countOrdersByStatus(String status, int userId) {
+        String sql = "SELECT COUNT(*) FROM sale_order WHERE status = ?";
+        if (userId > 0) {
+            sql += " AND created_by = ?";
+        }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_APPROVED);
+            ps.setString(1, status);
+            if (userId > 0) {
+                ps.setInt(2, userId);
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -98,55 +103,20 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return 0;
     }
 
-    public int countStatusRejected() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_REJECTED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
+    public int countStatusApproved(int userId) {
+        return countOrdersByStatus(GlobalUtils.STATUS_APPROVED, userId);
     }
 
-    public int countStatusPending() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_PENDING);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
+    public int countStatusRejected(int userId) {
+        return countOrdersByStatus(GlobalUtils.STATUS_REJECTED, userId);
     }
 
-    public int countStatusCancelled() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ? ";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_CANCELLED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return 0;
+    public int countStatusPending(int userId) {
+        return countOrdersByStatus(GlobalUtils.STATUS_PENDING, userId);
+    }
+
+    public int countStatusCancelled(int userId) {
+        return countOrdersByStatus(GlobalUtils.STATUS_CANCELLED, userId);
     }
 
     public List<SaleOrder> findAll() {
@@ -296,7 +266,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public SaleOrder findById(int id) {
-        String sql = "SELECT * FROM sale_order WHERE order_id = ?";
+        String sql = "SELECT so.*, u.name AS created_by_name FROM sale_order so LEFT JOIN user u ON so.created_by = u.id WHERE so.order_id = ?";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -335,7 +305,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             ps.setDouble(11, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
             ps.setString(12, s.getNote());
             ps.setTimestamp(13, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
-            ps.setInt(14, s.getCustomerTypeId());
+            if (s.getCustomerTypeId() > 0) {
+                ps.setInt(14, s.getCustomerTypeId());
+            } else {
+                ps.setNull(14, java.sql.Types.INTEGER);
+            }
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -375,6 +349,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setCustomerNote(rs.getString("customer_note"));
 
         s.setCreatedBy(rs.getInt("created_by"));
+        try {
+            s.setCreatedByName(rs.getString("created_by_name"));
+        } catch (SQLException e) {
+            // column not available in some queries
+        }
 
         int approvedBy = rs.getInt("approved_by");
         s.setApprovedBy(rs.wasNull() ? 0 : approvedBy);

@@ -82,7 +82,7 @@
                         <span>Ngày đặt: <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></span>
                     </div>
                     <div class="hero-pills">
-                        <span class="pill role-staff"><span class="pdot"></span>Người tạo: ID ${order.createdBy}</span>
+                        <span class="pill role-staff"><span class="pdot"></span>Người tạo: <c:out value="${order.createdByName}"/></span>
                         <c:if test="${order.approvedBy != 0}">
                             <span class="pill role-manager"><span class="pdot"></span>Người duyệt: ID ${order.approvedBy}</span>
                         </c:if>

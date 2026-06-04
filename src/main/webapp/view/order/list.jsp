@@ -57,6 +57,20 @@
                 font-size: 13px;
                 color: var(--muted);
             }
+            .col-creator {
+                white-space: nowrap;
+                width: 100px;
+            }
+            .col-status {
+                white-space: nowrap;
+                width: 110px;
+            }
+            .col-address {
+                max-width: 160px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
         </style>
     </head>
     <body>
@@ -134,9 +148,10 @@
                                     <th>Mã đơn</th>
                                     <th>Khách hàng</th>
                                     <th>Ngày đặt</th>
+                                    <th class="col-creator">Người tạo</th>
                                     <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Địa chỉ</th>
+                                    <th class="col-status">Trạng thái</th>
+                                    <th class="col-address">Địa chỉ</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
@@ -144,7 +159,7 @@
                                 <c:choose>
                                     <c:when test="${empty orders}">
                                         
-                                        <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
+                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="order" items="${orders}" varStatus="loop">
@@ -163,10 +178,13 @@
                                                 <td>
                                                     <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/>
                                                 </td>
+                                                <td class="col-creator">
+                                                    <c:out value="${order.createdByName}"/>
+                                                </td>
                                                 <td class="amount-cell">
                                                     <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
                                                 </td>
-                                                <td>
+                                                <td class="col-status">
                                                     <c:choose>
                                                         <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
@@ -175,7 +193,7 @@
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${order.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
-                                                <td><span class="pill role-staff"><span class="pdot"></span> ${order.customerAddress}</span></td>
+                                                <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customerAddress}</span></td>
                                                 <td class="col-actions">
                                                     <div class="row-actions">
                                                         <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}'" title="Xem chi tiết">
