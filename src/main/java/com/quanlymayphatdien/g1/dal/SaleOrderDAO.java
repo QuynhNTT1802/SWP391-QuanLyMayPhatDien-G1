@@ -24,10 +24,14 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> findByStatus(String status) {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT * FROM sale_order WHERE status = ? ORDER BY created_at DESC";
+        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
+                + "c.email AS customer_email, c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "WHERE so.status = ? ORDER BY so.created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(getFromResultSet(rs));
@@ -41,7 +45,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> findApprovedWithoutActiveReceipt() {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT so.* FROM sale_order so "
+        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
+                + "c.email AS customer_email, c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.status = 'APPROVED' "
                 + "AND NOT EXISTS ("
                 + "  SELECT 1 FROM receipt r "
@@ -62,7 +70,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public List<SaleOrder> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
         List<SaleOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT so.* FROM sale_order so "
+                "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
+                + "c.email AS customer_email, c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.status = 'APPROVED' "
                 + "AND NOT EXISTS ("
                 + "  SELECT 1 FROM receipt r "
@@ -70,7 +82,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + ") ");
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (so.order_code LIKE ? OR so.customer_name LIKE ?) ");
+            sql.append("AND (so.order_code LIKE ? OR c.name LIKE ?) ");
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
@@ -104,6 +116,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.status = 'APPROVED' "
                 + "AND NOT EXISTS ("
                 + "  SELECT 1 FROM receipt r "
@@ -111,7 +124,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + ") ");
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (so.order_code LIKE ? OR so.customer_name LIKE ?) ");
+            sql.append("AND (so.order_code LIKE ? OR c.name LIKE ?) ");
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
@@ -141,40 +154,39 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> searchByNameCode(String search, String status) {
         List<SaleOrder> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM sale_order WHERE 1=1");
+        StringBuilder sql = new StringBuilder(
+                "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
+                + "c.email AS customer_email, c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "WHERE 1=1");
         List<Object> param = new ArrayList<>();
 
         if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND status = ?");
+            sql.append(" AND so.status = ?");
             param.add(status);
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (order_code LIKE ? OR customer_name LIKE ?)");
+            sql.append(" AND (so.order_code LIKE ? OR c.name LIKE ?)");
             String pattern = "%" + search.trim() + "%";
             param.add(pattern);
             param.add(pattern);
         }
 
-        sql.append(" ORDER BY created_at DESC");
+        sql.append(" ORDER BY so.created_at DESC");
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < param.size(); i++) {
                 ps.setObject(i + 1, param.get(i));
             }
-
-            System.out.println("SQL: " + sql.toString());
-            System.out.println("Params: " + param);
-
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    SaleOrder order = getFromResultSet(rs);
-                    System.out.println("Loaded order: " + order.getOrderId() + " - " + order.getOrderCode());
-                    list.add(order);
+                    list.add(getFromResultSet(rs));
                 }
             }
         } catch (Exception e) {
-            System.err.println("ERROR in searchByNameCode: " + e.getMessage());
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
@@ -250,7 +262,12 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> findAll() {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT * FROM sale_order ORDER BY created_at DESC";
+        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
+                + "c.email AS customer_email, c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "ORDER BY so.created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(getFromResultSet(rs));
@@ -372,7 +389,12 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public SaleOrder findById(int id) {
-        String sql = "SELECT * FROM sale_order WHERE order_id = ?";
+        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
+                + "c.email AS customer_email, c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "WHERE so.order_id = ?";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -441,14 +463,17 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         SaleOrder s = new SaleOrder();
         s.setOrderId(rs.getInt("order_id"));
         s.setOrderCode(rs.getString("order_code"));
-        s.setCustomerName(rs.getString("customer_name"));
-        s.setCustomerPhone(rs.getString("customer_phone"));
-        s.setCustomerEmail(rs.getString("customer_email"));
-        s.setCustomerAddress(rs.getString("customer_address"));
-        s.setCustomerTaxCode(rs.getString("customer_tax_code"));
-        s.setCustomerType(rs.getString("customer_type"));
-        s.setCustomerCompany(rs.getString("customer_company_name"));
-        s.setCustomerNote(rs.getString("customer_note"));
+
+        // customer_id là FK — lấy từ cột của bảng sale_order
+        int customerId = rs.getInt("customer_id");
+        if (!rs.wasNull()) s.setCustomerTypeId(customerId); // tạm dùng customerTypeId để lưu customer_id
+
+        // Các cột được alias từ JOIN với bảng customer (chỉ có khi query dùng JOIN)
+        try { s.setCustomerName(rs.getString("customer_name")); } catch (SQLException ignored) {}
+        try { s.setCustomerPhone(rs.getString("customer_phone")); } catch (SQLException ignored) {}
+        try { s.setCustomerEmail(rs.getString("customer_email")); } catch (SQLException ignored) {}
+        try { s.setCustomerAddress(rs.getString("customer_address")); } catch (SQLException ignored) {}
+        try { s.setCustomerCompany(rs.getString("customer_company_name")); } catch (SQLException ignored) {}
 
         s.setCreatedBy(rs.getInt("created_by"));
 
@@ -476,10 +501,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
-        }
-        Object customerTypeIdObj = rs.getObject("customer_type_id");
-        if (customerTypeIdObj != null) {
-            s.setCustomerTypeId(((Number) customerTypeIdObj).intValue());
         }
         return s;
     }

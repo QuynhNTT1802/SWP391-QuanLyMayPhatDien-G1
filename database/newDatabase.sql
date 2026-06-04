@@ -281,6 +281,49 @@ INSERT INTO `category_receipt_reason` VALUES (25),(26),(27),(28),(29),(30),(31);
 UNLOCK TABLES;
 
 --
+-- Table structure for table `customer`
+--
+
+DROP TABLE IF EXISTS `customer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `customer` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL COMMENT 'Tên khách hàng hoặc tên công ty',
+  `phone` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `address` text,
+  `company_name` varchar(255) DEFAULT NULL COMMENT 'NULL nếu là cá nhân',
+  `customer_type_id` int DEFAULT NULL COMMENT 'FK → category (Cá nhân / Doanh nghiệp / Nhà nước)',
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_customer_name` (`name`),
+  KEY `idx_customer_phone` (`phone`),
+  KEY `idx_customer_status` (`status`),
+  KEY `fk_customer_type_cat` (`customer_type_id`),
+  KEY `fk_customer_created_by` (`created_by`),
+  KEY `fk_customer_updated_by` (`updated_by`),
+  CONSTRAINT `fk_customer_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_customer_type_cat` FOREIGN KEY (`customer_type_id`) REFERENCES `category` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_customer_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `user` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Quản lý thông tin khách hàng';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `customer`
+--
+
+LOCK TABLES `customer` WRITE;
+/*!40000 ALTER TABLE `customer` DISABLE KEYS */;
+INSERT INTO `customer` VALUES (1,'Công ty TNHH Xây Dựng ABC','0988123456','abc@xaydungabc.com','12 Trần Duy Hưng, Cầu Giấy, Hà Nội','Công ty TNHH Xây Dựng ABC',33,'active','2026-05-21 09:00:00',4,NULL,NULL),(2,'Công ty CP Điện Máy XYZ','0977123456','xyz@dienmayxyz.com','56 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh','Công ty CP Điện Máy XYZ',33,'active','2026-05-21 10:00:00',4,NULL,NULL);
+/*!40000 ALTER TABLE `customer` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `generator`
 --
 
@@ -478,7 +521,7 @@ CREATE TABLE `permission` (
   `description` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_resource_action` (`resource`,`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=114 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -487,7 +530,7 @@ CREATE TABLE `permission` (
 
 LOCK TABLES `permission` WRITE;
 /*!40000 ALTER TABLE `permission` DISABLE KEYS */;
-INSERT INTO `permission` VALUES (1,'users','view','Xem danh sach nguoi dung'),(2,'users','create','Them nguoi dung moi'),(3,'users','update','Cap nhat thong tin nguoi dung'),(4,'users','deactivate','Vo hieu hoa nguoi dung'),(5,'roles','view','Xem danh sach vai tro'),(6,'roles','create','Them vai tro moi'),(7,'roles','update','Cap nhat vai tro'),(8,'roles','deactivate','Vo hieu hoa vai tro'),(9,'roles','edit_permissions','Chinh sua quyen cua vai tro'),(10,'generators','view','Xem danh sach may phat dien'),(11,'generators','create','Them may phat dien moi'),(12,'generators','update','Cap nhat thong tin may'),(22,'inventory','view','Xem ton kho'),(24,'inventory','adjust','Dieu chinh ton kho'),(25,'warehouses','view','Xem thong tin kho'),(26,'warehouses','create','Them kho moi'),(27,'warehouses','update','Cap nhat thong tin kho'),(45,'orders','view','Xem don hang'),(46,'orders','create','Tao don hang'),(47,'orders','update','Cap nhat don hang'),(48,'orders','cancel','Huy don hang'),(65,'reports','view','Xem bao cao'),(66,'reports','export','Xuat bao cao'),(91,'dashboard','view','Xem dashboard'),(95,'profile','view','Xem ho so ca nhan'),(96,'profile','edit','Sua ho so ca nhan'),(97,'password','change','Doi mat khau'),(98,'forgot_pw','process','Xu ly yeu cau reset mat khau'),(100,'orders','approve','Duyet don hang (sale_manager)'),(101,'receipts','view','Xem phieu xuat/nhap kho'),(102,'receipts','create','Tao phieu xuat/nhap kho'),(103,'receipts','approve','Duyet phieu xuat/nhap kho (warehouse_manager)'),(104,'stock_card','view','Xem the kho'),(105,'orders','reject','Tu choi don hang (sale_manager)'),(106,'receipts','reject','Tu choi phieu xuat/nhap kho (warehouse_manager)'),(107,'categories','view','Xem danh mục'),(108,'categories','create','Tạo danh mục mới'),(109,'categories','update','Sửa danh mục'),(110,'categories','delete','Xóa danh mục'),(111,'activity_log','view','Xem lịch sử hoạt động'),(112,'system_log','view','Xem nhật ký hệ thống');
+INSERT INTO `permission` VALUES (1,'users','view','Xem danh sach nguoi dung'),(2,'users','create','Them nguoi dung moi'),(3,'users','update','Cap nhat thong tin nguoi dung'),(4,'users','deactivate','Vo hieu hoa nguoi dung'),(5,'roles','view','Xem danh sach vai tro'),(6,'roles','create','Them vai tro moi'),(7,'roles','update','Cap nhat vai tro'),(8,'roles','deactivate','Vo hieu hoa vai tro'),(9,'roles','edit_permissions','Chinh sua quyen cua vai tro'),(10,'generators','view','Xem danh sach may phat dien'),(11,'generators','create','Them may phat dien moi'),(12,'generators','update','Cap nhat thong tin may'),(22,'inventory','view','Xem ton kho'),(24,'inventory','adjust','Dieu chinh ton kho'),(25,'warehouses','view','Xem thong tin kho'),(26,'warehouses','create','Them kho moi'),(27,'warehouses','update','Cap nhat thong tin kho'),(45,'orders','view','Xem don hang'),(46,'orders','create','Tao don hang'),(47,'orders','update','Cap nhat don hang'),(48,'orders','cancel','Huy don hang'),(65,'reports','view','Xem bao cao'),(66,'reports','export','Xuat bao cao'),(91,'dashboard','view','Xem dashboard'),(95,'profile','view','Xem ho so ca nhan'),(96,'profile','edit','Sua ho so ca nhan'),(97,'password','change','Doi mat khau'),(98,'forgot_pw','process','Xu ly yeu cau reset mat khau'),(100,'orders','approve','Duyet don hang (sale_manager)'),(101,'receipts','view','Xem phieu xuat/nhap kho'),(102,'receipts','create','Tao phieu xuat/nhap kho'),(103,'receipts','approve','Duyet phieu xuat/nhap kho (warehouse_manager)'),(104,'stock_card','view','Xem the kho'),(105,'orders','reject','Tu choi don hang (sale_manager)'),(106,'receipts','reject','Tu choi phieu xuat/nhap kho (warehouse_manager)'),(107,'categories','view','Xem danh mục'),(108,'categories','create','Tạo danh mục mới'),(109,'categories','update','Sửa danh mục'),(110,'categories','delete','Xóa danh mục'),(111,'activity_log','view','Xem lịch sử hoạt động'),(112,'system_log','view','Xem nhật ký hệ thống'),(113,'customers','view','Xem danh sách khách hàng'),(114,'customers','create','Thêm khách hàng mới'),(115,'customers','update','Sửa thông tin khách hàng'),(116,'customers','deactivate','Vô hiệu hóa khách hàng');
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -634,14 +677,7 @@ DROP TABLE IF EXISTS `sale_order`;
 CREATE TABLE `sale_order` (
   `order_id` int NOT NULL AUTO_INCREMENT,
   `order_code` varchar(50) NOT NULL,
-  `customer_name` varchar(255) NOT NULL,
-  `customer_phone` varchar(45) DEFAULT NULL,
-  `customer_email` varchar(100) DEFAULT NULL,
-  `customer_address` text,
-  `customer_tax_code` varchar(45) DEFAULT NULL,
-  `customer_type` varchar(45) DEFAULT 'individual',
-  `customer_company_name` varchar(255) DEFAULT NULL,
-  `customer_note` text,
+  `customer_id` int DEFAULT NULL,
   `created_by` int NOT NULL,
   `approved_by` int DEFAULT NULL,
   `status` enum('PENDING','APPROVED','REJECTED','CANCELLED') NOT NULL DEFAULT 'PENDING',
@@ -651,7 +687,6 @@ CREATE TABLE `sale_order` (
   `approved_at` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `customer_type_id` int DEFAULT NULL,
   `cancelled_by` int DEFAULT NULL,
   `cancelled_at` datetime DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
@@ -661,10 +696,10 @@ CREATE TABLE `sale_order` (
   KEY `idx_order_created` (`created_by`),
   KEY `idx_order_approved` (`approved_by`),
   KEY `idx_order_status` (`status`),
-  KEY `fk_order_customer_type` (`customer_type_id`),
+  KEY `fk_order_customer` (`customer_id`),
   CONSTRAINT `fk_order_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_order_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `sale_order_ibfk_1` FOREIGN KEY (`customer_type_id`) REFERENCES `category` (`id`)
+  CONSTRAINT `fk_so_customer` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -674,7 +709,7 @@ CREATE TABLE `sale_order` (
 
 LOCK TABLES `sale_order` WRITE;
 /*!40000 ALTER TABLE `sale_order` DISABLE KEYS */;
-INSERT INTO `sale_order` VALUES (1,'SO-20260521-001','Công ty TNHH Xây Dựng ABC','0988123456','abc@xaydungabc.com','12 Trần Duy Hưng, Cầu Giấy, Hà Nội','0101234567','company','Công ty TNHH Xây Dựng ABC','Khách hàng thân thiết, đã mua 3 lần',4,NULL,'PENDING',85000000.00,'Đơn hàng gấp, yêu cầu giao trong tuần','2026-05-21 09:00:00',NULL,'2026-05-21 09:00:00','2026-05-21 09:00:00',NULL,NULL,NULL,NULL,NULL),(2,'SO-20260521-002','Công ty CP Điện Máy XYZ','0977123456','xyz@dienmayxyz.com','56 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh','0201234568','company','Công ty CP Điện Máy XYZ',NULL,4,5,'APPROVED',96000000.00,NULL,'2026-05-21 10:00:00','2026-05-21 10:30:00','2026-05-21 10:00:00','2026-05-21 10:30:00',NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `sale_order` VALUES (1,'SO-20260521-001',1,4,5,'APPROVED',85000000.00,'Đơn hàng gấp, yêu cầu giao trong tuần','2026-05-21 09:00:00','2026-06-04 19:17:06','2026-05-21 09:00:00','2026-06-04 19:17:06',NULL,NULL,NULL,NULL),(2,'SO-20260521-002',2,4,5,'CANCELLED',96000000.00,NULL,'2026-05-21 10:00:00','2026-05-21 10:30:00','2026-05-21 10:00:00','2026-06-02 12:15:07',3,'2026-06-02 12:15:07',NULL,NULL);
 /*!40000 ALTER TABLE `sale_order` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -885,4 +920,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-01 17:12:11
+-- Dump completed on 2026-06-04 21:19:03
