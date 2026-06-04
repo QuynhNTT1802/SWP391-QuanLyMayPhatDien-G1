@@ -803,7 +803,7 @@ td.col-actions, th.col-actions {
 
 .row-actions {
     display: inline-flex;
-    gap: 2px;
+    gap: 4px;
     opacity: 0;
     transition: opacity .15s ease;
 }
