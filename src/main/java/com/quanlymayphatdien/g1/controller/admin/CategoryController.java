@@ -298,6 +298,7 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
                 }
             } catch (Exception e) {
+                SystemLogger.error("Quản lý danh mục", "CategoryController.viewCategoryEdit", e.getMessage(), e);
                 e.printStackTrace();
             }
         }
@@ -455,6 +456,7 @@ public class CategoryController extends HttpServlet {
                     logDelete(request, id, c.getName(), c.getType(), c.getStatus(), c.getModule());
                 }
             } catch (Exception e) {
+                SystemLogger.error("Quản lý danh mục", "CategoryController.deleteCategory", e.getMessage(), e);
                 e.printStackTrace();
             }
         }
@@ -583,10 +585,12 @@ public class CategoryController extends HttpServlet {
             String typeLabel = TYPE_LABELS.getOrDefault(type, type);
             String statusLabel = statusLabel(status);
 
-            String description = "Thêm mới: '" + name + "' (" + typeLabel + ") — Trạng thái: " + statusLabel;
+            String description = "Thêm mới: '" + name + "' (" + typeLabel + ") — Trạng thái: " + statusLabel
+                    + " | module:" + (module != null ? module : "");
 
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
+            SystemLogger.error("Hệ thống", "CategoryController.logCreate", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -681,7 +685,6 @@ public class CategoryController extends HttpServlet {
                     String newPriceStr = request.getParameter("typicalPrice");
                     String newPrice = normalizeLogString(newPriceStr);
                     String oldPrice = normalizeLogNumber(oldF != null ? oldF.getTypicalPrice() : null);
-
                     if (!newPrice.equals(oldPrice)) {
                         try {
                             java.math.BigDecimal np = newPrice.equals("(trống)") ? null : new java.math.BigDecimal(newPriceStr.trim());
@@ -720,6 +723,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
+            SystemLogger.error("Hệ thống", "CategoryController.logUpdate", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -744,6 +748,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, name, "DELETE", description);
         } catch (Exception e) {
+            SystemLogger.error("Hệ thống", "CategoryController.logDelete", e.getMessage(), e);
             e.printStackTrace();
         }
     }
