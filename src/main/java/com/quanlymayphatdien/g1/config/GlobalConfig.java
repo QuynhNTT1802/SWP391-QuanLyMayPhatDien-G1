@@ -11,5 +11,5 @@ public class GlobalConfig {
     
     public static final String REGEX_PHONE = "^0[0-9]{9,10}$";
     
-    public static final String TEST = "TEST";
+    
 }
