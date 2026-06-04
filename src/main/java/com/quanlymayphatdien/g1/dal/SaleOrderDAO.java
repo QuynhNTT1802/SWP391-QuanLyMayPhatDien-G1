@@ -214,12 +214,35 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
-    public boolean cancelOrder(int orderId, int cancelledBy) {
+    /**
+     * Cancel an order.
+     *
+     * @param orderId     the order ID
+     * @param cancelledBy the user ID who cancels
+     * @return 1 if cancelled successfully,
+     *         -1 if cannot cancel because there are completed EXPORT receipts,
+     *         0 if order not found or not in PENDING/APPROVED status
+     */
+    public int cancelOrder(int orderId, int cancelledBy) {
+        String checkSql = "SELECT COUNT(*) FROM receipt "
+                + "WHERE order_id = ? AND receipt_type = 'EXPORT' AND status = 'COMPLETED'";
 
-        String sql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
+        try (Connection conn = getConnection(); PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+            checkPs.setInt(1, orderId);
+            try (ResultSet rs = checkPs.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return -1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+        String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
                 + "WHERE order_id = ? AND status IN (?, ?)";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(updateSql)) {
             ps.setString(1, GlobalUtils.STATUS_CANCELLED);
             ps.setInt(2, cancelledBy);
             ps.setInt(3, orderId);
@@ -227,11 +250,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             ps.setString(5, GlobalUtils.STATUS_APPROVED);
 
             int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
+            return rowsAffected > 0 ? 1 : 0;
 
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return 0;
         }
     }
 
