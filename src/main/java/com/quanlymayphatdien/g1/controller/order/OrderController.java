@@ -474,16 +474,27 @@ public class OrderController extends HttpServlet {
 
     private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        HttpSession session = request.getSession();
+
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.cancel")) {
+            session.setAttribute("message", "Bạn không có quyền hủy đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
+
         int id = Integer.parseInt(request.getParameter("id"));
-        User user = (User) request.getSession().getAttribute("loggedUser");
+        User user = (User) session.getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
-        boolean success = saleorderdao.cancelOrder(id, user.getId());
+        int result = saleorderdao.cancelOrder(id, user.getId());
 
-        if (success) {
-            request.getSession().setAttribute("message", "Đã hủy đơn hàng.");
+        if (result == 1) {
+            session.setAttribute("message", "Đã hủy đơn hàng.");
+        } else if (result == -1) {
+            session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
-            request.getSession().setAttribute("message", "Hủy thất bại (đơn đã xuất kho hoặc không hợp lệ).");
+            session.setAttribute("message", "Hủy thất bại: đơn không ở trạng thái PENDING hoặc APPROVED.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
