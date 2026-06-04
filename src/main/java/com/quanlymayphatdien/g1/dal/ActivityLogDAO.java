@@ -101,7 +101,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         log.setAction(rs.getString("action"));
         log.setEntityType(rs.getString("entity_type"));
         log.setEntityId(rs.getObject("entity_id", Integer.class));
-        log.setDetails(rs.getString("description"));
+        log.setDetails(rs.getString("details"));
         log.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
         return log;
     }

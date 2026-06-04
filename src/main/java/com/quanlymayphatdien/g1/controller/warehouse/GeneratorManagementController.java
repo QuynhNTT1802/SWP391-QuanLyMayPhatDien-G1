@@ -139,7 +139,7 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("brandList", catDAO.findByType("brand"));
         request.setAttribute("genTypeList", catDAO.findByType("generator_type"));
         
-        request.getRequestDispatcher("/view/warehouse/generator-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/customer/generator-list.jsp").forward(request, response);
     }
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -168,7 +168,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.setAttribute("genPowerRange", getCatName(cats, "power_range"));
 
                 ActivityLogDAO logDAO = new ActivityLogDAO();
-                List<ActivityLog> logs = logDAO.getLogsByEntity("generator", id, 1, 20);
+                List<ActivityLog> logs = logDAO.findByEntityTypeAndId("generator", id, 1, 20);
                 DateTimeFormatter logFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 List<String> logDates = new ArrayList<>();
                 for (ActivityLog log : logs) {
@@ -176,7 +176,7 @@ public class GeneratorManagementController extends HttpServlet {
                 }
                 request.setAttribute("activityLogs", logs);
                 request.setAttribute("logDates", logDates);
-                request.getRequestDispatcher("/view/warehouse/generator-detail.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/customer/generator-detail.jsp").forward(request, response);
                 return;
             }
         }
@@ -205,7 +205,7 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("phases", catDAO.findByType("phase"));
         request.setAttribute("conditions", catDAO.findByType("condition"));
         request.setAttribute("origins", catDAO.findByType("origin"));
-        request.getRequestDispatcher("/view/warehouse/generator-create.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/customer/generator-create.jsp").forward(request, response);
     }
 
     private void createGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -290,7 +290,7 @@ public class GeneratorManagementController extends HttpServlet {
                 List<Integer> selectedIds = selectedCats.stream()
                         .map(Category::getId).collect(Collectors.toList());
                 request.setAttribute("selectedCatIds", selectedIds);
-                request.getRequestDispatcher("/view/warehouse/generator-edit.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/customer/generator-edit.jsp").forward(request, response);
                 return;
             }
         }
