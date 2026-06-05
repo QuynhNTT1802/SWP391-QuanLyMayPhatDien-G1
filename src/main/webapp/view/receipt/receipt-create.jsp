@@ -177,6 +177,15 @@
                                     </div>
                                 </div>
                             </c:if>
+                            <div class="form-field">
+                                <label>Lý do *</label>
+                                <select name="reasonId" class="input" required>
+                                    <option value="">-- Chọn lý do --</option>
+                                    <c:forEach var="r" items="${receiptReasons}">
+                                        <option value="${r.id}" <c:if test="${receipt.reasonId == r.id}">selected</c:if>>${r.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
                             <div class="form-field full">
                                 <label>Ghi chú phiếu</label>
                                 <textarea name="note" placeholder="Nhập ghi chú nếu có...">${receipt.note}</textarea>

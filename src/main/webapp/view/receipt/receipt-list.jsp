@@ -77,7 +77,7 @@
                             </select>
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
-                                <option value="PENDING_RECONCILIATION" <c:if test="${statusFilter == 'PENDING_RECONCILIATION'}">selected</c:if>>Chờ duyệt</option>
+                                <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                                 <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                                 <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
@@ -109,6 +109,7 @@
                                     <th>Loại</th>
                                     <th>Kho</th>
                                     <th>Đơn liên quan</th>
+                                    <th>Lý do</th>
                                     <th>Người tạo</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày tạo</th>
@@ -118,7 +119,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="8">
+                                        <tr><td colspan="9">
                                                 <div class="empty-state"><strong>Không tìm thấy phiếu nào</strong></div>
                                             </td></tr>
                                         </c:when>
@@ -148,10 +149,20 @@
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty r.reasonName}">
+                                                            <span class="status-pill status-pending"><span class="pdot"></span>${r.reasonName}</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color:var(--muted);">—</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td>${r.createdByName}</td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${r.status == 'PENDING_RECONCILIATION'}">
+                                                        <c:when test="${r.status == 'PENDING'}">
                                                             <span class="status active" style="--dot:var(--warn);"><span class="sdot"></span>Chờ duyệt</span>
                                                         </c:when>
                                                         <c:when test="${r.status == 'NEEDS_REVISION'}">
