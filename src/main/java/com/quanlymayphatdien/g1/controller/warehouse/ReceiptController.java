@@ -20,6 +20,7 @@ import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -560,7 +561,7 @@ public class ReceiptController extends HttpServlet {
         int id = Integer.parseInt(idStr);
         Receipt receipt = receiptDAO.findById(id);
         if (receipt == null
-                || !"NEEDS_REVISION".equals(receipt.getStatus())
+                || !GlobalUtils.RECEIPT_STATUS_REVISION.equals(receipt.getStatus())
                 || receipt.getCreatedBy() != loggedUser.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
@@ -608,7 +609,7 @@ public class ReceiptController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/receipt");
             return;
         }
-        if (!"NEEDS_REVISION".equals(existing.getStatus())
+        if (!GlobalUtils.RECEIPT_STATUS_REVISION.equals(existing.getStatus())
                 || existing.getCreatedBy() != loggedUser.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;

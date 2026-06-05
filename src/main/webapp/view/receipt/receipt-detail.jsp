@@ -157,7 +157,7 @@
                     <h2 class="hero-name">
                         <c:out value="${receipt.receiptCode}"/>
                         <c:choose>
-                            <c:when test="${receipt.status == 'PENDING_RECONCILIATION'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
+                            <c:when test="${receipt.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                             <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                             <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
                             <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
@@ -181,7 +181,7 @@
                 </div>
             </div>
 
-            <c:if test="${receipt.status == 'PENDING_RECONCILIATION' && isManager}">
+            <c:if test="${receipt.status == 'PENDING' && isManager}">
                 <div class="action-bar-top">
                     <form method="POST" action="${pageContext.request.contextPath}/receipt?action=approve" style="display:inline;">
                         <input type="hidden" name="id" value="${receipt.receiptId}" />
@@ -252,7 +252,7 @@
                             <div class="info-label">Trạng thái</div>
                             <div class="info-value">
                                 <c:choose>
-                                    <c:when test="${receipt.status == 'PENDING_RECONCILIATION'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
+                                    <c:when test="${receipt.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                     <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                                     <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
                                     <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
@@ -366,7 +366,7 @@
     </div>
 </div>
 
-<c:if test="${receipt.status == 'PENDING_RECONCILIATION' && isManager}">
+<c:if test="${receipt.status == 'PENDING' && isManager}">
     <div class="modal-host" id="rejectModal">
         <div class="modal-card">
             <h3>Từ chối phiếu</h3>
