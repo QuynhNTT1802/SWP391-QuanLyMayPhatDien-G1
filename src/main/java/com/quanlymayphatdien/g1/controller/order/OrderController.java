@@ -56,16 +56,11 @@ public class OrderController extends HttpServlet {
                     break;
                 case "edit":
                     showEditForm(request, response);
-                    break;
-                case "approve":
-                    approveOrder(request, response);
-                    break;
+                    break;          
                 case "reject":
                     showRejectForm(request, response);
                     break;
-                case "cancel":
-                    cancelOrder(request, response);
-                    break;
+            
                 default:
                     listOrders(request, response);
                     break;
@@ -102,6 +97,12 @@ public class OrderController extends HttpServlet {
                 case "reject":
                     rejectOrder(request, response);
                     break;
+                case "approve":
+                    approveOrder(request, response);
+                    break;
+                case "cancel":
+                    cancelOrder(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -128,7 +129,7 @@ public class OrderController extends HttpServlet {
         int rejected = saleorderdao.countStatusRejected(userId);
         int approved = saleorderdao.countStatusApproved(userId);
         int cancelled = saleorderdao.countStatusCancelled(userId);
-        
+
         List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId);
 
         int page = 1;
@@ -177,6 +178,7 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
+
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -226,6 +228,12 @@ public class OrderController extends HttpServlet {
 
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, ParseException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.create")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền tạo đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
 
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("loggedUser");
@@ -310,7 +318,7 @@ public class OrderController extends HttpServlet {
         order.setStatus("PENDING");
         int newId = saleorderdao.insert(order);
         if (newId > 0) {
-            
+
             for (OrderDetail d : detailsList) {
                 d.setOrderId(newId);
                 orderdetaildao.insert(d);
@@ -325,6 +333,12 @@ public class OrderController extends HttpServlet {
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.approve")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("id"));
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         SaleOrder order = saleorderdao.findById(id);
@@ -351,6 +365,12 @@ public class OrderController extends HttpServlet {
 
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.update")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
 
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
@@ -359,7 +379,7 @@ public class OrderController extends HttpServlet {
         int orderId = Integer.parseInt(request.getParameter("orderId"));
 
         try {
-            
+
             String[] genIds = request.getParameterValues("generatorId");
             String[] qtys = request.getParameterValues("quantity");
             List<OrderDetail> newDetails = new ArrayList<>();
@@ -389,7 +409,6 @@ public class OrderController extends HttpServlet {
                 }
             }
 
-          
             SaleOrder order = saleorderdao.findById(orderId);
             if (order == null) {
                 request.getSession().setAttribute("message", "Không tìm thấy phiếu.");
@@ -414,7 +433,6 @@ public class OrderController extends HttpServlet {
                 }
             }
 
-           
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 
             if (ok) {
@@ -433,6 +451,12 @@ public class OrderController extends HttpServlet {
 
     private void approveOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.approve")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền duyệt đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("id"));
         User user = (User) request.getSession().getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
@@ -449,6 +473,12 @@ public class OrderController extends HttpServlet {
 
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.reject")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("id"));
         request.setAttribute("orderId", id);
         request.getRequestDispatcher("/view/order/reject.jsp").forward(request, response);
@@ -456,6 +486,12 @@ public class OrderController extends HttpServlet {
 
     private void rejectOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.reject")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("orderId"));
         String reason = request.getParameter("rejectReason");
         User user = (User) request.getSession().getAttribute("loggedUser");
