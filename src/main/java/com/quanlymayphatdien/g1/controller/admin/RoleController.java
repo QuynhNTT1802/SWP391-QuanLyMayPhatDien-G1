@@ -4,6 +4,7 @@ import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -48,7 +49,9 @@ public class RoleController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("quản lý phân quyền", "RoleController",
+                "Lỗi xử lý GET " + action + ": " + e.getMessage(), e);
+            throw new ServletException(e);
         }
     }
 
@@ -65,7 +68,9 @@ public class RoleController extends HttpServlet {
                 saveRoleFull(request, response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("quản lý phân quyền", "RoleController",
+                "Lỗi xử lý POST /admin/role/save: " + e.getMessage(), e);
+            throw new ServletException(e);
         }
     }
 

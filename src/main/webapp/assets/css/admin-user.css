@@ -223,6 +223,7 @@ header.topbar {
     font-weight: 600;
     cursor: pointer;
     font-family: var(--font-ui);
+    text-decoration: none;
     transition: background .12s ease;
 }
 .btn:hover {

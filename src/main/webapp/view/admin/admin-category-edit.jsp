@@ -7,6 +7,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -47,8 +48,24 @@
                 Quay lại danh sách
             </a>
 
-            
+                        <%-- Tab bar: chỉ hiện khi đang edit (category đã có id) --%>
+            <c:if test="${category.id > 0}">
+            <div class="tab-bar">
+                <a href="javascript:void(0)" id="tabInfoBtn" class="tab ${activeTab != 'history' ? 'active' : ''}" onclick="switchTab('info')">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Thông tin
+                </a>
+                <a href="javascript:void(0)" id="tabHistoryBtn" class="tab ${activeTab == 'history' ? 'active' : ''}" onclick="switchTab('history')">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Lịch sử
+                    <c:if test="${histTotalLogs > 0}"><span class="tab-badge">${histTotalLogs}</span></c:if>
+                </a>
+            </div>
+            </c:if>
 
+
+            <%-- ===== TAB: THÔNG TIN ===== --%>
+            <div id="tab-info" class="tab-content ${activeTab == 'history' ? 'tab-hidden' : ''}">
             <div class="form-layout">
                 <form class="form-card" id="categoryForm" method="post" action="${pageContext.request.contextPath}/admin/category/save">
                     <c:if test="${category.id > 0}">
@@ -96,7 +113,6 @@
                     <c:set var="extType" value="${not empty category ? category.type : param.type}"/>
 
                     <div class="ext-section ${extType == 'brand' ? 'visible' : ''}" id="ext-brand">
-                        <c:if test="${extType == 'brand'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN HÃNG</div>
@@ -105,27 +121,25 @@
                             <div class="form-grid">
                                 <div class="field">
                                     <label class="field-label">Quốc gia</label>
-                                    <input class="input" name="country" placeholder="VD: Nhật Bản" value="<c:out value="${extension.country}"/>" />
+                                    <input class="input" name="country" placeholder="VD: Nhật Bản" value="<c:out value="${brandExt.country}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Website</label>
-                                    <input class="input" name="website" placeholder="VD: honda.com.vn" value="<c:out value="${extension.website}"/>" />
+                                    <input class="input" name="website" placeholder="VD: honda.com.vn" value="<c:out value="${brandExt.website}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Năm thành lập</label>
-                                    <input class="input mono" name="foundedYear" type="number" placeholder="VD: 1948" value="<c:out value="${extension.foundedYear}"/>" />
+                                    <input class="input mono" name="foundedYear" type="number" placeholder="VD: 1948" value="<c:out value="${brandExt.foundedYear}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Bảo hành (tháng)</label>
-                                    <input class="input mono" name="warrantyPeriod" type="number" placeholder="VD: 12" value="<c:out value="${extension.warrantyPeriod}"/>" />
+                                    <input class="input mono" name="warrantyPeriod" type="number" placeholder="VD: 12" value="<c:out value="${brandExt.warrantyPeriod}"/>" />
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'fuel_type' ? 'visible' : ''}" id="ext-fuel">
-                        <c:if test="${extType == 'fuel_type'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN NHIÊN LIỆU</div>
@@ -134,19 +148,17 @@
                             <div class="form-grid">
                                 <div class="field">
                                     <label class="field-label">Đơn vị</label>
-                                    <input class="input" name="unit" placeholder="VD: lít" value="<c:out value="${extension.unit}"/>" />
+                                    <input class="input" name="unit" placeholder="VD: lít" value="<c:out value="${fuelExt.unit}"/>" />
                                 </div>
                                 <div class="field">
                                     <label class="field-label">Giá tham khảo (VND)</label>
-                                    <input class="input mono" name="typicalPrice" type="number" step="1" min="0" placeholder="VD: 25000" value="<c:out value="${extension.typicalPrice}"/>" />
+                                    <input class="input mono" name="typicalPrice" type="number" step="1" min="0" placeholder="VD: 25000" value="<c:out value="${fuelExt.typicalPrice}"/>" />
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'origin' ? 'visible' : ''}" id="ext-origin">
-                        <c:if test="${extType == 'origin'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN XUẤT XỨ</div>
@@ -155,15 +167,13 @@
                             <div class="form-grid">
                                 <div class="field">
                                     <label class="field-label">Mã quốc gia</label>
-                                    <input class="input mono" name="country_code" placeholder="VD: JP" maxlength="5" value="<c:out value="${extension.countryCode}"/>" />
+                                    <input class="input mono" name="country_code" placeholder="VD: JP" maxlength="5" value="<c:out value="${originExt.countryCode}"/>" />
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'customer_type' ? 'visible' : ''}" id="ext-customer">
-                        <c:if test="${extType == 'customer_type'}">
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — THÔNG TIN LOẠI KHÁCH</div>
@@ -174,16 +184,15 @@
                                     <label class="field-label">Loại thuế</label>
                                     <select class="select" name="taxType">
                                         <option value="">-- Chọn --</option>
-                                        <option value="VAT 10%" ${extension.taxType == 'VAT 10%' ? 'selected' : ''}>VAT 10%</option>
-                                        <option value="VAT 8%"  ${extension.taxType == 'VAT 8%' ? 'selected' : ''}>VAT 8%</option>
-                                        <option value="VAT 5%"  ${extension.taxType == 'VAT 5%' ? 'selected' : ''}>VAT 5%</option>
-                                        <option value="VAT 0%"  ${extension.taxType == 'VAT 0%' ? 'selected' : ''}>VAT 0%</option>
-                                        <option value="Không chịu thuế" ${extension.taxType == 'Không chịu thuế' ? 'selected' : ''}>Không chịu thuế</option>
+                                        <option value="VAT 10%" ${customerExt.taxType == 'VAT 10%' ? 'selected' : ''}>VAT 10%</option>
+                                        <option value="VAT 8%"  ${customerExt.taxType == 'VAT 8%' ? 'selected' : ''}>VAT 8%</option>
+                                        <option value="VAT 5%"  ${customerExt.taxType == 'VAT 5%' ? 'selected' : ''}>VAT 5%</option>
+                                        <option value="VAT 0%"  ${customerExt.taxType == 'VAT 0%' ? 'selected' : ''}>VAT 0%</option>
+                                        <option value="Không chịu thuế" ${customerExt.taxType == 'Không chịu thuế' ? 'selected' : ''}>Không chịu thuế</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
-                        </c:if>
                     </div>
 
                     <div class="ext-section ${extType == 'receipt_reason' or extType == 'receipt_status' or extType == 'order_status' or extType == 'generator_type' or extType == 'phase' or extType == 'condition' ? 'visible' : ''}" id="ext-simple">
@@ -271,7 +280,133 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div><%-- end form-layout --%>
+            </div><%-- end tab-info --%>
+
+            <%-- ===== TAB: LỊCH SỬ (cấp 2) ===== --%>
+            <c:if test="${category.id > 0}">
+            <div id="tab-history" class="tab-content ${activeTab == 'history' ? '' : 'tab-hidden'}">
+
+                <div class="table-card history-card">
+
+                    <%-- Filter theo hành động --%>
+                    <form method="get" action="${pageContext.request.contextPath}/admin/category/edit" class="history-filter-bar">
+                        <input type="hidden" name="id"         value="${category.id}"/>
+                        <input type="hidden" name="module"     value="${currentModule}"/>
+                        <input type="hidden" name="activeTab"  value="history"/>
+                        <input type="hidden" name="histPage"   value="1"/>
+
+                        <div class="search-input hf-search">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input type="text" name="histSearch" placeholder="Tìm theo tên người dùng..." value="<c:out value="${histSearch}"/>" onkeypress="if(event.keyCode==13) this.form.submit();"/>
+                        </div>
+
+                        <select name="historyAction" id="historyActionSelect" class="filter-select" onchange="this.form.submit()">
+                            <option value=""      ${empty historyAction ? 'selected' : ''}>Tất cả hành động</option>
+                            <option value="CREATE" ${historyAction == 'CREATE' ? 'selected' : ''}>Thêm mới</option>
+                            <option value="UPDATE" ${historyAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                            <option value="DELETE" ${historyAction == 'DELETE' ? 'selected' : ''}>Khóa</option>
+                        </select>
+
+                        <div class="date-range">
+                            <span class="date-label">Từ:</span>
+                            <input type="date" name="histDateFrom" class="date-input" value="<c:out value="${histDateFrom}"/>" onchange="this.form.submit()"/>
+                            <span class="date-label">Đến:</span>
+                            <input type="date" name="histDateTo" class="date-input" value="<c:out value="${histDateTo}"/>" onchange="this.form.submit()"/>
+                        </div>
+
+                        <c:if test="${not empty historyAction or not empty histSearch or not empty histDateFrom or not empty histDateTo}">
+                            <a href="${pageContext.request.contextPath}/admin/category/edit?id=${category.id}&module=${currentModule}&activeTab=history" class="btn">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                Xóa lọc
+                            </a>
+                        </c:if>
+                    </form>
+
+                    <%-- Thông tin tổng số --%>
+                    <div class="result-summary">
+                        Tìm thấy <strong>${histTotalLogs}</strong> bản ghi
+                        <c:if test="${not empty historyAction or not empty histSearch or not empty histDateFrom or not empty histDateTo}">
+                            &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                        </c:if>
+                    </div>
+
+                    <table>
+                        <thead><tr>
+                            <th style="width:150px;">Thời gian</th>
+                            <th style="width:160px;">Người dùng</th>
+                            <th style="width:120px;">Hành động</th>
+                            <th>Chi tiết</th>
+                        </tr></thead>
+                        <tbody>
+                        <c:choose>
+                            <c:when test="${empty historyLogs}">
+                                <tr><td colspan="4">
+                                    <div class="empty-state">
+                                        <div class="icon-wrap">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        </div>
+                                        <strong>Chưa có lịch sử nào</strong>
+                                        <c:if test="${not empty historyAction or not empty histSearch or not empty histDateFrom or not empty histDateTo}">
+                                            <span style="color:var(--muted);font-size:0.88rem;">Thử <a href="${pageContext.request.contextPath}/admin/category/edit?id=${category.id}&module=${currentModule}&activeTab=history">xóa bộ lọc</a></span>
+                                        </c:if>
+                                    </div>
+                                </td></tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="hlog" items="${historyLogs}">
+                                    <tr>
+                                        <td><fmt:formatDate value="${hlog.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                        <td><div style="font-weight:600;color:var(--fg);">${hlog.username}</div></td>
+                                        <td>
+                                            <span class="action-badge action-<c:choose><c:when test="${hlog.action == 'CREATE'}">create</c:when><c:when test="${hlog.action == 'UPDATE'}">update</c:when><c:when test="${hlog.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>">
+                                                <c:choose><c:when test="${hlog.action == 'CREATE'}">Thêm mới</c:when><c:when test="${hlog.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${hlog.action == 'DELETE'}">Khóa</c:when><c:otherwise>${hlog.action}</c:otherwise></c:choose>
+                                            </span>
+                                        </td>
+                                        <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                            <c:choose>
+                                                <c:when test="${fn:contains(hlog.details, ' | module:')}"><c:out value="${fn:substringBefore(hlog.details, ' | module:')}"/></c:when>
+                                                <c:otherwise><c:out value="${hlog.details}"/></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                        </tbody>
+                    </table>
+
+                    <%-- Phân trang lịch sử --%>
+                    <c:if test="${histTotalPages > 1}">
+                    <c:set var="filterParams" value=""/>
+                    <c:if test="${not empty histSearch}"><c:set var="filterParams" value="${filterParams}&histSearch=${histSearch}"/></c:if>
+                    <c:if test="${not empty historyAction}"><c:set var="filterParams" value="${filterParams}&historyAction=${historyAction}"/></c:if>
+                    <c:if test="${not empty histDateFrom}"><c:set var="filterParams" value="${filterParams}&histDateFrom=${histDateFrom}"/></c:if>
+                    <c:if test="${not empty histDateTo}"><c:set var="filterParams" value="${filterParams}&histDateTo=${histDateTo}"/></c:if>
+
+                    <div class="pagination">
+                        <div class="info">Trang <strong>${histPage}</strong> / <strong>${histTotalPages}</strong></div>
+                        <div class="controls">
+                            <c:if test="${histPage > 1}">
+                                <a href="${pageContext.request.contextPath}/admin/category/edit?id=${category.id}&module=${currentModule}&activeTab=history&histPage=${histPage - 1}${filterParams}" class="page-btn">&lsaquo;</a>
+                            </c:if>
+                            <c:forEach begin="1" end="${histTotalPages}" var="hp">
+                                <c:choose>
+                                    <c:when test="${hp == histPage}"><span class="page-btn active">${hp}</span></c:when>
+                                    <c:otherwise><a href="${pageContext.request.contextPath}/admin/category/edit?id=${category.id}&module=${currentModule}&activeTab=history&histPage=${hp}${filterParams}" class="page-btn">${hp}</a></c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                            <c:if test="${histPage < histTotalPages}">
+                                <a href="${pageContext.request.contextPath}/admin/category/edit?id=${category.id}&module=${currentModule}&activeTab=history&histPage=${histPage + 1}${filterParams}" class="page-btn">&rsaquo;</a>
+                            </c:if>
+                        </div>
+                    </div>
+                    </c:if>
+
+                </div><%-- end table-card --%>
+            </div><%-- end tab-history --%>
+            </c:if>
+
         </main>
     </div>
 </div>
@@ -344,6 +479,26 @@ document.getElementById('categoryForm').addEventListener('submit', function(e) {
         return false;
     }
 });
+
+// ===== Tab switching =====
+function switchTab(tab) {
+    var infoEl    = document.getElementById('tab-info');
+    var histEl    = document.getElementById('tab-history');
+    var btnInfo   = document.getElementById('tabInfoBtn');
+    var btnHist   = document.getElementById('tabHistoryBtn');
+
+    if (tab === 'history') {
+        if (infoEl)  infoEl.classList.add('tab-hidden');
+        if (histEl)  histEl.classList.remove('tab-hidden');
+        if (btnInfo) btnInfo.classList.remove('active');
+        if (btnHist) btnHist.classList.add('active');
+    } else {
+        if (infoEl)  infoEl.classList.remove('tab-hidden');
+        if (histEl)  histEl.classList.add('tab-hidden');
+        if (btnInfo) btnInfo.classList.add('active');
+        if (btnHist) btnHist.classList.remove('active');
+    }
+}
 
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>

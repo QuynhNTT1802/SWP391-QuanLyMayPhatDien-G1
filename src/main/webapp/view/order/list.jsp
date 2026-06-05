@@ -424,9 +424,6 @@
                 reasonInput.value = reason.trim();
                 form.appendChild(actionInput);
                 form.appendChild(idInput);
-                form.appendChild(reasonInput);
-                document.body.appendChild(form);
-                form.submit();
             }
         }
         function confirmCancel(orderId) {

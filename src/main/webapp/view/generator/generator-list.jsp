@@ -5,7 +5,6 @@
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -28,7 +27,7 @@
                 <div>
                     <header class="topbar">
                         <h1>Máy phát điện</h1>
-                        <span class="crumb">/ <a href="#">Quản trị</a> / Máy phát điện</span>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/generators?action=list">Quản trị</a> / Máy phát điện</span>
                         <div class="top-actions">
                             <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -70,7 +69,19 @@
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             <input name="search" value="<c:out value="${searchFilter}"/>" placeholder="Tìm theo mẫu máy..." autocomplete="off" />
                         </div>
+                            <select class="filter-select" name="brandId" onchange="this.form.submit()">
+                                <option value="">Thương hiệu: Tất cả</option>
+                                <c:forEach var="b" items="${brandList}">
+                                    <option value="${b.id}" <c:if test="${brandFilter == String.valueOf(b.id)}">selected</c:if>>${b.name}</option>
+                                </c:forEach>
+                            </select>
 
+                            <select class="filter-select" name="genTypeId" onchange="this.form.submit()">
+                                <option value="">Loại máy: Tất cả</option>
+                                <c:forEach var="t" items="${genTypeList}">
+                                    <option value="${t.id}" <c:if test="${genTypeFilter == String.valueOf(t.id)}">selected</c:if>>${t.name}</option>
+                                </c:forEach>
+                            </select>
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="active" <c:if test="${statusFilter == 'active'}">selected</c:if>>Đang hoạt động</option>
@@ -107,9 +118,7 @@
                                         </c:when>
                                         <c:otherwise>
                                             <c:forEach var="g" items="${generators}">
-                                            <tr onclick="if (!event.target.closest('button,a'))
-                                                        location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'"
-                                                style="cursor:pointer;">
+                                            <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'" style="cursor:pointer;">
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
@@ -125,7 +134,7 @@
                                                     <c:out value="${not empty foundBrand ? foundBrand : '—'}"/>
                                                 </td>
                                                 <td><span class="mono"><c:out value="${g.powerRating}"/> kVA</span></td>
-                                                <td><span class="mono"><fmt:formatNumber value="${g.unitPrice}" pattern="#,###"/> đ</span></td>
+                                                <td><span class="mono"><c:out value="${g.unitPrice}"/> đ</span></td>
                                                 <td>
                                                     <c:set var="foundType" value=""/>
                                                     <c:forEach var="cat" items="${g.categories}">
@@ -172,21 +181,19 @@
                             <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalGenerators ? totalGenerators : currentPage * 10}</strong> / <strong>${totalGenerators}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">‹</a>
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty brandFilter}">&brandId=<c:out value="${brandFilter}"/></c:if><c:if test="${not empty genTypeFilter}">&genTypeId=<c:out value="${genTypeFilter}"/></c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty brandFilter}">&brandId=<c:out value="${brandFilter}"/></c:if><c:if test="${not empty genTypeFilter}">&genTypeId=<c:out value="${genTypeFilter}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">›</a>
-                                </c:if>
-                            </div>
-                        </div>
-                    </div>
-                </main>
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty searchFilter}">&search=<c:out value="${searchFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty brandFilter}">&brandId=<c:out value="${brandFilter}"/></c:if><c:if test="${not empty genTypeFilter}">&genTypeId=<c:out value="${genTypeFilter}"/></c:if>" class="page-btn">›</a>
+                                </c:if>                                    
+                                    </main>
+
             </div>
         </div>
 
@@ -203,8 +210,8 @@
             </div>
         </div>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/generator-js.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/theme.js" charset="UTF-8"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/generator-js.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     </body>
 </html>
