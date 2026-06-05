@@ -409,7 +409,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setRejectReason(rs.getString("reject_reason"));
 
         try {
-            s.setNote(rs.getString("customer_note"));
+            s.setCustomerNote(rs.getString("customer_note"));
         } catch (SQLException e) {
         }
 

@@ -1,10 +1,12 @@
 package com.quanlymayphatdien.g1.controller.order;
 
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
+import com.quanlymayphatdien.g1.dal.CustomerDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.entity.Customer;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
@@ -56,11 +58,11 @@ public class OrderController extends HttpServlet {
                     break;
                 case "edit":
                     showEditForm(request, response);
-                    break;          
+                    break;
                 case "reject":
                     showRejectForm(request, response);
                     break;
-            
+
                 default:
                     listOrders(request, response);
                     break;
@@ -193,8 +195,8 @@ public class OrderController extends HttpServlet {
         List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
 
         String customerTypeName = "";
-        if (order.getCustomerTypeId() > 0) {
-            Category ct = new CategoryDAO().findById(order.getCustomerTypeId());
+        if (order.getCustomer() != null && order.getCustomer().getCustomerTypeId() > 0) {
+            Category ct = new CategoryDAO().findById(order.getCustomer().getCustomerTypeId());
             if (ct != null) {
                 customerTypeName = ct.getName();
             }
@@ -255,23 +257,50 @@ public class OrderController extends HttpServlet {
             orderCode = String.format("ORD-%s-%03d", dateStr, todayCount);
         }
         order.setOrderCode(orderCode);
-        order.setCustomerName(request.getParameter("customerName"));
-        order.setCustomerPhone(request.getParameter("customerPhone"));
-        order.setCustomerEmail(request.getParameter("customerEmail"));
-        order.setCustomerAddress(request.getParameter("customerAddress"));
-        order.setCustomerTaxCode(request.getParameter("customerTaxCode"));
-        order.setCustomerCompany(request.getParameter("customerCompany"));
-        order.setCustomerNote(request.getParameter("customerNote"));
-        order.setNote(request.getParameter("internalNote"));
-        order.setCreatedBy(user.getId());
+        // Tạo CustomerDAO
+        CustomerDAO customerDAO = new CustomerDAO();
 
-        String ctIdStr = request.getParameter("customerTypeId");
-        if (ctIdStr != null && !ctIdStr.isEmpty()) {
-            try {
-                order.setCustomerTypeId(Integer.parseInt(ctIdStr));
-            } catch (NumberFormatException ignored) {
+        String custName = request.getParameter("customerName");
+        String custPhone = request.getParameter("customerPhone");
+        String custEmail = request.getParameter("customerEmail");
+        String custAddress = request.getParameter("customerAddress");
+
+        String custCompany = request.getParameter("customerCompany");
+        String custTypeIdStr = request.getParameter("customerTypeId");
+        String custNote = request.getParameter("customerNote");
+        Customer customer = null;
+        if (custPhone != null && !custPhone.trim().isEmpty()) {
+            customer = customerDAO.findByPhone(custPhone);
+        }
+        if (customer == null) {
+            customer = new Customer();
+            customer.setName(custName);
+            customer.setPhone(custPhone);
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                try {
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            customer.setStatus("active");
+            customer.setCreatedBy(user.getId());
+
+            int newCustId = customerDAO.insert(customer);
+            if (newCustId > 0) {
+                customer.setId(newCustId);
             }
         }
+
+        if (customer != null && customer.getId() > 0) {
+            order.setCustomerId(customer.getId());
+        }
+
+        order.setCustomerNote(custNote);
 
         order.setStatus("PENDING");
         order.setTotalAmount(0.0);
@@ -334,7 +363,7 @@ public class OrderController extends HttpServlet {
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (permissions == null || !permissions.contains("orders.approve")) {
+        if (permissions == null || !permissions.contains("orders.update")) {
             request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
@@ -415,23 +444,31 @@ public class OrderController extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/order?action=list");
                 return;
             }
-            order.setCustomerName(request.getParameter("customerName"));
-            order.setCustomerPhone(request.getParameter("customerPhone"));
-            order.setCustomerEmail(request.getParameter("customerEmail"));
-            order.setCustomerAddress(request.getParameter("customerAddress"));
-            order.setCustomerTaxCode(request.getParameter("customerTaxCode"));
-            order.setCustomerCompany(request.getParameter("customerCompany"));
-            order.setCustomerNote(request.getParameter("customerNote"));
-            order.setNote(request.getParameter("internalNote"));
-            order.setTotalAmount(totalAmount);
 
-            String ctIdStr = request.getParameter("customerTypeId");
-            if (ctIdStr != null && !ctIdStr.isEmpty()) {
-                try {
-                    order.setCustomerTypeId(Integer.parseInt(ctIdStr));
-                } catch (NumberFormatException ignored) {
-                }
+            CustomerDAO customerDAO = new CustomerDAO();
+            String custName = request.getParameter("customerName");
+            String custPhone = request.getParameter("customerPhone");
+
+            Customer customer = null;
+            if (custPhone != null && !custPhone.trim().isEmpty()) {
+                customer = customerDAO.findByPhone(custPhone);
             }
+            if (customer == null) {
+
+                customer = new Customer();
+                customer.setName(custName);
+
+                int newCustId = customerDAO.insert(customer);
+                customer.setId(newCustId);
+            }
+
+            if (customer != null) {
+                order.setCustomerId(customer.getId());
+
+                customerDAO.update(customer);
+            }
+
+            order.setCustomerNote(request.getParameter("customerNote"));
 
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 
@@ -473,7 +510,7 @@ public class OrderController extends HttpServlet {
 
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.reject")) {
             request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
