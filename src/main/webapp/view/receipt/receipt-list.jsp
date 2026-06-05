@@ -109,6 +109,7 @@
                                     <th>Loại</th>
                                     <th>Kho</th>
                                     <th>Đơn liên quan</th>
+                                    <th>Lý do</th>
                                     <th>Người tạo</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày tạo</th>
@@ -118,7 +119,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="8">
+                                        <tr><td colspan="9">
                                                 <div class="empty-state"><strong>Không tìm thấy phiếu nào</strong></div>
                                             </td></tr>
                                         </c:when>
@@ -142,6 +143,16 @@
                                                         <c:when test="${not empty r.orderCode}">
                                                             <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}" style="font-family:monospace;font-size:12px;">${r.orderCode}</a>
                                                             <div style="font-size:11px;color:var(--muted);">${r.customerName}</div>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color:var(--muted);">—</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty r.reasonName}">
+                                                            <span class="status-pill status-pending"><span class="pdot"></span>${r.reasonName}</span>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <span style="color:var(--muted);">—</span>

@@ -12,25 +12,28 @@ import java.util.List;
  * @author FPTShop
  */
 public class Receipt {
+
     private int receiptId;
     private String receiptCode;
     private String receiptType;
     private Integer orderId;
     private int warehouseId;
     private int createdBy;
-    private Integer approvedBy; 
+    private Integer approvedBy;
     private String status;
     private String note;
     private LocalDateTime approvedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
     private String warehouseName;
     private String createdByName;
     private String approvedByName;
     private String orderCode;
     private String customerName;
-    
+    private Integer reasonId;
+    private String reasonNote;
+    private String reasonName;
     private List<ReceiptDetail> details;
 
     public Integer getApprovedBy() {
@@ -179,5 +182,29 @@ public class Receipt {
     public void setDetails(List<ReceiptDetail> details) {
         this.details = details;
     }
-    
+
+    public Integer getReasonId() {
+        return reasonId;
+    }
+
+    public void setReasonId(Integer reasonId) {
+        this.reasonId = reasonId;
+    }
+
+    public String getReasonNote() {
+        return reasonNote;
+    }
+
+    public void setReasonNote(String reasonNote) {
+        this.reasonNote = reasonNote;
+    }
+
+    public String getReasonName() {
+        return reasonName;
+    }
+
+    public void setReasonName(String reasonName) {
+        this.reasonName = reasonName;
+    }
+
 }

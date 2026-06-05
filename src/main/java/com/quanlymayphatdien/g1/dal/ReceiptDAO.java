@@ -33,13 +33,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         List<Receipt> allReceipts = new ArrayList<>();
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
-                + "so.order_code, c.name AS customer_name "
+                + "so.order_code, c.name AS customer_name, cr.name AS reason_name "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
         List<String> inputs = new ArrayList<>();
         if (typeFilter != null && !typeFilter.isEmpty()) {
@@ -94,6 +95,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
         List<String> inputs = new ArrayList<>();
         if (typeFilter != null && !typeFilter.isEmpty()) {
@@ -136,13 +138,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     public Receipt findById(int receiptId) {
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
-                + "so.order_code, c.name AS customer_name "
+                + "so.order_code, c.name AS customer_name, cr.name AS reason_name "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE r.receipt_id = ?";
         try {
             connection = getConnection();
@@ -164,8 +167,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     @Override
     public int insert(Receipt r) {
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, "
-                + "warehouse_id, created_by, status, note, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', ?, ?)";
+                + "warehouse_id, created_by, status, note, reason_id, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -179,7 +182,12 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             statement.setInt(4, r.getWarehouseId());
             statement.setInt(5, r.getCreatedBy());
             statement.setString(6, r.getNote());
-            statement.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getReasonId() != null) {
+                statement.setInt(7, r.getReasonId());
+            } else {
+                statement.setNull(7, Types.INTEGER);
+            }
+            statement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -289,18 +297,26 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
     }
 
-    public boolean rejectReceipt(int receiptId, int approvedBy, String reason) {
+    public boolean rejectReceipt(int receiptId, int approvedBy, Integer reasonId, String reasonNote) {
         String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
-                + "approved_at = ?, "
-                + "note = CONCAT(COALESCE(note, ''), ' | Lý do từ chối: ', ?) "
+                + "approved_at = ?, reason_id = ?, reason_note = ? "
                 + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, approvedBy);
             statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setString(3, reason);
-            statement.setInt(4, receiptId);
+            if (reasonId != null) {
+                statement.setInt(3, reasonId);
+            } else {
+                statement.setNull(3, Types.INTEGER);
+            }
+            if (reasonNote != null && !reasonNote.trim().isEmpty()) {
+                statement.setString(4, reasonNote.trim());
+            } else {
+                statement.setNull(4, Types.VARCHAR);
+            }
+            statement.setInt(5, receiptId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -308,16 +324,25 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return false;
     }
 
-    public boolean requestRevision(int receiptId, int managerId, String reason) {
+    public boolean requestRevision(int receiptId, int managerId, Integer reasonId, String reasonNote) {
         String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_REVISION + "', approved_by = ?, "
-                + "note = CONCAT(COALESCE(note, ''), ' | Lý do yêu cầu chỉnh sửa: ', ?) "
+                + "reason_id = ?, reason_note = ? "
                 + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, managerId);
-            statement.setString(2, reason);
-            statement.setInt(3, receiptId);
+            if (reasonId != null) {
+                statement.setInt(2, reasonId);
+            } else {
+                statement.setNull(2, Types.INTEGER);
+            }
+            if (reasonNote != null && !reasonNote.trim().isEmpty()) {
+                statement.setString(3, reasonNote.trim());
+            } else {
+                statement.setNull(3, Types.VARCHAR);
+            }
+            statement.setInt(4, receiptId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -327,7 +352,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
 
     public boolean updateReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId) {
         String updateSql = "UPDATE receipt SET warehouse_id = ?, note = ?, "
-                + "status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', approved_by = NULL "
+                + "status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', approved_by = NULL, reason_id = ? "
                 + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_REVISION + "' AND created_by = ?";
         String deleteDetailSql = "DELETE FROM receipt_detail WHERE receipt_id = ?";
         String insertDetailSql = "INSERT INTO receipt_detail "
@@ -456,6 +481,18 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         try {
             r.setCustomerName(rs.getString("customer_name"));
+        } catch (SQLException ignored) {
+        }
+        int rid = rs.getInt("reason_id");
+        if (!rs.wasNull()) {
+            r.setReasonId(rid);
+        }
+        try {
+            r.setReasonNote(rs.getString("reason_note"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            r.setReasonName(rs.getString("reason_name"));
         } catch (SQLException ignored) {
         }
         return r;
