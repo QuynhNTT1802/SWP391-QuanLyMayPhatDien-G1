@@ -183,6 +183,25 @@ public class RoleController extends HttpServlet {
             }
         }
 
+        Role existingRole = null;
+        if (excludeId > 0) {
+            for (Role r : roleDAO.findAll()) {
+                if (r.getRoleId() == excludeId) {
+                    existingRole = r;
+                    break;
+                }
+            }
+        }
+
+        if (existingRole != null && "admin".equalsIgnoreCase(existingRole.getRoleName())) {
+            if ("inactive".equals(status)) {
+                errors.add("Không thể khóa vai trò Quản trị viên");
+            }
+            if (name != null && !name.equalsIgnoreCase("admin")) {
+                errors.add("Không thể đổi tên vai trò Quản trị viên");
+            }
+        }
+
         if (name != null && !name.trim().isEmpty() && errors.isEmpty()) {
             if (roleDAO.isRoleNameExists(name, excludeId)) {
                 errors.add("Tên vai trò đã tồn tại");
@@ -288,6 +307,13 @@ public class RoleController extends HttpServlet {
             }
         }
         roleDAO.updatePermissionRole(roleId, new ArrayList<>(expanded));
+
+        // Báo cho SecurityFilter biết cần refresh lại quyền của tất cả user mang role này
+        com.quanlymayphatdien.g1.dal.UserDAO userDAO = new com.quanlymayphatdien.g1.dal.UserDAO();
+        List<Integer> affectedUsers = userDAO.getUserIdsByRoleId(roleId);
+        for (Integer uid : affectedUsers) {
+            request.getServletContext().setAttribute("perm_refresh_" + uid, true);
+        }
 
         response.sendRedirect(request.getContextPath() + "/admin/roles?msg=success");
     }
