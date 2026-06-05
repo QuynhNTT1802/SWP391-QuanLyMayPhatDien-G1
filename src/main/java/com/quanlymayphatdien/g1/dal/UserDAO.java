@@ -456,4 +456,21 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
     }
 
+    public List<Integer> getUserIdsByRoleId(int roleId) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
+        try {
+            Connection c = getConnection();
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("user_id"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+
 }

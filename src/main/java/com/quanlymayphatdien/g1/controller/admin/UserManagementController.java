@@ -312,6 +312,8 @@ public class UserManagementController extends HttpServlet {
                         }
                     }
 
+                    request.getServletContext().setAttribute("perm_refresh_" + userId, true);
+
                     request.getSession().setAttribute("message", "Update successfully");
                     logActivity(request, "user", userId, name, "UPDATE",
                             "Cập nhật người dùng: " + (name != null ? name : ("ID " + userId)));
