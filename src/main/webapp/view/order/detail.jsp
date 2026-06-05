@@ -234,7 +234,7 @@
                                     <tbody>
                                         <c:forEach var="d" items="${details}">
                                             <tr>
-                                                <td><c:out value="${d.generatorModel}"/></td>
+                                                <td><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></td>
                                                 <td>${d.quantity}</td>
                                                 <td class="text-right"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
                                                 <td class="text-right"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
