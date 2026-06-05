@@ -64,6 +64,17 @@ public class CategoryExcelSupport {
         CellStyle headerStyle = workbook.createCellStyle();
         XSSFFont font = workbook.createFont();
         font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        headerStyle.setFont(font); // ← gán font vào style
+        headerStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
+                new byte[]{(byte) 79, (byte) 129, (byte) 189}, null)); // màu xanh dương
+        headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
+        headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+
+        // Font trắng cho chữ trên nền xanh
+        font.setColor(new org.apache.poi.xssf.usermodel.XSSFColor(
+                new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
         String[] headers = getHeaderColumns(type);
         Row headerRow = sheet.createRow(0);
@@ -73,6 +84,7 @@ public class CategoryExcelSupport {
             cell.setCellValue(headers[i]);
             cell.setCellStyle(headerStyle);
         }
+
 
         int rowNum = 1;
         for (Category c : list) {
@@ -135,12 +147,16 @@ public class CategoryExcelSupport {
             boolean isEmpty = true;
 
             for (int j = 0; j < headers.length; j++) {
-                Cell cell = row.getCell(i);
+                Cell cell = row.getCell(j); // ← sửa: i → j
                 String value = getCellValueAsString(cell);
                 rowData.put(headers[j], value);
                 if (!value.isEmpty()) {
                     isEmpty = false;
                 }
+            }
+
+            if (!isEmpty) {
+                result.add(rowData); // ← sửa: thêm dòng này để lưu kết quả
             }
         }
         workbook.close();
