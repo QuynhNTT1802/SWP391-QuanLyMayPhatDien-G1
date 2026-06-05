@@ -172,11 +172,11 @@
                         <span>Ngày tạo: ${receipt.createdAt}</span>
                     </div>
                     <div class="hero-pills">
-                        <span class="pill warehouse"><span class="pdot"></span><c:out value="${receipt.warehouseName}"/></span>
-                        <span class="pill status-active"><span class="pdot"></span>Người tạo: <c:out value="${receipt.createdByName}"/></span>
-                        <c:if test="${not empty receipt.approvedByName}">
-                            <span class="pill role-admin"><span class="pdot"></span>Người duyệt: <c:out value="${receipt.approvedByName}"/></span>
-                        </c:if>
+                        <span class="pill warehouse"><span class="pdot"></span><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}" style="color:inherit;text-decoration:underline;"><c:out value="${receipt.warehouseName}"/></a></span>
+<span class="pill status-active"><span class="pdot"></span>Người tạo: <c:out value="${receipt.createdByName}"/></span>
+<c:if test="${not empty receipt.approvedByName}">
+    <span class="pill role-admin"><span class="pdot"></span>Người duyệt: <c:out value="${receipt.approvedByName}"/></span>
+</c:if>
                     </div>
                 </div>
             </div>
@@ -216,7 +216,7 @@
                         </div>
                         <div class="info-field">
                             <div class="info-label">Kho</div>
-                            <div class="info-value"><c:out value="${receipt.warehouseName}"/></div>
+                            <div class="info-value"><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></div>
                         </div>
                         <div class="info-field">
                             <div class="info-label">Người tạo</div>
@@ -344,7 +344,7 @@
                                     <c:forEach var="d" items="${receipt.details}" varStatus="st">
                                         <tr class="detail-row">
                                             <td class="mono">${st.index + 1}</td>
-                                            <td><strong><c:out value="${d.generatorModel}"/></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
+                                            <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
                                             <td class="mono"><c:out value="${d.serialNumber}"/></td>
                                             <td><c:out value="${d.note}"/></td>
                                         </tr>
