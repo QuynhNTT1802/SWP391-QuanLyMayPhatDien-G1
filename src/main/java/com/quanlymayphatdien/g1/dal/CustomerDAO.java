@@ -317,4 +317,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
 
         return c;
     }
+
+    public Customer findByPhone(String custPhone) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
