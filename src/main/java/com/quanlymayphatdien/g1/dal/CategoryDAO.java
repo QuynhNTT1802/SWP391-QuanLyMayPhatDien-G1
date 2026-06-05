@@ -12,7 +12,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -167,6 +169,32 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
         return types;
     }
 
+    /**
+     * Lấy MIN(id) theo từng type trong một module.
+     * Dùng để hiển thị cột ID đại diện trong bảng Tổng quan danh mục.
+     *
+     * @param module tên module, VD "quản lý vật tư"
+     * @return Map&lt;type, minId&gt;
+     */
+    public Map<String, Integer> getMinIdByType(String module) {
+        Map<String, Integer> result = new HashMap<>();
+        String sql = "SELECT type, MIN(id) AS min_id FROM category WHERE module = ? GROUP BY type";
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql)) {
+            p.setString(1, module);
+            try (ResultSet rs = p.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getString("type"), rs.getInt("min_id"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
+
     public List<Category> searchByName(String name) {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category where name like ? or description like ? order by type, name";
@@ -273,5 +301,4 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
         LocalDateTime updatedAt = rs.getObject("updated_at", LocalDateTime.class);
         return new Category(id, module, name, type, desc, status, createdAt, updatedAt);
     }
-
 }

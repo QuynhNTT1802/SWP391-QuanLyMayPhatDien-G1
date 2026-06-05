@@ -198,7 +198,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
     }
 
     public List<Generator> findGeneratorsByFilters(String search, String status,
-            int page, int pageSize) {
+        Integer brandId, Integer genTypeId, int page, int pageSize) {
         List<Generator> all = new ArrayList<>();
         String sql = "SELECT DISTINCT g.* FROM generator g "
                 + "LEFT JOIN generator_category gc ON g.id = gc.generator_id "
@@ -214,6 +214,16 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             String p = "%" + search.trim() + "%";
             params.add(p);
             params.add(p);
+        }
+        if (brandId != null) {
+            sql += "AND EXISTS (SELECT 1 FROM generator_category gc_b "
+                    + "WHERE gc_b.generator_id = g.id AND gc_b.category_id = ?) ";
+            params.add(String.valueOf(brandId));
+        }
+        if (genTypeId != null) {
+            sql += "AND EXISTS (SELECT 1 FROM generator_category gc_t "
+                    + "WHERE gc_t.generator_id = g.id AND gc_t.category_id = ?) ";
+            params.add(String.valueOf(genTypeId));
         }
         sql += "ORDER BY g.created_at DESC";
 
@@ -247,7 +257,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return new ArrayList<>();
     }
 
-    public int getTotalFiltered(String search, String status) {
+    public int getTotalFiltered(String search, String status,
+            Integer brandId, Integer genTypeId) {
         String sql = "SELECT COUNT(DISTINCT g.id) FROM generator g "
                 + "LEFT JOIN generator_category gc ON g.id = gc.generator_id "
                 + "LEFT JOIN category c ON gc.category_id = c.id WHERE 1=1 ";
@@ -262,6 +273,16 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             String p = "%" + search.trim() + "%";
             params.add(p);
             params.add(p);
+        }
+        if (brandId != null) {
+            sql += "AND EXISTS (SELECT 1 FROM generator_category gc_b "
+                    + "WHERE gc_b.generator_id = g.id AND gc_b.category_id = ?) ";
+            params.add(String.valueOf(brandId));
+        }
+        if (genTypeId != null) {
+            sql += "AND EXISTS (SELECT 1 FROM generator_category gc_t "
+                    + "WHERE gc_t.generator_id = g.id AND gc_t.category_id = ?) ";
+            params.add(String.valueOf(genTypeId));
         }
         try {
             connection = getConnection();

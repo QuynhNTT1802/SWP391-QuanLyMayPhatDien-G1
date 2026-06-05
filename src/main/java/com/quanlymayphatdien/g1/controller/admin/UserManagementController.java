@@ -1,13 +1,16 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
 import com.quanlymayphatdien.g1.config.GlobalConfig;
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -55,6 +58,7 @@ public class UserManagementController extends HttpServlet {
                 try {
                     showUpdateForm(request, response);
                 } catch (SQLException ex) {
+                    SystemLogger.error("Quản lý người dùng", "UserManagementController.showUpdateForm", ex.getMessage(), ex);
                     Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -127,9 +131,18 @@ public class UserManagementController extends HttpServlet {
                     }
                 }
                 request.setAttribute("userInitials", initials.toUpperCase());
-                java.time.format.DateTimeFormatter dtf = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(dtf) : "—");
                 request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
+
+                ActivityLogDAO logDAO = new ActivityLogDAO();
+                List<ActivityLog> logs = logDAO.getLogsByEntity("user", userId, 1, 20);
+                List<String> logDates = new ArrayList<>();
+                for (ActivityLog log : logs) {
+                    logDates.add(log.getCreatedAt() != null ? log.getCreatedAt().format(dtf) : "—");
+                }
+                request.setAttribute("activityLogs", logs);
+                request.setAttribute("logDates", logDates);
 
                 request.getRequestDispatcher("/view/admin/admin-user-detail.jsp").forward(request, response);
                 return;
@@ -192,11 +205,14 @@ public class UserManagementController extends HttpServlet {
                     userDAO.updateUserRoles(newUserId, roleIdList);
                 }
                 request.getSession().setAttribute("message", "User added successfully!");
+                logActivity(request, "user", newUserId, name, "CREATE",
+                        "Tạo người dùng: " + username);
             } else {
                 request.getSession().setAttribute("message", "Failed to add user!");
             }
 
         } catch (Exception e) {
+            SystemLogger.error("Quản lý người dùng", "UserManagementController.createUser", e.getMessage(), e);
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -297,6 +313,8 @@ public class UserManagementController extends HttpServlet {
                     }
 
                     request.getSession().setAttribute("message", "Update successfully");
+                    logActivity(request, "user", userId, name, "UPDATE",
+                            "Cập nhật người dùng: " + (name != null ? name : ("ID " + userId)));
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
                 }
@@ -304,6 +322,7 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Account not found!");
             }
         } catch (Exception e) {
+            SystemLogger.error("Quản lý người dùng", "UserManagementController.updateUser", e.getMessage(), e);
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
@@ -390,6 +409,8 @@ public class UserManagementController extends HttpServlet {
                     boolean check = userDAO.deactivateAccount(userId);
                     if (check) {
                         request.getSession().setAttribute("message", "Khóa người dùng thành công");
+                        logActivity(request, "user", userId, user.getName(), "DEACTIVATE",
+                                "Khóa người dùng: " + user.getUsername());
                     } else {
                         request.getSession().setAttribute("message", "Khóa người dùng thất bại");
                     }
@@ -417,6 +438,11 @@ public class UserManagementController extends HttpServlet {
             boolean check = userDAO.activateAccount(userId);
             if (check) {
                 request.getSession().setAttribute("message", "Kích hoạt người dùng thành công");
+                User user = userDAO.findById(userId);
+                if (user != null) {
+                    logActivity(request, "user", userId, user.getName(), "ACTIVATE",
+                            "Kích hoạt người dùng: " + user.getUsername());
+                }
             } else {
                 request.getSession().setAttribute("message", "Kích hoạt người dùng thất bại");
             }
@@ -442,6 +468,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
+                SystemLogger.warn("Quản lý người dùng", "UserManagementController.listUsers", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
@@ -495,6 +522,24 @@ public class UserManagementController extends HttpServlet {
 
         request.setAttribute("userInitials", userInitials);
         request.setAttribute("userAvatarClass", userAvatarClass);
+    }
+
+    private void logActivity(HttpServletRequest request, String entityType,
+            int entityId, String entityName, String action, String details) {
+        User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+        if (loggedUser == null) {
+            return;
+        }
+        ActivityLog log = new ActivityLog();
+        log.setUserId(loggedUser.getId());
+        log.setUsername(loggedUser.getUsername());
+        log.setEntityType(entityType);
+        log.setEntityId(entityId);
+        log.setEntityName(entityName);
+        log.setAction(action);
+        log.setDetails(details);
+        log.setCreatedAt(LocalDateTime.now());
+        new ActivityLogDAO().insertLog(log);
     }
 
 }

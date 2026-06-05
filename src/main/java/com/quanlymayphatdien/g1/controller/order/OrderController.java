@@ -11,6 +11,7 @@ import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -68,6 +69,7 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
+            SystemLogger.error("Quản lý phiếu mua bán", "OrderController.doGet", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order?action=list");
@@ -110,6 +112,7 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
+            SystemLogger.error("Quản lý phiếu mua bán", "OrderController.doPost", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi xử lý dữ liệu: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order?action=list");
@@ -144,6 +147,7 @@ public class OrderController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
+                SystemLogger.warn("Quản lý phiếu mua bán", "OrderController.listOrders", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
@@ -180,6 +184,7 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
+     
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -480,6 +485,7 @@ public class OrderController extends HttpServlet {
             }
 
         } catch (Exception e) {
+            SystemLogger.error("Quản lý phiếu mua bán", "OrderController.updateOrder", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
