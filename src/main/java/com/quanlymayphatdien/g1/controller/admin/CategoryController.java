@@ -974,8 +974,12 @@ public class CategoryController extends HttpServlet {
         for (Map<String, String> row : rows) {
             String name = row.get("Tên danh mục");
             List<String> errors = new ArrayList<>();
+
             if (name == null || name.trim().isEmpty()) {
                 errors.add("Tên danh mục không được trống");
+            } else if (cateDAO.existsByNameAndTypeAndModule(name.trim(), type, module, 0)) {
+                // Kiểm tra trùng với dữ liệu đang có trong DB
+                errors.add("Đã tồn tại danh mục \"" + name.trim() + "\" trong hệ thống");
             }
 
             if (errors.isEmpty()) {
@@ -1027,6 +1031,11 @@ public class CategoryController extends HttpServlet {
 
                 if (names[i] == null || names[i].trim().isEmpty()) {
                     continue;
+                }
+
+                // Kiểm tra trùng lần cuối trước khi insert (tránh race condition)
+                if (cateDAO.existsByNameAndTypeAndModule(names[i].trim(), type, module, 0)) {
+                    continue; // bỏ qua nếu đã tồn tại
                 }
 
                 Category c = new Category();
