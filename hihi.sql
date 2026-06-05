@@ -554,6 +554,8 @@ CREATE TABLE `receipt` (
   `approved_at` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `reason_id` int DEFAULT NULL,
+  `reason_note` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`receipt_id`),
   UNIQUE KEY `uk_receipt_code` (`receipt_code`),
   KEY `idx_receipt_order` (`order_id`),
@@ -561,10 +563,12 @@ CREATE TABLE `receipt` (
   KEY `idx_receipt_created` (`created_by`),
   KEY `idx_receipt_approved` (`approved_by`),
   KEY `idx_receipt_status` (`status`),
+  KEY `reason_id` (`reason_id`),
   CONSTRAINT `fk_receipt_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_receipt_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_receipt_order` FOREIGN KEY (`order_id`) REFERENCES `sale_order` (`order_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_receipt_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
+  CONSTRAINT `fk_receipt_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT,
+  CONSTRAINT `receipt_ibfk_1` FOREIGN KEY (`reason_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -574,7 +578,7 @@ CREATE TABLE `receipt` (
 
 LOCK TABLES `receipt` WRITE;
 /*!40000 ALTER TABLE `receipt` DISABLE KEYS */;
-INSERT INTO `receipt` VALUES (1,'RX-20260521-001','EXPORT',2,1,6,NULL,'PENDING','Xuất kho 2 máy Hyundai DHY8000 theo đơn hàng SO-20260521-002. Đã quét serial.',NULL,'2026-05-21 11:00:00','2026-06-05 11:42:03'),(2,'RX-IM-20260605-152','IMPORT',NULL,1,8,NULL,'PENDING','123',NULL,'2026-06-05 10:40:27','2026-06-05 11:42:03');
+INSERT INTO `receipt` VALUES (1,'RX-20260521-001','EXPORT',2,1,6,NULL,'PENDING','Xuất kho 2 máy Hyundai DHY8000 theo đơn hàng SO-20260521-002. Đã quét serial.',NULL,'2026-05-21 11:00:00','2026-06-05 11:42:03',NULL,NULL),(2,'RX-IM-20260605-152','IMPORT',NULL,1,8,NULL,'PENDING','123',NULL,'2026-06-05 10:40:27','2026-06-05 11:42:03',NULL,NULL);
 /*!40000 ALTER TABLE `receipt` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -680,9 +684,10 @@ CREATE TABLE `sale_order` (
   `customer_id` int DEFAULT NULL,
   `created_by` int NOT NULL,
   `approved_by` int DEFAULT NULL,
-  `status` enum('PENDING','APPROVED','REJECTED','CANCELLED') NOT NULL DEFAULT 'PENDING',
+  `status` varchar(50) NOT NULL DEFAULT 'PENDING',
   `total_amount` decimal(15,2) DEFAULT NULL,
   `note` text,
+  `customer_note` text,
   `order_date` datetime DEFAULT CURRENT_TIMESTAMP,
   `approved_at` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
@@ -690,6 +695,7 @@ CREATE TABLE `sale_order` (
   `cancelled_by` int DEFAULT NULL,
   `cancelled_at` datetime DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
+  `rejected_by` int DEFAULT NULL,
   `reject_reason` text,
   PRIMARY KEY (`order_id`),
   UNIQUE KEY `uk_order_code` (`order_code`),
@@ -697,9 +703,11 @@ CREATE TABLE `sale_order` (
   KEY `idx_order_approved` (`approved_by`),
   KEY `idx_order_status` (`status`),
   KEY `fk_order_customer` (`customer_id`),
+  KEY `fk_so_rejected_by` (`rejected_by`),
   CONSTRAINT `fk_order_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_order_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_so_customer` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`) ON DELETE SET NULL
+  CONSTRAINT `fk_so_customer` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_so_rejected_by` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -709,7 +717,7 @@ CREATE TABLE `sale_order` (
 
 LOCK TABLES `sale_order` WRITE;
 /*!40000 ALTER TABLE `sale_order` DISABLE KEYS */;
-INSERT INTO `sale_order` VALUES (1,'SO-20260521-001',1,4,5,'APPROVED',85000000.00,'Đơn hàng gấp, yêu cầu giao trong tuần','2026-05-21 09:00:00','2026-06-04 19:17:06','2026-05-21 09:00:00','2026-06-04 19:17:06',NULL,NULL,NULL,NULL),(2,'SO-20260521-002',2,4,5,'CANCELLED',96000000.00,NULL,'2026-05-21 10:00:00','2026-05-21 10:30:00','2026-05-21 10:00:00','2026-06-02 12:15:07',3,'2026-06-02 12:15:07',NULL,NULL);
+INSERT INTO `sale_order` VALUES (1,'SO-20260521-001',1,4,5,'APPROVED',85000000.00,'Đơn hàng gấp, yêu cầu giao trong tuần',NULL,'2026-05-21 09:00:00','2026-06-04 19:17:06','2026-05-21 09:00:00','2026-06-04 19:17:06',NULL,NULL,NULL,NULL,NULL),(2,'SO-20260521-002',2,4,5,'CANCELLED',96000000.00,NULL,NULL,'2026-05-21 10:00:00','2026-05-21 10:30:00','2026-05-21 10:00:00','2026-06-02 12:15:07',3,'2026-06-02 12:15:07',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `sale_order` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -920,4 +928,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-05 11:42:38
+-- Dump completed on 2026-06-05 12:45:28
