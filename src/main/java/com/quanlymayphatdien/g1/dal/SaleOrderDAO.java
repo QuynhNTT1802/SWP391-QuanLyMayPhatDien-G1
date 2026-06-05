@@ -428,6 +428,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
+
         return s;
     }
 
@@ -442,7 +443,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Update sale_order (chỉ khi vẫn PENDING)
+              
                 try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                     if (s.getCustomerId() > 0) {
                         ps.setInt(1, s.getCustomerId());
@@ -462,13 +463,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     }
                 }
 
-                // 2. Xóa detail cũ
+           
                 try (PreparedStatement ps = conn.prepareStatement(deleteDetailSql)) {
                     ps.setInt(1, s.getOrderId());
                     ps.executeUpdate();
                 }
 
-                // 3. Insert detail mới
+              
                 try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
                     for (OrderDetail d : newDetails) {
                         ps.setInt(1, d.getOrderId());
