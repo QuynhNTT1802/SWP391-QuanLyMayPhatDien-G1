@@ -11,54 +11,47 @@ import java.util.Date;
  * @author Phuong Linh
  */
 public class SaleOrder {
+
     private int orderId;
     private String orderCode;
-    private String customerName;
-    private String customerPhone;
-    private String customerEmail;
-    private String customerAddress;
-    private String customerTaxCode;
-    private String customerType;
-    private String customerCompany;
-    private String customerNote;
-    
+    private int customerId;
     private int createdBy;
-    private String createdByName;
+
     private int approvedBy;
     private int cancelledBy;
     private int updatedBy;
-    private int customerTypeId;
-    
-    private String status; // PENDING, APPROVED, REJECTED, CANCELLED
+
+    private int rejectedBy;
+    private String createdByName;
+    private String approvedByName;
+    private String cancelledByName;
+    private String rejectedByName;
+
+    private String status;
     private Double totalAmount;
     private String note;
-    private String rejectReason; // Lý do từ chối (UC-35)
-    
+    private String customerNote;
+    private String rejectReason;
+
     private Date orderDate;
     private Date approvedAt;
-    private Date cancelledAt; // Thời điểm hủy (UC-36)
+    private Date cancelledAt;
     private Date createdAt;
     private Date updatedAt;
+    private Customer customer;
 
     public SaleOrder() {
     }
 
-    public SaleOrder(int orderId, String orderCode, String customerName, String customerPhone, String customerEmail, String customerAddress, String customerTaxCode, String customerType, String customerCompany, String customerNote, int createdBy, int approvedBy, int cancelledBy, int updatedBy, int customerTypeId, String status, Double totalAmount, String note, String rejectReason, Date orderDate, Date approvedAt, Date cancelledAt, Date createdAt, Date updatedAt) {
+    public SaleOrder(int orderId, String orderCode, int customerId, int createdBy, int approvedBy, int cancelledBy, int updatedBy, int rejectedBy, String status, Double totalAmount, String note, String rejectReason, Date orderDate, Date approvedAt, Date cancelledAt, Date createdAt, Date updatedAt, Customer customer) {
         this.orderId = orderId;
         this.orderCode = orderCode;
-        this.customerName = customerName;
-        this.customerPhone = customerPhone;
-        this.customerEmail = customerEmail;
-        this.customerAddress = customerAddress;
-        this.customerTaxCode = customerTaxCode;
-        this.customerType = customerType;
-        this.customerCompany = customerCompany;
-        this.customerNote = customerNote;
+        this.customerId = customerId;
         this.createdBy = createdBy;
         this.approvedBy = approvedBy;
         this.cancelledBy = cancelledBy;
         this.updatedBy = updatedBy;
-        this.customerTypeId = customerTypeId;
+        this.rejectedBy = rejectedBy;
         this.status = status;
         this.totalAmount = totalAmount;
         this.note = note;
@@ -68,6 +61,55 @@ public class SaleOrder {
         this.cancelledAt = cancelledAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.customer = customer;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+
+    public String getApprovedByName() {
+        return approvedByName;
+    }
+
+    public void setApprovedByName(String approvedByName) {
+        this.approvedByName = approvedByName;
+    }
+
+    public String getCancelledByName() {
+        return cancelledByName;
+    }
+
+    public void setCancelledByName(String cancelledByName) {
+        this.cancelledByName = cancelledByName;
+    }
+
+    public String getRejectedByName() {
+        return rejectedByName;
+    }
+
+    public void setRejectedByName(String rejectedByName) {
+        this.rejectedByName = rejectedByName;
+    }
+
+    public String getCustomerNote() {
+        return customerNote;
+    }
+
+    public void setCustomerNote(String customerNote) {
+        this.customerNote = customerNote;
+    }
+
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     public int getOrderId() {
@@ -86,68 +128,12 @@ public class SaleOrder {
         this.orderCode = orderCode;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public int getCustomerId() {
+        return customerId;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
-    }
-
-    public String getCustomerPhone() {
-        return customerPhone;
-    }
-
-    public void setCustomerPhone(String customerPhone) {
-        this.customerPhone = customerPhone;
-    }
-
-    public String getCustomerEmail() {
-        return customerEmail;
-    }
-
-    public void setCustomerEmail(String customerEmail) {
-        this.customerEmail = customerEmail;
-    }
-
-    public String getCustomerAddress() {
-        return customerAddress;
-    }
-
-    public void setCustomerAddress(String customerAddress) {
-        this.customerAddress = customerAddress;
-    }
-
-    public String getCustomerTaxCode() {
-        return customerTaxCode;
-    }
-
-    public void setCustomerTaxCode(String customerTaxCode) {
-        this.customerTaxCode = customerTaxCode;
-    }
-
-    public String getCustomerType() {
-        return customerType;
-    }
-
-    public void setCustomerType(String customerType) {
-        this.customerType = customerType;
-    }
-
-    public String getCustomerCompany() {
-        return customerCompany;
-    }
-
-    public void setCustomerCompany(String customerCompany) {
-        this.customerCompany = customerCompany;
-    }
-
-    public String getCustomerNote() {
-        return customerNote;
-    }
-
-    public void setCustomerNote(String customerNote) {
-        this.customerNote = customerNote;
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
     }
 
     public int getCreatedBy() {
@@ -156,14 +142,6 @@ public class SaleOrder {
 
     public void setCreatedBy(int createdBy) {
         this.createdBy = createdBy;
-    }
-
-    public String getCreatedByName() {
-        return createdByName;
-    }
-
-    public void setCreatedByName(String createdByName) {
-        this.createdByName = createdByName;
     }
 
     public int getApprovedBy() {
@@ -190,12 +168,12 @@ public class SaleOrder {
         this.updatedBy = updatedBy;
     }
 
-    public int getCustomerTypeId() {
-        return customerTypeId;
+    public int getRejectedBy() {
+        return rejectedBy;
     }
 
-    public void setCustomerTypeId(int customerTypeId) {
-        this.customerTypeId = customerTypeId;
+    public void setRejectedBy(int rejectedBy) {
+        this.rejectedBy = rejectedBy;
     }
 
     public String getStatus() {
@@ -269,11 +247,5 @@ public class SaleOrder {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
-    
-    
-    
 
-
-    
-    
 }

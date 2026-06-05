@@ -98,9 +98,18 @@
                 font-family: inherit;
                 white-space: nowrap;
             }
-            .dropdown-btn:hover { border-color: var(--accent); color: var(--accent); }
-            .dropdown-btn .arrow { transition: transform .2s ease; margin-left: 2px; font-size: 10px; }
-            .dropdown-btn.open .arrow { transform: rotate(180deg); }
+            .dropdown-btn:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
+            .dropdown-btn .arrow {
+                transition: transform .2s ease;
+                margin-left: 2px;
+                font-size: 10px;
+            }
+            .dropdown-btn.open .arrow {
+                transform: rotate(180deg);
+            }
             .dropdown-menu {
                 position: fixed;
                 z-index: 999;
@@ -142,13 +151,34 @@
                 box-sizing: border-box;
                 white-space: nowrap;
             }
-            .dropdown-item:hover { background: var(--surface-2); }
-            .dropdown-item svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
-            .dropdown-item .label { flex: 1; }
-            .dropdown-item.approve svg { stroke: #155724; }
-            .dropdown-item.reject svg { stroke: #721c24; }
-            .dropdown-item.cancel svg { stroke: #dc3545; }
-            .dropdown-divider { height: 1px; background: var(--border); margin: 3px 0; }
+            .dropdown-item:hover {
+                background: var(--surface-2);
+            }
+            .dropdown-item svg {
+                width: 14px;
+                height: 14px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                flex-shrink: 0;
+            }
+            .dropdown-item .label {
+                flex: 1;
+            }
+            .dropdown-item.approve svg {
+                stroke: #155724;
+            }
+            .dropdown-item.reject svg {
+                stroke: #721c24;
+            }
+            .dropdown-item.cancel svg {
+                stroke: #dc3545;
+            }
+            .dropdown-divider {
+                height: 1px;
+                background: var(--border);
+                margin: 3px 0;
+            }
         </style>
     </head>
     <body>
@@ -192,8 +222,8 @@
 
                     <script>
                         <c:if test="${not empty sessionScope.message}">
-                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.message}"/>', type: 'success' };
-                        <c:remove var="message" scope="session"/>
+                        window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
+                            <c:remove var="message" scope="session"/>
                         </c:if>
                     </script>
 
@@ -236,7 +266,7 @@
                             <tbody id="ordersBody">
                                 <c:choose>
                                     <c:when test="${empty orders}">
-                                        
+
                                         <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
@@ -356,9 +386,24 @@
     <script>
         function confirmApprove(orderId) {
             if (confirm('Bạn có chắc muốn duyệt đơn hàng này?')) {
-                window.location.href = window.APP_CTX + '/order?action=approve&id=' + orderId;
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.APP_CTX + '/order';
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'approve';
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = orderId;
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
+
         function confirmReject(orderId) {
             var reason = prompt('Nhập lý do từ chối:');
             if (reason && reason.trim() !== '') {
@@ -386,14 +431,31 @@
         }
         function confirmCancel(orderId) {
             if (confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.')) {
-                window.location.href = window.APP_CTX + '/order?action=cancel&id=' + orderId;
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.APP_CTX + '/order';
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'cancel';
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = orderId;
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
         function toggleDropdown(btn) {
             var menu = btn.nextElementSibling;
             var isOpen = menu.classList.contains('open');
-            document.querySelectorAll('.dropdown-menu.open').forEach(function(m) {
-                if (m !== menu) { m.classList.remove('open'); m.previousElementSibling.classList.remove('open'); }
+            document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+                if (m !== menu) {
+                    m.classList.remove('open');
+                    m.previousElementSibling.classList.remove('open');
+                }
             });
             if (isOpen) {
                 menu.classList.remove('open');
@@ -407,10 +469,14 @@
             menu.classList.add('open');
             btn.classList.add('open');
         }
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.open').forEach(function(m) { m.classList.remove('open'); });
-                document.querySelectorAll('.dropdown-btn.open').forEach(function(b) { b.classList.remove('open'); });
+                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+                    m.classList.remove('open');
+                });
+                document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
+                    b.classList.remove('open');
+                });
             }
         });
     </script>
