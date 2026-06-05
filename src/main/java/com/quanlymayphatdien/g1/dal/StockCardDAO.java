@@ -21,12 +21,14 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
     public List<StockCard> findByWarehouseAndGenerator(int warehouseId, int generatorId) {
         List<StockCard> list = new ArrayList<>();
         String sql = "SELECT sc.*, w.name AS warehouse_name, "
-                + "g.model AS generator_model, r.receipt_code "
+                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name "
                 + "FROM stock_card sc "
                 + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN generator g ON sc.generator_id = g.id "
                 + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id "
-                + "WHERE sc.warehouse_id = ? AND sc.generator_id = ? ";
+                + "LEFT JOIN user u ON sc.created_by = u.id "
+                + "WHERE sc.warehouse_id = ? AND sc.generator_id = ? "
+                + "ORDER BY sc.created_at DESC";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, warehouseId);
             ps.setInt(2, generatorId);
@@ -39,6 +41,97 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public List<StockCard> findWithFilters(Integer warehouseId, Integer generatorId,
+            String typeFilter, String fromDate, String toDate,
+            int page, int pageSize) {
+        List<StockCard> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT sc.*, w.name AS warehouse_name, "
+                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name "
+                + "FROM stock_card sc "
+                + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN generator g ON sc.generator_id = g.id "
+                + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id "
+                + "LEFT JOIN user u ON sc.created_by = u.id "
+                + "WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (warehouseId != null) {
+            sql.append("AND sc.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
+        if (generatorId != null) {
+            sql.append("AND sc.generator_id = ? ");
+            params.add(generatorId);
+        }
+        if (typeFilter != null && !typeFilter.isEmpty()) {
+            sql.append("AND sc.transaction_type = ? ");
+            params.add(typeFilter);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY sc.created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countWithFilters(Integer warehouseId, Integer generatorId,
+            String typeFilter, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM stock_card sc WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+        if (warehouseId != null) {
+            sql.append("AND sc.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
+        if (generatorId != null) {
+            sql.append("AND sc.generator_id = ? ");
+            params.add(generatorId);
+        }
+        if (typeFilter != null && !typeFilter.isEmpty()) {
+            sql.append("AND sc.transaction_type = ? ");
+            params.add(typeFilter);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) <= ? ");
+            params.add(toDate);
+        }
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public int insert(Connection conn, StockCard sc) throws SQLException {
@@ -126,6 +219,10 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         }
         try {
             sc.setReceiptCode(rs.getString("receipt_code"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            sc.setCreatedByName(rs.getString("created_by_name"));
         } catch (SQLException ignored) {
         }
         return sc;
