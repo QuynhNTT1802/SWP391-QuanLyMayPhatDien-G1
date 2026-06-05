@@ -10,7 +10,6 @@ import com.quanlymayphatdien.g1.dal.CategoryExtensionDAO;
 import com.quanlymayphatdien.g1.entity.*;
 import com.quanlymayphatdien.g1.utils.CategoryExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
-
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -945,9 +944,9 @@ public class CategoryController extends HttpServlet {
         // Ghi Activity Log
         User user = (User) request.getSession().getAttribute("loggedUser");
         if (user != null) {
-            String desc = "Xuất Excel danh mục: "
-                    + (typeFilter != null ? typeFilter : "tất cả")
-                    + " - " + list.size() + " bản ghi | module:" + module;
+            String desc = "Xuất Excel: " + list.size() + " bản ghi"
+                    + " | type:" + (typeFilter != null ? typeFilter : "all")
+                    + " | module:" + module;
             insertLog(user, null, "Excel Export", "EXPORT", desc);
         }
     }
@@ -1117,6 +1116,12 @@ public class CategoryController extends HttpServlet {
                     }
                 }
 
+
+                User user = (User) request.getSession().getAttribute("loggedUser");
+                if (user != null) {
+                    insertLog(user, newId, names[i].trim(), "IMPORT",
+                            "Tạo từ nhập Excel | type:" + type + " | module:" + module);
+                }
                 importedCount++;
             }
         }

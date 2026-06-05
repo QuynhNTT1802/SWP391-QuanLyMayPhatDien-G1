@@ -359,8 +359,8 @@
                                         <td><fmt:formatDate value="${hlog.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td><div style="font-weight:600;color:var(--fg);">${hlog.username}</div></td>
                                         <td>
-                                            <span class="action-badge action-<c:choose><c:when test="${hlog.action == 'CREATE'}">create</c:when><c:when test="${hlog.action == 'UPDATE'}">update</c:when><c:when test="${hlog.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>">
-                                                <c:choose><c:when test="${hlog.action == 'CREATE'}">Thêm mới</c:when><c:when test="${hlog.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${hlog.action == 'DELETE'}">Khóa</c:when><c:otherwise>${hlog.action}</c:otherwise></c:choose>
+                                            <span class="action-badge action-<c:choose><c:when test="${hlog.action == 'CREATE'}">create</c:when><c:when test="${hlog.action == 'UPDATE'}">update</c:when><c:when test="${hlog.action == 'DELETE'}">delete</c:when><c:when test="${hlog.action == 'IMPORT'}">import</c:when><c:when test="${hlog.action == 'EXPORT'}">export</c:when><c:otherwise>default</c:otherwise></c:choose>">
+                                                <c:choose><c:when test="${hlog.action == 'CREATE'}">Thêm mới</c:when><c:when test="${hlog.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${hlog.action == 'DELETE'}">Khóa</c:when><c:when test="${hlog.action == 'IMPORT'}">Nhập Excel</c:when><c:when test="${hlog.action == 'EXPORT'}">Xuất Excel</c:when><c:otherwise>${hlog.action}</c:otherwise></c:choose>
                                             </span>
                                         </td>
                                         <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">

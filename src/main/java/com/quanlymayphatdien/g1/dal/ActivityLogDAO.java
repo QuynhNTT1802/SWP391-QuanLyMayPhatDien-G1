@@ -433,12 +433,18 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         StringBuilder where = new StringBuilder(
                 "WHERE al.entity_type = 'categories' "
                 + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
-                + "AND ( (c.module = ? AND c.type = ?) OR (c.module IS NULL AND al.details LIKE ? AND al.details LIKE ?) ) "
+                + "AND ( "
+                + "  (c.module = ? AND c.type = ?) "
+                + "  OR (c.module IS NULL AND al.details LIKE ? AND al.details LIKE ?) "
+                + "  OR (al.entity_id IS NULL AND al.details LIKE ? AND al.details LIKE ?) "
+                + ") "
         );
         params.add(module);
         params.add(type);
         params.add("%module:" + module + "%");
-        params.add("%type:" + type + "%"); // fallback trong tương lai nếu log delete lưu type
+        params.add("%type:" + type + "%");
+        params.add("%module:" + module + "%"); // fallback cho EXPORT (entity_id null)
+        params.add("%type:" + type + "%");
 
         if (search != null && !search.trim().isEmpty()) {
             where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
@@ -507,11 +513,17 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         StringBuilder where = new StringBuilder(
                 "WHERE al.entity_type = 'categories' "
                 + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
-                + "AND ( (c.module = ? AND c.type = ?) OR (c.module IS NULL AND al.details LIKE ? AND al.details LIKE ?) ) "
+                + "AND ( "
+                + "  (c.module = ? AND c.type = ?) "
+                + "  OR (c.module IS NULL AND al.details LIKE ? AND al.details LIKE ?) "
+                + "  OR (al.entity_id IS NULL AND al.details LIKE ? AND al.details LIKE ?) "
+                + ") "
         );
         params.add(module);
         params.add(type);
         params.add("%module:" + module + "%");
+        params.add("%type:" + type + "%");
+        params.add("%module:" + module + "%"); // fallback cho EXPORT
         params.add("%type:" + type + "%");
 
         if (search != null && !search.trim().isEmpty()) {

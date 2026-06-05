@@ -32,26 +32,23 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class CategoryExcelSupport {
 
     private static String[] getHeaderColumns(String type) {
-        String[] base = {"STT", "ID", "Tên danh mục", "Loại", "Mô tả", "Trạng thái", "Module"};
+        // Bỏ STT, ID, Loại, Module — không cần khi nhập
+        String[] base = {"Tên danh mục", "Mô tả", "Trạng thái"};
         if ("brand".equals(type)) {
-            return new String[]{"STT", "ID", "Tên danh mục", "Loại", "Mô tả", "Trạng thái", "Module",
-                "Quốc gia", "Website", "Năm thành lập", "Bảo hành"};
+            return new String[]{"Tên danh mục", "Mô tả", "Trạng thái",
+                "Quốc gia", "Website", "Năm thành lập", "Bảo hành (tháng)"};
         }
-
         if ("fuel_type".equals(type)) {
-            return new String[]{"STT", "ID", "Tên danh mục", "Loại", "Mô tả", "Trạng thái", "Module",
+            return new String[]{"Tên danh mục", "Mô tả", "Trạng thái",
                 "Đơn vị", "Giá tham khảo"};
         }
-
         if ("origin".equals(type)) {
-            return new String[]{"STT", "ID", "Tên danh mục", "Loại", "Mô tả", "Trạng thái", "Module",
+            return new String[]{"Tên danh mục", "Mô tả", "Trạng thái",
                 "Mã quốc gia"};
         }
-
         if ("customer_type".equals(type)) {
-            return new String[]{"STT", "ID", "Tên danh mục", "Loại", "Mô tả", "Trạng thái", "Module",
+            return new String[]{"Tên danh mục", "Mô tả", "Trạng thái",
                 "Loại thuế"};
-
         }
         return base;
     }
@@ -89,38 +86,35 @@ public class CategoryExcelSupport {
         int rowNum = 1;
         for (Category c : list) {
             Row row = sheet.createRow(rowNum);
-
-            row.createCell(0).setCellValue(rowNum);
-            row.createCell(1).setCellValue(c.getId());
-            row.createCell(2).setCellValue(c.getName());
-            row.createCell(3).setCellValue(c.getType());
-            row.createCell(4).setCellValue(c.getDescription() != null ? c.getDescription() : "");
-            row.createCell(5).setCellValue(c.getStatus());
-            row.createCell(6).setCellValue(c.getModule());
+            // Cột 0: Tên, 1: Mô tả, 2: Trạng thái
+            row.createCell(0).setCellValue(c.getName());
+            row.createCell(1).setCellValue(c.getDescription() != null ? c.getDescription() : "");
+            row.createCell(2).setCellValue(c.getStatus());
 
             Object ext = extensions != null ? extensions.get(c.getId()) : null;
             if ("brand".equals(type) && ext instanceof CategoryBrand) {
                 CategoryBrand b = (CategoryBrand) ext;
-                row.createCell(7).setCellValue(b.getCountry() != null ? b.getCountry() : "");
-                row.createCell(8).setCellValue(b.getWebsite() != null ? b.getWebsite() : "");
-                row.createCell(9).setCellValue(b.getFoundedYear() != null ? b.getFoundedYear() : 0);
-                row.createCell(10).setCellValue(b.getWarrantyPeriod() != null ? b.getWarrantyPeriod() : 0);
+                row.createCell(3).setCellValue(b.getCountry() != null ? b.getCountry() : "");
+                row.createCell(4).setCellValue(b.getWebsite() != null ? b.getWebsite() : "");
+                row.createCell(5).setCellValue(b.getFoundedYear() != null ? b.getFoundedYear() : 0);
+                if (b.getWarrantyPeriod() != null) {
+                    row.createCell(6).setCellValue(b.getWarrantyPeriod());
+                } else {
+                    row.createCell(6).setCellValue("");
+                }
             }
-
             if ("fuel_type".equals(type) && ext instanceof CategoryFuelType) {
                 CategoryFuelType f = (CategoryFuelType) ext;
-                row.createCell(7).setCellValue(f.getUnit() != null ? f.getUnit() : "");
-                row.createCell(8).setCellValue((RichTextString) f.getTypicalPrice());
+                row.createCell(3).setCellValue(f.getUnit() != null ? f.getUnit() : "");
+                row.createCell(4).setCellValue(f.getTypicalPrice() != null ? f.getTypicalPrice().toPlainString() : "");
             }
-
             if ("origin".equals(type) && ext instanceof CategoryOrigin) {
                 CategoryOrigin o = (CategoryOrigin) ext;
-                row.createCell(7).setCellValue(o.getCountryCode() != null ? o.getCountryCode() : "");
+                row.createCell(3).setCellValue(o.getCountryCode() != null ? o.getCountryCode() : "");
             }
-
             if ("customer_type".equals(type) && ext instanceof CategoryCustomerType) {
                 CategoryCustomerType ct = (CategoryCustomerType) ext;
-                row.createCell(7).setCellValue(ct.getTaxType() != null ? ct.getTaxType() : "");
+                row.createCell(3).setCellValue(ct.getTaxType() != null ? ct.getTaxType() : "");
             }
             rowNum++;
         }
