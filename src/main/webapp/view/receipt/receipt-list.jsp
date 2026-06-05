@@ -77,7 +77,7 @@
                             </select>
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
-                                <option value="PENDING_RECONCILIATION" <c:if test="${statusFilter == 'PENDING_RECONCILIATION'}">selected</c:if>>Chờ duyệt</option>
+                                <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                                 <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                                 <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
@@ -151,7 +151,7 @@
                                                 <td>${r.createdByName}</td>
                                                 <td>
                                                     <c:choose>
-                                                        <c:when test="${r.status == 'PENDING_RECONCILIATION'}">
+                                                        <c:when test="${r.status == 'PENDING'}">
                                                             <span class="status active" style="--dot:var(--warn);"><span class="sdot"></span>Chờ duyệt</span>
                                                         </c:when>
                                                         <c:when test="${r.status == 'NEEDS_REVISION'}">
