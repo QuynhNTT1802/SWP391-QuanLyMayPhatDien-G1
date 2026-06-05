@@ -121,6 +121,22 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
+    public int countByWarehouseId(int warehouseId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
     public Inventory findByWarehouseAndGenerator(int warehouseId, int generatorId) {
         String sql = "SELECT * FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
         try {

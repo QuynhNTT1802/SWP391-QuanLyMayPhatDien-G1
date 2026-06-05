@@ -138,8 +138,7 @@ public class GeneratorManagementController extends HttpServlet {
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("brandList", catDAO.findByType("brand"));
         request.setAttribute("genTypeList", catDAO.findByType("generator_type"));
-        
-        request.getRequestDispatcher("/view/customer/generator-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/generator/generator-list.jsp").forward(request, response);
     }
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -176,11 +175,11 @@ public class GeneratorManagementController extends HttpServlet {
                 }
                 request.setAttribute("activityLogs", logs);
                 request.setAttribute("logDates", logDates);
-                request.getRequestDispatcher("/view/customer/generator-detail.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/generator/generator-detail.jsp").forward(request, response);
                 return;
             }
         }
-        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
     }
 
     private String getCatName(List<Category> cats, String type) {
@@ -205,7 +204,7 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("phases", catDAO.findByType("phase"));
         request.setAttribute("conditions", catDAO.findByType("condition"));
         request.setAttribute("origins", catDAO.findByType("origin"));
-        request.getRequestDispatcher("/view/customer/generator-create.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/generator/generator-create.jsp").forward(request, response);
     }
 
     private void createGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -237,7 +236,7 @@ public class GeneratorManagementController extends HttpServlet {
                         brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
                         fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=create");
+                response.sendRedirect(request.getContextPath() + "/generator/generators?action=create");
                 return;
             }
 
@@ -266,7 +265,7 @@ public class GeneratorManagementController extends HttpServlet {
             SystemLogger.error("Quản lý kho", "GeneratorManagementController.createGenerator", e.getMessage(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
@@ -290,11 +289,11 @@ public class GeneratorManagementController extends HttpServlet {
                 List<Integer> selectedIds = selectedCats.stream()
                         .map(Category::getId).collect(Collectors.toList());
                 request.setAttribute("selectedCatIds", selectedIds);
-                request.getRequestDispatcher("/view/customer/generator-edit.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/generator/generator-edit.jsp").forward(request, response);
                 return;
             }
         }
-        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
     }
 
     private void updateGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -322,7 +321,7 @@ public class GeneratorManagementController extends HttpServlet {
             if (!errors.isEmpty()) {
                 saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=update&id=" + id);
+                response.sendRedirect(request.getContextPath() + "/generator/generators?action=update&id=" + id);
                 return;
             }
 
@@ -357,7 +356,7 @@ public class GeneratorManagementController extends HttpServlet {
             SystemLogger.error("Quản lý kho", "GeneratorManagementController.updateGenerator", e.getMessage(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
     }
 
     private void saveGeneratorCategories(HttpServletRequest request, GeneratorDAO dao, int generatorId) {
@@ -419,7 +418,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Kích hoạt thất bại!");
             }
         }
-        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list&page=" + currentPage);
     }
 
     private void deactivateGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -444,7 +443,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Khóa thất bại!");
             }
         }
-        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list&page=" + currentPage);
     }
 
     private Map<String, String> validateGeneratorForm(String model,

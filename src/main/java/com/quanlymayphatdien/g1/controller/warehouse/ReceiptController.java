@@ -4,6 +4,7 @@
  */
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
@@ -20,6 +21,7 @@ import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -191,6 +193,9 @@ public class ReceiptController extends HttpServlet {
         request.setAttribute("generators", generators);
         request.setAttribute("brandMap", brandMap);
 
+        CategoryDAO catDAO = new CategoryDAO();
+        request.setAttribute("receiptReasons", catDAO.findByType("receipt_reason"));
+
         String orderIdStr = request.getParameter("orderId");
         if (orderIdStr != null && !orderIdStr.isEmpty()) {
             int orderId = Integer.parseInt(orderIdStr);
@@ -246,6 +251,7 @@ public class ReceiptController extends HttpServlet {
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
         request.setAttribute("isOwner", isOwner);
+        request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
         request.getRequestDispatcher("/view/receipt/receipt-detail.jsp").forward(request, response);
     }
 
@@ -277,6 +283,17 @@ public class ReceiptController extends HttpServlet {
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
             errors.add("Ghi chú phiếu không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
         }
+        Integer reasonId = null;
+        String reasonIdStr = request.getParameter("reasonId");
+        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
+            try {
+                reasonId = Integer.parseInt(reasonIdStr);
+            } catch (NumberFormatException e) {
+                errors.add("Lý do không hợp lệ");
+            }
+        } else {
+            errors.add("Vui lòng chọn lý do");
+        }
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
@@ -294,12 +311,14 @@ public class ReceiptController extends HttpServlet {
             form.setReceiptType(receiptType);
             form.setWarehouseId(warehouseId);
             form.setNote(note);
+            form.setReasonId(reasonId);
             form.setDetails(details);
             request.setAttribute("receipt", form);
             request.setAttribute("errors", errors);
             request.setAttribute("warehouses", warehouseDAO.findAll());
             GeneratorDAO genDAO = new GeneratorDAO();
             request.setAttribute("generators", genDAO.findAll());
+            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
             request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
             return;
         }
@@ -310,6 +329,7 @@ public class ReceiptController extends HttpServlet {
         r.setWarehouseId(warehouseId);
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
+        r.setReasonId(reasonId);
         String oid = request.getParameter("orderId");
         if (oid != null && !oid.isEmpty()) {
             try {
@@ -323,6 +343,7 @@ public class ReceiptController extends HttpServlet {
             request.setAttribute("errors", errors);
             request.setAttribute("warehouses", warehouseDAO.findAll());
             request.setAttribute("generators", new ArrayList<>());
+            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
             request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
             return;
         }
@@ -449,19 +470,29 @@ public class ReceiptController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/receipt");
             return;
         }
-        String reason = request.getParameter("reason");
-        if (reason == null || reason.trim().isEmpty()) {
-            request.setAttribute("error", "Vui lòng nhập lý do từ chối phiếu");
-            viewDetail(request, response);
-            return;
+        Integer reasonId = null;
+        String reasonIdStr = request.getParameter("reasonId");
+        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
+            try {
+                reasonId = Integer.parseInt(reasonIdStr);
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Lý do không hợp lệ");
+                viewDetail(request, response);
+                return;
+            }
         }
-        reason = reason.trim();
-        if (reason.length() > MAX_REASON_LENGTH) {
-            request.setAttribute("error", "Lý do từ chối không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
-            viewDetail(request, response);
-            return;
+        String reasonNote = request.getParameter("reason");
+        if (reasonNote != null) {
+            reasonNote = reasonNote.trim();
+            if (reasonNote.isEmpty()) {
+                reasonNote = null;
+            } else if (reasonNote.length() > MAX_REASON_LENGTH) {
+                request.setAttribute("error", "Lý do từ chối không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
+                viewDetail(request, response);
+                return;
+            }
         }
-        boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reason);
+        boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reasonId, reasonNote);
 
         if (ok) {
             response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=rejected");
@@ -526,19 +557,29 @@ public class ReceiptController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/receipt");
             return;
         }
-        String reason = request.getParameter("reason");
-        if (reason == null || reason.trim().isEmpty()) {
-            request.setAttribute("error", "Vui lòng nhập lý do yêu cầu chỉnh sửa");
-            viewDetail(request, response);
-            return;
+        Integer reasonId = null;
+        String reasonIdStr = request.getParameter("reasonId");
+        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
+            try {
+                reasonId = Integer.parseInt(reasonIdStr);
+            } catch (NumberFormatException e) {
+                request.setAttribute("error", "Lý do không hợp lệ");
+                viewDetail(request, response);
+                return;
+            }
         }
-        reason = reason.trim();
-        if (reason.length() > MAX_REASON_LENGTH) {
-            request.setAttribute("error", "Lý do yêu cầu chỉnh sửa không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
-            viewDetail(request, response);
-            return;
+        String reasonNote = request.getParameter("reason");
+        if (reasonNote != null) {
+            reasonNote = reasonNote.trim();
+            if (reasonNote.isEmpty()) {
+                reasonNote = null;
+            } else if (reasonNote.length() > MAX_REASON_LENGTH) {
+                request.setAttribute("error", "Lý do yêu cầu chỉnh sửa không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
+                viewDetail(request, response);
+                return;
+            }
         }
-        boolean ok = receiptDAO.requestRevision(id, loggedUser.getId(), reason);
+        boolean ok = receiptDAO.requestRevision(id, loggedUser.getId(), reasonId, reasonNote);
         if (ok) {
             response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=revisionRequested");
         } else {
@@ -560,7 +601,7 @@ public class ReceiptController extends HttpServlet {
         int id = Integer.parseInt(idStr);
         Receipt receipt = receiptDAO.findById(id);
         if (receipt == null
-                || !"NEEDS_REVISION".equals(receipt.getStatus())
+                || !GlobalUtils.RECEIPT_STATUS_REVISION.equals(receipt.getStatus())
                 || receipt.getCreatedBy() != loggedUser.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
@@ -608,7 +649,7 @@ public class ReceiptController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/receipt");
             return;
         }
-        if (!"NEEDS_REVISION".equals(existing.getStatus())
+        if (!GlobalUtils.RECEIPT_STATUS_REVISION.equals(existing.getStatus())
                 || existing.getCreatedBy() != loggedUser.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
@@ -630,6 +671,18 @@ public class ReceiptController extends HttpServlet {
 
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
             errors.add("Ghi chú phiếu không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
+        }
+
+        Integer reasonId = null;
+        String reasonIdStr = request.getParameter("reasonId");
+        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
+            try {
+                reasonId = Integer.parseInt(reasonIdStr);
+            } catch (NumberFormatException e) {
+                errors.add("Lý do không hợp lệ");
+            }
+        } else {
+            errors.add("Vui lòng chọn lý do");
         }
 
         String[] genIds = request.getParameterValues("generatorId");
@@ -654,6 +707,7 @@ public class ReceiptController extends HttpServlet {
         r.setReceiptId(receiptId);
         r.setWarehouseId(warehouseId);
         r.setNote(note);
+        r.setReasonId(reasonId);
 
         boolean ok = receiptDAO.updateReceipt(r, details, loggedUser.getId());
         if (ok) {

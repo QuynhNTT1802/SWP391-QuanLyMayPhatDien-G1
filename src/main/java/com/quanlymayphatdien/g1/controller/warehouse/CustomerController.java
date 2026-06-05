@@ -120,7 +120,7 @@ public class CustomerController extends HttpServlet {
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("customerTypeList", catDAO.findByType("customer_type"));
 
-        request.getRequestDispatcher("/view/warehouse/customer-list.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/customer/customer-list.jsp").forward(request, response);
     }
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -159,7 +159,7 @@ public class CustomerController extends HttpServlet {
                 request.setAttribute("activityLogs", logs);
                 request.setAttribute("logDates", logDates);
 
-                request.getRequestDispatcher("/view/warehouse/customer-detail.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/customer/customer-detail.jsp").forward(request, response);
                 return;
             }
         }
@@ -170,7 +170,7 @@ public class CustomerController extends HttpServlet {
             throws ServletException, IOException {
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("customerTypeList", catDAO.findByType("customer_type"));
-        request.getRequestDispatcher("/view/warehouse/customer-create.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/customer/customer-create.jsp").forward(request, response);
     }
 
     private void createCustomer(HttpServletRequest request, HttpServletResponse response)
@@ -235,7 +235,7 @@ public class CustomerController extends HttpServlet {
                 request.setAttribute("customer", c);
                 CategoryDAO catDAO = new CategoryDAO();
                 request.setAttribute("customerTypeList", catDAO.findByType("customer_type"));
-                request.getRequestDispatcher("/view/warehouse/customer-edit.jsp").forward(request, response);
+                request.getRequestDispatcher("/view/customer/customer-edit.jsp").forward(request, response);
                 return;
             }
         }
