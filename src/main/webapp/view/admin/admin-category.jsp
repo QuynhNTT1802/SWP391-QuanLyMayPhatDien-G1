@@ -73,8 +73,6 @@
                                 <span class="type-count">${kpiTotal} mục</span>
                                 <span class="spacer"></span>
                             </div>
-
-                            <%-- Thống kê KPI riêng cho loại danh mục này --%>
                             <div class="kpi-grid">
                                 <div class="kpi-card kpi-total">
                                     <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg></div>
@@ -180,7 +178,7 @@
                                                                     <div style="font-weight:600;color:var(--fg);">${log.username}</div>
                                                                 </td>
                                                                 <td>
-                                                                    <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:otherwise>default</c:otherwise></c:choose>"><c:choose><c:when test="${log.action == 'CREATE'}">Thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${log.action == 'DELETE'}">Khóa</c:when><c:otherwise>${log.action}</c:otherwise></c:choose></span>
+                                                                    <span class="action-badge action-<c:choose><c:when test="${log.action == 'CREATE'}">create</c:when><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'DELETE'}">delete</c:when><c:when test="${log.action == 'IMPORT'}">import</c:when><c:when test="${log.action == 'EXPORT'}">export</c:when><c:otherwise>default</c:otherwise></c:choose>"><c:choose><c:when test="${log.action == 'CREATE'}">Thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${log.action == 'DELETE'}">Khóa</c:when><c:when test="${log.action == 'IMPORT'}">Nhập Excel</c:when><c:when test="${log.action == 'EXPORT'}">Xuất Excel</c:when><c:otherwise>${log.action}</c:otherwise></c:choose></span>
                                                                         </td>
                                                                                                         <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
                                                                 <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
@@ -525,7 +523,7 @@
             </div>
         </div>
 
-        <%-- MODAL NHẬP EXCEL --%>
+
         <div id="importModal"
              style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
                     background:rgba(0,0,0,0.45); justify-content:center; align-items:center;

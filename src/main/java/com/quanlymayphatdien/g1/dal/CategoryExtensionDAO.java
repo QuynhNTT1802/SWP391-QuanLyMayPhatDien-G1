@@ -136,6 +136,8 @@ public class CategoryExtensionDAO extends DBContext {
     }
 
     public void insertEmptyExtension(String tableName, int categoryId) {
+        // Xóa bản ghi cũ trước để tránh lỗi Duplicate entry khi update
+        delete(tableName, categoryId);
         String sql = "INSERT INTO " + tableName + " (category_id) VALUES (?)";
         try (Connection c = getConnection();
              PreparedStatement p = c.prepareStatement(sql)) {
