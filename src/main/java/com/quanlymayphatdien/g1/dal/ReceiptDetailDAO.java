@@ -27,9 +27,9 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
 
     public List<ReceiptDetail> findByReceiptId(int receiptId) {
         List<ReceiptDetail> list = new ArrayList<>();
-        String sql = "SELECT rd.*, g.model AS generator_model "
+        String sql = "SELECT rd.*, g.model AS generator_model, g.unit_price AS generator_price "
                 + "FROM receipt_detail rd "
-                + "JOIN generator g ON rd.generator_id = g.id "
+                + "LEFT JOIN generator g ON rd.generator_id = g.id "
                 + "WHERE rd.receipt_id = ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, receiptId);
@@ -56,14 +56,19 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
 
     @Override
     public int insert(ReceiptDetail rd) {
-        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rd.getReceiptId());
             ps.setInt(2, rd.getGeneratorId());
             ps.setString(3, rd.getSerialNumber());
             ps.setInt(4, rd.getQuantity());
-            ps.setString(5, rd.getNote());
+            if (rd.getUnitPrice() != null) {
+                ps.setBigDecimal(5, rd.getUnitPrice());
+            } else {
+                ps.setNull(5, java.sql.Types.DECIMAL);
+            }
+            ps.setString(6, rd.getNote());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -77,15 +82,20 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     }
 
     public int batchInsert(Connection conn, List<ReceiptDetail> details) throws SQLException {
-        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (ReceiptDetail rd : details) {
                 ps.setInt(1, rd.getReceiptId());
                 ps.setInt(2, rd.getGeneratorId());
                 ps.setString(3, rd.getSerialNumber());
                 ps.setInt(4, rd.getQuantity());
-                ps.setString(5, rd.getNote());
+                if (rd.getUnitPrice() != null) {
+                    ps.setBigDecimal(5, rd.getUnitPrice());
+                } else {
+                    ps.setNull(5, java.sql.Types.DECIMAL);
+                }
+                ps.setString(6, rd.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -103,6 +113,10 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
         rd.setGeneratorId(rs.getInt("generator_id"));
         rd.setSerialNumber(rs.getString("serial_number"));
         rd.setQuantity(rs.getInt("quantity"));
+        try {
+            rd.setUnitPrice(rs.getBigDecimal("unit_price"));
+        } catch (SQLException ignored) {
+        }
         rd.setNote(rs.getString("note"));
 
         try {

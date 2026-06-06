@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -357,6 +358,8 @@
                                             <th class="col-gen">Máy phát</th>
                                             <th class="col-serial">Serial</th>
                                             <th class="col-qty" style="width:70px;">SL</th>
+                                            <th style="width:130px;">Đơn giá</th>
+                                            <th style="width:130px;">Thành tiền</th>
                                             <th class="col-note">Ghi chú</th>
                                             <th class="col-del"></th>
                                         </tr>
@@ -368,15 +371,17 @@
                                                     <tr>
                                                         <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                         <td>
-                                                            <select name="generatorId" required onchange="validateField(this)">
+                                                            <select name="generatorId" required onchange="onGeneratorChange(this)">
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
-                                                                    <option value="${g.id}" <c:if test="${g.id == fd.genIds[i]}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
+                                                                    <option value="${g.id}" data-price="${g.unitPrice}" <c:if test="${g.id == fd.genIds[i]}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                                 </c:forEach>
                                                             </select><span class="field-error"></span>
                                                         </td>
                                                         <td><input type="text" name="serialNumber" placeholder="S/N" value="${fd.serials[i]}" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                                        <td><input type="number" name="quantity" min="1" max="100000" value="${fd.quantities[i]}" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="number" name="quantity" min="1" max="100000" value="${fd.quantities[i]}" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="text" name="unitPrice" class="price-input mono" readonly value="${fd.unitPrices[i]}" placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
+                                                        <td class="col-price mono row-subtotal">0₫</td>
                                                         <td><input type="text" name="detailNote" placeholder="Ghi chú" value="${fd.detailNotes[i]}" /></td>
                                                         <td class="col-del">
                                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -391,15 +396,17 @@
                                                     <tr>
                                                         <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                         <td>
-                                                            <select name="generatorId" required onchange="validateField(this)">
+                                                            <select name="generatorId" required onchange="onGeneratorChange(this)">
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
-                                                                    <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
+                                                                    <option value="${g.id}" data-price="${g.unitPrice}" <c:if test="${g.id == d.generatorId}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                                 </c:forEach>
                                                             </select><span class="field-error"></span>
                                                         </td>
                                                         <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                                        <td><input type="number" name="quantity" min="1" max="100000" value="${d.quantity}" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="number" name="quantity" min="1" max="100000" value="${d.quantity}" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="text" name="unitPrice" class="price-input mono" readonly value="<fmt:formatNumber value='${d.unitPrice}' type='number' groupingUsed='false'/>" placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
+                                                        <td class="col-price mono row-subtotal">0₫</td>
                                                         <td><input type="text" name="detailNote" placeholder="Ghi chú" value="${d.note}" /></td>
                                                         <td class="col-del">
                                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -413,15 +420,17 @@
                                                 <tr>
                                                     <td class="col-num"><span class="row-num">1</span></td>
                                                     <td>
-                                                        <select name="generatorId" required onchange="validateField(this)">
+                                                        <select name="generatorId" required onchange="onGeneratorChange(this)">
                                                             <option value="">-- Chọn máy --</option>
                                                             <c:forEach var="g" items="${generators}">
-                                                                <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
+                                                                <option value="${g.id}" data-price="${g.unitPrice}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                             </c:forEach>
                                                         </select><span class="field-error"></span>
                                                     </td>
                                                     <td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                                    <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                    <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                    <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
+                                                    <td class="col-price mono row-subtotal">0₫</td>
                                                     <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                                     <td class="col-del">
                                                         <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -432,21 +441,30 @@
                                             </c:otherwise>
                                         </c:choose>
                                     </tbody>
+                                    <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="5" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
+                                            <td class="mono" id="grandTotal" style="padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">0₫</td>
+                                            <td colspan="2" style="border-top:2px solid var(--border);"></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
 
                                 <template id="rowTemplate">
                                     <tr>
                                         <td class="col-num"><span class="row-num"></span></td>
                                         <td>
-                                            <select name="generatorId" onchange="validateField(this)">
+                                            <select name="generatorId" onchange="onGeneratorChange(this)">
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
-                                                    <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
+                                                    <option value="${g.id}" data-price="${g.unitPrice}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                 </c:forEach>
                                             </select><span class="field-error"></span>
                                         </td>
                                         <td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                        <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                        <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
+                                        <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
+                                        <td class="col-price mono row-subtotal">0₫</td>
                                         <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                         <td class="col-del">
                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -486,6 +504,43 @@
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
+            function formatVND(num) {
+                return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
+            }
+
+            function onGeneratorChange(sel) {
+                var row = sel.closest('tr');
+                var opt = sel.options[sel.selectedIndex];
+                var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
+                var priceInput = row.querySelector('input[name="unitPrice"]');
+                if (priceInput && price > 0) {
+                    priceInput.value = price;
+                }
+                updateRowTotal(row.querySelector('input[name="quantity"]'));
+            }
+
+            function updateRowTotal(el) {
+                var row = el ? el.closest('tr') : null;
+                if (!row) return;
+                var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
+                var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
+                var price = parseFloat(priceStr) || 0;
+                var subtotal = qty * price;
+                row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
+                updateGrandTotal();
+            }
+
+            function updateGrandTotal() {
+                var grand = 0;
+                document.querySelectorAll('#detailBody tr').forEach(function (row) {
+                    var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
+                    var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
+                    var price = parseFloat(priceStr) || 0;
+                    grand += qty * price;
+                });
+                document.getElementById('grandTotal').textContent = formatVND(grand);
+            }
+
             function addRow() {
                 var tpl = document.getElementById('rowTemplate');
                 var clone = tpl.content.cloneNode(true);
@@ -498,6 +553,7 @@
                     return;
                 btn.closest('tr').remove();
                 updateRowNumbers();
+                updateGrandTotal();
             }
             function updateRowNumbers() {
                 document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
@@ -542,6 +598,13 @@
                 }
                 return valid;
             }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+                    if (sel.value) onGeneratorChange(sel);
+                });
+                updateGrandTotal();
+            });
         </script>
     </body>
 </html>
