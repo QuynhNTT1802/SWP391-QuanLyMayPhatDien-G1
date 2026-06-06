@@ -173,7 +173,7 @@
                                     <label>Đơn hàng nguồn</label>
                                     <div class="order-pin">
                                         <strong>${order.orderCode}</strong>
-                                        <span class="order-cust">— ${order.customerName}</span>
+                                        <span class="order-cust">— ${order.customer.name}</span>
                                     </div>
                                 </div>
                             </c:if>

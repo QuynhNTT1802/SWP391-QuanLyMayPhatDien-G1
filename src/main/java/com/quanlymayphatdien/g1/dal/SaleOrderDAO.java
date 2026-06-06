@@ -134,6 +134,101 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return 0;
     }
 
+    public List<SaleOrder> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
+        List<SaleOrder> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT so.*, "
+                + "u_created.name AS created_by_name, "
+                + "u_approved.name AS approved_by_name, "
+                + "u_cancelled.name AS cancelled_by_name, "
+                + "c.name AS customer_name, "
+                + "c.phone AS customer_phone, "
+                + "c.email AS customer_email, "
+                + "c.address AS customer_address, "
+                + "c.company_name AS customer_company_name "
+                + "FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
+                + "LEFT JOIN user u_approved ON so.approved_by = u_approved.id "
+                + "LEFT JOIN user u_cancelled ON so.cancelled_by = u_cancelled.id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "WHERE so.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.order_id = so.order_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (so.order_code LIKE ? OR c.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(so.approved_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(so.approved_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY so.approved_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "WHERE so.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.order_id = so.order_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (so.order_code LIKE ? OR c.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(so.approved_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(so.approved_at) <= ? ");
+            params.add(toDate);
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public List<SaleOrder> findAll() {
         List<SaleOrder> list = new ArrayList<>();
         String sql = "SELECT * FROM sale_order ORDER BY created_at DESC";
