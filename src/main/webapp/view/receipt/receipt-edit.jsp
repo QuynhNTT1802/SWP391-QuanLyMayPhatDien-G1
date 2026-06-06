@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -214,6 +215,13 @@
                 background: oklch(58% 0.16 75);
             }
 
+            .field-error {
+                display: none;
+                font-size: 11px;
+                color: #dc3545;
+                margin-top: 3px;
+            }
+
             @media (max-width: 760px) {
                 .form-grid {
                     grid-template-columns: 1fr;
@@ -232,7 +240,7 @@
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <a class="btn" href="${pageContext.request.contextPath}/receipt?action=detail&id=${receipt.receiptId}">Huỷ</a>
-                        <button type="button" class="btn btn-primary" onclick="document.getElementById('receiptForm').submit()">
+                        <button type="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                             Gửi lại để duyệt
                         </button>
@@ -279,21 +287,7 @@
                         </div>
                     </c:if>
 
-                    <c:if test="${not empty errors}">
-                        <div class="alert alert-error">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                            <div class="alert-body">
-                                <div class="alert-title">Vui lòng sửa các lỗi sau:</div>
-                                <ul>
-                                    <c:forEach var="err" items="${errors}">
-                                        <li><c:out value="${err}"/></li>
-                                        </c:forEach>
-                                </ul>
-                            </div>
-                        </div>
-                    </c:if>
-
-                    <form id="receiptForm" action="${pageContext.request.contextPath}/receipt?action=update" method="POST">
+                    <form id="receiptForm" action="${pageContext.request.contextPath}/receipt?action=update" method="POST" onsubmit="return validateReceiptForm()">
                         <input type="hidden" name="receiptId" value="${receipt.receiptId}" />
 
                         <div class="content">
@@ -310,26 +304,28 @@
                                         <select disabled>
                                             <option value="IMPORT" <c:if test="${receipt.receiptType == 'IMPORT'}">selected</c:if>>Nhập kho</option>
                                             <option value="EXPORT" <c:if test="${receipt.receiptType == 'EXPORT'}">selected</c:if>>Xuất kho</option>
-                                            </select>
-                                            <input type="hidden" name="receiptType" value="${receipt.receiptType}" />
+                                        </select>
+                                        <input type="hidden" name="receiptType" value="${receipt.receiptType}" />
                                     </div>
                                     <div class="form-field">
                                         <label>Kho *</label>
-                                        <select name="warehouseId" required>
+                                        <select name="warehouseId" required onchange="validateField(this)">
                                             <option value="">-- Chọn kho --</option>
                                             <c:forEach var="wh" items="${warehouses}">
                                                 <option value="${wh.warehouseId}" <c:if test="${receipt.warehouseId == wh.warehouseId}">selected</c:if>>${wh.name}</option>
                                             </c:forEach>
                                         </select>
+                                        <span class="field-error"></span>
                                     </div>
                                     <div class="form-field">
                                         <label>Lý do *</label>
-                                        <select name="reasonId" class="input" required>
+                                        <select name="reasonId" class="input" required onchange="validateField(this)">
                                             <option value="">-- Chọn lý do --</option>
                                             <c:forEach var="r" items="${receiptReasons}">
                                                 <option value="${r.id}" <c:if test="${receipt.reasonId == r.id}">selected</c:if>>${r.name}</option>
                                             </c:forEach>
                                         </select>
+                                        <span class="field-error"></span>
                                     </div>
                                     <c:if test="${not empty order}">
                                         <div class="form-field full">
@@ -360,29 +356,54 @@
                                             <th class="col-num">#</th>
                                             <th class="col-gen">Máy phát</th>
                                             <th class="col-serial">Serial</th>
+                                            <th class="col-qty" style="width:70px;">SL</th>
                                             <th class="col-note">Ghi chú</th>
                                             <th class="col-del"></th>
                                         </tr>
                                     </thead>
                                     <tbody id="detailBody">
                                         <c:choose>
+                                            <c:when test="${not empty fd.genIds}">
+                                                <c:forEach var="i" begin="0" end="${fn:length(fd.genIds) - 1}" varStatus="st">
+                                                    <tr>
+                                                        <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
+                                                        <td>
+                                                            <select name="generatorId" required onchange="validateField(this)">
+                                                                <option value="">-- Chọn máy --</option>
+                                                                <c:forEach var="g" items="${generators}">
+                                                                    <option value="${g.id}" <c:if test="${g.id == fd.genIds[i]}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
+                                                                </c:forEach>
+                                                            </select><span class="field-error"></span>
+                                                        </td>
+                                                        <td><input type="text" name="serialNumber" placeholder="S/N" value="${fd.serials[i]}" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="number" name="quantity" min="1" max="100000" value="${fd.quantities[i]}" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="text" name="detailNote" placeholder="Ghi chú" value="${fd.detailNotes[i]}" /></td>
+                                                        <td class="col-del">
+                                                            <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </c:when>
                                             <c:when test="${not empty receipt.details}">
                                                 <c:forEach var="d" items="${receipt.details}" varStatus="st">
                                                     <tr>
                                                         <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                         <td>
-                                                            <select name="generatorId" required>
+                                                            <select name="generatorId" required onchange="validateField(this)">
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
                                                                     <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                                 </c:forEach>
-                                                            </select>
+                                                            </select><span class="field-error"></span>
                                                         </td>
-                                                        <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" required/></td>
+                                                        <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                        <td><input type="number" name="quantity" min="1" max="100000" value="${d.quantity}" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                                         <td><input type="text" name="detailNote" placeholder="Ghi chú" value="${d.note}" /></td>
                                                         <td class="col-del">
                                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
-                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -392,14 +413,15 @@
                                                 <tr>
                                                     <td class="col-num"><span class="row-num">1</span></td>
                                                     <td>
-                                                        <select name="generatorId" required>
+                                                        <select name="generatorId" required onchange="validateField(this)">
                                                             <option value="">-- Chọn máy --</option>
                                                             <c:forEach var="g" items="${generators}">
                                                                 <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                             </c:forEach>
-                                                        </select>
+                                                        </select><span class="field-error"></span>
                                                     </td>
-                                                    <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
+                                                    <td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                    <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                                     <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                                     <td class="col-del">
                                                         <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -416,14 +438,15 @@
                                     <tr>
                                         <td class="col-num"><span class="row-num"></span></td>
                                         <td>
-                                            <select name="generatorId">
+                                            <select name="generatorId" onchange="validateField(this)">
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
                                                     <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                 </c:forEach>
-                                            </select>
+                                            </select><span class="field-error"></span>
                                         </td>
-                                        <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
+                                        <td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                        <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                         <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                         <td class="col-del">
                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -445,27 +468,80 @@
             </div>
         </div>
 
+        <div class="toast-host" id="toastHost"></div>
+        <script>
+            <c:if test="${not empty sessionScope.toastMessage}">
+            window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+            <c:remove var="toastMessage" scope="session"/>
+            <c:remove var="toastType" scope="session"/>
+            </c:if>
+            <c:if test="${not empty requestScope.toastMessage}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+            window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+            </c:if>
+        </script>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
-                                    function addRow() {
-                                        var tpl = document.getElementById('rowTemplate');
-                                        var clone = tpl.content.cloneNode(true);
-                                        document.getElementById('detailBody').appendChild(clone);
-                                        updateRowNumbers();
-                                    }
-                                    function removeRow(btn) {
-                                        var tbody = document.getElementById('detailBody');
-                                        if (tbody.querySelectorAll('tr').length <= 1)
-                                            return;
-                                        btn.closest('tr').remove();
-                                        updateRowNumbers();
-                                    }
-                                    function updateRowNumbers() {
-                                        document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
-                                            el.textContent = i + 1;
-                                        });
-                                    }
+            function addRow() {
+                var tpl = document.getElementById('rowTemplate');
+                var clone = tpl.content.cloneNode(true);
+                document.getElementById('detailBody').appendChild(clone);
+                updateRowNumbers();
+            }
+            function removeRow(btn) {
+                var tbody = document.getElementById('detailBody');
+                if (tbody.querySelectorAll('tr').length <= 1)
+                    return;
+                btn.closest('tr').remove();
+                updateRowNumbers();
+            }
+            function updateRowNumbers() {
+                document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
+                    el.textContent = i + 1;
+                });
+            }
+
+            function validateField(el) {
+                var err = el.parentElement.querySelector('.field-error');
+                if (err === null) return true;
+                if (el.required && !el.value.trim()) {
+                    el.style.borderColor = '#dc3545';
+                    err.textContent = 'Trường này là bắt buộc';
+                    err.style.display = 'block';
+                    return false;
+                }
+                if (el.name === 'quantity') {
+                    var q = parseInt(el.value);
+                    if (isNaN(q) || q < 1) {
+                        el.style.borderColor = '#dc3545';
+                        err.textContent = 'Số lượng phải ≥ 1';
+                        err.style.display = 'block';
+                        return false;
+                    }
+                }
+                el.style.borderColor = '';
+                err.style.display = 'none';
+                return true;
+            }
+
+            function validateReceiptForm() {
+                var valid = true;
+                document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
+                    if (!validateField(el)) valid = false;
+                });
+                if (document.querySelectorAll('#detailBody tr').length === 0) {
+                    toast('Vui lòng thêm ít nhất 1 dòng chi tiết', 'danger');
+                    valid = false;
+                }
+                if (!valid) {
+                    toast('Vui lòng điền đầy đủ các trường bắt buộc', 'danger');
+                }
+                return valid;
+            }
         </script>
     </body>
 </html>

@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -93,7 +94,7 @@
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/receipt">Huỷ</a>
-                <button type="button" class="btn btn-primary" onclick="document.getElementById('receiptForm').submit()">
+                <button type="submit" form="receiptForm" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Lưu phiếu
                 </button>
@@ -120,21 +121,7 @@
                 </div>
             </div>
 
-            <c:if test="${not empty errors}">
-                <div class="alert alert-error">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                    <div class="alert-body">
-                        <div class="alert-title">Vui lòng sửa các lỗi sau:</div>
-                        <ul>
-                            <c:forEach var="err" items="${errors}">
-                                <li><c:out value="${err}"/></li>
-                            </c:forEach>
-                        </ul>
-                    </div>
-                </div>
-            </c:if>
-
-            <form id="receiptForm" action="${pageContext.request.contextPath}/receipt?action=save" method="POST">
+            <form id="receiptForm" action="${pageContext.request.contextPath}/receipt?action=save" method="POST" onsubmit="return validateReceiptForm()">
                 <c:if test="${not empty receipt.orderId}">
                     <input type="hidden" name="orderId" value="${receipt.orderId}" />
                 </c:if>
@@ -150,23 +137,25 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label>Loại phiếu *</label>
-                                <select name="receiptType" required <c:if test="${not empty receipt.orderId}">disabled</c:if>>
+                                <select name="receiptType" required <c:if test="${not empty receipt.orderId}">disabled</c:if> onchange="validateField(this)">
                                     <option value="">-- Chọn loại --</option>
                                     <option value="IMPORT" <c:if test="${receipt.receiptType == 'IMPORT'}">selected</c:if>>Nhập kho</option>
                                     <option value="EXPORT" <c:if test="${receipt.receiptType == 'EXPORT'}">selected</c:if>>Xuất kho</option>
                                 </select>
+                                <span class="field-error" style="display:none;"></span>
                                 <c:if test="${not empty receipt.orderId}">
                                     <input type="hidden" name="receiptType" value="EXPORT" />
                                 </c:if>
                             </div>
                             <div class="form-field">
                                 <label>Kho *</label>
-                                <select name="warehouseId" required>
+                                <select name="warehouseId" required onchange="validateField(this)">
                                     <option value="">-- Chọn kho --</option>
                                     <c:forEach var="wh" items="${warehouses}">
                                         <option value="${wh.warehouseId}" <c:if test="${receipt.warehouseId == wh.warehouseId}">selected</c:if>>${wh.name}</option>
                                     </c:forEach>
                                 </select>
+                                <span class="field-error" style="display:none;"></span>
                             </div>
                             <c:if test="${not empty order}">
                                 <div class="form-field full">
@@ -179,16 +168,17 @@
                             </c:if>
                             <div class="form-field">
                                 <label>Lý do *</label>
-                                <select name="reasonId" class="input" required>
+                                <select name="reasonId" class="input" required onchange="validateField(this)">
                                     <option value="">-- Chọn lý do --</option>
                                     <c:forEach var="r" items="${receiptReasons}">
                                         <option value="${r.id}" <c:if test="${receipt.reasonId == r.id}">selected</c:if>>${r.name}</option>
                                     </c:forEach>
                                 </select>
+                                <span class="field-error" style="display:none;"></span>
                             </div>
                             <div class="form-field full">
                                 <label>Ghi chú phiếu</label>
-                                <textarea name="note" placeholder="Nhập ghi chú nếu có...">${receipt.note}</textarea>
+                                <textarea name="note" placeholder="Nhập ghi chú nếu có..."><c:out value="${receipt.note}"/></textarea>
                             </div>
                         </div>
                     </section>
@@ -206,6 +196,7 @@
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát</th>
                                     <th class="col-serial">Serial</th>
+                                    <th class="col-qty" style="width:70px;">SL</th>
                                     <th class="col-note">Ghi chú</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -217,14 +208,15 @@
                                             <tr>
                                                 <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                 <td>
-                                                    <select name="generatorId" required>
+                                                    <select name="generatorId" required onchange="validateField(this)">
                                                         <option value="">-- Chọn máy --</option>
                                                         <c:forEach var="g" items="${generators}">
                                                             <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>>${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                         </c:forEach>
-                                                    </select>
+                                                    </select><span class="field-error" style="display:none;"></span>
                                                 </td>
-                                                <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" required/></td>
+                                                <td><input type="text" name="serialNumber" placeholder="S/N" value="${d.serialNumber}" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                                <td><input type="number" name="quantity" min="1" max="100000" value="${d.quantity}" style="width:70px;" required oninput="validateQty(this)" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="${d.note}" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -238,14 +230,15 @@
                                         <tr>
                                             <td class="col-num"><span class="row-num">1</span></td>
                                             <td>
-                                                <select name="generatorId" required>
+                                                <select name="generatorId" required onchange="validateField(this)">
                                                     <option value="">-- Chọn máy --</option>
                                                     <c:forEach var="g" items="${generators}">
                                                         <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                                     </c:forEach>
-                                                </select>
+                                                </select><span class="field-error" style="display:none;"></span>
                                             </td>
-                                            <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
+                                            <td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                            <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this)" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -262,14 +255,15 @@
                             <tr>
                                 <td class="col-num"><span class="row-num"></span></td>
                                 <td>
-                                    <select name="generatorId">
+                                    <select name="generatorId" onchange="validateField(this)">
                                         <option value="">-- Chọn máy --</option>
                                         <c:forEach var="g" items="${generators}">
                                             <option value="${g.id}">${g.model}${not empty brandMap[g.id] ? ' ('.concat(brandMap[g.id]).concat(')') : ''}</option>
                                         </c:forEach>
-                                    </select>
+                                    </select><span class="field-error" style="display:none;"></span>
                                 </td>
-                                <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
+                                <td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this)" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                 <td class="col-del">
                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -291,6 +285,21 @@
     </div>
 </div>
 
+<div class="toast-host" id="toastHost"></div>
+<script>
+    <c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+    <c:remove var="toastMessage" scope="session"/>
+    <c:remove var="toastType" scope="session"/>
+    </c:if>
+    <c:if test="${not empty requestScope.toastMessage}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+    </c:if>
+</script>
+<script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
@@ -310,6 +319,61 @@
         document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
             el.textContent = i + 1;
         });
+    }
+
+    function validateQty(input) {
+        var v = input.value.replace(/[^0-9]/g, '');
+        var n = parseInt(v);
+        if (isNaN(n) || n < 1) {
+            input.value = 1;
+        } else if (n > 100000) {
+            input.value = 100000;
+        } else {
+            input.value = n;
+        }
+        validateField(input);
+    }
+
+    function validateField(el) {
+        var err = el.parentElement.querySelector('.field-error');
+        if (err === null) return true;
+        if (el.required && !el.value.trim()) {
+            el.style.borderColor = '#dc3545';
+            err.style.display = 'block';
+            return false;
+        }
+        if (el.name === 'quantity') {
+            var q = parseInt(el.value);
+            if (isNaN(q) || q < 1) {
+                el.style.borderColor = '#dc3545';
+                err.textContent = 'Số lượng phải ≥ 1';
+                err.style.display = 'block';
+                return false;
+            }
+        }
+        el.style.borderColor = '';
+        err.style.display = 'none';
+        return true;
+    }
+
+    function validateReceiptForm() {
+        var valid = true;
+        var firstInvalid = null;
+        document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
+            if (!validateField(el)) {
+                valid = false;
+                if (firstInvalid === null) firstInvalid = el;
+            }
+        });
+        if (document.querySelectorAll('#detailBody tr').length === 0) {
+            toast('Vui lòng thêm ít nhất 1 dòng chi tiết', 'danger');
+            valid = false;
+        }
+        if (!valid) {
+            toast('Vui lòng điền đầy đủ các trường bắt buộc', 'danger');
+            if (firstInvalid) firstInvalid.focus();
+        }
+        return valid;
     }
 </script>
 </body>

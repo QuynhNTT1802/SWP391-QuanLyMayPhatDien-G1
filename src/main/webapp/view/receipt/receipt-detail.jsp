@@ -372,19 +372,7 @@
                         Quay lại danh sách
                     </a>
 
-                    <c:if test="${not empty param.msg}">
-                        <div class="alert alert-success">
-                            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
-                            <span>
-                                <c:choose>
-                                    <c:when test="${param.msg == 'approved'}">Đã duyệt phiếu thành công.</c:when>
-                                    <c:when test="${param.msg == 'rejected'}">Đã từ chối phiếu.</c:when>
-                                    <c:when test="${param.msg == 'revisionRequested'}">Đã gửi yêu cầu chỉnh sửa cho nhân viên tạo phiếu.</c:when>
-                                    <c:otherwise><c:out value="${param.msg}"/></c:otherwise>
-                                </c:choose>
-                            </span>
-                        </div>
-                    </c:if>
+
                     <c:if test="${not empty error}">
                         <div class="alert alert-error">
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -627,7 +615,7 @@
         </div>
 
         <c:if test="${receipt.status == 'PENDING' && isManager}">
-            <div class="modal-host" id="rejectModal">
+            <div class="modal-host" id="rejectModal" <c:if test="${openRejectModal == 'true' and (empty flashReasonIdStr and empty flashReason)}">style="display:none;"</c:if>>
                 <div class="modal-card">
                     <h3>Từ chối phiếu</h3>
                     <div class="modal-sub">Phiếu sẽ bị huỷ và không cập nhật tồn kho. Hành động này không thể hoàn tác.</div>
@@ -637,10 +625,10 @@
                         <select name="reasonId" class="input">
                             <option value="">-- Chọn lý do (tùy chọn) --</option>
                             <c:forEach var="r" items="${receiptReasons}">
-                                <option value="${r.id}">${r.name}</option>
+                                <option value="${r.id}" <c:if test="${flashReasonIdStr == r.id}">selected</c:if>>${r.name}</option>
                             </c:forEach>
                         </select>
-                        <textarea name="reason" placeholder="Mô tả chi tiết lý do từ chối (tùy chọn)..." style="margin-top:8px;"></textarea>
+                        <textarea name="reason" placeholder="Mô tả chi tiết lý do từ chối (tùy chọn)..." style="margin-top:8px;"><c:out value="${flashReason}"/></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
                             <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
@@ -672,6 +660,24 @@
             </div>
         </c:if>
 
+        <div class="toast-host" id="toastHost"></div>
+        <script>
+            <c:if test="${not empty sessionScope.toastMessage}">
+            window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+            <c:remove var="toastMessage" scope="session"/>
+            <c:remove var="toastType" scope="session"/>
+            </c:if>
+            <c:if test="${not empty requestScope.toastMessage}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+            window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+            </c:if>
+        </script>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <c:if test="${openRejectModal == 'true'}">
+            <script>openModal('rejectModal');</script>
+        </c:if>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
