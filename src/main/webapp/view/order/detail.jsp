@@ -16,7 +16,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <style>
-            /* Bổ sung style cho bảng sản phẩm trong đơn hàng */
             .product-table {
                 width: 100%;
                 border-collapse: collapse;
@@ -76,68 +75,30 @@
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-    <div>
-        <header class="topbar">
-            <h1>Chi tiết đơn hàng</h1>
-            <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <span id="crumbId"><c:out value="${order.orderCode}"/></span></span>
-            <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                <c:if test="${order.status == 'PENDING'}">
-                    <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                        Chỉnh sửa
-                    </a>
-                </c:if>
-            </div>
-        </header>
-
-        <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
-                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Quay lại danh sách
-            </a>
-
-            <div class="hero">
-                <div class="hero-avatar blue">
-                    <c:choose>
-                        <c:when test="${order.status == 'PENDING'}"></c:when>
-                        <c:when test="${order.status == 'APPROVED'}">✅</c:when>
-                        <c:when test="${order.status == 'REJECTED'}">❌</c:when>
-                        <c:otherwise>🚫</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="hero-body">
-                    <h2 class="hero-name">
-                        <c:out value="${order.customerName}"/>
-                        <c:choose>
-                            <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                            <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
-                            <c:when test="${order.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                            <c:otherwise><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:otherwise>
-                        </c:choose>
-                    </h2>
-                    <div class="hero-meta">
-                        <span><c:out value="${order.orderCode}"/></span>
-                        <span class="sep">·</span>
-                        <span class="id">#<c:out value="${order.orderId}"/></span>
-                        <span class="sep">·</span>
-                        <span>Ngày đặt: <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></span>
-                    </div>
-                    <div class="hero-pills">
-                        <span class="pill role-staff"><span class="pdot"></span>Người tạo: <c:out value="${order.createdByName}"/></span>
-                        <c:if test="${order.approvedBy != 0}">
-                            <span class="pill role-manager"><span class="pdot"></span>Người duyệt: ID ${order.approvedBy}</span>
+            <div>
+                <header class="topbar">
+                    <h1>Chi tiết đơn hàng</h1>
+                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <span id="crumbId"><c:out value="${order.orderCode}"/></span></span>
+                    <div class="top-actions">
+                        <button class="icon-btn theme-toggle" id="themeToggle">
+                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                        </button>
+                        <c:if test="${order.status == 'PENDING'}">
+                            <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                Chỉnh sửa
+                            </a>
                         </c:if>
                     </div>
                 </header>
 
                 <main>
                     <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
-                        <svg viewBox="0 0 24 24">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại danh sách
                     </a>
+
                     <div class="hero">
                         <div class="hero-avatar blue">
                             <c:choose>
@@ -149,7 +110,7 @@
                         </div>
                         <div class="hero-body">
                             <h2 class="hero-name">
-                                <c:out value="${order.customerName}"/>
+                                <c:out value="${order.customer.name}"/>
                                 <c:choose>
                                     <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                     <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
@@ -165,9 +126,9 @@
                                 <span>Ngày đặt: <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></span>
                             </div>
                             <div class="hero-pills">
-                                <span class="pill role-staff"><span class="pdot"></span>Người tạo: ID ${order.createdBy}</span>
+                                <span class="pill role-staff"><span class="pdot"></span>Người tạo: <c:out value="${order.createdByName}"/></span>
                                 <c:if test="${order.approvedBy != 0}">
-                                    <span class="pill role-manager"><span class="pdot"></span>Người duyệt: ID ${order.approvedBy}</span>
+                                    <span class="pill role-manager"><span class="pdot"></span>Người duyệt: <c:out value="${order.approvedByName}"/></span>
                                 </c:if>
                                 <span class="pill role-admin"><span class="pdot"></span>Tổng tiền: <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></span>
                             </div>
@@ -198,21 +159,21 @@
                                 <div class="info-grid">
                                     <div class="info-field">
                                         <div class="info-label">Tên khách hàng</div>
-                                        <div class="info-value"><c:out value="${order.customerName}"/></div>
+                                        <div class="info-value"><c:out value="${order.customer.name}"/></div>
                                     </div>
                                     <div class="info-field">
                                         <div class="info-label">Số điện thoại</div>
-                                        <div class="info-value mono"><c:out value="${order.customerPhone}"/></div>
+                                        <div class="info-value mono"><c:out value="${order.customer.phone}"/></div>
                                     </div>
-                                    <c:if test="${not empty order.customerEmail}">
+                                    <c:if test="${not empty order.customer.email}">
                                         <div class="info-field">
                                             <div class="info-label">Email</div>
-                                            <div class="info-value mono"><c:out value="${order.customerEmail}"/></div>
+                                            <div class="info-value mono"><c:out value="${order.customer.email}"/></div>
                                         </div>
                                     </c:if>
                                     <div class="info-field">
                                         <div class="info-label">Địa chỉ giao hàng</div>
-                                        <div class="info-value"><c:out value="${order.customerAddress}"/></div>
+                                        <div class="info-value"><c:out value="${order.customer.address}"/></div>
                                     </div>
                                     <c:if test="${not empty customerTypeName}">
                                         <div class="info-field">
@@ -220,14 +181,13 @@
                                             <div class="info-value"><c:out value="${customerTypeName}"/></div>
                                         </div>
                                     </c:if>
-                                    <c:if test="${not empty order.customerCompany or not empty order.customerTaxCode}">
+                                    <c:if test="${not empty order.customer.companyName}">
                                         <div class="info-field">
-                                            <div class="info-label">Công ty / MST</div>
+                                            <div class="info-label">Công ty</div>
                                             <div class="info-value">
-                                                <c:out value="${order.customerCompany}"/>
-                                                <c:if test="${not empty order.customerTaxCode}"> (<c:out value="${order.customerTaxCode}"/>)</c:if>
-                                                </div>
+                                                <c:out value="${order.customer.companyName}"/>
                                             </div>
+                                        </div>
                                     </c:if>
                                     <div class="info-field">
                                         <div class="info-label">Trạng thái</div>
@@ -250,6 +210,12 @@
                                         <div class="info-field" style="grid-column: span 2;">
                                             <div class="info-label">Ghi chú nội bộ</div>
                                             <div class="info-value"><c:out value="${order.note}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <c:if test="${not empty order.customerNote}">
+                                        <div class="info-field" style="grid-column: span 2;">
+                                            <div class="info-label">Ghi chú của khách hàng</div>
+                                            <div class="info-value"><c:out value="${order.customerNote}"/></div>
                                         </div>
                                     </c:if>
                                 </div>

@@ -39,7 +39,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + "LEFT JOIN user u_approved ON so.approved_by = u_approved.id "
                 + "LEFT JOIN user u_cancelled ON so.cancelled_by = u_cancelled.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "WHERE so.order_id = ?";
+                + "WHERE status = ?";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
@@ -82,7 +82,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
 
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (co.order_code LIKE ? OR c.name LIKE ?)");
+            sql.append(" AND (so.order_code LIKE ? OR c.name LIKE ?)");
             String pattern = "%" + search.trim() + "%";
             param.add(pattern);
             param.add(pattern);
@@ -358,7 +358,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
 
             Customer customer = new Customer();
-            customer.setId(rs.getInt("customer_id"));  // có thể null → 0
+            customer.setId(rs.getInt("customer_id"));
 
             customer.setName(rs.getString("customer_name"));
             customer.setPhone(rs.getString("customer_phone"));
@@ -443,7 +443,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
-              
+
                 try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                     if (s.getCustomerId() > 0) {
                         ps.setInt(1, s.getCustomerId());
@@ -463,13 +463,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     }
                 }
 
-           
                 try (PreparedStatement ps = conn.prepareStatement(deleteDetailSql)) {
                     ps.setInt(1, s.getOrderId());
                     ps.executeUpdate();
                 }
 
-              
                 try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
                     for (OrderDetail d : newDetails) {
                         ps.setInt(1, d.getOrderId());
@@ -498,20 +496,28 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
-    public int countStatusPending(int userId) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+    public int countOrderByStatus(String status, int userId) {
+        String sql = "select count(*)\n"
+                + "from sale_order\n"
+                + "where status = ? ";
+        if (userId > 0) {
+            sql += " AND created_by = ?";
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (userId > 0) {
+                ps.setInt(2, userId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
 
-    public int countStatusRejected(int userId) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    public int countStatusApproved(int userId) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    public int countStatusCancelled(int userId) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
 }
