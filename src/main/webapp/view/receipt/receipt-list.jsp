@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -107,6 +108,7 @@
                                     <th>Đơn liên quan</th>
                                     <th>Lý do</th>
                                     <th>Người tạo</th>
+                                    <th>Tổng tiền</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày tạo</th>
                                     <th class="col-actions">Thao tác</th>
@@ -115,7 +117,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="9">
+                                        <tr><td colspan="10">
                                                 <div class="empty-state"><strong>Không tìm thấy phiếu nào</strong></div>
                                             </td></tr>
                                         </c:when>
@@ -156,6 +158,14 @@
                                                     </c:choose>
                                                 </td>
                                                 <td>${r.createdByName}</td>
+                                                <td class="mono">
+                                                    <c:choose>
+                                                        <c:when test="${not empty r.totalAmount}">
+                                                            <fmt:formatNumber value="${r.totalAmount}" type="currency" currencySymbol="" minFractionDigits="0"/>₫
+                                                        </c:when>
+                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${r.status == 'PENDING'}">

@@ -175,8 +175,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     @Override
     public int insert(Receipt r) {
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, "
-                + "warehouse_id, created_by, status, note, reason_id, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', ?, ?, ?)";
+                + "warehouse_id, created_by, status, note, reason_id, total_amount, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -195,7 +195,12 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 statement.setNull(7, Types.INTEGER);
             }
-            statement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getTotalAmount() != null) {
+                statement.setBigDecimal(8, r.getTotalAmount());
+            } else {
+                statement.setNull(8, Types.DECIMAL);
+            }
+            statement.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -359,12 +364,12 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public boolean updateReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId) {
-        String updateSql = "UPDATE receipt SET warehouse_id = ?, note = ?, "
+        String updateSql = "UPDATE receipt SET warehouse_id = ?, note = ?, total_amount = ?, "
                 + "status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "', approved_by = NULL, reason_id = ? "
                 + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_REVISION + "' AND created_by = ?";
         String deleteDetailSql = "DELETE FROM receipt_detail WHERE receipt_id = ?";
         String insertDetailSql = "INSERT INTO receipt_detail "
-                + "(receipt_id, generator_id, serial_number, quantity, note) VALUES (?, ?, ?, ?, ?)";
+                + "(receipt_id, generator_id, serial_number, quantity, unit_price, note) VALUES (?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         try {
             conn = getConnection();
@@ -373,8 +378,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setInt(1, r.getWarehouseId());
                 ps.setString(2, r.getNote());
-                ps.setInt(3, r.getReceiptId());
-                ps.setInt(4, userId);
+                if (r.getTotalAmount() != null) {
+                    ps.setBigDecimal(3, r.getTotalAmount());
+                } else {
+                    ps.setNull(3, Types.DECIMAL);
+                }
+                ps.setInt(4, r.getReasonId());
+                ps.setInt(5, r.getReceiptId());
+                ps.setInt(6, userId);
                 int affected = ps.executeUpdate();
                 if (affected == 0) {
                     conn.rollback();
@@ -393,7 +404,12 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     ps.setInt(2, d.getGeneratorId());
                     ps.setString(3, d.getSerialNumber());
                     ps.setInt(4, d.getQuantity());
-                    ps.setString(5, d.getNote());
+                    if (d.getUnitPrice() != null) {
+                        ps.setBigDecimal(5, d.getUnitPrice());
+                    } else {
+                        ps.setNull(5, java.sql.Types.DECIMAL);
+                    }
+                    ps.setString(6, d.getNote());
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -470,6 +486,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         Timestamp ua = rs.getTimestamp("updated_at");
         if (ua != null) {
             r.setUpdatedAt(ua.toLocalDateTime());
+        }
+        try {
+            r.setTotalAmount(rs.getBigDecimal("total_amount"));
+        } catch (SQLException ignored) {
         }
         try {
             r.setWarehouseName(rs.getString("warehouse_name"));

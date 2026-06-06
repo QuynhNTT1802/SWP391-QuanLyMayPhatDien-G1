@@ -18,7 +18,6 @@ import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
-import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
@@ -34,6 +33,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -129,8 +129,9 @@ public class ReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         Integer createdByFilter = null;
-        if (loggedUser != null && !isWarehouseManager(loggedUser)) {
+        if (loggedUser != null && (perms == null || !perms.contains("receipts.approve"))) {
             createdByFilter = loggedUser.getId();
         }
 
@@ -245,16 +246,9 @@ public class ReceiptController extends HttpServlet {
             request.getRequestDispatcher("/view/receipt/receipt-detail.jsp").forward(request, response);
             return;
         }
-        boolean isManager = false;
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean isManager = perms != null && perms.contains("receipts.approve");
         boolean isOwner = receipt.getCreatedBy() == loggedUser.getId();
-        if (loggedUser.getRoles() != null) {
-            for (Role role : loggedUser.getRoles()) {
-                if ("warehouse_manager".equals(role.getRoleName())) {
-                    isManager = true;
-                    break;
-                }
-            }
-        }
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
         request.setAttribute("isOwner", isOwner);
@@ -305,10 +299,11 @@ public class ReceiptController extends HttpServlet {
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
         String[] quantities = request.getParameterValues("quantity");
+        String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = parseAndValidateDetails(
-                genIds, serials, quantities, detailNotes, receiptType, warehouseId, errors);
+                genIds, serials, quantities, unitPrices, detailNotes, receiptType, warehouseId, errors);
 
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
             errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
@@ -337,6 +332,13 @@ public class ReceiptController extends HttpServlet {
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
         r.setReasonId(reasonId);
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        for (ReceiptDetail d : details) {
+            if (d.getUnitPrice() != null) {
+                total = total.add(d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
+            }
+        }
+        r.setTotalAmount(total);
         String oid = request.getParameter("orderId");
         if (oid != null && !oid.isEmpty()) {
             try {
@@ -367,8 +369,8 @@ public class ReceiptController extends HttpServlet {
     }
 
     private List<ReceiptDetail> parseAndValidateDetails(String[] genIds, String[] serials,
-            String[] quantities, String[] detailNotes, String receiptType, int warehouseId,
-            List<String> errors) {
+            String[] quantities, String[] unitPrices, String[] detailNotes,
+            String receiptType, int warehouseId, List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) {
             return details;
@@ -455,10 +457,22 @@ public class ReceiptController extends HttpServlet {
                 }
             }
 
+            java.math.BigDecimal price = null;
+            String priceStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
+            if (priceStr != null && !priceStr.trim().isEmpty()) {
+                try {
+                    price = new java.math.BigDecimal(priceStr.trim().replace(",", ""));
+                } catch (NumberFormatException e) {
+                    errors.add("Dòng " + rowNum + ": Đơn giá không hợp lệ");
+                    continue;
+                }
+            }
+
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);
             d.setQuantity(qty);
+            d.setUnitPrice(price);
             d.setNote(detailNote);
             details.add(d);
         }
@@ -469,6 +483,11 @@ public class ReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("receipts.approve")) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         int id;
         try {
@@ -494,6 +513,11 @@ public class ReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("receipts.approve")) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         int id;
         try {
@@ -589,6 +613,11 @@ public class ReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("receipts.approve")) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         int id;
         try {
@@ -736,10 +765,11 @@ public class ReceiptController extends HttpServlet {
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
         String[] quantities = request.getParameterValues("quantity");
+        String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = parseAndValidateDetails(
-                genIds, serials, quantities, detailNotes,
+                genIds, serials, quantities, unitPrices, detailNotes,
                 existing.getReceiptType(), warehouseId, errors);
 
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
@@ -758,11 +788,19 @@ public class ReceiptController extends HttpServlet {
             return;
         }
 
+        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
+        for (ReceiptDetail d : details) {
+            if (d.getUnitPrice() != null) {
+                total = total.add(d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
+            }
+        }
+
         Receipt r = new Receipt();
         r.setReceiptId(receiptId);
         r.setWarehouseId(warehouseId);
         r.setNote(note);
         r.setReasonId(reasonId);
+        r.setTotalAmount(total);
 
         boolean ok = receiptDAO.updateReceipt(r, details, loggedUser.getId());
         if (ok) {
@@ -774,17 +812,4 @@ public class ReceiptController extends HttpServlet {
             request.setAttribute("toastType", "danger");
             showEditForm(request, response);
         }
-    }
-
-    private boolean isWarehouseManager(User user) {
-        if (user == null || user.getRoles() == null) {
-            return false;
-        }
-        for (Role role : user.getRoles()) {
-            if ("warehouse_manager".equals(role.getRoleName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-}
+    }}

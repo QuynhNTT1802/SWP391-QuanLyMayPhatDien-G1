@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -580,26 +581,42 @@
                                         <th style="width: 40px;">#</th>
                                         <th>Máy phát / Hãng</th>
                                         <th>Serial</th>
+                                        <th style="width: 60px;">SL</th>
+                                        <th style="width: 140px;">Đơn giá</th>
+                                        <th style="width: 140px;">Thành tiền</th>
                                         <th>Ghi chú</th>
                                     </tr>
                                 </thead>
                                 <tbody id="detailBody">
                                     <c:choose>
                                         <c:when test="${empty receipt.details}">
-                                            <tr><td colspan="4" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                            <tr><td colspan="7" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                         </c:when>
                                         <c:otherwise>
+                                            <c:set var="grandTotal" value="0" />
                                             <c:forEach var="d" items="${receipt.details}" varStatus="st">
+                                                <c:set var="subtotal" value="${d.unitPrice * d.quantity}" />
+                                                <c:set var="grandTotal" value="${grandTotal + subtotal}" />
                                                 <tr class="detail-row">
                                                     <td class="mono">${st.index + 1}</td>
                                                     <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
                                                     <td class="mono"><c:out value="${d.serialNumber}"/></td>
+                                                    <td class="mono"><fmt:formatNumber value="${d.quantity}"/></td>
+                                                    <td class="mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
+                                                    <td class="mono" style="font-weight: 600;"><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
                                                     <td><c:out value="${d.note}"/></td>
                                                 </tr>
                                             </c:forEach>
                                         </c:otherwise>
                                     </c:choose>
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5" style="text-align: right; padding: 12px; font-weight: 700; border-top: 2px solid var(--border);">Tổng cộng:</td>
+                                        <td class="mono" style="padding: 12px; font-weight: 700; border-top: 2px solid var(--border);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
+                                        <td style="border-top: 2px solid var(--border);"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                             <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
                                 <div class="detail-pager" id="detailPagination">
