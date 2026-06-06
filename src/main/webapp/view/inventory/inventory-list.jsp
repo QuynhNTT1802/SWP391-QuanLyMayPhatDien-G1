@@ -68,10 +68,10 @@
                     <thead>
                         <tr>
                             <th style="width:40px;">#</th>
-                            <th>Kho</th>
                             <th>Model</th>
                             <th>Hãng</th>
                             <th style="width:100px;">Số lượng</th>
+                            <th>Kho</th>
                             <th style="width:160px;">Cập nhật</th>
                         </tr>
                     </thead>
@@ -86,7 +86,6 @@
                                 <c:forEach var="item" items="${inventoryList}" varStatus="st">
                                     <tr>
                                         <td>${fromIndex + st.index}</td>
-                                        <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
                                         <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${item.generatorId}">${item.generatorModel}</a></strong></td>
                                         <td>${item.generatorBrand}</td>
                                         <td>
@@ -94,6 +93,7 @@
                                                 ${item.quantity}
                                             </span>
                                         </td>
+                                        <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
                                         <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
                                     </tr>
                                 </c:forEach>

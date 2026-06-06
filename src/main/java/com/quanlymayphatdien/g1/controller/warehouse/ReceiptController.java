@@ -9,11 +9,13 @@ import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Receipt;
@@ -46,6 +48,7 @@ public class ReceiptController extends HttpServlet {
     private final ReceiptDetailDAO detailDAO = new ReceiptDetailDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
+    private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
 
     private static final int MAX_QUANTITY = 100000;
     private static final int MAX_SERIAL_LENGTH = 100;
@@ -249,9 +252,13 @@ public class ReceiptController extends HttpServlet {
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean isManager = perms != null && perms.contains("receipts.approve");
         boolean isOwner = receipt.getCreatedBy() == loggedUser.getId();
+        List<ActivityLog> receiptHistory = activityLogDAO.findByEntityTypeAndId("receipt", id, 1, 100);
+        int totalHistory = activityLogDAO.countByEntityTypeAndId("receipt", id);
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
         request.setAttribute("isOwner", isOwner);
+        request.setAttribute("receiptHistory", receiptHistory);
+        request.setAttribute("totalHistory", totalHistory);
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
         request.getRequestDispatcher("/view/receipt/receipt-detail.jsp").forward(request, response);
     }
@@ -362,6 +369,15 @@ public class ReceiptController extends HttpServlet {
             d.setReceiptId(receiptId);
             detailDAO.insert(d);
         }
+
+        ActivityLog log = new ActivityLog();
+        log.setUserId(loggedUser.getId());
+        log.setEntityType("receipt");
+        log.setAction("CREATE");
+        log.setEntityId(receiptId);
+        log.setEntityName(r.getReceiptCode());
+        log.setDetails("Tạo phiếu " + ("IMPORT".equals(r.getReceiptType()) ? "nhập" : "xuất") + " kho");
+        activityLogDAO.insert(log);
 
         session.setAttribute("toastMessage", "Thêm phiếu thành công");
         session.setAttribute("toastType", "success");
@@ -499,6 +515,17 @@ public class ReceiptController extends HttpServlet {
         boolean ok = receiptDAO.approveReceipt(id, loggedUser.getId());
 
         if (ok) {
+            Receipt r = receiptDAO.findById(id);
+            if (r != null) {
+                ActivityLog log = new ActivityLog();
+                log.setUserId(loggedUser.getId());
+                log.setEntityType("receipt");
+                log.setAction("APPROVE");
+                log.setEntityId(id);
+                log.setEntityName(r.getReceiptCode());
+                log.setDetails("Duyệt phiếu " + ("IMPORT".equals(r.getReceiptType()) ? "nhập" : "xuất") + " kho, cập nhật tồn kho");
+                activityLogDAO.insert(log);
+            }
             session.setAttribute("toastMessage", "Duyệt phiếu thành công");
             session.setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id);
@@ -555,6 +582,19 @@ public class ReceiptController extends HttpServlet {
         boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reasonId, reasonNote);
 
         if (ok) {
+            Receipt r = receiptDAO.findById(id);
+            if (r != null) {
+                ActivityLog log = new ActivityLog();
+                log.setUserId(loggedUser.getId());
+                log.setEntityType("receipt");
+                log.setAction("REJECT");
+                log.setEntityId(id);
+                log.setEntityName(r.getReceiptCode());
+                String detail = "Từ chối phiếu";
+                if (reasonNote != null) detail += ": " + reasonNote;
+                log.setDetails(detail);
+                activityLogDAO.insert(log);
+            }
             session.setAttribute("toastMessage", "Đã từ chối phiếu");
             session.setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id);
@@ -654,6 +694,19 @@ public class ReceiptController extends HttpServlet {
         }
         boolean ok = receiptDAO.requestRevision(id, loggedUser.getId(), reasonId, reasonNote);
         if (ok) {
+            Receipt r = receiptDAO.findById(id);
+            if (r != null) {
+                ActivityLog log = new ActivityLog();
+                log.setUserId(loggedUser.getId());
+                log.setEntityType("receipt");
+                log.setAction("REVISION");
+                log.setEntityId(id);
+                log.setEntityName(r.getReceiptCode());
+                String detail = "Yêu cầu chỉnh sửa";
+                if (reasonNote != null) detail += ": " + reasonNote;
+                log.setDetails(detail);
+                activityLogDAO.insert(log);
+            }
             session.setAttribute("toastMessage", "Đã gửi yêu cầu chỉnh sửa");
             session.setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id);
@@ -704,6 +757,7 @@ public class ReceiptController extends HttpServlet {
         }
         request.setAttribute("generators", generators);
         request.setAttribute("brandMap", brandMap);
+        request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
 
         request.getRequestDispatcher("/view/receipt/receipt-edit.jsp").forward(request, response);
     }
@@ -804,6 +858,31 @@ public class ReceiptController extends HttpServlet {
 
         boolean ok = receiptDAO.updateReceipt(r, details, loggedUser.getId());
         if (ok) {
+            StringBuilder changeDetail = new StringBuilder("Cập nhật phiếu");
+            if (existing.getWarehouseId() != warehouseId) {
+                changeDetail.append(", đổi kho");
+            }
+            List<ReceiptDetail> oldDetails = existing.getDetails();
+            int compareLen = Math.min(oldDetails != null ? oldDetails.size() : 0, details.size());
+            for (int i = 0; i < compareLen; i++) {
+                ReceiptDetail od = oldDetails.get(i);
+                ReceiptDetail nd = details.get(i);
+                if (od.getQuantity() != nd.getQuantity()) {
+                    changeDetail.append(", dòng ").append(i + 1).append(": SL ").append(od.getQuantity()).append("→").append(nd.getQuantity());
+                }
+                if (nd.getUnitPrice() != null && od.getUnitPrice() != null
+                        && nd.getUnitPrice().compareTo(od.getUnitPrice()) != 0) {
+                    changeDetail.append(", dòng ").append(i + 1).append(": ĐG ").append(od.getUnitPrice()).append("→").append(nd.getUnitPrice());
+                }
+            }
+            ActivityLog log = new ActivityLog();
+            log.setUserId(loggedUser.getId());
+            log.setEntityType("receipt");
+            log.setAction("UPDATE");
+            log.setEntityId(receiptId);
+            log.setEntityName(existing.getReceiptCode());
+            log.setDetails(changeDetail.toString());
+            activityLogDAO.insert(log);
             session.setAttribute("toastMessage", "Cập nhật phiếu thành công, đã gửi lại để duyệt");
             session.setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/receipt?action=list");

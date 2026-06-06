@@ -56,24 +56,32 @@
             </a>
         </c:if>
 
-        <c:if test="${not empty perms and perms.contains('inventory.view')}">
-            <a href="${pageContext.request.contextPath}/inventory">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
-                Tồn kho
-            </a>
+        <c:if test="${not empty perms and (perms.contains('inventory.view') or perms.contains('stock_card.view'))}">
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+                Kho
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <c:if test="${not empty perms and perms.contains('inventory.view')}">
+                    <a href="${pageContext.request.contextPath}/inventory">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+                        Tồn kho
+                    </a>
+                </c:if>
+                <c:if test="${not empty perms and perms.contains('stock_card.view')}">
+                    <a href="${pageContext.request.contextPath}/stock-card">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>
+                        Thẻ kho
+                    </a>
+                </c:if>
+            </div>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('warehouses.view')}">
             <a href="${pageContext.request.contextPath}/warehouse?action=list">
                 <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
                 Kho hàng
-            </a>
-        </c:if>
-
-        <c:if test="${not empty perms and perms.contains('stock_card.view')}">
-            <a href="${pageContext.request.contextPath}/stock-card">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>
-                Thẻ kho
             </a>
         </c:if>
 

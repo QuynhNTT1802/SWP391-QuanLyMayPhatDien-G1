@@ -561,6 +561,19 @@
                 });
             }
 
+            function validateQty(input) {
+                var v = input.value.replace(/[^0-9]/g, '');
+                var n = parseInt(v);
+                if (isNaN(n) || n < 1) {
+                    input.value = 1;
+                } else if (n > 100000) {
+                    input.value = 100000;
+                } else {
+                    input.value = n;
+                }
+                validateField(input);
+            }
+
             function validateField(el) {
                 var err = el.parentElement.querySelector('.field-error');
                 if (err === null) return true;
