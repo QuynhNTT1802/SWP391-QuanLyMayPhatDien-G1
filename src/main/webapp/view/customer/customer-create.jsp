@@ -100,14 +100,10 @@
 
                     <div class="form-section">
                         <div class="form-section-head">
-                            <div class="form-section-num">02 — GHI CHÚ & TRẠNG THÁI</div>
+                            <div class="form-section-num">02 — TRẠNG THÁI</div>
                             <h3 class="form-section-title">Thông tin bổ sung</h3>
                         </div>
                         <div class="form-grid">
-                            <div class="field full-width">
-                                <label class="field-label">Ghi chú</label>
-                                <textarea class="input" name="note" rows="3" placeholder="Ghi chú về khách hàng..."><c:out value="${sessionScope.fieldNote}"/></textarea>
-                            </div>
                             <div class="field">
                                 <label class="field-label">Trạng thái</label>
                                 <select class="select" name="status">
