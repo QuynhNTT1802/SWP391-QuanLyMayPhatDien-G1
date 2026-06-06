@@ -195,30 +195,6 @@
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
                                         <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
-                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
-                                            <option value="">-- Chọn loại khách hàng --</option>
-                                            <c:forEach var="ct" items="${customerTypes}">
-                                                <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${param.customerTypeId == ct.id}">selected</c:if>>
-                                                    <c:out value="${ct.name}"/>
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
-                                    </div>
                                 </div>
                             </div>
 
@@ -243,7 +219,7 @@
                                     </div>
                                     <div class="field" style="grid-column: span 2;">
                                         <label class="field-label">Ghi chú nội bộ (Chỉ nhân viên thấy)</label>
-                                        <textarea class="input" name="internalNote" rows="2" placeholder="VD: Khách quen, giảm giá 5%..."><c:out value="${param.internalNote}"/></textarea>
+                                        <textarea class="input" name="note" rows="2" placeholder="VD: Khách quen, giảm giá 5%..."><c:out value="${param.note}"/></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -421,14 +397,13 @@
                 }
             });
             // Tự tính ngay khi load (vì có dữ liệu pre-fill)
-            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty + MST
+            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
             function onCustomerTypeChange() {
                 var sel = document.getElementById('customerTypeSelect');
                 var opt = sel.options[sel.selectedIndex];
                 var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
                 var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
                 document.getElementById('customerCompany').required = isCompany;
-                document.getElementById('customerTaxCode').required = isCompany;
                 document.querySelectorAll('.company-req').forEach(function (el) {
                     el.style.display = isCompany ? 'inline' : 'none';
                 });

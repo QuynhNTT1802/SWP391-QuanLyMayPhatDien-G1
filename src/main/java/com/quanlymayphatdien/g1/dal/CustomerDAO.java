@@ -319,6 +319,21 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
     }
 
     public Customer findByPhone(String custPhone) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "SELECT * FROM customer WHERE phone = ?";
+    try {
+        connection = getConnection();
+        statement = connection.prepareStatement(sql);
+        statement.setString(1, custPhone.trim());
+        resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            return getFromResultSet(resultSet);
+        }
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
+    } finally {
+        closeResources();
+    }
+    return null;
+
     }
 }

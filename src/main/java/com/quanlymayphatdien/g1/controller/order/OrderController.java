@@ -11,6 +11,7 @@ import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -130,11 +131,10 @@ public class OrderController extends HttpServlet {
         boolean canViewAllOrders = permissions != null && permissions.contains("orders.approve");
         int userId = canViewAllOrders ? 0 : user.getId();
 
-        int pendding = saleorderdao.countStatusPending(userId);
-        int rejected = saleorderdao.countStatusRejected(userId);
-        int approved = saleorderdao.countStatusApproved(userId);
-        int cancelled = saleorderdao.countStatusCancelled(userId);
-
+        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId);
+        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId);
+        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId);
+        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId);
         List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId);
 
         int page = 1;
@@ -184,7 +184,6 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
-     
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -262,7 +261,6 @@ public class OrderController extends HttpServlet {
             orderCode = String.format("ORD-%s-%03d", dateStr, todayCount);
         }
         order.setOrderCode(orderCode);
-        // Tạo CustomerDAO
         CustomerDAO customerDAO = new CustomerDAO();
 
         String custName = request.getParameter("customerName");
@@ -411,7 +409,7 @@ public class OrderController extends HttpServlet {
         GeneratorDAO generatorDao = new GeneratorDAO();
 
         int orderId = Integer.parseInt(request.getParameter("orderId"));
-
+        User user = (User) request.getSession().getAttribute("loggedUser");
         try {
 
             String[] genIds = request.getParameterValues("generatorId");
@@ -451,29 +449,54 @@ public class OrderController extends HttpServlet {
             }
 
             CustomerDAO customerDAO = new CustomerDAO();
+
             String custName = request.getParameter("customerName");
             String custPhone = request.getParameter("customerPhone");
+            String custEmail = request.getParameter("customerEmail");
+            String custAddress = request.getParameter("customerAddress");
+            String custCompany = request.getParameter("customerCompany");
+            String custTypeIdStr = request.getParameter("customerTypeId");
+            String custNote = request.getParameter("customerNote");
 
             Customer customer = null;
             if (custPhone != null && !custPhone.trim().isEmpty()) {
                 customer = customerDAO.findByPhone(custPhone);
             }
+
             if (customer == null) {
-
                 customer = new Customer();
-                customer.setName(custName);
+            }
 
+            customer.setName(custName);
+            customer.setPhone(custPhone);
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                try {
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            if (customer.getId() > 0) {
+
+                customer.setUpdatedBy(user.getId());
+                customerDAO.update(customer);
+            } else {
+
+                customer.setStatus("active");
+                customer.setCreatedBy(user.getId());
                 int newCustId = customerDAO.insert(customer);
                 customer.setId(newCustId);
             }
 
             if (customer != null) {
                 order.setCustomerId(customer.getId());
-
-                customerDAO.update(customer);
             }
 
-            order.setCustomerNote(request.getParameter("customerNote"));
+            order.setCustomerNote(custNote);
 
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 

@@ -278,8 +278,8 @@
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
-                                                            <div class="user-name"><c:out value="${order.customerName}"/></div>
-                                                            <div class="user-email"><c:out value="${order.customerPhone}"/></div>
+                                                            <div class="user-name"><c:out value="${order.customer.name}"/></div>
+                                                            <div class="user-email"><c:out value="${order.customer.phone}"/></div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -301,7 +301,7 @@
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${order.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
-                                                <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customerAddress}</span></td>
+                                                <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customer.address}</span></td>
                                                 <td class="col-actions">
                                                     <div class="dropdown">
                                                         <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
@@ -375,9 +375,8 @@
                 </main>
             </div>
         </div>
-    </div>
 
-    <div class="toast-host" id="toastHost"></div>
+        <div class="toast-host" id="toastHost"></div>
 
     <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
     <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
@@ -424,6 +423,9 @@
                 reasonInput.value = reason.trim();
                 form.appendChild(actionInput);
                 form.appendChild(idInput);
+                form.appendChild(reasonInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
         function confirmCancel(orderId) {
