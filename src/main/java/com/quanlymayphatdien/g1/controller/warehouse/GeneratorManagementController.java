@@ -179,7 +179,7 @@ public class GeneratorManagementController extends HttpServlet {
                 return;
             }
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
     private String getCatName(List<Category> cats, String type) {
@@ -236,7 +236,7 @@ public class GeneratorManagementController extends HttpServlet {
                         brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
                         fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath() + "/generator/generators?action=create");
+                response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=create");
                 return;
             }
 
@@ -265,7 +265,7 @@ public class GeneratorManagementController extends HttpServlet {
             SystemLogger.error("Quản lý kho", "GeneratorManagementController.createGenerator", e.getMessage(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
@@ -293,7 +293,7 @@ public class GeneratorManagementController extends HttpServlet {
                 return;
             }
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
     private void updateGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -321,7 +321,7 @@ public class GeneratorManagementController extends HttpServlet {
             if (!errors.isEmpty()) {
                 saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath() + "/generator/generators?action=update&id=" + id);
+                response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=update&id=" + id);
                 return;
             }
 
@@ -356,7 +356,7 @@ public class GeneratorManagementController extends HttpServlet {
             SystemLogger.error("Quản lý kho", "GeneratorManagementController.updateGenerator", e.getMessage(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
     private void saveGeneratorCategories(HttpServletRequest request, GeneratorDAO dao, int generatorId) {
@@ -418,7 +418,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Kích hoạt thất bại!");
             }
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
     }
 
     private void deactivateGenerator(HttpServletRequest request, HttpServletResponse response)
@@ -443,7 +443,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Khóa thất bại!");
             }
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list&page=" + currentPage);
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list&page=" + currentPage);
     }
 
     private Map<String, String> validateGeneratorForm(String model,
