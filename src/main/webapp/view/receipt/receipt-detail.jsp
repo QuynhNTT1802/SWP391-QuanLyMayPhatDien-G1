@@ -346,6 +346,80 @@
                 gap: 8px;
                 margin-top: 16px;
             }
+            .action-badge {
+                display: inline-block;
+                padding: 3px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            .action-badge.action-create {
+                background: #d4edda;
+                color: #155724;
+            }
+            .action-badge.action-update {
+                background: #fff3cd;
+                color: #856404;
+            }
+            .action-badge.action-approve {
+                background: #cce5ff;
+                color: #004085;
+            }
+            .action-badge.action-reject {
+                background: #f8d7da;
+                color: #721c24;
+            }
+            .action-badge.action-revision {
+                background: #fff3cd;
+                color: #856404;
+            }
+            .action-badge.action-default {
+                background: #e2e3e5;
+                color: #383d41;
+            }
+            .history-card {
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 16px;
+                background: var(--bg);
+            }
+            .history-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 4px;
+            }
+            .history-table th {
+                padding: 10px 14px;
+                font-size: 11px;
+                color: var(--muted);
+                text-transform: uppercase;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                background: var(--surface-2);
+                text-align: left;
+                border-bottom: 2px solid var(--border);
+            }
+            .history-table td {
+                padding: 11px 14px;
+                font-size: 13px;
+                color: var(--fg);
+                border-bottom: 1px solid var(--border);
+                vertical-align: middle;
+            }
+            .history-table tbody tr:hover {
+                background: var(--surface-2);
+            }
+            .history-table .detail-cell {
+                color: var(--fg-soft);
+                line-height: 1.55;
+                max-width: 360px;
+            }
+            .history-table .mono {
+                font-family: var(--font-mono);
+                font-size: 12px;
+                color: var(--fg);
+            }
         </style>
     </head>
     <body>
@@ -505,70 +579,64 @@
                         </div>
 
                         <div class="tab-panel" id="tab-history">
-                            <div class="history-list">
-                                <div class="history-item">
-                                    <div class="history-icon create">
-                                        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                    </div>
-                                    <div class="history-body">
-                                        <div class="history-title">Tạo phiếu bởi <c:out value="${receipt.createdByName}"/></div>
-                                        <div class="history-meta">${receipt.createdAt}</div>
-                                    </div>
-                                </div>
-                                <c:if test="${receipt.status == 'NEEDS_REVISION'}">
-                                    <div class="history-item">
-                                        <div class="history-icon revision">
-                                            <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                        </div>
-                                        <div class="history-body">
-                                            <div class="history-title">Yêu cầu chỉnh sửa<c:if test="${not empty receipt.approvedByName}"> bởi <c:out value="${receipt.approvedByName}"/></c:if></div>
-                                                <div class="history-meta">Phiếu chờ nhân viên tạo phiếu chỉnh sửa và gửi lại</div>
-                                            </div>
-                                        </div>
-                                </c:if>
-                                <c:if test="${receipt.status == 'COMPLETED' && not empty receipt.approvedAt}">
-                                    <div class="history-item">
-                                        <div class="history-icon approve">
-                                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                        </div>
-                                        <div class="history-body">
-                                            <div class="history-title">Duyệt phiếu bởi <c:out value="${receipt.approvedByName}"/></div>
-                                            <div class="history-meta">${receipt.approvedAt} — Tồn kho đã được cập nhật</div>
-                                        </div>
-                                    </div>
-                                </c:if>
-                                <c:if test="${receipt.status == 'CANCELLED' && not empty receipt.approvedAt}">
-                                    <div class="history-item">
-                                        <div class="history-icon reject">
-                                            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                        </div>
-                                        <div class="history-body">
-                                            <div class="history-title">Từ chối phiếu bởi <c:out value="${receipt.approvedByName}"/></div>
-                                            <div class="history-meta">${receipt.approvedAt}</div>
-                                        </div>
-                                    </div>
-                                </c:if>
-                            </div>
                             <c:if test="${not empty receipt.reasonName}">
-                                <div style="margin-top: 18px;">
-                                    <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do</div>
-                                    <div class="note-soft">
-                                        <span class="status-pill status-pending"><span class="pdot"></span><c:out value="${receipt.reasonName}"/></span>
-                                    </div>
+                                <div style="margin-bottom: 18px; padding: 12px 16px; background: var(--warn-soft); border-radius: var(--radius-sm);">
+                                    <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Lý do</div>
+                                    <span class="status-pill status-pending"><span class="pdot"></span><c:out value="${receipt.reasonName}"/></span>
+                                    <c:if test="${not empty receipt.reasonNote}">
+                                        <div style="margin-top:4px;font-size:12.5px;color:var(--fg);"><c:out value="${receipt.reasonNote}"/></div>
+                                    </c:if>
                                 </div>
                             </c:if>
-                            <c:if test="${not empty receipt.reasonNote}">
-                                <div style="margin-top: 12px;">
-                                    <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do chi tiết (từ chối / yêu cầu chỉnh sửa)</div>
-                                    <div class="note-soft"><c:out value="${receipt.reasonNote}"/></div>
+                            <div class="table-card history-card">
+                                <div class="result-summary" style="margin-bottom:8px;">
+                                    Tìm thấy <strong>${totalHistory}</strong> bản ghi
                                 </div>
-                            </c:if>
-                            <c:if test="${not empty receipt.note}">
-                                <div style="margin-top: 12px;">
-                                    <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
-                                    <div class="note-soft"><c:out value="${receipt.note}"/></div>
-                                </div>
-                            </c:if>
+                                <table class="history-table">
+                                    <thead><tr>
+                                        <th style="width:150px;">Thời gian</th>
+                                        <th style="width:180px;">Người thực hiện</th>
+                                        <th style="width:140px;">Hành động</th>
+                                        <th>Chi tiết thay đổi</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    <c:choose>
+                                        <c:when test="${empty receiptHistory}">
+                                            <tr><td colspan="4">
+                                                <div class="empty-state"><strong>Không có bản ghi nào</strong></div>
+                                            </td></tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="h" items="${receiptHistory}">
+                                                <tr>
+                                                    <td class="mono"><fmt:formatDate value="${h.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td><c:out value="${h.username}"/></td>
+                                                    <td>
+                                                        <span class="action-badge action-<c:choose>
+                                                            <c:when test="${h.action == 'CREATE'}">create</c:when>
+                                                            <c:when test="${h.action == 'UPDATE'}">update</c:when>
+                                                            <c:when test="${h.action == 'APPROVE'}">approve</c:when>
+                                                            <c:when test="${h.action == 'REJECT'}">reject</c:when>
+                                                            <c:when test="${h.action == 'REVISION'}">revision</c:when>
+                                                            <c:otherwise>default</c:otherwise>
+                                                        </c:choose>">
+                                                        <c:choose>
+                                                            <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
+                                                            <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
+                                                            <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
+                                                            <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
+                                                            <c:when test="${h.action == 'REVISION'}">Yêu cầu sửa</c:when>
+                                                            <c:otherwise>${h.action}</c:otherwise>
+                                                        </c:choose></span>
+                                                    </td>
+                                                    <td class="detail-cell"><c:out value="${h.details}"/></td>
+                                                </tr>
+                                            </c:forEach>
+                                        </c:otherwise>
+                                    </c:choose>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <div class="tab-panel" id="tab-products">
