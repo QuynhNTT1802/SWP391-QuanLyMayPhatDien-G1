@@ -304,23 +304,23 @@ public class ReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
+        String[] quantities = request.getParameterValues("quantity");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = parseAndValidateDetails(
-                genIds, serials, detailNotes, receiptType, warehouseId, errors);
+                genIds, serials, quantities, detailNotes, receiptType, warehouseId, errors);
 
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
             errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
         }
 
         if (!errors.isEmpty()) {
-            Receipt form = new Receipt();
-            form.setReceiptType(receiptType);
-            form.setWarehouseId(warehouseId);
-            form.setNote(note);
-            form.setReasonId(reasonId);
-            form.setDetails(details);
-            request.setAttribute("receipt", form);
+            StringBuilder msg = new StringBuilder("Lưu phiếu thất bại:");
+            for (String e : errors) {
+                msg.append(" ").append(e.replace("Dòng ", "dòng "));
+            }
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", msg.toString());
             request.setAttribute("errors", errors);
             request.setAttribute("warehouses", warehouseDAO.findAll());
             GeneratorDAO genDAO = new GeneratorDAO();
@@ -346,7 +346,8 @@ public class ReceiptController extends HttpServlet {
         }
         int receiptId = receiptDAO.insert(r);
         if (receiptId <= 0) {
-            errors.add("Không thể tạo phiếu, vui lòng thử lại");
+            request.setAttribute("toastMessage", "Không thể tạo phiếu, vui lòng thử lại");
+            request.setAttribute("toastType", "danger");
             request.setAttribute("errors", errors);
             request.setAttribute("warehouses", warehouseDAO.findAll());
             request.setAttribute("generators", new ArrayList<>());
@@ -360,11 +361,13 @@ public class ReceiptController extends HttpServlet {
             detailDAO.insert(d);
         }
 
-        response.sendRedirect(request.getContextPath() + "/receipt?msg=created");
+        session.setAttribute("toastMessage", "Thêm phiếu thành công");
+        session.setAttribute("toastType", "success");
+        response.sendRedirect(request.getContextPath() + "/receipt?action=list");
     }
 
     private List<ReceiptDetail> parseAndValidateDetails(String[] genIds, String[] serials,
-            String[] detailNotes, String receiptType, int warehouseId,
+            String[] quantities, String[] detailNotes, String receiptType, int warehouseId,
             List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) {
@@ -376,6 +379,7 @@ public class ReceiptController extends HttpServlet {
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
+            String qtyStr = (quantities != null && i < quantities.length) ? quantities[i] : null;
             String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
 
             boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
@@ -394,6 +398,24 @@ public class ReceiptController extends HttpServlet {
             }
             if (genId <= 0) {
                 errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
+                continue;
+            }
+
+            int qty = 1;
+            if (qtyStr != null && !qtyStr.trim().isEmpty()) {
+                try {
+                    qty = Integer.parseInt(qtyStr.trim());
+                } catch (NumberFormatException e) {
+                    errors.add("Dòng " + rowNum + ": Số lượng không hợp lệ");
+                    continue;
+                }
+            }
+            if (qty <= 0) {
+                errors.add("Dòng " + rowNum + ": Số lượng phải lớn hơn 0");
+                continue;
+            }
+            if (qty > MAX_QUANTITY) {
+                errors.add("Dòng " + rowNum + ": Số lượng không được vượt quá " + MAX_QUANTITY);
                 continue;
             }
 
@@ -427,8 +449,8 @@ public class ReceiptController extends HttpServlet {
             if (isExport && warehouseId > 0) {
                 Inventory inv = inventoryDAO.findByWarehouseAndGenerator(warehouseId, genId);
                 int onHand = inv != null ? inv.getQuantity() : 0;
-                if (onHand < 1) {
-                    errors.add("Dòng " + rowNum + ": Máy phát này đã hết hàng trong kho");
+                if (onHand < qty) {
+                    errors.add("Dòng " + rowNum + ": Kho chỉ còn " + onHand + " máy, không đủ " + qty);
                     continue;
                 }
             }
@@ -436,7 +458,7 @@ public class ReceiptController extends HttpServlet {
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);
-            d.setQuantity(1);
+            d.setQuantity(qty);
             d.setNote(detailNote);
             details.add(d);
         }
@@ -458,9 +480,12 @@ public class ReceiptController extends HttpServlet {
         boolean ok = receiptDAO.approveReceipt(id, loggedUser.getId());
 
         if (ok) {
-            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=approved");
+            session.setAttribute("toastMessage", "Duyệt phiếu thành công");
+            session.setAttribute("toastType", "success");
+            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id);
         } else {
-            request.setAttribute("error", "Không thể duyệt phiếu (phiếu không ở trạng thái chờ duyệt)");
+            request.setAttribute("toastMessage", "Không thể duyệt phiếu (phiếu không ở trạng thái chờ duyệt)");
+            request.setAttribute("toastType", "danger");
             viewDetail(request, response);
         }
     }
@@ -483,7 +508,9 @@ public class ReceiptController extends HttpServlet {
             try {
                 reasonId = Integer.parseInt(reasonIdStr);
             } catch (NumberFormatException e) {
-                request.setAttribute("error", "Lý do không hợp lệ");
+                request.setAttribute("toastMessage", "Lý do không hợp lệ");
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("openRejectModal", "true");
                 viewDetail(request, response);
                 return;
             }
@@ -494,7 +521,9 @@ public class ReceiptController extends HttpServlet {
             if (reasonNote.isEmpty()) {
                 reasonNote = null;
             } else if (reasonNote.length() > MAX_REASON_LENGTH) {
-                request.setAttribute("error", "Lý do từ chối không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
+                request.setAttribute("toastMessage", "Lý do từ chối không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("openRejectModal", "true");
                 viewDetail(request, response);
                 return;
             }
@@ -502,9 +531,13 @@ public class ReceiptController extends HttpServlet {
         boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reasonId, reasonNote);
 
         if (ok) {
-            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=rejected");
+            session.setAttribute("toastMessage", "Đã từ chối phiếu");
+            session.setAttribute("toastType", "success");
+            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id);
         } else {
-            request.setAttribute("error", "Không thể từ chối phiếu (phiếu không ở trạng thái chờ duyệt)");
+            request.setAttribute("toastMessage", "Không thể từ chối phiếu (phiếu không ở trạng thái chờ duyệt)");
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("openRejectModal", "true");
             viewDetail(request, response);
         }
     }
@@ -570,7 +603,9 @@ public class ReceiptController extends HttpServlet {
             try {
                 reasonId = Integer.parseInt(reasonIdStr);
             } catch (NumberFormatException e) {
-                request.setAttribute("error", "Lý do không hợp lệ");
+                request.setAttribute("toastMessage", "Lý do không hợp lệ");
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("openRevisionModal", "true");
                 viewDetail(request, response);
                 return;
             }
@@ -581,16 +616,22 @@ public class ReceiptController extends HttpServlet {
             if (reasonNote.isEmpty()) {
                 reasonNote = null;
             } else if (reasonNote.length() > MAX_REASON_LENGTH) {
-                request.setAttribute("error", "Lý do yêu cầu chỉnh sửa không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
+                request.setAttribute("toastMessage", "Lý do yêu cầu chỉnh sửa không được vượt quá " + MAX_REASON_LENGTH + " ký tự");
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("openRevisionModal", "true");
                 viewDetail(request, response);
                 return;
             }
         }
         boolean ok = receiptDAO.requestRevision(id, loggedUser.getId(), reasonId, reasonNote);
         if (ok) {
-            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id + "&msg=revisionRequested");
+            session.setAttribute("toastMessage", "Đã gửi yêu cầu chỉnh sửa");
+            session.setAttribute("toastType", "success");
+            response.sendRedirect(request.getContextPath() + "/receipt?action=detail&id=" + id);
         } else {
-            request.setAttribute("error", "Không thể yêu cầu chỉnh sửa (phiếu không ở trạng thái chờ duyệt)");
+            request.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa (phiếu không ở trạng thái chờ duyệt)");
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("openRevisionModal", "true");
             viewDetail(request, response);
         }
     }
@@ -694,10 +735,11 @@ public class ReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
+        String[] quantities = request.getParameterValues("quantity");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = parseAndValidateDetails(
-                genIds, serials, detailNotes,
+                genIds, serials, quantities, detailNotes,
                 existing.getReceiptType(), warehouseId, errors);
 
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
@@ -705,6 +747,12 @@ public class ReceiptController extends HttpServlet {
         }
 
         if (!errors.isEmpty()) {
+            StringBuilder msg = new StringBuilder("Cập nhật phiếu thất bại:");
+            for (String e : errors) {
+                msg.append(" ").append(e.replace("Dòng ", "dòng "));
+            }
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", msg.toString());
             request.setAttribute("errors", errors);
             showEditForm(request, response);
             return;
@@ -718,9 +766,12 @@ public class ReceiptController extends HttpServlet {
 
         boolean ok = receiptDAO.updateReceipt(r, details, loggedUser.getId());
         if (ok) {
-            response.sendRedirect(request.getContextPath() + "/receipt?msg=resubmitted");
+            session.setAttribute("toastMessage", "Cập nhật phiếu thành công, đã gửi lại để duyệt");
+            session.setAttribute("toastType", "success");
+            response.sendRedirect(request.getContextPath() + "/receipt?action=list");
         } else {
-            request.setAttribute("error", "Không thể cập nhật phiếu (phiếu không ở trạng thái cần chỉnh sửa)");
+            request.setAttribute("toastMessage", "Không thể cập nhật phiếu (phiếu không ở trạng thái cần chỉnh sửa)");
+            request.setAttribute("toastType", "danger");
             showEditForm(request, response);
         }
     }

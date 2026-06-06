@@ -45,23 +45,19 @@
                             <div class="page-sub">${totalItems} phiếu</div>
                         </div>
                     </div>
-                    <!-- message/error giữ nguyên -->
-                    <c:if test="${not empty param.msg}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                            <c:choose>
-                                <c:when test="${param.msg == 'created'}">Đã tạo phiếu thành công.</c:when>
-                                <c:when test="${param.msg == 'approved'}">Đã duyệt phiếu thành công.</c:when>
-                                <c:when test="${param.msg == 'rejected'}">Đã từ chối phiếu.</c:when>
-                                <c:when test="${param.msg == 'resubmitted'}">Đã gửi lại phiếu để duyệt.</c:when>
-                                <c:otherwise>${param.msg}</c:otherwise>
-                            </c:choose>
-                        </div>
-                    </c:if>
-                    <c:if test="${not empty error}">
-                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${error}"/>
-                        </div>
-                    </c:if>
+                    <div class="toast-host" id="toastHost"></div>
+                    <script>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+                        <c:remove var="toastMessage" scope="session"/>
+                        <c:remove var="toastType" scope="session"/>
+                        </c:if>
+                        <c:if test="${not empty requestScope.toastMessage}">
+                        window.SESSION_DATA = window.SESSION_DATA || {};
+                        window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+                        window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+                        </c:if>
+                    </script>
                     <!-- filter giữ nguyên -->
                     <form method="get" action="${pageContext.request.contextPath}/receipt" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <input type="hidden" name="action" value="list" />
@@ -231,6 +227,8 @@
                 </main>
             </div>
         </div>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     </body>

@@ -261,6 +261,7 @@ public class OrderController extends HttpServlet {
             orderCode = String.format("ORD-%s-%03d", dateStr, todayCount);
         }
         order.setOrderCode(orderCode);
+        order.setCreatedBy(user.getId());
         CustomerDAO customerDAO = new CustomerDAO();
 
         String custName = request.getParameter("customerName");
