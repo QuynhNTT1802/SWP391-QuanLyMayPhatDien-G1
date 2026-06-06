@@ -151,6 +151,10 @@
             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
             Khách hàng
         </a>
+        <a href="${pageContext.request.contextPath}/warehouse/suppliers">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Nhà cung cấp
+        </a>
 
         <c:if test="${not empty perms and perms.contains('forgot_pw.process')}">
             <a href="${pageContext.request.contextPath}/admin/forgot-password">
