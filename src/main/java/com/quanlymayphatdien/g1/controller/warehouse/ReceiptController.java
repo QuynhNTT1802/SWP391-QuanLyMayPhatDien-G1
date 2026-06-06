@@ -127,6 +127,13 @@ public class ReceiptController extends HttpServlet {
 
     private void viewReceiptList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Integer createdByFilter = null;
+        if (loggedUser != null && !isWarehouseManager(loggedUser)) {
+            createdByFilter = loggedUser.getId();
+        }
+
         String typeFilter = request.getParameter("type");
         String statusFilter = request.getParameter("status");
         String whFilter = request.getParameter("warehouse");
@@ -145,7 +152,7 @@ public class ReceiptController extends HttpServlet {
                 page = 1;
             }
         }
-        int totalItems = receiptDAO.countWithFilters(typeFilter, statusFilter, whFilter, search);
+        int totalItems = receiptDAO.countWithFilters(typeFilter, statusFilter, whFilter, search, createdByFilter);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -154,7 +161,7 @@ public class ReceiptController extends HttpServlet {
             page = totalPages;
         }
         List<Receipt> receiptList = receiptDAO.findWithFilters(
-                typeFilter, statusFilter, whFilter, search, page, pageSize);
+                typeFilter, statusFilter, whFilter, search, createdByFilter, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
         request.setAttribute("receiptList", receiptList);
@@ -716,5 +723,17 @@ public class ReceiptController extends HttpServlet {
             request.setAttribute("error", "Không thể cập nhật phiếu (phiếu không ở trạng thái cần chỉnh sửa)");
             showEditForm(request, response);
         }
+    }
+
+    private boolean isWarehouseManager(User user) {
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        for (Role role : user.getRoles()) {
+            if ("warehouse_manager".equals(role.getRoleName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

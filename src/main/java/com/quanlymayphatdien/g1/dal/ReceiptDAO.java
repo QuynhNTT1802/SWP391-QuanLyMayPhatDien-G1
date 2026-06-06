@@ -29,7 +29,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public List<Receipt> findWithFilters(String typeFilter, String statusFilter, String whFilter,
-            String search, int page, int pageSize) {
+            String search, Integer createdByFilter, int page, int pageSize) {
         List<Receipt> allReceipts = new ArrayList<>();
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
@@ -42,7 +42,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
-        List<String> inputs = new ArrayList<>();
+        List<Object> inputs = new ArrayList<>();
         if (typeFilter != null && !typeFilter.isEmpty()) {
             sql += "AND r.receipt_type = ? ";
             inputs.add(typeFilter);
@@ -54,6 +54,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (whFilter != null && !whFilter.isEmpty()) {
             sql += "AND r.warehouse_id = ? ";
             inputs.add(whFilter);
+        }
+        if (createdByFilter != null) {
+            sql += "AND r.created_by = ? ";
+            inputs.add(createdByFilter);
         }
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
@@ -69,7 +73,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             for (int i = 0; i < inputs.size(); i++) {
-                statement.setString(i + 1, inputs.get(i));
+                statement.setObject(i + 1, inputs.get(i));
             }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -90,14 +94,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return new ArrayList<>();
     }
 
-    public int countWithFilters(String typeFilter, String statusFilter, String whFilter, String search) {
+    public int countWithFilters(String typeFilter, String statusFilter, String whFilter, String search, Integer createdByFilter) {
         String sql = "SELECT COUNT(*) FROM receipt r "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
-        List<String> inputs = new ArrayList<>();
+        List<Object> inputs = new ArrayList<>();
         if (typeFilter != null && !typeFilter.isEmpty()) {
             sql += "AND r.receipt_type = ? ";
             inputs.add(typeFilter);
@@ -109,6 +113,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (whFilter != null && !whFilter.isEmpty()) {
             sql += "AND r.warehouse_id = ? ";
             inputs.add(whFilter);
+        }
+        if (createdByFilter != null) {
+            sql += "AND r.created_by = ? ";
+            inputs.add(createdByFilter);
         }
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
@@ -123,7 +131,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             for (int i = 0; i < inputs.size(); i++) {
-                statement.setString(i + 1, inputs.get(i));
+                statement.setObject(i + 1, inputs.get(i));
             }
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
