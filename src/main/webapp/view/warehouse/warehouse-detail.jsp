@@ -16,11 +16,20 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
     <style>
         a.btn, a.back-link { text-decoration: none; }
         .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
         .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
         .alert-success { background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+        .action-badge.action-lock   { background: var(--danger-soft); color: var(--danger); }
+        .action-badge.action-unlock { background: var(--accent-soft); color: var(--accent); }
+        .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+        .filter-active-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 11px; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; gap: 8px; color: var(--muted); }
+        .empty-state .icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+        .empty-state .icon-wrap svg { width: 22px; height: 22px; stroke: var(--muted); }
+        .empty-state strong { color: var(--fg); font-size: 14px; }
     </style>
 </head>
 <body>
@@ -97,54 +106,177 @@
                 </div>
             </div>
 
-            <div class="section" style="padding: 18px 22px;">
-                <div class="info-grid">
-                    <div class="info-field">
-                        <div class="info-label">Tên kho</div>
-                        <div class="info-value mono"><c:out value="${warehouse.name}"/></div>
-                    </div>
-                    <div class="info-field">
-                        <div class="info-label">Địa chỉ</div>
-                        <div class="info-value"><c:out value="${warehouse.address}"/></div>
-                    </div>
-                    <div class="info-field">
-                        <div class="info-label">Trạng thái</div>
-                        <div class="info-value">
-                            <c:choose>
-                                <c:when test="${warehouse.status == 'active'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#d4edda;color:#155724;">Hoạt động</span></c:when>
-                                <c:when test="${warehouse.status == 'locked'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Bị khóa</span></c:when>
-                                <c:otherwise><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Ngưng hoạt động</span></c:otherwise>
-                            </c:choose>
-                        </div>
-                    </div>
-                    <div class="info-field">
-                        <div class="info-label">Tổng tồn kho</div>
-                        <div class="info-value mono"><fmt:formatNumber value="${warehouse.totalInventory}"/></div>
-                    </div>
-                    <div class="info-field">
-                        <div class="info-label">Số mặt hàng</div>
-                        <div class="info-value mono">${warehouse.itemCount}</div>
-                    </div>
-                    <c:if test="${not empty warehouse.createdAt}">
-                        <div class="info-field">
-                            <div class="info-label">Ngày tạo</div>
-                            <div class="info-value mono">${warehouse.createdAt}</div>
-                        </div>
-                    </c:if>
-                    <c:if test="${not empty warehouse.updatedAt}">
-                        <div class="info-field">
-                            <div class="info-label">Cập nhật cuối</div>
-                            <div class="info-value mono">${warehouse.updatedAt}</div>
-                        </div>
-                    </c:if>
-                    <c:if test="${not empty warehouse.description}">
-                        <div class="info-field" style="grid-column: span 2;">
-                            <div class="info-label">Mô tả</div>
-                            <div style="font-size:13px;color:var(--fg-soft);white-space:pre-wrap;line-height:1.55;padding:14px;background:var(--surface-2);border-radius:var(--radius-sm);"><c:out value="${warehouse.description}"/></div>
-                        </div>
-                    </c:if>
-                </div>
+            <div class="tab-bar">
+                <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${warehouse.warehouseId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Thông tin chung
+                </a>
+                <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${warehouse.warehouseId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
+                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Lịch sử
+                </a>
             </div>
+
+            <c:choose>
+                <c:when test="${currentTab == 'history'}">
+                    <div class="table-card history-card">
+                        <form method="get" action="${pageContext.request.contextPath}/warehouse" class="history-filter-bar">
+                            <input type="hidden" name="action" value="view"/>
+                            <input type="hidden" name="id" value="${warehouse.warehouseId}"/>
+                            <input type="hidden" name="tab" value="history"/>
+                            <input type="hidden" name="page" value="1"/>
+
+                            <div class="search-input hf-search">
+                                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input name="logSearch" value="${logSearch}" placeholder="Tìm tên kho, người dùng..." autocomplete="off"/>
+                            </div>
+                            <select name="logAction" class="filter-select">
+                                <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
+                                <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                                <option value="LOCK" ${logAction == 'LOCK' ? 'selected' : ''}>Khóa kho</option>
+                                <option value="UNLOCK" ${logAction == 'UNLOCK' ? 'selected' : ''}>Mở khóa kho</option>
+                            </select>
+                            <div class="date-range">
+                                <label class="date-label">Từ</label>
+                                <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
+                                <label class="date-label">đến</label>
+                                <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                Áp dụng
+                            </button>
+                            <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${warehouse.warehouseId}&amp;tab=history" class="btn">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                    Xóa lọc
+                                </a>
+                            </c:if>
+                        </form>
+
+                        <div class="result-summary">
+                            Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                            <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                            </c:if>
+                        </div>
+
+                        <table>
+                            <thead><tr>
+                                <th style="width:150px;">Thời gian</th>
+                                <th style="width:180px;">Người dùng</th>
+                                <th style="width:140px;">Hành động</th>
+                                <th>Đối tượng</th>
+                                <th>Chi tiết</th>
+                            </tr></thead>
+                            <tbody>
+                            <c:choose>
+                                <c:when test="${empty logList}">
+                                    <tr><td colspan="5">
+                                        <div class="empty-state">
+                                            <div class="icon-wrap">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                            </div>
+                                            <strong>Không có bản ghi nào</strong>
+                                            <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                                <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${warehouse.warehouseId}&amp;tab=history">xóa lọc</a></span>
+                                            </c:if>
+                                        </div>
+                                    </td></tr>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:forEach var="log" items="${logList}">
+                                        <tr>
+                                            <td><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                            <td>
+                                                <div style="font-weight:600;color:var(--fg);">${log.username}</div>
+                                            </td>
+                                            <td>
+                                                <span class="action-badge action-<c:choose><c:when test="${log.action == 'UPDATE'}">update</c:when><c:when test="${log.action == 'LOCK'}">lock</c:when><c:when test="${log.action == 'UNLOCK'}">unlock</c:when><c:otherwise>default</c:otherwise></c:choose>"><c:choose><c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when><c:when test="${log.action == 'LOCK'}">Khóa kho</c:when><c:when test="${log.action == 'UNLOCK'}">Mở khóa kho</c:when><c:otherwise>${log.action}</c:otherwise></c:choose></span>
+                                            </td>
+                                            <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
+                                            <td style="max-width:380px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                                ${log.details}
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
+                            </tbody>
+                        </table>
+
+                        <c:if test="${logTotalPages > 1}">
+                        <div class="pagination">
+                            <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
+                            <div class="controls">
+                                <c:if test="${logPage > 1}">
+                                    <a href="${pageContext.request.contextPath}/warehouse?action=view&amp;id=${warehouse.warehouseId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${logTotalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="${pageContext.request.contextPath}/warehouse?action=view&amp;id=${warehouse.warehouseId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                                <c:if test="${logPage < logTotalPages}">
+                                    <a href="${pageContext.request.contextPath}/warehouse?action=view&amp;id=${warehouse.warehouseId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                                </c:if>
+                            </div>
+                        </div>
+                        </c:if>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <div class="section" style="padding: 18px 22px;">
+                        <div class="info-grid">
+                            <div class="info-field">
+                                <div class="info-label">Tên kho</div>
+                                <div class="info-value mono"><c:out value="${warehouse.name}"/></div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Địa chỉ</div>
+                                <div class="info-value"><c:out value="${warehouse.address}"/></div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Trạng thái</div>
+                                <div class="info-value">
+                                    <c:choose>
+                                        <c:when test="${warehouse.status == 'active'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#d4edda;color:#155724;">Hoạt động</span></c:when>
+                                        <c:when test="${warehouse.status == 'locked'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Bị khóa</span></c:when>
+                                        <c:otherwise><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Ngưng hoạt động</span></c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Tổng tồn kho</div>
+                                <div class="info-value mono"><fmt:formatNumber value="${warehouse.totalInventory}"/></div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Số mặt hàng</div>
+                                <div class="info-value mono">${warehouse.itemCount}</div>
+                            </div>
+                            <c:if test="${not empty warehouse.createdAt}">
+                                <div class="info-field">
+                                    <div class="info-label">Ngày tạo</div>
+                                    <div class="info-value mono">${warehouse.createdAt}</div>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty warehouse.updatedAt}">
+                                <div class="info-field">
+                                    <div class="info-label">Cập nhật cuối</div>
+                                    <div class="info-value mono">${warehouse.updatedAt}</div>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty warehouse.description}">
+                                <div class="info-field" style="grid-column: span 2;">
+                                    <div class="info-label">Mô tả</div>
+                                    <div style="font-size:13px;color:var(--fg-soft);white-space:pre-wrap;line-height:1.55;padding:14px;background:var(--surface-2);border-radius:var(--radius-sm);"><c:out value="${warehouse.description}"/></div>
+                                </div>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:otherwise>
+            </c:choose>
         </main>
     </div>
 </div>
