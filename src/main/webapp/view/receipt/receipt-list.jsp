@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -24,8 +25,8 @@
                         <span class="crumb">/ Kho / Phiếu nhập/xuất</span>
                         <div class="top-actions">
                             <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
-                                <svg class="icon-sun" viewBox="0 0 24 24">...</svg>
-                                <svg class="icon-moon" viewBox="0 0 24 24">...</svg>
+                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             </button>
                             <a class="btn" href="${pageContext.request.contextPath}/receipt?action=selectOrder">
                             Xem phiếu mua đã duyệt
@@ -45,23 +46,19 @@
                             <div class="page-sub">${totalItems} phiếu</div>
                         </div>
                     </div>
-                    <!-- message/error giữ nguyên -->
-                    <c:if test="${not empty param.msg}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                            <c:choose>
-                                <c:when test="${param.msg == 'created'}">Đã tạo phiếu thành công.</c:when>
-                                <c:when test="${param.msg == 'approved'}">Đã duyệt phiếu thành công.</c:when>
-                                <c:when test="${param.msg == 'rejected'}">Đã từ chối phiếu.</c:when>
-                                <c:when test="${param.msg == 'resubmitted'}">Đã gửi lại phiếu để duyệt.</c:when>
-                                <c:otherwise>${param.msg}</c:otherwise>
-                            </c:choose>
-                        </div>
-                    </c:if>
-                    <c:if test="${not empty error}">
-                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${error}"/>
-                        </div>
-                    </c:if>
+                    <div class="toast-host" id="toastHost"></div>
+                    <script>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+                        <c:remove var="toastMessage" scope="session"/>
+                        <c:remove var="toastType" scope="session"/>
+                        </c:if>
+                        <c:if test="${not empty requestScope.toastMessage}">
+                        window.SESSION_DATA = window.SESSION_DATA || {};
+                        window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+                        window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+                        </c:if>
+                    </script>
                     <!-- filter giữ nguyên -->
                     <form method="get" action="${pageContext.request.contextPath}/receipt" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <input type="hidden" name="action" value="list" />
@@ -111,6 +108,7 @@
                                     <th>Đơn liên quan</th>
                                     <th>Lý do</th>
                                     <th>Người tạo</th>
+                                    <th>Tổng tiền</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày tạo</th>
                                     <th class="col-actions">Thao tác</th>
@@ -119,7 +117,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="9">
+                                        <tr><td colspan="10">
                                                 <div class="empty-state"><strong>Không tìm thấy phiếu nào</strong></div>
                                             </td></tr>
                                         </c:when>
@@ -160,6 +158,14 @@
                                                     </c:choose>
                                                 </td>
                                                 <td>${r.createdByName}</td>
+                                                <td class="mono">
+                                                    <c:choose>
+                                                        <c:when test="${not empty r.totalAmount}">
+                                                            <fmt:formatNumber value="${r.totalAmount}" type="currency" currencySymbol="" minFractionDigits="0"/>₫
+                                                        </c:when>
+                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${r.status == 'PENDING'}">
@@ -231,6 +237,8 @@
                 </main>
             </div>
         </div>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     </body>

@@ -508,6 +508,7 @@ CREATE TABLE `receipt` (
   `approved_by` int DEFAULT NULL,
   `status` enum('PENDING_RECONCILIATION','COMPLETED','CANCELLED') NOT NULL DEFAULT 'PENDING_RECONCILIATION',
   `note` text,
+  `total_amount` decimal(15,2) DEFAULT NULL,
   `approved_at` datetime DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -548,6 +549,7 @@ CREATE TABLE `receipt_detail` (
   `generator_id` int NOT NULL,
   `serial_number` varchar(100) NOT NULL,
   `quantity` int NOT NULL DEFAULT '1',
+  `unit_price` decimal(15,2) DEFAULT NULL,
   `note` text,
   PRIMARY KEY (`receipt_detail_id`),
   UNIQUE KEY `uk_serial_receipt` (`serial_number`,`receipt_id`),
@@ -564,7 +566,7 @@ CREATE TABLE `receipt_detail` (
 
 LOCK TABLES `receipt_detail` WRITE;
 /*!40000 ALTER TABLE `receipt_detail` DISABLE KEYS */;
-INSERT INTO `receipt_detail` VALUES (1,1,3,'HYU-DHY8000-SN001',1,'Máy mới 100%, tem nguyên vẹn'),(2,1,3,'HYU-DHY8000-SN002',1,'Máy mới 100%, tem nguyên vẹn');
+INSERT INTO `receipt_detail` VALUES (1,1,3,'HYU-DHY8000-SN001',1,NULL,'Máy mới 100%, tem nguyên vẹn'),(2,1,3,'HYU-DHY8000-SN002',1,NULL,'Máy mới 100%, tem nguyên vẹn');
 /*!40000 ALTER TABLE `receipt_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
