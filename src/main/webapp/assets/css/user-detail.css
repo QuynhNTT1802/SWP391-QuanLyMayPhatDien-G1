@@ -1,5 +1,11 @@
 
 
+/* ===== User-history action badges (kế thừa .action-badge từ admin-category.css) ===== */
+.action-badge.action-update_profile  { background: var(--info-soft);   color: var(--info); }
+.action-badge.action-change_password { background: color-mix(in srgb, var(--purple) 18%, transparent); color: var(--purple); }
+.action-badge.action-activate        { background: var(--accent-soft); color: var(--accent); }
+.action-badge.action-deactivate      { background: var(--danger-soft); color: var(--danger); }
+
 [data-theme="dark"] {
     --bg: oklch(16% 0.012 250);
     --surface: oklch(20% 0.014 250);
