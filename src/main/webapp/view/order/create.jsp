@@ -115,6 +115,32 @@
             margin-top: 8px;
             font-size: 13px;
         }
+        .customer-warn-banner {
+            max-width: 600px;
+            margin: 24px auto;
+            padding: 16px 20px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #856404;
+            font-size: 14px;
+        }
+        .customer-warn-banner .banner-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .customer-warn-banner .banner-content {
+            flex: 1;
+        }
+        .customer-warn-banner a {
+            color: #3b82f6;
+            font-weight: 600;
+            text-decoration: underline;
+            margin-left: 8px;
+        }
     </style>
     <body>
         <div class="app">
@@ -135,8 +161,8 @@
                 <main>
                     <script>
                         <c:if test="${not empty sessionScope.message}">
-                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.message}"/>', type: 'success' };
-                        <c:remove var="message" scope="session"/>
+                        window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
+                            <c:remove var="message" scope="session"/>
                         </c:if>
                         <c:if test="${not empty error}">
                         window.SESSION_DATA = window.SESSION_DATA || {};
@@ -155,6 +181,19 @@
                         <h2 class="page-title">Tạo đơn hàng bán ra</h2>
                     </div>
 
+                    <c:if test="${param.error == 'customer_not_found' or not empty requestScope.customerNotFound}">
+                        <div class="customer-warn-banner">
+                            <div class="banner-icon">⚠</div>
+                            <div class="banner-content">
+                                <strong>Chưa có khách hàng với SĐT này trong hệ thống.</strong>
+                                <a href="${pageContext.request.contextPath}/warehouse/customers?action=create&returnTo=order-create&phone=${param.customerPhone}">
+                                    Tạo khách hàng mới →
+                                </a>
+                            </div>
+                        </div>
+                    </c:if>
+
+
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/order?action=create">
                             <div class="form-section">
@@ -165,27 +204,32 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${param.customerName}"/>" required />
+                                        <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : param.customerName}" />
+                                        <input class="input" name="customerName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${preName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <input class="input mono" name="customerPhone" placeholder="VD: 0912345678" value="<c:out value="${param.customerPhone}"/>" required />
+                                        <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : param.customerPhone}" />
+                                        <input class="input mono" name="customerPhone" placeholder="VD: 0912345678" value="<c:out value="${prePhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
-                                        <input class="input mono" name="customerEmail" type="email" placeholder="email@example.com" value="<c:out value="${param.customerEmail}"/>" />
+                                        <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : param.customerEmail}" />
+                                        <input class="input mono" name="customerEmail" type="email" placeholder="email@example.com" value="<c:out value="${preEmail}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${param.customerAddress}"/>" required />
+                                        <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : param.customerAddress}" />
+                                        <input class="input" name="customerAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${preAddress}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
+                                        <c:set var="preTypeId" value="${(preselectCustomer != null) ? preselectCustomer.customerTypeId : param.customerTypeId}" />
                                         <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
                                             <option value="">-- Chọn loại khách hàng --</option>
                                             <c:forEach var="ct" items="${customerTypes}">
                                                 <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${param.customerTypeId == ct.id}">selected</c:if>>
+                                                        <c:if test="${preTypeId == ct.id}">selected</c:if>>
                                                     <c:out value="${ct.name}"/>
                                                 </option>
                                             </c:forEach>
@@ -193,7 +237,8 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
+                                        <c:set var="preCompany" value="${(preselectCustomer != null) ? preselectCustomer.companyName : param.customerCompany}" />
+                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${preCompany}"/>" />
                                     </div>
                                 </div>
                             </div>

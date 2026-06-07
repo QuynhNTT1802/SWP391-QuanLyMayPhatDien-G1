@@ -162,27 +162,32 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerName" value="<c:out value="${order.customer.name}"/>" required />
+                                        <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : order.customer.name}" />
+                                        <input class="input" name="customerName" value="<c:out value="${preName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <input class="input mono" name="customerPhone" value="<c:out value="${order.customer.phone}"/>" required />
+                                        <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : order.customer.phone}" />
+                                        <input class="input mono" name="customerPhone" value="<c:out value="${prePhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
-                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${order.customer.email}"/>" />
+                                        <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : order.customer.email}" />
+                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${preEmail}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerAddress" value="<c:out value="${order.customer.address}"/>" required />
+                                        <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : order.customer.address}" />
+                                        <input class="input" name="customerAddress" value="<c:out value="${preAddress}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
+                                        <c:set var="preTypeId" value="${(preselectCustomer != null) ? preselectCustomer.customerTypeId : order.customer.customerTypeId}" />
                                         <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
                                             <option value="">-- Chọn loại khách hàng --</option>
                                             <c:forEach var="ct" items="${customerTypes}">
                                                 <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${order.customer.customerTypeId == ct.id}">selected</c:if>>
+                                                        <c:if test="${preTypeId == ct.id}">selected</c:if>>
                                                     <c:out value="${ct.name}"/>
                                                 </option>
                                             </c:forEach>
@@ -190,7 +195,8 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${order.customer.companyName}"/>" />
+                                        <c:set var="preCompany" value="${(preselectCustomer != null) ? preselectCustomer.companyName : order.customer.companyName}" />
+                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${preCompany}"/>" />
                                     </div>
                                 </div>
                             </div>
