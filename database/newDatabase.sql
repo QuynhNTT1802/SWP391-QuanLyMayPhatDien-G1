@@ -885,4 +885,21 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+-- --------------------------------------------------------
+-- MIGRATION: Thêm quyền customers.create cho sales_staff
+-- (Dùng cho quick-create khách hàng ngay trong form đơn hàng)
+-- --------------------------------------------------------
+
+-- 1. Thêm permission customers.create (idempotent)
+INSERT IGNORE INTO `permission` (`resource`, `action`, `description`)
+VALUES ('customers', 'create', 'Tạo/sửa khách hàng (gồm cả quick-create trong đơn hàng)');
+
+-- 2. Gán permission customers.create cho sales_staff (role_id=5)
+SET @perm_cust_create = (SELECT id FROM `permission`
+                         WHERE `resource` = 'customers' AND `action` = 'create'
+                         LIMIT 1);
+
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+VALUES (5, @perm_cust_create);
+
 -- Dump completed on 2026-06-01 17:12:11

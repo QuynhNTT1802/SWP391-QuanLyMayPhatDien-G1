@@ -226,18 +226,21 @@ public class OrderController extends HttpServlet {
 
         GeneratorDAO generatorDao = new GeneratorDAO();
         CategoryDAO categoryDao = new CategoryDAO();
+        CustomerDAO customerDao = new CustomerDAO();
 
         List<Generator> generators = generatorDao.findAll();
         List<Category> brands = categoryDao.findByType("brand");
         List<Category> fuelTypes = categoryDao.findByType("fuel_type");
         List<Category> phases = categoryDao.findByType("phase");
         List<Category> customerTypes = categoryDao.findByType("customer_type");
+        List<Customer> top4Customers = customerDao.findTop4Alphabetical();
 
         request.setAttribute("customerTypes", customerTypes);
         request.setAttribute("generators", generators);
         request.setAttribute("brands", brands);
         request.setAttribute("fuelTypes", fuelTypes);
         request.setAttribute("phases", phases);
+        request.setAttribute("top4Customers", top4Customers);
 
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
     }
@@ -289,26 +292,43 @@ public class OrderController extends HttpServlet {
         }
         customer = customerDAO.findByPhone(custPhone.trim());
         if (customer == null) {
-            request.setAttribute("customerNotFound", true);
-            CategoryDAO categoryDao2 = new CategoryDAO();
-            request.setAttribute("customerTypes", categoryDao2.findByType("customer_type"));
-            request.setAttribute("generators", generatorDao.findAll());
-            request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
-            return;
-        }
-        // Cập nhật thông tin customer từ form (KH đã tồn tại)
-        customer.setName(custName);
-        customer.setEmail(custEmail);
-        customer.setAddress(custAddress);
-        customer.setCompanyName(custCompany);
-        if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
-            try {
-                customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
-            } catch (NumberFormatException ignored) {
+            // Quick-create KH mới ngay khi tạo đơn
+            customer = new Customer();
+            customer.setName(custName);
+            customer.setPhone(custPhone.trim());
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                try {
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                } catch (NumberFormatException ignored) {
+                }
             }
+            customer.setStatus("active");
+            customer.setCreatedBy(user.getId());
+            int newCustId = customerDAO.insert(customer);
+            if (newCustId <= 0) {
+                request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
+                response.sendRedirect(request.getContextPath() + "/order?action=create");
+                return;
+            }
+            customer.setId(newCustId);
+        } else {
+            // KH đã tồn tại theo SĐT → auto-update thông tin từ form
+            customer.setName(custName);
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                try {
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            customer.setUpdatedBy(user.getId());
+            customerDAO.update(customer);
         }
-        customer.setUpdatedBy(user.getId());
-        customerDAO.update(customer);
 
         order.setCustomerId(customer.getId());
         order.setCustomerNote(custNote);
@@ -391,7 +411,9 @@ public class OrderController extends HttpServlet {
 
             List<Generator> generator = generatordao.findAll();
             CategoryDAO categoryDao = new CategoryDAO();
+            CustomerDAO customerDao = new CustomerDAO();
             List<Category> customerTypes = categoryDao.findByType("customer_type");
+            List<Customer> top4Customers = customerDao.findTop4Alphabetical();
 
             // Nếu return từ customer-create → load customer mới để pre-fill form
             String newCustIdStr = request.getParameter("newCustomerId");
@@ -411,6 +433,7 @@ public class OrderController extends HttpServlet {
             request.setAttribute("existingDetails", existingDetails);
             request.setAttribute("generators", generator);
             request.setAttribute("customerTypes", customerTypes);
+            request.setAttribute("top4Customers", top4Customers);
             request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
         } else {
             request.getSession().setAttribute("message", "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).");
@@ -488,23 +511,43 @@ public class OrderController extends HttpServlet {
             }
             Customer customer = customerDAO.findByPhone(custPhone.trim());
             if (customer == null) {
-                request.getSession().setAttribute("message", "SĐT chưa có trong hệ thống. Vui lòng tạo khách hàng mới trước.");
-                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
-                return;
-            }
-            // Cập nhật thông tin customer từ form
-            customer.setName(custName);
-            customer.setEmail(custEmail);
-            customer.setAddress(custAddress);
-            customer.setCompanyName(custCompany);
-            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
-                try {
-                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
-                } catch (NumberFormatException ignored) {
+                // Quick-create KH mới khi sửa đơn (giống create)
+                customer = new Customer();
+                customer.setName(custName);
+                customer.setPhone(custPhone.trim());
+                customer.setEmail(custEmail);
+                customer.setAddress(custAddress);
+                customer.setCompanyName(custCompany);
+                if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                    try {
+                        customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
+                customer.setStatus("active");
+                customer.setCreatedBy(user.getId());
+                int newCustId = customerDAO.insert(customer);
+                if (newCustId <= 0) {
+                    request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
+                    response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                    return;
+                }
+                customer.setId(newCustId);
+            } else {
+                // KH đã tồn tại theo SĐT → auto-update thông tin từ form
+                customer.setName(custName);
+                customer.setEmail(custEmail);
+                customer.setAddress(custAddress);
+                customer.setCompanyName(custCompany);
+                if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                    try {
+                        customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                customer.setUpdatedBy(user.getId());
+                customerDAO.update(customer);
             }
-            customer.setUpdatedBy(user.getId());
-            customerDAO.update(customer);
 
             order.setCustomerId(customer.getId());
 

@@ -20,6 +20,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
     </head>
     <style>
         .detail-table {
@@ -143,6 +144,9 @@
         }
     </style>
     <body>
+        <script>
+            var contextPath = '${pageContext.request.contextPath}';
+        </script>
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
@@ -201,26 +205,49 @@
                                     <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
                                     <h3 class="form-section-title">Người nhận hàng</h3>
                                 </div>
+
+                                <div class="sd" id="customerDropdown"
+                                     data-endpoint="${pageContext.request.contextPath}/warehouse/customers?action=search&q=">
+                                    <button type="button" class="sd-trigger" id="sdTrigger"
+                                            aria-haspopup="listbox" aria-expanded="false">
+                                        <span class="sd-trigger-label" id="sdLabel">--Tìm kiếm khách hàng--</span>
+                                        <svg class="sd-caret" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M6 9l6 6 6-6" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <div class="sd-panel" id="sdPanel" role="listbox" hidden>
+                                        <div class="sd-search-wrap">
+                                            <input type="text" class="sd-search" id="sdSearch"
+                                                   placeholder="Search for an item..."
+                                                   autocomplete="off" />
+                                        </div>
+                                        <ul class="sd-list" id="sdList">
+                                            <li class="sd-empty">&nbsp;</li>
+                                        </ul>
+                                    </div>
+                                    <input type="hidden" name="customerId" id="sdHiddenId" />
+                                </div>
+
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
                                         <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : param.customerName}" />
-                                        <input class="input" name="customerName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${preName}"/>" required />
+                                        <input class="input" name="customerName" id="inpCustName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${preName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
                                         <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : param.customerPhone}" />
-                                        <input class="input mono" name="customerPhone" placeholder="VD: 0912345678" value="<c:out value="${prePhone}"/>" required />
+                                        <input class="input mono" name="customerPhone" id="inpCustPhone" placeholder="VD: 0912345678" value="<c:out value="${prePhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
                                         <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : param.customerEmail}" />
-                                        <input class="input mono" name="customerEmail" type="email" placeholder="email@example.com" value="<c:out value="${preEmail}"/>" />
+                                        <input class="input mono" name="customerEmail" id="inpCustEmail" type="email" placeholder="email@example.com" value="<c:out value="${preEmail}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
                                         <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : param.customerAddress}" />
-                                        <input class="input" name="customerAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${preAddress}"/>" required />
+                                        <input class="input" name="customerAddress" id="inpCustAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${preAddress}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
@@ -459,5 +486,6 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
     </body>
 </html>
