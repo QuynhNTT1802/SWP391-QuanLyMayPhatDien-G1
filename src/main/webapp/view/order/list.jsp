@@ -179,6 +179,91 @@
                 background: var(--border);
                 margin: 3px 0;
             }
+            .user-name.customer-link {
+                cursor: pointer;
+                color: var(--accent);
+                text-decoration: none;
+            }
+            .user-name.customer-link:hover {
+                text-decoration: underline;
+            }
+            .customer-modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,.45);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .customer-modal-backdrop.open {
+                display: flex;
+            }
+            .customer-modal {
+                background: var(--surface);
+                border-radius: 8px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 10px 40px rgba(0,0,0,.25);
+                overflow: hidden;
+                animation: modalPop .18s ease-out;
+            }
+            @keyframes modalPop {
+                from { transform: scale(.96); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .customer-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border);
+            }
+            .customer-modal-header h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            .customer-modal-close {
+                background: transparent;
+                border: none;
+                font-size: 22px;
+                line-height: 1;
+                cursor: pointer;
+                color: var(--muted);
+                padding: 0 4px;
+            }
+            .customer-modal-close:hover { color: var(--fg); }
+            .customer-modal-body {
+                padding: 16px 18px;
+            }
+            .cust-info-row {
+                display: flex;
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px dashed var(--border);
+                font-size: 13.5px;
+            }
+            .cust-info-row:last-child { border-bottom: none; }
+            .cust-info-row .lbl {
+                flex: 0 0 110px;
+                color: var(--muted);
+                font-weight: 500;
+            }
+            .cust-info-row .val {
+                flex: 1;
+                color: var(--fg);
+                word-break: break-word;
+            }
+            .customer-modal-footer {
+                padding: 12px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                background: var(--surface-2);
+            }
         </style>
     </head>
     <body>
@@ -278,7 +363,17 @@
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
-                                                            <div class="user-name"><c:out value="${order.customer.name}"/></div>
+                                                            <a href="javascript:void(0);" class="user-name customer-link"
+                                                               onclick="showCustomerModal(this)"
+                                                               data-cust-id="<c:out value='${order.customer.id}'/>"
+                                                               data-cust-name="<c:out value='${order.customer.name}'/>"
+                                                               data-cust-phone="<c:out value='${order.customer.phone}'/>"
+                                                               data-cust-email="<c:out value='${order.customer.email}'/>"
+                                                               data-cust-address="<c:out value='${order.customer.address}'/>"
+                                                               data-cust-company="<c:out value='${order.customer.companyName}'/>"
+                                                               title="Xem thông tin khách hàng">
+                                                                <c:out value="${order.customer.name}"/>
+                                                            </a>
                                                             <div class="user-email"><c:out value="${order.customer.phone}"/></div>
                                                         </div>
                                                     </div>
@@ -378,6 +473,48 @@
 
         <div class="toast-host" id="toastHost"></div>
 
+        <div class="customer-modal-backdrop" id="customerModal" onclick="if (event.target === this) closeCustomerModal();">
+            <div class="customer-modal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+                <div class="customer-modal-header">
+                    <h3 id="customerModalTitle">Thông tin khách hàng</h3>
+                    <button type="button" class="customer-modal-close" onclick="closeCustomerModal()" aria-label="Đóng">&times;</button>
+                </div>
+                <div class="customer-modal-body">
+                    <div class="cust-info-row">
+                        <div class="lbl">Mã khách hàng</div>
+                        <div class="val" id="cm-id">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Họ và tên</div>
+                        <div class="val" id="cm-name">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Số điện thoại</div>
+                        <div class="val" id="cm-phone">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Email</div>
+                        <div class="val" id="cm-email">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Công ty</div>
+                        <div class="val" id="cm-company">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Địa chỉ</div>
+                        <div class="val" id="cm-address">—</div>
+                    </div>
+                </div>
+                <div class="customer-modal-footer">
+                    <button type="button" class="btn" onclick="closeCustomerModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="cm-detail-link">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
     <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
     <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
@@ -468,6 +605,33 @@
             menu.classList.add('open');
             btn.classList.add('open');
         }
+        function showCustomerModal(el) {
+            event.stopPropagation();
+            var id = el.getAttribute('data-cust-id') || '';
+            var name = el.getAttribute('data-cust-name') || '—';
+            var phone = el.getAttribute('data-cust-phone') || '—';
+            var email = el.getAttribute('data-cust-email') || '';
+            var address = el.getAttribute('data-cust-address') || '';
+            var company = el.getAttribute('data-cust-company') || '';
+
+            document.getElementById('cm-id').textContent = id || '—';
+            document.getElementById('cm-name').textContent = name;
+            document.getElementById('cm-phone').textContent = phone;
+            document.getElementById('cm-email').textContent = email || '—';
+            document.getElementById('cm-company').textContent = company || '—';
+            document.getElementById('cm-address').textContent = address || '—';
+            document.getElementById('cm-detail-link').href = window.APP_CTX + '/warehouse/customers?action=view&id=' + id;
+
+            document.getElementById('customerModal').classList.add('open');
+        }
+        function closeCustomerModal() {
+            document.getElementById('customerModal').classList.remove('open');
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeCustomerModal();
+            }
+        });
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.dropdown')) {
                 document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
