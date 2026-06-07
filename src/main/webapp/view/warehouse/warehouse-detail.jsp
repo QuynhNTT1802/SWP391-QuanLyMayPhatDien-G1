@@ -33,6 +33,20 @@
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse?action=list">Kho hàng</a> / <span><c:out value="${warehouse.name}"/></span></span>
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
+                <c:choose>
+                    <c:when test="${warehouse.status == 'locked'}">
+                        <a class="btn" href="${pageContext.request.contextPath}/warehouse?action=unlock&id=${warehouse.warehouseId}" onclick="return confirm('Mở khóa kho này? Các máy trong kho sẽ hiển thị lại trong tồn kho.');">
+                            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                            Mở khóa kho
+                        </a>
+                    </c:when>
+                    <c:otherwise>
+                        <a class="btn" href="${pageContext.request.contextPath}/warehouse?action=lock&id=${warehouse.warehouseId}" onclick="return confirm('Khóa kho này? Các máy trong kho sẽ bị ẩn khỏi tồn kho cho đến khi mở khóa lại.');">
+                            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Khóa kho
+                        </a>
+                    </c:otherwise>
+                </c:choose>
                 <a class="btn" href="${pageContext.request.contextPath}/warehouse?action=update&id=${warehouse.warehouseId}">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                     Chỉnh sửa
@@ -66,6 +80,7 @@
                         <c:out value="${warehouse.name}"/>
                         <c:choose>
                             <c:when test="${warehouse.status == 'active'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#d4edda;color:#155724;">Hoạt động</span></c:when>
+                            <c:when test="${warehouse.status == 'locked'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Bị khóa</span></c:when>
                             <c:otherwise><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Ngưng hoạt động</span></c:otherwise>
                         </c:choose>
                     </h2>
@@ -97,6 +112,7 @@
                         <div class="info-value">
                             <c:choose>
                                 <c:when test="${warehouse.status == 'active'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#d4edda;color:#155724;">Hoạt động</span></c:when>
+                                <c:when test="${warehouse.status == 'locked'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Bị khóa</span></c:when>
                                 <c:otherwise><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Ngưng hoạt động</span></c:otherwise>
                             </c:choose>
                         </div>
@@ -133,6 +149,20 @@
     </div>
 </div>
 
+<div class="toast-host" id="toastHost"></div>
+<script>
+    <c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+    <c:remove var="toastMessage" scope="session"/>
+    <c:remove var="toastType" scope="session"/>
+    </c:if>
+    <c:if test="${not empty requestScope.toastMessage}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+    </c:if>
+</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 </body>
