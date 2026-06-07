@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -49,7 +50,27 @@ public class InventoryController extends HttpServlet {
                 SystemLogger.warn("Quản lý kho", "InventoryController.doGet", "Lỗi định dạng kho: " + ignored.getMessage());
             }
         }
+        if (selectedWarehouse != null) {
+            Warehouse sel = warehouseDAO.findById(selectedWarehouse);
+            if (sel != null && "locked".equals(sel.getStatus())) {
+                request.setAttribute("lockedWarehouseName", sel.getName());
+                request.setAttribute("lockedWarehouseId", sel.getWarehouseId());
+                selectedWarehouse = null;
+            }
+        }
         String search = request.getParameter("search");
+
+        boolean outOfStock = "1".equals(request.getParameter("outOfStock"));
+        Integer minYears = null;
+        String minYearsParam = request.getParameter("minYears");
+        if (minYearsParam != null && !minYearsParam.trim().isEmpty()) {
+            try {
+                int n = Integer.parseInt(minYearsParam.trim());
+                if (n >= 0) minYears = n;
+            } catch (NumberFormatException ignored) {
+                SystemLogger.warn("Quản lý kho", "InventoryController.doGet", "Lỗi định dạng minYears: " + minYearsParam);
+            }
+        }
 
         int page = 1;
         int pageSize = 10;
@@ -64,17 +85,20 @@ public class InventoryController extends HttpServlet {
             }
         }
 
-        int totalItems = inventoryDAO.countWithFilters(selectedWarehouse, search);
+        int totalItems = inventoryDAO.countWithFilters(selectedWarehouse, search, outOfStock, minYears);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<Inventory> inventoryList = inventoryDAO.findWithFilters(selectedWarehouse, search, page, pageSize);
+        List<Inventory> inventoryList = inventoryDAO.findWithFilters(selectedWarehouse, search, outOfStock, minYears, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("selectedWarehouse", selectedWarehouse);
         request.setAttribute("search", search);
+        request.setAttribute("outOfStock", outOfStock);
+        request.setAttribute("minYears", minYears);
+        request.setAttribute("today", LocalDate.now());
         request.setAttribute("inventoryList", inventoryList);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("currentPage", page);

@@ -132,6 +132,28 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
+    public boolean lock(int id) {
+        String sql = "UPDATE warehouse SET status = 'locked', updated_at = CURRENT_TIMESTAMP WHERE warehouse_id = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean unlock(int id) {
+        String sql = "UPDATE warehouse SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE warehouse_id = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     @Override
     public Warehouse getFromResultSet(ResultSet rs) throws SQLException {
         Warehouse w = new Warehouse();

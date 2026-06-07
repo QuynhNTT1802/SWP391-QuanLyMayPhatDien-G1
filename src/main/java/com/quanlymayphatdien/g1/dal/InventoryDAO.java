@@ -37,18 +37,24 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    public List<Inventory> findWithFilters(Integer warehouseId, String search, int page, int pageSize) {
+    public List<Inventory> findWithFilters(Integer warehouseId, String search,
+            boolean outOfStock, Integer minYears, int page, int pageSize) {
         List<Inventory> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT i.*, g.model AS generator_model, "
                 + "w.name AS warehouse_name, "
                 + "(SELECT c.name FROM generator_category gc "
                 + "  JOIN category c ON gc.category_id = c.id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand, "
+                + "sc.first_import_at "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE 1=1 ");
+                + "LEFT JOIN (SELECT warehouse_id, generator_id, MIN(created_at) AS first_import_at "
+                + "             FROM stock_card WHERE transaction_type = 'IMPORT' "
+                + "             GROUP BY warehouse_id, generator_id) sc "
+                + "  ON sc.warehouse_id = i.warehouse_id AND sc.generator_id = i.generator_id "
+                + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
@@ -63,6 +69,14 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
+        }
+        if (outOfStock) {
+            sql.append("AND i.quantity = 0 ");
+        }
+        if (minYears != null) {
+            sql.append("AND sc.first_import_at IS NOT NULL "
+                    + "AND sc.first_import_at <= (CURDATE() - INTERVAL ? YEAR) ");
+            params.add(minYears);
         }
         sql.append("ORDER BY w.name, g.model LIMIT ? OFFSET ?");
         params.add(pageSize);
@@ -77,6 +91,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);
                 try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                try {
+                    Timestamp ts = resultSet.getTimestamp("first_import_at");
+                    if (ts != null) inv.setFirstImportAt(ts.toLocalDateTime());
+                } catch (SQLException ignored) {}
                 list.add(inv);
             }
         } catch (SQLException e) {
@@ -85,11 +103,17 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    public int countWithFilters(Integer warehouseId, String search) {
+    public int countWithFilters(Integer warehouseId, String search,
+            boolean outOfStock, Integer minYears) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
-                + "WHERE 1=1 ");
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN (SELECT warehouse_id, generator_id, MIN(created_at) AS first_import_at "
+                + "             FROM stock_card WHERE transaction_type = 'IMPORT' "
+                + "             GROUP BY warehouse_id, generator_id) sc "
+                + "  ON sc.warehouse_id = i.warehouse_id AND sc.generator_id = i.generator_id "
+                + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
@@ -104,6 +128,14 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
+        }
+        if (outOfStock) {
+            sql.append("AND i.quantity = 0 ");
+        }
+        if (minYears != null) {
+            sql.append("AND sc.first_import_at IS NOT NULL "
+                    + "AND sc.first_import_at <= (CURDATE() - INTERVAL ? YEAR) ");
+            params.add(minYears);
         }
         try {
             connection = getConnection();
