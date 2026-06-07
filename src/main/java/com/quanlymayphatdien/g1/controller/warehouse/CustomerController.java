@@ -54,6 +54,9 @@ public class CustomerController extends HttpServlet {
             case "deactivate":
                 deactivateCustomer(request, response);
                 break;
+            case "search":
+                searchCustomerAjax(request, response);
+                break;
             default:
                 listCustomers(request, response);
                 break;
@@ -423,5 +426,48 @@ public class CustomerController extends HttpServlet {
         log.setDetails(details);
         log.setCreatedAt(LocalDateTime.now());
         new ActivityLogDAO().insertLog(log);
+    }
+
+    private void searchCustomerAjax(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String keyword = request.getParameter("q");
+        if (keyword == null) {
+            keyword = "";
+        }
+        CustomerDAO dao = new CustomerDAO();
+        List<Customer> list = dao.searchByKeyword(keyword.trim());
+
+        response.setContentType("application/json;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-cache");
+
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            Customer c = list.get(i);
+            sb.append("{")
+                    .append("\"id\":").append(c.getId()).append(",")
+                    .append("\"name\":\"").append(esc(c.getName())).append("\",")
+                    .append("\"phone\":\"").append(esc(c.getPhone())).append("\",")
+                    .append("\"email\":\"").append(esc(c.getEmail())).append("\",")
+                    .append("\"address\":\"").append(esc(c.getAddress())).append("\",")
+                    .append("\"companyName\":\"").append(esc(c.getCompanyName())).append("\",")
+                    .append("\"customerTypeId\":").append(c.getCustomerTypeId())
+                    .append("}");
+        }
+        sb.append("]");
+        response.getWriter().write(sb.toString());
+    }
+
+    private String esc(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

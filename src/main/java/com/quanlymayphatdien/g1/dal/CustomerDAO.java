@@ -288,6 +288,72 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
         return false;
     }
 
+    public List<Customer> findTop4Alphabetical() {
+        List<Customer> list = new ArrayList<>();
+        String sql = "SELECT * FROM customer WHERE status = 'active' ORDER BY name ASC LIMIT 4";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public List<Customer> searchByKeyword(String keyword) {
+        List<Customer> list = new ArrayList<>();
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return list;
+        }
+        String sql = "SELECT * FROM customer WHERE status = 'active' "
+                + "AND (name LIKE ? OR phone LIKE ?) "
+                + "ORDER BY name ASC LIMIT 30";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            String p = "%" + keyword.trim() + "%";
+            statement.setString(1, p);
+            statement.setString(2, p);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countByName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return 0;
+        }
+        String sql = "SELECT COUNT(*) FROM customer "
+                + "WHERE status = 'active' AND LOWER(TRIM(name)) = LOWER(TRIM(?))";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, name.trim());
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
     @Override
     public Customer getFromResultSet(ResultSet rs) throws SQLException {
         Customer c = new Customer();
