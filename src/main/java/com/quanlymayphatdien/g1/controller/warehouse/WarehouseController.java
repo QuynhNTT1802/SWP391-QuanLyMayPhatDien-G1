@@ -40,6 +40,12 @@ public class WarehouseController extends HttpServlet {
             case "update":
                 showUpdateForm(request, response);
                 break;
+            case "lock":
+                lockWarehouse(request, response);
+                break;
+            case "unlock":
+                unlockWarehouse(request, response);
+                break;
             default:
                 listWarehouses(request, response);
                 break;
@@ -168,5 +174,55 @@ public class WarehouseController extends HttpServlet {
             request.setAttribute("error", "Cập nhật thất bại");
             request.getRequestDispatcher("/view/warehouse/warehouse-update.jsp").forward(request, response);
         }
+    }
+
+    private void lockWarehouse(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/warehouse");
+            return;
+        }
+        int id = Integer.parseInt(idStr);
+        Warehouse w = warehouseDAO.findById(id);
+        if (w == null) {
+            response.sendRedirect(request.getContextPath() + "/warehouse");
+            return;
+        }
+        HttpSession session = request.getSession();
+        boolean ok = warehouseDAO.lock(id);
+        if (ok) {
+            session.setAttribute("toastMessage", "Đã khóa kho. Các máy trong kho đã bị ẩn khỏi danh sách tồn kho.");
+            session.setAttribute("toastType", "success");
+        } else {
+            session.setAttribute("toastMessage", "Khóa kho thất bại!");
+            session.setAttribute("toastType", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/warehouse");
+    }
+
+    private void unlockWarehouse(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/warehouse");
+            return;
+        }
+        int id = Integer.parseInt(idStr);
+        Warehouse w = warehouseDAO.findById(id);
+        if (w == null) {
+            response.sendRedirect(request.getContextPath() + "/warehouse");
+            return;
+        }
+        HttpSession session = request.getSession();
+        boolean ok = warehouseDAO.unlock(id);
+        if (ok) {
+            session.setAttribute("toastMessage", "Đã mở khóa kho. Các máy trong kho đã hiển thị lại trong tồn kho.");
+            session.setAttribute("toastType", "success");
+        } else {
+            session.setAttribute("toastMessage", "Mở khóa kho thất bại!");
+            session.setAttribute("toastType", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/warehouse");
     }
 }

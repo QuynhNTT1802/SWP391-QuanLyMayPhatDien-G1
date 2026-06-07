@@ -83,7 +83,7 @@
                                 <c:forEach var="o" items="${approvedOrders}">
                                     <tr>
                                         <td><strong style="font-family:monospace;">${o.orderCode}</strong></td>
-                                        <td>${o.customerName}</td>
+                                        <td>${o.customer.name}</td>
                                         <td><fmt:formatDate value="${o.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td style="font-weight:600;color:var(--accent);">
                                             <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="₫"/>
