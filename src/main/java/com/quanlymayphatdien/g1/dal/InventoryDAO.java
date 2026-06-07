@@ -9,7 +9,9 @@ import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -197,6 +199,79 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         ps.setInt(3, quantityChange);
         ps.setInt(4, quantityChange);
         return ps.executeUpdate() > 0;
+    }
+
+    public Map<Integer, Integer> countItemsByWarehouse() {
+        Map<Integer, Integer> map = new HashMap<>();
+        String sql = "SELECT i.warehouse_id, COUNT(*) AS cnt "
+                + "FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE w.status = 'active' "
+                + "GROUP BY i.warehouse_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getInt("warehouse_id"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return map;
+    }
+
+    public Map<Integer, Integer> sumQtyByWarehouse() {
+        Map<Integer, Integer> map = new HashMap<>();
+        String sql = "SELECT i.warehouse_id, COALESCE(SUM(i.quantity), 0) AS total_qty "
+                + "FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE w.status = 'active' "
+                + "GROUP BY i.warehouse_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getInt("warehouse_id"), rs.getInt("total_qty"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return map;
+    }
+
+    public int countActiveWarehouses() {
+        String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'active'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countLockedWarehouses() {
+        String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'locked'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public long grandTotalQty() {
+        String sql = "SELECT COALESCE(SUM(i.quantity), 0) "
+                + "FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE w.status = 'active'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
     }
 
     @Override
