@@ -59,6 +59,8 @@
 
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/customers?action=create">
+                            <input type="hidden" name="returnTo" value="<c:out value="${param.returnTo}"/>" />
+                            <input type="hidden" name="orderId" value="<c:out value="${param.orderId}"/>" />
 
                             <div class="form-section">
                                 <div class="form-section-head">
@@ -72,7 +74,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <input class="input mono" name="phone" placeholder="VD: 0912345678" value="<c:out value="${sessionScope.fieldPhone}"/>" required />
+                                        <input class="input mono" name="phone" placeholder="VD: 0912345678" value="<c:out value="${not empty param.phone ? param.phone : sessionScope.fieldPhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>

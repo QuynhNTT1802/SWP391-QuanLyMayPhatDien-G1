@@ -214,6 +214,16 @@ public class OrderController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+         String newCustIdStr = request.getParameter("newCustomerId");
+        if (newCustIdStr != null && !newCustIdStr.isEmpty()) {
+            try {
+                int newCustId = Integer.parseInt(newCustIdStr);
+                Customer preselect = new CustomerDAO().findById(newCustId);
+                request.setAttribute("preselectCustomer", preselect);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         GeneratorDAO generatorDao = new GeneratorDAO();
         CategoryDAO categoryDao = new CategoryDAO();
 
@@ -377,12 +387,26 @@ public class OrderController extends HttpServlet {
         GeneratorDAO generatordao = new GeneratorDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
 
-        if (order != null && "PENDING".equals(order.getStatus())) {
+       if (order != null && "PENDING".equals(order.getStatus())) {
             List<OrderDetail> existingDetails = orderdetaildao.findGeneratorById(id);
 
             List<Generator> generator = generatordao.findAll();
             CategoryDAO categoryDao = new CategoryDAO();
             List<Category> customerTypes = categoryDao.findByType("customer_type");
+
+            // Nếu return từ customer-create → load customer mới để pre-fill form
+            String newCustIdStr = request.getParameter("newCustomerId");
+            if (newCustIdStr != null && !newCustIdStr.isEmpty()) {
+                try {
+                    int newCustId = Integer.parseInt(newCustIdStr);
+                    Customer preselect = new CustomerDAO().findById(newCustId);
+                    if (preselect != null) {
+                        order.setCustomer(preselect);
+                        order.setCustomerId(preselect.getId());
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
 
             request.setAttribute("order", order);
             request.setAttribute("existingDetails", existingDetails);
@@ -458,43 +482,18 @@ public class OrderController extends HttpServlet {
             String custTypeIdStr = request.getParameter("customerTypeId");
             String custNote = request.getParameter("customerNote");
 
-            Customer customer = null;
-            if (custPhone != null && !custPhone.trim().isEmpty()) {
-                customer = customerDAO.findByPhone(custPhone);
+            if (custPhone == null || custPhone.trim().isEmpty()) {
+                request.getSession().setAttribute("message", "Vui lòng nhập số điện thoại khách hàng.");
+                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                return;
             }
-
+            Customer customer = customerDAO.findByPhone(custPhone.trim());
             if (customer == null) {
-                customer = new Customer();
+                request.getSession().setAttribute("message", "SĐT chưa có trong hệ thống. Vui lòng tạo khách hàng mới trước.");
+                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                return;
             }
-
-            customer.setName(custName);
-            customer.setPhone(custPhone);
-            customer.setEmail(custEmail);
-            customer.setAddress(custAddress);
-            customer.setCompanyName(custCompany);
-
-            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
-                try {
-                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
-                } catch (NumberFormatException ignored) {
-                }
-            }
-
-            if (customer.getId() > 0) {
-
-                customer.setUpdatedBy(user.getId());
-                customerDAO.update(customer);
-            } else {
-
-                customer.setStatus("active");
-                customer.setCreatedBy(user.getId());
-                int newCustId = customerDAO.insert(customer);
-                customer.setId(newCustId);
-            }
-
-            if (customer != null) {
-                order.setCustomerId(customer.getId());
-            }
+            order.setCustomerId(customer.getId());
 
             order.setCustomerNote(custNote);
 
