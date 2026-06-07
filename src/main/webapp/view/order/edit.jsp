@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
         <style>
             .detail-table {
                 width: 100%;
@@ -112,6 +113,9 @@
         </style>
     </head>
     <body>
+        <script>
+            var contextPath = '${pageContext.request.contextPath}';
+        </script>
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
@@ -159,26 +163,60 @@
                                     <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
                                     <h3 class="form-section-title">Người nhận hàng</h3>
                                 </div>
+
+                                <div class="cust-picker" id="customerPicker">
+                                    <div class="cust-picker-head">
+                                        <div class="cust-picker-head-title">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                            Khách hàng gần đây (click để đổi)
+                                        </div>
+                                        <button type="button" class="cust-picker-search" id="btnOpenCustSearch">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            Tìm kiếm
+                                        </button>
+                                    </div>
+                                    <div class="cust-picker-list">
+                                        <c:choose>
+                                            <c:when test="${not empty top4Customers}">
+                                                <c:forEach var="c" items="${top4Customers}">
+                                                    <button type="button" class="cust-picker-item"
+                                                            data-customer='{"id":${c.id},"name":"<c:out value='${c.name}' escapeXml='false'/>","phone":"<c:out value='${c.phone}' escapeXml='false'/>","email":"<c:out value='${c.email}' escapeXml='false'/>","address":"<c:out value='${c.address}' escapeXml='false'/>","companyName":"<c:out value='${c.companyName}' escapeXml='false'/>","customerTypeId":${c.customerTypeId}}'>
+                                                        <span class="cust-picker-item-name"><c:out value="${c.name}"/></span>
+                                                        <span class="cust-picker-item-phone"><c:out value="${c.phone}"/></span>
+                                                    </button>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="cust-picker-empty">Chưa có khách hàng nào.</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+
+                                <div class="cust-picker-hint" id="custDuplicateHint">
+                                    ⚠ Có nhiều khách hàng trùng tên này. Vui lòng nhập <strong>số điện thoại</strong> để chọn đúng người.
+                                </div>
+
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
                                         <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : order.customer.name}" />
-                                        <input class="input" name="customerName" value="<c:out value="${preName}"/>" required />
+                                        <input class="input" name="customerName" id="inpCustName" value="<c:out value="${preName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
                                         <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : order.customer.phone}" />
-                                        <input class="input mono" name="customerPhone" value="<c:out value="${prePhone}"/>" required />
+                                        <input class="input mono" name="customerPhone" id="inpCustPhone" value="<c:out value="${prePhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
                                         <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : order.customer.email}" />
-                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${preEmail}"/>" />
+                                        <input class="input mono" name="customerEmail" id="inpCustEmail" type="email" value="<c:out value="${preEmail}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
                                         <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : order.customer.address}" />
-                                        <input class="input" name="customerAddress" value="<c:out value="${preAddress}"/>" required />
+                                        <input class="input" name="customerAddress" id="inpCustAddress" value="<c:out value="${preAddress}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
@@ -400,5 +438,22 @@
                                     }
                                     document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
+
+        <div class="cust-picker-modal" id="custSearchModal">
+            <div class="cust-picker-modal-dialog">
+                <div class="cust-picker-modal-head">
+                    <h3>Tìm khách hàng</h3>
+                    <button type="button" class="cust-picker-modal-close" id="btnCloseCustSearch">×</button>
+                </div>
+                <div class="cust-picker-modal-search-wrap">
+                    <input type="text" class="cust-picker-modal-search" id="inpCustModalSearch" placeholder="Gõ tên hoặc số điện thoại..." autocomplete="off" />
+                </div>
+                <div class="cust-picker-modal-results" id="custModalResults">
+                    <div class="cust-picker-modal-empty">Gõ để bắt đầu tìm kiếm...</div>
+                </div>
+            </div>
+        </div>
+
+        <script src="${pageContext.request.contextPath}/assets/js/customer-picker.js"></script>
     </body>
 </html>

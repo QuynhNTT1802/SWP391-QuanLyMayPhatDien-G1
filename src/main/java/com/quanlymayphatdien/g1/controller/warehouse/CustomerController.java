@@ -57,6 +57,9 @@ public class CustomerController extends HttpServlet {
             case "search":
                 searchCustomerAjax(request, response);
                 break;
+            case "countByName":
+                countByNameAjax(request, response);
+                break;
             default:
                 listCustomers(request, response);
                 break;
@@ -458,6 +461,20 @@ public class CustomerController extends HttpServlet {
         }
         sb.append("]");
         response.getWriter().write(sb.toString());
+    }
+
+    private void countByNameAjax(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String name = request.getParameter("name");
+        if (name == null) {
+            name = "";
+        }
+        CustomerDAO dao = new CustomerDAO();
+        int count = dao.countByName(name);
+
+        response.setContentType("text/plain;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-cache");
+        response.getWriter().write(String.valueOf(count));
     }
 
     private String esc(String s) {
