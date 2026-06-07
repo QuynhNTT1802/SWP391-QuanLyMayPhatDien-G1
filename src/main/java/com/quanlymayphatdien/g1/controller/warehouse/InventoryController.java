@@ -18,12 +18,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author FPTShop
  */
-@WebServlet(name = "InventoryController", urlPatterns = {"/inventory"})
+@WebServlet(name = "InventoryController", urlPatterns = {"/inventory", "/inventory/*"})
 public class InventoryController extends HttpServlet {
 
     private final InventoryDAO inventoryDAO = new InventoryDAO();
@@ -38,9 +39,53 @@ public class InventoryController extends HttpServlet {
             return;
         }
 
+        String pathInfo = request.getPathInfo();
+        boolean isList = pathInfo != null && pathInfo.equals("/list");
+
         List<Warehouse> warehouses = warehouseDAO.findAll();
         request.setAttribute("warehouses", warehouses);
 
+        Map<Integer, Integer> itemCountMap = inventoryDAO.countItemsByWarehouse();
+        Map<Integer, Integer> qtySumMap = inventoryDAO.sumQtyByWarehouse();
+        int activeWh = inventoryDAO.countActiveWarehouses();
+        int lockedWh = inventoryDAO.countLockedWarehouses();
+        long grandQty = inventoryDAO.grandTotalQty();
+        request.setAttribute("warehouseItemCount", itemCountMap);
+        request.setAttribute("warehouseQtySum", qtySumMap);
+        request.setAttribute("kpiActiveWarehouses", activeWh);
+        request.setAttribute("kpiLockedWarehouses", lockedWh);
+        request.setAttribute("kpiTotalQty", grandQty);
+        request.setAttribute("kpiTotalWarehouses", activeWh + lockedWh);
+
+        if (isList) {
+            handleListView(request, response);
+        } else {
+            handleOverview(request, response);
+        }
+    }
+
+    private void handleOverview(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String whParam = request.getParameter("warehouse");
+        Integer selectedWarehouse = null;
+        if (whParam != null && !whParam.isEmpty()) {
+            try {
+                selectedWarehouse = Integer.parseInt(whParam);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        if (selectedWarehouse != null) {
+            Warehouse sel = warehouseDAO.findById(selectedWarehouse);
+            if (sel != null && "locked".equals(sel.getStatus())) {
+                request.setAttribute("lockedWarehouseName", sel.getName());
+                selectedWarehouse = null;
+            }
+        }
+        request.getRequestDispatcher("/view/inventory/inventory-overview.jsp").forward(request, response);
+    }
+
+    private void handleListView(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         String whParam = request.getParameter("warehouse");
         Integer selectedWarehouse = null;
         if (whParam != null && !whParam.isEmpty()) {
