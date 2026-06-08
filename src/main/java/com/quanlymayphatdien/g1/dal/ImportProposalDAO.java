@@ -6,6 +6,7 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
+
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -231,8 +232,8 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     public List<ImportProposalDetail> findDetailsByProposalId(int proposalId) {
         List<ImportProposalDetail> list = new ArrayList<>();
         String sql = "SELECT d.*, "
-                + "g.model_code AS generator_code, "
-                + "g.name AS generator_name, "
+                + "g.model AS generator_code, "
+                + "g.model AS generator_name, "
                 + "(SELECT c.name FROM generator_category gc "
                 + "   JOIN category c ON c.id = gc.category_id "
                 + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name "

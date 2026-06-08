@@ -495,7 +495,7 @@
                                         Duyệt phiếu
                                     </button>
                                 </form>
-                                <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
+                                <button type="button" class="btn btn-danger" onclick="location.href='${pageContext.request.contextPath}/proposal?action=reject&id=${proposal.proposalId}'">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
                                 </button>
@@ -726,24 +726,6 @@
                 </main>
             </div>
         </div>
-
-        <c:if test="${proposal.status == 'PENDING' && perms.contains('proposals.reject')}">
-            <div class="modal-host" id="rejectModal" style="display:none;">
-                <div class="modal-card">
-                    <h3>Từ chối phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu sẽ bị từ chối và không thể chỉnh sửa. Vui lòng nhập lý do để người tạo biết.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <label>Lý do từ chối <span style="color:var(--danger);">*</span></label>
-                        <textarea name="rejectReason" placeholder="Mô tả chi tiết lý do từ chối..." required></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
 
         <div class="toast-host" id="toastHost"></div>
         <script>
