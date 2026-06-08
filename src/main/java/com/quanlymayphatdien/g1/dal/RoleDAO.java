@@ -4,7 +4,9 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Role;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -118,6 +120,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
         }
         return list;
     }
+    
 
     @Override
     public List<Role> findAll() {

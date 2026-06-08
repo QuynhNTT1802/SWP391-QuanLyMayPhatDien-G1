@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -9,10 +10,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/role/rbac-role-edit.css">
 </head>
 <body>
@@ -32,6 +34,22 @@
             </div>
             <button type="submit" form="roleForm" class="btn btn-primary">Lưu thay đổi</button>
         </header>
+
+        <c:if test="${role.roleId > 0}">
+        <div class="tab-bar">
+            <a href="javascript:void(0)" id="tabInfoBtn" class="tab ${activeTab != 'history' ? 'active' : ''}" onclick="switchTab('info')">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Thông tin &amp; Quyền
+            </a>
+            <a href="javascript:void(0)" id="tabHistoryBtn" class="tab ${activeTab == 'history' ? 'active' : ''}" onclick="switchTab('history')">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Lịch sử
+                <c:if test="${histTotal > 0}"><span class="tab-badge">${histTotal}</span></c:if>
+            </a>
+        </div>
+        </c:if>
+
+        <div id="tab-info" class="tab-content ${activeTab == 'history' ? 'tab-hidden' : ''}">
 
         <form id="roleForm" action="${pageContext.request.contextPath}/admin/role/save" method="POST">
             <input type="hidden" name="id" value="${role.roleId}">
@@ -96,7 +114,6 @@
                                 <c:forEach var="entry" items="${groupedPerms}">
                                     <div class="perm-row">
                                         <div class="res-info">
-<!--                                            <div class="res-icon">Edit</div>-->
                                             <div>
                                                 <div class="res-name">${entry.key}</div>
                                             </div>
@@ -136,9 +153,107 @@
             </main>
 
         </form>
+        </div>
+
+        <c:if test="${role.roleId > 0}">
+        <div id="tab-history" class="tab-content ${activeTab == 'history' ? '' : 'tab-hidden'}">
+            <div class="table-card history-card" style="margin: 20px 24px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:155px;">Thời gian</th>
+                            <th style="width:155px;">Người thực hiện</th>
+                            <th style="width:160px;">Hành động</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <c:choose>
+                        <c:when test="${empty roleHistory}">
+                            <tr><td colspan="4" style="text-align:center;padding:48px;color:var(--muted);">Chưa có lịch sử nào</td></tr>
+                        </c:when>
+                        <c:otherwise>
+                            <c:forEach var="hlog" items="${roleHistory}">
+                            <tr>
+                                <td style="color:var(--muted);font-size:12.5px;">
+                                    <fmt:formatDate value="${hlog.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/>
+                                </td>
+                                <td style="font-weight:600;">${hlog.username}</td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${hlog.action == 'CREATE_ROLE'}">
+                                            <span class="action-badge action-create">Tạo vai trò</span>
+                                        </c:when>
+                                        <c:when test="${hlog.action == 'UPDATE_ROLE'}">
+                                            <span class="action-badge action-update">Cập nhật</span>
+                                        </c:when>
+                                        <c:when test="${hlog.action == 'DEACTIVATE_ROLE'}">
+                                            <span class="action-badge action-delete">Khóa vai trò</span>
+                                        </c:when>
+                                        <c:when test="${hlog.action == 'UPDATE_PERMISSIONS'}">
+                                            <span class="action-badge action-export">Sửa quyền</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="action-badge action-default">${hlog.action}</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td style="color:var(--muted);">${hlog.details}</td>
+                            </tr>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
+                    </tbody>
+                </table>
+
+                <c:if test="${histTotalPages > 1}">
+                <div class="pagination">
+                    <span class="info">Trang <strong>${histPage}</strong> / <strong>${histTotalPages}</strong></span>
+                    <div class="controls">
+                        <c:if test="${histPage > 1}">
+                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage - 1}" class="page-btn">&lsaquo;</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${histTotalPages}" var="hp">
+                            <c:choose>
+                                <c:when test="${hp == histPage}">
+                                    <span class="page-btn active">${hp}</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${hp}" class="page-btn">${hp}</a>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                        <c:if test="${histPage < histTotalPages}">
+                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage + 1}" class="page-btn">&rsaquo;</a>
+                        </c:if>
+                    </div>
+                </div>
+                </c:if>
+            </div>
+        </div>
+        </c:if>
     </div>
 </div>
 
+<script>
+function switchTab(tab) {
+    var infoEl  = document.getElementById('tab-info');
+    var histEl  = document.getElementById('tab-history');
+    var btnInfo = document.getElementById('tabInfoBtn');
+    var btnHist = document.getElementById('tabHistoryBtn');
+    if (tab === 'history') {
+        if (infoEl)  infoEl.classList.add('tab-hidden');
+        if (histEl)  histEl.classList.remove('tab-hidden');
+        if (btnInfo) btnInfo.classList.remove('active');
+        if (btnHist) btnHist.classList.add('active');
+    } else {
+        if (infoEl)  infoEl.classList.remove('tab-hidden');
+        if (histEl)  histEl.classList.add('tab-hidden');
+        if (btnInfo) btnInfo.classList.add('active');
+        if (btnHist) btnHist.classList.remove('active');
+    }
+}
+</script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/role/rbac-role-edit.js"></script>

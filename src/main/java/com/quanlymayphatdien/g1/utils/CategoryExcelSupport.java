@@ -32,7 +32,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class CategoryExcelSupport {
 
     private static String[] getHeaderColumns(String type) {
-        // Bỏ STT, ID, Loại, Module — không cần khi nhập
+
         String[] base = {"Tên danh mục", "Mô tả", "Trạng thái"};
         if ("brand".equals(type)) {
             return new String[]{"Tên danh mục", "Mô tả", "Trạng thái",
@@ -62,14 +62,14 @@ public class CategoryExcelSupport {
         XSSFFont font = workbook.createFont();
         font.setBold(true);
         font.setFontHeightInPoints((short) 11);
-        headerStyle.setFont(font); // ← gán font vào style
+        headerStyle.setFont(font); 
         headerStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
-                new byte[]{(byte) 79, (byte) 129, (byte) 189}, null)); // màu xanh dương
+                new byte[]{(byte) 79, (byte) 129, (byte) 189}, null));
         headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
         headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
         headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
 
-        // Font trắng cho chữ trên nền xanh
+   
         font.setColor(new org.apache.poi.xssf.usermodel.XSSFColor(
                 new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
 
@@ -86,7 +86,7 @@ public class CategoryExcelSupport {
         int rowNum = 1;
         for (Category c : list) {
             Row row = sheet.createRow(rowNum);
-            // Cột 0: Tên, 1: Mô tả, 2: Trạng thái
+  
             row.createCell(0).setCellValue(c.getName());
             row.createCell(1).setCellValue(c.getDescription() != null ? c.getDescription() : "");
             row.createCell(2).setCellValue(c.getStatus());
@@ -141,7 +141,7 @@ public class CategoryExcelSupport {
             boolean isEmpty = true;
 
             for (int j = 0; j < headers.length; j++) {
-                Cell cell = row.getCell(j); // ← sửa: i → j
+                Cell cell = row.getCell(j); 
                 String value = getCellValueAsString(cell);
                 rowData.put(headers[j], value);
                 if (!value.isEmpty()) {
@@ -150,7 +150,7 @@ public class CategoryExcelSupport {
             }
 
             if (!isEmpty) {
-                result.add(rowData); // ← sửa: thêm dòng này để lưu kết quả
+                result.add(rowData); 
             }
         }
         workbook.close();

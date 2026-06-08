@@ -5,6 +5,7 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.ActivityLog;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -63,7 +64,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 }
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -102,7 +103,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -117,7 +118,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -201,7 +202,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -262,7 +263,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -348,7 +349,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -415,7 +416,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -498,7 +499,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -572,7 +573,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -647,7 +648,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -705,7 +706,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -728,7 +729,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(getLogFromResultSet(rs));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -771,9 +772,51 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 }
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error("Hệ thống", "Lỗi ngoại lệ", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
+    }
+
+    public List<ActivityLog> getLogsByRoleId(int roleId, int page, int pageSize) {
+        List<ActivityLog> list = new ArrayList<>();
+        String sql = "SELECT al.*, u.name AS user_name "
+                + "FROM activity_log al JOIN user u ON al.user_id = u.id "
+                + "WHERE al.entity_type = 'roles' AND al.entity_id = ? "
+                + "ORDER BY al.created_at DESC "
+                + "LIMIT ? OFFSET ?";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            p.setInt(2, pageSize);
+            p.setInt(3, (page - 1) * pageSize);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                ActivityLog log = getFromResultSet(rs);
+                log.setUsername(rs.getString("user_name"));
+                list.add(log);
+
+            }
+        } catch (Exception e) {
+            SystemLogger.error("Hệ thống", "Lỗi ngoại lệ", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return list;
+    }
+
+    public int countLogsByRoleId(int roleId) {
+        String sql = "SELECT COUNT(*) FROM activity_log "
+                + "WHERE entity_type = 'roles' AND entity_id = ?";
+        try (Connection c = getConnection()) {
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            SystemLogger.error("Hệ thống", "Lỗi ngoại lệ",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return 0;
     }
 
 }
