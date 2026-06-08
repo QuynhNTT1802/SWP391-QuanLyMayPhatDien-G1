@@ -1,5 +1,8 @@
 package com.quanlymayphatdien.g1.utils;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class GlobalUtils {
 
     public static final String PHONE_REGEX = "^0[0-9]{9,10}$";
@@ -23,4 +26,10 @@ public class GlobalUtils {
     public static final String RECEIPT_STATUS_REVISION = "NEEDS_REVISION";
     public static final String RECEIPT_STATUS_COMPLETED = "COMPLETED";
     public static final String RECEIPT_STATUS_CANCELLED = "CANCELLED";
+
+    private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    public static String formatDateTime(LocalDateTime dt) {
+        return dt == null ? "" : dt.format(DT_FORMAT);
+    }
 }
