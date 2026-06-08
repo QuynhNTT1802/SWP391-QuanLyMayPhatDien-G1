@@ -2,6 +2,10 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%
+    java.time.format.DateTimeFormatter __propFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    request.setAttribute("propFmt", __propFmt);
+%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -442,7 +446,7 @@
                                 <span class="sep">·</span>
                                 <span class="id">#${proposal.proposalId}</span>
                                 <span class="sep">·</span>
-                                <span>Ngày đề xuất: <fmt:formatDate value="${proposal.proposalDate}" pattern="dd/MM/yyyy HH:mm"/></span>
+                                <span>Ngày đề xuất: <c:choose><c:when test="${proposal.proposalDate == null}">—</c:when><c:otherwise>${proposal.proposalDate.format(propFmt)}</c:otherwise></c:choose></span>
                             </div>
                             <div class="hero-pills">
                                 <span class="pill"><span class="pdot"></span><c:out value="${proposal.warehouseName}"/></span>
@@ -574,7 +578,7 @@
                                 </div>
                                 <div class="info-field">
                                     <div class="info-label">Ngày đề xuất</div>
-                                    <div class="info-value mono"><fmt:formatDate value="${proposal.proposalDate}" pattern="dd/MM/yyyy HH:mm"/></div>
+                                    <div class="info-value mono"><c:choose><c:when test="${proposal.proposalDate == null}">—</c:when><c:otherwise>${proposal.proposalDate.format(propFmt)}</c:otherwise></c:choose></div>
                                 </div>
                                 <div class="info-field">
                                     <div class="info-label">Trạng thái</div>
@@ -597,7 +601,7 @@
                                     </div>
                                     <div class="info-field">
                                         <div class="info-label">Ngày duyệt</div>
-                                        <div class="info-value mono"><fmt:formatDate value="${proposal.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></div>
+                                        <div class="info-value mono"><c:choose><c:when test="${proposal.approvedAt == null}">—</c:when><c:otherwise>${proposal.approvedAt.format(propFmt)}</c:otherwise></c:choose></div>
                                     </div>
                                 </c:if>
                                 <c:if test="${proposal.status == 'REJECTED' && not empty proposal.rejectedByName}">
@@ -607,7 +611,7 @@
                                     </div>
                                     <div class="info-field">
                                         <div class="info-label">Ngày từ chối</div>
-                                        <div class="info-value mono"><fmt:formatDate value="${proposal.rejectedAt}" pattern="dd/MM/yyyy HH:mm"/></div>
+                                        <div class="info-value mono"><c:choose><c:when test="${proposal.rejectedAt == null}">—</c:when><c:otherwise>${proposal.rejectedAt.format(propFmt)}</c:otherwise></c:choose></div>
                                     </div>
                                 </c:if>
                             </div>
@@ -685,7 +689,7 @@
                                         <c:otherwise>
                                             <c:forEach var="h" items="${history}">
                                                 <tr>
-                                                    <td class="mono"><fmt:formatDate value="${h.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td class="mono"><c:choose><c:when test="${h.createdAtAsDate == null}">—</c:when><c:otherwise>${h.createdAtAsDate.format(propFmt)}</c:otherwise></c:choose></td>
                                                     <td><c:out value="${h.username}"/></td>
                                                     <td>
                                                         <span class="action-badge action-<c:choose>
