@@ -1,6 +1,8 @@
 package com.quanlymayphatdien.g1.controller.user;
 import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PASSWORD;
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import java.io.IOException;
@@ -108,6 +110,17 @@ public class ChangePasswordServlet extends HttpServlet {
         boolean updated = userDAO.updatePassword(user.getId(), newHashedPassword);
 
         if (updated) {
+            ActivityLog log = new ActivityLog();
+            log.setUserId(currentUser.getId());
+            log.setUsername(currentUser.getUsername());
+            log.setEntityType("user");
+            log.setEntityId(user.getId());
+            log.setEntityName(user.getName());
+            log.setAction("CHANGE_PASSWORD");
+            log.setDetails("Đổi mật khẩu thành công");
+            log.setCreatedAt(LocalDateTime.now());
+            new ActivityLogDAO().insertLog(log);
+
             session.invalidate();
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;

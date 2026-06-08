@@ -74,6 +74,7 @@
                             </select>
                             <select class="filter-select" name="status" onchange="this.form.submit()">
                                 <option value="">Trạng thái: Tất cả</option>
+                                <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Bản nháp</option>
                                 <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                                 <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                                 <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
@@ -168,6 +169,9 @@
                                                 </td>
                                                 <td>
                                                     <c:choose>
+                                                        <c:when test="${r.status == 'DRAFT'}">
+                                                            <span class="status active" style="--dot:var(--info);background:var(--info-soft);color:var(--info);"><span class="sdot"></span>Bản nháp</span>
+                                                        </c:when>
                                                         <c:when test="${r.status == 'PENDING'}">
                                                             <span class="status active" style="--dot:var(--warn);"><span class="sdot"></span>Chờ duyệt</span>
                                                         </c:when>
@@ -189,8 +193,8 @@
                                                         <a href="${pageContext.request.contextPath}/receipt?action=detail&id=${r.receiptId}" class="icon-mini" title="Xem chi tiết">
                                                             <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                         </a>
-                                                        <c:if test="${r.status == 'NEEDS_REVISION' && r.createdBy == sessionScope.loggedUser.id}">
-                                                            <a href="${pageContext.request.contextPath}/receipt?action=edit&id=${r.receiptId}" class="icon-mini" title="Chỉnh sửa và gửi lại" style="color:var(--warn);">
+                                                        <c:if test="${(r.status == 'NEEDS_REVISION' || r.status == 'DRAFT') && r.createdBy == sessionScope.loggedUser.id}">
+                                                            <a href="${pageContext.request.contextPath}/receipt?action=edit&id=${r.receiptId}" class="icon-mini" title="Chỉnh sửa" style="color:var(--warn);">
                                                                 <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                             </a>
                                                         </c:if>
