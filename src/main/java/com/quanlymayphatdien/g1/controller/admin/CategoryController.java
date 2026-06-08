@@ -33,6 +33,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
             "/admin/category/save",
             "/admin/category/delete",
             "/admin/category/export",
+            "/admin/category/template",
             "/admin/category/import-preview",
             "/admin/category/import-confirm"})
 
@@ -70,6 +71,8 @@ public class CategoryController extends HttpServlet {
                 viewCategoryEdit(request, response);
             } else if ("/admin/category/export".equals(action)) {
                 exportCategoryExcel(request, response);
+            } else if ("/admin/category/template".equals(action)) {
+                downloadCategoryTemplate(request, response);
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -1139,6 +1142,24 @@ public class CategoryController extends HttpServlet {
             return "";
         }
         return arr[index].trim();
+    }
+
+    private void downloadCategoryTemplate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String type = request.getParameter("type");
+        if (type == null || type.trim().isEmpty()) {
+            type = "default";
+        }
+
+        XSSFWorkbook workbook = CategoryExcelSupport.createTemplateWorkbook(type);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String filename = "BieuMau_Nhap_" + type + ".xlsx";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+        try (java.io.OutputStream out = response.getOutputStream()) {
+            workbook.write(out);
+        } finally {
+            workbook.close();
+        }
     }
 
 }

@@ -539,8 +539,16 @@
                       method="post" enctype="multipart/form-data">
                     <input type="hidden" name="type"   value="${currentType}"/>
                     <input type="hidden" name="module" value="${currentModule}"/>
-                    <label style="display:block; font-size:0.88rem; font-weight:600;
-                                  color:var(--fg); margin-bottom:8px;">Chọn file .xlsx</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <label style="font-size:0.88rem; font-weight:600; color:var(--fg);">Chọn file .xlsx</label>
+                        <a href="${pageContext.request.contextPath}/admin/category/template?type=${currentType}" 
+                           style="font-size:0.85rem; color:var(--accent); text-decoration:none; display:flex; align-items:center; gap:4px;">
+                            <svg style="width:14px; height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Tải biểu mẫu
+                        </a>
+                    </div>
                     <input type="file" name="excelFile" accept=".xlsx" required
                            style="display:block; width:100%; margin-bottom:20px; font-size:0.9rem;"/>
                     <div style="display:flex; gap:10px; justify-content:flex-end;">
