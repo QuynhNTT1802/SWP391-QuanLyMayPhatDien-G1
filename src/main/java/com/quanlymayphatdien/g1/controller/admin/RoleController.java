@@ -1,9 +1,13 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
+import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -30,6 +34,7 @@ public class RoleController extends HttpServlet {
 
     private final RoleDAO roleDAO = new RoleDAO();
     private final PermissionDAO perDAO = new PermissionDAO();
+    private final ActivityLogDAO logDAO = new ActivityLogDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -74,7 +79,7 @@ public class RoleController extends HttpServlet {
         }
     }
 
-    //TASK 12: VIEW ROLE LIST
+
     private void viewRoleList(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String search = request.getParameter("search");
         List<Role> roleList;
@@ -115,14 +120,14 @@ public class RoleController extends HttpServlet {
         request.getRequestDispatcher("/view/admin/admin-role.jsp").forward(request, response);
     }
 
-    //TASK 13: VIEW ROLE EDIT
+
     private void viewRolePermission(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String idParam = request.getParameter("id");
         String permSearch = request.getParameter("permSearch");
 
         List<Permission> allPermissions = perDAO.findAll();
 
-        // Ví dụ: "users" -> [Xem, Tạo, Sửa, Xoá]
+
         Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
         for (Permission p : allPermissions) {
             if (permSearch != null && !permSearch.trim().isEmpty()) {
@@ -147,11 +152,32 @@ public class RoleController extends HttpServlet {
 
             request.setAttribute("role", curRole);
             request.setAttribute("rolePermissions", rolePermissions);
+
+            // Tải lịch sử thay đổi của role này
+            int histPage = 1;
+            String histPageStr = request.getParameter("histPage");
+            if (histPageStr != null && !histPageStr.isEmpty()) {
+                try { histPage = Math.max(1, Integer.parseInt(histPageStr)); }
+                catch (NumberFormatException ignored) {}
+            }
+            int histPageSize = 10;
+            List<ActivityLog> roleHistory = logDAO.getLogsByRoleId(roleId, histPage, histPageSize);
+            int histTotal = logDAO.countLogsByRoleId(roleId);
+            int histTotalPages = Math.max(1, (int) Math.ceil((double) histTotal / histPageSize));
+            if (histPage > histTotalPages) histPage = histTotalPages;
+
+            request.setAttribute("roleHistory", roleHistory);
+            request.setAttribute("histPage", histPage);
+            request.setAttribute("histTotalPages", histTotalPages);
+            request.setAttribute("histTotal", histTotal);
+
+            String activeTab = request.getParameter("activeTab");
+            request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
         }
         request.getRequestDispatcher("/view/admin/admin-role-edit.jsp").forward(request, response);
     }
 
-    //TASK 14 & 16: SAVE EVERYTHING
+
     private void saveRoleFull(HttpServletRequest request, HttpServletResponse response) throws Exception {
         HttpSession session = request.getSession(false);
         @SuppressWarnings("unchecked")
@@ -194,9 +220,6 @@ public class RoleController extends HttpServlet {
         }
 
         if (existingRole != null && "admin".equalsIgnoreCase(existingRole.getRoleName())) {
-            if ("inactive".equals(status)) {
-                errors.add("Không thể khóa vai trò Quản trị viên");
-            }
             if (name != null && !name.equalsIgnoreCase("admin")) {
                 errors.add("Không thể đổi tên vai trò Quản trị viên");
             }
@@ -276,6 +299,10 @@ public class RoleController extends HttpServlet {
                 return;
             }
             roleId = roleDAO.insert(role);
+            // --- LOG: Tạo role mới ---
+            String createDetails = "Tạo vai trò mới — Mô tả: "
+                + (desc != null && !desc.trim().isEmpty() ? desc.trim() : "(trống)");
+            logRoleAction(request, roleId, name, "CREATE_ROLE", createDetails);
         } else {
             if (permissions == null || !permissions.contains("roles.update")) {
                 request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
@@ -284,6 +311,24 @@ public class RoleController extends HttpServlet {
             roleId = excludeId;
             role.setRoleId(roleId);
             roleDAO.update(role);
+            // --- LOG: Cập nhật thông tin role ---
+            String oldName   = existingRole != null ? existingRole.getRoleName() : name;
+            String oldStatus = existingRole != null ? existingRole.getStatus()   : status;
+            String oldDesc   = existingRole != null && existingRole.getDescription() != null
+                               ? existingRole.getDescription() : "";
+            String updateAction = ("active".equals(oldStatus) && "inactive".equals(status))
+                                  ? "DEACTIVATE_ROLE" : "UPDATE_ROLE";
+            List<String> changes = new ArrayList<>();
+            if (!name.equals(oldName))
+                changes.add("Tên: '" + oldName + "' -> '" + name + "'");
+            if (!status.equals(oldStatus))
+                changes.add("Trạng thái: " + oldStatus + " -> " + status);
+            String newDescTrim = desc != null ? desc.trim() : "";
+            if (!newDescTrim.equals(oldDesc.trim()))
+                changes.add("Mô tả đã thay đổi");
+            String updateDetails = "Cập nhật vai trò '" + name + "'"
+                + (changes.isEmpty() ? "" : " — " + String.join(", ", changes));
+            logRoleAction(request, roleId, name, updateAction, updateDetails);
         }
 
         List<Permission> allPerms = perDAO.findAll();
@@ -306,15 +351,66 @@ public class RoleController extends HttpServlet {
                 }
             }
         }
+        // --- LOG: So sánh quyền cũ vs mới, chỉ log nếu có thay đổi ---
+        try {
+            List<Permission> oldPermList = perDAO.getPermissionByRoleId(roleId);
+            Set<String> oldPermSet = new HashSet<>();
+            for (Permission perm : oldPermList) {
+                oldPermSet.add(perm.getResource() + "." + perm.getAction());
+            }
+            Set<String> newPermSet = new HashSet<>();
+            for (int pid : expanded) {
+                Permission perm = permById.get(pid);
+                if (perm != null) newPermSet.add(perm.getResource() + "." + perm.getAction());
+            }
+            Set<String> added = new HashSet<>(newPermSet);
+            added.removeAll(oldPermSet);
+            Set<String> removed = new HashSet<>(oldPermSet);
+            removed.removeAll(newPermSet);
+            if (!added.isEmpty() || !removed.isEmpty()) {
+                StringBuilder permDetails = new StringBuilder();
+                if (!added.isEmpty())   permDetails.append("Thêm: ").append(String.join(", ", added));
+                if (!removed.isEmpty()) {
+                    if (permDetails.length() > 0) permDetails.append(" | ");
+                    permDetails.append("Xóa: ").append(String.join(", ", removed));
+                }
+                logRoleAction(request, roleId, name, "UPDATE_PERMISSIONS", permDetails.toString());
+            }
+        } catch (Exception e) {
+            SystemLogger.error("Quản lý phân quyền", "RoleController.log quyền", e.getMessage(), e);
+        }
         roleDAO.updatePermissionRole(roleId, new ArrayList<>(expanded));
 
         // Báo cho SecurityFilter biết cần refresh lại quyền của tất cả user mang role này
-        com.quanlymayphatdien.g1.dal.UserDAO userDAO = new com.quanlymayphatdien.g1.dal.UserDAO();
+        UserDAO userDAO = new UserDAO();
         List<Integer> affectedUsers = userDAO.getUserIdsByRoleId(roleId);
         for (Integer uid : affectedUsers) {
             request.getServletContext().setAttribute("perm_refresh_" + uid, true);
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/roles?msg=success");
+    }
+
+    /**
+     * Ghi log thay đổi vai trò và phân quyền vào activity_log.
+     */
+    private void logRoleAction(HttpServletRequest request, int roleId,
+                                String roleName, String action, String details) {
+        try {
+            User user = (User) request.getSession().getAttribute("loggedUser");
+            if (user == null) return;
+
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("roles");
+            log.setAction(action);
+            log.setEntityId(roleId);
+            log.setEntityName(roleName);
+            log.setDetails(details);
+            logDAO.insert(log);
+        } catch (Exception e) {
+            SystemLogger.error("Quản lý phân quyền",
+                    "RoleController.logRoleAction", e.getMessage(), e);
+        }
     }
 }

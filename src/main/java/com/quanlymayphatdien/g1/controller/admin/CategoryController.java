@@ -138,7 +138,7 @@ public class CategoryController extends HttpServlet {
             list = filtered;
         }
 
-        //Tính toán KPI trước khi áp dụng statusFilter
+
         int kpiTotal = list.size();
         int kpiActive = 0;
         int kpiInactive = 0;
@@ -153,7 +153,7 @@ public class CategoryController extends HttpServlet {
         request.setAttribute("kpiActive", kpiActive);
         request.setAttribute("kpiInactive", kpiInactive);
 
-        //Filter theo trạng thái (active / inactive / tất cả) ---
+
         String statusFilter = request.getParameter("status");
         if (statusFilter != null && !statusFilter.trim().isEmpty() && !"all".equals(statusFilter)) {
             List<Category> filtered = new ArrayList<>();
@@ -236,7 +236,8 @@ public class CategoryController extends HttpServlet {
                 request.setAttribute("extensions", new CategoryExtensionDAO().loadExtensionsByType(typeFilter, catIds));
             }
         } else {
-            // Danh sách toàn bộ các danh mục (overview)
+            
+            // Danh sách toàn bộ các danh mục 
             Map<String, Integer> typeCounts = new LinkedHashMap<>();
             for (Category c : list) {
                 typeCounts.merge(c.getType(), 1, Integer::sum);
@@ -244,7 +245,7 @@ public class CategoryController extends HttpServlet {
             request.setAttribute("typeCounts", typeCounts);
             request.setAttribute("typeMinIds", cateDAO.getMinIdByType(module));
 
-            // Phân trang cho danh sách chi tiết tất cả danh mục
+
             int page = 1, pageSize = 10;
             String pageStr = request.getParameter("page");
             if (pageStr != null && !pageStr.isEmpty()) {
@@ -332,13 +333,12 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("histDateFrom", histDateFrom != null ? histDateFrom : "");
                     request.setAttribute("histDateTo", histDateTo != null ? histDateTo : "");
 
-                    // Giữ tab đang active (info hoặc history)
+
                     String activeTab = request.getParameter("activeTab");
                     request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
                 }
             } catch (Exception e) {
                 SystemLogger.error("Quản lý danh mục", "CategoryController.viewCategoryEdit", e.getMessage(), e);
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
 
@@ -457,7 +457,7 @@ public class CategoryController extends HttpServlet {
         boolean isUpdate = idVar != null && !idVar.isEmpty() && !"0".equals(idVar);
         if (isUpdate) {
             categoryId = Integer.parseInt(idVar);
-            // Đọc giá trị cũ TRƯỚC khi lưu để so sánh trước và sau
+
             Category oldCategory = cateDAO.findById(categoryId);
             category.setId(categoryId);
             cateDAO.update(category);
@@ -496,7 +496,6 @@ public class CategoryController extends HttpServlet {
                 }
             } catch (Exception e) {
                 SystemLogger.error("Quản lý danh mục", "CategoryController.deleteCategory", e.getMessage(), e);
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
 
@@ -602,7 +601,6 @@ public class CategoryController extends HttpServlet {
         }
     }
 
-    // --------------- Hệ thống ghi log ---------------
     private String statusLabel(String status) {
         if ("active".equals(status)) {
             return "Hoạt động";
@@ -630,7 +628,6 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logCreate", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
@@ -777,7 +774,6 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logUpdate", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
@@ -802,7 +798,6 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, name, "DELETE", description);
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logDelete", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
     }
 
@@ -821,13 +816,13 @@ public class CategoryController extends HttpServlet {
     private void showHistory(HttpServletRequest request, HttpServletResponse response, String module)
             throws ServletException, IOException {
 
-        //Đọc các tham số filter
-        String logSearch = request.getParameter("logSearch");   // từ khóa: tên đối tượng / người dùng
-        String logAction = request.getParameter("logAction");   // hành động: CREATE, UPDATE, DELETE...
-        String dateFrom = request.getParameter("dateFrom");    // ngày bắt đầu yyyy-MM-dd
-        String dateTo = request.getParameter("dateTo");      // ngày kết thúc yyyy-MM-dd
 
-        //Đọc trang hiện tại
+        String logSearch = request.getParameter("logSearch");
+        String logAction = request.getParameter("logAction");
+        String dateFrom = request.getParameter("dateFrom");
+        String dateTo = request.getParameter("dateTo");
+
+
         int page = 1;
         String pageStr = request.getParameter("page");
         if (pageStr != null && !pageStr.isEmpty()) {
@@ -893,7 +888,7 @@ public class CategoryController extends HttpServlet {
         } else {
             list = cateDAO.findByModule(module);
         }
-        // Filter theo type
+
         if (typeFilter != null && !typeFilter.trim().isEmpty()) {
             List<Category> filtered = new ArrayList<>();
             for (Category c : list) {
@@ -903,7 +898,7 @@ public class CategoryController extends HttpServlet {
             }
             list = filtered;
         }
-        // Filter theo status
+
 
         if (statusFilter != null && !statusFilter.trim().isEmpty()
                 && !"all".equals(statusFilter)) {
@@ -933,15 +928,15 @@ public class CategoryController extends HttpServlet {
                 + (typeFilter != null && !typeFilter.isEmpty() ? typeFilter : "all")
                 + "-" + today + ".xlsx";
 
-        // Set header để trình duyệt nhận ra là file tải về
+
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-        // Ghi workbook ra response (xuất file)
+
 
         workbook.write(response.getOutputStream());
         workbook.close();
 
-        // Ghi Activity Log
+
         User user = (User) request.getSession().getAttribute("loggedUser");
         if (user != null) {
             String desc = "Xuất Excel: " + list.size() + " bản ghi"
@@ -1128,7 +1123,7 @@ public class CategoryController extends HttpServlet {
 
         User user = (User) request.getSession().getAttribute("loggedUser");
         if (user != null) {
-            insertLog(user, 0, "Excel Import", "IMPORT", // ← đổi null → 0
+            insertLog(user, 0, "Excel Import", "IMPORT",
                     "Nhập Excel: thêm " + importedCount + " danh mục " + type + " | module:" + module);
         }
 
