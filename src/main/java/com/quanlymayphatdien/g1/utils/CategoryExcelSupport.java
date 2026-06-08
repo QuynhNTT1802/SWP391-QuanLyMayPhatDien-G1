@@ -177,4 +177,69 @@ public class CategoryExcelSupport {
         }
     }
 
+    public static XSSFWorkbook createTemplateWorkbook(String type) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Danh mục (Mẫu)");
+
+        CellStyle headerStyle = workbook.createCellStyle();
+        XSSFFont font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        font.setColor(new org.apache.poi.xssf.usermodel.XSSFColor(
+                new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+        headerStyle.setFont(font);
+        headerStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
+                new byte[]{(byte) 79, (byte) 129, (byte) 189}, null));
+        headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(org.apache.poi.ss.usermodel.HorizontalAlignment.CENTER);
+        headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+
+        String[] headers = getHeaderColumns(type);
+        Row headerRow = sheet.createRow(0);
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        Row sampleRow = sheet.createRow(1);
+        
+        if ("brand".equals(type)) {
+            sampleRow.createCell(0).setCellValue("Honda");
+            sampleRow.createCell(1).setCellValue("Thương hiệu động cơ và máy phát điện từ Nhật Bản");
+            sampleRow.createCell(2).setCellValue("active");
+            sampleRow.createCell(3).setCellValue("Nhật Bản");
+            sampleRow.createCell(4).setCellValue("https://www.honda.com");
+            sampleRow.createCell(5).setCellValue(1948);
+            sampleRow.createCell(6).setCellValue(12);
+        } else if ("fuel_type".equals(type)) {
+            sampleRow.createCell(0).setCellValue("Dầu Diesel");
+            sampleRow.createCell(1).setCellValue("Nhiên liệu cho máy phát điện công nghiệp");
+            sampleRow.createCell(2).setCellValue("active");
+            sampleRow.createCell(3).setCellValue("Lít");
+            sampleRow.createCell(4).setCellValue("20000");
+        } else if ("origin".equals(type)) {
+            sampleRow.createCell(0).setCellValue("Nhập khẩu Nhật Bản");
+            sampleRow.createCell(1).setCellValue("Các dòng máy nguyên chiếc nhập từ Nhật");
+            sampleRow.createCell(2).setCellValue("active");
+            sampleRow.createCell(3).setCellValue("JP");
+        } else if ("customer_type".equals(type)) {
+            sampleRow.createCell(0).setCellValue("Khách hàng doanh nghiệp");
+            sampleRow.createCell(1).setCellValue("Công ty, xí nghiệp cần xuất hóa đơn đỏ");
+            sampleRow.createCell(2).setCellValue("active");
+            sampleRow.createCell(3).setCellValue("VAT 10%");
+        } else {
+            sampleRow.createCell(0).setCellValue("Mẫu danh mục 1");
+            sampleRow.createCell(1).setCellValue("Đây là dữ liệu mẫu để hướng dẫn nhập liệu");
+            sampleRow.createCell(2).setCellValue("active");
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        return workbook;
+    }
+
 }
