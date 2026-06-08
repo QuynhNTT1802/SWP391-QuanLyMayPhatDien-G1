@@ -64,19 +64,19 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
     }
 
    public int insertLog(ActivityLog t) {
-        String sql = "insert into activity_log(user_id, username, action, entity_type, entity_id, description, created_at) "
+        String sql = "insert into activity_log(user_id, action, entity_type, entity_id, entity_name, details, created_at) "
                    + "values(?, ?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             p.setInt(1, t.getUserId());
-            p.setString(2, t.getUsername());
-            p.setString(3, t.getAction());
-            p.setString(4, t.getEntityType());
+            p.setString(2, t.getAction());
+            p.setString(3, t.getEntityType());
             if (t.getEntityId() != null) {
-                p.setInt(5, t.getEntityId());
+                p.setInt(4, t.getEntityId());
             } else {
-                p.setNull(5, Types.INTEGER);
+                p.setNull(4, Types.INTEGER);
             }
+            p.setString(5, t.getEntityName());
             p.setString(6, t.getDetails());
             p.setObject(7, LocalDateTime.now());
 
@@ -101,7 +101,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         log.setAction(rs.getString("action"));
         log.setEntityType(rs.getString("entity_type"));
         log.setEntityId(rs.getObject("entity_id", Integer.class));
-        log.setDetails(rs.getString("description"));
+        log.setDetails(rs.getString("details"));
         log.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
         return log;
     }
@@ -109,9 +109,10 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
     public List<ActivityLog> getLogsByEntity(String entityType, int entityId,
             int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
-        String sql = "select * from activity_log "
-                   + "where entity_type = ? and entity_id = ? "
-                   + "order by created_at desc "
+        String sql = "select al.*, u.username as username from activity_log al "
+                   + "left join user u on al.user_id = u.id "
+                   + "where al.entity_type = ? and al.entity_id = ? "
+                   + "order by al.created_at desc "
                    + "limit ? offset ?";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
@@ -626,14 +627,23 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
     }
     
     public List<ActivityLog> findByEntityId(int entityId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
+        return findByEntityTypeAndId2("categories", entityId, search, action, dateFrom, dateTo, page, pageSize);
+    }
+
+    public int countByEntityId(int entityId, String search, String action, String dateFrom, String dateTo) {
+        return countByEntityTypeAndId2("categories", entityId, search, action, dateFrom, dateTo);
+    }
+
+    public List<ActivityLog> findByEntityTypeAndId2(String entityType, int entityId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
         StringBuilder where = new StringBuilder(
-                "WHERE al.entity_type = 'categories' "
+                "WHERE al.entity_type = ? "
                 + "AND al.entity_id = ? "
                 + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
         );
+        params.add(entityType);
         params.add(entityId);
 
         if (search != null && !search.trim().isEmpty()) {
@@ -688,14 +698,15 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return list;
     }
 
-    public int countByEntityId(int entityId, String search, String action, String dateFrom, String dateTo) {
+    public int countByEntityTypeAndId2(String entityType, int entityId, String search, String action, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
 
         StringBuilder where = new StringBuilder(
-                "WHERE al.entity_type = 'categories' "
+                "WHERE al.entity_type = ? "
                 + "AND al.entity_id = ? "
                 + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
         );
+        params.add(entityType);
         params.add(entityId);
 
         if (search != null && !search.trim().isEmpty()) {

@@ -432,7 +432,7 @@
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/receipt">Phiếu nhập/xuất</a> / <span><c:out value="${receipt.receiptCode}"/></span></span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                            <c:if test="${receipt.status == 'NEEDS_REVISION' && isOwner}">
+                            <c:if test="${(receipt.status == 'NEEDS_REVISION' || receipt.status == 'DRAFT') && isOwner}">
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/receipt?action=edit&id=${receipt.receiptId}">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                 Chỉnh sửa
@@ -466,6 +466,7 @@
                             <h2 class="hero-name">
                                 <c:out value="${receipt.receiptCode}"/>
                                 <c:choose>
+                                    <c:when test="${receipt.status == 'DRAFT'}"><span class="status-pill" style="background: var(--info-soft); color: var(--info);"><span class="pdot"></span>Bản nháp</span></c:when>
                                     <c:when test="${receipt.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                     <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                                     <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
@@ -561,6 +562,7 @@
                                     <div class="info-label">Trạng thái</div>
                                     <div class="info-value">
                                         <c:choose>
+                                            <c:when test="${receipt.status == 'DRAFT'}"><span class="status-pill" style="background: var(--info-soft); color: var(--info);"><span class="pdot"></span>Bản nháp</span></c:when>
                                             <c:when test="${receipt.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                             <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                                             <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
