@@ -53,6 +53,9 @@ public class ProposalController extends HttpServlet {
                 case "detail":
                     showDetail(request, response);
                     break;
+                case "reject":
+                    showRejectForm(request, response);
+                    break;
                 default:
                     listProposals(request, response);
                     break;
@@ -228,6 +231,32 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("history", history);
         request.setAttribute("totalHistory", totalHistory);
         request.getRequestDispatcher("/view/proposal/proposal-detail.jsp").forward(request, response);
+    }
+
+    private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("proposals.reject")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu đề xuất.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        int id = parseId(request);
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        ImportProposal p = new ImportProposalDAO().findById(id);
+        if (p == null || !GlobalUtils.STATUS_PENDING.equals(p.getStatus())) {
+            session.setAttribute("toastMessage", "Chỉ phiếu đang chờ duyệt mới có thể từ chối.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
+        request.setAttribute("proposal", p);
+        request.getRequestDispatcher("/view/proposal/proposal-reject.jsp").forward(request, response);
     }
 
     private void saveProposal(HttpServletRequest request, HttpServletResponse response)

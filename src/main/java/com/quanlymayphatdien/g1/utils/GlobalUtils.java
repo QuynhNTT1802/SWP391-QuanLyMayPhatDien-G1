@@ -26,6 +26,7 @@ public class GlobalUtils {
     public static final String RECEIPT_STATUS_REVISION = "NEEDS_REVISION";
     public static final String RECEIPT_STATUS_COMPLETED = "COMPLETED";
     public static final String RECEIPT_STATUS_CANCELLED = "CANCELLED";
+    public static final String RECEIPT_STATUS_DRAFT = "DRAFT";
 
     private static final DateTimeFormatter DT_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
