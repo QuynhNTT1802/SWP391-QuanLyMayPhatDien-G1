@@ -6,6 +6,7 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -125,13 +126,16 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     @Override
-    public boolean update(ImportProposal t) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
     public boolean delete(ImportProposal t) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "DELETE FROM import_proposal WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, t.getProposalId());
+            ps.setString(2, GlobalUtils.STATUS_DRAFT);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override
@@ -259,4 +263,178 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
+    public boolean approveProposal(int proposalId, int approverId) {
+        String sql = "UPDATE import_proposal SET status = ?, approved_by = ?, approved_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_APPROVED);
+            ps.setInt(2, approverId);
+            ps.setInt(3, proposalId);
+            ps.setString(4, GlobalUtils.STATUS_PENDING);   // chỉ duyệt khi PENDING
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean rejectProposal(int proposalId, int rejecterId, String reason) {
+        String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
+                + "rejected_by = ?, rejected_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_REJECTED);
+            ps.setString(2, reason);
+            ps.setInt(3, rejecterId);
+            ps.setInt(4, proposalId);
+            ps.setString(5, GlobalUtils.STATUS_PENDING);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean cancelProposal(int proposalId, int cancellerId) {
+        String sql = "UPDATE import_proposal SET status = ?, updated_at = NOW() "
+                + "WHERE proposal_id = ? AND status IN (?, ?)";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_CANCELLED);
+            ps.setInt(2, proposalId);
+            ps.setString(3, GlobalUtils.STATUS_DRAFT);
+            ps.setString(4, GlobalUtils.STATUS_PENDING);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean markAsConverted(int proposalId, int receiptId) {
+        String sql = "UPDATE import_proposal SET status = ?, converted_receipt_id = ?, updated_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_CONVERTED);
+            ps.setInt(2, receiptId);
+            ps.setInt(3, proposalId);
+            ps.setString(4, GlobalUtils.STATUS_APPROVED);   // chỉ convert khi đã APPROVED
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<ImportProposal> searchByFilters(String status, String search, int page, int pageSize) {
+        List<ImportProposal> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.*, "
+                + "w.name AS warehouse_name, "
+                + "u_c.name AS created_by_name, "
+                + "u_a.name AS approved_by_name, "
+                + "u_r.name AS rejected_by_name, "
+                + "rc.receipt_code AS converted_receipt_code "
+                + "FROM import_proposal p "
+                + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
+                + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
+                + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
+                + "LEFT JOIN receipt rc   ON rc.receipt_id = p.converted_receipt_id "
+                + "WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND p.status = ?");
+            params.add(status);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND p.proposal_code LIKE ?");
+            params.add("%" + search.trim() + "%");
+        }
+        sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countByFilters(String status, String search) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE 1=1");
+        List<Object> params = new ArrayList<>();
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND status = ?");
+            params.add(status);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND proposal_code LIKE ?");
+            params.add("%" + search.trim() + "%");
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public void deleteDetails(int proposalId) {
+        String sql = "DELETE FROM import_proposal_detail WHERE proposal_id = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, proposalId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void insertDetailsBatch(List<ImportProposalDetail> details) {
+        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, current_stock, note) "
+                + "VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (ImportProposalDetail d : details) {
+                ps.setInt(1, d.getProposalId());
+                ps.setInt(2, d.getGeneratorId());
+                ps.setInt(3, d.getQuantity());
+                ps.setInt(4, d.getCurrentStock());
+                ps.setString(5, d.getNote());
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean update(ImportProposal t) {
+        String sql = "UPDATE import_proposal SET note = ?, status = ?, updated_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, t.getNote());
+            ps.setString(2, t.getStatus());
+            ps.setInt(3, t.getProposalId());
+            ps.setString(4, GlobalUtils.STATUS_DRAFT);   // chỉ update khi DRAFT
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
