@@ -63,9 +63,35 @@
             width: 100px;
         }
         .col-price {
-            width: 130px;
+            width: 160px;
             text-align: right;
             font-size: 13px;
+            padding-top: 6px !important;
+        }
+        .unit-price-input {
+            width: 100%;
+            padding: 7px 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            color: var(--fg);
+            font-size: 13px;
+            box-sizing: border-box;
+            text-align: right;
+        }
+        .unit-price-input.is-invalid {
+            border-color: var(--danger);
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+        .unit-price-hint {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+            text-align: right;
+        }
+        .row-subtotal-cell {
             padding-top: 14px !important;
         }
         .col-del {
@@ -309,7 +335,7 @@
                                             <th class="col-num">#</th>
                                             <th>Máy phát</th>
                                             <th class="col-qty">Số lượng</th>
-                                            <th class="col-price">Đơn giá</th>
+                                            <th class="col-price">Đơn giá bán</th>
                                             <th class="col-price">Thành tiền</th>
                                             <th class="col-del"></th>
                                         </tr>
@@ -321,15 +347,18 @@
                                                 <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                     <option value="">-- Chọn máy --</option>
                                                     <c:forEach var="g" items="${generators}">
-                                                        <option value="${g.id}" data-price="${g.unitPrice}">
+                                                        <option value="${g.id}" data-base-price="${g.unitPrice}">
                                                             <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                         </option>
                                                     </c:forEach>
                                                 </select>
                                             </td>
                                             <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
-                                            <td class="col-price"><span class="row-unit-price mono">0₫</span></td>
-                                            <td class="col-price"><span class="row-subtotal mono">0₫</span></td>
+                                            <td class="col-price">
+                                                <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
+                                                <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                            </td>
+                                            <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                             </td>
@@ -351,15 +380,18 @@
                                             <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
-                                                    <option value="${g.id}" data-price="${g.unitPrice}">
+                                                    <option value="${g.id}" data-base-price="${g.unitPrice}">
                                                         <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                     </option>
                                                 </c:forEach>
                                             </select>
                                         </td>
                                         <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
-                                        <td class="col-price"><span class="row-unit-price mono">0₫</span></td>
-                                        <td class="col-price"><span class="row-subtotal mono">0₫</span></td>
+                                        <td class="col-price">
+                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
+                                            <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                        </td>
+                                        <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                         <td class="col-del">
                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                         </td>
@@ -408,17 +440,38 @@
             function updateRowPrice(selectEl) {
                 var row = selectEl.closest('tr');
                 var opt = selectEl.options[selectEl.selectedIndex];
-                var price = parseFloat(opt.getAttribute('data-price')) || 0;
-                row.querySelector('.row-unit-price').textContent = formatVND(price);
+                var basePrice = parseFloat(opt.getAttribute('data-base-price')) || 0;
+                var priceInput = row.querySelector('.unit-price-input');
+                priceInput.value = basePrice;
+                priceInput.setAttribute('data-base', basePrice);
+                row.querySelector('.base-price-label').textContent = basePrice > 0 ? formatVND(basePrice) : '—';
+                validateUnitPrice(priceInput);
                 updateTotal();
+            }
+            function validateUnitPrice(input) {
+                var base = parseFloat(input.getAttribute('data-base')) || 0;
+                var v = parseFloat(input.value);
+                if (isNaN(v)) {
+                    input.classList.add('is-invalid');
+                    input.title = base > 0 ? ('Đơn giá phải ≥ giá gốc (' + formatVND(base) + ')') : '';
+                    return false;
+                }
+                if (base > 0 && v < base) {
+                    input.classList.add('is-invalid');
+                    input.title = 'Đơn giá phải ≥ giá gốc (' + formatVND(base) + ')';
+                    return false;
+                }
+                input.classList.remove('is-invalid');
+                input.title = '';
+                return true;
             }
             function updateTotal() {
                 var grand = 0;
                 document.querySelectorAll('#detailBody tr').forEach(function (row) {
                     var sel = row.querySelector('.gen-select');
                     var qty = parseInt(row.querySelector('.qty-input').value) || 0;
-                    var opt = sel.options[sel.selectedIndex];
-                    var price = parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0;
+                    var priceInput = row.querySelector('.unit-price-input');
+                    var price = parseFloat(priceInput.value) || 0;
                     var subtotal = price * qty;
                     row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
                     grand += subtotal;
@@ -452,11 +505,18 @@
                 for (var i = 0; i < rows.length; i++) {
                     var sel = rows[i].querySelector('.gen-select');
                     var qtyInput = rows[i].querySelector('.qty-input');
+                    var priceInput = rows[i].querySelector('.unit-price-input');
                     var qty = parseInt(qtyInput.value);
                     if (sel.value && (isNaN(qty) || qty < 1)) {
                         e.preventDefault();
                         alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
                         qtyInput.focus();
+                        return false;
+                    }
+                    if (sel.value && !validateUnitPrice(priceInput)) {
+                        e.preventDefault();
+                        alert('Đơn giá ở dòng ' + (i + 1) + ' phải ≥ giá gốc của máy.');
+                        priceInput.focus();
                         return false;
                     }
                     if (sel.value)

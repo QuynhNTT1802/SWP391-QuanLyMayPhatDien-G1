@@ -112,16 +112,24 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     public int countByStatus(String status) {
-        return countByStatus(status, null);
+        return countByStatus(status, null, false);
     }
 
     public int countByStatus(String status, Integer createdBy) {
+        return countByStatus(status, createdBy, false);
+    }
+
+    public int countByStatus(String status, Integer createdBy, boolean excludeDraft) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE status = ?");
         List<Object> params = new ArrayList<>();
         params.add(status);
         if (createdBy != null) {
             sql.append(" AND created_by = ?");
             params.add(createdBy);
+        }
+        if (excludeDraft) {
+            sql.append(" AND status != ?");
+            params.add(GlobalUtils.STATUS_DRAFT);
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -338,7 +346,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -367,6 +375,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND p.created_by = ?");
             params.add(createdBy);
         }
+        if (excludeDraft) {
+            sql.append(" AND p.status != ?");
+            params.add(GlobalUtils.STATUS_DRAFT);
+        }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -386,6 +398,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     public int countByFilters(String status, String search, Integer createdBy) {
+        return countByFilters(status, search, createdBy, false);
+    }
+
+    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -399,6 +415,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         if (createdBy != null) {
             sql.append(" AND created_by = ?");
             params.add(createdBy);
+        }
+        if (excludeDraft) {
+            sql.append(" AND status != ?");
+            params.add(GlobalUtils.STATUS_DRAFT);
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {

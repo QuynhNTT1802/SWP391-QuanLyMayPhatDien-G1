@@ -78,107 +78,6 @@
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            .dropdown {
-                position: relative;
-                display: inline-block;
-            }
-            .dropdown-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 4px 10px;
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                background: var(--surface);
-                color: var(--fg);
-                font-size: 12px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all .12s ease;
-                font-family: inherit;
-                white-space: nowrap;
-            }
-            .dropdown-btn:hover {
-                border-color: var(--accent);
-                color: var(--accent);
-            }
-            .dropdown-btn .arrow {
-                transition: transform .2s ease;
-                margin-left: 2px;
-                font-size: 10px;
-            }
-            .dropdown-btn.open .arrow {
-                transform: rotate(180deg);
-            }
-            .dropdown-menu {
-                position: fixed;
-                z-index: 999;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                box-shadow: 0 4px 20px rgba(0,0,0,.12);
-                padding: 4px;
-                min-width: 150px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(-4px);
-                transition: all .15s ease;
-                pointer-events: none;
-            }
-            .dropdown-menu.open {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-                pointer-events: auto;
-            }
-            .dropdown-item {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 7px 10px;
-                border: none;
-                border-radius: 4px;
-                background: transparent;
-                color: var(--fg);
-                font-size: 12.5px;
-                font-weight: 500;
-                cursor: pointer;
-                width: 100%;
-                text-align: left;
-                font-family: inherit;
-                text-decoration: none;
-                transition: background .1s ease;
-                box-sizing: border-box;
-                white-space: nowrap;
-            }
-            .dropdown-item:hover {
-                background: var(--surface-2);
-            }
-            .dropdown-item svg {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                flex-shrink: 0;
-            }
-            .dropdown-item .label {
-                flex: 1;
-            }
-            .dropdown-item.approve svg {
-                stroke: #155724;
-            }
-            .dropdown-item.reject svg {
-                stroke: #721c24;
-            }
-            .dropdown-item.cancel svg {
-                stroke: #dc3545;
-            }
-            .dropdown-divider {
-                height: 1px;
-                background: var(--border);
-                margin: 3px 0;
-            }
             .user-name.customer-link {
                 cursor: pointer;
                 color: var(--accent);
@@ -398,50 +297,9 @@
                                                 </td>
                                                 <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customer.address}</span></td>
                                                 <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động
-                                                            <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-
-                                                            <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                                    <span class="label">Sửa</span>
-                                                                </a>
-                                                            </c:if>
-
-                                                            <c:if test="${canApproveOrder && order.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item approve" onclick="confirmApprove(${order.orderId})" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                    <span class="label">Duyệt</span>
-                                                                </button>
-                                                            </c:if>
-
-                                                            <c:if test="${canRejectOrder && order.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item reject" onclick="confirmReject(${order.orderId})" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    <span class="label">Từ chối</span>
-                                                                </button>
-                                                            </c:if>
-
-                                                            <c:if test="${canCancelOrder && (order.status == 'PENDING' || order.status == 'APPROVED')}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item cancel" onclick="confirmCancel(${order.orderId})" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                    <span class="label">Hủy</span>
-                                                                </button>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
+                                                    <a class="btn" href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}">
+                                                        Chi tiết
+                                                    </a>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -584,27 +442,6 @@
                 form.submit();
             }
         }
-        function toggleDropdown(btn) {
-            var menu = btn.nextElementSibling;
-            var isOpen = menu.classList.contains('open');
-            document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                if (m !== menu) {
-                    m.classList.remove('open');
-                    m.previousElementSibling.classList.remove('open');
-                }
-            });
-            if (isOpen) {
-                menu.classList.remove('open');
-                btn.classList.remove('open');
-                return;
-            }
-            var rect = btn.getBoundingClientRect();
-            menu.style.top = (rect.bottom + 4) + 'px';
-            menu.style.left = rect.left + 'px';
-            menu.style.minWidth = Math.max(150, rect.width) + 'px';
-            menu.classList.add('open');
-            btn.classList.add('open');
-        }
         function showCustomerModal(el) {
             event.stopPropagation();
             var id = el.getAttribute('data-cust-id') || '';
@@ -630,16 +467,6 @@
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeCustomerModal();
-            }
-        });
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    m.classList.remove('open');
-                });
-                document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                    b.classList.remove('open');
-                });
             }
         });
     </script>
