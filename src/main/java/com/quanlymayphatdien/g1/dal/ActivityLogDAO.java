@@ -354,10 +354,8 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return list;
     }
 
-    /**
-     * Đếm tổng số log theo module — dùng cho phân trang. Cùng logic WHERE với
-     * findByModuleFilter.
-     */
+
+
     public int countByModuleFilter(String module, String search, String action,
             String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
@@ -777,18 +775,56 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return -1;
     }
 
-    public List<ActivityLog> getLogsByRoleId(int roleId, int page, int pageSize) {
+    public List<ActivityLog> getLogsByRoleId(int roleId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        
+        StringBuilder where = new StringBuilder(
+                "WHERE al.entity_type = 'roles' AND al.entity_id = ? "
+        );
+        params.add(roleId);
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND u.name LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
         String sql = "SELECT al.*, u.name AS user_name "
                 + "FROM activity_log al JOIN user u ON al.user_id = u.id "
-                + "WHERE al.entity_type = 'roles' AND al.entity_id = ? "
+                + where
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
+                
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, roleId);
-            p.setInt(2, pageSize);
-            p.setInt(3, (page - 1) * pageSize);
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
+            p.setInt(idx++, pageSize);
+            p.setInt(idx, (page - 1) * pageSize);
+            
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
                 ActivityLog log = getFromResultSet(rs);
@@ -802,12 +838,49 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return list;
     }
 
-    public int countLogsByRoleId(int roleId) {
-        String sql = "SELECT COUNT(*) FROM activity_log "
-                + "WHERE entity_type = 'roles' AND entity_id = ?";
+    public int countLogsByRoleId(int roleId, String search, String action, String dateFrom, String dateTo) {
+        List<Object> params = new ArrayList<>();
+        
+        StringBuilder where = new StringBuilder(
+                "WHERE al.entity_type = 'roles' AND al.entity_id = ? "
+        );
+        params.add(roleId);
+
+        if (search != null && !search.trim().isEmpty()) {
+            where.append("AND u.name LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+
+        if (action != null && !action.trim().isEmpty()) {
+            where.append("AND al.action = ? ");
+            params.add(action.trim());
+        }
+
+        if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            where.append("AND al.created_at >= ? ");
+            params.add(LocalDate.parse(dateFrom).atStartOfDay());
+        }
+
+        if (dateTo != null && !dateTo.trim().isEmpty()) {
+            where.append("AND al.created_at <= ? ");
+            params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
+        }
+
+        String sql = "SELECT COUNT(*) FROM activity_log al JOIN user u ON al.user_id = u.id "
+                + where;
+                
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, roleId);
+            int idx = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    p.setString(idx++, (String) param);
+                } else if (param instanceof LocalDateTime) {
+                    p.setObject(idx++, (LocalDateTime) param);
+                } else {
+                    p.setObject(idx++, param);
+                }
+            }
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1);

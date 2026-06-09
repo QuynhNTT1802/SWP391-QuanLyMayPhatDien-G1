@@ -161,8 +161,14 @@ public class RoleController extends HttpServlet {
                 catch (NumberFormatException ignored) {}
             }
             int histPageSize = 10;
-            List<ActivityLog> roleHistory = logDAO.getLogsByRoleId(roleId, histPage, histPageSize);
-            int histTotal = logDAO.countLogsByRoleId(roleId);
+            
+            String histSearch = request.getParameter("histSearch");
+            String histAction = request.getParameter("histAction");
+            String histDateFrom = request.getParameter("histDateFrom");
+            String histDateTo = request.getParameter("histDateTo");
+
+            List<ActivityLog> roleHistory = logDAO.getLogsByRoleId(roleId, histSearch, histAction, histDateFrom, histDateTo, histPage, histPageSize);
+            int histTotal = logDAO.countLogsByRoleId(roleId, histSearch, histAction, histDateFrom, histDateTo);
             int histTotalPages = Math.max(1, (int) Math.ceil((double) histTotal / histPageSize));
             if (histPage > histTotalPages) histPage = histTotalPages;
 
@@ -170,6 +176,11 @@ public class RoleController extends HttpServlet {
             request.setAttribute("histPage", histPage);
             request.setAttribute("histTotalPages", histTotalPages);
             request.setAttribute("histTotal", histTotal);
+            
+            request.setAttribute("histSearch", histSearch);
+            request.setAttribute("histAction", histAction);
+            request.setAttribute("histDateFrom", histDateFrom);
+            request.setAttribute("histDateTo", histDateTo);
 
             String activeTab = request.getParameter("activeTab");
             request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
