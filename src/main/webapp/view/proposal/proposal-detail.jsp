@@ -18,298 +18,251 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <style>
             a.btn, a.back-link { text-decoration: none; }
 
-            /* ============== Status pill ============== */
-            .status-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 600;
+            /* ============== Page head (eyebrow + title + sub + status) ============== */
+            .page-head { margin: 0 0 24px 0; padding-top: 4px; }
+            .page-head .eyebrow {
+                display: inline-flex; align-items: center; gap: 6px;
+                font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+                text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+                font-family: var(--font-ui);
             }
-            .status-draft     { background: #e2e3e5; color: #383d41; }
-            .status-pending   { background: #fff3cd; color: #856404; }
-            .status-approved  { background: #d4edda; color: #155724; }
-            .status-rejected  { background: #f8d7da; color: #721c24; }
-            .status-converted { background: #cce5ff; color: #004085; }
-            .status-cancelled { background: #d6d8db; color: #1d2129; }
-            [data-theme="dark"] .status-pending   { background: var(--warn-soft); color: var(--warn); }
-            [data-theme="dark"] .status-rejected  { background: var(--danger-soft); color: var(--danger); }
-            [data-theme="dark"] .status-approved  { background: var(--accent-soft); color: var(--accent); }
-            [data-theme="dark"] .status-converted { background: rgba(0, 64, 133, 0.25); color: #66b0ff; }
-            .pdot {
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: currentColor;
-                display: inline-block;
-                opacity: 0.55;
+            .page-head .eyebrow::before {
+                content: ''; width: 5px; height: 5px; border-radius: 50%;
+                background: var(--accent);
             }
+            .page-head h1.title {
+                font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
+                margin: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+                line-height: 1.2;
+            }
+            .page-head h1.title .ts-code {
+                font-family: var(--font-mono);
+                color: var(--fg-soft);
+                font-weight: 700;
+            }
+            .page-head .lede {
+                color: var(--muted); margin-top: 8px; font-size: 14px;
+                display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+            }
+            .page-head .lede .sep { color: var(--muted-2); margin: 0 4px; }
+            .page-head .ts-status { display: flex; align-items: center; gap: 6px; }
 
-            /* ============== 1) Header Bar (top code strip) ============== */
+            /* ============== Status pill (hệ thống) ============== */
+            .status-pill {
+                display: inline-flex; align-items: center; gap: 5px;
+                font-size: 11.5px; font-weight: 600;
+                padding: 2px 8px; border-radius: 999px; border: 1px solid;
+                font-family: var(--font-ui);
+            }
+            .status-pill .pdot {
+                width: 5px; height: 5px; border-radius: 50%;
+                background: currentColor;
+            }
+            .status-draft,
+            .status-cancelled { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
+            .status-pending   { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft); }
+            .status-approved  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft); }
+            .status-rejected  { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft); }
+            .status-converted { color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft); }
+
+            /* ============== Header bar (top code strip - subtle) ============== */
             .header-bar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                width: 100%;
-                padding: 10px 18px;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                margin-bottom: 12px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+                display: flex; align-items: center; justify-content: space-between;
+                gap: 12px; width: 100%;
+                padding: 0 0 14px 0; margin: 0 0 18px 0;
+                border-bottom: 1px solid var(--border);
             }
             .header-bar .hb-left {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                min-width: 0;
-            }
-            .header-bar .hb-left .hb-icon {
-                width: 30px;
-                height: 30px;
-                border-radius: 8px;
-                background: var(--accent-soft);
-                color: var(--accent);
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-            }
-            .header-bar .hb-left .hb-icon svg {
-                width: 16px;
-                height: 16px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 1.8;
+                display: flex; align-items: center; gap: 12px; min-width: 0;
             }
             .header-bar .hb-left .hb-text {
-                display: flex;
-                flex-direction: column;
-                line-height: 1.25;
-                min-width: 0;
+                display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap;
+            }
+            .header-bar .hb-left .hb-num {
+                font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+                color: var(--accent); letter-spacing: 0.04em;
             }
             .header-bar .hb-left .hb-label {
-                font-size: 11px;
-                color: var(--muted);
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                font-weight: 600;
+                font-size: 10.5px; color: var(--muted);
+                text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
             }
             .header-bar .hb-left .hb-code {
-                font-family: var(--font-mono);
-                font-size: 14px;
-                font-weight: 700;
-                color: var(--fg);
-                letter-spacing: 0.02em;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+                color: var(--fg); letter-spacing: 0.02em;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             }
-            .header-bar .hb-right {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
+            .header-bar .hb-right { display: flex; align-items: center; gap: 8px; }
 
-            /* ============== 2) Action Bar (button group) ============== */
+            /* ============== Action bar (button group) ============== */
             .action-bar {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
-                width: 100%;
-                padding: 10px 14px;
-                background: var(--surface-2);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                margin-bottom: 16px;
+                display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+                width: 100%; padding: 0 0 20px 0; margin: 0 0 8px 0;
             }
             .action-bar .ab-group {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
+                display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
             }
             .action-bar .ab-divider {
-                width: 1px;
-                height: 22px;
-                background: var(--border);
-                margin: 0 4px;
+                width: 1px; height: 22px; background: var(--border); margin: 0 4px;
             }
 
-            /* ============== 3) Title & Status Section ============== */
-            .title-status {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 14px;
-                flex-wrap: wrap;
-                width: 100%;
-                padding: 4px 4px 14px 4px;
-                margin-bottom: 6px;
+            /* ============== Buttons (scope override - giống hệ thống) ============== */
+            .header-bar .btn,
+            .action-bar .btn,
+            .detail-pager .btn {
+                display: inline-flex; align-items: center; gap: 6px;
+                height: auto; padding: 7px 12px;
+                font-size: 13px; font-weight: 600; line-height: 1.2;
+                border-radius: var(--radius-sm);
+                border: 1px solid var(--border);
+                background: var(--surface); color: var(--fg);
+                font-family: var(--font-ui); cursor: pointer;
+                white-space: nowrap; text-decoration: none;
+                transition: background .15s ease, border-color .15s ease, color .15s ease;
             }
-            .title-status .ts-title {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                min-width: 0;
+            .header-bar .btn svg,
+            .action-bar .btn svg,
+            .detail-pager .btn svg {
+                width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8;
             }
-            .title-status .ts-title .ts-eyebrow {
-                font-size: 11px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.06em;
-                color: var(--muted);
-            }
-            .title-status .ts-title .ts-h {
-                font-size: 22px;
-                font-weight: 700;
-                color: var(--fg);
-                line-height: 1.3;
-                margin: 0;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-            .title-status .ts-title .ts-h .ts-code {
-                font-family: var(--font-mono);
-                color: var(--accent);
-                font-weight: 700;
-            }
-            .title-status .ts-title .ts-sub {
-                font-size: 12.5px;
-                color: var(--muted);
-            }
-            .title-status .ts-status {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-            .title-status .ts-status .status-pill {
-                font-size: 12.5px;
-                padding: 6px 12px;
+            .header-bar .btn:hover,
+            .action-bar .btn:hover,
+            .detail-pager .btn:hover { background: var(--surface-2); }
+            .header-bar .btn:disabled,
+            .action-bar .btn:disabled,
+            .detail-pager .btn:disabled { opacity: .45; cursor: not-allowed; }
+            .header-bar .btn:focus-visible,
+            .action-bar .btn:focus-visible,
+            .detail-pager .btn:focus-visible {
+                outline: none; box-shadow: 0 0 0 3px var(--accent-soft);
             }
 
-            /* ============== 4) Tab Navigation ============== */
+            .header-bar .btn-primary,
+            .action-bar .btn-primary {
+                background: var(--fg); color: var(--bg); border-color: var(--fg);
+            }
+            .header-bar .btn-primary:hover,
+            .action-bar .btn-primary:hover { background: var(--fg-soft); border-color: var(--fg-soft); }
+
+            .header-bar .btn-danger,
+            .action-bar .btn-danger,
+            .detail-pager .btn-danger {
+                color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+            }
+            .header-bar .btn-danger:hover,
+            .action-bar .btn-danger:hover,
+            .detail-pager .btn-danger:hover { background: var(--danger-soft); }
+
+            .header-bar .btn-success,
+            .action-bar .btn-success,
+            .detail-pager .btn-success {
+                background: var(--accent); color: var(--bg); border-color: var(--accent);
+            }
+            .header-bar .btn-success:hover,
+            .action-bar .btn-success:hover,
+            .detail-pager .btn-success:hover { background: color-mix(in srgb, var(--accent) 85%, var(--fg)); }
+
+            .header-bar .btn-warn,
+            .action-bar .btn-warn,
+            .detail-pager .btn-warn {
+                color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent);
+            }
+            .header-bar .btn-warn:hover,
+            .action-bar .btn-warn:hover,
+            .detail-pager .btn-warn:hover { background: var(--warn-soft); }
+
+            .action-bar .back-link {
+                display: inline-flex; align-items: center; gap: 6px;
+                height: auto; padding: 7px 12px;
+                font-size: 13px; font-weight: 600;
+                color: var(--muted); background: var(--surface);
+                border: 1px solid var(--border); border-radius: var(--radius-sm);
+                margin-bottom: 0; text-decoration: none;
+                transition: color .15s ease, background .15s ease, border-color .15s ease;
+            }
+            .action-bar .back-link:hover {
+                color: var(--fg); background: var(--surface-2);
+                border-color: color-mix(in srgb, var(--fg) 18%, var(--border));
+            }
+            .action-bar .back-link svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+            /* ============== Tabs (giống hệ thống) ============== */
             .tabs {
-                display: flex;
-                gap: 4px;
+                display: flex; gap: 4px;
                 border-bottom: 1px solid var(--border);
-                margin-bottom: 18px;
+                margin: 0 0 28px 0;
             }
             .tab {
-                padding: 10px 20px;
-                border: none;
-                background: transparent;
-                color: var(--muted);
-                cursor: pointer;
-                font-size: 13px;
-                font-weight: 600;
-                font-family: var(--font-ui);
-                border-bottom: 2px solid transparent;
-                margin-bottom: -1px;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                transition: color 0.15s, border-color 0.15s;
+                background: transparent; border: 0;
+                padding: 10px 14px;
+                font-size: 13px; color: var(--muted); cursor: pointer;
+                font-family: var(--font-ui); font-weight: 600;
+                border-bottom: 2px solid transparent; margin-bottom: -1px;
+                display: inline-flex; align-items: center; gap: 8px;
+                transition: color .15s, border-color .15s;
             }
             .tab:hover { color: var(--fg); }
-            .tab.active {
-                color: var(--fg);
-                border-bottom-color: var(--accent);
-            }
-            .tab svg {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 1.8;
-            }
+            .tab.active { color: var(--fg); border-bottom-color: var(--fg); }
+            .tab svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
             .tab .tab-count {
-                background: var(--surface-2);
-                color: var(--muted);
-                font-size: 11px;
-                padding: 1px 8px;
-                border-radius: 10px;
-                font-weight: 700;
-            }
-            .tab.active .tab-count {
-                background: var(--accent-soft);
-                color: var(--accent);
+                font-family: var(--font-mono); font-size: 10.5px; font-weight: 500;
+                padding: 1px 6px; border-radius: 3px;
+                background: var(--accent-soft); color: var(--accent);
             }
             .tab-panel { display: none; }
             .tab-panel.active { display: block; }
 
-            /* ============== 5) Detail Content Area (Read-only Grid) ============== */
+            /* ============== Section (content card) ============== */
             .detail-content {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 20px;
+                background: var(--surface); border: 1px solid var(--border);
+                border-radius: 10px; padding: 22px 22px;
                 width: 100%;
+                margin-bottom: 20px;
+            }
+            .detail-content .dc-section-head {
+                display: flex; align-items: center; justify-content: space-between;
+                gap: 12px; margin: 0 0 18px 0; padding-bottom: 14px;
+                border-bottom: 1px solid var(--border);
+            }
+            .detail-content .dc-section-head-left {
+                display: flex; align-items: baseline; gap: 10px; min-width: 0;
+            }
+            .detail-content .dc-num {
+                font-family: var(--font-mono); font-size: 11.5px; font-weight: 700;
+                color: var(--accent); letter-spacing: 0.04em;
             }
             .detail-content .dc-section-title {
-                font-size: 14px;
-                font-weight: 700;
-                color: var(--fg);
-                margin: 0 0 16px 0;
-                padding-bottom: 12px;
-                border-bottom: 1px solid var(--border);
-                display: flex;
-                align-items: center;
-                gap: 8px;
+                font-size: 15px; font-weight: 700; color: var(--fg);
+                margin: 0; letter-spacing: -0.01em;
             }
-            .detail-content .dc-section-title svg {
-                width: 16px;
-                height: 16px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 1.8;
-                color: var(--accent);
+            .detail-content .dc-section-sub {
+                font-size: 11.5px; color: var(--muted);
+                font-family: var(--font-mono); font-weight: 500;
             }
-            .detail-grid {
-                display: grid;
-                gap: 16px 20px;
-            }
+
+            /* ============== Detail grid (info fields) ============== */
+            .detail-grid { display: grid; gap: 14px 20px; }
             .detail-grid.row-4 { grid-template-columns: repeat(4, 1fr); }
             .detail-grid.row-2 { grid-template-columns: repeat(2, 1fr); }
             .detail-grid.row-1 { grid-template-columns: 1fr; }
             .detail-field { min-width: 0; }
             .detail-field .df-label {
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                margin-bottom: 6px;
+                font-size: 11px; color: var(--muted);
+                font-weight: 600; text-transform: uppercase;
+                letter-spacing: 0.02em; margin-bottom: 4px;
             }
             .detail-field .df-value {
-                font-size: 14px;
-                color: var(--fg);
-                word-wrap: break-word;
-                font-weight: 500;
-                padding: 10px 12px;
-                background: var(--surface-2);
-                border: 1px solid var(--border);
-                border-radius: var(--radius-sm);
-                min-height: 40px;
-                display: flex;
-                align-items: center;
+                font-size: 14px; color: var(--fg);
+                font-weight: 600; word-wrap: break-word;
+                display: flex; align-items: center; gap: 8px;
             }
             .detail-field .df-value.mono {
-                font-family: var(--font-mono);
+                font-family: var(--font-mono); font-weight: 500;
             }
             .detail-field .df-value.empty {
-                color: var(--muted);
-                font-style: italic;
+                color: var(--muted); font-style: italic; font-weight: 500;
             }
             @media (max-width: 1024px) {
                 .detail-grid.row-4 { grid-template-columns: repeat(2, 1fr); }
@@ -319,501 +272,145 @@
                 .detail-grid.row-2 { grid-template-columns: 1fr; }
             }
 
-            /* ============== Info label (dùng trong banner) ============== */
+            /* ============== Note (read-only, soft) ============== */
+            .note-soft {
+                font-size: 13px; color: var(--fg-soft);
+                line-height: 1.6; white-space: pre-wrap;
+            }
+
+            /* ============== Tables (product + history) ============== */
+            .product-table, .history-table {
+                width: 100%; border-collapse: separate; border-spacing: 0;
+                border: 1px solid var(--border); border-radius: var(--radius);
+                overflow: hidden; font-size: 13px;
+            }
+            .product-table th, .product-table td,
+            .history-table th, .history-table td {
+                padding: 11px 14px; text-align: left;
+                border-bottom: 1px solid var(--border);
+            }
+            .product-table th, .history-table th {
+                font-size: 11px; color: var(--muted);
+                text-transform: uppercase; font-weight: 700;
+                background: var(--surface-2); letter-spacing: 0.04em;
+            }
+            .product-table td, .history-table td {
+                font-size: 13.5px; color: var(--fg); vertical-align: middle;
+            }
+            .product-table tbody tr:hover,
+            .history-table tbody tr:hover { background: var(--surface-2); }
+            .product-table tbody tr:last-child td,
+            .history-table tbody tr:last-child td { border-bottom: 0; }
+            .text-center { text-align: center; }
+            .history-table .detail-cell {
+                color: var(--fg-soft); line-height: 1.5; max-width: 400px;
+            }
+            .history-table .mono { font-family: var(--font-mono); font-size: 12px; }
+            .result-summary {
+                padding: 11px 14px; font-size: 12.5px; color: var(--muted);
+                border-bottom: 1px solid var(--border); background: var(--surface-2);
+            }
+            .detail-pager {
+                display: flex; align-items: center; justify-content: center;
+                gap: 12px; margin-top: 16px;
+                font-size: 13px; color: var(--muted);
+            }
+            .empty-state {
+                text-align: center; padding: 40px 12px; color: var(--muted);
+            }
+
+            /* ============== Action badge (pill) ============== */
+            .action-badge {
+                display: inline-flex; align-items: center; gap: 5px;
+                font-size: 11px; font-weight: 700;
+                padding: 2px 9px; border-radius: 999px; border: 1px solid;
+                text-transform: uppercase; letter-spacing: 0.02em;
+            }
+            .action-badge::before {
+                content: ""; width: 5px; height: 5px;
+                border-radius: 50%; background: currentColor;
+            }
+            .action-create   { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent); background: var(--accent-soft); }
+            .action-update   { color: var(--purple); border-color: color-mix(in srgb, var(--purple) 32%, transparent); background: var(--purple-soft); }
+            .action-approve  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent); background: var(--accent-soft); }
+            .action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent); background: var(--danger-soft); }
+            .action-cancel   { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
+            .action-convert  { color: var(--info); border-color: color-mix(in srgb, var(--info) 32%, transparent); background: var(--info-soft); }
+            .action-default  { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
+
+            /* ============== Banners (alert style) ============== */
+            .reject-banner,
+            .convert-banner {
+                display: flex; align-items: flex-start; gap: 10px;
+                padding: 12px 16px; margin-bottom: 16px;
+                border-radius: var(--radius-sm);
+                font-size: 13px; font-weight: 500;
+            }
+            .reject-banner svg, .convert-banner svg {
+                width: 18px; height: 18px; stroke: currentColor; fill: none;
+                stroke-width: 2; flex-shrink: 0; margin-top: 1px;
+            }
+            .reject-banner {
+                background: var(--danger-soft); color: var(--danger);
+                border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+            }
+            .reject-banner .info-label { color: var(--danger); margin-bottom: 4px; }
+            .convert-banner {
+                background: var(--info-soft); color: var(--info);
+                border: 1px solid color-mix(in srgb, var(--info) 30%, transparent);
+            }
+            .convert-banner .info-label { color: var(--info); margin-bottom: 4px; }
+            .convert-banner a { color: var(--info); font-weight: 700; font-family: var(--font-mono); }
             .info-label {
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
+                font-size: 11px; font-weight: 700;
+                text-transform: uppercase; letter-spacing: 0.04em;
                 margin-bottom: 6px;
             }
 
-            /* ============== Note soft box (read-only) ============== */
-            .note-soft {
-                padding: 12px 16px;
-                background: var(--surface-2);
-                border-radius: var(--radius-sm);
-                font-size: 13.5px;
-                color: var(--fg);
-                line-height: 1.6;
-                white-space: pre-wrap;
-                border: 1px solid var(--border);
-            }
-
-            .note-soft {
-                padding: 12px 16px;
-                background: var(--surface-2);
-                border-radius: var(--radius-sm);
-                font-size: 13.5px;
-                color: var(--fg);
-                line-height: 1.6;
-                white-space: pre-wrap;
-            }
-
-            /* ============== Bảng chi tiết (card Chi tiết máy phát) ============== */
-            .product-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .product-table th, .product-table td {
-                padding: 12px 16px;
-                text-align: left;
-                border-bottom: 1px solid var(--border);
-            }
-            .product-table th {
-                font-size: 11px;
-                color: var(--muted);
-                text-transform: uppercase;
-                font-weight: 700;
-                background: var(--surface-2);
-                letter-spacing: 0.04em;
-            }
-            .product-table td { font-size: 13.5px; }
-            .product-table tbody tr:hover { background: var(--surface-2); }
-            .product-table tbody tr:last-child td { border-bottom: 0; }
-            .text-center { text-align: center; }
-            .detail-pager {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 12px;
-                margin-top: 16px;
-                font-size: 13px;
-                color: var(--muted);
-            }
-
-            /* ============== Banners (reject / convert) ============== */
-            .reject-banner {
-                margin-bottom: 16px;
-                padding: 14px 18px;
-                background: var(--danger-soft);
-                border-radius: var(--radius-sm);
-                border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
-                display: flex;
-                gap: 12px;
-                align-items: flex-start;
-            }
-            .reject-banner .info-label {
-                color: var(--danger);
-                margin-bottom: 4px;
-            }
-            .reject-banner svg {
-                width: 18px;
-                height: 18px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                color: var(--danger);
-                flex-shrink: 0;
-                margin-top: 1px;
-            }
-            .convert-banner {
-                margin-bottom: 16px;
-                padding: 14px 18px;
-                background: rgba(0, 64, 133, 0.08);
-                border-radius: var(--radius-sm);
-                border: 1px solid color-mix(in srgb, #004085 25%, transparent);
-                display: flex;
-                gap: 12px;
-                align-items: flex-start;
-            }
-            .convert-banner .info-label {
-                color: #004085;
-                margin-bottom: 4px;
-            }
-            .convert-banner svg {
-                width: 18px;
-                height: 18px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                color: #004085;
-                flex-shrink: 0;
-                margin-top: 1px;
-            }
-
-            /* ============== Lịch sử cập nhật ============== */
-            .table-card {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                overflow: hidden;
-            }
-            .empty-state {
-                text-align: center;
-                padding: 40px 12px;
-                color: var(--muted);
-            }
-            .history-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .history-table th {
-                padding: 12px 16px;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: var(--muted);
-                font-weight: 700;
-                background: var(--surface-2);
-                text-align: left;
-                border-bottom: 2px solid var(--border);
-            }
-            .history-table td {
-                padding: 12px 16px;
-                font-size: 13px;
-                color: var(--fg);
-                border-bottom: 1px solid var(--border);
-                vertical-align: middle;
-            }
-            .history-table tbody tr:hover { background: var(--surface-2); }
-            .history-table tbody tr:last-child td { border-bottom: 0; }
-            .history-table .detail-cell {
-                color: var(--fg-soft);
-                line-height: 1.55;
-                max-width: 400px;
-            }
-            .history-table .mono {
-                font-family: var(--font-mono);
-                font-size: 12px;
-            }
-            .result-summary {
-                padding: 12px 16px;
-                font-size: 12.5px;
-                color: var(--muted);
-                border-bottom: 1px solid var(--border);
-                background: var(--surface-2);
-            }
-            .action-badge {
-                display: inline-block;
-                padding: 3px 9px;
-                border-radius: 12px;
-                font-size: 11px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.03em;
-            }
-            .action-create   { background: #e2e3e5; color: #383d41; }
-            .action-update   { background: #cce5ff; color: #004085; }
-            .action-approve  { background: #d4edda; color: #155724; }
-            .action-reject   { background: #f8d7da; color: #721c24; }
-            .action-cancel   { background: #d6d8db; color: #1d2129; }
-            .action-convert  { background: #cce5ff; color: #004085; }
-            .action-default  { background: var(--surface-2); color: var(--muted); }
-
-            /* ============== Modal (nếu cần) ============== */
+            /* ============== Modal ============== */
             .modal-host {
-                position: fixed;
-                inset: 0;
+                position: fixed; inset: 0;
                 background: rgba(0, 0, 0, 0.45);
-                display: none;
-                align-items: center;
-                justify-content: center;
+                display: none; align-items: center; justify-content: center;
                 z-index: 1000;
             }
             .modal-host.show { display: flex; }
             .modal-card {
-                background: var(--surface);
-                border-radius: var(--radius);
-                padding: 22px 24px;
-                width: 460px;
-                max-width: 90vw;
-                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+                background: var(--surface); border-radius: var(--radius);
+                padding: 22px 24px; width: 460px; max-width: 90vw;
             }
             .modal-card h3 { margin: 0 0 6px 0; font-size: 17px; }
             .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
             .modal-card label {
-                display: block;
-                font-size: 12px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: var(--muted);
-                margin-bottom: 6px;
+                display: block; font-size: 12px; font-weight: 700;
+                text-transform: uppercase; letter-spacing: 0.04em;
+                color: var(--muted); margin-bottom: 6px;
             }
             .modal-card textarea {
-                width: 100%;
-                min-height: 80px;
-                padding: 8px 10px;
-                border: 1px solid var(--border);
+                width: 100%; min-height: 80px;
+                padding: 8px 10px; border: 1px solid var(--border);
                 border-radius: var(--radius-sm);
-                background: var(--surface);
-                color: var(--fg);
-                font-family: var(--font-ui);
-                font-size: 13px;
-                resize: vertical;
-                box-sizing: border-box;
+                background: var(--surface); color: var(--fg);
+                font-family: var(--font-ui); font-size: 13px;
+                resize: vertical; box-sizing: border-box;
             }
             .modal-actions {
-                display: flex;
-                gap: 8px;
-                justify-content: flex-end;
-                margin-top: 14px;
-            }
-
-            /* ============== Buttons (Beautified) ============== */
-            /* Override base .btn chỉ trong scope trang detail */
-            .header-bar .btn,
-            .action-bar .btn,
-            .detail-pager .btn {
-                position: relative;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                height: 34px;
-                padding: 0 14px;
-                font-size: 12.5px;
-                font-weight: 600;
-                line-height: 1;
-                border-radius: 8px;
-                border: 1px solid var(--border);
-                background: var(--surface);
-                color: var(--fg);
-                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
-                            inset 0 -1px 0 rgba(15, 23, 42, 0.04);
-                transition: transform .12s ease, box-shadow .15s ease,
-                            background .15s ease, border-color .15s ease, color .15s ease;
-                white-space: nowrap;
-                cursor: pointer;
-            }
-            .header-bar .btn svg,
-            .action-bar .btn svg,
-            .detail-pager .btn svg {
-                width: 14px;
-                height: 14px;
-                stroke-width: 2;
-            }
-            .header-bar .btn:hover,
-            .action-bar .btn:hover,
-            .detail-pager .btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08),
-                            inset 0 -1px 0 rgba(15, 23, 42, 0.04);
-                background: var(--surface-2);
-                border-color: color-mix(in srgb, var(--fg) 18%, var(--border));
-            }
-            .header-bar .btn:active,
-            .action-bar .btn:active,
-            .detail-pager .btn:active {
-                transform: translateY(0);
-                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-            }
-            .header-bar .btn:focus-visible,
-            .action-bar .btn:focus-visible,
-            .detail-pager .btn:focus-visible {
-                outline: none;
-                box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-            }
-            .header-bar .btn:disabled,
-            .action-bar .btn:disabled,
-            .detail-pager .btn:disabled {
-                opacity: .55;
-                cursor: not-allowed;
-                transform: none;
-                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-            }
-
-            /* Primary (gradient tím → xanh dương) */
-            .header-bar .btn-primary,
-            .action-bar .btn-primary {
-                background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-                color: #fff;
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(79, 70, 229, 0.25),
-                            0 4px 12px rgba(79, 70, 229, 0.18),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-primary:hover,
-            .action-bar .btn-primary:hover {
-                background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(79, 70, 229, 0.3),
-                            0 8px 18px rgba(79, 70, 229, 0.28),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-primary:focus-visible,
-            .action-bar .btn-primary:focus-visible {
-                box-shadow: 0 0 0 3px color-mix(in srgb, #6366f1 35%, transparent),
-                            0 4px 12px rgba(79, 70, 229, 0.18);
-            }
-
-            /* Success (gradient xanh lá) */
-            .header-bar .btn-success,
-            .action-bar .btn-success,
-            .detail-pager .btn-success {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: #fff;
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(5, 150, 105, 0.25),
-                            0 4px 12px rgba(5, 150, 105, 0.18),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-success:hover,
-            .action-bar .btn-success:hover,
-            .detail-pager .btn-success:hover {
-                background: linear-gradient(135deg, #059669 0%, #047857 100%);
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(5, 150, 105, 0.3),
-                            0 8px 18px rgba(5, 150, 105, 0.28),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-success:focus-visible,
-            .action-bar .btn-success:focus-visible,
-            .detail-pager .btn-success:focus-visible {
-                box-shadow: 0 0 0 3px color-mix(in srgb, #10b981 35%, transparent),
-                            0 4px 12px rgba(5, 150, 105, 0.18);
-            }
-
-            /* Danger (gradient đỏ) */
-            .header-bar .btn-danger,
-            .action-bar .btn-danger,
-            .detail-pager .btn-danger {
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                color: #fff;
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(220, 38, 38, 0.25),
-                            0 4px 12px rgba(220, 38, 38, 0.18),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-danger:hover,
-            .action-bar .btn-danger:hover,
-            .detail-pager .btn-danger:hover {
-                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3),
-                            0 8px 18px rgba(220, 38, 38, 0.28),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-danger:focus-visible,
-            .action-bar .btn-danger:focus-visible,
-            .detail-pager .btn-danger:focus-visible {
-                box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 35%, transparent),
-                            0 4px 12px rgba(220, 38, 38, 0.18);
-            }
-
-            /* Warn (gradient vàng/cam) */
-            .header-bar .btn-warn,
-            .action-bar .btn-warn,
-            .detail-pager .btn-warn {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-                color: #fff;
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(217, 119, 6, 0.25),
-                            0 4px 12px rgba(217, 119, 6, 0.18),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-warn:hover,
-            .action-bar .btn-warn:hover,
-            .detail-pager .btn-warn:hover {
-                background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-                border-color: transparent;
-                box-shadow: 0 1px 2px rgba(217, 119, 6, 0.3),
-                            0 8px 18px rgba(217, 119, 6, 0.28),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            }
-            .header-bar .btn-warn:focus-visible,
-            .action-bar .btn-warn:focus-visible,
-            .detail-pager .btn-warn:focus-visible {
-                box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 35%, transparent),
-                            0 4px 12px rgba(217, 119, 6, 0.18);
-            }
-
-            /* Back link button (subtle ghost) */
-            .action-bar .back-link {
-                height: 34px;
-                padding: 0 14px;
-                font-size: 12.5px;
-                font-weight: 600;
-                color: var(--muted);
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-                margin-bottom: 0;
-                transition: transform .12s ease, box-shadow .15s ease, color .15s ease, background .15s ease;
-            }
-            .action-bar .back-link:hover {
-                color: var(--fg);
-                background: var(--surface-2);
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-            }
-            .action-bar .back-link svg { width: 14px; height: 14px; stroke-width: 2; }
-
-            /* ============== Buttons (Dark mode tweaks) ============== */
-            [data-theme="dark"] .header-bar .btn,
-            [data-theme="dark"] .action-bar .btn,
-            [data-theme="dark"] .detail-pager .btn {
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.04);
-            }
-            [data-theme="dark"] .header-bar .btn:hover,
-            [data-theme="dark"] .action-bar .btn:hover,
-            [data-theme="dark"] .detail-pager .btn:hover {
-                box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            }
-            [data-theme="dark"] .header-bar .btn-primary,
-            [data-theme="dark"] .action-bar .btn-primary,
-            [data-theme="dark"] .header-bar .btn-success,
-            [data-theme="dark"] .action-bar .btn-success,
-            [data-theme="dark"] .detail-pager .btn-success,
-            [data-theme="dark"] .header-bar .btn-danger,
-            [data-theme="dark"] .action-bar .btn-danger,
-            [data-theme="dark"] .detail-pager .btn-danger,
-            [data-theme="dark"] .header-bar .btn-warn,
-            [data-theme="dark"] .action-bar .btn-warn,
-            [data-theme="dark"] .detail-pager .btn-warn {
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35),
-                            0 6px 16px rgba(0, 0, 0, 0.35),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.12);
-            }
-
-            /* ============== Back link ============== */
-            .back-link {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                color: var(--muted);
-                text-decoration: none;
-                font-size: 13px;
-                margin-bottom: 14px;
-                transition: color 0.15s;
-            }
-            .back-link:hover { color: var(--accent); }
-            .back-link svg {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 1.8;
+                display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px;
             }
 
             /* ============== Alert (error từ controller) ============== */
             .alert {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 10px 14px;
-                border-radius: var(--radius);
-                margin-bottom: 14px;
-                font-size: 13px;
-                font-weight: 600;
+                display: flex; align-items: center; gap: 10px;
+                padding: 12px 16px; border-radius: var(--radius-sm);
+                margin-bottom: 16px; font-size: 13px; font-weight: 500;
             }
             .alert svg {
-                width: 16px;
-                height: 16px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                flex-shrink: 0;
+                width: 18px; height: 18px; stroke: currentColor; fill: none;
+                stroke-width: 2; flex-shrink: 0;
             }
             .alert-error {
-                background: var(--danger-soft);
-                color: var(--danger);
-                border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+                background: var(--danger-soft); color: var(--danger);
+                border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
             }
 
             /* ============== In ấn ============== */
@@ -822,7 +419,7 @@
                 .header-bar, .action-bar {
                     display: none !important;
                 }
-                .detail-content { box-shadow: none; border: 1px solid #ddd; }
+                .detail-content { border: 1px solid #ddd; }
                 body, .app > div:last-child, main { background: #fff !important; }
                 .tab-panel { display: block !important; }
                 .tab-panel:not(.active) { display: none !important; }
@@ -863,17 +460,14 @@
                     <%-- ============== 1) Header Bar (top code strip) ============== --%>
                     <div class="header-bar">
                         <div class="hb-left">
-                            <span class="hb-icon">
-                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                            </span>
                             <div class="hb-text">
+                                <span class="hb-num">00</span>
                                 <span class="hb-label">Đang xem phiếu</span>
                                 <span class="hb-code"><c:out value="${proposal.proposalCode}"/></span>
                             </div>
                         </div>
                         <div class="hb-right">
                             <button type="button" class="btn" onclick="window.print()" title="In phiếu">
-                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                                 In phiếu
                             </button>
                         </div>
@@ -883,7 +477,6 @@
                     <div class="action-bar">
                         <div class="ab-group">
                             <a class="btn back-link" href="${pageContext.request.contextPath}/proposal" title="Quay lại danh sách">
-                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                                 Quay lại danh sách
                             </a>
                         </div>
@@ -898,21 +491,18 @@
                             <div class="ab-group">
                                 <c:if test="${proposal.status == 'DRAFT' && isOwner}">
                                     <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
-                                        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                         Chỉnh sửa
                                     </a>
                                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
                                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                                         <input type="hidden" name="submitType" value="submit" />
                                         <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">
-                                            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="20 6 9 17 4 12"/></svg>
                                             Gửi duyệt
                                         </button>
                                     </form>
                                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:inline;">
                                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận xoá phiếu đề xuất nháp này? Hành động không thể hoàn tác.')">
-                                            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
                                             Xoá
                                         </button>
                                     </form>
@@ -923,12 +513,10 @@
                                         <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" style="display:inline;">
                                             <input type="hidden" name="id" value="${proposal.proposalId}" />
                                             <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận duyệt phiếu đề xuất này?')">
-                                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="20 6 9 17 4 12"/></svg>
                                                 Duyệt phiếu
                                             </button>
                                         </form>
                                         <a class="btn btn-danger" href="${pageContext.request.contextPath}/proposal?action=reject&id=${proposal.proposalId}">
-                                            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                             Từ chối
                                         </a>
                                     </c:if>
@@ -936,7 +524,6 @@
                                         <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
                                             <input type="hidden" name="id" value="${proposal.proposalId}" />
                                             <button type="submit" class="btn btn-warn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
-                                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                                                 Huỷ phiếu
                                             </button>
                                         </form>
@@ -948,7 +535,6 @@
                                         <form method="POST" action="${pageContext.request.contextPath}/proposal?action=convert" style="display:inline;">
                                             <input type="hidden" name="id" value="${proposal.proposalId}" />
                                             <button type="submit" class="btn btn-success">
-                                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                                                 Tạo phiếu nhập từ đề xuất
                                             </button>
                                         </form>
@@ -957,7 +543,6 @@
                                         <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
                                             <input type="hidden" name="id" value="${proposal.proposalId}" />
                                             <button type="submit" class="btn btn-warn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất đã duyệt?')">
-                                                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                                                 Huỷ phiếu
                                             </button>
                                         </form>
@@ -967,30 +552,28 @@
                         </c:if>
                     </div>
 
-                    <%-- ============== 3) Title & Status Section ============== --%>
-                    <div class="title-status">
-                        <div class="ts-title">
-                            <span class="ts-eyebrow">Phiếu đề xuất nhập kho</span>
-                            <h2 class="ts-h">
-                                <span>Chi tiết đề xuất</span>
-                                <span class="ts-code">#${proposal.proposalId}</span>
-                            </h2>
-                            <span class="ts-sub">
-                                Ngày đề xuất: <c:choose><c:when test="${proposal.proposalDate == null}">—</c:when><c:otherwise>${proposal.proposalDate.format(propFmt)}</c:otherwise></c:choose>
-                                <span style="margin: 0 8px; color: var(--border);">·</span>
-                                Kho: <c:out value="${proposal.warehouseName}"/>
+                    <%-- ============== 3) Page Head (eyebrow + title + lede + status) ============== --%>
+                    <div class="page-head">
+                        <div class="eyebrow">Phiếu đề xuất nhập kho</div>
+                        <h1 class="title">
+                            <span>Chi tiết đề xuất</span>
+                            <span class="ts-code">#${proposal.proposalId}</span>
+                            <span class="ts-status">
+                                <c:choose>
+                                    <c:when test="${proposal.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Nháp</span></c:when>
+                                    <c:when test="${proposal.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
+                                    <c:when test="${proposal.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
+                                    <c:when test="${proposal.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
+                                    <c:when test="${proposal.status == 'CONVERTED'}"><span class="status-pill status-converted"><span class="pdot"></span>Đã chuyển phiếu nhập</span></c:when>
+                                    <c:when test="${proposal.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
+                                    <c:otherwise><span class="status-pill"><c:out value="${proposal.status}"/></span></c:otherwise>
+                                </c:choose>
                             </span>
-                        </div>
-                        <div class="ts-status">
-                            <c:choose>
-                                <c:when test="${proposal.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Nháp</span></c:when>
-                                <c:when test="${proposal.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                                <c:when test="${proposal.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
-                                <c:when test="${proposal.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                                <c:when test="${proposal.status == 'CONVERTED'}"><span class="status-pill status-converted"><span class="pdot"></span>Đã chuyển phiếu nhập</span></c:when>
-                                <c:when test="${proposal.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
-                                <c:otherwise><span class="status-pill"><c:out value="${proposal.status}"/></span></c:otherwise>
-                            </c:choose>
+                        </h1>
+                        <div class="lede">
+                            <span>Ngày đề xuất: <c:choose><c:when test="${proposal.proposalDate == null}">—</c:when><c:otherwise>${proposal.proposalDate.format(propFmt)}</c:otherwise></c:choose></span>
+                            <span class="sep">·</span>
+                            <span>Kho: <c:out value="${proposal.warehouseName}"/></span>
                         </div>
                     </div>
 
@@ -1012,11 +595,9 @@
                     <%-- ============== Tabs (2 tab) ============== --%>
                     <div class="tabs">
                         <button type="button" class="tab active" data-tab="overview">
-                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                             Tổng quan
                         </button>
                         <button type="button" class="tab" data-tab="history">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             Lịch sử cập nhật
                             <span class="tab-count">${totalHistory}</span>
                         </button>
@@ -1026,10 +607,13 @@
                     <div class="tab-panel active" id="tab-overview">
                         <%-- 5) Detail Content Area: Thông tin chung (read-only grid 4 cột) --%>
                         <div class="detail-content" style="margin-bottom: 16px;">
-                            <h3 class="dc-section-title">
-                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                Thông tin chung
-                            </h3>
+                            <div class="dc-section-head">
+                                <div class="dc-section-head-left">
+                                    <span class="dc-num">01</span>
+                                    <h3 class="dc-section-title">Thông tin chung</h3>
+                                </div>
+                                <span class="dc-section-sub">Read-only · Thông tin phiếu</span>
+                            </div>
 
                             <%-- Dòng 1 (4 cột): Mã phiếu · Tên phiếu · Ngày đăng ký · Năm kế hoạch --%>
                             <div class="detail-grid row-4" style="margin-bottom: 16px;">
@@ -1110,10 +694,13 @@
 
                         <%-- 5b) Detail Content Area: Chi tiết máy phát đề xuất --%>
                         <div class="detail-content" style="padding: 0; margin-bottom: 16px;">
-                            <h3 class="dc-section-title" style="padding: 20px 20px 14px 20px; margin: 0; border-bottom: 1px solid var(--border);">
-                                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                                Chi tiết máy phát đề xuất
-                            </h3>
+                            <div class="dc-section-head" style="padding: 18px 22px 14px 22px; border-bottom: 1px solid var(--border);">
+                                <div class="dc-section-head-left">
+                                    <span class="dc-num">02</span>
+                                    <h3 class="dc-section-title">Chi tiết máy phát đề xuất</h3>
+                                </div>
+                                <span class="dc-section-sub"><c:out value="${fn:length(details)}"/> dòng hàng</span>
+                            </div>
                             <c:set var="details" value="${proposal.details}" />
                             <table class="product-table" id="detailTable">
                                 <thead>
@@ -1162,10 +749,13 @@
                     <%-- ============== Tab Lịch sử cập nhật ============== --%>
                     <div class="tab-panel" id="tab-history">
                         <div class="detail-content" style="padding: 0;">
-                            <h3 class="dc-section-title" style="padding: 20px 20px 14px 20px; margin: 0; border-bottom: 1px solid var(--border);">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                Lịch sử cập nhật
-                            </h3>
+                            <div class="dc-section-head" style="padding: 18px 22px 14px 22px; border-bottom: 1px solid var(--border);">
+                                <div class="dc-section-head-left">
+                                    <span class="dc-num">03</span>
+                                    <h3 class="dc-section-title">Lịch sử cập nhật</h3>
+                                </div>
+                                <span class="dc-section-sub">${totalHistory} bản ghi</span>
+                            </div>
                             <div class="result-summary">Tìm thấy <strong>${totalHistory}</strong> bản ghi</div>
                             <table class="history-table">
                                 <thead><tr>

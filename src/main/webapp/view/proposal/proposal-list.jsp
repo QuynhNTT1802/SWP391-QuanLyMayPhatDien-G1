@@ -110,10 +110,12 @@
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
-                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=create">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                            Tạo phiếu đề xuất
-                        </a>
+                        <c:if test="${!sessionScope.userPermissions.contains('proposals.approve')}">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=create">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                Tạo phiếu đề xuất
+                            </a>
+                        </c:if>
                     </div>
                 </header>
 
@@ -127,7 +129,6 @@
                     </div>
 
                     <div class="stats-row">
-                        <div class="stat"><div class="lbl">Nháp</div><div class="val">${draftCount}</div></div>
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
                         <div class="stat"><div class="lbl">Đã duyệt</div><div class="val">${approvedCount}</div></div>
                         <div class="stat"><div class="lbl">Từ chối</div><div class="val">${rejectedCount}</div></div>
