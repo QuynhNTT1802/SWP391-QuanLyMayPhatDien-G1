@@ -121,6 +121,14 @@ public class ProposalController extends HttpServlet {
 
     private void listProposals(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        Integer createdByFilter = null;
+        if (loggedUser != null && (perms == null || !perms.contains("proposals.approve"))) {
+            createdByFilter = loggedUser.getId();
+        }
+
         String statusFilter = request.getParameter("status");
         String search = request.getParameter("search");
 
@@ -139,7 +147,7 @@ public class ProposalController extends HttpServlet {
         }
 
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -148,7 +156,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, page, pageSize);
         int fromIndex = total == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, total);
 
@@ -161,12 +169,12 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("search", search);
 
-        request.setAttribute("draftCount",     dao.countByStatus(GlobalUtils.STATUS_DRAFT));
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED));
-        request.setAttribute("convertedCount", dao.countByStatus(GlobalUtils.STATUS_CONVERTED));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED));
+        request.setAttribute("draftCount",     dao.countByStatus(GlobalUtils.STATUS_DRAFT, createdByFilter));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING, createdByFilter));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED, createdByFilter));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED, createdByFilter));
+        request.setAttribute("convertedCount", dao.countByStatus(GlobalUtils.STATUS_CONVERTED, createdByFilter));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter));
 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }
