@@ -75,17 +75,14 @@
                             </div>
                             <div class="kpi-grid">
                                 <div class="kpi-card kpi-total">
-                                    <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg></div>
                                     <div class="kpi-title">Tổng ${typeLabel}</div>
                                     <div class="kpi-value">${kpiTotal}</div>
                                 </div>
                                 <div class="kpi-card kpi-active">
-                                    <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                                     <div class="kpi-title">Đang hoạt động</div>
                                     <div class="kpi-value">${kpiActive}</div>
                                 </div>
                                 <div class="kpi-card kpi-inactive">
-                                    <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div>
                                     <div class="kpi-title">Đã khóa</div>
                                     <div class="kpi-value">${kpiInactive}</div>
                                 </div>
@@ -381,17 +378,14 @@
 
                             <div class="kpi-grid">
                                 <div class="kpi-card kpi-total">
-                                    <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg></div>
                                     <div class="kpi-title">Tổng danh mục</div>
                                     <div class="kpi-value">${kpiTotal}</div>
                                 </div>
                                 <div class="kpi-card kpi-active">
-                                    <div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                                     <div class="kpi-title">Đang hoạt động</div>
                                     <div class="kpi-value">${kpiActive}</div>
                                 </div>
                                 <div class="kpi-card kpi-inactive">
-                                    <div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div>
                                     <div class="kpi-title">Đã khóa</div>
                                     <div class="kpi-value">${kpiInactive}</div>
                                 </div>
