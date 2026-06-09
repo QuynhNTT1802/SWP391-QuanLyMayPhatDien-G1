@@ -112,9 +112,21 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     public int countByStatus(String status) {
-        String sql = "SELECT COUNT(*) FROM import_proposal WHERE status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
+        return countByStatus(status, null);
+    }
+
+    public int countByStatus(String status, Integer createdBy) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE status = ?");
+        List<Object> params = new ArrayList<>();
+        params.add(status);
+        if (createdBy != null) {
+            sql.append(" AND created_by = ?");
+            params.add(createdBy);
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -326,7 +338,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -351,6 +363,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND p.proposal_code LIKE ?");
             params.add("%" + search.trim() + "%");
         }
+        if (createdBy != null) {
+            sql.append(" AND p.created_by = ?");
+            params.add(createdBy);
+        }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -369,7 +385,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search) {
+    public int countByFilters(String status, String search, Integer createdBy) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -379,6 +395,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND proposal_code LIKE ?");
             params.add("%" + search.trim() + "%");
+        }
+        if (createdBy != null) {
+            sql.append(" AND created_by = ?");
+            params.add(createdBy);
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {

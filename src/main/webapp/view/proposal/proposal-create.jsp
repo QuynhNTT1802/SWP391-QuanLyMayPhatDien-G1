@@ -22,34 +22,356 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
         <style>
-            .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .order-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
-            .detail-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-            .detail-table th { text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; }
-            .detail-table td { padding: 8px 6px; vertical-align: top; }
-            .detail-table select, .detail-table input { width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; box-sizing: border-box; }
-            .col-num { width: 36px; text-align: center; color: var(--muted); font-weight: 600; padding-top: 14px; }
-            .col-qty { width: 110px; }
-            .col-stock { width: 90px; text-align: center; padding-top: 14px !important; color: var(--muted); font-size: 13px; }
-            .col-del { width: 40px; text-align: center; }
-            .row-del-btn { width: 28px; height: 28px; border: none; background: none; color: var(--danger); cursor: pointer; border-radius: var(--radius-sm); margin-top: 4px; }
-            .row-del-btn:hover { background: var(--danger-soft); }
-            .add-row-btn { margin-top: 8px; font-size: 13px; }
-            .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
-            .form-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
-            .form-section-num { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; }
-            .form-section-title { font-size: 16px; font-weight: 700; margin: 0; }
-            .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
-            .field { display: flex; flex-direction: column; gap: 6px; }
-            .field-label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
-            .input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13.5px; font-family: inherit; }
-            .input:focus { outline: none; border-color: var(--accent); }
-            textarea.input { min-height: 80px; resize: vertical; }
-            .req { color: #dc3545; }
-            .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 13px; margin-bottom: 12px; }
+            a.btn { text-decoration: none; }
+            .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 13px; margin-bottom: 14px; }
             .back-link:hover { color: var(--accent); }
-            .footer-actions { display: flex; gap: 10px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
-            .alert-warn { padding: 12px 16px; border-radius: 8px; background: #fff3cd; color: #856404; border: 1px solid #ffe69c; display: flex; gap: 10px; align-items: flex-start; }
+            .back-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+            /* ============== Layout tổng thể ============== */
+            .import-wrap {
+                max-width: 880px;
+                margin: 0 auto;
+                padding: 12px 4px 40px;
+            }
+
+            /* ============== Card chức năng ============== */
+            .import-card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            }
+
+            .import-card-head {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 18px 24px;
+                border-bottom: 1px solid var(--border);
+            }
+            .import-card-head .head-icon {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                background: var(--accent-soft);
+                color: var(--accent);
+                display: grid;
+                place-items: center;
+                flex-shrink: 0;
+            }
+            .import-card-head .head-icon svg {
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.8;
+            }
+            .import-card-head .head-text h2 {
+                margin: 0;
+                font-size: 17px;
+                font-weight: 700;
+                color: var(--fg);
+            }
+            .import-card-head .head-text p {
+                margin: 2px 0 0;
+                font-size: 12.5px;
+                color: var(--muted);
+                line-height: 1.4;
+            }
+
+            .import-card-body {
+                padding: 32px 24px 28px;
+            }
+
+            /* ============== Form thông tin chung (kho + ghi chú) ============== */
+            .form-section {
+                background: var(--surface-2);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                padding: 18px 20px;
+                margin-bottom: 20px;
+            }
+            .form-section-title {
+                font-size: 13px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--muted);
+                margin: 0 0 14px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .form-section-title svg {
+                width: 14px;
+                height: 14px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.8;
+                color: var(--accent);
+            }
+            .form-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+            .field { display: flex; flex-direction: column; gap: 6px; }
+            .field-label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+            .input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13.5px; font-family: inherit; box-sizing: border-box; width: 100%; }
+            .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+            textarea.input { min-height: 70px; resize: vertical; }
+            .req { color: #dc3545; }
+
+            /* ============== Drag & Drop Zone ============== */
+            .dropzone {
+                position: relative;
+                border: 2px dashed var(--border);
+                border-radius: var(--radius);
+                background: var(--surface-2);
+                padding: 48px 24px 36px;
+                text-align: center;
+                transition: all 0.18s ease;
+                cursor: pointer;
+            }
+            .dropzone:hover {
+                border-color: var(--accent);
+                background: var(--accent-soft);
+            }
+            .dropzone.drag-over {
+                border-color: var(--accent);
+                background: var(--accent-soft);
+                transform: scale(1.005);
+            }
+            .dropzone.has-file {
+                border-style: solid;
+                border-color: var(--accent);
+                background: var(--accent-soft);
+            }
+            .dropzone .dz-icon {
+                width: 72px;
+                height: 72px;
+                margin: 0 auto 18px;
+                border-radius: 50%;
+                background: var(--surface);
+                color: var(--accent);
+                display: grid;
+                place-items: center;
+                border: 1px solid var(--border);
+                transition: transform 0.18s ease;
+            }
+            .dropzone.drag-over .dz-icon { transform: translateY(-4px); }
+            .dropzone .dz-icon svg {
+                width: 32px;
+                height: 32px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.6;
+            }
+            .dropzone .dz-title {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--fg);
+                margin: 0 0 4px;
+            }
+            .dropzone .dz-title strong {
+                color: var(--accent);
+                font-weight: 700;
+            }
+            .dropzone .dz-sub {
+                font-size: 12.5px;
+                color: var(--muted);
+                margin: 0 0 18px;
+            }
+            .dropzone .dz-hints {
+                display: inline-flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 6px 16px;
+                font-size: 11.5px;
+                color: var(--muted);
+            }
+            .dropzone .dz-hints span {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .dropzone .dz-hints svg {
+                width: 12px;
+                height: 12px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+            }
+            .dropzone input[type="file"] {
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+            /* File đã chọn */
+            .file-info {
+                display: none;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                background: var(--surface);
+                border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+                border-radius: var(--radius-sm);
+                margin-top: 18px;
+                text-align: left;
+            }
+            .file-info.show { display: flex; }
+            .file-info .fi-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 8px;
+                background: var(--accent-soft);
+                color: var(--accent);
+                display: grid;
+                place-items: center;
+                flex-shrink: 0;
+            }
+            .file-info .fi-icon svg {
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.8;
+            }
+            .file-info .fi-body { flex: 1; min-width: 0; }
+            .file-info .fi-name {
+                font-size: 13.5px;
+                font-weight: 600;
+                color: var(--fg);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .file-info .fi-meta {
+                font-size: 11.5px;
+                color: var(--muted);
+                margin-top: 2px;
+            }
+            .file-info .fi-remove {
+                background: none;
+                border: none;
+                color: var(--danger);
+                cursor: pointer;
+                padding: 6px;
+                border-radius: var(--radius-sm);
+            }
+            .file-info .fi-remove:hover { background: var(--danger-soft); }
+            .file-info .fi-remove svg {
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+            }
+
+            /* ============== Action buttons ============== */
+            .import-actions {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 22px;
+                flex-wrap: wrap;
+            }
+            .import-actions .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 20px;
+                font-size: 13.5px;
+                font-weight: 600;
+            }
+            .import-actions .btn svg {
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.8;
+            }
+            .btn-primary {
+                background: var(--accent);
+                color: #fff;
+                border: 1px solid var(--accent);
+            }
+            .btn-primary:hover { filter: brightness(1.05); }
+
+            /* ============== Notice Box ============== */
+            .import-notice {
+                background: var(--info-soft);
+                border: 1px solid color-mix(in srgb, var(--info) 25%, transparent);
+                border-radius: var(--radius);
+                padding: 18px 22px;
+                margin-top: 24px;
+                display: flex;
+                gap: 14px;
+                align-items: flex-start;
+            }
+            .import-notice .ni-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                background: var(--info);
+                color: #fff;
+                display: grid;
+                place-items: center;
+                flex-shrink: 0;
+            }
+            .import-notice .ni-icon svg {
+                width: 14px;
+                height: 14px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2.2;
+            }
+            .import-notice .ni-body { flex: 1; min-width: 0; }
+            .import-notice .ni-title {
+                font-size: 13.5px;
+                font-weight: 700;
+                color: var(--fg);
+                margin: 0 0 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+            .import-notice ul {
+                margin: 0;
+                padding-left: 18px;
+                color: var(--fg-soft);
+                font-size: 12.5px;
+                line-height: 1.7;
+            }
+            .import-notice ul li { margin-bottom: 2px; }
+            .import-notice ul li::marker { color: var(--info); }
+
+            /* ============== Alert ============== */
+            .alert {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px;
+                border-radius: var(--radius);
+                margin-bottom: 14px;
+                font-size: 13px;
+                font-weight: 600;
+            }
+            .alert svg {
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                flex-shrink: 0;
+            }
+            .alert-error {
+                background: var(--danger-soft);
+                color: var(--danger);
+                border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+            }
+            .alert-success {
+                background: var(--accent-soft);
+                color: var(--accent);
+                border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+            }
         </style>
     </head>
     <body>
@@ -70,195 +392,242 @@
 
                 <main>
                     <a class="back-link" href="${pageContext.request.contextPath}/proposal">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại danh sách
                     </a>
 
-                    <div class="page-head">
-                        <div class="left">
-                            <div class="eyebrow">Kinh doanh · Tạo đề xuất nhập</div>
-                            <h2 class="page-title">Tạo phiếu đề xuất nhập kho</h2>
-                            <div class="page-sub">Đề xuất nhập máy phát điện vào kho</div>
-                        </div>
-                    </div>
-
                     <c:if test="${not empty sessionScope.toastMessage}">
-                        <div class="alert-warn" style="background:${sessionScope.toastType == 'danger' ? '#f8d7da' : '#d4edda'};color:${sessionScope.toastType == 'danger' ? '#721c24' : '#155724'};border-color:${sessionScope.toastType == 'danger' ? '#f5c6cb' : '#c3e6cb'};">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <div><c:out value="${sessionScope.toastMessage}"/></div>
+                        <div class="alert ${sessionScope.toastType == 'danger' ? 'alert-error' : 'alert-success'}">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                            <span><c:out value="${sessionScope.toastMessage}"/></span>
                         </div>
                         <c:remove var="toastMessage" scope="session"/>
                         <c:remove var="toastType" scope="session"/>
                     </c:if>
 
-                    <form class="form-card" method="post" action="${pageContext.request.contextPath}/proposal?action=save" onsubmit="return validateForm();">
-
-                        <div class="form-section">
-                            <div class="form-section-head">
-                                <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
-                                <h3 class="form-section-title">Kho nhập & ghi chú</h3>
-                            </div>
-                            <div class="form-grid">
-                                <div class="field">
-                                    <label class="field-label">Kho nhập <span class="req">*</span></label>
-                                    <select class="input" name="warehouseId" required>
-                                        <option value="">-- Chọn kho --</option>
-                                        <c:forEach var="w" items="${warehouses}">
-                                            <option value="${w.warehouseId}"><c:out value="${w.name}"/></option>
-                                        </c:forEach>
-                                    </select>
+                    <div class="import-wrap">
+                        <div class="import-card">
+                            <div class="import-card-head">
+                                <div class="head-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
                                 </div>
-                                <div class="field" style="grid-column: span 2;">
-                                    <label class="field-label">Ghi chú</label>
-                                    <textarea class="input" name="note" rows="3" placeholder="VD: Đề xuất nhập máy phát 100kW cho kho HCM..."></textarea>
+                                <div class="head-text">
+                                    <h2>Nhập dữ liệu đề xuất</h2>
+                                    <p>Tạo nhanh phiếu đề xuất nhập kho bằng cách tải lên tệp Excel theo mẫu.</p>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="form-section">
-                            <div class="form-section-head">
-                                <div class="form-section-num">02 — MÁY PHÁT ĐIỆN ĐỀ XUẤT NHẬP</div>
-                                <h3 class="form-section-title">Chi tiết đề xuất</h3>
-                            </div>
-
-                            <div class="table-card">
-                                <table class="detail-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-num">#</th>
-                                            <th>Máy phát <span class="req">*</span></th>
-                                            <th class="col-qty">Số lượng <span class="req">*</span></th>
-                                            <th class="col-stock">Tồn kho HT</th>
-                                            <th>Ghi chú dòng</th>
-                                            <th class="col-del"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detailBody">
-                                        <tr>
-                                            <td class="col-num"><span class="row-num">1</span></td>
-                                            <td>
-                                                <select name="generatorId" class="gen-select" onchange="updateCurrentStock(this)" required>
-                                                    <option value="">-- Chọn máy --</option>
-                                                    <c:forEach var="g" items="${generators}">
-                                                        <option value="${g.id}"><c:out value="${g.model}"/></option>
+                            <div class="import-card-body">
+                                <form id="importForm" method="POST" action="${pageContext.request.contextPath}/proposal?action=importExcel" enctype="multipart/form-data">
+                                    <%-- Thông tin chung: kho + ghi chú --%>
+                                    <div class="form-section">
+                                        <div class="form-section-title">
+                                            <svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+                                            Thông tin chung
+                                        </div>
+                                        <div class="form-grid">
+                                            <div class="field">
+                                                <label class="field-label">Kho nhập <span class="req">*</span></label>
+                                                <select class="input" name="warehouseId" required>
+                                                    <option value="">-- Chọn kho --</option>
+                                                    <c:forEach var="w" items="${warehouses}">
+                                                        <option value="${w.warehouseId}"><c:out value="${w.name}"/></option>
                                                     </c:forEach>
                                                 </select>
-                                            </td>
-                                            <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this)" required /></td>
-                                            <td class="col-stock"><span class="current-stock">0</span></td>
-                                            <td><input type="text" name="detailNote" placeholder="VD: Cần gấp cho dự án X" /></td>
-                                            <td class="col-del">
-                                                <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                            </div>
+                                            <div class="field">
+                                                <label class="field-label">Ghi chú</label>
+                                                <textarea class="input" name="note" rows="2" placeholder="VD: Đề xuất nhập máy phát 100kW cho kho HCM..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <%-- Drop zone --%>
+                                    <div class="dropzone" id="dropzone">
+                                        <input type="file" name="excelFile" id="excelFile" accept=".xlsx,.xls" />
+
+                                        <div class="dz-icon">
+                                            <svg viewBox="0 0 24 24">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="17 8 12 3 7 8"/>
+                                                <line x1="12" y1="3" x2="12" y2="15"/>
+                                            </svg>
+                                        </div>
+
+                                        <p class="dz-title">
+                                            Kéo thả file Excel vào đây hoặc <strong>chọn file từ máy tính</strong>
+                                        </p>
+                                        <p class="dz-sub">Tệp Excel chứa danh sách máy phát điện cần đề xuất nhập kho</p>
+
+                                        <div class="dz-hints">
+                                            <span>
+                                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                Định dạng: .xlsx, .xls
+                                            </span>
+                                            <span>
+                                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                Dung lượng tối đa: 10MB
+                                            </span>
+                                            <span>
+                                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                                Trạng thái: Sẵn sàng nhận file
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <%-- File đã chọn --%>
+                                    <div class="file-info" id="fileInfo">
+                                        <div class="fi-icon">
+                                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        </div>
+                                        <div class="fi-body">
+                                            <div class="fi-name" id="fileName">filename.xlsx</div>
+                                            <div class="fi-meta" id="fileMeta">0 KB · Sẵn sàng tải lên</div>
+                                        </div>
+                                        <button type="button" class="fi-remove" id="fileRemove" title="Bỏ chọn file">
+                                            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                        </button>
+                                    </div>
+
+                                    <%-- Action buttons --%>
+                                    <div class="import-actions">
+                                        <button type="button" class="btn btn-primary" id="btnChooseFile">
+                                            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                            Chọn file Excel
+                                        </button>
+                                        <a class="btn" href="${pageContext.request.contextPath}/proposal?action=downloadTemplate" id="btnDownloadTemplate">
+                                            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                            Tải biểu mẫu
+                                        </a>
+                                    </div>
+                                </form>
+
+                                <%-- Notice box --%>
+                                <div class="import-notice">
+                                    <div class="ni-icon">
+                                        <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    </div>
+                                    <div class="ni-body">
+                                        <p class="ni-title">Lưu ý quan trọng</p>
+                                        <ul>
+                                            <li>File Excel phải theo đúng biểu mẫu được cung cấp, không thay đổi cấu trúc cột.</li>
+                                            <li>Mã máy phát (ID) phải tồn tại trong hệ thống, nếu không dòng đó sẽ bị bỏ qua.</li>
+                                            <li>Số lượng phải là số nguyên dương, không vượt quá 9.999.</li>
+                                            <li>Sau khi tải lên, đề xuất sẽ ở trạng thái <strong>Chờ duyệt</strong> và cần quản lý phê duyệt.</li>
+                                            <li>Bạn có thể tải biểu mẫu để xem đúng cấu trúc cột cần điền.</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-
-                            <template id="rowTemplate">
-                                <tr>
-                                    <td class="col-num"><span class="row-num"></span></td>
-                                    <td>
-                                        <select name="generatorId" class="gen-select" onchange="updateCurrentStock(this)" required>
-                                            <option value="">-- Chọn máy --</option>
-                                            <c:forEach var="g" items="${generators}">
-                                                <option value="${g.id}"><c:out value="${g.model}"/></option>
-                                            </c:forEach>
-                                        </select>
-                                    </td>
-                                    <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this)" required /></td>
-                                    <td class="col-stock"><span class="current-stock">0</span></td>
-                                    <td><input type="text" name="detailNote" placeholder="VD: Cần gấp cho dự án X" /></td>
-                                    <td class="col-del">
-                                        <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                                    </td>
-                                </tr>
-                            </template>
-
-                            <button type="button" class="btn add-row-btn" onclick="addRow()">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                Thêm dòng
-                            </button>
                         </div>
-
-                        <div class="form-section">
-                            <div class="footer-actions">
-                                <a class="btn" href="${pageContext.request.contextPath}/proposal">Huỷ</a>
-                                <button type="submit" name="submitType" value="draft" class="btn">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                    Lưu nháp
-                                </button>
-                                <button type="submit" name="submitType" value="pending" class="btn btn-primary">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    Gửi duyệt
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </main>
             </div>
         </div>
 
+        <div class="toast-host" id="toastHost"></div>
         <script>
-            function updateCurrentStock(selectEl) {
-                var row = selectEl.closest('tr');
-                var opt = selectEl.options[selectEl.selectedIndex];
-                var stock = opt ? (opt.getAttribute('data-stock') || '0') : '0';
-                row.querySelector('.current-stock').textContent = stock;
-            }
-            function validateQty(input) {
-                var v = input.value.replace(/[^0-9]/g, '');
-                var n = parseInt(v);
-                if (isNaN(n) || n < 1) input.value = 1;
-                else if (n > 9999) input.value = 9999;
-                else input.value = n;
-            }
-            function addRow() {
-                var tpl = document.getElementById('rowTemplate');
-                var clone = tpl.content.cloneNode(true);
-                document.getElementById('detailBody').appendChild(clone);
-                updateRowNumbers();
-            }
-            function removeRow(btn) {
-                var tbody = document.getElementById('detailBody');
-                if (tbody.querySelectorAll('tr').length <= 1) {
-                    alert('Phải có ít nhất 1 dòng máy đề xuất.');
-                    return;
-                }
-                btn.closest('tr').remove();
-                updateRowNumbers();
-            }
-            function updateRowNumbers() {
-                document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
-                    el.textContent = i + 1;
-                });
-            }
-            function validateForm() {
-                var rows = document.querySelectorAll('#detailBody tr');
-                if (rows.length === 0) {
-                    alert('Vui lòng thêm ít nhất 1 dòng máy đề xuất nhập.');
-                    return false;
-                }
-                var hasValid = false;
-                for (var i = 0; i < rows.length; i++) {
-                    var sel = rows[i].querySelector('.gen-select');
-                    var qtyInput = rows[i].querySelector('.qty-input');
-                    var qty = parseInt(qtyInput.value);
-                    if (sel.value && (isNaN(qty) || qty < 1)) {
-                        alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
-                        qtyInput.focus();
-                        return false;
-                    }
-                    if (sel.value) hasValid = true;
-                }
-                if (!hasValid) {
-                    alert('Vui lòng chọn ít nhất 1 máy phát điện.');
-                    return false;
-                }
-                return true;
-            }
+            <c:if test="${not empty sessionScope.toastMessage}">
+            window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+            <c:remove var="toastMessage" scope="session"/>
+            <c:remove var="toastType" scope="session"/>
+            </c:if>
+            <c:if test="${not empty requestScope.toastMessage}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+            window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+            </c:if>
         </script>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script>
+            (function () {
+                var dropzone = document.getElementById('dropzone');
+                var fileInput = document.getElementById('excelFile');
+                var fileInfo = document.getElementById('fileInfo');
+                var fileName = document.getElementById('fileName');
+                var fileMeta = document.getElementById('fileMeta');
+                var fileRemove = document.getElementById('fileRemove');
+                var btnChoose = document.getElementById('btnChooseFile');
+
+                function formatSize(bytes) {
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+                }
+
+                function showFile(file) {
+                    if (!file) return;
+                    var validExt = /\.xlsx?$/i.test(file.name);
+                    if (!validExt) {
+                        if (typeof showToast === 'function') {
+                            showToast('Chỉ chấp nhận file Excel (.xlsx, .xls)', 'danger');
+                        } else {
+                            alert('Chỉ chấp nhận file Excel (.xlsx, .xls)');
+                        }
+                        return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                        if (typeof showToast === 'function') {
+                            showToast('File vượt quá dung lượng tối đa 10MB', 'danger');
+                        } else {
+                            alert('File vượt quá dung lượng tối đa 10MB');
+                        }
+                        return;
+                    }
+                    fileName.textContent = file.name;
+                    fileMeta.textContent = formatSize(file.size) + ' · Sẵn sàng tải lên';
+                    fileInfo.classList.add('show');
+                    dropzone.classList.add('has-file');
+                }
+
+                function clearFile() {
+                    fileInput.value = '';
+                    fileInfo.classList.remove('show');
+                    dropzone.classList.remove('has-file');
+                }
+
+                fileInput.addEventListener('change', function () {
+                    if (fileInput.files && fileInput.files[0]) {
+                        showFile(fileInput.files[0]);
+                    }
+                });
+
+                btnChoose.addEventListener('click', function () {
+                    fileInput.click();
+                });
+
+                fileRemove.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    clearFile();
+                });
+
+                ['dragenter', 'dragover'].forEach(function (ev) {
+                    dropzone.addEventListener(ev, function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.add('drag-over');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach(function (ev) {
+                    dropzone.addEventListener(ev, function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('drag-over');
+                    });
+                });
+
+                dropzone.addEventListener('drop', function (e) {
+                    var dt = e.dataTransfer;
+                    if (dt && dt.files && dt.files[0]) {
+                        fileInput.files = dt.files;
+                        showFile(dt.files[0]);
+                    }
+                });
+            })();
+        </script>
     </body>
 </html>
