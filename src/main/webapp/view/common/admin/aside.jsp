@@ -64,20 +64,29 @@
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
-        <a href="${pageContext.request.contextPath}/receipt">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-            Phiếu nhập/xuất
-        </a>
+            <a href="${pageContext.request.contextPath}/receipt">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+                Phiếu nhập/xuất
+            </a>
 
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('orders.view')}">
-        <a href="${pageContext.request.contextPath}/order">
+            <a href="${pageContext.request.contextPath}/order">
 
-            <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-            Đơn hàng
-        </a>
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                Đơn hàng
+            </a>
         </c:if>
+
+        <c:if test="${not empty perms and perms.contains('liquidations.view')}">
+            <a href="${pageContext.request.contextPath}/liquidations">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+
+                Thanh lý
+            </a>
+        </c:if>
+
 
         <div class="nav-section">Quản trị</div>
 
@@ -104,21 +113,26 @@
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                     Quản lý mua bán
                 </a>
+                <a href="${pageContext.request.contextPath}/admin/categories?module=qu%e1%ba%a3n%20l%c3%bd%20thanh%20l%c3%bd">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+
+                    Quản lý thanh lý
+                </a>
             </div>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('system_log.view')}">
-        <a href="${pageContext.request.contextPath}/admin/system-log"
-           class="${activePage == 'system-log' ? 'active' : ''}">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <a href="${pageContext.request.contextPath}/admin/system-log"
+               class="${activePage == 'system-log' ? 'active' : ''}">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
                 <line x1="8" y1="13" x2="16" y2="13"/>
                 <line x1="8" y1="17" x2="16" y2="17"/>
                 <polyline points="10 9 9 9 8 9"/>
-            </svg>
-            System Log
-        </a>
+                </svg>
+                System Log
+            </a>
         </c:if>
 
 
