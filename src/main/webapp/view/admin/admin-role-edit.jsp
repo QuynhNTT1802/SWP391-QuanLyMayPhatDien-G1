@@ -30,7 +30,7 @@
             </a>
             <div class="topbar-info">
                 <h1>${empty role ? 'Tạo vai trò mới' : 'Chỉnh sửa vai trò'}</h1>
-                <span class="crumb">/ <a href="#">Quản trị</a> / <a href="${pageContext.request.contextPath}/admin/roles">Phân quyền</a></span>
+                <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/dashboard">Quản trị</a> / <a href="${pageContext.request.contextPath}/admin/roles">Phân quyền</a></span>
             </div>
             <button type="submit" form="roleForm" class="btn btn-primary">Lưu thay đổi</button>
         </header>
@@ -158,7 +158,48 @@
         <c:if test="${role.roleId > 0}">
         <div id="tab-history" class="tab-content ${activeTab == 'history' ? '' : 'tab-hidden'}">
             <div class="table-card history-card" style="margin: 20px 24px;">
-                <table>
+                <form method="get" action="${pageContext.request.contextPath}/admin/role/edit" class="history-filter-bar" style="display:flex; gap:12px; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border); background:var(--surface);">
+                    <input type="hidden" name="id" value="${role.roleId}"/>
+                    <input type="hidden" name="activeTab" value="history"/>
+                    <input type="hidden" name="histPage" value="1"/>
+
+                    <div class="search-input hf-search" style="position:relative; display:flex; align-items:center; flex:1;">
+                        <svg viewBox="0 0 24 24" style="position:absolute; left:12px; width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input name="histSearch" value="${histSearch}" placeholder="Tìm người dùng..." autocomplete="off" style="width:100%; padding:8px 12px 8px 36px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none;"/>
+                    </div>
+                    <select name="histAction" class="filter-select" style="padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; background:var(--surface);">
+                        <option value="" ${empty histAction ? 'selected' : ''}>Tất cả hành động</option>
+                        <option value="CREATE_ROLE" ${histAction == 'CREATE_ROLE' ? 'selected' : ''}>Tạo vai trò</option>
+                        <option value="UPDATE_ROLE" ${histAction == 'UPDATE_ROLE' ? 'selected' : ''}>Cập nhật</option>
+                        <option value="DEACTIVATE_ROLE" ${histAction == 'DEACTIVATE_ROLE' ? 'selected' : ''}>Khóa vai trò</option>
+                        <option value="UPDATE_PERMISSIONS" ${histAction == 'UPDATE_PERMISSIONS' ? 'selected' : ''}>Sửa quyền</option>
+                    </select>
+                    <div class="date-range" style="display:flex; align-items:center; gap:8px;">
+                        <label class="date-label" style="font-size:13px; color:var(--muted);">Từ</label>
+                        <input type="date" name="histDateFrom" value="${histDateFrom}" class="date-input" style="padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none;"/>
+                        <label class="date-label" style="font-size:13px; color:var(--muted);">đến</label>
+                        <input type="date" name="histDateTo"   value="${histDateTo}"   class="date-input" style="padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none;"/>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding:8px 16px;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; margin-right:6px;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        Lọc
+                    </button>
+                    <c:if test="${not empty histSearch or not empty histAction or not empty histDateFrom or not empty histDateTo}">
+                        <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history" class="btn" style="padding:8px 16px;">
+                            <svg class="icon" viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; margin-right:6px;"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            Xóa lọc
+                        </a>
+                    </c:if>
+                </form>
+
+                <div class="result-summary" style="padding:12px 20px; font-size:13px; color:var(--muted); border-bottom:1px solid var(--border);">
+                    Tìm thấy <strong>${histTotal}</strong> bản ghi
+                    <c:if test="${not empty histSearch or not empty histAction or not empty histDateFrom or not empty histDateTo}">
+                        &nbsp;—&nbsp;<span class="filter-active-badge" style="color:var(--brand-color); font-weight:500;">Bộ lọc đang hoạt động</span>
+                    </c:if>
+                </div>
+
+                <table style="width:100%; border-collapse:collapse;">
                     <thead>
                         <tr>
                             <th style="width:155px;">Thời gian</th>
@@ -208,10 +249,10 @@
 
                 <c:if test="${histTotalPages > 1}">
                 <div class="pagination">
-                    <span class="info">Trang <strong>${histPage}</strong> / <strong>${histTotalPages}</strong></span>
+                    <div class="info">Hiển thị <strong>${(histPage-1)*10 + 1}</strong>–<strong>${histPage*10 > histTotal ? histTotal : histPage*10}</strong> / <strong>${histTotal}</strong> bản ghi</div>
                     <div class="controls">
                         <c:if test="${histPage > 1}">
-                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage - 1}" class="page-btn">&lsaquo;</a>
+                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage - 1}<c:if test="${not empty histSearch}">&amp;histSearch=<c:out value="${histSearch}"/></c:if><c:if test="${not empty histAction}">&amp;histAction=${histAction}</c:if><c:if test="${not empty histDateFrom}">&amp;histDateFrom=${histDateFrom}</c:if><c:if test="${not empty histDateTo}">&amp;histDateTo=${histDateTo}</c:if>" class="page-btn">&lsaquo;</a>
                         </c:if>
                         <c:forEach begin="1" end="${histTotalPages}" var="hp">
                             <c:choose>
@@ -219,12 +260,12 @@
                                     <span class="page-btn active">${hp}</span>
                                 </c:when>
                                 <c:otherwise>
-                                    <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${hp}" class="page-btn">${hp}</a>
+                                    <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${hp}<c:if test="${not empty histSearch}">&amp;histSearch=<c:out value="${histSearch}"/></c:if><c:if test="${not empty histAction}">&amp;histAction=${histAction}</c:if><c:if test="${not empty histDateFrom}">&amp;histDateFrom=${histDateFrom}</c:if><c:if test="${not empty histDateTo}">&amp;histDateTo=${histDateTo}</c:if>" class="page-btn">${hp}</a>
                                 </c:otherwise>
                             </c:choose>
                         </c:forEach>
                         <c:if test="${histPage < histTotalPages}">
-                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage + 1}" class="page-btn">&rsaquo;</a>
+                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage + 1}<c:if test="${not empty histSearch}">&amp;histSearch=<c:out value="${histSearch}"/></c:if><c:if test="${not empty histAction}">&amp;histAction=${histAction}</c:if><c:if test="${not empty histDateFrom}">&amp;histDateFrom=${histDateFrom}</c:if><c:if test="${not empty histDateTo}">&amp;histDateTo=${histDateTo}</c:if>" class="page-btn">&rsaquo;</a>
                         </c:if>
                     </div>
                 </div>

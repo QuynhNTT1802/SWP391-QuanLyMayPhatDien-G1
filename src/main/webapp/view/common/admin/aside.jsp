@@ -122,36 +122,47 @@
         </c:if>
 
 
-        <c:if test="${not empty perms and perms.contains('users.view')}">
-            <a href="${pageContext.request.contextPath}/admin/users">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-                Người dùng
-            </a>
-        </c:if>
+        <c:if test="${not empty perms and (perms.contains('users.view') or perms.contains('roles.view') or perms.contains('forgot_pw.process'))}">
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Quản lý chung
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <c:if test="${not empty perms and perms.contains('users.view')}">
+                    <a href="${pageContext.request.contextPath}/admin/users">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                        Người dùng
+                    </a>
+                </c:if>
 
-        <c:if test="${not empty perms and perms.contains('roles.view')}">
-            <a href="${pageContext.request.contextPath}/admin/roles">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Phân quyền
-            </a>
+                <c:if test="${not empty perms and perms.contains('roles.view')}">
+                    <a href="${pageContext.request.contextPath}/admin/roles">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Phân quyền
+                    </a>
+                </c:if>
+
+                <c:if test="${not empty perms and perms.contains('forgot_pw.process')}">
+                    <a href="${pageContext.request.contextPath}/admin/forgot-password">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                        <path d="M21 3v5h-5"></path>
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                        <path d="M3 21v-5h5"></path>
+                        </svg>
+                        Cấp mật khẩu
+                    </a>
+                </c:if>
+            </div>
         </c:if>
 
         <a href="${pageContext.request.contextPath}/warehouse/generators">
             <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             Máy phát điện
         </a>
-
-        <c:if test="${not empty perms and perms.contains('forgot_pw.process')}">
-            <a href="${pageContext.request.contextPath}/admin/forgot-password">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
-                <path d="M21 3v5h-5"></path>
-                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
-                <path d="M3 21v-5h5"></path>
-                </svg>
-                Cấp mật khẩu
-            </a>
-        </c:if>
 
         <div class="nav-section">Tài khoản</div>
 
