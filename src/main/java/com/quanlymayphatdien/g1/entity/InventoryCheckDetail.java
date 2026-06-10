@@ -1,4 +1,3 @@
-
 package com.quanlymayphatdien.g1.entity;
 
 public class InventoryCheckDetail {
