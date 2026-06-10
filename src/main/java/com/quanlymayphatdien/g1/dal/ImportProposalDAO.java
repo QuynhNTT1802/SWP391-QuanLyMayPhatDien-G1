@@ -438,6 +438,93 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
+    public List<ImportProposal> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
+        List<ImportProposal> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.*, "
+                + "w.name AS warehouse_name, "
+                + "u_c.name AS created_by_name, "
+                + "u_a.name AS approved_by_name, "
+                + "u_r.name AS rejected_by_name "
+                + "FROM import_proposal p "
+                + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
+                + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
+                + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
+                + "WHERE p.status = ? "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.proposal_id = p.proposal_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        params.add(GlobalUtils.STATUS_APPROVED);
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND p.proposal_code LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY p.approved_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM import_proposal p "
+                + "WHERE p.status = ? "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.proposal_id = p.proposal_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        params.add(GlobalUtils.STATUS_APPROVED);
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND p.proposal_code LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) <= ? ");
+            params.add(toDate);
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     @Override
     public boolean update(ImportProposal t) {
         String sql = "UPDATE import_proposal SET note = ?, status = ?, updated_at = NOW() "

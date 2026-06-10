@@ -68,6 +68,9 @@ public class ImportReceiptController extends HttpServlet {
                 case "list":
                     viewList(request, response);
                     break;
+                case "selectProposal":
+                    selectProposal(request, response);
+                    break;
                 case "create":
                     showCreateForm(request, response);
                     break;
@@ -166,6 +169,35 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("toIndex", toIndex);
         request.setAttribute("canApproveReceipt", perms != null && perms.contains("receipts.approve"));
         request.getRequestDispatcher("/view/receipt/import/import-list.jsp").forward(request, response);
+    }
+
+    private void selectProposal(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String search = request.getParameter("search");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+        int page = parsePage(request.getParameter("page"));
+        int pageSize = 10;
+
+        ImportProposalDAO ipDAO = new ImportProposalDAO();
+        int totalItems = ipDAO.countApprovedAvailableFiltered(search, fromDate, toDate);
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+        if (page > totalPages) {
+            page = totalPages;
+        }
+        List<ImportProposal> approvedProposals = ipDAO.findApprovedAvailableFiltered(search, fromDate, toDate, page, pageSize);
+        int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
+        int toIndex = Math.min(page * pageSize, totalItems);
+
+        request.setAttribute("approvedProposals", approvedProposals);
+        request.setAttribute("search", search);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
+        request.getRequestDispatcher("/view/receipt/import/import-select-proposal.jsp").forward(request, response);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
