@@ -18,6 +18,7 @@ public class Receipt {
     private String receiptCode;
     private String receiptType;
     private Integer orderId;
+    private Integer proposalId;
     private int warehouseId;
     private int createdBy;
     private Integer approvedBy;
@@ -32,6 +33,8 @@ public class Receipt {
     private String approvedByName;
     private String orderCode;
     private String customerName;
+    private String proposalCode;
+    private String supplierName;
     private Integer reasonId;
     private String reasonNote;
     private String reasonName;
@@ -79,6 +82,14 @@ public class Receipt {
 
     public void setOrderId(Integer orderId) {
         this.orderId = orderId;
+    }
+
+    public Integer getProposalId() {
+        return proposalId;
+    }
+
+    public void setProposalId(Integer proposalId) {
+        this.proposalId = proposalId;
     }
 
     public int getWarehouseId() {
@@ -175,6 +186,22 @@ public class Receipt {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public String getProposalCode() {
+        return proposalCode;
+    }
+
+    public void setProposalCode(String proposalCode) {
+        this.proposalCode = proposalCode;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
     }
 
     public BigDecimal getTotalAmount() {

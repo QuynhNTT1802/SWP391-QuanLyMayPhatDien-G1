@@ -172,7 +172,6 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraftForList));
         request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraftForList));
         request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraftForList));
-        request.setAttribute("convertedCount", dao.countByStatus(GlobalUtils.STATUS_CONVERTED, createdByFilter, excludeDraftForList));
         request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraftForList));
 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
@@ -484,13 +483,6 @@ public class ProposalController extends HttpServlet {
     private void convertToReceipt(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
-        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
-        if (permissions == null || !permissions.contains("proposals.convert")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền chuyển đổi phiếu đề xuất.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
-            return;
-        }
         int id = parseId(request);
         if (id <= 0) {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
@@ -498,12 +490,12 @@ public class ProposalController extends HttpServlet {
         }
         ImportProposal p = new ImportProposalDAO().findById(id);
         if (p == null || !GlobalUtils.STATUS_APPROVED.equals(p.getStatus())) {
-            session.setAttribute("toastMessage", "Chỉ phiếu đã duyệt mới chuyển được sang phiếu nhập");
+            session.setAttribute("toastMessage", "Chỉ phiếu đã duyệt mới tạo được phiếu nhập");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
         }
-        
+
         response.sendRedirect(request.getContextPath()
                 + "/receipt?action=create&proposalId=" + id);
     }

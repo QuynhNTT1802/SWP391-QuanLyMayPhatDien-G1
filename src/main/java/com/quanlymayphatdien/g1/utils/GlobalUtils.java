@@ -19,7 +19,6 @@ public class GlobalUtils {
     public static final String STATUS_APPROVED = "APPROVED";
     public static final String STATUS_REJECTED = "REJECTED";
     public static final String STATUS_CANCELLED = "CANCELLED";
-    public static final String STATUS_CONVERTED = "CONVERTED";
 
 
     public static final String RECEIPT_STATUS_PENDING = "PENDING";

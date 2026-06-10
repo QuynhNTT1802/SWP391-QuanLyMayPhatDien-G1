@@ -130,6 +130,9 @@
                 <c:if test="${not empty receipt.orderId}">
                     <input type="hidden" name="orderId" value="${receipt.orderId}" />
                 </c:if>
+                <c:if test="${not empty receipt.proposalId}">
+                    <input type="hidden" name="proposalId" value="${receipt.proposalId}" />
+                </c:if>
 
                 <div class="content">
                     <section class="section">
@@ -142,7 +145,7 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label>Loại phiếu *</label>
-                                <select name="receiptType" required <c:if test="${not empty receipt.orderId}">disabled</c:if> onchange="validateField(this)">
+                                <select name="receiptType" required <c:if test="${not empty receipt.orderId or not empty receipt.proposalId}">disabled</c:if> onchange="validateField(this)">
                                     <option value="">-- Chọn loại --</option>
                                     <option value="IMPORT" <c:if test="${receipt.receiptType == 'IMPORT'}">selected</c:if>>Nhập kho</option>
                                     <option value="EXPORT" <c:if test="${receipt.receiptType == 'EXPORT'}">selected</c:if>>Xuất kho</option>
@@ -150,6 +153,9 @@
                                 <span class="field-error" style="display:none;"></span>
                                 <c:if test="${not empty receipt.orderId}">
                                     <input type="hidden" name="receiptType" value="EXPORT" />
+                                </c:if>
+                                <c:if test="${not empty receipt.proposalId}">
+                                    <input type="hidden" name="receiptType" value="IMPORT" />
                                 </c:if>
                             </div>
                             <div class="form-field">

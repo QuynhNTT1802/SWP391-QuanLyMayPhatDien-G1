@@ -11,6 +11,8 @@ import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
+import com.quanlymayphatdien.g1.dal.ImportProposalDAO;
+import com.quanlymayphatdien.g1.dal.ImportProposalDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
@@ -18,6 +20,8 @@ import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.ImportProposal;
+import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
@@ -231,6 +235,31 @@ public class ReceiptController extends HttpServlet {
                 request.setAttribute("order", order);
             }
         }
+
+        String proposalIdStr = request.getParameter("proposalId");
+        if (proposalIdStr != null && !proposalIdStr.isEmpty()) {
+            int proposalId = Integer.parseInt(proposalIdStr);
+            ImportProposal p = new ImportProposalDAO().findById(proposalId);
+            if (p != null && GlobalUtils.STATUS_APPROVED.equalsIgnoreCase(p.getStatus())) {
+                List<ImportProposalDetail> pds = new ImportProposalDetailDAO().findByProposalId(proposalId);
+                Receipt prefill = new Receipt();
+                prefill.setProposalId(proposalId);
+                prefill.setReceiptType("IMPORT");
+                prefill.setNote("Tạo từ đề xuất " + p.getProposalCode());
+                prefill.setWarehouseId(p.getWarehouseId());
+                List<ReceiptDetail> ds = new ArrayList<>();
+                for (ImportProposalDetail pd : pds) {
+                    ReceiptDetail rd = new ReceiptDetail();
+                    rd.setGeneratorId(pd.getGeneratorId());
+                    rd.setQuantity(pd.getQuantity());
+                    rd.setNote(pd.getNote());
+                    ds.add(rd);
+                }
+                prefill.setDetails(ds);
+                request.setAttribute("receipt", prefill);
+                request.setAttribute("proposal", p);
+            }
+        }
         request.getRequestDispatcher("/view/receipt/receipt-create.jsp").forward(request, response);
     }
 
@@ -370,6 +399,13 @@ public class ReceiptController extends HttpServlet {
         if (oid != null && !oid.isEmpty()) {
             try {
                 r.setOrderId(Integer.parseInt(oid));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        String pid = request.getParameter("proposalId");
+        if (pid != null && !pid.isEmpty()) {
+            try {
+                r.setProposalId(Integer.parseInt(pid));
             } catch (NumberFormatException ignored) {
             }
         }
