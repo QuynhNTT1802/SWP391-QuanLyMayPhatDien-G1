@@ -82,8 +82,14 @@
         <a href="${pageContext.request.contextPath}/receipt">
             <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
             Phiếu nhập/xuất
-        </a>
+        </a>         
 
+        </c:if>
+        <c:if test="${not empty perms and perms.contains('inventory_check.view')}">
+            <a href="${pageContext.request.contextPath}/inventory-check">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5h6"/><path d="M9 14l2 2 4-4"/></svg>
+                Kiểm kê
+            </a>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('orders.view')}">
