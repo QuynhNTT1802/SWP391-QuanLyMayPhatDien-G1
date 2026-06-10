@@ -15,6 +15,93 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+        <style>
+            .user-name.link-ref {
+                cursor: pointer;
+                color: var(--accent);
+                text-decoration: none;
+            }
+            .user-name.link-ref:hover {
+                text-decoration: underline;
+            }
+            .ref-modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,.45);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .ref-modal-backdrop.open {
+                display: flex;
+            }
+            .ref-modal {
+                background: var(--surface);
+                border-radius: 8px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 10px 40px rgba(0,0,0,.25);
+                overflow: hidden;
+                animation: refModalPop .18s ease-out;
+            }
+            @keyframes refModalPop {
+                from { transform: scale(.96); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .ref-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border);
+            }
+            .ref-modal-header h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            .ref-modal-close {
+                background: transparent;
+                border: none;
+                font-size: 22px;
+                line-height: 1;
+                cursor: pointer;
+                color: var(--muted);
+                padding: 0 4px;
+            }
+            .ref-modal-close:hover { color: var(--fg); }
+            .ref-modal-body {
+                padding: 16px 18px;
+            }
+            .ref-info-row {
+                display: flex;
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px dashed var(--border);
+                font-size: 13.5px;
+            }
+            .ref-info-row:last-child { border-bottom: none; }
+            .ref-info-row .lbl {
+                flex: 0 0 110px;
+                color: var(--muted);
+                font-weight: 500;
+            }
+            .ref-info-row .val {
+                flex: 1;
+                color: var(--fg);
+                word-break: break-word;
+            }
+            .ref-modal-footer {
+                padding: 12px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                background: var(--surface-2);
+            }
+        </style>
     </head>
     <body>
         <div class="app">
@@ -140,11 +227,27 @@
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${not empty r.orderCode}">
-                                                            <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}" style="font-family:monospace;font-size:12px;">${r.orderCode}</a>
-                                                            <div style="font-size:11px;color:var(--muted);">${r.customerName}</div>
+                                                            <a href="javascript:void(0);" class="user-name link-ref"
+                                                               onclick="showRefModal(this)"
+                                                               data-ref-type="order"
+                                                               data-ref-id="<c:out value='${r.orderId}'/>"
+                                                               data-ref-code="<c:out value='${r.orderCode}'/>"
+                                                               data-ref-name="<c:out value='${r.customerName}'/>"
+                                                               title="Xem thông tin đơn hàng">
+                                                                <c:out value="${r.orderCode}"/>
+                                                            </a>
+                                                            <div style="font-size:11px;color:var(--muted);"><c:out value="${r.customerName}"/></div>
                                                         </c:when>
                                                         <c:when test="${not empty r.proposalCode}">
-                                                            <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${r.proposalId}" style="font-family:monospace;font-size:12px;">${r.proposalCode}</a>
+                                                            <a href="javascript:void(0);" class="user-name link-ref"
+                                                               onclick="showRefModal(this)"
+                                                               data-ref-type="proposal"
+                                                               data-ref-id="<c:out value='${r.proposalId}'/>"
+                                                               data-ref-code="<c:out value='${r.proposalCode}'/>"
+                                                               data-ref-name="<c:out value='${r.warehouseName}'/>"
+                                                               title="Xem thông tin đề xuất nhập">
+                                                                <c:out value="${r.proposalCode}"/>
+                                                            </a>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <span style="color:var(--muted);">—</span>
@@ -244,9 +347,68 @@
                 </main>
             </div>
         </div>
+
+        <div class="ref-modal-backdrop" id="refModal" onclick="if (event.target === this) closeRefModal();">
+            <div class="ref-modal" role="dialog" aria-modal="true" aria-labelledby="refModalTitle">
+                <div class="ref-modal-header">
+                    <h3 id="refModalTitle">Thông tin đơn liên quan</h3>
+                    <button type="button" class="ref-modal-close" onclick="closeRefModal()" aria-label="Đóng">&times;</button>
+                </div>
+                <div class="ref-modal-body">
+                    <div class="ref-info-row">
+                        <div class="lbl">Loại</div>
+                        <div class="val" id="rm-type">—</div>
+                    </div>
+                    <div class="ref-info-row">
+                        <div class="lbl">Mã</div>
+                        <div class="val" id="rm-code">—</div>
+                    </div>
+                    <div class="ref-info-row">
+                        <div class="lbl" id="rm-name-lbl">Tên</div>
+                        <div class="val" id="rm-name">—</div>
+                    </div>
+                </div>
+                <div class="ref-modal-footer">
+                    <button type="button" class="btn" onclick="closeRefModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="rm-detail-link">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script>
+            function showRefModal(el) {
+                var type = el.getAttribute('data-ref-type');
+                var id = el.getAttribute('data-ref-id') || '';
+                var code = el.getAttribute('data-ref-code') || '—';
+                var name = el.getAttribute('data-ref-name') || '—';
+
+                document.getElementById('rm-type').textContent = type === 'order' ? 'Đơn hàng bán' : 'Phiếu đề xuất nhập';
+                document.getElementById('rm-code').textContent = code;
+                document.getElementById('rm-name').textContent = name;
+                document.getElementById('rm-name-lbl').textContent = type === 'order' ? 'Khách hàng' : 'Kho nhập';
+
+                var detailUrl = type === 'order'
+                    ? window.APP_CTX + '/order?action=detail&id=' + id
+                    : window.APP_CTX + '/proposal?action=detail&id=' + id;
+                document.getElementById('rm-detail-link').href = detailUrl;
+
+                document.getElementById('refModal').classList.add('open');
+            }
+            function closeRefModal() {
+                document.getElementById('refModal').classList.remove('open');
+            }
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeRefModal();
+                }
+            });
+        </script>
     </body>
 </html>
