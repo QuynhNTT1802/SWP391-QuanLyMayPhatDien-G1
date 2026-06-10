@@ -66,7 +66,6 @@
             .status-pending   { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft); }
             .status-approved  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft); }
             .status-rejected  { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft); }
-            .status-converted { color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft); }
 
             /* ============== Header bar (top code strip - subtle) ============== */
             .header-bar {
@@ -335,18 +334,16 @@
             .action-approve  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent); background: var(--accent-soft); }
             .action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent); background: var(--danger-soft); }
             .action-cancel   { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
-            .action-convert  { color: var(--info); border-color: color-mix(in srgb, var(--info) 32%, transparent); background: var(--info-soft); }
             .action-default  { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
 
             /* ============== Banners (alert style) ============== */
-            .reject-banner,
-            .convert-banner {
+            .reject-banner {
                 display: flex; align-items: flex-start; gap: 10px;
                 padding: 12px 16px; margin-bottom: 16px;
                 border-radius: var(--radius-sm);
                 font-size: 13px; font-weight: 500;
             }
-            .reject-banner svg, .convert-banner svg {
+            .reject-banner svg {
                 width: 18px; height: 18px; stroke: currentColor; fill: none;
                 stroke-width: 2; flex-shrink: 0; margin-top: 1px;
             }
@@ -355,12 +352,6 @@
                 border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
             }
             .reject-banner .info-label { color: var(--danger); margin-bottom: 4px; }
-            .convert-banner {
-                background: var(--info-soft); color: var(--info);
-                border: 1px solid color-mix(in srgb, var(--info) 30%, transparent);
-            }
-            .convert-banner .info-label { color: var(--info); margin-bottom: 4px; }
-            .convert-banner a { color: var(--info); font-weight: 700; font-family: var(--font-mono); }
             .info-label {
                 font-size: 11px; font-weight: 700;
                 text-transform: uppercase; letter-spacing: 0.04em;
@@ -531,7 +522,7 @@
                                 </c:if>
 
                                 <c:if test="${proposal.status == 'APPROVED'}">
-                                    <c:if test="${perms.contains('proposals.convert')}">
+                                    <c:if test="${perms.contains('receipts.create')}">
                                         <form method="POST" action="${pageContext.request.contextPath}/proposal?action=convert" style="display:inline;">
                                             <input type="hidden" name="id" value="${proposal.proposalId}" />
                                             <button type="submit" class="btn btn-success">
@@ -564,7 +555,6 @@
                                     <c:when test="${proposal.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                     <c:when test="${proposal.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                     <c:when test="${proposal.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                                    <c:when test="${proposal.status == 'CONVERTED'}"><span class="status-pill status-converted"><span class="pdot"></span>Đã chuyển phiếu nhập</span></c:when>
                                     <c:when test="${proposal.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
                                     <c:otherwise><span class="status-pill"><c:out value="${proposal.status}"/></span></c:otherwise>
                                 </c:choose>
@@ -577,20 +567,7 @@
                         </div>
                     </div>
 
-                    <%-- ============== Banners (Reject / Convert) ============== --%>
-                    <c:if test="${proposal.status == 'CONVERTED' && not empty proposal.convertedReceiptCode}">
-                        <div class="convert-banner">
-                            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            <div style="flex:1;">
-                                <div class="info-label">Đã chuyển thành phiếu nhập</div>
-                                <div style="margin-top:4px;font-size:13.5px;">
-                                    <a href="${pageContext.request.contextPath}/receipt?action=detail&id=${proposal.convertedReceiptId}" style="color:#004085;font-weight:700;font-family:var(--font-mono);">
-                                        <c:out value="${proposal.convertedReceiptCode}"/>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </c:if>
+                    <%-- ============== Banners (Reject) ============== --%>
 
                     <%-- ============== Tabs (2 tab) ============== --%>
                     <div class="tabs">
@@ -657,7 +634,6 @@
                                             <c:when test="${proposal.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                             <c:when test="${proposal.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                             <c:when test="${proposal.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                                            <c:when test="${proposal.status == 'CONVERTED'}"><span class="status-pill status-converted"><span class="pdot"></span>Đã chuyển phiếu nhập</span></c:when>
                                             <c:when test="${proposal.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
                                             <c:otherwise><span class="status-pill"><c:out value="${proposal.status}"/></span></c:otherwise>
                                         </c:choose>

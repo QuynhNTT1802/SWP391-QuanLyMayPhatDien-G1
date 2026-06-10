@@ -87,10 +87,6 @@
                 background: #f8d7da;
                 color: #721c24;
             }
-            .status-converted {
-                background: #cce5ff;
-                color: #004085;
-            }
             .status-cancelled {
                 background: #d6d8db;
                 color: #1d2129;
@@ -132,7 +128,6 @@
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
                         <div class="stat"><div class="lbl">Đã duyệt</div><div class="val">${approvedCount}</div></div>
                         <div class="stat"><div class="lbl">Từ chối</div><div class="val">${rejectedCount}</div></div>
-                        <div class="stat"><div class="lbl">Đã chuyển phiếu nhập</div><div class="val">${convertedCount}</div></div>
                         <div class="stat"><div class="lbl">Đã hủy</div><div class="val">${cancelledCount}</div></div>
                     </div>
 
@@ -157,7 +152,6 @@
                             <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
                             <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
-                            <option value="CONVERTED" <c:if test="${statusFilter == 'CONVERTED'}">selected</c:if>>Đã chuyển phiếu nhập</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                         </select>
 
@@ -205,7 +199,6 @@
                                                         <c:when test="${p.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                                                        <c:when test="${p.status == 'CONVERTED'}"><span class="status-pill status-converted"><span class="pdot"></span>Đã chuyển phiếu nhập</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
                                                     </c:choose>

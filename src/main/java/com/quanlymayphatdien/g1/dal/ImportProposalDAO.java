@@ -49,14 +49,12 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
-                + "u_r.name AS rejected_by_name, "
-                + "rc.receipt_code AS converted_receipt_code "
+                + "u_r.name AS rejected_by_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
-                + "LEFT JOIN receipt rc   ON rc.receipt_id = p.converted_receipt_id "
                 + "ORDER BY p.proposal_date DESC, p.proposal_id DESC";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
@@ -74,14 +72,12 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
-                + "u_r.name AS rejected_by_name, "
-                + "rc.receipt_code AS converted_receipt_code "
+                + "u_r.name AS rejected_by_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
-                + "LEFT JOIN receipt rc   ON rc.receipt_id = p.converted_receipt_id "
                 + "WHERE p.proposal_id = ?";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -216,9 +212,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         Timestamp ra = rs.getTimestamp("rejected_at");
         p.setRejectedAt(ra != null ? ra.toLocalDateTime() : null);
 
-        int cr = rs.getInt("converted_receipt_id");
-        p.setConvertedReceiptId(rs.wasNull() ? null : cr);
-
         Timestamp ca = rs.getTimestamp("created_at");
         p.setCreatedAt(ca != null ? ca.toLocalDateTime() : null);
 
@@ -229,7 +222,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         p.setCreatedByName(rs.getString("created_by_name"));
         p.setApprovedByName(rs.getString("approved_by_name"));
         p.setRejectedByName(rs.getString("rejected_by_name"));
-        p.setConvertedReceiptCode(rs.getString("converted_receipt_code"));
         return p;
     }
 
@@ -331,21 +323,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public boolean markAsConverted(int proposalId, int receiptId) {
-        String sql = "UPDATE import_proposal SET status = ?, converted_receipt_id = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_CONVERTED);
-            ps.setInt(2, receiptId);
-            ps.setInt(3, proposalId);
-            ps.setString(4, GlobalUtils.STATUS_APPROVED);   // chỉ convert khi đã APPROVED
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -353,14 +330,12 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
-                + "u_r.name AS rejected_by_name, "
-                + "rc.receipt_code AS converted_receipt_code "
+                + "u_r.name AS rejected_by_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
-                + "LEFT JOIN receipt rc   ON rc.receipt_id = p.converted_receipt_id "
                 + "WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {

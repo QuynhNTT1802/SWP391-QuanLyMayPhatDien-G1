@@ -143,6 +143,9 @@
                                                             <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}" style="font-family:monospace;font-size:12px;">${r.orderCode}</a>
                                                             <div style="font-size:11px;color:var(--muted);">${r.customerName}</div>
                                                         </c:when>
+                                                        <c:when test="${not empty r.proposalCode}">
+                                                            <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${r.proposalId}" style="font-family:monospace;font-size:12px;">${r.proposalCode}</a>
+                                                        </c:when>
                                                         <c:otherwise>
                                                             <span style="color:var(--muted);">—</span>
                                                         </c:otherwise>

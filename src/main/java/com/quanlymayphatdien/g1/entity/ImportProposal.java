@@ -25,7 +25,6 @@ public class ImportProposal {
     private String rejectReason;
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
-    private Integer convertedReceiptId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -34,13 +33,12 @@ public class ImportProposal {
     private String createdByName;
     private String approvedByName;
     private String rejectedByName;
-    private String convertedReceiptCode;
     private List<ImportProposalDetail> details;
 
     public ImportProposal() {
     }
 
-    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, Integer convertedReceiptId, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, String convertedReceiptCode, List<ImportProposalDetail> details) {
+    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details) {
         this.proposalId = proposalId;
         this.proposalCode = proposalCode;
         this.status = status;
@@ -53,14 +51,12 @@ public class ImportProposal {
         this.rejectReason = rejectReason;
         this.approvedAt = approvedAt;
         this.rejectedAt = rejectedAt;
-        this.convertedReceiptId = convertedReceiptId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.warehouseName = warehouseName;
         this.createdByName = createdByName;
         this.approvedByName = approvedByName;
         this.rejectedByName = rejectedByName;
-        this.convertedReceiptCode = convertedReceiptCode;
         this.details = details;
     }
 
@@ -160,14 +156,6 @@ public class ImportProposal {
         this.rejectedAt = rejectedAt;
     }
 
-    public Integer getConvertedReceiptId() {
-        return convertedReceiptId;
-    }
-
-    public void setConvertedReceiptId(Integer convertedReceiptId) {
-        this.convertedReceiptId = convertedReceiptId;
-    }
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -214,14 +202,6 @@ public class ImportProposal {
 
     public void setRejectedByName(String rejectedByName) {
         this.rejectedByName = rejectedByName;
-    }
-
-    public String getConvertedReceiptCode() {
-        return convertedReceiptCode;
-    }
-
-    public void setConvertedReceiptCode(String convertedReceiptCode) {
-        this.convertedReceiptCode = convertedReceiptCode;
     }
 
     public List<ImportProposalDetail> getDetails() {
