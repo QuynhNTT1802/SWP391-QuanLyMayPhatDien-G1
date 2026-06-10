@@ -119,7 +119,7 @@
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${not empty sc.receiptCode}">
-                                                            <a href="${pageContext.request.contextPath}/receipt?action=detail&id=${sc.receiptId}" style="font-family:monospace;font-size:12px;">${sc.receiptCode}</a>
+                                                            <a href="${pageContext.request.contextPath}${sc.transactionType == 'IMPORT' ? '/import-receipt' : '/export-receipt'}?action=detail&id=${sc.receiptId}" style="font-family:monospace;font-size:12px;">${sc.receiptCode}</a>
                                                         </c:when>
                                                         <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                     </c:choose>

@@ -79,11 +79,21 @@
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
-        <a href="${pageContext.request.contextPath}/receipt">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-            Phiếu nhập/xuất
-        </a>
-
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+                Phiếu
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <a href="${pageContext.request.contextPath}/import-receipt">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Phiếu nhập
+                </a>
+                <a href="${pageContext.request.contextPath}/export-receipt">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                    Phiếu xuất
+                </a>
+            </div>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('orders.view')}">
