@@ -13,7 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -229,7 +231,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return -1;
     }
 
-    public boolean approveReceipt(int receiptId, int approvedBy) {
+    public List<String> approveReceipt(int receiptId, int approvedBy) {
+        List<String> errors = new ArrayList<>();
         try {
             connection = getConnection();
             connection.setAutoCommit(false);
@@ -244,7 +247,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             int updated = statement.executeUpdate();
             if (updated == 0) {
                 connection.rollback();
-                return false;
+                errors.add("Phiếu không ở trạng thái chờ duyệt");
+                return errors;
             }
             // 2. Lấy receipt_detail
             String detailSql = "SELECT * FROM receipt_detail WHERE receipt_id = ?";
@@ -271,11 +275,33 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             InventoryDAO invDAO = new InventoryDAO();
             StockCardDAO scDAO = new StockCardDAO();
-            // 4. Update inventory + ghi stock_card cho từng detail
-            for (ReceiptDetail detail : details) {
-                int genId = detail.getGeneratorId();
-                int qty = detail.getQuantity();
-                int change = "IMPORT".equals(receiptType) ? qty : -qty;
+
+            // 4. Validate trùng serial toàn hệ thống (mọi receipt_detail)
+            for (ReceiptDetail d : details) {
+                if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                    if (rdDAO.isSerialExists(connection, d.getSerialNumber().trim())) {
+                        errors.add("Serial \"" + d.getSerialNumber().trim() + "\" đã tồn tại trong hệ thống");
+                    }
+                }
+            }
+            if (!errors.isEmpty()) {
+                connection.rollback();
+                return errors;
+            }
+
+            // 5. Group details theo generator_id, cộng dồn số lượng
+            Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+            for (ReceiptDetail d : details) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+            for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+                int genId = entry.getKey();
+                List<ReceiptDetail> groupDetails = entry.getValue();
+                int totalQty = 0;
+                for (ReceiptDetail gd : groupDetails) {
+                    totalQty += gd.getQuantity();
+                }
+                int change = "IMPORT".equals(receiptType) ? totalQty : -totalQty;
                 invDAO.updateQuantity(connection, warehouseId, genId, change);
                 int qtyAfter = change;
                 String qtySql = "SELECT quantity FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
@@ -301,7 +327,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 scDAO.insert(connection, sc);
             }
             connection.commit();
-            return true;
+            return errors;
         } catch (SQLException e) {
             try {
                 if (connection != null) {
@@ -311,7 +337,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 ex.printStackTrace();
             }
             e.printStackTrace();
-            return false;
+            errors.add("Lỗi hệ thống: " + e.getMessage());
+            return errors;
         } finally {
             try {
                 if (connection != null) {

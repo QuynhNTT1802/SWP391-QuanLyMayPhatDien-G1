@@ -222,8 +222,8 @@
                                                         <option value="">-- Chọn máy --</option>
                                                     </select><span class="field-error"></span>
                                                 </td>
-                                                <td><input type="text" name="serialNumber" placeholder="S/N (không bắt buộc)" value="<c:out value='${d.serialNumber}'/>" onblur="validateField(this)"/><span class="field-error"></span></td>
-                                                <td><input type="number" name="quantity" min="1" max="100000" value="${d.quantity}" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                <td><input type="number" name="quantity" min="1" max="1" value="${d.quantity}" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
                                                 <td><input type="text" name="unitPrice" class="price-input mono" readonly value="<fmt:formatNumber value='${d.unitPrice}' type='number' groupingUsed='false'/>" placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
                                                 <td class="col-price mono row-subtotal">0₫</td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
@@ -243,8 +243,8 @@
                                                     <option value="">-- Chọn máy --</option>
                                                 </select><span class="field-error"></span>
                                             </td>
-                                            <td><input type="text" name="serialNumber" placeholder="S/N (không bắt buộc)" onblur="validateField(this)"/><span class="field-error"></span></td>
-                                            <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
+                                            <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                            <td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
                                             <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
                                             <td class="col-price mono row-subtotal">0₫</td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
@@ -374,8 +374,8 @@
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="serialNumber" placeholder="S/N (không bắt buộc)" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
                 + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'

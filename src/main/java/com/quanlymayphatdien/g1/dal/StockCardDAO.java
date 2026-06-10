@@ -21,7 +21,10 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
     public List<StockCard> findByWarehouseAndGenerator(int warehouseId, int generatorId) {
         List<StockCard> list = new ArrayList<>();
         String sql = "SELECT sc.*, w.name AS warehouse_name, "
-                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name "
+                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name, "
+                + "(SELECT GROUP_CONCAT(rd.serial_number SEPARATOR ', ') "
+                + " FROM receipt_detail rd "
+                + " WHERE rd.receipt_id = sc.receipt_id AND rd.generator_id = sc.generator_id) AS serial_list "
                 + "FROM stock_card sc "
                 + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN generator g ON sc.generator_id = g.id "
@@ -49,7 +52,10 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         List<StockCard> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT sc.*, w.name AS warehouse_name, "
-                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name "
+                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name, "
+                + "(SELECT GROUP_CONCAT(rd.serial_number SEPARATOR ', ') "
+                + " FROM receipt_detail rd "
+                + " WHERE rd.receipt_id = sc.receipt_id AND rd.generator_id = sc.generator_id) AS serial_list "
                 + "FROM stock_card sc "
                 + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN generator g ON sc.generator_id = g.id "
@@ -168,6 +174,22 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         return -1;
     }
 
+    public List<StockCard> findByReceiptId(int receiptId) {
+        List<StockCard> list = new ArrayList<>();
+        String sql = "SELECT * FROM stock_card WHERE receipt_id = ? ORDER BY stock_card_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     @Override
     public List<StockCard> findAll() {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
@@ -223,6 +245,10 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         }
         try {
             sc.setCreatedByName(rs.getString("created_by_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            sc.setSerialList(rs.getString("serial_list"));
         } catch (SQLException ignored) {
         }
         return sc;
