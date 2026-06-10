@@ -78,35 +78,47 @@
             </div>
         </c:if>
 
-        <c:if test="${not empty perms and perms.contains('receipts.view')}">
-            <a href="${pageContext.request.contextPath}/receipt">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
-                Phiếu nhập/xuất
-            </a>
+        <c:if test="${not empty perms and (perms.contains('proposals.approve') or perms.contains('proposals.create'))}">
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v2H7V4a2 2 0 0 1 2-2z"/><rect x="5" y="6" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
+                Đề xuất phiếu
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <a href="${pageContext.request.contextPath}/proposal">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Đề xuất nhập kho
+                </a>
+            </div>
+        </c:if>
 
+        <c:if test="${not empty perms and perms.contains('receipts.view')}">
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+                Phiếu
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <a href="${pageContext.request.contextPath}/import-receipt">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Phiếu nhập
+                </a>
+                <a href="${pageContext.request.contextPath}/export-receipt">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                    Phiếu xuất
+                </a>
+            </div>
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('orders.view')}">
-            <a href="${pageContext.request.contextPath}/order">
+        <a href="${pageContext.request.contextPath}/order">
 
-                <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                Đơn hàng
-            </a>
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Đơn hàng
+        </a>
         </c:if>
 
         <div class="nav-section">Quản trị</div>
-
-        <c:if test="${not empty perms and perms.contains('proposals.view')}">
-            <a href="${pageContext.request.contextPath}/proposal">
-                <svg class="icon" viewBox="0 0 24 24">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="12" y1="18" x2="12" y2="12"/>
-                <line x1="9" y1="15" x2="15" y1="15"/>
-                </svg>
-                Đề xuất nhập kho
-            </a>
-        </c:if>
 
 
         <c:if test="${not empty perms and perms.contains('categories.view')}">
@@ -135,17 +147,17 @@
         </c:if>
 
         <c:if test="${not empty perms and perms.contains('system_log.view')}">
-            <a href="${pageContext.request.contextPath}/admin/system-log"
-               class="${activePage == 'system-log' ? 'active' : ''}">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <a href="${pageContext.request.contextPath}/admin/system-log"
+           class="${activePage == 'system-log' ? 'active' : ''}">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
                 <line x1="8" y1="13" x2="16" y2="13"/>
                 <line x1="8" y1="17" x2="16" y2="17"/>
                 <polyline points="10 9 9 9 8 9"/>
-                </svg>
-                System Log
-            </a>
+            </svg>
+            System Log
+        </a>
         </c:if>
 
 
@@ -169,18 +181,10 @@
                 Kho hàng
             </a>
         </c:if>
-
+        
         <a href="${pageContext.request.contextPath}/warehouse/generators">
             <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             Máy phát điện
-        </a>
-        <a href="${pageContext.request.contextPath}/warehouse/customers">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-            Khách hàng
-        </a>
-        <a href="${pageContext.request.contextPath}/warehouse/suppliers">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Nhà cung cấp
         </a>
 
         <c:if test="${not empty perms and perms.contains('forgot_pw.process')}">
