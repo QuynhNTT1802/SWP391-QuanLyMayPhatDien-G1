@@ -552,9 +552,10 @@ CREATE TABLE `receipt_detail` (
   `unit_price` decimal(15,2) DEFAULT NULL,
   `note` text,
   PRIMARY KEY (`receipt_detail_id`),
-  UNIQUE KEY `uk_serial_receipt` (`serial_number`,`receipt_id`),
+  UNIQUE KEY `uk_serial_global` (`serial_number`),
   KEY `idx_rd_receipt` (`receipt_id`),
   KEY `idx_rd_generator` (`generator_id`),
+  KEY `idx_rd_serial` (`serial_number`),
   CONSTRAINT `fk_rd_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_rd_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -717,7 +718,6 @@ CREATE TABLE `stock_card` (
 
 LOCK TABLES `stock_card` WRITE;
 /*!40000 ALTER TABLE `stock_card` DISABLE KEYS */;
-INSERT INTO `stock_card` VALUES (1,1,1,NULL,'IMPORT',15,15,'Nhập kho ban đầu - Kho Hà Nội - Honda EG4500CX','2026-05-20 08:00:00',6),(2,1,2,NULL,'IMPORT',10,10,'Nhập kho ban đầu - Kho Hà Nội - Yamaha EF6000','2026-05-20 08:00:00',6),(3,1,3,NULL,'IMPORT',8,8,'Nhập kho ban đầu - Kho Hà Nội - Hyundai DHY8000','2026-05-20 08:00:00',6),(4,2,4,NULL,'IMPORT',5,5,'Nhập kho ban đầu - Kho HCM - Cummins C10D5','2026-05-20 08:00:00',6),(5,2,5,NULL,'IMPORT',3,3,'Nhập kho ban đầu - Kho HCM - Mitsubishi MGP-15','2026-05-20 08:00:00',6);
 /*!40000 ALTER TABLE `stock_card` ENABLE KEYS */;
 UNLOCK TABLES;
 

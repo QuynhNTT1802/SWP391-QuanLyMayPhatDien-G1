@@ -199,8 +199,8 @@
                                             <option value="">-- Chọn kho trước --</option>
                                         </select><span class="field-error" style="display:none;"></span>
                                     </td>
-                                    <td><input type="text" name="serialNumber" placeholder="S/N (không bắt buộc)" disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
-                                    <td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required disabled oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                    <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                    <td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly disabled oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
                                     <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>
                                     <td class="col-price mono row-subtotal">0₫</td>
                                     <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
@@ -301,7 +301,7 @@
 
     function disableAllRows(disabled) {
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            row.querySelectorAll('select[name="generatorId"], input[name="quantity"]').forEach(function (el) {
+            row.querySelectorAll('select[name="generatorId"], input[name="serialNumber"]').forEach(function (el) {
                 el.disabled = disabled;
             });
             var btn = row.querySelector('.row-del-btn');
@@ -348,8 +348,8 @@
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="serialNumber" placeholder="S/N (không bắt buộc)" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="number" name="quantity" min="1" max="100000" value="1" style="width:70px;" required oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
                 + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
