@@ -4,6 +4,7 @@
  */
 package com.quanlymayphatdien.g1.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class Receipt {
     private Integer reasonId;
     private String reasonNote;
     private String reasonName;
+    private BigDecimal totalAmount;
     private List<ReceiptDetail> details;
 
     public Integer getApprovedBy() {
@@ -173,6 +175,14 @@ public class Receipt {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public List<ReceiptDetail> getDetails() {

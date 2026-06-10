@@ -1,0 +1,535 @@
+/* ========================================================
+   INVENTORY — Layout cho trang Tồn kho
+   ======================================================== */
+
+.users-card .btn-primary {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13px;
+    font-weight: 600;
+}
+.users-card .btn-primary:hover {
+    background: var(--surface-2);
+}
+.users-card .btn-primary svg { color: var(--fg-soft); }
+
+main {
+    padding: 20px 24px 60px;
+    min-width: 0;
+}
+
+/* ========================================================
+   PAGE HEADER
+   ======================================================== */
+.page-head {
+    margin-bottom: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+.page-head .left { flex: 1; }
+.eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.eyebrow::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+.page-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+}
+.page-sub {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+/* ========================================================
+   ALERT
+   ======================================================== */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.alert a { color: inherit; text-decoration: underline; }
+
+/* ========================================================
+   KPI GRID
+   ======================================================== */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.kpi-card .kpi-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.kpi-card .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--fg);
+    line-height: 1;
+    margin: 4px 0;
+}
+.kpi-card .kpi-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    align-self: flex-start;
+    margin-bottom: 4px;
+}
+.kpi-card .kpi-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+.kpi-card.kpi-total .kpi-icon   { background: var(--info-soft);     color: var(--info); }
+.kpi-card.kpi-active .kpi-icon  { background: var(--accent-soft);   color: var(--accent); }
+.kpi-card.kpi-locked .kpi-icon  { background: var(--danger-soft);   color: var(--danger); }
+
+/* ========================================================
+   SECTION HEADING
+   ======================================================== */
+.section-heading {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--fg);
+}
+.section-heading svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 2;
+}
+
+/* ========================================================
+   BACK LINK + TYPE HEADER (khi đã chọn kho)
+   ======================================================== */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+}
+.back-link:hover { color: var(--fg); }
+.back-link svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.type-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 16px;
+}
+.type-header .type-badge {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    background: var(--accent-soft);
+}
+.type-header .type-badge .tdot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+.type-header .type-count {
+    color: var(--muted);
+    font-size: 13px;
+    font-family: var(--font-mono);
+}
+
+/* ========================================================
+   TABLE CARD (top — phân loại kho)
+   ======================================================== */
+.table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 32px;
+}
+.table-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.table-card th,
+.table-card td {
+    text-align: start;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.table-card th {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-strong);
+}
+.table-card td { vertical-align: middle; }
+.table-card tbody tr:last-child td { border-bottom: 0; }
+
+.warehouse-row { cursor: pointer; transition: background .12s ease; }
+.warehouse-row:hover { background: var(--surface-2); }
+.warehouse-row.active {
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+.warehouse-row .warehouse-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--fg);
+}
+.warehouse-row .wdot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+}
+.warehouse-row .item-count {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--muted);
+}
+
+/* ========================================================
+   SEARCH + FILTER BAR
+   ======================================================== */
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+.search-input {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+    max-width: 360px;
+}
+.search-input input {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--fg);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px 7px 32px;
+    font-size: 13px;
+    font-family: var(--font-ui);
+    font-weight: 500;
+}
+.search-input input::placeholder { color: var(--muted-2); font-weight: 500; }
+.search-input input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.search-input svg {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    stroke: var(--muted);
+    fill: none;
+    stroke-width: 1.8;
+}
+
+.filter-select {
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--fg);
+    border-radius: var(--radius-sm);
+    padding: 7px 28px 7px 10px;
+    font-size: 13px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+.filter-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.filter-checkbox {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+}
+.filter-minyears {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+}
+.filter-minyears input {
+    width: 80px;
+    padding: 7px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 500;
+}
+.filter-minyears input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ========================================================
+   STATUS
+   ======================================================== */
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.status .sdot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.status.active .sdot {
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.status.active { color: var(--fg); }
+.status.inactive .sdot { background: var(--muted-2); }
+.status.inactive { color: var(--muted); }
+.status.locked .sdot {
+    background: var(--danger);
+    box-shadow: 0 0 0 3px var(--danger-soft);
+}
+.status.locked { color: var(--danger); }
+.status.disabled .sdot { background: var(--muted-2); }
+.status.disabled { color: var(--muted); }
+
+/* ========================================================
+   QTY CELL
+   ======================================================== */
+.qty-cell { font-weight: 700; }
+.qty-low { color: var(--danger); }
+.qty-ok   { color: var(--accent); }
+
+/* ========================================================
+   BOTTOM TABLE CARD (bảng máy)
+   ======================================================== */
+.users-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.users-card table.users {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.users-card table.users th,
+.users-card table.users td {
+    text-align: start;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.users-card table.users th {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border-strong);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.users-card table.users td { vertical-align: middle; }
+.users-card table.users tbody tr:last-child td { border-bottom: 0; }
+.users-card table.users tbody tr:hover { background: var(--surface-2); }
+.users-card table.users a { color: var(--fg); text-decoration: none; }
+.users-card table.users a:hover { color: var(--accent); }
+
+/* ========================================================
+   PAGINATION
+   ======================================================== */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+.pagination .info {
+    color: var(--muted);
+    font-family: var(--font-mono);
+}
+.pagination .info strong { color: var(--fg); font-weight: 700; }
+.pagination .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pagination .page-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg-soft);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.pagination .page-btn:hover { background: var(--surface-2); color: var(--fg); }
+.pagination .page-btn.active {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+}
+.pagination .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ========================================================
+   EMPTY STATE
+   ======================================================== */
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+}
+.empty-state .icon-wrap {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 14px;
+    background: var(--surface-2);
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+}
+.empty-state .icon-wrap svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--muted);
+    fill: none;
+    stroke-width: 1.6;
+}
+.empty-state strong {
+    display: block;
+    color: var(--fg);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+/* ========================================================
+   RESPONSIVE
+   ======================================================== */
+@media (max-width: 760px) {
+    main { padding: 16px 16px 100px; }
+    .kpi-grid { grid-template-columns: 1fr; }
+}

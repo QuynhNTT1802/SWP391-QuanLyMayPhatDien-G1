@@ -5,6 +5,8 @@
 package com.quanlymayphatdien.g1.entity;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  *
@@ -21,6 +23,7 @@ public class Inventory {
     private String generatorModel;
     private String generatorBrand;
     private String warehouseName;
+    private LocalDateTime firstImportAt;
 
     public Inventory() {
     }
@@ -87,6 +90,21 @@ public class Inventory {
 
     public void setWarehouseName(String warehouseName) {
         this.warehouseName = warehouseName;
+    }
+
+    public LocalDateTime getFirstImportAt() {
+        return firstImportAt;
+    }
+
+    public void setFirstImportAt(LocalDateTime firstImportAt) {
+        this.firstImportAt = firstImportAt;
+    }
+
+    public Date getFirstImportAtAsDate() {
+        if (firstImportAt == null) {
+            return null;
+        }
+        return Date.from(firstImportAt.atZone(ZoneId.systemDefault()).toInstant());
     }
 
 }

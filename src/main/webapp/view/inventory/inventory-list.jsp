@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -12,12 +13,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-    <style>
-        .qty-cell { font-weight: 700; }
-        .qty-low { color: var(--danger); }
-        .qty-ok { color: var(--accent); }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory.css">
 </head>
 <body>
 <div class="app">
@@ -25,23 +21,46 @@
     <div>
         <header class="topbar">
             <h1>Tồn kho</h1>
-            <span class="crumb">/ Kho / Tồn kho</span>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/inventory">Kho</a> / Tồn kho<c:if test="${selectedWarehouse != null}"> / <c:set var="selectedWhName" value=""/><c:forEach var="w" items="${warehouses}"><c:if test="${w.warehouseId == selectedWarehouse}"><c:set var="selectedWhName" value="${w.name}"/></c:if></c:forEach><c:out value="${selectedWhName}"/></c:if></span>
             <div class="top-actions">
                 <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41 1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                     <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                 </button>
             </div>
         </header>
         <main>
-            <div class="page-head">
-                <div class="left">
-                    <div class="eyebrow">Kho</div>
-                    <h2 class="page-title">Tồn kho hiện tại</h2>
-                    <div class="page-sub">${totalItems} mặt hàng</div>
+            <c:if test="${not empty lockedWarehouseName}">
+                <div class="alert" style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb, var(--danger) 25%, transparent);">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span>Kho &quot;<c:out value='${lockedWarehouseName}'/>&quot; hiện đang bị khóa. Các máy trong kho này tạm thời không hiển thị trong tồn kho. Vui lòng mở khóa kho trong phần <a href="${pageContext.request.contextPath}/warehouse?action=list">Quản lý kho</a> nếu cần xem.</span>
                 </div>
-            </div>
-            <form method="get" action="${pageContext.request.contextPath}/inventory" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            </c:if>
+
+            <a class="back-link" href="${pageContext.request.contextPath}/inventory">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Quay lại tổng quan tồn kho
+            </a>
+
+            <c:if test="${selectedWarehouse != null}">
+                <c:set var="selectedWhName" value=""/>
+                <c:forEach var="w" items="${warehouses}">
+                    <c:if test="${w.warehouseId == selectedWarehouse}">
+                        <c:set var="selectedWhName" value="${w.name}"/>
+                    </c:if>
+                </c:forEach>
+                <div class="type-header">
+                    <span class="type-badge"><span class="tdot"></span><c:out value="${selectedWhName}"/></span>
+                    <span class="type-count">${totalItems} mặt hàng</span>
+                </div>
+            </c:if>
+
+            <h3 class="section-heading">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Tất cả máy tồn kho
+            </h3>
+
+            <form method="get" action="${pageContext.request.contextPath}/inventory/list" class="filter-bar">
                 <div class="search-input">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                     <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo model hoặc hãng" autocomplete="off" />
@@ -52,49 +71,102 @@
                         <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
                     </c:forEach>
                 </select>
+                <label class="filter-checkbox">
+                    <input type="checkbox" name="outOfStock" value="1" onchange="this.form.submit()" <c:if test="${outOfStock}">checked</c:if> />
+                    Chỉ hiện hết hàng
+                </label>
+                <label class="filter-minyears">
+                    Tồn kho ≥
+                    <input type="number" min="0" name="minYears" value="<c:out value='${minYears}'/>" placeholder="N năm" />
+                    năm
+                </label>
                 <button type="submit" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                     Tìm kiếm
                 </button>
-                <c:if test="${not empty selectedWarehouse or not empty search}">
-                    <a href="${pageContext.request.contextPath}/inventory" class="btn">
+                <c:if test="${not empty selectedWarehouse or not empty search or outOfStock or not empty minYears}">
+                    <a href="${pageContext.request.contextPath}/inventory/list" class="btn">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Xoá lọc
                     </a>
                 </c:if>
             </form>
-            <div class="table-card" style="margin-top:16px;">
+
+            <div class="users-card">
                 <table class="users">
                     <thead>
                         <tr>
                             <th style="width:40px;">#</th>
-                            <th>Kho</th>
                             <th>Model</th>
                             <th>Hãng</th>
                             <th style="width:100px;">Số lượng</th>
+                            <th>Kho</th>
                             <th style="width:160px;">Cập nhật</th>
+                            <th style="width:120px;">Ngày nhập đầu</th>
+                            <th style="width:90px;">Số năm</th>
+                            <th style="width:220px;">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         <c:choose>
                             <c:when test="${empty inventoryList}">
-                                <tr><td colspan="6">
-                                    <div class="empty-state"><strong>Không có dữ liệu tồn kho</strong></div>
+                                <tr><td colspan="9">
+                                    <div class="empty-state">
+                                        <div class="icon-wrap">
+                                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                        </div>
+                                        <strong>Không có dữ liệu tồn kho</strong>
+                                    </div>
                                 </td></tr>
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="item" items="${inventoryList}" varStatus="st">
                                     <tr>
                                         <td>${fromIndex + st.index}</td>
-                                        <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
                                         <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${item.generatorId}">${item.generatorModel}</a></strong></td>
                                         <td>${item.generatorBrand}</td>
                                         <td>
-                                            <span class="qty-cell ${item.quantity <= 3 ? 'qty-low' : 'qty-ok'}">
+                                            <span class="qty-cell ${item.quantity < 5 ? 'qty-low' : 'qty-ok'}">
                                                 ${item.quantity}
                                             </span>
                                         </td>
+                                        <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
                                         <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
+                                        <td style="font-size:12px;color:var(--muted);">
+                                            <c:choose>
+                                                <c:when test="${item.firstImportAt != null}">
+                                                    <fmt:formatDate value="${item.firstImportAtAsDate}" pattern="yyyy-MM-dd" />
+                                                </c:when>
+                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td style="font-size:12px;">
+                                            <c:choose>
+                                                <c:when test="${item.firstImportAt != null}">
+                                                    <c:set var="yearsInWh" value="${today.year - item.firstImportAt.year}" />
+                                                    <c:choose>
+                                                        <c:when test="${item.firstImportAt.monthValue > today.monthValue || (item.firstImportAt.monthValue == today.monthValue && item.firstImportAt.dayOfMonth > today.dayOfMonth)}">
+                                                            <c:set var="yearsInWh" value="${yearsInWh - 1}" />
+                                                        </c:when>
+                                                    </c:choose>
+                                                    <c:choose>
+                                                        <c:when test="${yearsInWh >= 1}">
+                                                            <strong style="color:var(--danger);">${yearsInWh} năm</strong>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color:var(--muted);">&lt; 1 năm</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </c:when>
+                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td>
+                                            <a href="${pageContext.request.contextPath}/stock-card?action=detail&warehouseId=${item.warehouseId}&generatorId=${item.generatorId}" class="btn btn-primary">
+                                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 8v4l3 2" stroke="currentColor" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                                                Xem lịch sử
+                                            </a>
+                                        </td>
                                     </tr>
                                 </c:forEach>
                             </c:otherwise>
@@ -107,6 +179,12 @@
                 </c:if>
                 <c:if test="${not empty search}">
                     <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                </c:if>
+                <c:if test="${outOfStock}">
+                    <c:set var="filterParams" value="${filterParams}&outOfStock=1" />
+                </c:if>
+                <c:if test="${not empty minYears}">
+                    <c:set var="filterParams" value="${filterParams}&minYears=${minYears}" />
                 </c:if>
                 <div class="pagination">
                     <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>

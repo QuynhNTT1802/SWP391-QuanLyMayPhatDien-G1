@@ -57,6 +57,128 @@
                 font-size: 13px;
                 color: var(--muted);
             }
+            .col-creator {
+                white-space: nowrap;
+                width: 100px;
+            }
+            .col-status {
+                white-space: nowrap;
+                width: 110px;
+            }
+            .col-address {
+                max-width: 160px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .col-actions {
+                white-space: nowrap;
+            }
+            .table-card {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+            .dropdown-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 10px;
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                background: var(--surface);
+                color: var(--fg);
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all .12s ease;
+                font-family: inherit;
+                white-space: nowrap;
+            }
+            .dropdown-btn:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
+            .dropdown-btn .arrow {
+                transition: transform .2s ease;
+                margin-left: 2px;
+                font-size: 10px;
+            }
+            .dropdown-btn.open .arrow {
+                transform: rotate(180deg);
+            }
+            .dropdown-menu {
+                position: fixed;
+                z-index: 999;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                box-shadow: 0 4px 20px rgba(0,0,0,.12);
+                padding: 4px;
+                min-width: 150px;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-4px);
+                transition: all .15s ease;
+                pointer-events: none;
+            }
+            .dropdown-menu.open {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+            .dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 7px 10px;
+                border: none;
+                border-radius: 4px;
+                background: transparent;
+                color: var(--fg);
+                font-size: 12.5px;
+                font-weight: 500;
+                cursor: pointer;
+                width: 100%;
+                text-align: left;
+                font-family: inherit;
+                text-decoration: none;
+                transition: background .1s ease;
+                box-sizing: border-box;
+                white-space: nowrap;
+            }
+            .dropdown-item:hover {
+                background: var(--surface-2);
+            }
+            .dropdown-item svg {
+                width: 14px;
+                height: 14px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                flex-shrink: 0;
+            }
+            .dropdown-item .label {
+                flex: 1;
+            }
+            .dropdown-item.approve svg {
+                stroke: #155724;
+            }
+            .dropdown-item.reject svg {
+                stroke: #721c24;
+            }
+            .dropdown-item.cancel svg {
+                stroke: #dc3545;
+            }
+            .dropdown-divider {
+                height: 1px;
+                background: var(--border);
+                margin: 3px 0;
+            }
         </style>
     </head>
     <body>
@@ -98,12 +220,12 @@
                         <div class="stat"><div class="lbl">Đã hủy</div><div class="val">${cancelledCount}</div></div>
                     </div>
 
-                    <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
-                        <c:remove var="message" scope="session"/>
-                    </c:if>
+                    <script>
+                        <c:if test="${not empty sessionScope.message}">
+                        window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
+                            <c:remove var="message" scope="session"/>
+                        </c:if>
+                    </script>
 
                     <form method="get" action="${pageContext.request.contextPath}/order" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                         <input type="hidden" name="action" value="list" />
@@ -134,17 +256,18 @@
                                     <th>Mã đơn</th>
                                     <th>Khách hàng</th>
                                     <th>Ngày đặt</th>
+                                    <th class="col-creator">Người tạo</th>
                                     <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Địa chỉ</th>
+                                    <th class="col-status">Trạng thái</th>
+                                    <th class="col-address">Địa chỉ</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="ordersBody">
                                 <c:choose>
                                     <c:when test="${empty orders}">
-                                        
-                                        <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
+
+                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="order" items="${orders}" varStatus="loop">
@@ -155,18 +278,21 @@
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
-                                                            <div class="user-name"><c:out value="${order.customerName}"/></div>
-                                                            <div class="user-email"><c:out value="${order.customerPhone}"/></div>
+                                                            <div class="user-name"><c:out value="${order.customer.name}"/></div>
+                                                            <div class="user-email"><c:out value="${order.customer.phone}"/></div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/>
                                                 </td>
+                                                <td class="col-creator">
+                                                    <c:out value="${order.createdByName}"/>
+                                                </td>
                                                 <td class="amount-cell">
                                                     <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
                                                 </td>
-                                                <td>
+                                                <td class="col-status">
                                                     <c:choose>
                                                         <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
@@ -175,36 +301,51 @@
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${order.status}"/></span></c:otherwise>
                                                         </c:choose>
                                                 </td>
-                                                <td><span class="pill role-staff"><span class="pdot"></span> ${order.customerAddress}</span></td>
+                                                <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customer.address}</span></td>
                                                 <td class="col-actions">
-                                                    <div class="row-actions">
-                                                        <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}'" title="Xem chi tiết">
-                                                            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    <div class="dropdown">
+                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
+                                                            Hành động
+                                                            <span class="arrow">▾</span>
                                                         </button>
+                                                        <div class="dropdown-menu">
+                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}">
+                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                                <span class="label">Chi tiết</span>
+                                                            </a>
 
-                                                        <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
-                                                            <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}'" title="Chỉnh sửa">
-                                                                <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                            </button>
-                                                        </c:if>
+                                                            <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                                                    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                                                    <span class="label">Sửa</span>
+                                                                </a>
+                                                            </c:if>
 
-                                                        <c:if  test="${canApproveOrder && order.status == 'PENDING'}">
-                                                            <button class="icon-mini" style="color: #28a745;" onclick="confirmApprove(${order.orderId})" title="Duyệt đơn">
-                                                                <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                            </button>
-                                                        </c:if>
+                                                            <c:if test="${canApproveOrder && order.status == 'PENDING'}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item approve" onclick="confirmApprove(${order.orderId})" type="button">
+                                                                    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                                                                    <span class="label">Duyệt</span>
+                                                                </button>
+                                                            </c:if>
 
-                                                        <c:if test="${canRejectOrder && order.status == 'PENDING'}">
-                                                            <button class="icon-mini" style="color: #ffc107;" onclick="confirmReject(${order.orderId})" title="Từ chối đơn">
-                                                                <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                            </button>
-                                                        </c:if>
+                                                            <c:if test="${canRejectOrder && order.status == 'PENDING'}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item reject" onclick="confirmReject(${order.orderId})" type="button">
+                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                                    <span class="label">Từ chối</span>
+                                                                </button>
+                                                            </c:if>
 
-                                                        <c:if  test="${canCancelOrder && (order.status == 'PENDING' || order.status == 'APPROVED')}">
-                                                            <button class="icon-mini" style="color: #dc3545;" onclick="confirmCancel(${order.orderId})" title="Hủy đơn">
-                                                                <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                            </button>
-                                                        </c:if>
+                                                            <c:if test="${canCancelOrder && (order.status == 'PENDING' || order.status == 'APPROVED')}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item cancel" onclick="confirmCancel(${order.orderId})" type="button">
+                                                                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                                                    <span class="label">Hủy</span>
+                                                                </button>
+                                                            </c:if>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -234,19 +375,34 @@
                 </main>
             </div>
         </div>
-    </div>
 
-    <div class="toast-host" id="toastHost"></div>
+        <div class="toast-host" id="toastHost"></div>
 
     <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     <script>
         function confirmApprove(orderId) {
             if (confirm('Bạn có chắc muốn duyệt đơn hàng này?')) {
-                window.location.href = window.APP_CTX + '/order?action=approve&id=' + orderId;
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.APP_CTX + '/order';
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'approve';
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = orderId;
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
+
         function confirmReject(orderId) {
             var reason = prompt('Nhập lý do từ chối:');
             if (reason && reason.trim() !== '') {
@@ -267,13 +423,61 @@
                 reasonInput.value = reason.trim();
                 form.appendChild(actionInput);
                 form.appendChild(idInput);
+                form.appendChild(reasonInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
         function confirmCancel(orderId) {
             if (confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.')) {
-                window.location.href = window.APP_CTX + '/order?action=cancel&id=' + orderId;
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.APP_CTX + '/order';
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'cancel';
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = orderId;
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
+        function toggleDropdown(btn) {
+            var menu = btn.nextElementSibling;
+            var isOpen = menu.classList.contains('open');
+            document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+                if (m !== menu) {
+                    m.classList.remove('open');
+                    m.previousElementSibling.classList.remove('open');
+                }
+            });
+            if (isOpen) {
+                menu.classList.remove('open');
+                btn.classList.remove('open');
+                return;
+            }
+            var rect = btn.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 4) + 'px';
+            menu.style.left = rect.left + 'px';
+            menu.style.minWidth = Math.max(150, rect.width) + 'px';
+            menu.classList.add('open');
+            btn.classList.add('open');
+        }
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+                    m.classList.remove('open');
+                });
+                document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
+                    b.classList.remove('open');
+                });
+            }
+        });
     </script>
 </body>
 </html>
