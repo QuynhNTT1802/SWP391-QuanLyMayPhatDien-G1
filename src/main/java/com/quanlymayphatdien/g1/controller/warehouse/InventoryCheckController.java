@@ -1,8 +1,10 @@
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.InventoryCheckDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.InventoryCheck;
 import com.quanlymayphatdien.g1.entity.InventoryCheckDetail;
 import com.quanlymayphatdien.g1.entity.User;
@@ -23,6 +25,7 @@ public class InventoryCheckController extends HttpServlet {
     private final InventoryCheckDAO checkDAO = new InventoryCheckDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
+    private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -162,9 +165,14 @@ public class InventoryCheckController extends HttpServlet {
             return;
         }
         List<InventoryCheckDetail> details = checkDAO.findDetailsByCheckId(id);
+        List<ActivityLog> logs = activityLogDAO.findByEntityTypeAndId("inventory_check", id, 1, 100);
+        int totalLogs = activityLogDAO.countByEntityTypeAndId("inventory_check", id);
 
         request.setAttribute("check", check);
         request.setAttribute("details", details);
+        request.setAttribute("logs", logs);
+        request.setAttribute("totalLogs", totalLogs);
+
         request.getRequestDispatcher("/view/inventory-check/inventory-check-detail.jsp").forward(request, response);
     }
 
@@ -223,7 +231,6 @@ public class InventoryCheckController extends HttpServlet {
                 InventoryCheckDetail d = new InventoryCheckDetail();
                 d.setGeneratorId(genId);
                 d.setSystemQuantity(sysQty);
-                d.setNotes(null);
                 details.add(d);
             }
         }
@@ -258,6 +265,15 @@ public class InventoryCheckController extends HttpServlet {
         }
 
         checkDAO.insertDetailsBatch(checkId, details);
+
+        ActivityLog log = new ActivityLog();
+        log.setUserId(loggedUser.getId());
+        log.setEntityType("inventory_check");
+        log.setAction("CREATE");
+        log.setEntityId(checkId);
+        log.setEntityName(check.getCheckCode());
+        log.setDetails("Tạo phiếu kiểm kê tại kho " + warehouseDAO.findById(warehouseId).getName());
+        activityLogDAO.insert(log);
 
         session.setAttribute("toastMessage", "Tạo phiếu kiểm kê thành công");
         session.setAttribute("toastType", "success");
@@ -307,6 +323,15 @@ public class InventoryCheckController extends HttpServlet {
 
         checkDAO.updateDetailsBatch(checkId, details);
 
+        ActivityLog log = new ActivityLog();
+        log.setUserId(loggedUser.getId());
+        log.setEntityType("inventory_check");
+        log.setAction("UPDATE");
+        log.setEntityId(checkId);
+        log.setEntityName(existing.getCheckCode());
+        log.setDetails("Cập nhật số lượng kiểm kê");
+        activityLogDAO.insert(log);
+
         session.setAttribute("toastMessage", "Cập nhật phiếu kiểm kê thành công");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
@@ -315,9 +340,26 @@ public class InventoryCheckController extends HttpServlet {
     private void completeCheck(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
         int checkId = Integer.parseInt(request.getParameter("id"));
+
+        InventoryCheck existing = checkDAO.findById(checkId);
+        if (existing == null) {
+            response.sendRedirect(request.getContextPath() + "/inventory-check");
+            return;
+        }
+
         boolean ok = checkDAO.complete(checkId);
         if (ok) {
+            ActivityLog log = new ActivityLog();
+            log.setUserId(loggedUser.getId());
+            log.setEntityType("inventory_check");
+            log.setAction("COMPLETE");
+            log.setEntityId(checkId);
+            log.setEntityName(existing.getCheckCode());
+            log.setDetails("Hoàn thành kiểm kê");
+            activityLogDAO.insert(log);
+
             session.setAttribute("toastMessage", "Hoàn thành kiểm kê");
             session.setAttribute("toastType", "success");
         } else {
