@@ -27,6 +27,7 @@ public class SecurityFilter implements Filter {
             Map.entry("/admin/role/save", "roles.update"),
             Map.entry("/admin/forgot-password", "forgot_pw.process"),
             Map.entry("/admin/categories", "categories.view"),
+            Map.entry("/inventory-check", "inventory_check.view"),
             Map.entry("/admin/system-log", "system_log.view")
     );
 

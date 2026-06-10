@@ -235,3 +235,36 @@
     accent-color: var(--accent);
     cursor: pointer;
 }
+.edit-input {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 13px;
+    font-family: var(--font-ui);
+    text-align: center;
+    box-sizing: border-box;
+}
+.edit-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.edit-input-note {
+    width: 100%;
+    min-width: 120px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 12px;
+    font-family: var(--font-ui);
+    box-sizing: border-box;
+}
+.edit-input-note:focus {
+    outline: none;
+    border-color: var(--accent);
+}
