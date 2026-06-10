@@ -1,5 +1,11 @@
 
 
+/* ===== User-history action badges (kế thừa .action-badge từ admin-category.css) ===== */
+.action-badge.action-update_profile  { background: var(--info-soft);   color: var(--info); }
+.action-badge.action-change_password { background: color-mix(in srgb, var(--purple) 18%, transparent); color: var(--purple); }
+.action-badge.action-activate        { background: var(--accent-soft); color: var(--accent); }
+.action-badge.action-deactivate      { background: var(--danger-soft); color: var(--danger); }
+
 [data-theme="dark"] {
     --bg: oklch(16% 0.012 250);
     --surface: oklch(20% 0.014 250);
@@ -1278,4 +1284,47 @@ main {
 .actlog-table .col-user {
     font-weight: 600;
     width: 180px;
+}
+
+.toast-host {
+    position: fixed;
+    top: 76px;
+    inset-inline-end: 24px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.toast {
+    background: var(--fg);
+    color: var(--bg);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateX(calc(100% + 32px));
+    opacity: 0;
+    transition: all .25s ease;
+}
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.toast.success {
+    background: var(--accent);
+    color: var(--bg);
+}
+.toast.danger {
+    background: var(--danger);
+    color: var(--bg);
+}
+.toast svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
 }

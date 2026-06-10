@@ -317,4 +317,23 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
 
         return c;
     }
+
+    public Customer findByPhone(String custPhone) {
+        String sql = "SELECT * FROM customer WHERE phone = ?";
+    try {
+        connection = getConnection();
+        statement = connection.prepareStatement(sql);
+        statement.setString(1, custPhone.trim());
+        resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            return getFromResultSet(resultSet);
+        }
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
+    } finally {
+        closeResources();
+    }
+    return null;
+
+    }
 }

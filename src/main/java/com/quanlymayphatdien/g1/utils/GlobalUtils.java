@@ -1,6 +1,13 @@
 package com.quanlymayphatdien.g1.utils;
 
 public class GlobalUtils {
+    public static final String REGEX_USERNAME = "^[a-zA-Z0-9_]+$";
+    
+    public static final String REGEX_PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+    
+    public static final String REGEX_EMAIL = 
+        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    public static final String REGEX_PHONE = "^0[0-9]{9,10}$";
 
     public static final String PHONE_REGEX = "^0[0-9]{9,10}$";
     public static final String PHONE_ERROR_MSG = "SĐT không hợp lệ (10-11 số, bắt đầu là 0).";
@@ -20,4 +27,5 @@ public class GlobalUtils {
     public static final String RECEIPT_STATUS_REVISION = "NEEDS_REVISION";
     public static final String RECEIPT_STATUS_COMPLETED = "COMPLETED";
     public static final String RECEIPT_STATUS_CANCELLED = "CANCELLED";
+    public static final String RECEIPT_STATUS_DRAFT = "DRAFT";
 }

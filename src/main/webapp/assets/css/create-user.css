@@ -802,7 +802,7 @@ main {
 
 .toast-host {
     position: fixed;
-    bottom: 80px;
+    top: 76px;
     inset-inline-end: 24px;
     z-index: 60;
     display: flex;
@@ -816,15 +816,16 @@ main {
     border-radius: var(--radius);
     font-size: 13px;
     font-weight: 600;
+    box-shadow: var(--shadow-md);
     display: flex;
     align-items: center;
     gap: 10px;
-    transform: translateY(8px);
+    transform: translateX(calc(100% + 32px));
     opacity: 0;
-    transition: all .2s ease;
+    transition: all .25s ease;
 }
 .toast.show {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
 }
 .toast.success {
