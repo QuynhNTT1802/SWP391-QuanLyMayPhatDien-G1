@@ -1,0 +1,61 @@
+.stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.stat {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.stat .lbl {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+}
+.stat .val {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--fg);
+    line-height: 1.1;
+}
+.stat-dng .val { color: var(--warn); }
+.stat-hoan .val { color: var(--accent); }
+
+.status-doing {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fff3cd;
+    color: #856404;
+}
+.status-completed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #d4edda;
+    color: #155724;
+}
+[data-theme="dark"] .status-doing {
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+[data-theme="dark"] .status-completed {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
