@@ -40,3 +40,25 @@ document.querySelectorAll('.modal-host').forEach(function (m) {
         if (e.target === m) m.classList.remove('show');
     });
 });
+// Select all / deselect all
+const selectAllCheckbox = document.getElementById('selectAll');
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function () {
+        var checkboxes = document.querySelectorAll('.gen-checkbox');
+        checkboxes.forEach(function (cb) {
+            cb.checked = selectAllCheckbox.checked;
+        });
+    });
+}
+
+// Update select-all state when individual checkbox changes
+document.querySelectorAll('.gen-checkbox').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+        var all = document.querySelectorAll('.gen-checkbox');
+        var checked = document.querySelectorAll('.gen-checkbox:checked');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = all.length === checked.length;
+            selectAllCheckbox.indeterminate = checked.length > 0 && checked.length < all.length;
+        }
+    });
+});
