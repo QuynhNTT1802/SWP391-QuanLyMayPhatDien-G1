@@ -497,7 +497,7 @@ public class ProposalController extends HttpServlet {
         }
 
         response.sendRedirect(request.getContextPath()
-                + "/receipt?action=create&proposalId=" + id);
+                + "/import-receipt?action=create&proposalId=" + id);
     }
 
     private int currentUserId(HttpServletRequest request) {

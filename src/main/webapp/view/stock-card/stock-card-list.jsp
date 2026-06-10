@@ -121,7 +121,7 @@
                                                             <span class="qty-import">+${sc.quantityChange}</span>
                                                         </c:when>
                                                         <c:when test="${sc.transactionType == 'EXPORT'}">
-                                                            <span class="qty-export">-${sc.quantityChange}</span>
+                                                            <span class="qty-export">${sc.quantityChange}</span>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <span class="qty-adjust"><c:out value="${sc.quantityChange >= 0 ? '+' : ''}${sc.quantityChange}"/></span>
@@ -132,7 +132,7 @@
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${not empty sc.receiptCode}">
-                                                            <a href="${pageContext.request.contextPath}/receipt?action=detail&id=${sc.receiptId}" style="font-family:monospace;font-size:12px;">${sc.receiptCode}</a>
+                                                            <a href="${pageContext.request.contextPath}${sc.transactionType == 'IMPORT' ? '/import-receipt' : '/export-receipt'}?action=detail&id=${sc.receiptId}" style="font-family:monospace;font-size:12px;">${sc.receiptCode}</a>
                                                         </c:when>
                                                         <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                     </c:choose>
