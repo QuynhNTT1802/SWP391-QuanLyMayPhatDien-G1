@@ -42,6 +42,21 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return 0;
     }
 
+    public int countPendingForReview() {
+        String sql = "SELECT COUNT(*) FROM import_proposal WHERE status IN (?, ?)";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_WAITING_MANAGER);
+            ps.setString(2, GlobalUtils.STATUS_PENDING);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     @Override
     public List<ImportProposal> findAll() {
         List<ImportProposal> list = new ArrayList<>();
@@ -310,12 +325,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public boolean cancelProposal(int proposalId, int cancellerId) {
         String sql = "UPDATE import_proposal SET status = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status IN (?, ?)";
+                + "WHERE proposal_id = ? AND status IN (?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, GlobalUtils.STATUS_CANCELLED);
             ps.setInt(2, proposalId);
             ps.setString(3, GlobalUtils.STATUS_DRAFT);
             ps.setString(4, GlobalUtils.STATUS_PENDING);
+            ps.setString(5, GlobalUtils.STATUS_WAITING_MANAGER);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

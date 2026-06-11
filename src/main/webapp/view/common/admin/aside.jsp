@@ -82,6 +82,7 @@
             <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v2H7V4a2 2 0 0 1 2-2z"/><rect x="5" y="6" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
                 Đề xuất phiếu
+                <span id="proposalBadge" style="display:none; background:#ef4444; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:9px; margin-left:6px;">0</span>
                 <span class="arrow"></span>
             </div>
             <div class="nav-children">
@@ -228,3 +229,19 @@
         </div>
     </div>
 </aside>
+<script>
+    (function () {
+        var badge = document.getElementById('proposalBadge');
+        if (!badge) { return; }
+        var ctx = (window.APP_CTX || '${pageContext.request.contextPath}');
+        fetch(ctx + '/proposal?action=countPending', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && data.canApprove && data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.style.display = 'inline-block';
+                }
+            })
+            .catch(function () {});
+    })();
+</script>

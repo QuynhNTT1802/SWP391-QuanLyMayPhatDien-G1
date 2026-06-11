@@ -5,25 +5,34 @@ import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.ImportProposalDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
+import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
+import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @WebServlet(name = "ProposalController", urlPatterns = {"/proposal"})
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024)
 public class ProposalController extends HttpServlet {
 
     @Override
@@ -55,6 +64,12 @@ public class ProposalController extends HttpServlet {
                     break;
                 case "reject":
                     showRejectForm(request, response);
+                    break;
+                case "downloadTemplate":
+                    downloadProposalTemplate(request, response);
+                    break;
+                case "countPending":
+                    countPendingForReview(request, response);
                     break;
                 default:
                     listProposals(request, response);
@@ -106,6 +121,12 @@ public class ProposalController extends HttpServlet {
                     break;
                 case "convert":
                     convertToReceipt(request, response);
+                    break;
+                case "importExcel":
+                    importProposalPreview(request, response);
+                    break;
+                case "importConfirm":
+                    importProposalConfirm(request, response);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -169,10 +190,17 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("search", search);
 
+        request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
+        request.setAttribute("canApproveProposal", canApprove);
+        request.setAttribute("userPermissions", perms);
+
         request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraftForList));
         request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraftForList));
         request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraftForList));
         request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraftForList));
+        request.setAttribute("waitingManagerCount", canApprove
+                ? dao.countByStatus(GlobalUtils.STATUS_WAITING_MANAGER, null, true)
+                : dao.countByStatus(GlobalUtils.STATUS_WAITING_MANAGER, createdByFilter, true));
 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }
@@ -498,6 +526,273 @@ public class ProposalController extends HttpServlet {
 
         response.sendRedirect(request.getContextPath()
                 + "/import-receipt?action=create&proposalId=" + id);
+    }
+
+    private void downloadProposalTemplate(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+        List<Generator> samples = new GeneratorDAO().findAllActive();
+        XSSFWorkbook workbook = ProposalExcelSupport.createTemplateWorkbook(samples);
+
+        String today = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        String fileName = "mau-de-xuat-nhap-" + today + ".xlsx";
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    private void countPendingForReview(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.getWriter().write("{\"count\":0,\"canApprove\":false}");
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean canApprove = perms != null && perms.contains("proposals.approve");
+        int count = 0;
+        if (canApprove) {
+            count = new ImportProposalDAO().countPendingForReview();
+        }
+        response.getWriter().write("{\"count\":" + count + ",\"canApprove\":" + canApprove + "}");
+    }
+
+    private void importProposalPreview(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("proposals.create")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền tạo phiếu đề xuất.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+
+        String warehouseIdRaw = request.getParameter("warehouseId");
+        String note = request.getParameter("note");
+        int warehouseId = parseInt(warehouseIdRaw);
+
+        Part filePart = null;
+        try {
+            filePart = request.getPart("excelFile");
+        } catch (Exception ignored) {
+        }
+        if (filePart == null || filePart.getSize() == 0) {
+            session.setAttribute("toastMessage", "Vui lòng chọn file Excel để tải lên");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        List<Map<String, String>> rows;
+        try (InputStream is = filePart.getInputStream()) {
+            rows = ProposalExcelSupport.parseFromExcel(is);
+        } catch (Exception e) {
+            session.setAttribute("toastMessage", "Không đọc được file Excel: " + e.getMessage());
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        GeneratorDAO genDAO = new GeneratorDAO();
+        List<Map<String, String>> validRows = new ArrayList<>();
+        List<Map<String, String>> warningRows = new ArrayList<>();
+        List<Map<String, String>> invalidRows = new ArrayList<>();
+        int stt = 1;
+        for (Map<String, String> row : rows) {
+            String model = row.get(ProposalExcelSupport.HEADER_MODEL);
+            String qtyStr = row.get(ProposalExcelSupport.HEADER_QUANTITY);
+            String lineNote = row.get(ProposalExcelSupport.HEADER_NOTE);
+
+            Map<String, String> enriched = new LinkedHashMap<>(row);
+            enriched.put("stt", String.valueOf(stt));
+            enriched.put("__lineNote", lineNote != null ? lineNote : "");
+
+            List<String> errors = new ArrayList<>();
+            List<String> warnings = new ArrayList<>();
+            boolean generatorResolved = false;
+
+            if (model == null || model.trim().isEmpty()) {
+                errors.add("Mã máy phát không được trống");
+            } else {
+                Generator g = genDAO.findByModel(model.trim());
+                if (g == null) {
+                    errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
+                } else {
+                    enriched.put("__generatorId", String.valueOf(g.getId()));
+                    enriched.put("__generatorName", g.getDescription() != null ? g.getDescription() : "");
+                    enriched.put("__resolvedModel", g.getModel());
+                    generatorResolved = true;
+                }
+            }
+
+            int qty = 0;
+            if (qtyStr == null || qtyStr.trim().isEmpty()) {
+                errors.add("Số lượng không được trống");
+            } else {
+                try {
+                    qty = Integer.parseInt(qtyStr.trim());
+                } catch (NumberFormatException ex) {
+                    errors.add("Số lượng phải là số nguyên");
+                }
+                if (qty <= 0) {
+                    errors.add("Số lượng phải lớn hơn 0");
+                }
+                if (qty > 9999) {
+                    errors.add("Số lượng không được vượt quá 9.999");
+                }
+            }
+            enriched.put("__quantity", String.valueOf(qty));
+
+            if (generatorResolved && warehouseId > 0
+                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("__generatorId")), warehouseId)) {
+                warnings.add("Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
+            }
+
+            if (!errors.isEmpty()) {
+                enriched.put("_errors", String.join("; ", errors));
+                invalidRows.add(enriched);
+            } else if (!warnings.isEmpty()) {
+                enriched.put("_warnings", String.join("; ", warnings));
+                warningRows.add(enriched);
+            } else {
+                validRows.add(enriched);
+            }
+            stt++;
+        }
+
+        request.setAttribute("validRows", validRows);
+        request.setAttribute("warningRows", warningRows);
+        request.setAttribute("invalidRows", invalidRows);
+        request.setAttribute("currentWarehouseId", warehouseId);
+        request.setAttribute("currentNote", note != null ? note : "");
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());
+        request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
+                .forward(request, response);
+    }
+
+    private void importProposalConfirm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("proposals.create")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền tạo phiếu đề xuất.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        User user = (User) session.getAttribute("loggedUser");
+
+        int warehouseId = parseInt(request.getParameter("warehouseId"));
+        String note = request.getParameter("note");
+        String submitType = request.getParameter("submitType");
+
+        if (warehouseId <= 0) {
+            session.setAttribute("toastMessage", "Vui lòng chọn kho nhập");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        String[] generatorIds = request.getParameterValues("generatorId");
+        String[] quantities = request.getParameterValues("quantity");
+        String[] detailNotes = request.getParameterValues("detailNote");
+
+        if (generatorIds == null || generatorIds.length == 0) {
+            session.setAttribute("toastMessage", "Bạn chưa chọn dòng nào để lưu");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        ImportProposal p = new ImportProposal();
+        p.setWarehouseId(warehouseId);
+        p.setNote(note);
+        String status;
+        if ("draft".equals(submitType)) {
+            status = GlobalUtils.STATUS_DRAFT;
+        } else if ("report".equals(submitType)) {
+            status = GlobalUtils.STATUS_WAITING_MANAGER;
+        } else {
+            status = GlobalUtils.STATUS_PENDING;
+        }
+        p.setStatus(status);
+        p.setCreatedBy(user.getId());
+        p.setProposalDate(LocalDateTime.now());
+
+        ImportProposalDAO dao = new ImportProposalDAO();
+        p.setProposalCode(dao.generateProposalCode());
+        int newId = dao.insert(p);
+        if (newId <= 0) {
+            session.setAttribute("toastMessage", "Không thể tạo phiếu đề xuất, vui lòng thử lại");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        List<ImportProposalDetail> details = new ArrayList<>();
+        for (int i = 0; i < generatorIds.length; i++) {
+            String idStr = generatorIds[i];
+            if (idStr == null || idStr.trim().isEmpty()) {
+                continue;
+            }
+            int genId = parseInt(idStr);
+            if (genId <= 0) {
+                continue;
+            }
+            int qty = 1;
+            if (quantities != null && i < quantities.length && quantities[i] != null
+                    && !quantities[i].trim().isEmpty()) {
+                qty = parseInt(quantities[i]);
+                if (qty <= 0) {
+                    qty = 1;
+                }
+            }
+            String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
+            ImportProposalDetail d = new ImportProposalDetail();
+            d.setProposalId(newId);
+            d.setGeneratorId(genId);
+            d.setQuantity(qty);
+            d.setCurrentStock(0);
+            d.setNote(dNote);
+            details.add(d);
+        }
+        if (!details.isEmpty()) {
+            dao.insertDetailsBatch(details);
+        }
+
+        logActivity(user.getId(), "import_proposal", "CREATE", newId,
+                p.getProposalCode(),
+                "draft".equals(submitType)
+                        ? "Tạo phiếu đề xuất (nháp) từ Excel — " + details.size() + " dòng"
+                        : ("report".equals(submitType)
+                                ? "Báo cáo Sale Manager xét duyệt máy mới từ Excel — " + details.size() + " dòng"
+                                : "Tạo phiếu đề xuất từ Excel (gửi duyệt) — " + details.size() + " dòng"));
+
+        session.setAttribute("toastMessage",
+                "report".equals(submitType)
+                        ? "Đã báo cáo Sale Manager xét duyệt các máy mới (" + details.size() + " dòng)"
+                        : "Tạo phiếu đề xuất từ Excel thành công (" + details.size() + " dòng)");
+        session.setAttribute("toastType", "success");
+        response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
     }
 
     private int currentUserId(HttpServletRequest request) {

@@ -91,6 +91,10 @@
                 background: #d6d8db;
                 color: #1d2129;
             }
+            .status-waiting_manager {
+                background: #fef3c7;
+                color: #92400e;
+            }
         </style>
     </head>
     <body>
@@ -106,7 +110,7 @@
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
-                        <c:if test="${!sessionScope.userPermissions.contains('proposals.approve')}">
+                        <c:if test="${sessionScope.userPermissions.contains('proposals.create')}">
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=create">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                 Tạo phiếu đề xuất
@@ -125,6 +129,7 @@
                     </div>
 
                     <div class="stats-row">
+                        <div class="stat" style="background: #fef3c7;"><div class="lbl">Chờ duyệt máy</div><div class="val">${waitingManagerCount}</div></div>
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
                         <div class="stat"><div class="lbl">Đã duyệt</div><div class="val">${approvedCount}</div></div>
                         <div class="stat"><div class="lbl">Từ chối</div><div class="val">${rejectedCount}</div></div>
@@ -148,11 +153,21 @@
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Nháp</option>
-                            <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
-                            <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                            <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
-                            <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                            <c:if test="${perms.contains('proposals.create')}">
+                                <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Nháp</option>
+                                <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
+                                <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
+                            <c:if test="${perms.contains('proposals.approve')}">
+                                <option value="WAITING_MANAGER" <c:if test="${statusFilter == 'WAITING_MANAGER'}">selected</c:if>>Chờ duyệt máy</option>
+                                <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
+                                <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
                         </select>
 
                         <div class="spacer"></div>
@@ -200,6 +215,7 @@
                                                         <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
+                                                        <c:when test="${p.status == 'WAITING_MANAGER'}"><span class="status-pill status-waiting_manager"><span class="pdot"></span>Chờ duyệt máy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
                                                     </c:choose>
                                                 </td>

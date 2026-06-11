@@ -1,0 +1,183 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.quanlymayphatdien.g1.utils;
+
+import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+
+/**
+ *
+ * @author Phuong Linh
+ */
+public class ProposalExcelSupport {
+
+    public static final String HEADER_STT = "STT";
+    public static final String HEADER_MODEL = "Mã máy phát";
+    public static final String HEADER_NAME = "Tên máy phát (tham khảo)";
+    public static final String HEADER_QUANTITY = "Số lượng";
+    public static final String HEADER_NOTE = "Ghi chú dòng";
+
+    public static String[] getDetailHeaders() {
+        return new String[]{HEADER_STT, HEADER_MODEL, HEADER_NAME, HEADER_QUANTITY, HEADER_NOTE};
+    }
+
+    private static CellStyle buildHeaderStyle(XSSFWorkbook workbook) {
+        CellStyle headerStyle = workbook.createCellStyle();
+        XSSFFont font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        font.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+        headerStyle.setFont(font);
+        headerStyle.setFillForegroundColor(new XSSFColor(
+                new byte[]{(byte) 79, (byte) 129, (byte) 189}, null));
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+        return headerStyle;
+    }
+
+    public static XSSFWorkbook createTemplateWorkbook(List<Generator> sampleGenerators) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Chi tiết đề xuất (Mẫu)");
+
+        String[] headers = getDetailHeaders();
+        CellStyle headerStyle = buildHeaderStyle(workbook);
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int sampleCount = sampleGenerators != null ? Math.min(sampleGenerators.size(), 3) : 0;
+        int[] sampleQty = {2, 5, 1};
+        for (int i = 0; i < sampleCount; i++) {
+            Generator g = sampleGenerators.get(i);
+            Row row = sheet.createRow(i + 1);
+            row.createCell(0).setCellValue(i + 1);
+            row.createCell(1).setCellValue(g.getModel() != null ? g.getModel() : "");
+            row.createCell(2).setCellValue(g.getDescription() != null ? g.getDescription() : "");
+            row.createCell(3).setCellValue(sampleQty[i]);
+            row.createCell(4).setCellValue("");
+        }
+
+        if (sampleCount == 0) {
+            Row row = sheet.createRow(1);
+            row.createCell(0).setCellValue(1);
+            row.createCell(1).setCellValue("EG4500CX");
+            row.createCell(2).setCellValue("Máy phát điện Honda 4.5kVA");
+            row.createCell(3).setCellValue(2);
+            row.createCell(4).setCellValue("");
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        return workbook;
+    }
+
+    public static XSSFWorkbook exportToWorkbook(List<ImportProposalDetail> details) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Chi tiết đề xuất");
+
+        String[] headers = getDetailHeaders();
+        CellStyle headerStyle = buildHeaderStyle(workbook);
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        for (ImportProposalDetail d : details) {
+            Row row = sheet.createRow(rowNum);
+            row.createCell(0).setCellValue(rowNum);
+            row.createCell(1).setCellValue(d.getGeneratorCode() != null ? d.getGeneratorCode() : "");
+            row.createCell(2).setCellValue(d.getGeneratorName() != null ? d.getGeneratorName() : "");
+            row.createCell(3).setCellValue(d.getQuantity());
+            row.createCell(4).setCellValue(d.getNote() != null ? d.getNote() : "");
+            rowNum++;
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        return workbook;
+    }
+
+    public static List<Map<String, String>> parseFromExcel(InputStream is) throws IOException {
+        List<Map<String, String>> result = new ArrayList<>();
+        String[] headers = getDetailHeaders();
+
+        XSSFWorkbook workbook = new XSSFWorkbook(is);
+        XSSFSheet sheet = workbook.getSheetAt(0);
+
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) {
+                continue;
+            }
+
+            Map<String, String> rowData = new LinkedHashMap<>();
+            boolean isEmpty = true;
+
+            for (int j = 0; j < headers.length; j++) {
+                Cell cell = row.getCell(j);
+                String value = getCellValueAsString(cell);
+                rowData.put(headers[j], value);
+                if (!value.isEmpty()) {
+                    isEmpty = false;
+                }
+            }
+
+            if (!isEmpty) {
+                result.add(rowData);
+            }
+        }
+        workbook.close();
+        return result;
+    }
+
+    public static String getCellValueAsString(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue().trim();
+            case NUMERIC:
+                double val = cell.getNumericCellValue();
+                if (val == Math.floor(val)) {
+                    return String.valueOf((long) val);
+                }
+                return String.valueOf(val);
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            default:
+                return "";
+        }
+    }
+}
