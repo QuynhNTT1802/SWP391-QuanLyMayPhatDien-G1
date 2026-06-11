@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -12,6 +13,26 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <style>
+        .cust-card {
+            display: flex; gap: 10px; align-items: center;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 8px 12px;
+            margin-top: 4px;
+            width: fit-content;
+        }
+        .cust-card-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0;
+        }
+        .cust-card-body { flex: 1; }
+        .cust-card-name { font-size: 13px; font-weight: 700; color: var(--fg); margin-bottom: 2px; }
+        .cust-card-rows { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+        .cust-card-row { font-size: 11.5px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
+        .cust-card-row svg { opacity: 0.6; width: 11px; height: 11px; }
+
         a.btn, a.back-link { text-decoration: none; }
         .product-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
         .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -99,16 +120,43 @@
                             <div class="info-label">Lý do thanh lý</div>
                             <div class="info-value">${liquidation.reasonName}</div>
                         </div>
+                        <c:if test="${not empty liquidation.customerName}">
+                        <div class="info-field">
+                            <div class="info-label">Khách hàng nhận</div>
+                            <div class="cust-card">
+                                <div class="cust-card-avatar">
+                                    ${fn:substring(liquidation.customerName,0,1)}
+                                </div>
+                                <div class="cust-card-body">
+                                    <div class="cust-card-name">${liquidation.customerName}</div>
+                                    <div class="cust-card-rows">
+                                        <c:if test="${not empty liquidation.customerPhone}">
+                                        <div class="cust-card-row">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
+                                            ${liquidation.customerPhone}
+                                        </div>
+                                        </c:if>
+                                        <c:if test="${not empty liquidation.customerEmail}">
+                                        <div class="cust-card-row">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                                            ${liquidation.customerEmail}
+                                        </div>
+                                        </c:if>
+                                        <c:if test="${not empty liquidation.customerAddress}">
+                                        <div class="cust-card-row">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            ${liquidation.customerAddress}
+                                        </div>
+                                        </c:if>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </c:if>
                         <div class="info-field">
                             <div class="info-label">Kho hàng</div>
                             <div class="info-value">${liquidation.warehouseName}</div>
                         </div>
-                        <c:if test="${not empty liquidation.customerName}">
-                        <div class="info-field">
-                            <div class="info-label">Khách hàng nhận</div>
-                            <div class="info-value">${liquidation.customerName}</div>
-                        </div>
-                        </c:if>
                         <div class="info-field">
                             <div class="info-label">Người tạo</div>
                             <div class="info-value">${liquidation.createdByName}</div>

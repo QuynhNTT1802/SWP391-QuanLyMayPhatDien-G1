@@ -116,6 +116,7 @@
                             <th>Mã đơn</th>
                             <th>Người tạo</th>
                             <th>Lý do</th>
+                            <th>Khách hàng</th>
                             <th>Ngày tạo</th>
                             <th>Trạng thái</th>
                             <th class="col-actions">Hành động</th>
@@ -136,6 +137,7 @@
                                         <td><strong>${liq.liquidationCode}</strong></td>
                                         <td>${liq.createdByName}</td>
                                         <td>${liq.reasonName}</td>
+                                        <td>${not empty liq.customerName ? liq.customerName : '<span style="color:var(--muted)">--</span>'}</td>
                                         <td>${liq.createdAt}</td>
                                         <td>
                                             <c:choose>

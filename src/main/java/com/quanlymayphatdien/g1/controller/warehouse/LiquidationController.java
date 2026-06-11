@@ -10,7 +10,10 @@ import com.quanlymayphatdien.g1.dal.NotificationDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.entity.Customer;
 import com.quanlymayphatdien.g1.entity.Liquidation;
 import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
@@ -26,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -42,6 +46,7 @@ public class LiquidationController extends HttpServlet {
     private final UserDAO userDAO = new UserDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final CustomerDAO customerDAO = new CustomerDAO();
+    private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -65,11 +70,10 @@ public class LiquidationController extends HttpServlet {
                 case "create":
                     List<Category> reasons = categoryDAO.findByType("liquidation_reason");
                     request.setAttribute("reasons", reasons);
-                    
                     com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
                     request.setAttribute("generators", genDAO.findAll());
                     request.setAttribute("warehouses", warehouseDAO.findAll());
-                    
+                    request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
                     request.getRequestDispatcher("/view/liquidation/liquidation-create.jsp").forward(request, response);
                     break;
                 case "edit_view":
@@ -85,6 +89,9 @@ public class LiquidationController extends HttpServlet {
                     break;
                 case "get_serials":
                     getSerials(request, response);
+                    break;
+                case "search_customer":
+                    searchCustomerJson(request, response);
                     break;
                 case "migrate_serials":
                     migrateSerials(request, response);
@@ -121,6 +128,34 @@ public class LiquidationController extends HttpServlet {
     private void migrateSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
         serialNumberDAO.migrateFromReceiptDetail();
         response.getWriter().write("Migration completed successfully!");
+    }
+
+    private void searchCustomerJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String q = request.getParameter("q");
+        if (q == null) q = "";
+        List<Customer> customers = customerDAO.findByFilters(q.trim(), "active", null, 1, 20);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < customers.size(); i++) {
+            Customer c = customers.get(i);
+            json.append("{");
+            json.append("\"id\":").append(c.getId()).append(",");
+            json.append("\"name\":\"").append(escapeJson(c.getName())).append("\",");
+            json.append("\"phone\":\"").append(escapeJson(c.getPhone())).append("\",");
+            json.append("\"email\":\"").append(c.getEmail() != null ? escapeJson(c.getEmail()) : "").append("\",");
+            json.append("\"address\":\"").append(c.getAddress() != null ? escapeJson(c.getAddress()) : "").append("\",");
+            json.append("\"companyName\":\"").append(c.getCompanyName() != null ? escapeJson(c.getCompanyName()) : "").append("\"");
+            json.append("}");
+            if (i < customers.size() - 1) json.append(",");
+        }
+        json.append("]");
+        response.getWriter().write(json.toString());
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
     
     private void showList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -206,6 +241,7 @@ public class LiquidationController extends HttpServlet {
             request.setAttribute("isStaff", isStaff);
         }
         
+        request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
         request.getRequestDispatcher("/view/liquidation/liquidation-detail.jsp").forward(request, response);
     }
 
@@ -229,6 +265,13 @@ public class LiquidationController extends HttpServlet {
 
         try {
             switch (action) {
+                case "create_customer":
+                    if (!perms.contains("liquidations.create")) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                    handleCreateCustomerAjax(request, response, currentUser);
+                    return;
                 case "create":
                     if (!perms.contains("liquidations.create")) {
                         request.setAttribute("requiredPerm", "liquidations.create");
@@ -300,18 +343,80 @@ public class LiquidationController extends HttpServlet {
         }
     }
 
+    private void handleCreateCustomerAjax(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        PrintWriter out = response.getWriter();
+        try {
+            String name = request.getParameter("custName");
+            String phone = request.getParameter("custPhone");
+            String email = request.getParameter("custEmail");
+            String address = request.getParameter("custAddress");
+            String companyName = request.getParameter("custCompanyName");
+            String typeIdStr = request.getParameter("custTypeId");
+
+            if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) {
+                out.write("{\"success\":false,\"error\":\"Họ tên và SĐT là bắt buộc\"}");
+                return;
+            }
+            // Check duplicate phone
+            if (customerDAO.isPhoneExists(phone.trim(), null)) {
+                Customer existing = customerDAO.findByPhone(phone.trim());
+                if (existing != null) {
+                    out.write("{\"success\":true,\"existing\":true,\"id\":" + existing.getId()
+                        + ",\"name\":\"" + escapeJson(existing.getName()) + "\""
+                        + ",\"phone\":\"" + escapeJson(existing.getPhone()) + "\""
+                        + ",\"email\":\"" + (existing.getEmail() != null ? escapeJson(existing.getEmail()) : "") + "\""
+                        + ",\"address\":\"" + (existing.getAddress() != null ? escapeJson(existing.getAddress()) : "") + "\""
+                        + ",\"companyName\":\"" + (existing.getCompanyName() != null ? escapeJson(existing.getCompanyName()) : "") + "\""
+                        + "}");
+                    return;
+                }
+            }
+            Customer c = new Customer();
+            c.setName(name.trim());
+            c.setPhone(phone.trim());
+            c.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : null);
+            c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+            c.setCompanyName(companyName != null && !companyName.trim().isEmpty() ? companyName.trim() : null);
+            if (typeIdStr != null && !typeIdStr.isEmpty()) {
+                try { c.setCustomerTypeId(Integer.parseInt(typeIdStr)); } catch (NumberFormatException ignore) {}
+            }
+            c.setStatus("active");
+            c.setCreatedBy(user.getId());
+            int newId = customerDAO.insert(c);
+            if (newId > 0) {
+                out.write("{\"success\":true,\"existing\":false,\"id\":" + newId
+                    + ",\"name\":\"" + escapeJson(c.getName()) + "\""
+                    + ",\"phone\":\"" + escapeJson(c.getPhone()) + "\""
+                    + ",\"email\":\"" + (c.getEmail() != null ? escapeJson(c.getEmail()) : "") + "\""
+                    + ",\"address\":\"" + (c.getAddress() != null ? escapeJson(c.getAddress()) : "") + "\""
+                    + ",\"companyName\":\"" + (c.getCompanyName() != null ? escapeJson(c.getCompanyName()) : "") + "\""
+                    + "}");
+            } else {
+                out.write("{\"success\":false,\"error\":\"Không thể lưu khách hàng\"}");
+            }
+        } catch (Exception e) {
+            out.write("{\"success\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+        }
+    }
+
     private void handleCreate(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int reasonId = Integer.parseInt(request.getParameter("reasonId"));
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] serialNumbers = request.getParameterValues("serialNumber");
         String[] originalPrices = request.getParameterValues("originalPrice");
-        
+        String customerIdStr = request.getParameter("customerId");
+
         Liquidation l = new Liquidation();
         l.setLiquidationCode("LIQ" + System.currentTimeMillis());
         l.setCreatedBy(user.getId());
         l.setReasonId(reasonId);
         l.setWarehouseId(warehouseId);
+        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try { l.setCustomerId(Integer.parseInt(customerIdStr)); } catch (NumberFormatException ignore) {}
+        }
         
         int insertedId = liquidationDAO.insert(l);
         if (insertedId > 0 && generatorIds != null) {
@@ -419,6 +524,16 @@ public class LiquidationController extends HttpServlet {
             receiptDAO.approveReceipt(newReceiptId, user.getId());
             liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);
             
+            // Lịch sử tự động tạo phiếu
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("receipt");
+            log.setAction("AUTO_CREATE");
+            log.setEntityId(newReceiptId);
+            log.setEntityName(r.getReceiptCode());
+            log.setDetails("Hệ thống tự động tạo phiếu xuất kho sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
+            activityLogDAO.insert(log);
+            
             // Thông báo cho nhân viên
             Notification notif = new Notification();
             notif.setUserId(l.getCreatedBy());
@@ -487,7 +602,7 @@ public class LiquidationController extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         Liquidation l = liquidationDAO.findById(id);
         
-        if (!"MANAGER_REQUEST_EDIT".equals(l.getStatus())) {
+        if (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + id);
             return;
         }
@@ -501,6 +616,7 @@ public class LiquidationController extends HttpServlet {
         com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
         request.setAttribute("generators", genDAO.findAll());
         request.setAttribute("warehouses", warehouseDAO.findAll());
+        request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
 
         request.getRequestDispatcher("/view/liquidation/liquidation-edit.jsp").forward(request, response);
     }
@@ -514,7 +630,7 @@ public class LiquidationController extends HttpServlet {
         String[] originalPrices = request.getParameterValues("originalPrice");
 
         Liquidation l = liquidationDAO.findById(liquidationId);
-        if (l == null || !"MANAGER_REQUEST_EDIT".equals(l.getStatus())) {
+        if (l == null || (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus()))) {
             response.sendRedirect(request.getContextPath() + "/liquidations");
             return;
         }
@@ -530,10 +646,17 @@ public class LiquidationController extends HttpServlet {
         if (updated) {
             // Hacky: Update warehouse_id via a direct SQL if needed, but since it doesn't change we can just update it using another DAO method. 
             // Cập nhật warehouseId nếu thay đổi
-            String updateWarehouseSql = "UPDATE liquidation SET warehouse_id = ? WHERE liquidation_id = ?";
+            // Cập nhật warehouseId và customerId
+            String customerIdStr = request.getParameter("customerId");
+            Integer newCustomerId = null;
+            if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+                try { newCustomerId = Integer.parseInt(customerIdStr.trim()); } catch (NumberFormatException ignore) {}
+            }
+            String updateWarehouseSql = "UPDATE liquidation SET warehouse_id = ?, customer_id = ? WHERE liquidation_id = ?";
             try (java.sql.Connection c = liquidationDAO.getConnection(); java.sql.PreparedStatement p = c.prepareStatement(updateWarehouseSql)) {
                 p.setInt(1, warehouseId);
-                p.setInt(2, liquidationId);
+                if (newCustomerId != null) p.setInt(2, newCustomerId); else p.setNull(2, java.sql.Types.INTEGER);
+                p.setInt(3, liquidationId);
                 p.executeUpdate();
             }
 
