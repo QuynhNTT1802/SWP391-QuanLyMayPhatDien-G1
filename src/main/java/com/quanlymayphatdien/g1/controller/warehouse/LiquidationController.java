@@ -508,7 +508,15 @@ public class LiquidationController extends HttpServlet {
             notifCeo.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
             notificationDAO.insert(notifCeo);
         }
-        
+        ActivityLog log = new ActivityLog();
+        log.setUserId(user.getId());
+        log.setEntityType("liquidation");
+        log.setAction("MANAGER_APPROVE");
+        log.setEntityId(liquidationId);
+        log.setEntityName(l.getLiquidationCode());
+        log.setDetails("Quản lý kho cập nhật giá, thêm khách hàng và trình lên CEO");
+        activityLogDAO.insert(log);
+
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
@@ -611,6 +619,14 @@ public class LiquidationController extends HttpServlet {
         notif.setMessage("Đơn " + l.getLiquidationCode() + " bị CEO từ chối/yêu cầu sửa.");
         notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
         notificationDAO.insert(notif);
+        ActivityLog log = new ActivityLog();
+        log.setUserId(user.getId());
+        log.setEntityType("liquidation");
+        log.setAction(isPermanent ? "REJECTED_BY_CEO" : "CEO_REQUEST_EDIT");
+        log.setEntityId(liquidationId);
+        log.setEntityName(l.getLiquidationCode());
+        log.setDetails(isPermanent ? "CEO từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "CEO yêu cầu sửa đơn thanh lý");
+        activityLogDAO.insert(log);
         
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
@@ -637,6 +653,14 @@ public class LiquidationController extends HttpServlet {
         notif.setMessage("Đơn " + l.getLiquidationCode() + " bị quản lý từ chối/yêu cầu sửa.");
         notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
         notificationDAO.insert(notif);
+        ActivityLog log = new ActivityLog();
+        log.setUserId(user.getId());
+        log.setEntityType("liquidation");
+        log.setAction(isPermanent ? "REJECTED_BY_MANAGER" : "MANAGER_REQUEST_EDIT");
+        log.setEntityId(liquidationId);
+        log.setEntityName(l.getLiquidationCode());
+        log.setDetails(isPermanent ? "Quản lý từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "Quản lý yêu cầu sửa đơn thanh lý");
+        activityLogDAO.insert(log);
         
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
@@ -731,6 +755,14 @@ public class LiquidationController extends HttpServlet {
                 notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
                 notificationDAO.insert(notif);
             }
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("liquidation");
+            log.setAction("EDIT_SUBMIT");
+            log.setEntityId(liquidationId);
+            log.setEntityName(l.getLiquidationCode());
+            log.setDetails("Nhân viên đã cập nhật lại thông tin đơn thanh lý theo yêu cầu");
+            activityLogDAO.insert(log);
         }
         
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);

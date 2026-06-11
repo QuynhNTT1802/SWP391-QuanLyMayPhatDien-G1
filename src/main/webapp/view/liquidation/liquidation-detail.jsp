@@ -314,7 +314,7 @@
                                         <td>
                                             <input type="hidden" name="detailId" value="${d.liquidationDetailId}" />
                                             <c:choose>
-                                                <c:when test="${liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT'}">
+                                                <c:when test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
                                                     <input type="number" name="liquidationPrice" value="${d.liquidationPrice}" placeholder="Điền giá đề xuất..." required style="padding: 6px; width: 100%; border: 1px solid var(--border); border-radius: 4px;" />
                                                 </c:when>
                                                 <c:otherwise>
@@ -374,8 +374,8 @@
                                     </div>
                                     <div style="padding-bottom: 16px;">
                                         <div style="font-size: 13px; color: var(--muted); margin-bottom: 2px;">
-                                            <fmt:formatDate value="${log.createdAt}" pattern="dd/MM/yyyy HH:mm" /> - <strong>${log.action}</strong> 
-                                            (bởi User #${log.userId})
+                                            <fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm" /> - <strong>${log.action}</strong> 
+                                            (bởi <b>${log.username}</b> - #${log.userId})
                                         </div>
                                         <div style="font-size: 14px; color: var(--fg); line-height: 1.5;">${log.details}</div>
                                     </div>
