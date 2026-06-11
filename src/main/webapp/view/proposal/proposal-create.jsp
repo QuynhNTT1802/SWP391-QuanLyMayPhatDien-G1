@@ -499,6 +499,10 @@
                                             <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                             Tải biểu mẫu
                                         </a>
+                                        <button type="submit" class="btn" id="btnUpload" disabled style="background: #10b981; color: #fff; border-color: #10b981;">
+                                            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                            Tải lên &amp; Xem trước
+                                        </button>
                                     </div>
                                 </form>
 
@@ -511,9 +515,9 @@
                                         <p class="ni-title">Lưu ý quan trọng</p>
                                         <ul>
                                             <li>File Excel phải theo đúng biểu mẫu được cung cấp, không thay đổi cấu trúc cột.</li>
-                                            <li>Mã máy phát (ID) phải tồn tại trong hệ thống, nếu không dòng đó sẽ bị bỏ qua.</li>
+                                            <li>Mã máy phát (model) phải tồn tại trong hệ thống, nếu không dòng đó sẽ bị bỏ qua.</li>
                                             <li>Số lượng phải là số nguyên dương, không vượt quá 9.999.</li>
-                                            <li>Sau khi tải lên, đề xuất sẽ ở trạng thái <strong>Chờ duyệt</strong> và cần quản lý phê duyệt.</li>
+                                            <li>Ở bước xem trước, bạn có thể chọn <strong>Lưu nháp</strong> hoặc <strong>Gửi duyệt</strong> tùy nhu cầu.</li>
                                             <li>Bạn có thể tải biểu mẫu để xem đúng cấu trúc cột cần điền.</li>
                                         </ul>
                                     </div>
@@ -551,6 +555,14 @@
                 var fileMeta = document.getElementById('fileMeta');
                 var fileRemove = document.getElementById('fileRemove');
                 var btnChoose = document.getElementById('btnChooseFile');
+                var btnUpload = document.getElementById('btnUpload');
+                var warehouseSelect = document.querySelector('select[name="warehouseId"]');
+
+                function refreshUploadBtn() {
+                    var hasFile = fileInput.files && fileInput.files.length > 0;
+                    var hasWarehouse = warehouseSelect && warehouseSelect.value && warehouseSelect.value !== '';
+                    btnUpload.disabled = !(hasFile && hasWarehouse);
+                }
 
                 function formatSize(bytes) {
                     if (bytes < 1024) return bytes + ' B';
@@ -581,12 +593,14 @@
                     fileMeta.textContent = formatSize(file.size) + ' · Sẵn sàng tải lên';
                     fileInfo.classList.add('show');
                     dropzone.classList.add('has-file');
+                    refreshUploadBtn();
                 }
 
                 function clearFile() {
                     fileInput.value = '';
                     fileInfo.classList.remove('show');
                     dropzone.classList.remove('has-file');
+                    refreshUploadBtn();
                 }
 
                 fileInput.addEventListener('change', function () {
@@ -594,6 +608,11 @@
                         showFile(fileInput.files[0]);
                     }
                 });
+
+                if (warehouseSelect) {
+                    warehouseSelect.addEventListener('change', refreshUploadBtn);
+                }
+                refreshUploadBtn();
 
                 btnChoose.addEventListener('click', function () {
                     fileInput.click();

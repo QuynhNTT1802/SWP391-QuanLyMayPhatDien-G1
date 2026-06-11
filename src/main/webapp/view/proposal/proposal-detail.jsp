@@ -63,6 +63,7 @@
             }
             .status-draft,
             .status-cancelled { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
+            .status-waiting_manager { color: #92400e; border-color: #fcd34d; background: #fef3c7; }
             .status-pending   { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft); }
             .status-approved  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft); }
             .status-rejected  { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft); }
@@ -556,6 +557,7 @@
                                     <c:when test="${proposal.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                     <c:when test="${proposal.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                     <c:when test="${proposal.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
+                                    <c:when test="${proposal.status == 'WAITING_MANAGER'}"><span class="status-pill status-waiting_manager"><span class="pdot"></span>Chờ duyệt máy</span></c:when>
                                     <c:otherwise><span class="status-pill"><c:out value="${proposal.status}"/></span></c:otherwise>
                                 </c:choose>
                             </span>
@@ -635,6 +637,7 @@
                                             <c:when test="${proposal.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                             <c:when test="${proposal.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                             <c:when test="${proposal.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
+                                            <c:when test="${proposal.status == 'WAITING_MANAGER'}"><span class="status-pill status-waiting_manager"><span class="pdot"></span>Chờ duyệt máy</span></c:when>
                                             <c:otherwise><span class="status-pill"><c:out value="${proposal.status}"/></span></c:otherwise>
                                         </c:choose>
                                     </div>
@@ -750,7 +753,7 @@
                                     <c:otherwise>
                                         <c:forEach var="h" items="${history}">
                                             <tr>
-                                                <td class="mono"><c:choose><c:when test="${h.createdAtAsDate == null}">—</c:when><c:otherwise>${h.createdAtAsDate.format(propFmt)}</c:otherwise></c:choose></td>
+                                                <td class="mono"><c:choose><c:when test="${h.createdAt == null}">—</c:when><c:otherwise>${h.createdAt.format(propFmt)}</c:otherwise></c:choose></td>
                                                 <td><c:out value="${h.username}"/></td>
                                                 <td>
                                                     <span class="action-badge action-<c:choose>
