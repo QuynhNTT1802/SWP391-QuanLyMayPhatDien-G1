@@ -69,6 +69,32 @@
             margin-top: 8px;
             font-size: 13px;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--bg); padding: 20px; border-radius: var(--radius-md);
+            width: 400px; max-width: 90%;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;
+        }
+        .modal-title { font-size: 16px; font-weight: 600; }
+        .close-modal { cursor: pointer; border: none; background: none; font-size: 18px; }
+        .serial-list {
+            max-height: 300px; overflow-y: auto; list-style: none; padding: 0; margin: 0;
+        }
+        .serial-item {
+            padding: 10px; border-bottom: 1px solid var(--border);
+            cursor: pointer; transition: background 0.2s;
+        }
+        .serial-item:hover { background: var(--surface-2); }
+        .empty-msg { padding: 10px; color: var(--muted); text-align: center; }
     </style>
 </head>
 <body>
@@ -100,7 +126,16 @@
                             <h3 class="form-section-title">Lý do thanh lý</h3>
                         </div>
                         <div class="form-grid">
-                            <div class="field" style="grid-column: span 2;">
+                            <div class="field">
+                                <label class="field-label">Kho hàng <span class="req">*</span></label>
+                                <select class="input" name="warehouseId" id="warehouseId" required>
+                                    <option value="">-- Chọn kho hàng --</option>
+                                    <c:forEach var="w" items="${warehouses}">
+                                        <option value="${w.warehouseId}">${w.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="field">
                                 <label class="field-label">Lý do thanh lý <span class="req">*</span></label>
                                 <select class="input" name="reasonId" required>
                                     <option value="">-- Chọn lý do --</option>
@@ -138,7 +173,7 @@
                                             </c:forEach>
                                         </select>
                                     </td>
-                                    <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
+                                    <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor: pointer; background: var(--surface-2);" onclick="openSerialModal(this)"/></td>
                                     <td><input type="number" name="originalPrice" placeholder="Giá gốc" readonly style="background: var(--surface-2); color: var(--muted); cursor: not-allowed;" required/></td>
                                     <td class="col-del">
                                         <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -160,7 +195,7 @@
                                         </c:forEach>
                                     </select>
                                 </td>
-                                <td><input type="text" name="serialNumber" placeholder="S/N" required/></td>
+                                <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor: pointer; background: var(--surface-2);" onclick="openSerialModal(this)"/></td>
                                 <td><input type="number" name="originalPrice" placeholder="Giá gốc" readonly style="background: var(--surface-2); color: var(--muted); cursor: not-allowed;" required/></td>
                                 <td class="col-del">
                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -189,6 +224,18 @@
     </div>
 </div>
 
+<!-- Serial Modal -->
+<div class="modal-overlay" id="serialModalOverlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Chọn Số Serial</h3>
+            <button class="close-modal" onclick="closeSerialModal()">×</button>
+        </div>
+        <div id="serialLoading" style="display:none; text-align:center; padding:10px;">Đang tải...</div>
+        <ul class="serial-list" id="serialList"></ul>
+    </div>
+</div>
+
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
@@ -212,12 +259,81 @@
 
     function updatePrice(selectElem) {
         var priceInput = selectElem.closest('tr').querySelector('input[name="originalPrice"]');
+        var serialInput = selectElem.closest('tr').querySelector('input[name="serialNumber"]');
         var selectedOption = selectElem.options[selectElem.selectedIndex];
         if (selectedOption && selectedOption.getAttribute('data-price')) {
             priceInput.value = selectedOption.getAttribute('data-price');
         } else {
             priceInput.value = "";
         }
+        serialInput.value = ""; // Clear serial when changing generator
+    }
+
+    var currentSerialInput = null;
+
+    function openSerialModal(inputElem) {
+        var warehouseId = document.getElementById('warehouseId').value;
+        if (!warehouseId) {
+            alert('Vui lòng chọn Kho hàng trước!');
+            return;
+        }
+        
+        var tr = inputElem.closest('tr');
+        var generatorSelect = tr.querySelector('select[name="generatorId"]');
+        var generatorId = generatorSelect.value;
+        if (!generatorId) {
+            alert('Vui lòng chọn Mã dòng máy trước!');
+            return;
+        }
+
+        currentSerialInput = inputElem;
+        document.getElementById('serialModalOverlay').style.display = 'flex';
+        document.getElementById('serialList').innerHTML = '';
+        document.getElementById('serialLoading').style.display = 'block';
+
+        fetch('${pageContext.request.contextPath}/liquidations?action=get_serials&warehouseId=' + warehouseId + '&generatorId=' + generatorId)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('serialLoading').style.display = 'none';
+                var ul = document.getElementById('serialList');
+                ul.innerHTML = '';
+                if (data.length === 0) {
+                    ul.innerHTML = '<li class="empty-msg">Không có máy nào trong kho đang rảnh.</li>';
+                    return;
+                }
+                
+                // Get all already selected serials to exclude them
+                var selectedSerials = Array.from(document.querySelectorAll('input[name="serialNumber"]'))
+                    .map(inp => inp.value)
+                    .filter(val => val !== '');
+
+                var count = 0;
+                data.forEach(sn => {
+                    if (!selectedSerials.includes(sn.serialNumber)) {
+                        var li = document.createElement('li');
+                        li.className = 'serial-item';
+                        li.textContent = sn.serialNumber;
+                        li.onclick = function() {
+                            currentSerialInput.value = sn.serialNumber;
+                            closeSerialModal();
+                        };
+                        ul.appendChild(li);
+                        count++;
+                    }
+                });
+                if (count === 0) {
+                    ul.innerHTML = '<li class="empty-msg">Tất cả máy khả dụng đã được chọn.</li>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('serialLoading').style.display = 'none';
+                document.getElementById('serialList').innerHTML = '<li class="empty-msg">Lỗi tải dữ liệu</li>';
+            });
+    }
+
+    function closeSerialModal() {
+        document.getElementById('serialModalOverlay').style.display = 'none';
+        currentSerialInput = null;
     }
 </script>
 </body>

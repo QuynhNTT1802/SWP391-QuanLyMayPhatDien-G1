@@ -5,11 +5,18 @@ import com.quanlymayphatdien.g1.dal.LiquidationDAO;
 import com.quanlymayphatdien.g1.dal.LiquidationDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
+import com.quanlymayphatdien.g1.dal.SerialNumberDAO;
+import com.quanlymayphatdien.g1.dal.NotificationDAO;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.dal.CustomerDAO;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Liquidation;
 import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
+import com.quanlymayphatdien.g1.entity.SerialNumber;
+import com.quanlymayphatdien.g1.entity.Notification;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -20,7 +27,6 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 @WebServlet(name = "LiquidationController", urlPatterns = {"/liquidations"})
@@ -31,6 +37,11 @@ public class LiquidationController extends HttpServlet {
     private final CategoryDAO categoryDAO = new CategoryDAO();
     private final ReceiptDAO receiptDAO = new ReceiptDAO();
     private final ReceiptDetailDAO receiptDetailDAO = new ReceiptDetailDAO();
+    private final SerialNumberDAO serialNumberDAO = new SerialNumberDAO();
+    private final NotificationDAO notificationDAO = new NotificationDAO();
+    private final UserDAO userDAO = new UserDAO();
+    private final WarehouseDAO warehouseDAO = new WarehouseDAO();
+    private final CustomerDAO customerDAO = new CustomerDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -57,6 +68,7 @@ public class LiquidationController extends HttpServlet {
                     
                     com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
                     request.setAttribute("generators", genDAO.findAll());
+                    request.setAttribute("warehouses", warehouseDAO.findAll());
                     
                     request.getRequestDispatcher("/view/liquidation/liquidation-create.jsp").forward(request, response);
                     break;
@@ -71,6 +83,12 @@ public class LiquidationController extends HttpServlet {
                 case "detail":
                     showDetail(request, response);
                     break;
+                case "get_serials":
+                    getSerials(request, response);
+                    break;
+                case "migrate_serials":
+                    migrateSerials(request, response);
+                    break;
                 case "list":
                 default:
                     showList(request, response);
@@ -79,6 +97,30 @@ public class LiquidationController extends HttpServlet {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private void getSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+        int generatorId = Integer.parseInt(request.getParameter("generatorId"));
+        List<SerialNumber> serials = serialNumberDAO.findByWarehouseAndGeneratorAndStatus(warehouseId, generatorId, "IN_STOCK");
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < serials.size(); i++) {
+            SerialNumber sn = serials.get(i);
+            json.append("{\"serialNumber\":\"").append(sn.getSerialNumber()).append("\"}");
+            if (i < serials.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+        response.getWriter().write(json.toString());
+    }
+
+    private void migrateSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        serialNumberDAO.migrateFromReceiptDetail();
+        response.getWriter().write("Migration completed successfully!");
     }
     
     private void showList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -150,6 +192,8 @@ public class LiquidationController extends HttpServlet {
         request.setAttribute("managerEditFeedbacks", managerEditFeedbacks);
         request.setAttribute("ceoRejectFeedbacks", ceoRejectFeedbacks);
         request.setAttribute("ceoEditFeedbacks", ceoEditFeedbacks);
+        
+        request.setAttribute("customers", customerDAO.findAll());
         
         HttpSession session = request.getSession(false);
         if (session != null) {
@@ -258,6 +302,7 @@ public class LiquidationController extends HttpServlet {
 
     private void handleCreate(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int reasonId = Integer.parseInt(request.getParameter("reasonId"));
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] serialNumbers = request.getParameterValues("serialNumber");
         String[] originalPrices = request.getParameterValues("originalPrice");
@@ -266,6 +311,7 @@ public class LiquidationController extends HttpServlet {
         l.setLiquidationCode("LIQ" + System.currentTimeMillis());
         l.setCreatedBy(user.getId());
         l.setReasonId(reasonId);
+        l.setWarehouseId(warehouseId);
         
         int insertedId = liquidationDAO.insert(l);
         if (insertedId > 0 && generatorIds != null) {
@@ -276,6 +322,21 @@ public class LiquidationController extends HttpServlet {
                 d.setSerialNumber(serialNumbers[i]);
                 d.setOriginalPrice(new BigDecimal(originalPrices[i]));
                 detailDAO.insert(d);
+                
+                // Cập nhật trạng thái serial sang PENDING_LIQUIDATION
+                serialNumberDAO.updateStatus(serialNumbers[i], "PENDING_LIQUIDATION");
+            }
+            
+            // Gửi thông báo cho Managers
+            List<User> managers = userDAO.findUsersWithRoles("Manager", null, null, 1, 1000);
+            for (User mgr : managers) {
+                Notification notif = new Notification();
+                notif.setUserId(mgr.getId());
+                notif.setTitle("Đơn thanh lý mới chờ duyệt");
+                notif.setMessage("Nhân viên " + user.getName() + " đã tạo đơn thanh lý " + l.getLiquidationCode() + " cần bạn duyệt.");
+                notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + insertedId);
+                notif.setRead(false);
+                notificationDAO.insert(notif);
             }
         }
         response.sendRedirect(request.getContextPath() + "/liquidations");
@@ -285,6 +346,7 @@ public class LiquidationController extends HttpServlet {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         String[] detailIds = request.getParameterValues("detailId");
         String[] liquidationPrices = request.getParameterValues("liquidationPrice");
+        String customerIdStr = request.getParameter("customerId");
         
         if (detailIds != null) {
             for (int i = 0; i < detailIds.length; i++) {
@@ -295,19 +357,46 @@ public class LiquidationController extends HttpServlet {
             }
         }
         
+        if (customerIdStr != null && !customerIdStr.isEmpty()) {
+            liquidationDAO.updateCustomer(liquidationId, Integer.parseInt(customerIdStr));
+        }
+        
         liquidationDAO.updateStatus(liquidationId, "PENDING_CEO", user.getId(), "manager", null);
+        
+        Liquidation l = liquidationDAO.findById(liquidationId);
+        
+        // Thông báo cho nhân viên
+        Notification notif = new Notification();
+        notif.setUserId(l.getCreatedBy());
+        notif.setTitle("Quản lý đã duyệt đơn thanh lý");
+        notif.setMessage("Đơn thanh lý " + l.getLiquidationCode() + " đã được quản lý " + user.getName() + " duyệt.");
+        notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+        notificationDAO.insert(notif);
+
+        // Thông báo cho CEO
+        List<User> ceos = userDAO.findUsersWithRoles("CEO", null, null, 1, 100);
+        for (User ceo : ceos) {
+            Notification notifCeo = new Notification();
+            notifCeo.setUserId(ceo.getId());
+            notifCeo.setTitle("Đơn thanh lý chờ CEO duyệt");
+            notifCeo.setMessage("Quản lý " + user.getName() + " đã trình lên đơn thanh lý " + l.getLiquidationCode() + " cần CEO duyệt.");
+            notifCeo.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+            notificationDAO.insert(notifCeo);
+        }
+        
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
     private void handleCEOApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
+        Liquidation l = liquidationDAO.findById(liquidationId);
         
         Receipt r = new Receipt();
         r.setReceiptCode("PX-LIQ-" + System.currentTimeMillis());
         r.setReceiptType("EXPORT");
-        r.setWarehouseId(1);
+        r.setWarehouseId(l.getWarehouseId()); // Lấy kho từ đơn thanh lý
         r.setCreatedBy(user.getId());
-        r.setStatus("COMPLETED"); 
+        r.setStatus("PENDING"); 
         r.setNote("Phiếu xuất cho đơn thanh lý ID: " + liquidationId);
         
         int newReceiptId = receiptDAO.insert(r);
@@ -320,11 +409,23 @@ public class LiquidationController extends HttpServlet {
                 rd.setGeneratorId(d.getGeneratorId());
                 rd.setSerialNumber(d.getSerialNumber());
                 rd.setQuantity(1);
+                rd.setUnitPrice(d.getLiquidationPrice());
                 rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
                 receiptDetailDAO.insert(rd);
+                
+                // Chuyển trạng thái serial sang LIQUIDATED (Đã thanh lý)
+                serialNumberDAO.updateStatus(d.getSerialNumber(), "LIQUIDATED");
             }
             receiptDAO.approveReceipt(newReceiptId, user.getId());
             liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);
+            
+            // Thông báo cho nhân viên
+            Notification notif = new Notification();
+            notif.setUserId(l.getCreatedBy());
+            notif.setTitle("CEO đã duyệt đơn thanh lý");
+            notif.setMessage("Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và xuất kho.");
+            notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+            notificationDAO.insert(notif);
         }
         
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
@@ -335,6 +436,24 @@ public class LiquidationController extends HttpServlet {
         int feedbackId = Integer.parseInt(request.getParameter("ceoFeedbackId"));
         
         liquidationDAO.updateCeoReject(liquidationId, user.getId(), feedbackId, isPermanent);
+        
+        Liquidation l = liquidationDAO.findById(liquidationId);
+        if (isPermanent) {
+            // Hoàn lại trạng thái serial number
+            List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
+            for (LiquidationDetail d : details) {
+                serialNumberDAO.updateStatus(d.getSerialNumber(), "IN_STOCK");
+            }
+        }
+        
+        // Thông báo
+        Notification notif = new Notification();
+        notif.setUserId(l.getCreatedBy());
+        notif.setTitle(isPermanent ? "CEO từ chối đơn thanh lý" : "CEO yêu cầu sửa đơn thanh lý");
+        notif.setMessage("Đơn " + l.getLiquidationCode() + " bị CEO từ chối/yêu cầu sửa.");
+        notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+        notificationDAO.insert(notif);
+        
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
@@ -343,6 +462,24 @@ public class LiquidationController extends HttpServlet {
         int feedbackId = Integer.parseInt(request.getParameter("managerFeedbackId"));
         
         liquidationDAO.updateManagerReject(liquidationId, user.getId(), feedbackId, isPermanent);
+        
+        Liquidation l = liquidationDAO.findById(liquidationId);
+        if (isPermanent) {
+            // Hoàn lại trạng thái serial number
+            List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
+            for (LiquidationDetail d : details) {
+                serialNumberDAO.updateStatus(d.getSerialNumber(), "IN_STOCK");
+            }
+        }
+
+        // Thông báo
+        Notification notif = new Notification();
+        notif.setUserId(l.getCreatedBy());
+        notif.setTitle(isPermanent ? "Quản lý từ chối đơn thanh lý" : "Quản lý yêu cầu sửa đơn thanh lý");
+        notif.setMessage("Đơn " + l.getLiquidationCode() + " bị quản lý từ chối/yêu cầu sửa.");
+        notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+        notificationDAO.insert(notif);
+        
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
@@ -363,6 +500,7 @@ public class LiquidationController extends HttpServlet {
         request.setAttribute("reasons", reasons);
         com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
         request.setAttribute("generators", genDAO.findAll());
+        request.setAttribute("warehouses", warehouseDAO.findAll());
 
         request.getRequestDispatcher("/view/liquidation/liquidation-edit.jsp").forward(request, response);
     }
@@ -370,6 +508,7 @@ public class LiquidationController extends HttpServlet {
     private void handleEditSubmit(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         int reasonId = Integer.parseInt(request.getParameter("reasonId"));
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] serialNumbers = request.getParameterValues("serialNumber");
         String[] originalPrices = request.getParameterValues("originalPrice");
@@ -380,9 +519,24 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
-        // Cập nhật reason và reset trạng thái về PENDING_MANAGER
+        // Trả lại trạng thái cũ cho serials cũ
+        List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
+        for (LiquidationDetail oldD : oldDetails) {
+            serialNumberDAO.updateStatus(oldD.getSerialNumber(), "IN_STOCK");
+        }
+
+        // Cập nhật reason và reset trạng thái về PENDING_MANAGER (update warehouseId thủ công)
         boolean updated = liquidationDAO.updateReasonAndStatus(liquidationId, reasonId);
         if (updated) {
+            // Hacky: Update warehouse_id via a direct SQL if needed, but since it doesn't change we can just update it using another DAO method. 
+            // Cập nhật warehouseId nếu thay đổi
+            String updateWarehouseSql = "UPDATE liquidation SET warehouse_id = ? WHERE liquidation_id = ?";
+            try (java.sql.Connection c = liquidationDAO.getConnection(); java.sql.PreparedStatement p = c.prepareStatement(updateWarehouseSql)) {
+                p.setInt(1, warehouseId);
+                p.setInt(2, liquidationId);
+                p.executeUpdate();
+            }
+
             // Xóa hết details cũ
             detailDAO.deleteByLiquidationId(liquidationId);
 
@@ -395,7 +549,21 @@ public class LiquidationController extends HttpServlet {
                     d.setSerialNumber(serialNumbers[i]);
                     d.setOriginalPrice(new java.math.BigDecimal(originalPrices[i]));
                     detailDAO.insert(d);
+                    
+                    // Giữ lại serials mới
+                    serialNumberDAO.updateStatus(serialNumbers[i], "PENDING_LIQUIDATION");
                 }
+            }
+            
+            // Bắn lại thông báo
+            List<User> managers = userDAO.findUsersWithRoles("Manager", null, null, 1, 1000);
+            for (User mgr : managers) {
+                Notification notif = new Notification();
+                notif.setUserId(mgr.getId());
+                notif.setTitle("Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa chữa");
+                notif.setMessage("Nhân viên " + user.getName() + " đã cập nhật lại đơn thanh lý.");
+                notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+                notificationDAO.insert(notif);
             }
         }
         

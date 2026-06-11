@@ -100,6 +100,16 @@
                             <div class="info-value">${liquidation.reasonName}</div>
                         </div>
                         <div class="info-field">
+                            <div class="info-label">Kho hàng</div>
+                            <div class="info-value">${liquidation.warehouseName}</div>
+                        </div>
+                        <c:if test="${not empty liquidation.customerName}">
+                        <div class="info-field">
+                            <div class="info-label">Khách hàng nhận</div>
+                            <div class="info-value">${liquidation.customerName}</div>
+                        </div>
+                        </c:if>
+                        <div class="info-field">
                             <div class="info-label">Người tạo</div>
                             <div class="info-value">${liquidation.createdByName}</div>
                         </div>
@@ -149,6 +159,19 @@
                         <div class="section" style="padding: 18px 22px; margin-top: 20px;">
                             <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Xử lý đơn thanh lý</h3>
                             <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở phía trên trước khi ra quyết định.</p>
+                            
+                            <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
+                                <div style="margin-bottom: 16px; max-width: 400px;">
+                                    <label style="display:block; margin-bottom: 4px; font-size: 13px; font-weight: 600;">Khách hàng (Tùy chọn)</label>
+                                    <select name="customerId" style="width:100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;">
+                                        <option value="">-- Có thể chọn sau --</option>
+                                        <c:forEach var="c" items="${customers}">
+                                            <option value="${c.id}" ${liquidation.customerId == c.id ? 'selected' : ''}>${c.name} - ${c.phone}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                            </c:if>
+                            
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 <c:if test="${isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT'}">
                                     <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liquidation.liquidationId}" class="btn btn-primary">Sửa đơn (Cập nhật lại)</a>

@@ -275,12 +275,15 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             InventoryDAO invDAO = new InventoryDAO();
             StockCardDAO scDAO = new StockCardDAO();
+            SerialNumberDAO snDAO = new SerialNumberDAO();
 
             // 4. Validate trùng serial toàn hệ thống (mọi receipt_detail)
-            for (ReceiptDetail d : details) {
-                if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                    if (rdDAO.isSerialExists(connection, d.getSerialNumber().trim(), receiptId)) {
-                        errors.add("Serial \"" + d.getSerialNumber().trim() + "\" đã tồn tại trong hệ thống");
+            if ("IMPORT".equals(receiptType)) {
+                for (ReceiptDetail d : details) {
+                    if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                        if (rdDAO.isSerialExists(connection, d.getSerialNumber().trim(), receiptId)) {
+                            errors.add("Serial \"" + d.getSerialNumber().trim() + "\" đã tồn tại trong hệ thống");
+                        }
                     }
                 }
             }
@@ -326,6 +329,34 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 sc.setCreatedBy(approvedBy);
                 scDAO.insert(connection, sc);
             }
+            
+            // 6. Đồng bộ bảng serial_number
+            if ("IMPORT".equals(receiptType)) {
+                String insertSerialSql = "INSERT IGNORE INTO serial_number (generator_id, serial_number, warehouse_id, status) VALUES (?, ?, ?, 'IN_STOCK')";
+                try (PreparedStatement psInsertSn = connection.prepareStatement(insertSerialSql)) {
+                    for (ReceiptDetail d : details) {
+                        if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                            psInsertSn.setInt(1, d.getGeneratorId());
+                            psInsertSn.setString(2, d.getSerialNumber().trim());
+                            psInsertSn.setInt(3, warehouseId);
+                            psInsertSn.addBatch();
+                        }
+                    }
+                    psInsertSn.executeBatch();
+                }
+            } else if ("EXPORT".equals(receiptType)) {
+                String updateSerialSql = "UPDATE serial_number SET status = 'SOLD' WHERE serial_number = ?";
+                try (PreparedStatement psUpdateSn = connection.prepareStatement(updateSerialSql)) {
+                    for (ReceiptDetail d : details) {
+                        if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                            psUpdateSn.setString(1, d.getSerialNumber().trim());
+                            psUpdateSn.addBatch();
+                        }
+                    }
+                    psUpdateSn.executeBatch();
+                }
+            }
+            
             connection.commit();
             return errors;
         } catch (SQLException e) {
@@ -334,17 +365,18 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     connection.rollback();
                 }
             } catch (SQLException ex) {
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", ex.getMessage() != null ? ex.getMessage() : ex.getClass().getName(), ex);
+                ex.printStackTrace();
             }
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            return false;
+            e.printStackTrace();
+            errors.add("Lỗi hệ thống: " + e.getMessage());
+            return errors;
         } finally {
             try {
                 if (connection != null) {
                     connection.setAutoCommit(true);
                 }
             } catch (SQLException e) {
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
             }
         }
     }
@@ -491,10 +523,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 try {
                     conn.rollback();
                 } catch (SQLException ex) {
-                    com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", ex.getMessage() != null ? ex.getMessage() : ex.getClass().getName(), ex);
+                    ex.printStackTrace();
                 }
             }
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         } finally {
             if (conn != null) {
