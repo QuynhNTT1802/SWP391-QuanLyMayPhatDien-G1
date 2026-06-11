@@ -66,3 +66,7 @@ main { padding: 20px 24px 40px; }
 .error-box li {
     margin-bottom: 3px;
 }
+
+/* ===== Tab visibility ===== */
+.tab-content { display: block; }
+.tab-hidden  { display: none !important; }

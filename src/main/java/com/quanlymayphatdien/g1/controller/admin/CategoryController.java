@@ -8,26 +8,36 @@ import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CategoryExtensionDAO;
 import com.quanlymayphatdien.g1.entity.*;
+import com.quanlymayphatdien.g1.utils.CategoryExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
-
 import java.io.IOException;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @WebServlet(name = "CategoryController",
         urlPatterns = {"/admin/categories",
             "/admin/category/edit",
             "/admin/category/save",
-            "/admin/category/delete"})
+            "/admin/category/delete",
+            "/admin/category/export",
+            "/admin/category/template",
+            "/admin/category/import-preview",
+            "/admin/category/import-confirm"})
+
+@MultipartConfig(maxFileSize = 10 * 1024 * 1024)
 public class CategoryController extends HttpServlet {
 
     private final CategoryDAO cateDAO = new CategoryDAO();
@@ -46,6 +56,11 @@ public class CategoryController extends HttpServlet {
         TYPE_LABELS.put("receipt_status", "Trạng thái phiếu");
         TYPE_LABELS.put("customer_type", "Loại khách hàng");
         TYPE_LABELS.put("order_status", "Trạng thái đơn");
+        TYPE_LABELS.put("liquidation_reason", "Lý do thanh lý");
+        TYPE_LABELS.put("manager_reject_reason", "Lý do quản lý từ chối");
+        TYPE_LABELS.put("manager_request_edit_reason", "Lý do quản lý yêu cầu sửa");
+        TYPE_LABELS.put("ceo_reject_reason", "Lý do CEO từ chối");
+        TYPE_LABELS.put("ceo_request_edit_reason", "Lý do CEO yêu cầu sửa");
     }
 
     @Override
@@ -54,10 +69,15 @@ public class CategoryController extends HttpServlet {
         String action = request.getServletPath();
 
         try {
+
             if ("/admin/categories".equals(action)) {
                 viewCategoryList(request, response);
             } else if ("/admin/category/edit".equals(action)) {
                 viewCategoryEdit(request, response);
+            } else if ("/admin/category/export".equals(action)) {
+                exportCategoryExcel(request, response);
+            } else if ("/admin/category/template".equals(action)) {
+                downloadCategoryTemplate(request, response);
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -77,6 +97,10 @@ public class CategoryController extends HttpServlet {
                 saveCategory(request, response);
             } else if ("/admin/category/delete".equals(action)) {
                 deleteCategory(request, response);
+            } else if ("/admin/category/import-preview".equals(action)) {
+                importCategoryPreview(request, response);
+            } else if ("/admin/category/import-confirm".equals(action)) {
+                importCategoryConfirm(request, response);
             }
         } catch (Exception e) {
             SystemLogger.error("quản lý danh mục", "CategoryController",
@@ -122,20 +146,22 @@ public class CategoryController extends HttpServlet {
             list = filtered;
         }
 
-        //Tính toán KPI trước khi áp dụng statusFilter
+
         int kpiTotal = list.size();
         int kpiActive = 0;
         int kpiInactive = 0;
         for (Category c : list) {
-            if ("active".equals(c.getStatus())) kpiActive++;
-            else kpiInactive++;
+            if ("active".equals(c.getStatus())) {
+                kpiActive++;
+            } else {
+                kpiInactive++;
+            }
         }
         request.setAttribute("kpiTotal", kpiTotal);
         request.setAttribute("kpiActive", kpiActive);
         request.setAttribute("kpiInactive", kpiInactive);
 
 
-        //Filter theo trạng thái (active / inactive / tất cả) ---
         String statusFilter = request.getParameter("status");
         if (statusFilter != null && !statusFilter.trim().isEmpty() && !"all".equals(statusFilter)) {
             List<Category> filtered = new ArrayList<>();
@@ -164,14 +190,20 @@ public class CategoryController extends HttpServlet {
                 int page = 1, pageSize = 20;
                 String pageStr = request.getParameter("page");
                 if (pageStr != null && !pageStr.isEmpty()) {
-                    try { page = Math.max(1, Integer.parseInt(pageStr)); } catch (NumberFormatException e) { page = 1; }
+                    try {
+                        page = Math.max(1, Integer.parseInt(pageStr));
+                    } catch (NumberFormatException e) {
+                        page = 1;
+                    }
                 }
 
                 List<ActivityLog> logs = logDAO.findByTypeAndModuleFilter(module, typeFilter, logSearch, logAction, dateFrom, dateTo, page, pageSize);
                 int totalLogs = logDAO.countByTypeAndModuleFilter(module, typeFilter, logSearch, logAction, dateFrom, dateTo);
 
                 int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
-                if (page > totalPages) page = totalPages;
+                if (page > totalPages) {
+                    page = totalPages;
+                }
 
                 request.setAttribute("logList", logs);
                 request.setAttribute("logPage", page);
@@ -212,7 +244,8 @@ public class CategoryController extends HttpServlet {
                 request.setAttribute("extensions", new CategoryExtensionDAO().loadExtensionsByType(typeFilter, catIds));
             }
         } else {
-            // Danh sách toàn bộ các danh mục (overview)
+            
+            // Danh sách toàn bộ các danh mục 
             Map<String, Integer> typeCounts = new LinkedHashMap<>();
             for (Category c : list) {
                 typeCounts.merge(c.getType(), 1, Integer::sum);
@@ -220,15 +253,20 @@ public class CategoryController extends HttpServlet {
             request.setAttribute("typeCounts", typeCounts);
             request.setAttribute("typeMinIds", cateDAO.getMinIdByType(module));
 
-            // Phân trang cho danh sách chi tiết tất cả danh mục
+
             int page = 1, pageSize = 10;
             String pageStr = request.getParameter("page");
             if (pageStr != null && !pageStr.isEmpty()) {
-                try { page = Math.max(1, Integer.parseInt(pageStr)); }
-                catch (NumberFormatException e) { page = 1; }
+                try {
+                    page = Math.max(1, Integer.parseInt(pageStr));
+                } catch (NumberFormatException e) {
+                    page = 1;
+                }
             }
             int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
-            if (page > totalPages) page = totalPages;
+            if (page > totalPages) {
+                page = totalPages;
+            }
             int from = (page - 1) * pageSize;
             int to = Math.min(from + pageSize, totalItems);
 
@@ -238,7 +276,7 @@ public class CategoryController extends HttpServlet {
             request.setAttribute("totalItems", totalItems);
             request.setAttribute("fromIndex", totalItems > 0 ? from + 1 : 0);
             request.setAttribute("toIndex", to);
-            
+
             request.setAttribute("currentStatus", statusFilter != null ? statusFilter : "");
         }
 
@@ -262,11 +300,16 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("category", found);
                     CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
                     Object ext = extDAO.findExtension(found.getType(), id);
-                    if ("brand".equals(found.getType())) request.setAttribute("brandExt", ext);
-                    else if ("fuel_type".equals(found.getType())) request.setAttribute("fuelExt", ext);
-                    else if ("origin".equals(found.getType())) request.setAttribute("originExt", ext);
-                    else if ("customer_type".equals(found.getType())) request.setAttribute("customerExt", ext);
-                    
+                    if ("brand".equals(found.getType())) {
+                        request.setAttribute("brandExt", ext);
+                    } else if ("fuel_type".equals(found.getType())) {
+                        request.setAttribute("fuelExt", ext);
+                    } else if ("origin".equals(found.getType())) {
+                        request.setAttribute("originExt", ext);
+                    } else if ("customer_type".equals(found.getType())) {
+                        request.setAttribute("customerExt", ext);
+                    }
+
                     String histSearch = request.getParameter("histSearch");
                     String historyAction = request.getParameter("historyAction");
                     String histDateFrom = request.getParameter("histDateFrom");
@@ -275,31 +318,35 @@ public class CategoryController extends HttpServlet {
                     int histPage = 1;
                     String histPageStr = request.getParameter("histPage");
                     if (histPageStr != null && !histPageStr.isEmpty()) {
-                        try { histPage = Math.max(1, Integer.parseInt(histPageStr)); }
-                        catch (NumberFormatException ignored) { histPage = 1; }
+                        try {
+                            histPage = Math.max(1, Integer.parseInt(histPageStr));
+                        } catch (NumberFormatException ignored) {
+                            histPage = 1;
+                        }
                     }
                     int histPageSize = 10;
                     List<ActivityLog> historyLogs = logDAO.findByEntityId(id, histSearch, historyAction, histDateFrom, histDateTo, histPage, histPageSize);
                     int histTotalLogs = logDAO.countByEntityId(id, histSearch, historyAction, histDateFrom, histDateTo);
                     int histTotalPages = Math.max(1, (int) Math.ceil((double) histTotalLogs / histPageSize));
-                    if (histPage > histTotalPages) histPage = histTotalPages;
+                    if (histPage > histTotalPages) {
+                        histPage = histTotalPages;
+                    }
 
-                    request.setAttribute("historyLogs",      historyLogs);
-                    request.setAttribute("histPage",         histPage);
-                    request.setAttribute("histTotalPages",   histTotalPages);
-                    request.setAttribute("histTotalLogs",    histTotalLogs);
-                    request.setAttribute("histSearch",       histSearch != null ? histSearch : "");
-                    request.setAttribute("historyAction",    historyAction != null ? historyAction : "");
-                    request.setAttribute("histDateFrom",     histDateFrom != null ? histDateFrom : "");
-                    request.setAttribute("histDateTo",       histDateTo != null ? histDateTo : "");
+                    request.setAttribute("historyLogs", historyLogs);
+                    request.setAttribute("histPage", histPage);
+                    request.setAttribute("histTotalPages", histTotalPages);
+                    request.setAttribute("histTotalLogs", histTotalLogs);
+                    request.setAttribute("histSearch", histSearch != null ? histSearch : "");
+                    request.setAttribute("historyAction", historyAction != null ? historyAction : "");
+                    request.setAttribute("histDateFrom", histDateFrom != null ? histDateFrom : "");
+                    request.setAttribute("histDateTo", histDateTo != null ? histDateTo : "");
 
-                    // Giữ tab đang active (info hoặc history)
+
                     String activeTab = request.getParameter("activeTab");
                     request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
                 }
             } catch (Exception e) {
                 SystemLogger.error("Quản lý danh mục", "CategoryController.viewCategoryEdit", e.getMessage(), e);
-                e.printStackTrace();
             }
         }
 
@@ -418,7 +465,7 @@ public class CategoryController extends HttpServlet {
         boolean isUpdate = idVar != null && !idVar.isEmpty() && !"0".equals(idVar);
         if (isUpdate) {
             categoryId = Integer.parseInt(idVar);
-            // Đọc giá trị cũ TRƯỚC khi lưu để so sánh trước và sau
+
             Category oldCategory = cateDAO.findById(categoryId);
             category.setId(categoryId);
             cateDAO.update(category);
@@ -457,7 +504,6 @@ public class CategoryController extends HttpServlet {
                 }
             } catch (Exception e) {
                 SystemLogger.error("Quản lý danh mục", "CategoryController.deleteCategory", e.getMessage(), e);
-                e.printStackTrace();
             }
         }
 
@@ -558,12 +604,13 @@ public class CategoryController extends HttpServlet {
                 return "Danh mục phiếu mua bán";
             case "quản lý kiểm kê":
                 return "Danh mục kiểm kê";
+            case "quản lý thanh lý":
+                return "Danh mục thanh lý";
             default:
                 return "Danh mục";
         }
     }
 
-    // --------------- Hệ thống ghi log ---------------
     private String statusLabel(String status) {
         if ("active".equals(status)) {
             return "Hoạt động";
@@ -591,7 +638,6 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logCreate", e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 
@@ -654,34 +700,44 @@ public class CategoryController extends HttpServlet {
             // So sánh các trường mở rộng (Extension)
             CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
             Object oldExt = extDAO.findExtension(newCategory.getType(), entityId);
-            
+
             switch (newCategory.getType()) {
                 case "brand":
                     CategoryBrand oldB = (CategoryBrand) oldExt;
                     String newCountry = normalizeLogString(request.getParameter("country"));
                     String oldCountry = normalizeLogString(oldB != null ? oldB.getCountry() : null);
-                    if (!newCountry.equals(oldCountry)) changes.add("Quốc gia: " + oldCountry + " -> " + newCountry);
-                    
+                    if (!newCountry.equals(oldCountry)) {
+                        changes.add("Quốc gia: " + oldCountry + " -> " + newCountry);
+                    }
+
                     String newWebsite = normalizeLogString(request.getParameter("website"));
                     String oldWebsite = normalizeLogString(oldB != null ? oldB.getWebsite() : null);
-                    if (!newWebsite.equals(oldWebsite)) changes.add("Website: " + oldWebsite + " -> " + newWebsite);
-                    
+                    if (!newWebsite.equals(oldWebsite)) {
+                        changes.add("Website: " + oldWebsite + " -> " + newWebsite);
+                    }
+
                     String newFYStr = request.getParameter("foundedYear");
                     String newFY = normalizeLogString(newFYStr);
                     String oldFY = normalizeLogNumber(oldB != null ? oldB.getFoundedYear() : null);
-                    if (!newFY.equals(oldFY)) changes.add("Năm TL: " + oldFY + " -> " + newFY);
-                    
+                    if (!newFY.equals(oldFY)) {
+                        changes.add("Năm TL: " + oldFY + " -> " + newFY);
+                    }
+
                     String newWPStr = request.getParameter("warrantyPeriod");
                     String newWP = normalizeLogString(newWPStr);
                     String oldWP = normalizeLogNumber(oldB != null ? oldB.getWarrantyPeriod() : null);
-                    if (!newWP.equals(oldWP)) changes.add("Bảo hành: " + oldWP + " -> " + newWP);
+                    if (!newWP.equals(oldWP)) {
+                        changes.add("Bảo hành: " + oldWP + " -> " + newWP);
+                    }
                     break;
                 case "fuel_type":
                     CategoryFuelType oldF = (CategoryFuelType) oldExt;
                     String newUnit = normalizeLogString(request.getParameter("unit"));
                     String oldUnit = normalizeLogString(oldF != null ? oldF.getUnit() : null);
-                    if (!newUnit.equals(oldUnit)) changes.add("Đơn vị: " + oldUnit + " -> " + newUnit);
-                    
+                    if (!newUnit.equals(oldUnit)) {
+                        changes.add("Đơn vị: " + oldUnit + " -> " + newUnit);
+                    }
+
                     String newPriceStr = request.getParameter("typicalPrice");
                     String newPrice = normalizeLogString(newPriceStr);
                     String oldPrice = normalizeLogNumber(oldF != null ? oldF.getTypicalPrice() : null);
@@ -703,13 +759,17 @@ public class CategoryController extends HttpServlet {
                     CategoryOrigin oldO = (CategoryOrigin) oldExt;
                     String newCode = normalizeLogString(request.getParameter("country_code"));
                     String oldCode = normalizeLogString(oldO != null ? oldO.getCountryCode() : null);
-                    if (!newCode.equals(oldCode)) changes.add("Mã quốc gia: " + oldCode + " -> " + newCode);
+                    if (!newCode.equals(oldCode)) {
+                        changes.add("Mã quốc gia: " + oldCode + " -> " + newCode);
+                    }
                     break;
                 case "customer_type":
                     CategoryCustomerType oldC = (CategoryCustomerType) oldExt;
                     String newTax = normalizeLogString(request.getParameter("taxType"));
                     String oldTax = normalizeLogString(oldC != null ? oldC.getTaxType() : null);
-                    if (!newTax.equals(oldTax)) changes.add("Loại thuế: " + oldTax + " -> " + newTax);
+                    if (!newTax.equals(oldTax)) {
+                        changes.add("Loại thuế: " + oldTax + " -> " + newTax);
+                    }
                     break;
             }
 
@@ -724,7 +784,6 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logUpdate", e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 
@@ -749,11 +808,9 @@ public class CategoryController extends HttpServlet {
             insertLog(user, entityId, name, "DELETE", description);
         } catch (Exception e) {
             SystemLogger.error("Hệ thống", "CategoryController.logDelete", e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 
- 
     private void insertLog(User user, Integer entityId, String entityName,
             String action, String description) {
         ActivityLog log = new ActivityLog();
@@ -769,13 +826,13 @@ public class CategoryController extends HttpServlet {
     private void showHistory(HttpServletRequest request, HttpServletResponse response, String module)
             throws ServletException, IOException {
 
-        //Đọc các tham số filter
-        String logSearch = request.getParameter("logSearch");   // từ khóa: tên đối tượng / người dùng
-        String logAction = request.getParameter("logAction");   // hành động: CREATE, UPDATE, DELETE...
-        String dateFrom = request.getParameter("dateFrom");    // ngày bắt đầu yyyy-MM-dd
-        String dateTo = request.getParameter("dateTo");      // ngày kết thúc yyyy-MM-dd
 
-        //Đọc trang hiện tại
+        String logSearch = request.getParameter("logSearch");
+        String logAction = request.getParameter("logAction");
+        String dateFrom = request.getParameter("dateFrom");
+        String dateTo = request.getParameter("dateTo");
+
+
         int page = 1;
         String pageStr = request.getParameter("page");
         if (pageStr != null && !pageStr.isEmpty()) {
@@ -813,4 +870,303 @@ public class CategoryController extends HttpServlet {
 
         request.getRequestDispatcher("/view/admin/admin-category.jsp").forward(request, response);
     }
+
+    private void exportCategoryExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String module = request.getParameter("module");
+        if (module == null || module.isEmpty()) {
+            module = "quản lý vật tư";
+        }
+
+        String typeFilter = request.getParameter("type");
+        String search = request.getParameter("search");
+        String statusFilter = request.getParameter("status");
+
+        List<Category> list;
+        if (typeFilter != null && !typeFilter.trim().isEmpty()
+                && search != null && !search.trim().isEmpty()) {
+            list = cateDAO.searchByTypeAndModule(typeFilter, module, search.trim());
+        } else if (search != null && !search.trim().isEmpty()) {
+            list = cateDAO.searchByName(search.trim());
+            List<Category> filtered = new ArrayList<>();
+            for (Category c : list) {
+                if (module.equals(c.getModule())) {
+                    filtered.add(c);
+                }
+            }
+            list = filtered;
+        } else {
+            list = cateDAO.findByModule(module);
+        }
+
+        if (typeFilter != null && !typeFilter.trim().isEmpty()) {
+            List<Category> filtered = new ArrayList<>();
+            for (Category c : list) {
+                if (typeFilter.equals(c.getType())) {
+                    filtered.add(c);
+                }
+            }
+            list = filtered;
+        }
+
+
+        if (statusFilter != null && !statusFilter.trim().isEmpty()
+                && !"all".equals(statusFilter)) {
+            List<Category> filtered = new ArrayList<>();
+            for (Category c : list) {
+                if (statusFilter.equals(c.getStatus())) {
+                    filtered.add(c);
+                }
+            }
+            list = filtered;
+        }
+
+        List<Integer> catIds = new ArrayList<>();
+        for (Category c : list) {
+            catIds.add(c.getId());
+        }
+
+        Map<Integer, Object> extensions = null;
+        if (typeFilter != null && !typeFilter.trim().isEmpty() && !catIds.isEmpty()) {
+            extensions = new CategoryExtensionDAO().loadExtensionsByType(typeFilter, catIds);
+        }
+
+        XSSFWorkbook workbook = CategoryExcelSupport.exportToWorkbook(list, extensions, typeFilter);
+
+        String today = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        String fileName = "danh-muc-"
+                + (typeFilter != null && !typeFilter.isEmpty() ? typeFilter : "all")
+                + "-" + today + ".xlsx";
+
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+
+
+        workbook.write(response.getOutputStream());
+        workbook.close();
+
+
+        User user = (User) request.getSession().getAttribute("loggedUser");
+        if (user != null) {
+            String desc = "Xuất Excel: " + list.size() + " bản ghi"
+                    + " | type:" + (typeFilter != null ? typeFilter : "all")
+                    + " | module:" + module;
+            insertLog(user, null, "Excel Export", "EXPORT", desc);
+        }
+    }
+
+    private void importCategoryPreview(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String type = request.getParameter("type");
+        String module = request.getParameter("module");
+
+        Part filePart = request.getPart("excelFile");
+
+        if (filePart == null || filePart.getSize() == 0) {
+            response.sendRedirect(request.getContextPath()
+                    + "/admin/categories?module=" + module + "&type=" + type + "&msg=no-file");
+            return;
+        }
+
+        InputStream is = filePart.getInputStream();
+        List<Map<String, String>> rows = CategoryExcelSupport.parseFromExcel(is, type);
+
+        List<Map<String, String>> validRows = new ArrayList<>();
+        List<Map<String, String>> invalidRows = new ArrayList<>();
+        for (Map<String, String> row : rows) {
+            String name = row.get("Tên danh mục");
+            List<String> errors = new ArrayList<>();
+
+            if (name == null || name.trim().isEmpty()) {
+                errors.add("Tên danh mục không được trống");
+            } else if (cateDAO.existsByNameAndTypeAndModule(name.trim(), type, module, 0)) {
+                // Kiểm tra trùng với dữ liệu đang có trong DB
+                errors.add("Đã tồn tại danh mục \"" + name.trim() + "\" trong hệ thống");
+            }
+
+            if (errors.isEmpty()) {
+                validRows.add(row);
+            } else {
+                row.put("_errors", String.join("; ", errors));
+                invalidRows.add(row);
+            }
+        }
+
+        request.setAttribute("validRows", validRows);
+        request.setAttribute("invalidRows", invalidRows);
+        request.setAttribute("currentType", type);
+        request.setAttribute("currentModule", module);
+        request.getRequestDispatcher("/view/admin/admin-category-import-preview.jsp")
+                .forward(request, response);
+    }
+
+    private void importCategoryConfirm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        String type = request.getParameter("type");
+        String module = request.getParameter("module");
+        if (module == null || module.trim().isEmpty()) {
+            module = "quản lý vật tư";
+        }
+
+        String[] names = request.getParameterValues("name");
+        String[] descs = request.getParameterValues("description");
+        String[] statuses = request.getParameterValues("status");
+        // brand
+        String[] countries = request.getParameterValues("country");
+        String[] websites = request.getParameterValues("website");
+        String[] foundedYears = request.getParameterValues("foundedYear");
+        String[] warrantyPeriods = request.getParameterValues("warrantyPeriod");
+        // fuel_type
+        String[] units = request.getParameterValues("unit");
+        String[] typicalPrices = request.getParameterValues("typicalPrice");
+        // origin
+        String[] countryCodes = request.getParameterValues("countryCode");
+        // customer_type
+        String[] taxTypes = request.getParameterValues("taxType");
+
+        int importedCount = 0;
+        CategoryExtensionDAO extDAO = new CategoryExtensionDAO();
+
+        if (names != null) {
+            for (int i = 0; i < names.length; i++) {
+
+                if (names[i] == null || names[i].trim().isEmpty()) {
+                    continue;
+                }
+
+                // Kiểm tra trùng lần cuối trước khi insert (tránh race condition)
+                if (cateDAO.existsByNameAndTypeAndModule(names[i].trim(), type, module, 0)) {
+                    continue; // bỏ qua nếu đã tồn tại
+                }
+
+                Category c = new Category();
+                c.setName(names[i].trim());
+                c.setType(type);
+                c.setDescription(descs != null && i < descs.length ? descs[i] : "");
+                c.setStatus(statuses != null && i < statuses.length ? statuses[i] : "active");
+                c.setModule(module);
+
+                int newId = cateDAO.insert(c);
+                if (newId <= 0) {
+                    continue;
+                }
+
+                switch (type != null ? type : "") {
+
+                    case "brand": {
+                        CategoryBrand b = new CategoryBrand();
+                        b.setCategoryId(newId);
+                        b.setCountry(safeGet(countries, i));
+                        b.setWebsite(safeGet(websites, i));
+
+                        String fy = safeGet(foundedYears, i);
+                        if (!fy.isEmpty()) {
+                            try {
+                                b.setFoundedYear(Integer.parseInt(fy));
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                        String wp = safeGet(warrantyPeriods, i);
+                        if (!wp.isEmpty()) {
+                            try {
+                                b.setWarrantyPeriod(Integer.parseInt(wp));
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                        extDAO.saveBrand(b);
+                        break;
+                    }
+
+                    case "fuel_type": {
+                        CategoryFuelType ft = new CategoryFuelType();
+                        ft.setCategoryId(newId);
+                        ft.setUnit(safeGet(units, i));
+                        String price = safeGet(typicalPrices, i);
+                        if (!price.isEmpty()) {
+                            try {
+                                ft.setTypicalPrice(new java.math.BigDecimal(price));
+                            } catch (NumberFormatException ignored) {
+                            }
+                        }
+                        extDAO.saveFuelType(ft);
+                        break;
+                    }
+
+                    case "origin": {
+                        CategoryOrigin o = new CategoryOrigin();
+                        o.setCategoryId(newId);
+                        o.setCountryCode(safeGet(countryCodes, i));
+                        extDAO.saveOrigin(o);
+                        break;
+                    }
+
+                    case "customer_type": {
+                        CategoryCustomerType ct = new CategoryCustomerType();
+                        ct.setCategoryId(newId);
+                        ct.setTaxType(safeGet(taxTypes, i));
+                        extDAO.saveCustomerType(ct);
+                        break;
+                    }
+
+                    default: {
+                        // phase, condition, generator_type, receipt_reason...
+                        String tableName = getExtensionTableName(type);
+                        if (tableName != null) {
+                            extDAO.insertEmptyExtension(tableName, newId);
+                        }
+                        break;
+                    }
+                }
+
+
+                User user = (User) request.getSession().getAttribute("loggedUser");
+                if (user != null) {
+                    insertLog(user, newId, names[i].trim(), "IMPORT",
+                            "Tạo từ nhập Excel | type:" + type + " | module:" + module);
+                }
+                importedCount++;
+            }
+        }
+
+        User user = (User) request.getSession().getAttribute("loggedUser");
+        if (user != null) {
+            insertLog(user, 0, "Excel Import", "IMPORT",
+                    "Nhập Excel: thêm " + importedCount + " danh mục " + type + " | module:" + module);
+        }
+
+        response.sendRedirect(request.getContextPath()
+                + "/admin/categories?module=" + java.net.URLEncoder.encode(module, "UTF-8")
+                + "&type=" + type
+                + "&msg=import-success"
+                + "&importedCount=" + importedCount);
+    }
+
+    private String safeGet(String[] arr, int index) {
+        if (arr == null || index >= arr.length || arr[index] == null) {
+            return "";
+        }
+        return arr[index].trim();
+    }
+
+    private void downloadCategoryTemplate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String type = request.getParameter("type");
+        if (type == null || type.trim().isEmpty()) {
+            type = "default";
+        }
+
+        XSSFWorkbook workbook = CategoryExcelSupport.createTemplateWorkbook(type);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String filename = "BieuMau_Nhap_" + type + ".xlsx";
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+        try (java.io.OutputStream out = response.getOutputStream()) {
+            workbook.write(out);
+        } finally {
+            workbook.close();
+        }
+    }
+
 }
