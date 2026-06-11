@@ -5,6 +5,8 @@
 package com.quanlymayphatdien.g1.entity;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  *
@@ -27,6 +29,8 @@ public class StockCard {
     private String warehouseName;
     private String generatorModel;
     private String receiptCode;
+    private String createdByName;
+    private String serialList;
 
     public StockCard() {
     }
@@ -95,6 +99,13 @@ public class StockCard {
         this.createdAt = createdAt;
     }
 
+    public Date getCreatedAtAsDate() {
+        if (createdAt == null) {
+            return null;
+        }
+        return Date.from(createdAt.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
     public Integer getCreatedBy() {
         return createdBy;
     }
@@ -133,5 +144,21 @@ public class StockCard {
 
     public void setReferenceNote(String referenceNote) {
         this.referenceNote = referenceNote;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+
+    public String getSerialList() {
+        return serialList;
+    }
+
+    public void setSerialList(String serialList) {
+        this.serialList = serialList;
     }
 }

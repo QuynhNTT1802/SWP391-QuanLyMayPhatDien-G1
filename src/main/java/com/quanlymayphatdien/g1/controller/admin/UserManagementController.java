@@ -135,14 +135,40 @@ public class UserManagementController extends HttpServlet {
                 request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(dtf) : "—");
                 request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
 
-                ActivityLogDAO logDAO = new ActivityLogDAO();
-                List<ActivityLog> logs = logDAO.getLogsByEntity("user", userId, 1, 20);
-                List<String> logDates = new ArrayList<>();
-                for (ActivityLog log : logs) {
-                    logDates.add(log.getCreatedAt() != null ? log.getCreatedAt().format(dtf) : "—");
+                String histSearch = request.getParameter("histSearch");
+                String historyAction = request.getParameter("historyAction");
+                String histDateFrom = request.getParameter("histDateFrom");
+                String histDateTo = request.getParameter("histDateTo");
+
+                int histPage = 1;
+                String histPageStr = request.getParameter("histPage");
+                if (histPageStr != null && !histPageStr.isEmpty()) {
+                    try {
+                        histPage = Math.max(1, Integer.parseInt(histPageStr));
+                    } catch (NumberFormatException ignored) {
+                        histPage = 1;
+                    }
                 }
-                request.setAttribute("activityLogs", logs);
-                request.setAttribute("logDates", logDates);
+                int histPageSize = 10;
+                ActivityLogDAO logDAO = new ActivityLogDAO();
+                List<ActivityLog> historyLogs = logDAO.findByEntityTypeAndId2("user", userId, histSearch, historyAction, histDateFrom, histDateTo, histPage, histPageSize);
+                int histTotalLogs = logDAO.countByEntityTypeAndId2("user", userId, histSearch, historyAction, histDateFrom, histDateTo);
+                int histTotalPages = Math.max(1, (int) Math.ceil((double) histTotalLogs / histPageSize));
+                if (histPage > histTotalPages) {
+                    histPage = histTotalPages;
+                }
+
+                request.setAttribute("historyLogs", historyLogs);
+                request.setAttribute("histPage", histPage);
+                request.setAttribute("histTotalPages", histTotalPages);
+                request.setAttribute("histTotalLogs", histTotalLogs);
+                request.setAttribute("histSearch", histSearch != null ? histSearch : "");
+                request.setAttribute("historyAction", historyAction != null ? historyAction : "");
+                request.setAttribute("histDateFrom", histDateFrom != null ? histDateFrom : "");
+                request.setAttribute("histDateTo", histDateTo != null ? histDateTo : "");
+
+                String activeTab = request.getParameter("activeTab");
+                request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
 
                 request.getRequestDispatcher("/view/admin/admin-user-detail.jsp").forward(request, response);
                 return;
@@ -266,6 +292,8 @@ public class UserManagementController extends HttpServlet {
             String status = request.getParameter("status");
 
             UserDAO userDAO = new UserDAO();
+            RoleDAO roleDAO = new RoleDAO();
+            PermissionDAO perDAO = new PermissionDAO();
             User user = userDAO.findById(userId);
 
             if (user != null) {
@@ -276,6 +304,31 @@ public class UserManagementController extends HttpServlet {
 
                     response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
                     return;
+                }
+
+                String beforeName = user.getName();
+                String beforeEmail = user.getEmail();
+                String beforePhone = user.getPhone();
+                String beforeAddress = user.getAddress();
+                String beforeStatus = user.getStatus();
+                List<Role> beforeRoles = roleDAO.getRolesByUserId(userId);
+                List<String[]> beforeOverrides = perDAO.getUserOverrides(userId);
+
+                List<String> fieldChanges = new ArrayList<>();
+                if (!equalsStr(beforeName, name)) {
+                    fieldChanges.add("name: \"" + safe(beforeName) + "\" → \"" + safe(name) + "\"");
+                }
+                if (!equalsStr(beforeEmail, email)) {
+                    fieldChanges.add("email: \"" + safe(beforeEmail) + "\" → \"" + safe(email) + "\"");
+                }
+                if (!equalsStr(beforePhone, phone)) {
+                    fieldChanges.add("phone: \"" + safe(beforePhone) + "\" → \"" + safe(phone) + "\"");
+                }
+                if (!equalsStr(beforeAddress, address)) {
+                    fieldChanges.add("address: \"" + safe(beforeAddress) + "\" → \"" + safe(address) + "\"");
+                }
+                if (!equalsStr(beforeStatus, status)) {
+                    fieldChanges.add("status: \"" + safe(beforeStatus) + "\" → \"" + safe(status) + "\"");
                 }
 
                 user.setName(name);
@@ -298,9 +351,14 @@ public class UserManagementController extends HttpServlet {
                     }
                     userDAO.updateUserRoles(userId, roleIdList);
 
+                    List<Role> afterRoles = roleDAO.getRolesByUserId(userId);
+                    String roleDiff = diffRoles(beforeRoles, afterRoles);
+                    if (!roleDiff.isEmpty()) {
+                        fieldChanges.add("roles: " + roleDiff);
+                    }
+
                     String overrideSubmitted = request.getParameter("perOverride_submitted");
                     if ("1".equals(overrideSubmitted)) {
-                        PermissionDAO perDAO = new PermissionDAO();
                         List<Permission> allPermissions = perDAO.findAll();
                         for (Permission perm : allPermissions) {
                             String overrideType = request.getParameter("perOverride_" + perm.getPermissionId());
@@ -311,12 +369,27 @@ public class UserManagementController extends HttpServlet {
                             }
                         }
                     }
+                    List<String[]> afterOverrides = perDAO.getUserOverrides(userId);
+                    String overrideDiff = diffOverrides(beforeOverrides, afterOverrides);
+                    if (!overrideDiff.isEmpty()) {
+                        fieldChanges.add("permissions: " + overrideDiff);
+                    }
+
+                    if (password != null && !password.isEmpty()) {
+                        fieldChanges.add("password: đã đặt lại");
+                    }
 
                     request.getServletContext().setAttribute("perm_refresh_" + userId, true);
 
                     request.getSession().setAttribute("message", "Update successfully");
-                    logActivity(request, "user", userId, name, "UPDATE",
-                            "Cập nhật người dùng: " + (name != null ? name : ("ID " + userId)));
+                    String details;
+                    if (fieldChanges.isEmpty()) {
+                        details = "Cập nhật người dùng #" + userId + " (" + safe(name) + "): không có thay đổi";
+                    } else {
+                        details = "Cập nhật người dùng #" + userId + " (" + safe(name) + "): "
+                                + String.join("; ", fieldChanges);
+                    }
+                    logActivity(request, "user", userId, name, "UPDATE", details);
                 } else {
                     request.getSession().setAttribute("message", "Fail to update");
                 }
@@ -329,6 +402,66 @@ public class UserManagementController extends HttpServlet {
         }
 
         response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
+    }
+
+    private static boolean equalsStr(String a, String b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equals(b);
+    }
+
+    private static String safe(String s) {
+        return s == null ? "" : s;
+    }
+
+    private static String diffRoles(List<Role> before, List<Role> after) {
+        Set<String> beforeSet = new java.util.TreeSet<>();
+        Set<String> afterSet = new java.util.TreeSet<>();
+        for (Role r : before) {
+            beforeSet.add(r.getRoleName());
+        }
+        for (Role r : after) {
+            afterSet.add(r.getRoleName());
+        }
+        java.util.Set<String> added = new java.util.LinkedHashSet<>(afterSet);
+        added.removeAll(beforeSet);
+        java.util.Set<String> removed = new java.util.LinkedHashSet<>(beforeSet);
+        removed.removeAll(afterSet);
+        List<String> parts = new ArrayList<>();
+        if (!added.isEmpty()) {
+            parts.add("+" + String.join(",", added));
+        }
+        if (!removed.isEmpty()) {
+            parts.add("-" + String.join(",", removed));
+        }
+        return String.join(" ", parts);
+    }
+
+    private static String diffOverrides(List<String[]> before, List<String[]> after) {
+        Map<String, String> beforeMap = new java.util.LinkedHashMap<>();
+        for (String[] o : before) {
+            beforeMap.put(o[0], o[1]);
+        }
+        Map<String, String> afterMap = new java.util.LinkedHashMap<>();
+        for (String[] o : after) {
+            afterMap.put(o[0], o[1]);
+        }
+        List<String> parts = new ArrayList<>();
+        for (Map.Entry<String, String> e : afterMap.entrySet()) {
+            String prev = beforeMap.get(e.getKey());
+            if (prev == null) {
+                parts.add("+" + e.getKey() + "=" + e.getValue());
+            } else if (!prev.equals(e.getValue())) {
+                parts.add(e.getKey() + ": " + prev + "→" + e.getValue());
+            }
+        }
+        for (Map.Entry<String, String> e : beforeMap.entrySet()) {
+            if (!afterMap.containsKey(e.getKey())) {
+                parts.add("-" + e.getKey() + "=" + e.getValue());
+            }
+        }
+        return String.join("; ", parts);
     }
 
     private Map<String, String> validateForm(String username, String password,

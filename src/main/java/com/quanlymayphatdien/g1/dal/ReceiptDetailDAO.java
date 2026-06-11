@@ -27,9 +27,9 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
 
     public List<ReceiptDetail> findByReceiptId(int receiptId) {
         List<ReceiptDetail> list = new ArrayList<>();
-        String sql = "SELECT rd.*, g.model AS generator_model "
+        String sql = "SELECT rd.*, g.model AS generator_model, g.unit_price AS generator_price "
                 + "FROM receipt_detail rd "
-                + "JOIN generator g ON rd.generator_id = g.id "
+                + "LEFT JOIN generator g ON rd.generator_id = g.id "
                 + "WHERE rd.receipt_id = ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, receiptId);
@@ -56,14 +56,19 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
 
     @Override
     public int insert(ReceiptDetail rd) {
-        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rd.getReceiptId());
             ps.setInt(2, rd.getGeneratorId());
             ps.setString(3, rd.getSerialNumber());
             ps.setInt(4, rd.getQuantity());
-            ps.setString(5, rd.getNote());
+            if (rd.getUnitPrice() != null) {
+                ps.setBigDecimal(5, rd.getUnitPrice());
+            } else {
+                ps.setNull(5, java.sql.Types.DECIMAL);
+            }
+            ps.setString(6, rd.getNote());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -77,22 +82,53 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     }
 
     public int batchInsert(Connection conn, List<ReceiptDetail> details) throws SQLException {
-        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (ReceiptDetail rd : details) {
                 ps.setInt(1, rd.getReceiptId());
                 ps.setInt(2, rd.getGeneratorId());
                 ps.setString(3, rd.getSerialNumber());
                 ps.setInt(4, rd.getQuantity());
-                ps.setString(5, rd.getNote());
+                if (rd.getUnitPrice() != null) {
+                    ps.setBigDecimal(5, rd.getUnitPrice());
+                } else {
+                    ps.setNull(5, java.sql.Types.DECIMAL);
+                }
+                ps.setString(6, rd.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
+        }
+        return -1;
+    }
+
+    public boolean isSerialExists(Connection conn, String serialNumber, int excludeReceiptId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM receipt_detail WHERE serial_number = ? AND receipt_id != ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            ps.setInt(2, excludeReceiptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    public List<String> findSerialsByReceiptIdAndGenerator(int receiptId, int generatorId) {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT serial_number FROM receipt_detail WHERE receipt_id = ? AND generator_id = ? ORDER BY receipt_detail_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            ps.setInt(2, generatorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(rs.getString("serial_number"));
+                }
+            }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
-        return -1;
+        return list;
     }
 
     @Override
@@ -103,6 +139,10 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
         rd.setGeneratorId(rs.getInt("generator_id"));
         rd.setSerialNumber(rs.getString("serial_number"));
         rd.setQuantity(rs.getInt("quantity"));
+        try {
+            rd.setUnitPrice(rs.getBigDecimal("unit_price"));
+        } catch (SQLException ignored) {
+        }
         rd.setNote(rs.getString("note"));
 
         try {
