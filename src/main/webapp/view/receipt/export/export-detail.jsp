@@ -252,6 +252,7 @@
                                                     <td>
                                                         <span class="action-badge action-<c:choose>
                                                             <c:when test="${h.action == 'CREATE'}">create</c:when>
+                                                            <c:when test="${h.action == 'AUTO_CREATE'}">create</c:when>
                                                             <c:when test="${h.action == 'UPDATE'}">update</c:when>
                                                             <c:when test="${h.action == 'APPROVE'}">approve</c:when>
                                                             <c:when test="${h.action == 'REJECT'}">reject</c:when>
@@ -260,6 +261,7 @@
                                                         </c:choose>">
                                                         <c:choose>
                                                             <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
+                                                            <c:when test="${h.action == 'AUTO_CREATE'}">Tạo tự động</c:when>
                                                             <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
                                                             <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
                                                             <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
