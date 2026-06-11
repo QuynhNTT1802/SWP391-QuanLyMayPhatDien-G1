@@ -6,10 +6,6 @@ package com.quanlymayphatdien.g1.entity;
 
 import java.time.LocalDateTime;
 
-/**
- *
- * @author LENOVO
- */
 public class ActivityLog {
     private int id;
     private int userId;
@@ -108,12 +104,10 @@ public class ActivityLog {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
     public java.util.Date getCreatedAtAsDate() {
         if (createdAt == null) return null;
         return java.util.Date.from(createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
-    
     
     
 }

@@ -133,17 +133,17 @@
                 </header>
 
                 <main>
-                    <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
+                    <script>
+                        <c:if test="${not empty sessionScope.message}">
+                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.message}"/>', type: 'success' };
                         <c:remove var="message" scope="session"/>
-                    </c:if>
-                    <c:if test="${not empty error}">
-                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${error}"/>
-                        </div>
-                    </c:if>
+                        </c:if>
+                        <c:if test="${not empty error}">
+                        window.SESSION_DATA = window.SESSION_DATA || {};
+                        window.SESSION_DATA.message = '<c:out value="${error}"/>';
+                        window.SESSION_DATA.type = 'danger';
+                        </c:if>
+                    </script>
 
                     <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -195,30 +195,6 @@
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
                                         <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
-                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
-                                            <option value="">-- Chọn loại khách hàng --</option>
-                                            <c:forEach var="ct" items="${customerTypes}">
-                                                <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${param.customerTypeId == ct.id}">selected</c:if>>
-                                                    <c:out value="${ct.name}"/>
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${param.customerCompany}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" placeholder="VD: 0123456789" value="<c:out value="${param.customerTaxCode}"/>" />
-                                    </div>
                                 </div>
                             </div>
 
@@ -243,7 +219,7 @@
                                     </div>
                                     <div class="field" style="grid-column: span 2;">
                                         <label class="field-label">Ghi chú nội bộ (Chỉ nhân viên thấy)</label>
-                                        <textarea class="input" name="internalNote" rows="2" placeholder="VD: Khách quen, giảm giá 5%..."><c:out value="${param.internalNote}"/></textarea>
+                                        <textarea class="input" name="note" rows="2" placeholder="VD: Khách quen, giảm giá 5%..."><c:out value="${param.note}"/></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -421,14 +397,13 @@
                 }
             });
             // Tự tính ngay khi load (vì có dữ liệu pre-fill)
-            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty + MST
+            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
             function onCustomerTypeChange() {
                 var sel = document.getElementById('customerTypeSelect');
                 var opt = sel.options[sel.selectedIndex];
                 var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
                 var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
                 document.getElementById('customerCompany').required = isCompany;
-                document.getElementById('customerTaxCode').required = isCompany;
                 document.querySelectorAll('.company-req').forEach(function (el) {
                     el.style.display = isCompany ? 'inline' : 'none';
                 });
@@ -436,6 +411,7 @@
             document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
 
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     </body>

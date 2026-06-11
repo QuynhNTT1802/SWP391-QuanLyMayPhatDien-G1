@@ -5,6 +5,7 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Admin;
+import com.quanlymayphatdien.g1.entity.Customer;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
@@ -24,12 +25,22 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public List<SaleOrder> findByStatus(String status) {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
+        String sql = "SELECT so.*, "
+                + "u_created.name AS created_by_name, "
+                + "u_approved.name AS approved_by_name, "
+                + "u_cancelled.name AS cancelled_by_name, "
+                + "c.name AS customer_name, "
+                + "c.phone AS customer_phone, "
+                + "c.email AS customer_email, "
+                + "c.address AS customer_address, "
                 + "c.company_name AS customer_company_name "
                 + "FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
+                + "LEFT JOIN user u_approved ON so.approved_by = u_approved.id "
+                + "LEFT JOIN user u_cancelled ON so.cancelled_by = u_cancelled.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "WHERE so.status = ? ORDER BY so.created_at DESC";
+                + "WHERE status = ?";
+
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             try (ResultSet rs = ps.executeQuery()) {
@@ -43,37 +54,101 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return list;
     }
 
-    public List<SaleOrder> findApprovedWithoutActiveReceipt() {
+    public List<SaleOrder> searchByNameCode(String search, String status, int userId) {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
+        StringBuilder sql = new StringBuilder(
+                "SELECT so.*, "
+                + "u_created.name AS created_by_name, "
+                + "u_approved.name AS approved_by_name, "
+                + "u_cancelled.name AS cancelled_by_name, "
+                + "c.name AS customer_name, "
+                + "c.phone AS customer_phone, "
+                + "c.email AS customer_email, "
+                + "c.address AS customer_address, "
                 + "c.company_name AS customer_company_name "
                 + "FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
+                + "LEFT JOIN user u_approved ON so.approved_by = u_approved.id "
+                + "LEFT JOIN user u_cancelled ON so.cancelled_by = u_cancelled.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "WHERE so.status = 'APPROVED' "
-                + "AND NOT EXISTS ("
-                + "  SELECT 1 FROM receipt r "
-                + "  WHERE r.order_id = so.order_id AND r.status <> 'CANCELLED'"
-                + ") "
-                + "ORDER BY so.created_at DESC";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql);
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+                + "WHERE 1=1"
+        );
+        List<Object> param = new ArrayList<>();
+
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append(" AND so.status = ?");
+            param.add(status);
+        }
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append(" AND (so.order_code LIKE ? OR c.name LIKE ?)");
+            String pattern = "%" + search.trim() + "%";
+            param.add(pattern);
+            param.add(pattern);
+        }
+
+        if (userId > 0) {
+            sql.append(" AND so.created_by = ?");
+            param.add(userId);
+        }
+
+        sql.append(" ORDER BY so.created_at DESC");
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < param.size(); i++) {
+                ps.setObject(i + 1, param.get(i));
             }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SaleOrder order = getFromResultSet(rs);
+                    list.add(order);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR in searchByNameCode: " + e.getMessage());
+            e.printStackTrace();
         }
         return list;
+    }
+
+    private int countOrdersByStatus(String status, int userId) {
+        String sql = "SELECT COUNT(*) FROM sale_order WHERE status = ?";
+        if (userId > 0) {
+            sql += " AND created_by = ?";
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (userId > 0) {
+                ps.setInt(2, userId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public List<SaleOrder> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
         List<SaleOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
+                "SELECT so.*, "
+                + "u_created.name AS created_by_name, "
+                + "u_approved.name AS approved_by_name, "
+                + "u_cancelled.name AS cancelled_by_name, "
+                + "c.name AS customer_name, "
+                + "c.phone AS customer_phone, "
+                + "c.email AS customer_email, "
+                + "c.address AS customer_address, "
                 + "c.company_name AS customer_company_name "
                 + "FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
+                + "LEFT JOIN user u_approved ON so.approved_by = u_approved.id "
+                + "LEFT JOIN user u_cancelled ON so.cancelled_by = u_cancelled.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.status = 'APPROVED' "
                 + "AND NOT EXISTS ("
@@ -116,6 +191,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.status = 'APPROVED' "
                 + "AND NOT EXISTS ("
@@ -152,114 +228,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return 0;
     }
 
-    public List<SaleOrder> searchByNameCode(String search, String status) {
-        List<SaleOrder> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-                "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
-                + "c.company_name AS customer_company_name "
-                + "FROM sale_order so "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "WHERE 1=1");
-        List<Object> param = new ArrayList<>();
-
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND so.status = ?");
-            param.add(status);
-        }
-
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (so.order_code LIKE ? OR c.name LIKE ?)");
-            String pattern = "%" + search.trim() + "%";
-            param.add(pattern);
-            param.add(pattern);
-        }
-
-        sql.append(" ORDER BY so.created_at DESC");
-
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < param.size(); i++) {
-                ps.setObject(i + 1, param.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return list;
-    }
-
-    public int countStatusApproved() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_APPROVED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public int countStatusRejected() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_REJECTED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public int countStatusPending() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_PENDING);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public int countStatusCancelled() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ? ";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_CANCELLED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
     public List<SaleOrder> findAll() {
         List<SaleOrder> list = new ArrayList<>();
         String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
@@ -280,40 +248,37 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     @Override
     public boolean update(SaleOrder s) {
-
-        String sql = "UPDATE sale_order SET order_code = ?, customer_name = ?, customer_phone = ?, "
-                + "customer_email = ?, customer_address = ?, customer_tax_code = ?, customer_type = ?, "
-                + "customer_company_name = ?, customer_note = ?, created_by = ?, approved_by = ?, "
-                + "cancelled_by = ?, updated_by = ?, status = ?, total_amount = ?, note = ?, "
-                + "reject_reason = ?, order_date = ?, approved_at = ?, cancelled_at = ?, updated_at = ?, customer_type_id = ? "
+        String sql = "UPDATE sale_order SET order_code = ?, customer_id = ?, "
+                + "created_by = ?, approved_by = ?, cancelled_by = ?, updated_by = ?, "
+                + "rejected_by = ?, status = ?, total_amount = ?, note = ?, "
+                + "customer_note = ?, reject_reason = ?, order_date = ?, approved_at = ?, "
+                + "cancelled_at = ?, updated_at = ? "
                 + "WHERE order_id = ? AND status = ?";
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, s.getOrderCode());
-                ps.setString(2, s.getCustomerName());
-                ps.setString(3, s.getCustomerPhone());
-                ps.setString(4, s.getCustomerEmail());
-                ps.setString(5, s.getCustomerAddress());
-                ps.setString(6, s.getCustomerTaxCode());
-                ps.setString(7, s.getCustomerType());
-                ps.setString(8, s.getCustomerCompany());
-                ps.setString(9, s.getCustomerNote());
-                ps.setInt(10, s.getCreatedBy());
-                ps.setInt(11, s.getApprovedBy());
-                ps.setInt(12, s.getCancelledBy());
-                ps.setInt(13, s.getUpdatedBy());
-                ps.setString(14, s.getStatus());
-                ps.setDouble(15, s.getTotalAmount());
-                ps.setString(16, s.getNote());
-                ps.setString(17, s.getRejectReason());
-                ps.setTimestamp(18, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
-                ps.setTimestamp(19, s.getApprovedAt() != null ? new java.sql.Timestamp(s.getApprovedAt().getTime()) : null);
-                ps.setTimestamp(20, s.getCancelledAt() != null ? new java.sql.Timestamp(s.getCancelledAt().getTime()) : null);
-                ps.setTimestamp(21, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
-                ps.setInt(22, s.getCustomerTypeId());
-                ps.setInt(23, s.getOrderId());
-                ps.setString(24, GlobalUtils.STATUS_PENDING);
+                if (s.getCustomerId() > 0) {
+                    ps.setInt(2, s.getCustomerId());
+                } else {
+                    ps.setNull(2, java.sql.Types.INTEGER);
+                }
+                ps.setInt(3, s.getCreatedBy());
+                ps.setInt(4, s.getApprovedBy());
+                ps.setInt(5, s.getCancelledBy());
+                ps.setInt(6, s.getUpdatedBy());
+                ps.setInt(7, s.getRejectedBy());
+                ps.setString(8, s.getStatus());
+                ps.setDouble(9, s.getTotalAmount());
+                ps.setString(10, s.getNote());
+                ps.setString(11, s.getCustomerNote());
+                ps.setString(12, s.getRejectReason());
+                ps.setTimestamp(13, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
+                ps.setTimestamp(14, s.getApprovedAt() != null ? new java.sql.Timestamp(s.getApprovedAt().getTime()) : null);
+                ps.setTimestamp(15, s.getCancelledAt() != null ? new java.sql.Timestamp(s.getCancelledAt().getTime()) : null);
+                ps.setTimestamp(16, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
+                ps.setInt(17, s.getOrderId());
+                ps.setString(18, GlobalUtils.STATUS_PENDING);
                 ps.executeUpdate();
                 conn.commit();
                 return true;
@@ -330,12 +295,26 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
-    public boolean cancelOrder(int orderId, int cancelledBy) {
+    public int cancelOrder(int orderId, int cancelledBy) {
+        String checkSql = "SELECT COUNT(*) FROM receipt "
+                + "WHERE order_id = ? AND receipt_type = 'EXPORT' AND status = 'COMPLETED'";
 
-        String sql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
+        try (Connection conn = getConnection(); PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+            checkPs.setInt(1, orderId);
+            try (ResultSet rs = checkPs.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    return -1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+        String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
                 + "WHERE order_id = ? AND status IN (?, ?)";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(updateSql)) {
             ps.setString(1, GlobalUtils.STATUS_CANCELLED);
             ps.setInt(2, cancelledBy);
             ps.setInt(3, orderId);
@@ -343,11 +322,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             ps.setString(5, GlobalUtils.STATUS_APPROVED);
 
             int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
+            return rowsAffected > 0 ? 1 : 0;
 
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            return false;
+            e.printStackTrace();
+            return 0;
         }
     }
 
@@ -371,8 +350,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public boolean rejectOrder(int orderId, int rejectedBy, String rejectReason) {
-
-        String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, updated_by = ?, updated_at = NOW() "
+        String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, rejected_by = ?, updated_at = NOW() "
                 + "WHERE order_id = ? AND status = ?";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, GlobalUtils.STATUS_REJECTED);
@@ -389,12 +367,22 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public SaleOrder findById(int id) {
-        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
+        String sql = "SELECT so.*, "
+                + "u_created.name AS created_by_name, "
+                + "u_approved.name AS approved_by_name, "
+                + "u_cancelled.name AS cancelled_by_name, "
+                + "c.name AS customer_name, "
+                + "c.phone AS customer_phone, "
+                + "c.email AS customer_email, "
+                + "c.address AS customer_address, "
                 + "c.company_name AS customer_company_name "
                 + "FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
+                + "LEFT JOIN user u_approved ON so.approved_by = u_approved.id "
+                + "LEFT JOIN user u_cancelled ON so.cancelled_by = u_cancelled.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.order_id = ?";
+
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -415,25 +403,23 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     @Override
     public int insert(SaleOrder s) {
-        String sql = "INSERT INTO sale_order (order_code, customer_name, customer_phone, customer_email, "
-                + "customer_address, customer_tax_code, customer_type, customer_company_name, customer_note, "
-                + "created_by, status, total_amount, note, order_date, customer_type_id) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '" + GlobalUtils.STATUS_PENDING + "', ?, ?, ?, ?)";
+        String sql = "INSERT INTO sale_order (order_code, customer_id, created_by, status, "
+                + "total_amount, note, customer_note, order_date) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, s.getOrderCode());
-            ps.setString(2, s.getCustomerName());
-            ps.setString(3, s.getCustomerPhone());
-            ps.setString(4, s.getCustomerEmail());
-            ps.setString(5, s.getCustomerAddress());
-            ps.setString(6, s.getCustomerTaxCode());
-            ps.setString(7, s.getCustomerType());
-            ps.setString(8, s.getCustomerCompany());
-            ps.setString(9, s.getCustomerNote());
-            ps.setInt(10, s.getCreatedBy());
-            ps.setDouble(11, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
-            ps.setString(12, s.getNote());
-            ps.setTimestamp(13, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
-            ps.setInt(14, s.getCustomerTypeId());
+            if (s.getCustomerId() > 0) {
+                ps.setInt(2, s.getCustomerId());
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setInt(3, s.getCreatedBy());
+            ps.setString(4, GlobalUtils.STATUS_PENDING);
+            ps.setDouble(5, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
+            ps.setString(6, s.getNote());
+            ps.setString(7, s.getCustomerNote());
+            ps.setTimestamp(8, s.getOrderDate() != null ? new java.sql.Timestamp(s.getOrderDate().getTime()) : null);
+
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -461,19 +447,29 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     @Override
     public SaleOrder getFromResultSet(ResultSet rs) throws SQLException {
         SaleOrder s = new SaleOrder();
+
         s.setOrderId(rs.getInt("order_id"));
         s.setOrderCode(rs.getString("order_code"));
 
-        // customer_id là FK — lấy từ cột của bảng sale_order
         int customerId = rs.getInt("customer_id");
-        if (!rs.wasNull()) s.setCustomerTypeId(customerId); // tạm dùng customerTypeId để lưu customer_id
+        s.setCustomerId(rs.wasNull() ? 0 : customerId);
 
-        // Các cột được alias từ JOIN với bảng customer (chỉ có khi query dùng JOIN)
-        try { s.setCustomerName(rs.getString("customer_name")); } catch (SQLException ignored) {}
-        try { s.setCustomerPhone(rs.getString("customer_phone")); } catch (SQLException ignored) {}
-        try { s.setCustomerEmail(rs.getString("customer_email")); } catch (SQLException ignored) {}
-        try { s.setCustomerAddress(rs.getString("customer_address")); } catch (SQLException ignored) {}
-        try { s.setCustomerCompany(rs.getString("customer_company_name")); } catch (SQLException ignored) {}
+        try {
+
+            Customer customer = new Customer();
+            customer.setId(rs.getInt("customer_id"));
+
+            customer.setName(rs.getString("customer_name"));
+            customer.setPhone(rs.getString("customer_phone"));
+            customer.setEmail(rs.getString("customer_email"));
+            customer.setAddress(rs.getString("customer_address"));
+            customer.setCompanyName(rs.getString("customer_company_name"));
+
+            s.setCustomer(customer);
+        } catch (SQLException e) {
+
+            s.setCustomer(null);
+        }
 
         s.setCreatedBy(rs.getInt("created_by"));
 
@@ -486,15 +482,44 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         int updatedBy = rs.getInt("updated_by");
         s.setUpdatedBy(rs.wasNull() ? 0 : updatedBy);
 
+        int rejectedBy = rs.getInt("rejected_by");
+        s.setRejectedBy(rs.wasNull() ? 0 : rejectedBy);
+
+        try {
+            s.setCreatedByName(rs.getString("created_by_name"));
+        } catch (SQLException e) {
+        }
+        try {
+            s.setApprovedByName(rs.getString("approved_by_name"));
+        } catch (SQLException e) {
+        }
+        try {
+            s.setCancelledByName(rs.getString("cancelled_by_name"));
+        } catch (SQLException e) {
+        }
+        try {
+            s.setRejectedByName(rs.getString("rejected_by_name"));
+        } catch (SQLException e) {
+        }
+
         s.setStatus(rs.getString("status"));
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
         s.setRejectReason(rs.getString("reject_reason"));
+
+        try {
+            s.setCustomerNote(rs.getString("customer_note"));
+        } catch (SQLException e) {
+        }
+
         if (rs.getTimestamp("order_date") != null) {
             s.setOrderDate(new Date(rs.getTimestamp("order_date").getTime()));
         }
         if (rs.getTimestamp("approved_at") != null) {
             s.setApprovedAt(new Date(rs.getTimestamp("approved_at").getTime()));
+        }
+        if (rs.getTimestamp("cancelled_at") != null) {
+            s.setCancelledAt(new Date(rs.getTimestamp("cancelled_at").getTime()));
         }
         if (rs.getTimestamp("created_at") != null) {
             s.setCreatedAt(new Date(rs.getTimestamp("created_at").getTime()));
@@ -506,9 +531,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public boolean updateWithDetails(SaleOrder s, List<OrderDetail> newDetails) {
-        String updateSql = "UPDATE sale_order SET customer_name = ?, customer_phone = ?, "
-                + "customer_email = ?, customer_address = ?, customer_tax_code = ?, "
-                + "customer_company_name = ?, customer_note = ?, customer_type_id = ?, "
+        String updateSql = "UPDATE sale_order SET customer_id = ?, customer_note = ?, "
                 + "total_amount = ?, note = ?, updated_at = NOW() "
                 + "WHERE order_id = ? AND status = ?";
         String deleteDetailSql = "DELETE FROM order_detail WHERE order_id = ?";
@@ -518,39 +541,31 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Update phiếu (chỉ khi vẫn PENDING)
+
                 try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
-                    ps.setString(1, s.getCustomerName());
-                    ps.setString(2, s.getCustomerPhone());
-                    ps.setString(3, s.getCustomerEmail());
-                    ps.setString(4, s.getCustomerAddress());
-                    ps.setString(5, s.getCustomerTaxCode());
-                    ps.setString(6, s.getCustomerCompany());
-                    ps.setString(7, s.getCustomerNote());
-                    if (s.getCustomerTypeId() > 0) {
-                        ps.setInt(8, s.getCustomerTypeId());
+                    if (s.getCustomerId() > 0) {
+                        ps.setInt(1, s.getCustomerId());
                     } else {
-                        ps.setNull(8, java.sql.Types.INTEGER);
+                        ps.setNull(1, java.sql.Types.INTEGER);
                     }
-                    ps.setDouble(9, s.getTotalAmount());
-                    ps.setString(10, s.getNote());
-                    ps.setInt(11, s.getOrderId());
-                    ps.setString(12, GlobalUtils.STATUS_PENDING);
+                    ps.setString(2, s.getCustomerNote());
+                    ps.setDouble(3, s.getTotalAmount());
+                    ps.setString(4, s.getNote());
+                    ps.setInt(5, s.getOrderId());
+                    ps.setString(6, GlobalUtils.STATUS_PENDING);
 
                     int rows = ps.executeUpdate();
                     if (rows == 0) {
-                        conn.rollback();    // không match -> phiếu đã đổi status
+                        conn.rollback();
                         return false;
                     }
                 }
 
-                // 2. Xóa detail cũ
                 try (PreparedStatement ps = conn.prepareStatement(deleteDetailSql)) {
                     ps.setInt(1, s.getOrderId());
                     ps.executeUpdate();
                 }
 
-                // 3. Insert detail mới
                 try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
                     for (OrderDetail d : newDetails) {
                         ps.setInt(1, d.getOrderId());
@@ -577,6 +592,30 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
+    }
+
+    public int countOrderByStatus(String status, int userId) {
+        String sql = "select count(*)\n"
+                + "from sale_order\n"
+                + "where status = ? ";
+        if (userId > 0) {
+            sql += " AND created_by = ?";
+        }
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            if (userId > 0) {
+                ps.setInt(2, userId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+
     }
 
 }

@@ -1,14 +1,17 @@
 package com.quanlymayphatdien.g1.controller.order;
 
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
+import com.quanlymayphatdien.g1.dal.CustomerDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.entity.Customer;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -58,15 +61,10 @@ public class OrderController extends HttpServlet {
                 case "edit":
                     showEditForm(request, response);
                     break;
-                case "approve":
-                    approveOrder(request, response);
-                    break;
                 case "reject":
                     showRejectForm(request, response);
                     break;
-                case "cancel":
-                    cancelOrder(request, response);
-                    break;
+
                 default:
                     listOrders(request, response);
                     break;
@@ -104,6 +102,12 @@ public class OrderController extends HttpServlet {
                 case "reject":
                     rejectOrder(request, response);
                     break;
+                case "approve":
+                    approveOrder(request, response);
+                    break;
+                case "cancel":
+                    cancelOrder(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -121,13 +125,17 @@ public class OrderController extends HttpServlet {
         String statusFilter = request.getParameter("status");
         String searchFilter = request.getParameter("search");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
-       
-        int pendding = saleorderdao.countStatusPending();
-        int rejected = saleorderdao.countStatusRejected();
-        int approved = saleorderdao.countStatusApproved();
-        int cancelled = saleorderdao.countStatusCancelled();
-        
-        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter);
+
+        User user = (User) request.getSession().getAttribute("loggedUser");
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        boolean canViewAllOrders = permissions != null && permissions.contains("orders.approve");
+        int userId = canViewAllOrders ? 0 : user.getId();
+
+        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId);
+        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId);
+        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId);
+        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId);
+        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId);
 
         int page = 1;
         int pageSize = 10;
@@ -176,7 +184,6 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
-     
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -192,8 +199,8 @@ public class OrderController extends HttpServlet {
         List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
 
         String customerTypeName = "";
-        if (order.getCustomerTypeId() > 0) {
-            Category ct = new CategoryDAO().findById(order.getCustomerTypeId());
+        if (order.getCustomer() != null && order.getCustomer().getCustomerTypeId() > 0) {
+            Category ct = new CategoryDAO().findById(order.getCustomer().getCustomerTypeId());
             if (ct != null) {
                 customerTypeName = ct.getName();
             }
@@ -227,6 +234,12 @@ public class OrderController extends HttpServlet {
 
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException, ParseException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.create")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền tạo đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
 
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("loggedUser");
@@ -248,23 +261,50 @@ public class OrderController extends HttpServlet {
             orderCode = String.format("ORD-%s-%03d", dateStr, todayCount);
         }
         order.setOrderCode(orderCode);
-        order.setCustomerName(request.getParameter("customerName"));
-        order.setCustomerPhone(request.getParameter("customerPhone"));
-        order.setCustomerEmail(request.getParameter("customerEmail"));
-        order.setCustomerAddress(request.getParameter("customerAddress"));
-        order.setCustomerTaxCode(request.getParameter("customerTaxCode"));
-        order.setCustomerCompany(request.getParameter("customerCompany"));
-        order.setCustomerNote(request.getParameter("customerNote"));
-        order.setNote(request.getParameter("internalNote"));
         order.setCreatedBy(user.getId());
+        CustomerDAO customerDAO = new CustomerDAO();
 
-        String ctIdStr = request.getParameter("customerTypeId");
-        if (ctIdStr != null && !ctIdStr.isEmpty()) {
-            try {
-                order.setCustomerTypeId(Integer.parseInt(ctIdStr));
-            } catch (NumberFormatException ignored) {
+        String custName = request.getParameter("customerName");
+        String custPhone = request.getParameter("customerPhone");
+        String custEmail = request.getParameter("customerEmail");
+        String custAddress = request.getParameter("customerAddress");
+
+        String custCompany = request.getParameter("customerCompany");
+        String custTypeIdStr = request.getParameter("customerTypeId");
+        String custNote = request.getParameter("customerNote");
+        Customer customer = null;
+        if (custPhone != null && !custPhone.trim().isEmpty()) {
+            customer = customerDAO.findByPhone(custPhone);
+        }
+        if (customer == null) {
+            customer = new Customer();
+            customer.setName(custName);
+            customer.setPhone(custPhone);
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                try {
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            customer.setStatus("active");
+            customer.setCreatedBy(user.getId());
+
+            int newCustId = customerDAO.insert(customer);
+            if (newCustId > 0) {
+                customer.setId(newCustId);
             }
         }
+
+        if (customer != null && customer.getId() > 0) {
+            order.setCustomerId(customer.getId());
+        }
+
+        order.setCustomerNote(custNote);
 
         order.setStatus("PENDING");
         order.setTotalAmount(0.0);
@@ -283,7 +323,7 @@ public class OrderController extends HttpServlet {
 
         if (genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
-               
+
                 if (genIds[i] == null || genIds[i].isEmpty()) {
                     continue;
                 }
@@ -311,7 +351,7 @@ public class OrderController extends HttpServlet {
         order.setStatus("PENDING");
         int newId = saleorderdao.insert(order);
         if (newId > 0) {
-            
+
             for (OrderDetail d : detailsList) {
                 d.setOrderId(newId);
                 orderdetaildao.insert(d);
@@ -326,6 +366,12 @@ public class OrderController extends HttpServlet {
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.update")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("id"));
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         SaleOrder order = saleorderdao.findById(id);
@@ -352,15 +398,21 @@ public class OrderController extends HttpServlet {
 
     private void updateOrder(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.update")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
 
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
 
         int orderId = Integer.parseInt(request.getParameter("orderId"));
-
+        User user = (User) request.getSession().getAttribute("loggedUser");
         try {
-            
+
             String[] genIds = request.getParameterValues("generatorId");
             String[] qtys = request.getParameterValues("quantity");
             List<OrderDetail> newDetails = new ArrayList<>();
@@ -390,32 +442,63 @@ public class OrderController extends HttpServlet {
                 }
             }
 
-          
             SaleOrder order = saleorderdao.findById(orderId);
             if (order == null) {
                 request.getSession().setAttribute("message", "Không tìm thấy phiếu.");
                 response.sendRedirect(request.getContextPath() + "/order?action=list");
                 return;
             }
-            order.setCustomerName(request.getParameter("customerName"));
-            order.setCustomerPhone(request.getParameter("customerPhone"));
-            order.setCustomerEmail(request.getParameter("customerEmail"));
-            order.setCustomerAddress(request.getParameter("customerAddress"));
-            order.setCustomerTaxCode(request.getParameter("customerTaxCode"));
-            order.setCustomerCompany(request.getParameter("customerCompany"));
-            order.setCustomerNote(request.getParameter("customerNote"));
-            order.setNote(request.getParameter("internalNote"));
-            order.setTotalAmount(totalAmount);
 
-            String ctIdStr = request.getParameter("customerTypeId");
-            if (ctIdStr != null && !ctIdStr.isEmpty()) {
+            CustomerDAO customerDAO = new CustomerDAO();
+
+            String custName = request.getParameter("customerName");
+            String custPhone = request.getParameter("customerPhone");
+            String custEmail = request.getParameter("customerEmail");
+            String custAddress = request.getParameter("customerAddress");
+            String custCompany = request.getParameter("customerCompany");
+            String custTypeIdStr = request.getParameter("customerTypeId");
+            String custNote = request.getParameter("customerNote");
+
+            Customer customer = null;
+            if (custPhone != null && !custPhone.trim().isEmpty()) {
+                customer = customerDAO.findByPhone(custPhone);
+            }
+
+            if (customer == null) {
+                customer = new Customer();
+            }
+
+            customer.setName(custName);
+            customer.setPhone(custPhone);
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
                 try {
-                    order.setCustomerTypeId(Integer.parseInt(ctIdStr));
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
                 } catch (NumberFormatException ignored) {
                 }
             }
 
-           
+            if (customer.getId() > 0) {
+
+                customer.setUpdatedBy(user.getId());
+                customerDAO.update(customer);
+            } else {
+
+                customer.setStatus("active");
+                customer.setCreatedBy(user.getId());
+                int newCustId = customerDAO.insert(customer);
+                customer.setId(newCustId);
+            }
+
+            if (customer != null) {
+                order.setCustomerId(customer.getId());
+            }
+
+            order.setCustomerNote(custNote);
+
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 
             if (ok) {
@@ -435,6 +518,12 @@ public class OrderController extends HttpServlet {
 
     private void approveOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.approve")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền duyệt đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("id"));
         User user = (User) request.getSession().getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
@@ -451,6 +540,12 @@ public class OrderController extends HttpServlet {
 
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.reject")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("id"));
         request.setAttribute("orderId", id);
         request.getRequestDispatcher("/view/order/reject.jsp").forward(request, response);
@@ -458,6 +553,12 @@ public class OrderController extends HttpServlet {
 
     private void rejectOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.reject")) {
+            request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
         int id = Integer.parseInt(request.getParameter("orderId"));
         String reason = request.getParameter("rejectReason");
         User user = (User) request.getSession().getAttribute("loggedUser");
@@ -481,16 +582,27 @@ public class OrderController extends HttpServlet {
 
     private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        HttpSession session = request.getSession();
+
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.cancel")) {
+            session.setAttribute("message", "Bạn không có quyền hủy đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
+
         int id = Integer.parseInt(request.getParameter("id"));
-        User user = (User) request.getSession().getAttribute("loggedUser");
+        User user = (User) session.getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
-        boolean success = saleorderdao.cancelOrder(id, user.getId());
+        int result = saleorderdao.cancelOrder(id, user.getId());
 
-        if (success) {
-            request.getSession().setAttribute("message", "Đã hủy đơn hàng.");
+        if (result == 1) {
+            session.setAttribute("message", "Đã hủy đơn hàng.");
+        } else if (result == -1) {
+            session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
-            request.getSession().setAttribute("message", "Hủy thất bại (đơn đã xuất kho hoặc không hợp lệ).");
+            session.setAttribute("message", "Hủy thất bại: đơn không ở trạng thái PENDING hoặc APPROVED.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }

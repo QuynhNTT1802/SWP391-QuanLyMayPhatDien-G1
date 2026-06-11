@@ -19,6 +19,56 @@ import java.util.List;
  */
 public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
 
+    public List<Warehouse> findWithSearch(String search, int page, int pageSize) {
+        List<Warehouse> list = new ArrayList<>();
+        String base = "SELECT w.*, COALESCE(SUM(i.quantity), 0) AS total_inventory, COUNT(i.inventory_id) AS item_count "
+                + "FROM warehouse w "
+                + "LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id ";
+        String where = "";
+        if (search != null && !search.trim().isEmpty()) {
+            where = "WHERE w.name LIKE ? OR w.address LIKE ? ";
+        }
+        String sql = base + where + "GROUP BY w.warehouse_id ORDER BY w.status, w.name LIMIT ? OFFSET ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            int idx = 1;
+            if (search != null && !search.trim().isEmpty()) {
+                String like = "%" + search.trim() + "%";
+                ps.setString(idx++, like);
+                ps.setString(idx++, like);
+            }
+            ps.setInt(idx++, pageSize);
+            ps.setInt(idx++, (page - 1) * pageSize);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(getFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countWithSearch(String search) {
+        String sql = "SELECT COUNT(*) FROM warehouse w WHERE 1=1 ";
+        if (search != null && !search.trim().isEmpty()) {
+            sql += "AND (w.name LIKE ? OR w.address LIKE ?) ";
+        }
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            if (search != null && !search.trim().isEmpty()) {
+                String like = "%" + search.trim() + "%";
+                ps.setString(1, like);
+                ps.setString(2, like);
+            }
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     @Override
     public List<Warehouse> findAll() {
         List<Warehouse> list = new ArrayList<>();
@@ -41,11 +91,12 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
         String sql = "SELECT w.*, COALESCE(SUM(i.quantity), 0) AS total_inventory "
                 + "FROM warehouse w "
                 + "LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id "
-                + "Where w.warehouse_id = ?"
+                + "WHERE w.warehouse_id = ? "
                 + "GROUP BY w.warehouse_id ";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, id);
-            while (rs.next()) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
                 return getFromResultSet(rs);
             }
         } catch (SQLException e) {
@@ -56,22 +107,15 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
 
     @Override
     public boolean update(Warehouse w) {
-        List<Warehouse> list = new ArrayList<>();
-        String sql = "UPDATE `warehousedb`.`warehouse`\n"
-                + "SET\n"
-                + "name = ?,\n"
-                + "address = ?,\n"
-                + "description = ?,\n"
-                + "status = ?,\n"
-                + "WHERE warehouse_id = ?;";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                ps.setString(1, w.getName());
-                ps.setString(2, w.getAddress());
-                ps.setString(3, w.getDescription());
-                ps.setString(4, w.getStatus());
-                return ps.executeUpdate() > 0;
-            }
+        String sql = "UPDATE warehouse SET name = ?, address = ?, description = ?, status = ?, updated_at = ? WHERE warehouse_id = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, w.getName());
+            ps.setString(2, w.getAddress());
+            ps.setString(3, w.getDescription());
+            ps.setString(4, w.getStatus());
+            ps.setTimestamp(5, w.getUpdatedAt() != null ? Timestamp.valueOf(w.getUpdatedAt()) : Timestamp.valueOf(java.time.LocalDateTime.now()));
+            ps.setInt(6, w.getWarehouseId());
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
@@ -88,6 +132,28 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
+    public boolean lock(int id) {
+        String sql = "UPDATE warehouse SET status = 'locked', updated_at = CURRENT_TIMESTAMP WHERE warehouse_id = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean unlock(int id) {
+        String sql = "UPDATE warehouse SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE warehouse_id = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     @Override
     public Warehouse getFromResultSet(ResultSet rs) throws SQLException {
         Warehouse w = new Warehouse();
@@ -102,13 +168,17 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
             w.setCreatedAt(ca.toLocalDateTime());
         }
 
-        Timestamp ua = rs.getTimestamp("created_at");
+        Timestamp ua = rs.getTimestamp("updated_at");
         if (ua != null) {
-            w.setCreatedAt(ua.toLocalDateTime());
+            w.setUpdatedAt(ua.toLocalDateTime());
         }
 
         try {
             w.setTotalInventory(rs.getInt("total_inventory"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            w.setItemCount(rs.getInt("item_count"));
         } catch (SQLException ignored) {
         }
         return w;

@@ -1,6 +1,3 @@
-/*
- * DAO for the customer table.
- */
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Customer;
@@ -8,120 +5,288 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-/**
- * Data Access Object cho bảng customer.
- */
 public class CustomerDAO extends DBContext implements I_DAO<Customer> {
 
-    // -------------------------------------------------------------------------
-    // I_DAO — insert
-    // -------------------------------------------------------------------------
+    @Override
+    public List<Customer> findAll() {
+        List<Customer> list = new ArrayList<>();
+        String sql = "SELECT * FROM customer ORDER BY created_at DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+
+    public Customer findById(int id) {
+        String sql = "SELECT * FROM customer WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
 
     @Override
     public int insert(Customer c) {
-        String sql = "INSERT INTO customer "
-                + "(name, phone, email, address, company_name, customer_type_id, status, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, c.getName());
-            ps.setString(2, c.getPhone());
-            ps.setString(3, c.getEmail());
-            ps.setString(4, c.getAddress());
-            ps.setString(5, c.getCompanyName());
+        String sql = "INSERT INTO customer (name, phone, email, address, company_name, "
+                + "customer_type_id, status, created_at, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, c.getName());
+            statement.setString(2, c.getPhone());
+            statement.setString(3, c.getEmail());
+            statement.setString(4, c.getAddress());
+            statement.setString(5, c.getCompanyName());
             if (c.getCustomerTypeId() > 0) {
-                ps.setInt(6, c.getCustomerTypeId());
+                statement.setInt(6, c.getCustomerTypeId());
             } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
+                statement.setNull(6, Types.INTEGER);
             }
-            ps.setString(7, c.getStatus() != null ? c.getStatus() : "active");
-            if (c.getCreatedBy() > 0) {
-                ps.setInt(8, c.getCreatedBy());
+            statement.setString(7, c.getStatus() != null ? c.getStatus() : "active");
+            statement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            if (c.getCreatedBy() != null) {
+                statement.setInt(9, c.getCreatedBy());
             } else {
-                ps.setNull(8, java.sql.Types.INTEGER);
+                statement.setNull(9, Types.INTEGER);
             }
-
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.insert",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
-    // -------------------------------------------------------------------------
-    // I_DAO — update
-    // -------------------------------------------------------------------------
-
     @Override
     public boolean update(Customer c) {
-        String sql = "UPDATE customer SET name = ?, phone = ?, email = ?, address = ?, "
-                + "company_name = ?, customer_type_id = ?, status = ?, "
-                + "updated_by = ?, updated_at = NOW() "
-                + "WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, c.getName());
-            ps.setString(2, c.getPhone());
-            ps.setString(3, c.getEmail());
-            ps.setString(4, c.getAddress());
-            ps.setString(5, c.getCompanyName());
+        String sql = "UPDATE customer SET name=?, phone=?, email=?, address=?, company_name=?, "
+                + "customer_type_id=?, status=?, updated_at=?, updated_by=? WHERE id=?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, c.getName());
+            statement.setString(2, c.getPhone());
+            statement.setString(3, c.getEmail());
+            statement.setString(4, c.getAddress());
+            statement.setString(5, c.getCompanyName());
             if (c.getCustomerTypeId() > 0) {
-                ps.setInt(6, c.getCustomerTypeId());
+                statement.setInt(6, c.getCustomerTypeId());
             } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
+                statement.setNull(6, Types.INTEGER);
             }
-            ps.setString(7, c.getStatus());
-            if (c.getUpdatedBy() > 0) {
-                ps.setInt(8, c.getUpdatedBy());
+            statement.setString(7, c.getStatus());
+            statement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            if (c.getUpdatedBy() != null) {
+                statement.setInt(9, c.getUpdatedBy());
             } else {
-                ps.setNull(8, java.sql.Types.INTEGER);
+                statement.setNull(9, Types.INTEGER);
             }
-            ps.setInt(9, c.getId());
-
-            return ps.executeUpdate() > 0;
+            statement.setInt(10, c.getId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.update",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            System.out.println(e.getMessage());
         }
         return false;
     }
-
-    // -------------------------------------------------------------------------
-    // I_DAO — delete (soft delete: chuyển status → inactive)
-    // -------------------------------------------------------------------------
 
     @Override
     public boolean delete(Customer c) {
-        String sql = "UPDATE customer SET status = 'inactive', updated_at = NOW() WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, c.getId());
-            return ps.executeUpdate() > 0;
+        String sql = "DELETE FROM customer WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, c.getId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.delete",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            System.out.println(e.getMessage());
         }
         return false;
     }
 
-    // -------------------------------------------------------------------------
-    // I_DAO — getFromResultSet
-    // -------------------------------------------------------------------------
+    public boolean activate(int id) {
+        String sql = "UPDATE customer SET status = 'active', updated_at = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean deactivate(int id) {
+        String sql = "UPDATE customer SET status = 'locked', updated_at = ? WHERE id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    public List<Customer> findByFilters(String search, String status,
+            Integer customerTypeId, int page, int pageSize) {
+        List<Customer> all = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT * FROM customer WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND status = ? ");
+            params.add(status);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (name LIKE ? OR phone LIKE ?) ");
+            String p = "%" + search.trim() + "%";
+            params.add(p);
+            params.add(p);
+        }
+        if (customerTypeId != null) {
+            sql.append("AND customer_type_id = ? ");
+            params.add(customerTypeId);
+        }
+        sql.append("ORDER BY created_at DESC");
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                Object val = params.get(i);
+                if (val instanceof String) {
+                    statement.setString(i + 1, (String) val);
+                } else if (val instanceof Integer) {
+                    statement.setInt(i + 1, (Integer) val);
+                }
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                all.add(getFromResultSet(resultSet));
+            }
+
+            if (all.isEmpty()) return all;
+
+            int start = (page - 1) * pageSize;
+            int end = Math.min(start + pageSize, all.size());
+            if (start > all.size()) return new ArrayList<>();
+            return new ArrayList<>(all.subList(start, end));
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return new ArrayList<>();
+    }
+
+    public int getTotalFiltered(String search, String status, Integer customerTypeId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM customer WHERE 1=1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND status = ? ");
+            params.add(status);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (name LIKE ? OR phone LIKE ?) ");
+            String p = "%" + search.trim() + "%";
+            params.add(p);
+            params.add(p);
+        }
+        if (customerTypeId != null) {
+            sql.append("AND customer_type_id = ? ");
+            params.add(customerTypeId);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                Object val = params.get(i);
+                if (val instanceof String) {
+                    statement.setString(i + 1, (String) val);
+                } else if (val instanceof Integer) {
+                    statement.setInt(i + 1, (Integer) val);
+                }
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM customer WHERE status = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, status);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public boolean isPhoneExists(String phone, Integer excludeId) {
+        String sql = "SELECT COUNT(*) FROM customer WHERE phone = ?";
+        if (excludeId != null) {
+            sql += " AND id != ?";
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, phone.trim());
+            if (excludeId != null) {
+                statement.setInt(2, excludeId);
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
 
     @Override
     public Customer getFromResultSet(ResultSet rs) throws SQLException {
@@ -132,197 +297,43 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
         c.setEmail(rs.getString("email"));
         c.setAddress(rs.getString("address"));
         c.setCompanyName(rs.getString("company_name"));
-
-        Object typeId = rs.getObject("customer_type_id");
-        if (typeId != null) {
-            c.setCustomerTypeId(((Number) typeId).intValue());
+        int ctId = rs.getInt("customer_type_id");
+        if (!rs.wasNull()) {
+            c.setCustomerTypeId(ctId);
         }
-
         c.setStatus(rs.getString("status"));
 
-        if (rs.getTimestamp("created_at") != null) {
-            c.setCreatedAt(new Date(rs.getTimestamp("created_at").getTime()));
-        }
+        Timestamp ca = rs.getTimestamp("created_at");
+        if (ca != null) c.setCreatedAt(ca.toLocalDateTime());
 
-        int createdBy = rs.getInt("created_by");
-        c.setCreatedBy(rs.wasNull() ? 0 : createdBy);
+        int cb = rs.getInt("created_by");
+        if (!rs.wasNull()) c.setCreatedBy(cb);
 
-        if (rs.getTimestamp("updated_at") != null) {
-            c.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
-        }
+        Timestamp ua = rs.getTimestamp("updated_at");
+        if (ua != null) c.setUpdatedAt(ua.toLocalDateTime());
 
-        int updatedBy = rs.getInt("updated_by");
-        c.setUpdatedBy(rs.wasNull() ? 0 : updatedBy);
+        int ub = rs.getInt("updated_by");
+        if (!rs.wasNull()) c.setUpdatedBy(ub);
 
         return c;
     }
 
-    // -------------------------------------------------------------------------
-    // Queries
-    // -------------------------------------------------------------------------
-
-    /** Lấy tất cả khách hàng, sắp xếp theo tên. */
-    public List<Customer> findAll() {
-        List<Customer> list = new ArrayList<>();
-        String sql = "SELECT * FROM customer ORDER BY name ASC";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
-            }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.findAll",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+    public Customer findByPhone(String custPhone) {
+        String sql = "SELECT * FROM customer WHERE phone = ?";
+    try {
+        connection = getConnection();
+        statement = connection.prepareStatement(sql);
+        statement.setString(1, custPhone.trim());
+        resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            return getFromResultSet(resultSet);
         }
-        return list;
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
+    } finally {
+        closeResources();
     }
+    return null;
 
-    /** Lấy khách hàng theo id. */
-    public Customer findById(int id) {
-        String sql = "SELECT * FROM customer WHERE id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return getFromResultSet(rs);
-                }
-            }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.findById",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return null;
-    }
-
-    /**
-     * Tìm kiếm + lọc + phân trang.
-     *
-     * @param search   tìm theo tên / SĐT / email / tên công ty
-     * @param status   lọc theo status (null = tất cả)
-     * @param typeId   lọc theo loại KH — category id (0 = tất cả)
-     * @param page     trang hiện tại (bắt đầu từ 1)
-     * @param pageSize số bản ghi mỗi trang
-     */
-    public List<Customer> search(String search, String status, int typeId, int page, int pageSize) {
-        List<Customer> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM customer WHERE 1=1 ");
-        List<Object> params = new ArrayList<>();
-
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (name LIKE ? OR phone LIKE ? OR email LIKE ? OR company_name LIKE ?) ");
-            String like = "%" + search.trim() + "%";
-            params.add(like);
-            params.add(like);
-            params.add(like);
-            params.add(like);
-        }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND status = ? ");
-            params.add(status);
-        }
-        if (typeId > 0) {
-            sql.append("AND customer_type_id = ? ");
-            params.add(typeId);
-        }
-
-        sql.append("ORDER BY name ASC LIMIT ? OFFSET ?");
-        params.add(pageSize);
-        params.add((page - 1) * pageSize);
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
-            }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.search",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return list;
-    }
-
-    /** Đếm tổng kết quả tìm kiếm (dùng cho phân trang). */
-    public int countSearch(String search, String status, int typeId) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM customer WHERE 1=1 ");
-        List<Object> params = new ArrayList<>();
-
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (name LIKE ? OR phone LIKE ? OR email LIKE ? OR company_name LIKE ?) ");
-            String like = "%" + search.trim() + "%";
-            params.add(like);
-            params.add(like);
-            params.add(like);
-            params.add(like);
-        }
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND status = ? ");
-            params.add(status);
-        }
-        if (typeId > 0) {
-            sql.append("AND customer_type_id = ? ");
-            params.add(typeId);
-        }
-
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.countSearch",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    /** Lấy danh sách khách hàng đang hoạt động (dùng cho dropdown khi tạo đơn). */
-    public List<Customer> findAllActive() {
-        List<Customer> list = new ArrayList<>();
-        String sql = "SELECT * FROM customer WHERE status = 'active' ORDER BY name ASC";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
-            }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.findAllActive",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return list;
-    }
-
-    /** Đếm tổng số khách hàng (dùng cho dashboard). */
-    public int countAll() {
-        String sql = "SELECT COUNT(*) FROM customer";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(
-                    "quản lý khách hàng", "CustomerDAO.countAll",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
     }
 }

@@ -14,6 +14,7 @@ public class ReceiptDetail {
     private int generatorId;
     private String serialNumber;
     private int quantity;
+    private java.math.BigDecimal unitPrice;
     private String note;
     
     private String generatorModel;
@@ -60,6 +61,14 @@ public class ReceiptDetail {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public java.math.BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(java.math.BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
     public String getNote() {

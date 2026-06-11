@@ -1,10 +1,14 @@
 package com.quanlymayphatdien.g1.controller.user;
 import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PHONE;
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.User;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -82,6 +86,10 @@ public class ProfileServlet extends HttpServlet {
         User user = userDAO.findById(currentUser.getId());
 
         if (user != null) {
+            String beforeName = user.getName();
+            String beforePhone = user.getPhone();
+            String beforeAddress = user.getAddress();
+
             user.setName(name.trim());
             user.setPhone(phone.trim());
             user.setAddress(address != null ? address.trim() : "");
@@ -93,6 +101,21 @@ public class ProfileServlet extends HttpServlet {
             if (updated) {
                 session.setAttribute("loggedUser", user);
                 request.setAttribute("success", "Cập nhật hồ sơ thành công!");
+
+                List<String> changes = new ArrayList<>();
+                if (!equalsStr(beforeName, user.getName())) {
+                    changes.add("name: \"" + safe(beforeName) + "\" → \"" + safe(user.getName()) + "\"");
+                }
+                if (!equalsStr(beforePhone, user.getPhone())) {
+                    changes.add("phone: \"" + safe(beforePhone) + "\" → \"" + safe(user.getPhone()) + "\"");
+                }
+                if (!equalsStr(beforeAddress, user.getAddress())) {
+                    changes.add("address: \"" + safe(beforeAddress) + "\" → \"" + safe(user.getAddress()) + "\"");
+                }
+                String details = changes.isEmpty()
+                        ? "Tự cập nhật hồ sơ: không có thay đổi"
+                        : "Tự cập nhật hồ sơ: " + String.join("; ", changes);
+                logProfileChange(currentUser, user, details);
             } else {
                 request.setAttribute("error", "Có lỗi xảy ra khi cập nhật hồ sơ.");
             }
@@ -100,5 +123,29 @@ public class ProfileServlet extends HttpServlet {
 
         request.setAttribute("user", user);
         request.getRequestDispatcher("/view/user/profile.jsp").forward(request, response);
+    }
+
+    private static boolean equalsStr(String a, String b) {
+        if (a == null) {
+            return b == null;
+        }
+        return a.equals(b);
+    }
+
+    private static String safe(String s) {
+        return s == null ? "" : s;
+    }
+
+    private void logProfileChange(User actor, User target, String details) {
+        ActivityLog log = new ActivityLog();
+        log.setUserId(actor.getId());
+        log.setUsername(actor.getUsername());
+        log.setEntityType("user");
+        log.setEntityId(target.getId());
+        log.setEntityName(target.getName());
+        log.setAction("UPDATE_PROFILE");
+        log.setDetails(details);
+        log.setCreatedAt(LocalDateTime.now());
+        new ActivityLogDAO().insertLog(log);
     }
 }

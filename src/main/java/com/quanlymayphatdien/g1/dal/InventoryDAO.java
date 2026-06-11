@@ -9,7 +9,9 @@ import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -37,18 +39,24 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    public List<Inventory> findWithFilters(Integer warehouseId, String search, int page, int pageSize) {
+    public List<Inventory> findWithFilters(Integer warehouseId, String search,
+            boolean outOfStock, Integer minYears, int page, int pageSize) {
         List<Inventory> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT i.*, g.model AS generator_model, "
                 + "w.name AS warehouse_name, "
                 + "(SELECT c.name FROM generator_category gc "
                 + "  JOIN category c ON gc.category_id = c.id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand, "
+                + "sc.first_import_at "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE 1=1 ");
+                + "LEFT JOIN (SELECT warehouse_id, generator_id, MIN(created_at) AS first_import_at "
+                + "             FROM stock_card WHERE transaction_type = 'IMPORT' "
+                + "             GROUP BY warehouse_id, generator_id) sc "
+                + "  ON sc.warehouse_id = i.warehouse_id AND sc.generator_id = i.generator_id "
+                + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
@@ -63,6 +71,14 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
+        }
+        if (outOfStock) {
+            sql.append("AND i.quantity = 0 ");
+        }
+        if (minYears != null) {
+            sql.append("AND sc.first_import_at IS NOT NULL "
+                    + "AND sc.first_import_at <= (CURDATE() - INTERVAL ? YEAR) ");
+            params.add(minYears);
         }
         sql.append("ORDER BY w.name, g.model LIMIT ? OFFSET ?");
         params.add(pageSize);
@@ -77,6 +93,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);
                 try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                try {
+                    Timestamp ts = resultSet.getTimestamp("first_import_at");
+                    if (ts != null) inv.setFirstImportAt(ts.toLocalDateTime());
+                } catch (SQLException ignored) {}
                 list.add(inv);
             }
         } catch (SQLException e) {
@@ -85,11 +105,17 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    public int countWithFilters(Integer warehouseId, String search) {
+    public int countWithFilters(Integer warehouseId, String search,
+            boolean outOfStock, Integer minYears) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
-                + "WHERE 1=1 ");
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN (SELECT warehouse_id, generator_id, MIN(created_at) AS first_import_at "
+                + "             FROM stock_card WHERE transaction_type = 'IMPORT' "
+                + "             GROUP BY warehouse_id, generator_id) sc "
+                + "  ON sc.warehouse_id = i.warehouse_id AND sc.generator_id = i.generator_id "
+                + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
@@ -105,12 +131,36 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             params.add(like);
             params.add(like);
         }
+        if (outOfStock) {
+            sql.append("AND i.quantity = 0 ");
+        }
+        if (minYears != null) {
+            sql.append("AND sc.first_import_at IS NOT NULL "
+                    + "AND sc.first_import_at <= (CURDATE() - INTERVAL ? YEAR) ");
+            params.add(minYears);
+        }
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
                 statement.setObject(i + 1, params.get(i));
             }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countByWarehouseId(int warehouseId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getInt(1);
@@ -149,6 +199,79 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         ps.setInt(3, quantityChange);
         ps.setInt(4, quantityChange);
         return ps.executeUpdate() > 0;
+    }
+
+    public Map<Integer, Integer> countItemsByWarehouse() {
+        Map<Integer, Integer> map = new HashMap<>();
+        String sql = "SELECT i.warehouse_id, COUNT(*) AS cnt "
+                + "FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE w.status = 'active' "
+                + "GROUP BY i.warehouse_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getInt("warehouse_id"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return map;
+    }
+
+    public Map<Integer, Integer> sumQtyByWarehouse() {
+        Map<Integer, Integer> map = new HashMap<>();
+        String sql = "SELECT i.warehouse_id, COALESCE(SUM(i.quantity), 0) AS total_qty "
+                + "FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE w.status = 'active' "
+                + "GROUP BY i.warehouse_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getInt("warehouse_id"), rs.getInt("total_qty"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return map;
+    }
+
+    public int countActiveWarehouses() {
+        String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'active'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countLockedWarehouses() {
+        String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'locked'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public long grandTotalQty() {
+        String sql = "SELECT COALESCE(SUM(i.quantity), 0) "
+                + "FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE w.status = 'active'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
     }
 
     @Override

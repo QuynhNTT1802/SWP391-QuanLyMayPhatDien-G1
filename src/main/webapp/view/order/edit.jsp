@@ -128,18 +128,17 @@
                 </header>
 
                 <main>
-                    <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
+                    <script>
+                        <c:if test="${not empty sessionScope.message}">
+                        window.SESSION_DATA = { message: '<c:out value="${sessionScope.message}"/>', type: 'success' };
                         <c:remove var="message" scope="session"/>
-                    </c:if>
-
-                    <c:if test="${not empty error}">
-                        <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${error}"/>
-                        </div>
-                    </c:if>
+                        </c:if>
+                        <c:if test="${not empty error}">
+                        window.SESSION_DATA = window.SESSION_DATA || {};
+                        window.SESSION_DATA.message = '<c:out value="${error}"/>';
+                        window.SESSION_DATA.type = 'danger';
+                        </c:if>
+                    </script>
 
                     <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 
@@ -155,7 +154,6 @@
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/order?action=update">
                             <input type="hidden" name="orderId" value="${order.orderId}" />
-
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
@@ -164,19 +162,19 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerName" value="<c:out value="${order.customerName}"/>" required />
+                                        <input class="input" name="customerName" value="<c:out value="${order.customer.name}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <input class="input mono" name="customerPhone" value="<c:out value="${order.customerPhone}"/>" required />
+                                        <input class="input mono" name="customerPhone" value="<c:out value="${order.customer.phone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
-                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${order.customerEmail}"/>" />
+                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${order.customer.email}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerAddress" value="<c:out value="${order.customerAddress}"/>" required />
+                                        <input class="input" name="customerAddress" value="<c:out value="${order.customer.address}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
@@ -184,7 +182,7 @@
                                             <option value="">-- Chọn loại khách hàng --</option>
                                             <c:forEach var="ct" items="${customerTypes}">
                                                 <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${order.customerTypeId == ct.id}">selected</c:if>>
+                                                        <c:if test="${order.customer.customerTypeId == ct.id}">selected</c:if>>
                                                     <c:out value="${ct.name}"/>
                                                 </option>
                                             </c:forEach>
@@ -192,31 +190,7 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${order.customerCompany}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" value="<c:out value="${order.customerTaxCode}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
-                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
-                                            <option value="">-- Chọn loại khách hàng --</option>
-                                            <c:forEach var="ct" items="${customerTypes}">
-                                                <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${order.customerTypeId == ct.id}">selected</c:if>>
-                                                    <c:out value="${ct.name}"/>
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${order.customerCompany}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Mã số thuế <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input mono" id="customerTaxCode" name="customerTaxCode" value="<c:out value="${order.customerTaxCode}"/>" />
+                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${order.customer.companyName}"/>" />
                                     </div>
                                 </div>
                             </div>
@@ -233,7 +207,7 @@
                                     </div>
                                     <div class="field" style="grid-column: span 2;">
                                         <label class="field-label">Ghi chú nội bộ</label>
-                                        <textarea class="input" name="internalNote" rows="2"><c:out value="${order.note}"/></textarea>
+                                        <textarea class="input" name="note" rows="2"><c:out value="${order.note}"/></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -356,6 +330,7 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
@@ -406,14 +381,13 @@
                                     // Tự tính ngay khi load (vì có dữ liệu pre-fill)
                                     document.addEventListener('DOMContentLoaded', updateTotal);
 
-                                    // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty + MST
+                                    // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
                                     function onCustomerTypeChange() {
                                         var sel = document.getElementById('customerTypeSelect');
                                         var opt = sel.options[sel.selectedIndex];
                                         var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
                                         var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
                                         document.getElementById('customerCompany').required = isCompany;
-                                        document.getElementById('customerTaxCode').required = isCompany;
                                         document.querySelectorAll('.company-req').forEach(function (el) {
                                             el.style.display = isCompany ? 'inline' : 'none';
                                         });
