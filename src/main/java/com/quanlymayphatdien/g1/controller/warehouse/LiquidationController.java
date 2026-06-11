@@ -95,12 +95,23 @@ public class LiquidationController extends HttpServlet {
         }
         int offset = (page - 1) * limit;
 
-        int totalRecords = liquidationDAO.countTotal(search, statusFilter);
+        HttpSession session = request.getSession(false);
+        java.util.Set<String> perms = session != null ? (java.util.Set<String>) session.getAttribute("userPermissions") : null;
+        User currentUser = session != null ? (User) session.getAttribute("loggedUser") : null;
+        
+        Integer filterUserId = null;
+        if (perms != null && !perms.contains("liquidations.approve_manager") && !perms.contains("liquidations.approve_ceo")) {
+            if (currentUser != null) {
+                filterUserId = currentUser.getId();
+            }
+        }
+
+        int totalRecords = liquidationDAO.countTotal(search, statusFilter, filterUserId);
         int totalPages = (int) Math.ceil((double) totalRecords / limit);
         
-        List<Liquidation> list = liquidationDAO.findWithPagination(limit, offset, search, statusFilter);
+        List<Liquidation> list = liquidationDAO.findWithPagination(limit, offset, search, statusFilter, filterUserId);
         
-        java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts();
+        java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts(filterUserId);
         int kpiPendingManager = kpis.getOrDefault("PENDING_MANAGER", 0);
         int kpiPendingCeo = kpis.getOrDefault("PENDING_CEO", 0);
         int kpiApproved = kpis.getOrDefault("APPROVED_BY_CEO", 0);
