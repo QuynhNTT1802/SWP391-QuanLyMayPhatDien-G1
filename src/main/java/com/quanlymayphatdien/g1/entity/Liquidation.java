@@ -33,6 +33,13 @@ public class Liquidation {
     private String reasonName;
     private String ceoFeedbackName;
     private String managerFeedbackName;
+    
+    // New fields
+    private int warehouseId;
+    private Integer customerId;
+    private String warehouseName;
+    private String customerName;
+
     private List<LiquidationDetail> details;
     
     public Liquidation() {
@@ -220,6 +227,36 @@ public class Liquidation {
     public void setDetails(List<LiquidationDetail> details) {
         this.details = details;
     }
-    
-    
+
+    public int getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(int warehouseId) {
+        this.warehouseId = warehouseId;
+    }
+
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
+    }
+
+    public String getWarehouseName() {
+        return warehouseName;
+    }
+
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
 }

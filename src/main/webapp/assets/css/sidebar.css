@@ -9,7 +9,9 @@ aside.sidebar {
 }
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; font-weight: 600; font-size: 14px; letter-spacing: -0.01em; }
 .brand-mark { width: 22px; height: 22px; border-radius: 5px; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; font-weight: 700; }
-nav.nav { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+nav.nav { display: flex; flex-direction: column; gap: 1px; flex: 1; overflow-y: auto; padding-right: 4px; }
+nav.nav::-webkit-scrollbar { width: 4px; }
+nav.nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 .nav-section { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 14px 10px 6px; font-weight: 500; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-sm); color: var(--fg-soft); text-decoration: none; font-size: 13px; font-weight: 500; }
 .nav a:hover { background: var(--surface-2); color: var(--fg); }
@@ -73,5 +75,5 @@ main { padding: 20px 24px 40px; overflow-x: hidden; }
 .nav-parent.open .arrow { transform: rotate(180deg); }
 
 .nav-children { display: none; }
-.nav-children.open { display: block; }
+.nav-children.open { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
 .nav-children a { padding-left: 36px !important; }
