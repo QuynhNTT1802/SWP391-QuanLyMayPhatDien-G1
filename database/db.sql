@@ -404,7 +404,6 @@ CREATE TABLE `import_proposal` (
   `reject_reason` text,
   `approved_at` datetime DEFAULT NULL,
   `rejected_at` datetime DEFAULT NULL,
-  `converted_receipt_id` int DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`proposal_id`),
@@ -414,10 +413,8 @@ CREATE TABLE `import_proposal` (
   KEY `idx_proposal_approved` (`approved_by`),
   KEY `idx_proposal_rejected` (`rejected_by`),
   KEY `idx_proposal_status` (`status`),
-  KEY `idx_proposal_receipt` (`converted_receipt_id`),
   CONSTRAINT `fk_proposal_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_proposal_receipt` FOREIGN KEY (`converted_receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -709,6 +706,7 @@ CREATE TABLE `receipt` (
   `receipt_code` varchar(50) NOT NULL,
   `receipt_type` enum('IMPORT','EXPORT') NOT NULL,
   `order_id` int DEFAULT NULL,
+  `proposal_id` int DEFAULT NULL,
   `warehouse_id` int NOT NULL,
   `created_by` int NOT NULL,
   `approved_by` int DEFAULT NULL,
@@ -728,9 +726,11 @@ CREATE TABLE `receipt` (
   KEY `idx_receipt_approved` (`approved_by`),
   KEY `idx_receipt_status` (`status`),
   KEY `reason_id` (`reason_id`),
+  KEY `idx_receipt_proposal` (`proposal_id`),
   CONSTRAINT `fk_receipt_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_receipt_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_receipt_order` FOREIGN KEY (`order_id`) REFERENCES `sale_order` (`order_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_receipt_proposal` FOREIGN KEY (`proposal_id`) REFERENCES `import_proposal` (`proposal_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_receipt_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT,
   CONSTRAINT `receipt_ibfk_1` FOREIGN KEY (`reason_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

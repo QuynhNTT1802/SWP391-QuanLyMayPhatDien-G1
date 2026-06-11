@@ -72,9 +72,13 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return list;
     }
 
-    public int countTotal(String search, String status) {
+    public int countTotal(String search, String status, Integer createdBy) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM liquidation l JOIN user u ON l.created_by = u.id WHERE 1=1");
         List<Object> params = new ArrayList<>();
+        if (createdBy != null) {
+            sql.append(" AND l.created_by = ?");
+            params.add(createdBy);
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (l.liquidation_code LIKE ? OR u.name LIKE ?)");
             params.add("%" + search.trim() + "%");
@@ -97,10 +101,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return 0;
     }
 
-    public List<Liquidation> findWithPagination(int limit, int offset, String search, String status) {
+    public List<Liquidation> findWithPagination(int limit, int offset, String search, String status, Integer createdBy) {
         List<Liquidation> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id WHERE 1=1");
         List<Object> params = new ArrayList<>();
+        if (createdBy != null) {
+            sql.append(" AND l.created_by = ?");
+            params.add(createdBy);
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (l.liquidation_code LIKE ? OR u.name LIKE ?)");
             params.add("%" + search.trim() + "%");
@@ -129,12 +137,21 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return list;
     }
 
-    public java.util.Map<String, Integer> getKpiCounts() {
+    public java.util.Map<String, Integer> getKpiCounts(Integer createdBy) {
         java.util.Map<String, Integer> kpis = new java.util.HashMap<>();
-        String sql = "SELECT status, COUNT(*) FROM liquidation GROUP BY status";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql); ResultSet rs = p.executeQuery()) {
-            while (rs.next()) {
-                kpis.put(rs.getString(1), rs.getInt(2));
+        String sql = "SELECT status, COUNT(*) FROM liquidation";
+        if (createdBy != null) {
+            sql += " WHERE created_by = ?";
+        }
+        sql += " GROUP BY status";
+        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+            if (createdBy != null) {
+                p.setInt(1, createdBy);
+            }
+            try (ResultSet rs = p.executeQuery()) {
+                while (rs.next()) {
+                    kpis.put(rs.getString(1), rs.getInt(2));
+                }
             }
         } catch (Exception e) {
             SystemLogger.error("Liquidation", "Lỗi getKpiCounts", e.getMessage(), e);
