@@ -54,6 +54,10 @@
         .btn-warn { background: var(--warn); color: white; border-color: var(--warn); }
         .btn-success { background: var(--accent); color: white; border-color: var(--accent); }
         .btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
+        .btn-outline-warn { background: transparent; color: var(--warn); border-color: var(--warn); }
+        .btn-outline-warn:hover { background: var(--warn-soft); }
+        .btn-outline-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+        .btn-outline-danger:hover { background: var(--danger-soft); }
 
         .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
         .tab { padding: 10px 18px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font-ui); border-bottom: 2px solid transparent; margin-bottom: -1px; }
@@ -344,13 +348,13 @@
                                 </c:if>
                                 <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')}">
                                     <button type="submit" name="action" value="approve_manager" class="btn btn-primary">Lưu giá & Gửi sếp duyệt</button>
-                                    <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_manager', 'Quản lý yêu cầu sửa', 'managerFeedbackId', 'btn-warn', 'select_manager_edit')">Yêu cầu sửa</button>
-                                    <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger', 'select_manager_reject')">Từ chối (Hủy đơn)</button>
+                                    <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_manager', 'Quản lý yêu cầu sửa', 'managerFeedbackId', 'btn-warn', 'select_manager_edit')">Yêu cầu sửa</button>
+                                    <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger', 'select_manager_reject')">Từ chối (Hủy đơn)</button>
                                 </c:if>
                                 <c:if test="${isCeo and liquidation.status == 'PENDING_CEO'}">
                                     <button type="submit" name="action" value="approve_ceo" class="btn btn-success" onclick="return confirm('Bạn có chắc chắn muốn duyệt và tạo Phiếu Xuất Kho cho đơn này?');">Duyệt & Xuất Kho</button>
-                                    <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">Yêu cầu sửa</button>
-                                    <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">Từ chối (Hủy đơn)</button>
+                                    <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">Yêu cầu sửa</button>
+                                    <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">Từ chối (Hủy đơn)</button>
                                 </c:if>
                             </div>
                         </div>

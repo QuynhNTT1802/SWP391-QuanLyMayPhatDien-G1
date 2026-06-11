@@ -22,6 +22,7 @@ import com.quanlymayphatdien.g1.entity.SerialNumber;
 import com.quanlymayphatdien.g1.entity.Notification;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +35,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @WebServlet(name = "LiquidationController", urlPatterns = {"/liquidations"})
+@MultipartConfig
 public class LiquidationController extends HttpServlet {
     
     private final LiquidationDAO liquidationDAO = new LiquidationDAO();
@@ -528,7 +530,7 @@ public class LiquidationController extends HttpServlet {
         r.setReceiptCode("PX-LIQ-" + System.currentTimeMillis());
         r.setReceiptType("EXPORT");
         r.setWarehouseId(l.getWarehouseId()); // Lấy kho từ đơn thanh lý
-        r.setCreatedBy(user.getId());
+        r.setCreatedBy(l.getCreatedBy());
         r.setStatus("PENDING"); 
         r.setNote("Phiếu xuất cho đơn thanh lý ID: " + liquidationId);
         r.setReasonId(l.getReasonId()); // Copy reason from liquidation
@@ -548,9 +550,6 @@ public class LiquidationController extends HttpServlet {
                 rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
                 receiptDetailDAO.insert(rd);
                 
-                // Chuyển trạng thái serial sang LIQUIDATED (Đã thanh lý)
-                serialNumberDAO.updateStatus(d.getSerialNumber(), "LIQUIDATED");
-                
                 if (d.getLiquidationPrice() != null) {
                     total = total.add(d.getLiquidationPrice());
                 }
@@ -564,7 +563,6 @@ public class LiquidationController extends HttpServlet {
                 p.executeUpdate();
             }
             
-            receiptDAO.approveReceipt(newReceiptId, user.getId());
             liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);
             
             // Lịch sử tự động tạo phiếu
@@ -574,23 +572,24 @@ public class LiquidationController extends HttpServlet {
             log.setAction("AUTO_CREATE");
             log.setEntityId(newReceiptId);
             log.setEntityName(r.getReceiptCode());
-            log.setDetails("Hệ thống tự động tạo phiếu xuất kho sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
+            log.setDetails("Hệ thống tự động tạo phiếu xuất kho chờ duyệt sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
             activityLogDAO.insert(log);
             
             // Thông báo cho nhân viên
             Notification notif = new Notification();
             notif.setUserId(l.getCreatedBy());
             notif.setTitle("CEO đã duyệt đơn thanh lý");
-            notif.setMessage("Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và xuất kho.");
+            notif.setMessage("Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.");
             notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
             notificationDAO.insert(notif);
+            
             ActivityLog liqLog = new ActivityLog();
             liqLog.setUserId(user.getId());
             liqLog.setEntityType("liquidation");
             liqLog.setAction("CEO_APPROVE");
             liqLog.setEntityId(liquidationId);
             liqLog.setEntityName(l.getLiquidationCode());
-            liqLog.setDetails("CEO duyệt đơn thanh lý và tự động sinh Phiếu Xuất Kho: " + r.getReceiptCode());
+            liqLog.setDetails("CEO duyệt đơn thanh lý và tự động sinh Phiếu Xuất Kho chờ duyệt: " + r.getReceiptCode());
             activityLogDAO.insert(liqLog);
         }
         
