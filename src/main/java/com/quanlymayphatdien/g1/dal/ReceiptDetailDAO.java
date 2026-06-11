@@ -103,10 +103,11 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
         return -1;
     }
 
-    public boolean isSerialExists(Connection conn, String serialNumber) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM receipt_detail WHERE serial_number = ?";
+    public boolean isSerialExists(Connection conn, String serialNumber, int excludeReceiptId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM receipt_detail WHERE serial_number = ? AND receipt_id != ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, serialNumber);
+            ps.setInt(2, excludeReceiptId);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
             }
