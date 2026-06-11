@@ -43,6 +43,11 @@
             .col-reason { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .col-actions { white-space: nowrap; }
             .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .badge-avail {
+                display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
+                border-radius: 4px; font-size: 9px; font-weight: 700;
+                text-transform: uppercase; margin-bottom: 2px;
+            }
             .dropdown { position: relative; display: inline-block; }
             .dropdown-btn {
                 display: inline-flex;
@@ -239,7 +244,13 @@
                                                 <td class="col-order">
                                                     <c:choose>
                                                         <c:when test="${not empty r.orderCode}">
+                                                            <div class="badge-avail" style="background:#e0e7ff; color:#4338ca;">[Bán hàng]</div><br/>
                                                             <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}">${r.orderCode}</a>
+                                                            <div class="cust">${r.customerName}</div>
+                                                        </c:when>
+                                                        <c:when test="${not empty r.liquidationCode}">
+                                                            <div class="badge-avail" style="background:#d1fae5; color:#059669;">[Thanh lý]</div><br/>
+                                                            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); font-weight:600;">${r.liquidationCode}</span>
                                                             <div class="cust">${r.customerName}</div>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
@@ -248,7 +259,7 @@
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
-                                                            <span class="status-pill status-revision"><span class="pdot"></span>${r.reasonName}</span>
+                                                            <span class="status-pill" style="background:var(--surface-2); color:var(--fg); border:1px solid var(--border);"><span class="pdot"></span>${r.reasonName}</span>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>

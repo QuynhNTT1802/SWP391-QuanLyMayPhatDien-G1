@@ -12,7 +12,9 @@ public class SerialNumberDAO extends DBContext {
 
     public List<SerialNumber> findByWarehouseAndGeneratorAndStatus(int warehouseId, int generatorId, String status) {
         List<SerialNumber> list = new ArrayList<>();
-        String sql = "SELECT * FROM serial_number WHERE warehouse_id = ? AND generator_id = ? AND status = ?";
+        String sql = "SELECT sn.*, g.model as generator_name FROM serial_number sn " +
+                     "JOIN generator g ON sn.generator_id = g.id " +
+                     "WHERE sn.warehouse_id = ? AND sn.generator_id = ? AND sn.status = ?";
         try {
             Connection conn = getConnection();
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -29,6 +31,7 @@ public class SerialNumberDAO extends DBContext {
                 sn.setStatus(rs.getString("status"));
                 if (rs.getTimestamp("created_at") != null) sn.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                 if (rs.getTimestamp("updated_at") != null) sn.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                sn.setGeneratorName(rs.getString("generator_name"));
                 list.add(sn);
             }
             rs.close();
