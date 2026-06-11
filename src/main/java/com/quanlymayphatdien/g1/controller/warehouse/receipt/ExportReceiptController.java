@@ -603,6 +603,19 @@ public class ExportReceiptController extends HttpServlet {
                 log.setEntityName(r.getReceiptCode());
                 log.setDetails("Duyệt phiếu xuất kho, cập nhật tồn kho");
                 activityLogDAO.insert(log);
+                
+                if (r.getLiquidationId() != null && r.getLiquidationId() > 0) {
+                    com.quanlymayphatdien.g1.dal.LiquidationDAO liqDAO = new com.quanlymayphatdien.g1.dal.LiquidationDAO();
+                    liqDAO.updateStatus(r.getLiquidationId(), com.quanlymayphatdien.g1.utils.GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), "warehouse", id);
+                    ActivityLog liqLog = new ActivityLog();
+                    liqLog.setUserId(loggedUser.getId());
+                    liqLog.setEntityType("liquidation");
+                    liqLog.setAction("EXPORT_APPROVE");
+                    liqLog.setEntityId(r.getLiquidationId());
+                    liqLog.setEntityName(r.getLiquidationCode() != null ? r.getLiquidationCode() : "N/A");
+                    liqLog.setDetails("Quản lý kho duyệt phiếu xuất kho " + r.getReceiptCode() + ", hoàn tất xuất máy thanh lý.");
+                    activityLogDAO.insert(liqLog);
+                }
             }
             session.setAttribute("toastMessage", "Duyệt phiếu thành công");
             session.setAttribute("toastType", "success");
@@ -661,6 +674,29 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 log.setDetails(detail);
                 activityLogDAO.insert(log);
+                
+                if (r.getLiquidationId() != null && r.getLiquidationId() > 0) {
+                    com.quanlymayphatdien.g1.dal.LiquidationDAO liqDAO = new com.quanlymayphatdien.g1.dal.LiquidationDAO();
+                    liqDAO.updateStatus(r.getLiquidationId(), com.quanlymayphatdien.g1.utils.GlobalUtils.STATUS_CANCELLED, loggedUser.getId(), "warehouse", id);
+                    
+                    com.quanlymayphatdien.g1.dal.SerialNumberDAO snDAO = new com.quanlymayphatdien.g1.dal.SerialNumberDAO();
+                    if (r.getDetails() != null) {
+                        for (com.quanlymayphatdien.g1.model.ReceiptDetail detail : r.getDetails()) {
+                            if (detail.getSerialNumber() != null && !detail.getSerialNumber().trim().isEmpty()) {
+                                snDAO.updateStatus(detail.getSerialNumber().trim(), "IN_STOCK");
+                            }
+                        }
+                    }
+
+                    ActivityLog liqLog = new ActivityLog();
+                    liqLog.setUserId(loggedUser.getId());
+                    liqLog.setEntityType("liquidation");
+                    liqLog.setAction("EXPORT_REJECT");
+                    liqLog.setEntityId(r.getLiquidationId());
+                    liqLog.setEntityName(r.getLiquidationCode() != null ? r.getLiquidationCode() : "N/A");
+                    liqLog.setDetails("Quản lý kho từ chối phiếu xuất kho " + r.getReceiptCode() + " (do bùng kèo hoặc sự cố). Đơn thanh lý đã bị hủy và máy được hoàn trả về kho.");
+                    activityLogDAO.insert(liqLog);
+                }
             }
             session.setAttribute("toastMessage", "Đã từ chối phiếu");
             session.setAttribute("toastType", "success");
