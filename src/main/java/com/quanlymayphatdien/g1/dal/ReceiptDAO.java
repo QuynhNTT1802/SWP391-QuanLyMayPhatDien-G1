@@ -279,7 +279,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             // 4. Validate trùng serial toàn hệ thống (mọi receipt_detail)
             for (ReceiptDetail d : details) {
                 if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                    if (rdDAO.isSerialExists(connection, d.getSerialNumber().trim())) {
+                    if (rdDAO.isSerialExists(connection, d.getSerialNumber().trim(), receiptId)) {
                         errors.add("Serial \"" + d.getSerialNumber().trim() + "\" đã tồn tại trong hệ thống");
                     }
                 }
