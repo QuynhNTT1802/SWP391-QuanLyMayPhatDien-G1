@@ -334,7 +334,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     connection.rollback();
                 }
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", ex.getMessage() != null ? ex.getMessage() : ex.getClass().getName(), ex);
             }
             e.printStackTrace();
             errors.add("Lỗi hệ thống: " + e.getMessage());
@@ -345,7 +345,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     connection.setAutoCommit(true);
                 }
             } catch (SQLException e) {
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
     }
@@ -492,10 +492,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 try {
                     conn.rollback();
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", ex.getMessage() != null ? ex.getMessage() : ex.getClass().getName(), ex);
                 }
             }
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         } finally {
             if (conn != null) {

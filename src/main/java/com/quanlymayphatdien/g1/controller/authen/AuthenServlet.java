@@ -173,7 +173,7 @@ public class AuthenServlet extends HttpServlet {
             return true;
         } catch (Exception e) {
             SystemLogger.error("Xác thực", "AuthenServlet.tryAutoLogin", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
@@ -229,7 +229,7 @@ public class AuthenServlet extends HttpServlet {
 
         } catch (Exception e) {
             SystemLogger.error("Xác thực", "AuthenServlet.loginDoPost", e.getMessage(), e);
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
             return "view/authen/login.jsp";
         }
