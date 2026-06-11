@@ -35,13 +35,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         List<Receipt> allReceipts = new ArrayList<>();
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
-                + "so.order_code, c.name AS customer_name, cr.name AS reason_name "
+                + "so.order_code, liq.liquidation_code, c.name AS customer_name, cr.name AS reason_name "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN liquidation liq ON liq.receipt_id = r.receipt_id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
         List<Object> inputs = new ArrayList<>();
@@ -104,7 +105,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         String sql = "SELECT COUNT(*) FROM receipt r "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN liquidation liq ON liq.receipt_id = r.receipt_id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
         List<Object> inputs = new ArrayList<>();
@@ -156,13 +158,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     public Receipt findById(int receiptId) {
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
-                + "so.order_code, c.name AS customer_name, cr.name AS reason_name "
+                + "so.order_code, liq.liquidation_code, c.name AS customer_name, cr.name AS reason_name "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN liquidation liq ON liq.receipt_id = r.receipt_id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE r.receipt_id = ?";
         try {
@@ -606,6 +609,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         try {
             r.setOrderCode(rs.getString("order_code"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            r.setLiquidationCode(rs.getString("liquidation_code"));
         } catch (SQLException ignored) {
         }
         try {
