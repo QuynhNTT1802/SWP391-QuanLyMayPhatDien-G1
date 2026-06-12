@@ -24,7 +24,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         String sql = "SELECT i.*, g.model AS generator_model "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
-                + "WHERE i.warehouse_id = ?";
+                + "WHERE i.warehouse_id = ? AND g.status = 'active'";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);

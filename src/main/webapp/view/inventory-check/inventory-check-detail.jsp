@@ -52,9 +52,6 @@
                 </c:if>
 
                 <div class="hero">
-                    <div class="hero-avatar" style="background:var(--warn);">
-                        <span>KK</span>
-                    </div>
                     <div class="hero-body">
                         <h2 class="hero-name">
                             <c:out value="${check.checkCode}"/>
@@ -170,7 +167,13 @@
                                     <c:forEach var="d" items="${details}" varStatus="st">
                                         <tr>
                                             <td>${st.index + 1}</td>
-                                            <td><strong><c:out value="${d.generatorModel}"/></strong></td>
+                                            <td>
+                                                <strong>
+                                                    <a href="${pageContext.request.contextPath}/stock-card?warehouseId=${check.warehouseId}&generatorId=${d.generatorId}" target="_blank">
+                                                        <c:out value="${d.generatorModel}"/>
+                                                    </a>
+                                                </strong>
+                                            </td>
                                             <td><c:out value="${not empty d.generatorBrand ? d.generatorBrand : '—'}"/></td>
                                             <td><span class="mono"><c:out value="${d.powerRating}"/> kVA</span></td>
                                             <td class="qty-sys">${d.systemQuantity}</td>
