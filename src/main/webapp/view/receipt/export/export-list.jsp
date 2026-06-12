@@ -40,9 +40,14 @@
             .col-order a { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); text-decoration: none; }
             .col-order a:hover { text-decoration: underline; }
             .col-order .cust { font-size: 11px; color: var(--muted); margin-top: 2px; }
-            .col-reason { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .col-reason { max-width: 200px; white-space: normal; word-wrap: break-word; }
             .col-actions { white-space: nowrap; }
             .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .badge-avail {
+                display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
+                border-radius: 4px; font-size: 9px; font-weight: 700;
+                text-transform: uppercase; margin-bottom: 2px;
+            }
             .dropdown { position: relative; display: inline-block; }
             .dropdown-btn {
                 display: inline-flex;
@@ -239,7 +244,13 @@
                                                 <td class="col-order">
                                                     <c:choose>
                                                         <c:when test="${not empty r.orderCode}">
+                                                            <div class="badge-avail" style="background:#e0e7ff; color:#4338ca;">[Bán hàng]</div><br/>
                                                             <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}">${r.orderCode}</a>
+                                                            <div class="cust">${r.customerName}</div>
+                                                        </c:when>
+                                                        <c:when test="${not empty r.liquidationCode}">
+                                                            <div class="badge-avail" style="background:#d1fae5; color:#059669;">[Thanh lý]</div><br/>
+                                                            <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${r.liquidationId}" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight:600;">${r.liquidationCode}</a>
                                                             <div class="cust">${r.customerName}</div>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
@@ -248,7 +259,7 @@
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
-                                                            <span class="status-pill status-revision"><span class="pdot"></span>${r.reasonName}</span>
+                                                            <span class="status-pill" style="background:var(--surface-2); color:var(--fg); border:1px solid var(--border);"><span class="pdot"></span>${r.reasonName}</span>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
@@ -283,7 +294,7 @@
                                                                 <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                                 <span class="label">Chi tiết</span>
                                                             </a>
-                                                            <c:if test="${(r.status == 'NEEDS_REVISION' || r.status == 'DRAFT') && r.createdBy == sessionScope.loggedUser.id}">
+                                                            <c:if test="${(r.status == 'NEEDS_REVISION' || r.status == 'DRAFT') && r.createdBy == sessionScope.loggedUser.id && empty r.liquidationCode}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <a class="dropdown-item" href="${pageContext.request.contextPath}/export-receipt?action=edit&id=${r.receiptId}">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -304,7 +315,7 @@
                                                                     <span class="label">Từ chối</span>
                                                                 </button>
                                                             </c:if>
-                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
+                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING' && empty r.liquidationCode}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <button class="dropdown-item revision" onclick="openRevisionModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
                                                                     <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>

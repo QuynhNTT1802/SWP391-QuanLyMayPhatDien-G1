@@ -116,6 +116,7 @@
                             <th>Mã đơn</th>
                             <th>Người tạo</th>
                             <th>Lý do</th>
+                            <th>Khách hàng</th>
                             <th>Ngày tạo</th>
                             <th>Trạng thái</th>
                             <th class="col-actions">Hành động</th>
@@ -136,6 +137,7 @@
                                         <td><strong>${liq.liquidationCode}</strong></td>
                                         <td>${liq.createdByName}</td>
                                         <td>${liq.reasonName}</td>
+                                        <td>${not empty liq.customerName ? liq.customerName : '<span style="color:var(--muted)">--</span>'}</td>
                                         <td>${liq.createdAt}</td>
                                         <td>
                                             <c:choose>
@@ -191,5 +193,19 @@
 </div>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    <c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+        <c:remove var="toastMessage" scope="session"/>
+        <c:remove var="toastType" scope="session"/>
+    </c:if>
+    <c:if test="${not empty requestScope.toastMessage}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+    </c:if>
+</script>
+<div class="toast-host" id="toastHost"></div>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

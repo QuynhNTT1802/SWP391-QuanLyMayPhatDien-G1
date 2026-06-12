@@ -515,6 +515,8 @@ CREATE TABLE `liquidation` (
   `converted_receipt_id` int DEFAULT NULL,
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `warehouse_id` int NOT NULL DEFAULT '1',
+  `customer_id` int DEFAULT NULL,
   PRIMARY KEY (`liquidation_id`),
   UNIQUE KEY `liquidation_code` (`liquidation_code`),
   KEY `fk_liq_created_by` (`created_by`),
@@ -524,13 +526,17 @@ CREATE TABLE `liquidation` (
   KEY `fk_liq_reason` (`reason_id`),
   KEY `fk_liq_ceo_feedback` (`ceo_feedback_id`),
   KEY `fk_liq_manager_feedback` (`manager_feedback_id`),
+  KEY `fk_liq_warehouse` (`warehouse_id`),
+  KEY `fk_liq_customer` (`customer_id`),
   CONSTRAINT `fk_liq_ceo_by` FOREIGN KEY (`ceo_reviewed_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_liq_ceo_feedback` FOREIGN KEY (`ceo_feedback_id`) REFERENCES `category` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_liq_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_liq_customer` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_liq_manager_by` FOREIGN KEY (`manager_reviewed_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_liq_manager_feedback` FOREIGN KEY (`manager_feedback_id`) REFERENCES `category` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_liq_reason` FOREIGN KEY (`reason_id`) REFERENCES `category` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_liq_receipt` FOREIGN KEY (`converted_receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE SET NULL
+  CONSTRAINT `fk_liq_receipt` FOREIGN KEY (`converted_receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_liq_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -572,6 +578,36 @@ CREATE TABLE `liquidation_detail` (
 LOCK TABLES `liquidation_detail` WRITE;
 /*!40000 ALTER TABLE `liquidation_detail` DISABLE KEYS */;
 /*!40000 ALTER TABLE `liquidation_detail` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notification`
+--
+
+DROP TABLE IF EXISTS `notification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notification` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `link` varchar(255) DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `fk_notif_user` (`user_id`),
+  CONSTRAINT `fk_notif_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notification`
+--
+
+LOCK TABLES `notification` WRITE;
+/*!40000 ALTER TABLE `notification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notification` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -884,6 +920,39 @@ INSERT INTO `sale_order` VALUES (1,'SO-20260521-001',1,4,5,'APPROVED',85000000.0
 UNLOCK TABLES;
 
 --
+-- Table structure for table `serial_number`
+--
+
+DROP TABLE IF EXISTS `serial_number`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `serial_number` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `generator_id` int NOT NULL,
+  `serial_number` varchar(100) NOT NULL,
+  `warehouse_id` int NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'IN_STOCK',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_serial_number` (`serial_number`),
+  KEY `fk_sn_generator` (`generator_id`),
+  KEY `fk_sn_warehouse` (`warehouse_id`),
+  CONSTRAINT `fk_sn_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sn_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `serial_number`
+--
+
+LOCK TABLES `serial_number` WRITE;
+/*!40000 ALTER TABLE `serial_number` DISABLE KEYS */;
+/*!40000 ALTER TABLE `serial_number` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `stock_card`
 --
 
@@ -1142,4 +1211,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-10 15:24:55
+-- Dump completed on 2026-06-11 16:26:26
