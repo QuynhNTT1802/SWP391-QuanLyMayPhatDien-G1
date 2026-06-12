@@ -43,13 +43,14 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(getFromResultSet(rs));
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -183,7 +184,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -191,6 +192,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM sale_order so "
+                + "LEFT JOIN user u_created ON so.created_by = u_created.id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id "
                 + "WHERE so.status = 'APPROVED' "
                 + "AND NOT EXISTS ("
@@ -222,133 +224,20 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public List<SaleOrder> searchByNameCode(String search, String status) {
-        List<SaleOrder> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-                "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
-                + "c.company_name AS customer_company_name "
-                + "FROM sale_order so "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "WHERE 1=1");
-        List<Object> param = new ArrayList<>();
-
-        if (status != null && !status.trim().isEmpty()) {
-            sql.append(" AND so.status = ?");
-            param.add(status);
-        }
-
-        if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND (so.order_code LIKE ? OR c.name LIKE ?)");
-            String pattern = "%" + search.trim() + "%";
-            param.add(pattern);
-            param.add(pattern);
-        }
-
-        sql.append(" ORDER BY so.created_at DESC");
-
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < param.size(); i++) {
-                ps.setObject(i + 1, param.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return list;
-    }
-
-    public int countStatusApproved() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_APPROVED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public int countStatusRejected() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_REJECTED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public int countStatusPending() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_PENDING);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        }
-        return 0;
-    }
-
-    public int countStatusCancelled() {
-        String sql = "select count(*)\n"
-                + "from sale_order\n"
-                + "where status = ? ";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_CANCELLED);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return 0;
     }
 
     public List<SaleOrder> findAll() {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
-                + "c.company_name AS customer_company_name "
-                + "FROM sale_order so "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "ORDER BY so.created_at DESC";
+        String sql = "SELECT * FROM sale_order ORDER BY created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -391,13 +280,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -432,8 +321,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             return rowsAffected > 0 ? 1 : 0;
 
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            return false;
+            e.printStackTrace();
+            return 0;
         }
     }
 
@@ -451,7 +340,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -468,7 +357,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -498,7 +387,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return null;
     }
@@ -534,7 +423,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return 0;
     }
@@ -546,7 +435,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return 0;
     }
@@ -634,6 +523,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
+
         return s;
     }
 
@@ -690,13 +580,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
