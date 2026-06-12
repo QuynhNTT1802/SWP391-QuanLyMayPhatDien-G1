@@ -21,6 +21,7 @@
             <h1>Đơn thanh lý</h1>
             <span class="crumb">/ Quản lý kho / Thanh lý</span>
             <div class="top-actions">
+                <jsp:include page="../common/admin/bell.jsp"/>
                 <a class="btn btn-primary" href="${pageContext.request.contextPath}/liquidations?action=create">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                     Tạo đơn thanh lý

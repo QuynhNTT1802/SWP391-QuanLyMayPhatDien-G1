@@ -143,6 +143,9 @@
         <header class="topbar">
             <h1>Chi tiết đơn thanh lý</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/liquidations">Thanh lý</a> / <span>${liquidation.liquidationCode}</span></span>
+            <div class="top-actions">
+                <jsp:include page="../common/admin/bell.jsp"/>
+            </div>
         </header>
         <main>
             <a class="back-link" href="${pageContext.request.contextPath}/liquidations">

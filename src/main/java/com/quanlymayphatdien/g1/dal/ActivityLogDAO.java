@@ -734,29 +734,29 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         ActivityLog log = new ActivityLog();
         log.setId(rs.getInt("id"));
         log.setUserId(rs.getInt("user_id"));
-        log.setUsername(rs.getString("username"));
+        log.setUsername(rs.getString("user_name"));
         log.setAction(rs.getString("action"));
         log.setEntityType(rs.getString("entity_type"));
         log.setEntityId(rs.getObject("entity_id", Integer.class));
-        log.setDetails(rs.getString("description"));
+        log.setDetails(rs.getString("details"));
         log.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
         return log;
     }
 
     public int insertLog(ActivityLog t) {
-        String sql = "insert into activity_log(user_id, username, action, entity_type, entity_id, description, created_at) "
+        String sql = "insert into activity_log(user_id, action, entity_type, entity_id, entity_name, details, created_at) "
                 + "values(?, ?, ?, ?, ?, ?, ?)";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             p.setInt(1, t.getUserId());
-            p.setString(2, t.getUsername());
-            p.setString(3, t.getAction());
-            p.setString(4, t.getEntityType());
+            p.setString(2, t.getAction());
+            p.setString(3, t.getEntityType());
             if (t.getEntityId() != null) {
-                p.setInt(5, t.getEntityId());
+                p.setInt(4, t.getEntityId());
             } else {
-                p.setNull(5, Types.INTEGER);
+                p.setNull(4, Types.INTEGER);
             }
+            p.setString(5, t.getEntityName());
             p.setString(6, t.getDetails());
             p.setObject(7, LocalDateTime.now());
 
@@ -949,7 +949,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -1005,7 +1005,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -1022,7 +1022,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -1048,7 +1048,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }

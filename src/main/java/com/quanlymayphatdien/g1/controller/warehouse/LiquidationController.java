@@ -6,7 +6,6 @@ import com.quanlymayphatdien.g1.dal.LiquidationDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.SerialNumberDAO;
-import com.quanlymayphatdien.g1.dal.NotificationDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
@@ -19,8 +18,8 @@ import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.SerialNumber;
-import com.quanlymayphatdien.g1.entity.Notification;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.service.NotificationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -44,7 +43,6 @@ public class LiquidationController extends HttpServlet {
     private final ReceiptDAO receiptDAO = new ReceiptDAO();
     private final ReceiptDetailDAO receiptDetailDAO = new ReceiptDetailDAO();
     private final SerialNumberDAO serialNumberDAO = new SerialNumberDAO();
-    private final NotificationDAO notificationDAO = new NotificationDAO();
     private final UserDAO userDAO = new UserDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final CustomerDAO customerDAO = new CustomerDAO();
@@ -447,13 +445,14 @@ public class LiquidationController extends HttpServlet {
             // Gửi thông báo cho Managers
             List<User> managers = userDAO.findUsersWithRoles("Manager", null, null, 1, 1000);
             for (User mgr : managers) {
-                Notification notif = new Notification();
-                notif.setUserId(mgr.getId());
-                notif.setTitle("Đơn thanh lý mới chờ duyệt");
-                notif.setMessage("Nhân viên " + user.getName() + " đã tạo đơn thanh lý " + l.getLiquidationCode() + " cần bạn duyệt.");
-                notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + insertedId);
-                notif.setRead(false);
-                notificationDAO.insert(notif);
+                NotificationService.send(
+                        mgr.getId(),
+                        "Đơn thanh lý mới chờ duyệt",
+                        "Nhân viên " + user.getName() + " đã tạo đơn thanh lý " + l.getLiquidationCode() + " cần bạn duyệt.",
+                        request.getContextPath() + "/liquidations?action=detail&id=" + insertedId,
+                        "liquidation",
+                        insertedId
+                );
             }
             
             ActivityLog log = new ActivityLog();
@@ -493,22 +492,26 @@ public class LiquidationController extends HttpServlet {
         Liquidation l = liquidationDAO.findById(liquidationId);
         
         // Thông báo cho nhân viên
-        Notification notif = new Notification();
-        notif.setUserId(l.getCreatedBy());
-        notif.setTitle("Quản lý đã duyệt đơn thanh lý");
-        notif.setMessage("Đơn thanh lý " + l.getLiquidationCode() + " đã được quản lý " + user.getName() + " duyệt.");
-        notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-        notificationDAO.insert(notif);
+        NotificationService.send(
+                l.getCreatedBy(),
+                "Quản lý đã duyệt đơn thanh lý",
+                "Đơn thanh lý " + l.getLiquidationCode() + " đã được quản lý " + user.getName() + " duyệt.",
+                request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                "liquidation",
+                liquidationId
+        );
 
         // Thông báo cho CEO
         List<User> ceos = userDAO.findUsersWithRoles("CEO", null, null, 1, 100);
         for (User ceo : ceos) {
-            Notification notifCeo = new Notification();
-            notifCeo.setUserId(ceo.getId());
-            notifCeo.setTitle("Đơn thanh lý chờ CEO duyệt");
-            notifCeo.setMessage("Quản lý " + user.getName() + " đã trình lên đơn thanh lý " + l.getLiquidationCode() + " cần CEO duyệt.");
-            notifCeo.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-            notificationDAO.insert(notifCeo);
+            NotificationService.send(
+                    ceo.getId(),
+                    "Đơn thanh lý chờ CEO duyệt",
+                    "Quản lý " + user.getName() + " đã trình lên đơn thanh lý " + l.getLiquidationCode() + " cần CEO duyệt.",
+                    request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                    "liquidation",
+                    liquidationId
+            );
         }
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
@@ -576,12 +579,14 @@ public class LiquidationController extends HttpServlet {
             activityLogDAO.insert(log);
             
             // Thông báo cho nhân viên
-            Notification notif = new Notification();
-            notif.setUserId(l.getCreatedBy());
-            notif.setTitle("CEO đã duyệt đơn thanh lý");
-            notif.setMessage("Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.");
-            notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-            notificationDAO.insert(notif);
+            NotificationService.send(
+                    l.getCreatedBy(),
+                    "CEO đã duyệt đơn thanh lý",
+                    "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.",
+                    request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                    "liquidation",
+                    liquidationId
+            );
             
             ActivityLog liqLog = new ActivityLog();
             liqLog.setUserId(user.getId());
@@ -612,12 +617,14 @@ public class LiquidationController extends HttpServlet {
         }
         
         // Thông báo
-        Notification notif = new Notification();
-        notif.setUserId(l.getCreatedBy());
-        notif.setTitle(isPermanent ? "CEO từ chối đơn thanh lý" : "CEO yêu cầu sửa đơn thanh lý");
-        notif.setMessage("Đơn " + l.getLiquidationCode() + " bị CEO từ chối/yêu cầu sửa.");
-        notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-        notificationDAO.insert(notif);
+        NotificationService.send(
+                l.getCreatedBy(),
+                isPermanent ? "CEO từ chối đơn thanh lý" : "CEO yêu cầu sửa đơn thanh lý",
+                "Đơn " + l.getLiquidationCode() + " bị CEO từ chối/yêu cầu sửa.",
+                request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                "liquidation",
+                liquidationId
+        );
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
         log.setEntityType("liquidation");
@@ -646,12 +653,14 @@ public class LiquidationController extends HttpServlet {
         }
 
         // Thông báo
-        Notification notif = new Notification();
-        notif.setUserId(l.getCreatedBy());
-        notif.setTitle(isPermanent ? "Quản lý từ chối đơn thanh lý" : "Quản lý yêu cầu sửa đơn thanh lý");
-        notif.setMessage("Đơn " + l.getLiquidationCode() + " bị quản lý từ chối/yêu cầu sửa.");
-        notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-        notificationDAO.insert(notif);
+        NotificationService.send(
+                l.getCreatedBy(),
+                isPermanent ? "Quản lý từ chối đơn thanh lý" : "Quản lý yêu cầu sửa đơn thanh lý",
+                "Đơn " + l.getLiquidationCode() + " bị quản lý từ chối/yêu cầu sửa.",
+                request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                "liquidation",
+                liquidationId
+        );
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
         log.setEntityType("liquidation");
@@ -747,12 +756,14 @@ public class LiquidationController extends HttpServlet {
             // Bắn lại thông báo
             List<User> managers = userDAO.findUsersWithRoles("Manager", null, null, 1, 1000);
             for (User mgr : managers) {
-                Notification notif = new Notification();
-                notif.setUserId(mgr.getId());
-                notif.setTitle("Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa chữa");
-                notif.setMessage("Nhân viên " + user.getName() + " đã cập nhật lại đơn thanh lý.");
-                notif.setLink(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-                notificationDAO.insert(notif);
+                NotificationService.send(
+                        mgr.getId(),
+                        "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa chữa",
+                        "Nhân viên " + user.getName() + " đã cập nhật lại đơn thanh lý.",
+                        request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                        "liquidation",
+                        liquidationId
+                );
             }
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
