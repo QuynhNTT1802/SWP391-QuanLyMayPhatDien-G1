@@ -681,9 +681,9 @@ public class ExportReceiptController extends HttpServlet {
                     
                     com.quanlymayphatdien.g1.dal.SerialNumberDAO snDAO = new com.quanlymayphatdien.g1.dal.SerialNumberDAO();
                     if (r.getDetails() != null) {
-                        for (com.quanlymayphatdien.g1.model.ReceiptDetail detail : r.getDetails()) {
-                            if (detail.getSerialNumber() != null && !detail.getSerialNumber().trim().isEmpty()) {
-                                snDAO.updateStatus(detail.getSerialNumber().trim(), "IN_STOCK");
+                        for (com.quanlymayphatdien.g1.entity.ReceiptDetail rd : r.getDetails()) {
+                            if (rd.getSerialNumber() != null && !rd.getSerialNumber().trim().isEmpty()) {
+                                snDAO.updateStatus(rd.getSerialNumber().trim(), "IN_STOCK");
                             }
                         }
                     }
