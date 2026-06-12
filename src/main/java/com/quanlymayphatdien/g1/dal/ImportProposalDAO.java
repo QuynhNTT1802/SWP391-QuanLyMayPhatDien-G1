@@ -42,21 +42,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return 0;
     }
 
-    public int countPendingForReview() {
-        String sql = "SELECT COUNT(*) FROM import_proposal WHERE status IN (?, ?)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_WAITING_MANAGER);
-            ps.setString(2, GlobalUtils.STATUS_PENDING);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
     @Override
     public List<ImportProposal> findAll() {
         List<ImportProposal> list = new ArrayList<>();
@@ -101,6 +86,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 if (rs.next()) {
                     ImportProposal p = getFromResultSet(rs);
                     p.setDetails(findDetailsByProposalId(id));
+                    p.setHasNewGenerator(hasNewGenerator(p.getWarehouseId(), id));
                     return p;
                 }
             }
@@ -110,24 +96,27 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return null;
     }
 
-    public int countAll() {
-        String sql = "SELECT COUNT(*) FROM import_proposal";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+    /**
+     * Kiểm tra phiếu có chứa máy phát chưa có trong inventory của kho đề xuất không.
+     * Dùng cho entity.transient.hasNewGenerator (warehouse tự xử lý category khi cần).
+     */
+    public boolean hasNewGenerator(int warehouseId, int proposalId) {
+        String sql = "SELECT COUNT(*) FROM import_proposal_detail d "
+                + "WHERE d.proposal_id = ? "
+                + "AND NOT EXISTS (SELECT 1 FROM inventory i "
+                + "    WHERE i.warehouse_id = ? AND i.generator_id = d.generator_id)";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, proposalId);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return 0;
-    }
-
-    public int countByStatus(String status) {
-        return countByStatus(status, null, false);
-    }
-
-    public int countByStatus(String status, Integer createdBy) {
-        return countByStatus(status, createdBy, false);
+        return false;
     }
 
     public int countByStatus(String status, Integer createdBy, boolean excludeDraft) {
@@ -240,22 +229,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return p;
     }
 
-    public boolean insertDetail(ImportProposalDetail d) {
-        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, "
-                + "current_stock, note) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, d.getProposalId());
-            ps.setInt(2, d.getGeneratorId());
-            ps.setInt(3, d.getQuantity());
-            ps.setInt(4, d.getCurrentStock());
-            ps.setString(5, d.getNote());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
     public List<ImportProposalDetail> findDetailsByProposalId(int proposalId) {
         List<ImportProposalDetail> list = new ArrayList<>();
         String sql = "SELECT d.*, "
@@ -325,13 +298,12 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public boolean cancelProposal(int proposalId, int cancellerId) {
         String sql = "UPDATE import_proposal SET status = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status IN (?, ?, ?)";
+                + "WHERE proposal_id = ? AND status IN (?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, GlobalUtils.STATUS_CANCELLED);
             ps.setInt(2, proposalId);
             ps.setString(3, GlobalUtils.STATUS_DRAFT);
             ps.setString(4, GlobalUtils.STATUS_PENDING);
-            ps.setString(5, GlobalUtils.STATUS_WAITING_MANAGER);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -386,10 +358,6 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             e.printStackTrace();
         }
         return list;
-    }
-
-    public int countByFilters(String status, String search, Integer createdBy) {
-        return countByFilters(status, search, createdBy, false);
     }
 
     public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft) {

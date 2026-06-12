@@ -35,29 +35,10 @@ public class ImportProposal {
     private String rejectedByName;
     private List<ImportProposalDetail> details;
 
-    public ImportProposal() {
-    }
+    // field transient: đánh dấu phiếu có chứa máy chưa có trong kho (warehouse tự xử lý category)
+    private transient Boolean hasNewGenerator;
 
-    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details) {
-        this.proposalId = proposalId;
-        this.proposalCode = proposalCode;
-        this.status = status;
-        this.warehouseId = warehouseId;
-        this.createdBy = createdBy;
-        this.approvedBy = approvedBy;
-        this.rejectedBy = rejectedBy;
-        this.proposalDate = proposalDate;
-        this.note = note;
-        this.rejectReason = rejectReason;
-        this.approvedAt = approvedAt;
-        this.rejectedAt = rejectedAt;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.warehouseName = warehouseName;
-        this.createdByName = createdByName;
-        this.approvedByName = approvedByName;
-        this.rejectedByName = rejectedByName;
-        this.details = details;
+    public ImportProposal() {
     }
 
     public int getProposalId() {
@@ -210,6 +191,14 @@ public class ImportProposal {
 
     public void setDetails(List<ImportProposalDetail> details) {
         this.details = details;
+    }
+
+    public void setHasNewGenerator(Boolean hasNewGenerator) {
+        this.hasNewGenerator = hasNewGenerator;
+    }
+
+    public boolean hasNewGenerator() {
+        return Boolean.TRUE.equals(hasNewGenerator);
     }
 
 }

@@ -26,18 +26,6 @@ public class ImportProposalDetail {
     public ImportProposalDetail() {
     }
 
-    public ImportProposalDetail(int proposalDetailId, int proposalId, int generatorId, int quantity, int currentStock, String note, String generatorCode, String generatorName, String brandName) {
-        this.proposalDetailId = proposalDetailId;
-        this.proposalId = proposalId;
-        this.generatorId = generatorId;
-        this.quantity = quantity;
-        this.currentStock = currentStock;
-        this.note = note;
-        this.generatorCode = generatorCode;
-        this.generatorName = generatorName;
-        this.brandName = brandName;
-    }
-
     public int getProposalDetailId() {
         return proposalDetailId;
     }

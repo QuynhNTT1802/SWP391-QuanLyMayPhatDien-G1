@@ -68,9 +68,6 @@ public class ProposalController extends HttpServlet {
                 case "downloadTemplate":
                     downloadProposalTemplate(request, response);
                     break;
-                case "countPending":
-                    countPendingForReview(request, response);
-                    break;
                 default:
                     listProposals(request, response);
                     break;
@@ -78,9 +75,11 @@ public class ProposalController extends HttpServlet {
         } catch (Exception e) {
             SystemLogger.error("Quản lý đề xuất nhập", "ProposalController.doGet", e.getMessage(), e);
             e.printStackTrace();
-            session.setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            if (!response.isCommitted()) {
+                session.setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
+                session.setAttribute("toastType", "danger");
+                response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            }
         }
     }
 
@@ -146,9 +145,10 @@ public class ProposalController extends HttpServlet {
         User loggedUser = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
+        // Sale manager (có quyền approve) xem tất cả phiếu TRỪ DRAFT.
+        // Sale staff (không có quyền approve) chỉ xem phiếu của mình, bao gồm DRAFT.
         Integer createdByFilter = canApprove ? null : loggedUser.getId();
-        boolean excludeDraftForList = canApprove;
-        boolean excludeDraftForTotal = true;
+        boolean excludeDraft = canApprove;
 
         String statusFilter = request.getParameter("status");
         String search = request.getParameter("search");
@@ -168,7 +168,7 @@ public class ProposalController extends HttpServlet {
         }
 
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraftForTotal);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -177,16 +177,12 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraftForList, page, pageSize);
-        int fromIndex = total == 0 ? 0 : (page - 1) * pageSize + 1;
-        int toIndex = Math.min(page * pageSize, total);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, page, pageSize);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("totalProposals", total);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
-        request.setAttribute("fromIndex", fromIndex);
-        request.setAttribute("toIndex", toIndex);
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("search", search);
 
@@ -194,13 +190,11 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("canApproveProposal", canApprove);
         request.setAttribute("userPermissions", perms);
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraftForList));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraftForList));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraftForList));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraftForList));
-        request.setAttribute("waitingManagerCount", canApprove
-                ? dao.countByStatus(GlobalUtils.STATUS_WAITING_MANAGER, null, true)
-                : dao.countByStatus(GlobalUtils.STATUS_WAITING_MANAGER, createdByFilter, true));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft));
+        request.setAttribute("draftCount",     canApprove ? 0 : dao.countByStatus(GlobalUtils.STATUS_DRAFT, loggedUser.getId(), false));
 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }
@@ -225,6 +219,8 @@ public class ProposalController extends HttpServlet {
         HttpSession session = request.getSession();
         int id = parseId(request);
         if (id <= 0) {
+            session.setAttribute("toastMessage", "ID phiếu không hợp lệ.");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
@@ -234,7 +230,7 @@ public class ProposalController extends HttpServlet {
                 || p.getCreatedBy() != currentUserId(request)) {
             session.setAttribute("toastMessage", "Không thể sửa phiếu này (đã gửi duyệt hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
         }
         request.setAttribute("proposal", p);
@@ -257,6 +253,29 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
+        // Chặn sale manager mở phiếu DRAFT (chỉ chính chủ mới xem được nháp của mình)
+        HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        boolean canApprove = perms != null && perms.contains("proposals.approve");
+        if (GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
+                && canApprove
+                && p.getCreatedBy() != loggedUser.getId()) {
+            session.setAttribute("toastMessage", "Bạn không thể xem phiếu nháp của nhân viên khác.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        // Chặn sale staff mở DRAFT của người khác
+        if (GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
+                && !canApprove
+                && p.getCreatedBy() != loggedUser.getId()) {
+            session.setAttribute("toastMessage", "Bạn không thể xem phiếu nháp của nhân viên khác.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+
         ActivityLogDAO logDAO = new ActivityLogDAO();
         List<ActivityLog> history = logDAO.findByEntityTypeAndId("import_proposal", id, 1, 100);
         int totalHistory = logDAO.countByEntityTypeAndId("import_proposal", id);
@@ -548,25 +567,6 @@ public class ProposalController extends HttpServlet {
         workbook.close();
     }
 
-    private void countPendingForReview(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession(false);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        if (session == null || session.getAttribute("loggedUser") == null) {
-            response.getWriter().write("{\"count\":0,\"canApprove\":false}");
-            return;
-        }
-        @SuppressWarnings("unchecked")
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        boolean canApprove = perms != null && perms.contains("proposals.approve");
-        int count = 0;
-        if (canApprove) {
-            count = new ImportProposalDAO().countPendingForReview();
-        }
-        response.getWriter().write("{\"count\":" + count + ",\"canApprove\":" + canApprove + "}");
-    }
-
     private void importProposalPreview(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -620,7 +620,7 @@ public class ProposalController extends HttpServlet {
 
             Map<String, String> enriched = new LinkedHashMap<>(row);
             enriched.put("stt", String.valueOf(stt));
-            enriched.put("__lineNote", lineNote != null ? lineNote : "");
+            enriched.put("gline", lineNote != null ? lineNote : "");
 
             List<String> errors = new ArrayList<>();
             List<String> warnings = new ArrayList<>();
@@ -633,9 +633,9 @@ public class ProposalController extends HttpServlet {
                 if (g == null) {
                     errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
                 } else {
-                    enriched.put("__generatorId", String.valueOf(g.getId()));
-                    enriched.put("__generatorName", g.getDescription() != null ? g.getDescription() : "");
-                    enriched.put("__resolvedModel", g.getModel());
+                    enriched.put("gid", String.valueOf(g.getId()));
+                    enriched.put("gname", g.getDescription() != null ? g.getDescription() : "");
+                    enriched.put("gmodel", g.getModel());
                     generatorResolved = true;
                 }
             }
@@ -656,18 +656,18 @@ public class ProposalController extends HttpServlet {
                     errors.add("Số lượng không được vượt quá 9.999");
                 }
             }
-            enriched.put("__quantity", String.valueOf(qty));
+            enriched.put("gqty", String.valueOf(qty));
 
             if (generatorResolved && warehouseId > 0
-                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("__generatorId")), warehouseId)) {
+                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)) {
                 warnings.add("Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
             }
 
             if (!errors.isEmpty()) {
-                enriched.put("_errors", String.join("; ", errors));
+                enriched.put("gerrors", String.join("; ", errors));
                 invalidRows.add(enriched);
             } else if (!warnings.isEmpty()) {
-                enriched.put("_warnings", String.join("; ", warnings));
+                enriched.put("gwarnings", String.join("; ", warnings));
                 warningRows.add(enriched);
             } else {
                 validRows.add(enriched);
@@ -729,8 +729,6 @@ public class ProposalController extends HttpServlet {
         String status;
         if ("draft".equals(submitType)) {
             status = GlobalUtils.STATUS_DRAFT;
-        } else if ("report".equals(submitType)) {
-            status = GlobalUtils.STATUS_WAITING_MANAGER;
         } else {
             status = GlobalUtils.STATUS_PENDING;
         }
@@ -783,13 +781,11 @@ public class ProposalController extends HttpServlet {
                 p.getProposalCode(),
                 "draft".equals(submitType)
                         ? "Tạo phiếu đề xuất (nháp) từ Excel — " + details.size() + " dòng"
-                        : ("report".equals(submitType)
-                                ? "Báo cáo Sale Manager xét duyệt máy mới từ Excel — " + details.size() + " dòng"
-                                : "Tạo phiếu đề xuất từ Excel (gửi duyệt) — " + details.size() + " dòng"));
+                        : "Tạo phiếu đề xuất từ Excel (gửi duyệt) — " + details.size() + " dòng");
 
         session.setAttribute("toastMessage",
-                "report".equals(submitType)
-                        ? "Đã báo cáo Sale Manager xét duyệt các máy mới (" + details.size() + " dòng)"
+                "draft".equals(submitType)
+                        ? "Đã lưu nháp phiếu đề xuất (" + details.size() + " dòng)"
                         : "Tạo phiếu đề xuất từ Excel thành công (" + details.size() + " dòng)");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);

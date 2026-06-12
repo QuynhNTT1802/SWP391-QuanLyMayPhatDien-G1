@@ -5,7 +5,6 @@
 package com.quanlymayphatdien.g1.utils;
 
 import com.quanlymayphatdien.g1.entity.Generator;
-import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -87,38 +86,6 @@ public class ProposalExcelSupport {
             row.createCell(2).setCellValue("Máy phát điện Honda 4.5kVA");
             row.createCell(3).setCellValue(2);
             row.createCell(4).setCellValue("");
-        }
-
-        for (int i = 0; i < headers.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
-
-        return workbook;
-    }
-
-    public static XSSFWorkbook exportToWorkbook(List<ImportProposalDetail> details) {
-        XSSFWorkbook workbook = new XSSFWorkbook();
-        XSSFSheet sheet = workbook.createSheet("Chi tiết đề xuất");
-
-        String[] headers = getDetailHeaders();
-        CellStyle headerStyle = buildHeaderStyle(workbook);
-
-        Row headerRow = sheet.createRow(0);
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-            cell.setCellStyle(headerStyle);
-        }
-
-        int rowNum = 1;
-        for (ImportProposalDetail d : details) {
-            Row row = sheet.createRow(rowNum);
-            row.createCell(0).setCellValue(rowNum);
-            row.createCell(1).setCellValue(d.getGeneratorCode() != null ? d.getGeneratorCode() : "");
-            row.createCell(2).setCellValue(d.getGeneratorName() != null ? d.getGeneratorName() : "");
-            row.createCell(3).setCellValue(d.getQuantity());
-            row.createCell(4).setCellValue(d.getNote() != null ? d.getNote() : "");
-            rowNum++;
         }
 
         for (int i = 0; i < headers.length; i++) {
