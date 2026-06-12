@@ -36,7 +36,7 @@
             .col-creator { white-space: nowrap; width: 110px; }
             .col-status { white-space: nowrap; width: 140px; }
             .col-date { white-space: nowrap; width: 130px; color: var(--muted); font-size: 13px; }
-            .col-reason { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .col-reason { max-width: 200px; white-space: normal; word-wrap: break-word; }
             .col-actions { white-space: nowrap; }
             .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .dropdown { position: relative; display: inline-block; }

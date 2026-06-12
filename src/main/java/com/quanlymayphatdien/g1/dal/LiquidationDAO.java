@@ -22,6 +22,8 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         l.setCreatedBy(rs.getInt("created_by"));
         l.setStatus(rs.getString("status"));
         l.setReasonId(rs.getInt("reason_id"));
+        l.setWarehouseId(rs.getInt("warehouse_id"));
+        l.setCustomerId(rs.getObject("customer_id", Integer.class));
 
         l.setManagerReviewedBy(rs.getObject("manager_reviewed_by", Integer.class));
         l.setManagerReviewedAt(rs.getObject("manager_reviewed_at", LocalDateTime.class));
@@ -50,6 +52,26 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             l.setManagerFeedbackName(rs.getString("manager_feedback_name"));
         } catch (Exception e) {
         }
+        try {
+            l.setWarehouseName(rs.getString("warehouse_name"));
+        } catch (Exception e) {
+        }
+        try {
+            l.setCustomerName(rs.getString("customer_name"));
+        } catch (Exception e) {
+        }
+        try {
+            l.setCustomerPhone(rs.getString("customer_phone"));
+        } catch (Exception e) {
+        }
+        try {
+            l.setCustomerEmail(rs.getString("customer_email"));
+        } catch (Exception e) {
+        }
+        try {
+            l.setCustomerAddress(rs.getString("customer_address"));
+        } catch (Exception e) {
+        }
 
         return l;
     }
@@ -57,10 +79,13 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     @Override
     public List<Liquidation> findAll() {
         List<Liquidation> list = new ArrayList<>();
-        String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name "
+        String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, w.name AS warehouse_name, "
+                + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address "
                 + "FROM liquidation l "
                 + "JOIN user u ON l.created_by = u.id "
                 + "JOIN category c ON l.reason_id = c.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "ORDER BY l.created_at DESC";
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql); ResultSet rs = p.executeQuery()) {
             while (rs.next()) {
@@ -72,9 +97,13 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return list;
     }
 
-    public int countTotal(String search, String status) {
+    public int countTotal(String search, String status, Integer createdBy) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM liquidation l JOIN user u ON l.created_by = u.id WHERE 1=1");
         List<Object> params = new ArrayList<>();
+        if (createdBy != null) {
+            sql.append(" AND l.created_by = ?");
+            params.add(createdBy);
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (l.liquidation_code LIKE ? OR u.name LIKE ?)");
             params.add("%" + search.trim() + "%");
@@ -97,10 +126,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return 0;
     }
 
-    public List<Liquidation> findWithPagination(int limit, int offset, String search, String status) {
+    public List<Liquidation> findWithPagination(int limit, int offset, String search, String status, Integer createdBy) {
         List<Liquidation> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name, w.name AS warehouse_name, cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id JOIN warehouse w ON l.warehouse_id = w.warehouse_id LEFT JOIN customer cu ON l.customer_id = cu.id WHERE 1=1");
         List<Object> params = new ArrayList<>();
+        if (createdBy != null) {
+            sql.append(" AND l.created_by = ?");
+            params.add(createdBy);
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND (l.liquidation_code LIKE ? OR u.name LIKE ?)");
             params.add("%" + search.trim() + "%");
@@ -129,12 +162,21 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return list;
     }
 
-    public java.util.Map<String, Integer> getKpiCounts() {
+    public java.util.Map<String, Integer> getKpiCounts(Integer createdBy) {
         java.util.Map<String, Integer> kpis = new java.util.HashMap<>();
-        String sql = "SELECT status, COUNT(*) FROM liquidation GROUP BY status";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql); ResultSet rs = p.executeQuery()) {
-            while (rs.next()) {
-                kpis.put(rs.getString(1), rs.getInt(2));
+        String sql = "SELECT status, COUNT(*) FROM liquidation";
+        if (createdBy != null) {
+            sql += " WHERE created_by = ?";
+        }
+        sql += " GROUP BY status";
+        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+            if (createdBy != null) {
+                p.setInt(1, createdBy);
+            }
+            try (ResultSet rs = p.executeQuery()) {
+                while (rs.next()) {
+                    kpis.put(rs.getString(1), rs.getInt(2));
+                }
             }
         } catch (Exception e) {
             SystemLogger.error("Liquidation", "Lỗi getKpiCounts", e.getMessage(), e);
@@ -144,10 +186,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
 
     public Liquidation findById(int id) {
-        String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, mf.name AS manager_feedback_name "
+        String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, "
+                + "mf.name AS manager_feedback_name, w.name AS warehouse_name, "
+                + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address "
                 + "FROM liquidation l "
                 + "JOIN user u ON l.created_by = u.id "
                 + "JOIN category c ON l.reason_id = c.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN category f ON l.ceo_feedback_id = f.id "
                 + "LEFT JOIN category mf ON l.manager_feedback_id = mf.id "
                 + "WHERE l.liquidation_id = ?";
@@ -255,6 +301,18 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         }
         return false;
     }
+    
+    public boolean updateCustomer(int liquidationId, int customerId) {
+        String sql = "UPDATE liquidation SET customer_id = ? WHERE liquidation_id = ?";
+        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+            p.setInt(1, customerId);
+            p.setInt(2, liquidationId);
+            return p.executeUpdate() > 0;
+        } catch (Exception e) {
+            SystemLogger.error("Liquidation", "Lỗi updateCustomer", e.getMessage(), e);
+        }
+        return false;
+    }
 
     @Override
     public boolean update(Liquidation t) {
@@ -268,15 +326,21 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
     @Override
     public int insert(Liquidation t) {
-        String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, created_at, updated_at) "
-                + "VALUES (?, ?, 'PENDING_MANAGER', ?, ?, ?)";
+        String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, created_at, updated_at) "
+                + "VALUES (?, ?, 'PENDING_MANAGER', ?, ?, ?, ?, ?)";
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             p.setString(1, t.getLiquidationCode());
             p.setInt(2, t.getCreatedBy());
             p.setInt(3, t.getReasonId());
+            p.setInt(4, t.getWarehouseId());
+            if (t.getCustomerId() != null) {
+                p.setInt(5, t.getCustomerId());
+            } else {
+                p.setNull(5, java.sql.Types.INTEGER);
+            }
             LocalDateTime now = LocalDateTime.now();
-            p.setObject(4, now);
-            p.setObject(5, now);
+            p.setObject(6, now);
+            p.setObject(7, now);
             if (p.executeUpdate() > 0) {
                 try (ResultSet rs = p.getGeneratedKeys()) {
                     if (rs.next()) {
