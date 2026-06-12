@@ -76,6 +76,9 @@
         a.btn { text-decoration: none; }
         .hero-avatar.edit { background: oklch(58% 0.16 145); }
         .field-error { display: none; font-size: 11px; color: #dc3545; margin-top: 3px; }
+        .stock-info { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); display: block; min-height: 14px; }
+        .stock-info .stock-label { color: var(--muted); }
+        .stock-info .stock-value { color: var(--accent); font-weight: 600; }
 
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -220,7 +223,9 @@
                                                 <td>
                                                     <select name="generatorId" required onchange="onGeneratorChange(this)">
                                                         <option value="">-- Chọn máy --</option>
-                                                    </select><span class="field-error"></span>
+                                                    </select>
+                                                    <span class="stock-info" data-stock-info></span>
+                                                    <span class="field-error"></span>
                                                 </td>
                                                 <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                                 <td><input type="number" name="quantity" min="1" max="1" value="${d.quantity}" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
@@ -241,7 +246,9 @@
                                             <td>
                                                 <select name="generatorId" required onchange="onGeneratorChange(this)">
                                                     <option value="">-- Chọn máy --</option>
-                                                </select><span class="field-error"></span>
+                                                </select>
+                                                <span class="stock-info" data-stock-info></span>
+                                                <span class="field-error"></span>
                                             </td>
                                             <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                             <td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
@@ -307,11 +314,27 @@
         var html = '<option value="">-- Chọn máy --</option>';
         for (var i = 0; i < generatorCache.length; i++) {
             var g = generatorCache[i];
-            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '');
+            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' — Tồn: ' + (g.stockQty || 0);
             var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
             html += '<option value="' + g.id + '" data-price="' + (g.unitPrice || 0) + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
         }
         selectEl.innerHTML = html;
+    }
+
+    function updateStockInfo(selectEl) {
+        var row = selectEl.closest('tr');
+        if (!row) return;
+        var info = row.querySelector('[data-stock-info]');
+        if (!info) return;
+        var opt = selectEl.options[selectEl.selectedIndex];
+        if (!opt || !opt.value) {
+            info.innerHTML = '';
+            return;
+        }
+        var stock = parseInt(opt.getAttribute('data-stock')) || 0;
+        var price = parseFloat(opt.getAttribute('data-price')) || 0;
+        info.innerHTML = '<span class="stock-label">Tồn kho hiện tại:</span> <span class="stock-value">' + stock + '</span> máy'
+                + (price > 0 ? ' · <span class="stock-label">Đơn giá:</span> <span class="stock-value">' + new Intl.NumberFormat('vi-VN').format(price) + '₫</span>' : '');
     }
 
     function onWarehouseChange() {
@@ -319,6 +342,7 @@
         if (!whId) {
             generatorCache = [];
             refreshAllGeneratorSelects();
+            document.querySelectorAll('#detailBody tr [data-stock-info]').forEach(function (el) { el.innerHTML = ''; });
             return;
         }
         fetch(ctx + '/import-receipt?action=loadGenerators&warehouseId=' + encodeURIComponent(whId))
@@ -345,6 +369,7 @@
         var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
         var priceInput = row.querySelector('input[name="unitPrice"]');
         if (priceInput && price > 0) priceInput.value = price;
+        updateStockInfo(sel);
         updateRowTotal(row.querySelector('input[name="quantity"]'));
     }
 
@@ -373,7 +398,7 @@
     function buildEmptyRow() {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
-                + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="field-error" style="display:none;"></span></td>'
+                + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
