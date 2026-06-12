@@ -8,6 +8,8 @@ public class Notification {
     private String title;
     private String message;
     private String link;
+    private String entityType;
+    private Integer entityId;
     private boolean isRead;
     private LocalDateTime createdAt;
 
@@ -20,6 +22,19 @@ public class Notification {
         this.title = title;
         this.message = message;
         this.link = link;
+        this.isRead = isRead;
+        this.createdAt = createdAt;
+    }
+
+    public Notification(int id, int userId, String title, String message, String link,
+                        String entityType, Integer entityId, boolean isRead, LocalDateTime createdAt) {
+        this.id = id;
+        this.userId = userId;
+        this.title = title;
+        this.message = message;
+        this.link = link;
+        this.entityType = entityType;
+        this.entityId = entityId;
         this.isRead = isRead;
         this.createdAt = createdAt;
     }
@@ -64,6 +79,22 @@ public class Notification {
         this.link = link;
     }
 
+    public String getEntityType() {
+        return entityType;
+    }
+
+    public void setEntityType(String entityType) {
+        this.entityType = entityType;
+    }
+
+    public Integer getEntityId() {
+        return entityId;
+    }
+
+    public void setEntityId(Integer entityId) {
+        this.entityId = entityId;
+    }
+
     public boolean isRead() {
         return isRead;
     }
@@ -78,5 +109,10 @@ public class Notification {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public java.util.Date getCreatedAtAsDate() {
+        if (createdAt == null) return null;
+        return java.util.Date.from(createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
 }
