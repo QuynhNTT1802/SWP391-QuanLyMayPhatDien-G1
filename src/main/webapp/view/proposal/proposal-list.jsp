@@ -1,7 +1,5 @@
-<%@ page contentType="text/html" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%
     java.time.format.DateTimeFormatter __propFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     request.setAttribute("propFmt", __propFmt);
@@ -9,52 +7,18 @@
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Đề xuất nhập kho — Warehouse OS</title>
+        <title>Quản lý đề xuất nhập kho — Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
         <style>
-            .table-card {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            .order-code {
-                font-family: 'JetBrains Mono', monospace;
-                font-size: 13px;
-                color: var(--muted);
-            }
-            .col-code {
-                white-space: nowrap;
-                width: 160px;
-            }
-            .col-creator {
-                white-space: nowrap;
-                width: 160px;
-            }
-            .col-date {
-                white-space: nowrap;
-                width: 150px;
-                color: var(--muted);
-                font-size: 13px;
-            }
-            .col-warehouse {
-                white-space: nowrap;
-            }
-            .col-status {
-                white-space: nowrap;
-                width: 150px;
-            }
-            .col-actions {
-                white-space: nowrap;
-                width: 110px;
-                text-align: right;
-            }
             .status-pill {
                 display: inline-flex;
                 align-items: center;
@@ -64,36 +28,37 @@
                 font-size: 12px;
                 font-weight: 600;
             }
-            .status-pill .pdot {
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: currentColor;
-                opacity: 0.55;
-            }
-            .status-draft     {
-                background: #e2e3e5;
-                color: #383d41;
-            }
-            .status-pending   {
+            .status-pending {
                 background: #fff3cd;
                 color: #856404;
             }
-            .status-approved  {
+            .status-approved {
                 background: #d4edda;
                 color: #155724;
             }
-            .status-rejected  {
+            .status-rejected {
                 background: #f8d7da;
                 color: #721c24;
             }
             .status-cancelled {
-                background: #d6d8db;
-                color: #1d2129;
+                background: #e2e3e5;
+                color: #383d41;
             }
-            .status-waiting_manager {
-                background: #fef3c7;
-                color: #92400e;
+            .status-draft {
+                background: #e2e3e5;
+                color: #383d41;
+            }
+            .order-code {
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 13px;
+                color: var(--muted);
+            }
+            .col-status {
+                white-space: nowrap;
+                width: 130px;
+            }
+            .col-actions {
+                white-space: nowrap;
             }
         </style>
     </head>
@@ -110,7 +75,7 @@
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
-                        <c:if test="${sessionScope.userPermissions.contains('proposals.create')}">
+                        <c:if test="${canCreateProposal}">
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=create">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                 Tạo phiếu đề xuất
@@ -129,7 +94,9 @@
                     </div>
 
                     <div class="stats-row">
-                        <div class="stat" style="background: #fef3c7;"><div class="lbl">Chờ duyệt máy</div><div class="val">${waitingManagerCount}</div></div>
+                        <c:if test="${!canApproveProposal}">
+                            <div class="stat"><div class="lbl">Nháp</div><div class="val">${draftCount}</div></div>
+                        </c:if>
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
                         <div class="stat"><div class="lbl">Đã duyệt</div><div class="val">${approvedCount}</div></div>
                         <div class="stat"><div class="lbl">Từ chối</div><div class="val">${rejectedCount}</div></div>
@@ -153,21 +120,13 @@
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <c:set var="perms" value="${sessionScope.userPermissions}"/>
-                            <c:if test="${perms.contains('proposals.create')}">
+                            <c:if test="${!canApproveProposal}">
                                 <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Nháp</option>
-                                <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
-                                <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                                <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
-                                <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
-                            <c:if test="${perms.contains('proposals.approve')}">
-                                <option value="WAITING_MANAGER" <c:if test="${statusFilter == 'WAITING_MANAGER'}">selected</c:if>>Chờ duyệt máy</option>
-                                <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
-                                <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                                <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
-                                <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
-                            </c:if>
+                            <option value="PENDING"   <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
+                            <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                            <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                            <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                         </select>
 
                         <div class="spacer"></div>
@@ -182,9 +141,9 @@
                             <thead>
                                 <tr>
                                     <th>Mã phiếu</th>
-                                    <th class="col-creator">Người tạo</th>
+                                    <th>Người tạo</th>
                                     <th>Ngày tạo</th>
-                                    <th class="col-warehouse">Kho</th>
+                                    <th>Kho</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
@@ -200,14 +159,14 @@
                                                 <td>
                                                     <div class="order-code"><c:out value="${p.proposalCode}"/></div>
                                                 </td>
-                                                <td class="col-creator"><c:out value="${p.createdByName}"/></td>
+                                                <td><c:out value="${p.createdByName}"/></td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${p.proposalDate == null}">—</c:when>
                                                         <c:otherwise>${p.proposalDate.format(propFmt)}</c:otherwise>
                                                     </c:choose>
                                                 </td>
-                                                <td class="col-warehouse"><c:out value="${p.warehouseName}"/></td>
+                                                <td><c:out value="${p.warehouseName}"/></td>
                                                 <td class="col-status">
                                                     <c:choose>
                                                         <c:when test="${p.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Nháp</span></c:when>
@@ -215,7 +174,6 @@
                                                         <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
-                                                        <c:when test="${p.status == 'WAITING_MANAGER'}"><span class="status-pill status-waiting_manager"><span class="pdot"></span>Chờ duyệt máy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
                                                     </c:choose>
                                                 </td>
@@ -230,23 +188,34 @@
                                 </c:choose>
                             </tbody>
                         </table>
-                    </div>
-
-                    <c:if test="${totalPages > 1}">
-                        <div class="pagination" style="display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;">
-                            <c:if test="${currentPage > 1}">
-                                <a class="btn" href="<c:out value='${pageContext.request.contextPath}/proposal?action=list&page=${currentPage - 1}&status=${statusFilter}&search=${search}'/>">‹ Trước</a>
-                            </c:if>
-                            <span style="color:var(--muted);font-size:13px;">Trang ${currentPage} / ${totalPages} (${fromIndex}–${toIndex} / ${totalProposals})</span>
-                            <c:if test="${currentPage < totalPages}">
-                                <a class="btn" href="<c:out value='${pageContext.request.contextPath}/proposal?action=list&page=${currentPage + 1}&status=${statusFilter}&search=${search}'/>">Sau ›</a>
-                            </c:if>
+                        <div class="pagination">
+                            <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalProposals ? totalProposals : currentPage * 10}</strong> / <strong>${totalProposals}</strong> kết quả</div>
+                            <div class="controls">
+                                <c:if test="${currentPage > 1}">
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">‹</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                                <c:if test="${currentPage < totalPages}">
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">›</a>
+                                </c:if>
+                            </div>
                         </div>
-                    </c:if>
+                    </div>
                 </main>
             </div>
         </div>
 
+        <div class="toast-host" id="toastHost"></div>
+
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SESSION_DATA && window.SESSION_DATA.message) {

@@ -14,6 +14,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <style>
             a.btn, a.back-link { text-decoration: none; }
 
@@ -176,64 +177,6 @@
                 border-color: color-mix(in srgb, var(--fg) 18%, var(--border));
             }
             .action-bar .back-link svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-
-            /* ============== Section (content card) ============== */
-            .detail-content {
-                background: var(--surface); border: 1px solid var(--border);
-                border-radius: 10px; padding: 22px 22px;
-                width: 100%;
-                margin-bottom: 20px;
-            }
-            .detail-content .dc-section-head {
-                display: flex; align-items: center; justify-content: space-between;
-                gap: 12px; margin: 0 0 18px 0; padding-bottom: 14px;
-                border-bottom: 1px solid var(--border);
-            }
-            .detail-content .dc-section-head-left {
-                display: flex; align-items: baseline; gap: 10px; min-width: 0;
-            }
-            .detail-content .dc-num {
-                font-family: var(--font-mono); font-size: 11.5px; font-weight: 700;
-                color: var(--accent); letter-spacing: 0.04em;
-            }
-            .detail-content .dc-section-title {
-                font-size: 15px; font-weight: 700; color: var(--fg);
-                margin: 0; letter-spacing: -0.01em;
-            }
-            .detail-content .dc-section-sub {
-                font-size: 11.5px; color: var(--muted);
-                font-family: var(--font-mono); font-weight: 500;
-            }
-
-            /* ============== Detail grid ============== */
-            .detail-grid { display: grid; gap: 14px 20px; }
-            .detail-grid.row-4 { grid-template-columns: repeat(4, 1fr); }
-            .detail-grid.row-2 { grid-template-columns: repeat(2, 1fr); }
-            .detail-grid.row-1 { grid-template-columns: 1fr; }
-            .detail-field { min-width: 0; }
-            .detail-field .df-label {
-                font-size: 11px; color: var(--muted);
-                font-weight: 600; text-transform: uppercase;
-                letter-spacing: 0.02em; margin-bottom: 4px;
-            }
-            .detail-field .df-value {
-                font-size: 14px; color: var(--fg);
-                font-weight: 600; word-wrap: break-word;
-                display: flex; align-items: center; gap: 8px;
-            }
-            .detail-field .df-value.mono {
-                font-family: var(--font-mono); font-weight: 500;
-            }
-            .detail-field .df-value.empty {
-                color: var(--muted); font-style: italic; font-weight: 500;
-            }
-            @media (max-width: 1024px) {
-                .detail-grid.row-4 { grid-template-columns: repeat(2, 1fr); }
-            }
-            @media (max-width: 600px) {
-                .detail-grid.row-4,
-                .detail-grid.row-2 { grid-template-columns: 1fr; }
-            }
 
             /* ============== Note (read-only, soft) ============== */
             .note-soft {
@@ -412,7 +355,7 @@
                 .gen-modal-backdrop {
                     display: none !important;
                 }
-                .detail-content { border: 1px solid #ddd; }
+                .section { border: 1px solid #ddd; }
                 body, .app > div:last-child, main { background: #fff !important; }
             }
         </style>
@@ -552,32 +495,32 @@
                     </c:if>
 
                     <%-- ============== Section 1: Thông tin đơn hàng + Khách hàng ============== --%>
-                    <div class="detail-content">
-                        <div class="dc-section-head">
-                            <div class="dc-section-head-left">
-                                <span class="dc-num">01</span>
-                                <h3 class="dc-section-title">Thông tin đơn hàng &amp; khách hàng</h3>
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">01 — THÔNG TIN ĐƠN HÀNG &amp; KHÁCH HÀNG</div>
+                                <h3 class="section-title">Thông tin đơn hàng</h3>
                             </div>
-                            <span class="dc-section-sub">Read-only</span>
+                            <span class="section-update">Read-only</span>
                         </div>
 
                         <%-- Dòng 1 (4 cột): Mã đơn · Tên đơn · Ngày đặt · Trạng thái --%>
-                        <div class="detail-grid row-4" style="margin-bottom: 16px;">
-                            <div class="detail-field">
-                                <div class="df-label">Mã đơn</div>
-                                <div class="df-value mono"><c:out value="${order.orderCode}"/></div>
+                        <div class="info-grid cols-4" style="margin-bottom: 16px;">
+                            <div class="info-field">
+                                <div class="info-label">Mã đơn</div>
+                                <div class="info-value mono"><c:out value="${order.orderCode}"/></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Tên đơn</div>
-                                <div class="df-value">Đơn hàng #<c:out value="${order.orderId}"/></div>
+                            <div class="info-field">
+                                <div class="info-label">Tên đơn</div>
+                                <div class="info-value">Đơn hàng #<c:out value="${order.orderId}"/></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Ngày đặt</div>
-                                <div class="df-value mono"><c:choose><c:when test="${order.orderDate == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
+                            <div class="info-field">
+                                <div class="info-label">Ngày đặt</div>
+                                <div class="info-value mono"><c:choose><c:when test="${order.orderDate == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Trạng thái</div>
-                                <div class="df-value">
+                            <div class="info-field">
+                                <div class="info-label">Trạng thái</div>
+                                <div class="info-value">
                                     <c:choose>
                                         <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                         <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
@@ -590,116 +533,116 @@
                         </div>
 
                         <%-- Dòng 2 (4 cột): Người tạo · Người duyệt · Ngày duyệt · Tổng tiền --%>
-                        <div class="detail-grid row-4" style="margin-bottom: 16px;">
-                            <div class="detail-field">
-                                <div class="df-label">Người tạo</div>
-                                <div class="df-value"><c:out value="${order.createdByName}"/></div>
+                        <div class="info-grid cols-4" style="margin-bottom: 16px;">
+                            <div class="info-field">
+                                <div class="info-label">Người tạo</div>
+                                <div class="info-value"><c:out value="${order.createdByName}"/></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Người duyệt</div>
-                                <div class="df-value"><c:out value="${not empty order.approvedByName ? order.approvedByName : '—'}"/></div>
+                            <div class="info-field">
+                                <div class="info-label">Người duyệt</div>
+                                <div class="info-value"><c:out value="${not empty order.approvedByName ? order.approvedByName : '—'}"/></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Ngày duyệt</div>
-                                <div class="df-value mono"><c:choose><c:when test="${order.approvedAt == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
+                            <div class="info-field">
+                                <div class="info-label">Ngày duyệt</div>
+                                <div class="info-value mono"><c:choose><c:when test="${order.approvedAt == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Tổng tiền</div>
-                                <div class="df-value mono" style="color: var(--accent);">
+                            <div class="info-field">
+                                <div class="info-label">Tổng tiền</div>
+                                <div class="info-value mono" style="color: var(--accent);">
                                     <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
                                 </div>
                             </div>
                         </div>
 
                         <c:if test="${order.status == 'REJECTED'}">
-                            <div class="detail-grid row-4" style="margin-bottom: 16px;">
-                                <div class="detail-field">
-                                    <div class="df-label">Người từ chối</div>
-                                    <div class="df-value"><c:out value="${not empty order.rejectedByName ? order.rejectedByName : '—'}"/></div>
+                            <div class="info-grid cols-4" style="margin-bottom: 16px;">
+                                <div class="info-field">
+                                    <div class="info-label">Người từ chối</div>
+                                    <div class="info-value"><c:out value="${not empty order.rejectedByName ? order.rejectedByName : '—'}"/></div>
                                 </div>
-                                <div class="detail-field" style="grid-column: span 3;">
-                                    <div class="df-label">Lý do từ chối</div>
-                                    <div class="df-value" style="color: var(--danger);"><c:out value="${not empty order.rejectReason ? order.rejectReason : '—'}"/></div>
+                                <div class="info-field" style="grid-column: span 3;">
+                                    <div class="info-label">Lý do từ chối</div>
+                                    <div class="info-value" style="color: var(--danger);"><c:out value="${not empty order.rejectReason ? order.rejectReason : '—'}"/></div>
                                 </div>
                             </div>
                         </c:if>
 
                         <c:if test="${order.status == 'CANCELLED'}">
-                            <div class="detail-grid row-4" style="margin-bottom: 16px;">
-                                <div class="detail-field">
-                                    <div class="df-label">Người hủy</div>
-                                    <div class="df-value"><c:out value="${not empty order.cancelledByName ? order.cancelledByName : '—'}"/></div>
+                            <div class="info-grid cols-4" style="margin-bottom: 16px;">
+                                <div class="info-field">
+                                    <div class="info-label">Người hủy</div>
+                                    <div class="info-value"><c:out value="${not empty order.cancelledByName ? order.cancelledByName : '—'}"/></div>
                                 </div>
-                                <div class="detail-field">
-                                    <div class="df-label">Ngày hủy</div>
-                                    <div class="df-value mono"><c:choose><c:when test="${order.cancelledAt == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.cancelledAt}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
+                                <div class="info-field">
+                                    <div class="info-label">Ngày hủy</div>
+                                    <div class="info-value mono"><c:choose><c:when test="${order.cancelledAt == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.cancelledAt}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
                                 </div>
                             </div>
                         </c:if>
 
                         <%-- Dòng khách hàng --%>
-                        <div class="detail-grid row-4" style="margin-top: 6px; padding-top: 16px; border-top: 1px dashed var(--border);">
-                            <div class="detail-field">
-                                <div class="df-label">Tên khách hàng</div>
-                                <div class="df-value"><c:out value="${order.customer.name}"/></div>
+                        <div class="info-grid cols-4" style="margin-top: 6px; padding-top: 16px; border-top: 1px dashed var(--border);">
+                            <div class="info-field">
+                                <div class="info-label">Tên khách hàng</div>
+                                <div class="info-value"><c:out value="${order.customer.name}"/></div>
                             </div>
-                            <div class="detail-field">
-                                <div class="df-label">Số điện thoại</div>
-                                <div class="df-value mono"><c:out value="${order.customer.phone}"/></div>
+                            <div class="info-field">
+                                <div class="info-label">Số điện thoại</div>
+                                <div class="info-value mono"><c:out value="${order.customer.phone}"/></div>
                             </div>
                             <c:if test="${not empty order.customer.email}">
-                                <div class="detail-field">
-                                    <div class="df-label">Email</div>
-                                    <div class="df-value mono"><c:out value="${order.customer.email}"/></div>
+                                <div class="info-field">
+                                    <div class="info-label">Email</div>
+                                    <div class="info-value mono"><c:out value="${order.customer.email}"/></div>
                                 </div>
                             </c:if>
                             <c:if test="${not empty order.customer.companyName}">
-                                <div class="detail-field">
-                                    <div class="df-label">Công ty</div>
-                                    <div class="df-value"><c:out value="${order.customer.companyName}"/></div>
+                                <div class="info-field">
+                                    <div class="info-label">Công ty</div>
+                                    <div class="info-value"><c:out value="${order.customer.companyName}"/></div>
                                 </div>
                             </c:if>
                         </div>
 
-                        <div class="detail-grid row-2" style="margin-top: 14px;">
-                            <div class="detail-field">
-                                <div class="df-label">Địa chỉ giao hàng</div>
-                                <div class="df-value"><c:out value="${order.customer.address}"/></div>
+                        <div class="info-grid cols-2" style="margin-top: 14px;">
+                            <div class="info-field">
+                                <div class="info-label">Địa chỉ giao hàng</div>
+                                <div class="info-value"><c:out value="${order.customer.address}"/></div>
                             </div>
                             <c:if test="${not empty customerTypeName}">
-                                <div class="detail-field">
-                                    <div class="df-label">Loại khách hàng</div>
-                                    <div class="df-value"><c:out value="${customerTypeName}"/></div>
+                                <div class="info-field">
+                                    <div class="info-label">Loại khách hàng</div>
+                                    <div class="info-value"><c:out value="${customerTypeName}"/></div>
                                 </div>
                             </c:if>
                         </div>
 
                         <c:if test="${not empty order.note || not empty order.customerNote}">
-                            <div class="detail-grid row-1" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+                            <div class="info-grid" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
                                 <c:if test="${not empty order.note}">
-                                    <div class="detail-field" style="margin-bottom: 10px;">
-                                        <div class="df-label">Ghi chú nội bộ</div>
+                                    <div class="info-field" style="margin-bottom: 10px;">
+                                        <div class="info-label">Ghi chú nội bộ</div>
                                         <div class="note-soft"><c:out value="${order.note}"/></div>
                                     </div>
                                 </c:if>
                                 <c:if test="${not empty order.customerNote}">
-                                    <div class="detail-field">
-                                        <div class="df-label">Ghi chú của khách hàng</div>
+                                    <div class="info-field">
+                                        <div class="info-label">Ghi chú của khách hàng</div>
                                         <div class="note-soft"><c:out value="${order.customerNote}"/></div>
                                     </div>
                                 </c:if>
                             </div>
                         </c:if>
-                    </div>
+                    </section>
 
                     <%-- ============== Section 2: Danh sách máy phát điện ============== --%>
-                    <div class="detail-content" style="padding: 0; margin-bottom: 0;">
-                        <div class="dc-section-head" style="padding: 18px 22px 14px 22px; border-bottom: 1px solid var(--border);">
-                            <div class="dc-section-head-left">
-                                <span class="dc-num">02</span>
-                                <h3 class="dc-section-title">Danh sách máy phát điện</h3>
+                    <section class="section" style="padding: 0;">
+                        <div class="section-head" style="margin: 0; padding: 18px 22px 14px 22px; border-bottom: 1px solid var(--border);">
+                            <div>
+                                <div class="section-num">02 — DANH SÁCH MÁY PHÁT ĐIỆN</div>
+                                <h3 class="section-title">Chi tiết sản phẩm</h3>
                             </div>
-                            <span class="dc-section-sub"><c:out value="${fn:length(details)}"/> dòng hàng</span>
+                            <span class="section-update"><c:out value="${fn:length(details)}"/> dòng hàng</span>
                         </div>
                         <table class="product-table" id="detailTable">
                             <thead>
