@@ -77,3 +77,30 @@ main { padding: 20px 24px 40px; overflow-x: hidden; }
 .nav-children { display: none; }
 .nav-children.open { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
 .nav-children a { padding-left: 36px !important; }
+
+/* Notification bell */
+.bell-wrap { position: relative; }
+.bell-btn { position: relative; }
+.bell-badge { position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #e11d48; color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; line-height: 1; }
+.bell-dropdown { position: absolute; right: 0; top: calc(100% + 6px); width: 360px; max-height: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm, 8px); box-shadow: 0 8px 24px rgba(0,0,0,.12); z-index: 100; display: flex; flex-direction: column; overflow: hidden; }
+.bell-dropdown[hidden] { display: none; }
+.bell-head { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; }
+.bell-list { overflow-y: auto; flex: 1; min-height: 80px; }
+.bell-item { padding: 10px 14px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 8px; align-items: flex-start; }
+.bell-item:last-child { border-bottom: none; }
+.bell-item:hover { background: var(--surface-2, rgba(0,0,0,.03)); }
+.bell-item.unread { background: color-mix(in srgb, var(--primary, #2563eb) 6%, transparent); }
+.bell-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary, #2563eb); margin-top: 6px; flex-shrink: 0; }
+.bell-item .body { flex: 1; min-width: 0; }
+.bell-item .ttl { font-weight: 600; font-size: 13px; color: var(--fg); }
+.bell-item .msg { color: var(--muted); font-size: 12px; margin-top: 2px; line-height: 1.35; }
+.bell-item .time { color: var(--muted); font-size: 11px; margin-top: 4px; }
+.bell-foot { display: block; padding: 10px 14px; text-align: center; border-top: 1px solid var(--border); color: var(--primary, #2563eb); text-decoration: none; font-size: 13px; font-weight: 500; }
+.bell-foot:hover { background: var(--surface-2, rgba(0,0,0,.03)); }
+.bell-empty { padding: 24px 14px; text-align: center; color: var(--muted); font-size: 13px; }
+.bell-mark-all { font-size: 11px; color: var(--primary, #2563eb); background: none; border: none; cursor: pointer; padding: 0; }
+.bell-mark-all:hover { text-decoration: underline; }
+
+/* Push top-actions right by default; reset when .search already pushed itself */
+.topbar .top-actions { margin-left: auto; }
+.topbar .search ~ .top-actions { margin-left: 0; }
