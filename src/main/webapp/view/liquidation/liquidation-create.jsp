@@ -154,10 +154,30 @@
 <div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSerialPanel()"></div>
 <div class="side-panel" id="sidePanel">
     <div class="side-panel-head">
-        <h3 class="side-panel-title">Chọn Số Serial</h3>
+        <div>
+            <h3 class="side-panel-title">Chọn Số Serial</h3>
+            <div class="side-panel-sub" id="serialPanelSub">&mdash;</div>
+        </div>
         <button class="side-panel-close" onclick="closeSerialPanel()" title="Đóng">
             <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+    </div>
+    <div class="side-panel-summary" id="serialSummary" style="display:none;">
+        <div class="summary-count" id="serialAvailCount">0 máy khả dụng</div>
+        <div class="summary-chips">
+            <button type="button" class="filter-chip filter-all is-active" data-filter="all">
+                <span class="dot"></span><span class="lbl">Tất cả</span><span class="num" id="cntAll">0</span>
+            </button>
+            <button type="button" class="filter-chip filter-old" data-filter="old">
+                <span class="dot"></span><span class="lbl">≥ 12 tháng</span><span class="num" id="cntOld">0</span>
+            </button>
+            <button type="button" class="filter-chip filter-mid" data-filter="mid">
+                <span class="dot"></span><span class="lbl">6-12 tháng</span><span class="num" id="cntMid">0</span>
+            </button>
+            <button type="button" class="filter-chip filter-fresh" data-filter="fresh">
+                <span class="dot"></span><span class="lbl">&lt; 6 tháng</span><span class="num" id="cntFresh">0</span>
+            </button>
+        </div>
     </div>
     <div class="side-panel-body">
         <div class="side-panel-tools">
@@ -174,6 +194,11 @@
         </div>
 
         <div class="serial-list-wrap" id="serialList"></div>
+    </div>
+    <div class="side-panel-foot">
+        <span class="kbd">↑</span><span class="kbd">↓</span> di chuyển &middot;
+        <span class="kbd">Enter</span> chọn &middot;
+        <span class="kbd">Esc</span> đóng
     </div>
 </div>
 
@@ -269,6 +294,7 @@
 
                 if (data.length === 0) {
                     listWrap.innerHTML = '<div class="empty-msg">Không có máy nào trong kho đang rảnh.</div>';
+                    document.getElementById('serialSummary').style.display = 'none';
                     return;
                 }
 
@@ -276,7 +302,7 @@
                     .map(function(inp) { return inp.value; })
                     .filter(function(val) { return val !== ''; });
 
-                var count = 0;
+                var count = 0, cOld = 0, cMid = 0, cFresh = 0;
                 data.forEach(function(sn) {
                     if (!selectedSerials.includes(sn.serialNumber)) {
                         var dateStr = 'Chưa xác định';
@@ -306,20 +332,16 @@
                         }
 
                         var card = document.createElement('div');
-                        card.className = 'serial-card';
+                        card.className = 'serial-card serial-row ' + ageClass;
                         card.setAttribute('data-serial', sn.serialNumber.toLowerCase());
                         card.setAttribute('data-time', timestamp);
+                        card.setAttribute('data-age', ageClass);
 
-                        var html = '<div class="serial-card-left">'
-                                 + '  <div class="serial-number-text">' + sn.serialNumber + '</div>'
-                                 + '  <div class="serial-meta">'
-                                 + '    <span class="age-chip ' + ageClass + '"><span class="pdot"></span>' + ageText + '</span>'
-                                 + '    <span class="serial-meta-item">' + dateStr + '</span>'
-                                 + '  </div>'
-                                 + '</div>'
-                                 + '<div class="serial-card-icon">'
-                                 + '  <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
-                                 + '</div>';
+                        var html = '<span class="age-dot"></span>'
+                                 + '<span class="serial-number-text">' + sn.serialNumber + '</span>'
+                                 + '<span class="serial-age-text">' + ageText + '</span>'
+                                 + '<span class="serial-date-text mono">' + dateStr + '</span>'
+                                 + '<svg class="serial-row-arrow" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
                         card.innerHTML = html;
 
                         card.onclick = function() {
@@ -328,12 +350,35 @@
                         };
                         listWrap.appendChild(card);
                         count++;
+                        if (ageClass === 'age-old') cOld++;
+                        else if (ageClass === 'age-mid') cMid++;
+                        else cFresh++;
                     }
                 });
 
                 if (count === 0) {
                     listWrap.innerHTML = '<div class="empty-msg">Tất cả máy khả dụng đã được chọn.</div>';
+                    document.getElementById('serialSummary').style.display = 'none';
+                } else {
+                    document.getElementById('serialAvailCount').textContent = count + ' máy khả dụng';
+                    document.getElementById('cntAll').textContent = count;
+                    document.getElementById('cntOld').textContent = cOld;
+                    document.getElementById('cntMid').textContent = cMid;
+                    document.getElementById('cntFresh').textContent = cFresh;
+                    document.getElementById('serialSummary').style.display = 'block';
                 }
+                // populate sub-header (model + warehouse)
+                var subEl = document.getElementById('serialPanelSub');
+                if (subEl) {
+                    var whSel = document.getElementById('warehouseId');
+                    var whName = whSel.options[whSel.selectedIndex] ? whSel.options[whSel.selectedIndex].textContent : '';
+                    var genName = generatorSelect.options[generatorSelect.selectedIndex] ? generatorSelect.options[generatorSelect.selectedIndex].textContent : '';
+                    subEl.textContent = genName + ' · ' + whName;
+                }
+                currentAgeFilter = 'all';
+                document.querySelectorAll('.filter-chip').forEach(function(c) {
+                    c.classList.toggle('is-active', c.getAttribute('data-filter') === 'all');
+                });
                 filterAndSortSerials();
             })
             .catch(function() {
@@ -342,6 +387,7 @@
             });
     }
 
+    var currentAgeFilter = 'all';
     function filterAndSortSerials() {
         var query = document.getElementById('serialSearchInput').value.toLowerCase().trim();
         var sortOrder = document.getElementById('serialSortOrder').value;
@@ -357,10 +403,26 @@
 
         items.forEach(function(item) {
             var text = item.getAttribute('data-serial');
-            item.style.display = text.indexOf(query) > -1 ? 'flex' : 'none';
+            var age = item.getAttribute('data-age') || 'age-fresh';
+            var matchText = text.indexOf(query) > -1;
+            var matchAge = currentAgeFilter === 'all' ||
+                (currentAgeFilter === 'old' && age === 'age-old') ||
+                (currentAgeFilter === 'mid' && age === 'age-mid') ||
+                (currentAgeFilter === 'fresh' && age === 'age-fresh');
+            item.style.display = (matchText && matchAge) ? 'flex' : 'none';
             listWrap.appendChild(item);
         });
     }
+    // Wire filter chip clicks once
+    document.querySelectorAll('.filter-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            currentAgeFilter = chip.getAttribute('data-filter');
+            document.querySelectorAll('.filter-chip').forEach(function(c) {
+                c.classList.toggle('is-active', c === chip);
+            });
+            filterAndSortSerials();
+        });
+    });
 
     document.getElementById('serialSearchInput').addEventListener('input', filterAndSortSerials);
     document.getElementById('serialSortOrder').addEventListener('change', filterAndSortSerials);

@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css?v=20260614b">
 </head>
 <body>
 <div class="app">
@@ -41,7 +41,8 @@
                     <c:choose>
                         <c:when test="${liquidation.status == 'PENDING_MANAGER'}"><span class="pill liq-pending-mgr"><span class="pdot"></span>Chờ Quản lý duyệt</span></c:when>
                         <c:when test="${liquidation.status == 'PENDING_CEO'}"><span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span></c:when>
-                        <c:when test="${liquidation.status == 'APPROVED_BY_CEO'}"><span class="pill liq-approved"><span class="pdot"></span>Đã duyệt &amp; xuất</span></c:when>
+                        <c:when test="${liquidation.status == 'APPROVED_BY_CEO'}"><span class="pill liq-pending-mgr"><span class="pdot"></span>Đã duyệt · chờ xuất kho</span></c:when>
+                        <c:when test="${liquidation.status == 'COMPLETED'}"><span class="pill liq-approved"><span class="pdot"></span>Đã xuất kho</span></c:when>
                         <c:when test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT'}"><span class="pill liq-edit"><span class="pdot"></span>Bị yêu cầu sửa</span></c:when>
                         <c:when test="${liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'REJECTED_BY_CEO'}"><span class="pill liq-rejected"><span class="pdot"></span>Đã hủy</span></c:when>
                     </c:choose>
@@ -64,22 +65,63 @@
             <c:set var="isMgrEdit" value="${st == 'MANAGER_REQUEST_EDIT'}"/>
             <c:set var="isCeoEdit" value="${st == 'CEO_REQUEST_EDIT'}"/>
             <c:set var="isApproved" value="${st == 'APPROVED_BY_CEO'}"/>
+            <c:set var="isCompleted" value="${st == 'COMPLETED'}"/>
             <c:set var="isPendingMgr" value="${st == 'PENDING_MANAGER'}"/>
             <c:set var="isPendingCeo" value="${st == 'PENDING_CEO'}"/>
 
+            <%-- Step "is-current" chỉ áp cho step xa nhất đã đạt được --%>
+            <c:set var="step1Cls" value="is-done"/>
+            <c:set var="step2Cls" value=""/>
+            <c:set var="step3Cls" value=""/>
+            <c:set var="step4Cls" value=""/>
+            <c:set var="step5Cls" value=""/>
+            <c:choose>
+                <c:when test="${isCompleted}">
+                    <c:set var="step2Cls" value="is-done"/>
+                    <c:set var="step3Cls" value="is-done"/>
+                    <c:set var="step4Cls" value="is-done"/>
+                    <c:set var="step5Cls" value="is-current"/>
+                </c:when>
+                <c:when test="${isApproved}">
+                    <c:set var="step2Cls" value="is-done"/>
+                    <c:set var="step3Cls" value="is-done"/>
+                    <c:set var="step4Cls" value="is-current"/>
+                </c:when>
+                <c:when test="${st == 'REJECTED_BY_CEO'}">
+                    <c:set var="step2Cls" value="is-done"/>
+                    <c:set var="step3Cls" value="is-rejected"/>
+                </c:when>
+                <c:when test="${isCeoEdit}">
+                    <c:set var="step2Cls" value="is-done"/>
+                    <c:set var="step3Cls" value="is-edit-requested"/>
+                </c:when>
+                <c:when test="${isPendingCeo}">
+                    <c:set var="step2Cls" value="is-done"/>
+                    <c:set var="step3Cls" value="is-current"/>
+                </c:when>
+                <c:when test="${st == 'REJECTED_BY_MANAGER'}">
+                    <c:set var="step2Cls" value="is-rejected"/>
+                </c:when>
+                <c:when test="${isMgrEdit}">
+                    <c:set var="step2Cls" value="is-edit-requested"/>
+                </c:when>
+                <c:when test="${isPendingMgr}">
+                    <c:set var="step2Cls" value="is-current"/>
+                </c:when>
+                <c:otherwise>
+                    <c:set var="step1Cls" value="is-current"/>
+                </c:otherwise>
+            </c:choose>
+
             <div class="liq-stepper">
-                <div class="liq-step is-done">
+                <div class="liq-step ${step1Cls}">
                     <div class="step-num"><span class="dot"></span>01</div>
-                    <div class="step-title">Đã tạo đơn</div>
+                    <div class="step-title">Tạo đơn</div>
                     <div class="step-meta">${liquidation.createdByName}</div>
                 </div>
-                <div class="liq-step
-                    ${isPendingMgr ? 'is-current' : ''}
-                    ${isMgrEdit ? 'is-edit-requested' : ''}
-                    ${st == 'REJECTED_BY_MANAGER' ? 'is-rejected' : ''}
-                    ${isPendingCeo or isCeoEdit or isApproved or st == 'REJECTED_BY_CEO' ? 'is-done' : ''}">
+                <div class="liq-step ${step2Cls}">
                     <div class="step-num"><span class="dot"></span>02</div>
-                    <div class="step-title">Quản lý duyệt</div>
+                    <div class="step-title">QL duyệt giá</div>
                     <div class="step-meta">
                         <c:choose>
                             <c:when test="${isMgrEdit}">Yêu cầu sửa</c:when>
@@ -89,28 +131,35 @@
                         </c:choose>
                     </div>
                 </div>
-                <div class="liq-step
-                    ${isPendingCeo ? 'is-current' : ''}
-                    ${isCeoEdit ? 'is-edit-requested' : ''}
-                    ${st == 'REJECTED_BY_CEO' ? 'is-rejected' : ''}
-                    ${isApproved ? 'is-done' : ''}">
+                <div class="liq-step ${step3Cls}">
                     <div class="step-num"><span class="dot"></span>03</div>
                     <div class="step-title">Sếp duyệt</div>
                     <div class="step-meta">
                         <c:choose>
                             <c:when test="${isCeoEdit}">Yêu cầu sửa</c:when>
                             <c:when test="${st == 'REJECTED_BY_CEO'}">Đã từ chối</c:when>
-                            <c:when test="${isApproved}">Đã duyệt</c:when>
+                            <c:when test="${isApproved or isCompleted}">Đã duyệt</c:when>
                             <c:otherwise>—</c:otherwise>
                         </c:choose>
                     </div>
                 </div>
-                <div class="liq-step ${isApproved ? 'is-done' : ''}">
+                <div class="liq-step ${step4Cls}">
                     <div class="step-num"><span class="dot"></span>04</div>
+                    <div class="step-title">QL duyệt phiếu xuất</div>
+                    <div class="step-meta">
+                        <c:choose>
+                            <c:when test="${isApproved}">Đang chờ duyệt</c:when>
+                            <c:when test="${isCompleted}">Đã duyệt</c:when>
+                            <c:otherwise>—</c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+                <div class="liq-step ${step5Cls}">
+                    <div class="step-num"><span class="dot"></span>05</div>
                     <div class="step-title">Đã xuất kho</div>
                     <div class="step-meta">
                         <c:choose>
-                            <c:when test="${isApproved}">Hoàn tất</c:when>
+                            <c:when test="${isCompleted}">Hoàn tất</c:when>
                             <c:otherwise>—</c:otherwise>
                         </c:choose>
                     </div>
