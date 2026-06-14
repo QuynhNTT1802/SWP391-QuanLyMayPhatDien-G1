@@ -116,14 +116,6 @@ public class PurchaseOrderController extends HttpServlet {
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String status = request.getParameter("status");
 
-        // CEO mac dinh chi xem PENDING_CEO
-        boolean isCeoOnly = perms != null
-                && perms.contains("purchase_orders.approve")
-                && !perms.contains("purchase_orders.create");
-        if (isCeoOnly && (status == null || status.isEmpty())) {
-            status = GlobalUtils.PO_STATUS_PENDING_CEO;
-        }
-
         int page = 1;
         int pageSize = 10;
         String pageStr = request.getParameter("page");
