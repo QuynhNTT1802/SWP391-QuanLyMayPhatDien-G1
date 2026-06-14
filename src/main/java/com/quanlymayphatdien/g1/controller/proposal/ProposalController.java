@@ -167,8 +167,14 @@ public class ProposalController extends HttpServlet {
             }
         }
 
+        Integer poFilter = null;
+        String poFilterStr = request.getParameter("poFilter");
+        if (poFilterStr != null && !poFilterStr.isEmpty()) {
+            try { poFilter = Integer.parseInt(poFilterStr); } catch (NumberFormatException e) {}
+        }
+
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -177,7 +183,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, page, pageSize);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("totalProposals", total);
@@ -185,6 +191,7 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("search", search);
+        request.setAttribute("poFilter", poFilter);
 
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
         request.setAttribute("canApproveProposal", canApprove);
