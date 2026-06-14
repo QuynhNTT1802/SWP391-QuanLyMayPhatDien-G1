@@ -854,15 +854,12 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    padding: 14px 18px;
+    padding: 18px 22px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     margin-top: 16px;
-    position: sticky;
-    bottom: 16px;
-    z-index: 10;
-    box-shadow: 0 -4px 16px oklch(0% 0 0 / 0.08);
+    align-items: center;
 }
 .liq-action-bar .hint {
     font-size: 12.5px;
@@ -915,10 +912,12 @@
     gap: 6px;
 }
 .liq-step .step-num .dot {
-    width: 8px;
-    height: 8px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    background: var(--border-strong);
+    background: transparent;
+    border: 1.5px solid var(--border-strong);
+    box-sizing: border-box;
     flex-shrink: 0;
 }
 .liq-step .step-title {
@@ -932,19 +931,25 @@
     color: var(--muted);
     margin-top: 2px;
 }
-.liq-step.is-done .step-num .dot { background: var(--accent); }
-.liq-step.is-done .step-title { color: var(--fg); }
+.liq-step.is-done .step-num .dot {
+    background: var(--muted-2);
+    border-color: var(--muted-2);
+}
+.liq-step.is-done .step-title { color: var(--fg-soft); font-weight: 600; }
+.liq-step.is-done .step-num { color: var(--muted); }
+.liq-step.is-done .step-meta { color: var(--muted-2); }
 .liq-step.is-current { background: var(--accent-soft); }
 .liq-step.is-current .step-num { color: var(--accent); }
 .liq-step.is-current .step-num .dot {
     background: var(--accent);
+    border-color: var(--accent);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 .liq-step.is-current .step-title { color: var(--fg); font-weight: 700; }
-.liq-step.is-rejected .step-num .dot { background: var(--danger); }
+.liq-step.is-rejected .step-num .dot { background: var(--danger); border-color: var(--danger); }
 .liq-step.is-rejected .step-num { color: var(--danger); }
 .liq-step.is-rejected { background: var(--danger-soft); }
-.liq-step.is-edit-requested .step-num .dot { background: var(--warn); }
+.liq-step.is-edit-requested .step-num .dot { background: var(--warn); border-color: var(--warn); }
 .liq-step.is-edit-requested .step-num { color: var(--warn); }
 .liq-step.is-edit-requested { background: var(--warn-soft); }
 
@@ -1596,4 +1601,188 @@
     .liq-head { padding: 10px 12px; }
     .liq-head .liq-head-sep { display: none; }
     .liq-head-stats { width: 100%; }
+}
+
+
+/* ============================================================
+   SERIAL PICKER v2 (option D)
+   - Header subtitle (model + warehouse)
+   - Summary block: total count + age filter chips
+   - Compact 1-row card list
+   - Footer keyboard hint
+   ============================================================ */
+
+/* ---------- Header subtitle ---------- */
+.side-panel-head { align-items: flex-start; }
+.side-panel-sub {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: var(--font-ui);
+}
+
+/* ---------- Summary block ---------- */
+.side-panel-summary {
+    padding: 12px 22px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+}
+.summary-count {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.summary-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg-soft);
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    transition: all .12s ease;
+}
+.filter-chip:hover { background: var(--surface); border-color: var(--border-strong); }
+.filter-chip .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted-2);
+    flex-shrink: 0;
+}
+.filter-chip .lbl { font-weight: 600; }
+.filter-chip .num {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--muted);
+    font-size: 11px;
+    background: var(--surface-2);
+    padding: 0 5px;
+    border-radius: 6px;
+    min-width: 16px;
+    text-align: center;
+}
+.filter-chip.filter-old .dot { background: var(--danger); }
+.filter-chip.filter-mid .dot { background: var(--warn); }
+.filter-chip.filter-fresh .dot { background: var(--accent); }
+
+.filter-chip.is-active {
+    background: var(--fg);
+    border-color: var(--fg);
+    color: var(--bg);
+}
+.filter-chip.is-active .num {
+    background: oklch(100% 0 0 / 0.18);
+    color: var(--bg);
+}
+.filter-chip.is-active.filter-old { background: var(--danger); border-color: var(--danger); }
+.filter-chip.is-active.filter-mid { background: var(--warn); border-color: var(--warn); color: var(--bg); }
+.filter-chip.is-active.filter-fresh { background: var(--accent); border-color: var(--accent); }
+
+/* ---------- Compact serial row ---------- */
+.serial-card.serial-row {
+    display: grid;
+    grid-template-columns: 14px 1fr auto auto 16px;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color .12s ease, background .12s ease, transform .12s ease;
+}
+.serial-card.serial-row:hover {
+    border-color: var(--accent);
+    background: var(--surface-2);
+    box-shadow: none;
+    transform: none;
+}
+.serial-card.serial-row.serial-card--focused {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.serial-card.serial-row .age-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--muted-2);
+    flex-shrink: 0;
+}
+.serial-card.serial-row.age-old .age-dot { background: var(--danger); }
+.serial-card.serial-row.age-mid .age-dot { background: var(--warn); }
+.serial-card.serial-row.age-fresh .age-dot { background: var(--accent); }
+
+.serial-card.serial-row .serial-number-text {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.serial-card.serial-row .serial-age-text {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+.serial-card.serial-row.age-old .serial-age-text { color: var(--danger); font-weight: 700; }
+.serial-card.serial-row.age-mid .serial-age-text { color: var(--warn); font-weight: 700; }
+
+.serial-card.serial-row .serial-date-text {
+    font-size: 11px;
+    color: var(--muted-2);
+    white-space: nowrap;
+}
+.serial-card.serial-row .serial-row-arrow {
+    width: 14px; height: 14px;
+    stroke: var(--muted-2);
+    fill: none;
+    stroke-width: 2;
+    opacity: 0;
+    transition: opacity .12s ease, transform .12s ease;
+    transform: translateX(-3px);
+}
+.serial-card.serial-row:hover .serial-row-arrow,
+.serial-card.serial-row.serial-card--focused .serial-row-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    stroke: var(--accent);
+}
+
+/* tighter list spacing now that rows are compact */
+.serial-list-wrap { gap: 6px; }
+
+/* ---------- Footer ---------- */
+.side-panel-foot {
+    padding: 10px 22px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 11.5px;
+    text-align: center;
+}
+.side-panel-foot .kbd {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 5px;
+    margin: 0 1px;
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    background: var(--surface);
+    color: var(--fg-soft);
 }

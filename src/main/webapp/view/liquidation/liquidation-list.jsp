@@ -92,7 +92,8 @@
                         <option value="CEO_REQUEST_EDIT" ${statusFilter == 'CEO_REQUEST_EDIT' ? 'selected' : ''}>Sếp yêu cầu sửa</option>
                         <option value="REJECTED_BY_CEO" ${statusFilter == 'REJECTED_BY_CEO' ? 'selected' : ''}>Sếp từ chối</option>
                     </c:if>
-                    <option value="APPROVED_BY_CEO" ${statusFilter == 'APPROVED_BY_CEO' ? 'selected' : ''}>Đã duyệt</option>
+                    <option value="APPROVED_BY_CEO" ${statusFilter == 'APPROVED_BY_CEO' ? 'selected' : ''}>Đã duyệt · chờ xuất kho</option>
+                    <option value="COMPLETED" ${statusFilter == 'COMPLETED' ? 'selected' : ''}>Đã xuất kho</option>
                 </select>
                 <div class="spacer"></div>
                 <button type="submit" class="btn btn-primary">
@@ -189,7 +190,10 @@
                                                     <span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'APPROVED_BY_CEO'}">
-                                                    <span class="pill liq-approved"><span class="pdot"></span>Đã xuất</span>
+                                                    <span class="pill liq-pending-mgr" title="Sếp đã duyệt — chờ Quản lý kho duyệt phiếu xuất"><span class="pdot"></span>Chờ xuất kho</span>
+                                                </c:when>
+                                                <c:when test="${liq.status == 'COMPLETED'}">
+                                                    <span class="pill liq-approved"><span class="pdot"></span>Đã xuất kho</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'MANAGER_REQUEST_EDIT'}">
                                                     <span class="pill liq-edit" title="Quản lý yêu cầu sửa: ${not empty liq.managerFeedbackName ? liq.managerFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Yêu cầu sửa</span>
