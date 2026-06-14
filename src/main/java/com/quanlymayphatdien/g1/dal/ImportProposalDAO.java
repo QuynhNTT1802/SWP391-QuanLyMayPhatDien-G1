@@ -535,6 +535,46 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
         return 0;
     }
+    
+    public List<ImportProposal> findByIdsForReview(List<Integer> proposalIds) {
+    if (proposalIds == null || proposalIds.isEmpty()) {
+        return new ArrayList<>();
+    }  
+    List<ImportProposal> list = new ArrayList<>();
+    
+    StringBuilder placeholders = new StringBuilder();
+    for (int i = 0; i < proposalIds.size(); i++) {
+        if (i > 0) placeholders.append(",");
+        placeholders.append("?");
+    }
+    
+    String sql = "SELECT ip.*, w.name AS warehouse_name, u_c.name AS created_by_name "
+               + "FROM import_proposal ip "
+               + "LEFT JOIN warehouse w ON w.warehouse_id = ip.warehouse_id "
+               + "LEFT JOIN user u_c ON u_c.id = ip.created_by "
+               + "WHERE ip.proposal_id IN (" + placeholders + ") "
+               + "  AND ip.status = 'PENDING' "
+               + "  AND ip.purchase_order_id IS NULL "
+               + "ORDER BY ip.proposal_id ASC";
+    
+    try (Connection c = getConnection();
+         PreparedStatement ps = c.prepareStatement(sql)) {
+        for (int i = 0; i < proposalIds.size(); i++) {
+            ps.setInt(i + 1, proposalIds.get(i));
+        }
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+           
+            ImportProposal p = getFromResultSet(rs);
+            p.setWarehouseName(rs.getString("warehouse_name"));
+            p.setCreatedByName(rs.getString("created_by_name"));
+            list.add(p);
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return list;
+}
 
     @Override
     public boolean update(ImportProposal t) {

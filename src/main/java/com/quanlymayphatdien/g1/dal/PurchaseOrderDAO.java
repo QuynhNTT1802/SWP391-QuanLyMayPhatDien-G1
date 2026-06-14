@@ -22,8 +22,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         String sql = "INSERT INTO purchase_order (po_code, period, period_start, period_end, "
                 + "warehouse_id, status, created_by, note, total_proposals, total_quantity) "
                 + "VALUES (?,?,?,?,?,?,?,?,?,?)";
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, po.getPoCode());
             ps.setString(2, po.getPeriod());
             ps.setDate(3, Date.valueOf(po.getPeriodStart()));
@@ -36,7 +35,9 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             ps.setInt(10, po.getTotalQuantity());
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -97,7 +98,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     "DELETE FROM purchase_order WHERE po_id = ? AND status = ?")) {
                 ps3.setInt(1, t.getPoId());
                 ps3.setString(2, GlobalUtils.PO_STATUS_DRAFT);
-                if (ps3.executeUpdate() == 0) { c.rollback(); return false; }
+                if (ps3.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
             }
             c.commit();
             return true;
@@ -116,44 +120,80 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         try {
             po.setPeriodStart(rs.getDate("period_start").toLocalDate());
             po.setPeriodEnd(rs.getDate("period_end").toLocalDate());
-        } catch (SQLException | NullPointerException ignored) {}
+        } catch (SQLException | NullPointerException ignored) {
+        }
         po.setWarehouseId(rs.getInt("warehouse_id"));
         po.setStatus(rs.getString("status"));
         po.setCreatedBy(rs.getInt("created_by"));
         try {
             int approvedBy = rs.getInt("approved_by");
             po.setApprovedBy(rs.wasNull() ? null : approvedBy);
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) {
+        }
         try {
             int rejectedBy = rs.getInt("rejected_by");
             po.setRejectedBy(rs.wasNull() ? null : rejectedBy);
-        } catch (SQLException ignored) {}
-        try { po.setRejectReason(rs.getString("reject_reason")); } catch (SQLException ignored) {}
-        try { po.setTotalProposals(rs.getInt("total_proposals")); } catch (SQLException ignored) {}
-        try { po.setTotalQuantity(rs.getInt("total_quantity")); } catch (SQLException ignored) {}
-        try { po.setNote(rs.getString("note")); } catch (SQLException ignored) {}
-        try { po.setWarehouseName(rs.getString("warehouse_name")); } catch (SQLException ignored) {}
-        try { po.setCreatedByName(rs.getString("created_by_name")); } catch (SQLException ignored) {}
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setRejectReason(rs.getString("reject_reason"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setTotalProposals(rs.getInt("total_proposals"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setTotalQuantity(rs.getInt("total_quantity"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setNote(rs.getString("note"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setWarehouseName(rs.getString("warehouse_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setCreatedByName(rs.getString("created_by_name"));
+        } catch (SQLException ignored) {
+        }
         try {
             Timestamp t = rs.getTimestamp("sent_to_ceo_at");
-            if (t != null) po.setSentToCeoAt(t.toLocalDateTime());
-        } catch (SQLException ignored) {}
+            if (t != null) {
+                po.setSentToCeoAt(t.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {
+        }
         try {
             Timestamp t = rs.getTimestamp("approved_at");
-            if (t != null) po.setApprovedAt(t.toLocalDateTime());
-        } catch (SQLException ignored) {}
+            if (t != null) {
+                po.setApprovedAt(t.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {
+        }
         try {
             Timestamp t = rs.getTimestamp("rejected_at");
-            if (t != null) po.setRejectedAt(t.toLocalDateTime());
-        } catch (SQLException ignored) {}
+            if (t != null) {
+                po.setRejectedAt(t.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {
+        }
         try {
             Timestamp t = rs.getTimestamp("created_at");
-            if (t != null) po.setCreatedAt(t.toLocalDateTime());
-        } catch (SQLException ignored) {}
+            if (t != null) {
+                po.setCreatedAt(t.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {
+        }
         try {
             Timestamp t = rs.getTimestamp("updated_at");
-            if (t != null) po.setUpdatedAt(t.toLocalDateTime());
-        } catch (SQLException ignored) {}
+            if (t != null) {
+                po.setUpdatedAt(t.toLocalDateTime());
+            }
+        } catch (SQLException ignored) {
+        }
         return po;
     }
 
@@ -225,11 +265,17 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 po.setWarehouseName(rs.getString("warehouse_name"));
                 po.setCreatedByName(rs.getString("created_by_name"));
                 Timestamp stc = rs.getTimestamp("sent_to_ceo_at");
-                if (stc != null) po.setSentToCeoAt(stc.toLocalDateTime());
+                if (stc != null) {
+                    po.setSentToCeoAt(stc.toLocalDateTime());
+                }
                 Timestamp sta = rs.getTimestamp("approved_at");
-                if (sta != null) po.setApprovedAt(sta.toLocalDateTime());
+                if (sta != null) {
+                    po.setApprovedAt(sta.toLocalDateTime());
+                }
                 Timestamp str = rs.getTimestamp("rejected_at");
-                if (str != null) po.setRejectedAt(str.toLocalDateTime());
+                if (str != null) {
+                    po.setRejectedAt(str.toLocalDateTime());
+                }
                 po.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
                 po.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
                 po.setDetails(findDetails(poId));
@@ -281,14 +327,25 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        if (period != null && !period.isEmpty()) { sql.append(" AND p.period = ?"); params.add(period); }
-        if (warehouseId > 0) { sql.append(" AND p.warehouse_id = ?"); params.add(warehouseId); }
-        if (status != null && !status.isEmpty()) { sql.append(" AND p.status = ?"); params.add(status); }
+        if (period != null && !period.isEmpty()) {
+            sql.append(" AND p.period = ?");
+            params.add(period);
+        }
+        if (warehouseId > 0) {
+            sql.append(" AND p.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND p.status = ?");
+            params.add(status);
+        }
         sql.append(" ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 PurchaseOrder po = new PurchaseOrder();
@@ -313,13 +370,26 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     public int countByFilters(String period, int warehouseId, String status) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM purchase_order WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        if (period != null && !period.isEmpty()) { sql.append(" AND period = ?"); params.add(period); }
-        if (warehouseId > 0) { sql.append(" AND warehouse_id = ?"); params.add(warehouseId); }
-        if (status != null && !status.isEmpty()) { sql.append(" AND status = ?"); params.add(status); }
+        if (period != null && !period.isEmpty()) {
+            sql.append(" AND period = ?");
+            params.add(period);
+        }
+        if (warehouseId > 0) {
+            sql.append(" AND warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND status = ?");
+            params.add(status);
+        }
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) ps.setObject(i + 1, params.get(i));
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -364,11 +434,71 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
+    public List<Map<String, Object>> aggregateByProposalIds(List<Integer> proposalIds, int warehouseId) {
+        if (proposalIds == null || proposalIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Map<String, Object>> list = new ArrayList<>();
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < proposalIds.size(); i++) {
+            if (i > 0) {
+                placeholders.append(",");
+            }
+            placeholders.append("?");
+        }
+
+        String sql = "SELECT ipd.generator_id, g.model AS generator_code, g.description AS generator_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON c.id = gc.category_id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name, "
+                + "SUM(ipd.quantity) AS total_proposed, "
+                + "COUNT(DISTINCT ip.proposal_id) AS proposal_count, "
+                + "COALESCE((SELECT i.quantity FROM inventory i "
+                + "          WHERE i.generator_id = ipd.generator_id AND i.warehouse_id = ? LIMIT 1), 0) AS current_stock "
+                + "FROM import_proposal ip "
+                + "JOIN import_proposal_detail ipd ON ipd.proposal_id = ip.proposal_id "
+                + "JOIN generator g ON g.id = ipd.generator_id "
+                + "WHERE ip.proposal_id IN (" + placeholders + ") "
+                + "  AND ip.status = 'PENDING' "
+                + "  AND ip.purchase_order_id IS NULL "
+                + "  AND ip.warehouse_id = ? "
+                + "GROUP BY ipd.generator_id, g.model, g.description "
+                + "ORDER BY g.description";
+
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            for (int i = 0; i < proposalIds.size(); i++) {
+                ps.setInt(i + 2, proposalIds.get(i));
+            }
+            ps.setInt(proposalIds.size() + 2, warehouseId);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("generatorId", rs.getInt("generator_id"));
+                row.put("generatorCode", rs.getString("generator_code"));
+                row.put("generatorName", rs.getString("generator_name"));
+                row.put("brandName", rs.getString("brand_name"));
+                row.put("totalProposed", rs.getInt("total_proposed"));
+                row.put("currentStock", rs.getInt("current_stock"));
+                row.put("proposalCount", rs.getInt("proposal_count"));
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public int linkProposalsToPo(int poId, String period, int warehouseId, List<Integer> generatorIds) {
-        if (generatorIds == null || generatorIds.isEmpty()) return 0;
+        if (generatorIds == null || generatorIds.isEmpty()) {
+            return 0;
+        }
         StringBuilder placeholders = new StringBuilder();
         for (int i = 0; i < generatorIds.size(); i++) {
-            if (i > 0) placeholders.append(",");
+            if (i > 0) {
+                placeholders.append(",");
+            }
             placeholders.append("?");
         }
         String sql = "UPDATE import_proposal SET purchase_order_id = ? "
@@ -382,7 +512,37 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             ps.setInt(1, poId);
             ps.setString(2, period);
             ps.setInt(3, warehouseId);
-            for (int i = 0; i < generatorIds.size(); i++) ps.setInt(4 + i, generatorIds.get(i));
+            for (int i = 0; i < generatorIds.size(); i++) {
+                ps.setInt(4 + i, generatorIds.get(i));
+            }
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    public int linkProposalsByIds(int poId, List<Integer> proposalIds) {
+        if (proposalIds == null || proposalIds.isEmpty()) {
+            return 0;
+        }
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < proposalIds.size(); i++) {
+            if (i > 0) {
+                placeholders.append(",");
+            }
+            placeholders.append("?");
+        }
+        String sql = "UPDATE import_proposal SET purchase_order_id = ? "
+                + "WHERE proposal_id IN (" + placeholders + ") "
+                + "AND status = 'PENDING' "
+                + "AND purchase_order_id IS NULL";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, poId);
+            for (int i = 0; i < proposalIds.size(); i++) {
+                ps.setInt(2 + i, proposalIds.get(i));
+            }
             return ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -411,7 +571,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 ps1.setString(1, GlobalUtils.PO_STATUS_PENDING_CEO);
                 ps1.setInt(2, poId);
                 ps1.setString(3, GlobalUtils.PO_STATUS_DRAFT);
-                if (ps1.executeUpdate() == 0) { c.rollback(); return false; }
+                if (ps1.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
             }
             try (PreparedStatement ps2 = c.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
@@ -439,7 +602,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 ps1.setInt(2, ceoId);
                 ps1.setInt(3, poId);
                 ps1.setString(4, GlobalUtils.PO_STATUS_PENDING_CEO);
-                if (ps1.executeUpdate() == 0) { c.rollback(); return false; }
+                if (ps1.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
             }
             try (PreparedStatement ps2 = c.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
@@ -467,7 +633,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 ps1.setString(3, reason);
                 ps1.setInt(4, poId);
                 ps1.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
-                if (ps1.executeUpdate() == 0) { c.rollback(); return false; }
+                if (ps1.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
             }
             try (PreparedStatement ps2 = c.prepareStatement(
                     "UPDATE import_proposal SET status = ?, reject_reason = ? "
@@ -501,7 +670,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 ps1.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
                 ps1.setInt(2, poId);
                 ps1.setString(3, GlobalUtils.PO_STATUS_DRAFT);
-                if (ps1.executeUpdate() == 0) { c.rollback(); return false; }
+                if (ps1.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
             }
             c.commit();
             return true;
@@ -547,5 +719,28 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             e.printStackTrace();
         }
         return list;
+    }
+
+    public PurchaseOrder findByPeriodWarehouse(String period, int warehouseId) {
+        if (period == null || period.isEmpty() || warehouseId <= 0) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM purchase_order "
+                + "WHERE period = ? AND warehouse_id = ? "
+                + "ORDER BY po_id DESC "
+                + "LIMIT 1";
+
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, period);
+            ps.setInt(2, warehouseId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return getFromResultSet(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
