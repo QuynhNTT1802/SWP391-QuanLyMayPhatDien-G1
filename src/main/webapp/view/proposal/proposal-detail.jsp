@@ -136,24 +136,34 @@
                         </div>
                     </c:if>
 
+                    <%-- Banner thuộc phiếu mua --%>
+                    <c:if test="${not empty proposal.purchaseOrderId}">
+                        <div class="alert alert-info" style="background: #e0f2fe; border-color: #38bdf8; color: #075985; padding: 12px 16px; border-radius: 6px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                            <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <span>Đã gom vào <strong>Phiếu mua</strong>: <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${proposal.purchaseOrderId}" style="color:#0369a1; font-weight:600;">${proposal.poCode}</a>. Phiếu này bị khóa sửa.</span>
+                        </div>
+                    </c:if>
+
                     <%-- Action bar --%>
                     <div class="action-bar">
                         <a class="btn" href="${pageContext.request.contextPath}/proposal">Quay lại danh sách</a>
 
-                        <c:if test="${proposal.status == 'DRAFT' && isOwner}">
-                            <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">Chỉnh sửa</a>
-                            <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
-                                <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                <input type="hidden" name="submitType" value="submit" />
-                                <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">Gửi duyệt</button>
-                            </form>
-                            <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:inline;">
-                                <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận xoá phiếu đề xuất nháp này?')">Xoá</button>
-                            </form>
+                        <c:if test="${empty proposal.purchaseOrderId}">
+                            <c:if test="${proposal.status == 'DRAFT' && isOwner}">
+                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">Chỉnh sửa</a>
+                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
+                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                    <input type="hidden" name="submitType" value="submit" />
+                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">Gửi duyệt</button>
+                                </form>
+                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:inline;">
+                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận xoá phiếu đề xuất nháp này?')">Xoá</button>
+                                </form>
+                            </c:if>
                         </c:if>
 
-                        <c:if test="${proposal.status == 'PENDING'}">
+                        <c:if test="${proposal.status == 'PENDING' && empty proposal.purchaseOrderId}">
                             <c:if test="${canApprove}">
                                 <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" style="display:inline;">
                                     <input type="hidden" name="id" value="${proposal.proposalId}" />
@@ -169,7 +179,7 @@
                             </c:if>
                         </c:if>
 
-                        <c:if test="${proposal.status == 'APPROVED' && perms.contains('proposals.cancel')}">
+                        <c:if test="${proposal.status == 'APPROVED' && perms.contains('proposals.cancel') && empty proposal.purchaseOrderId}">
                             <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
                                 <input type="hidden" name="id" value="${proposal.proposalId}" />
                                 <button type="submit" class="btn btn-warn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất đã duyệt?')">Huỷ phiếu</button>
@@ -186,6 +196,7 @@
                             <c:choose>
                                 <c:when test="${proposal.status == 'DRAFT'}"><span class="pill draft"><span class="pdot"></span>Nháp</span></c:when>
                                 <c:when test="${proposal.status == 'PENDING'}"><span class="pill pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
+                                <c:when test="${proposal.status == 'PENDING_CEO'}"><span class="pill pending"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
                                 <c:when test="${proposal.status == 'APPROVED'}"><span class="pill approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                 <c:when test="${proposal.status == 'REJECTED'}"><span class="pill rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                 <c:when test="${proposal.status == 'CANCELLED'}"><span class="pill cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>

@@ -8,6 +8,7 @@ import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
 
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
+import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -162,7 +163,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     @Override
     public int insert(ImportProposal t) {
         String sql = "INSERT INTO import_proposal (proposal_code, status, warehouse_id, created_by, "
-                + "proposal_date, note) VALUES (?, ?, ?, ?, ?, ?)";
+                + "proposal_date, period, note) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, t.getProposalCode());
             ps.setString(2, t.getStatus());
@@ -171,7 +172,8 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             ps.setTimestamp(5, t.getProposalDate() != null
                     ? Timestamp.valueOf(t.getProposalDate())
                     : Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(6, t.getNote());
+            ps.setString(6, PeriodUtils.currentPeriod());
+            ps.setString(7, t.getNote());
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
@@ -226,6 +228,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         p.setCreatedByName(rs.getString("created_by_name"));
         p.setApprovedByName(rs.getString("approved_by_name"));
         p.setRejectedByName(rs.getString("rejected_by_name"));
+
+        try {
+            int poId = rs.getInt("purchase_order_id");
+            p.setPurchaseOrderId(rs.wasNull() ? null : poId);
+        } catch (SQLException ignored) {}
+        try { p.setPeriod(rs.getString("period")); } catch (SQLException ignored) {}
+        try { p.setPoCode(rs.getString("po_code")); } catch (SQLException ignored) {}
         return p;
     }
 
@@ -311,15 +320,17 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
+                + "po.po_code AS po_code, "
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
                 + "u_r.name AS rejected_by_name "
                 + "FROM import_proposal p "
+                + "LEFT JOIN purchase_order po ON po.po_id = p.purchase_order_id "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
@@ -342,6 +353,14 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND p.status != ?");
             params.add(GlobalUtils.STATUS_DRAFT);
         }
+        if (poFilter != null) {
+            if (poFilter == 0) {
+                sql.append(" AND p.purchase_order_id IS NULL");
+            } else {
+                sql.append(" AND p.purchase_order_id = ?");
+                params.add(poFilter);
+            }
+        }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -360,24 +379,32 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE 1=1");
+    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
-            sql.append(" AND status = ?");
+            sql.append(" AND p.status = ?");
             params.add(status);
         }
         if (search != null && !search.trim().isEmpty()) {
-            sql.append(" AND proposal_code LIKE ?");
+            sql.append(" AND p.proposal_code LIKE ?");
             params.add("%" + search.trim() + "%");
         }
         if (createdBy != null) {
-            sql.append(" AND created_by = ?");
+            sql.append(" AND p.created_by = ?");
             params.add(createdBy);
         }
         if (excludeDraft) {
-            sql.append(" AND status != ?");
+            sql.append(" AND p.status != ?");
             params.add(GlobalUtils.STATUS_DRAFT);
+        }
+        if (poFilter != null) {
+            if (poFilter == 0) {
+                sql.append(" AND p.purchase_order_id IS NULL");
+            } else {
+                sql.append(" AND p.purchase_order_id = ?");
+                params.add(poFilter);
+            }
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {

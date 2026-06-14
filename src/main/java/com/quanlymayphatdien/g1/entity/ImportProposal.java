@@ -37,9 +37,64 @@ public class ImportProposal {
 
     // field transient: đánh dấu phiếu có chứa máy chưa có trong kho (warehouse tự xử lý category)
     private transient Boolean hasNewGenerator;
+    private Integer purchaseOrderId;
+    private String period;
+    private String poCode;
 
     public ImportProposal() {
     }
+
+    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
+        this.proposalId = proposalId;
+        this.proposalCode = proposalCode;
+        this.status = status;
+        this.warehouseId = warehouseId;
+        this.createdBy = createdBy;
+        this.approvedBy = approvedBy;
+        this.rejectedBy = rejectedBy;
+        this.proposalDate = proposalDate;
+        this.note = note;
+        this.rejectReason = rejectReason;
+        this.approvedAt = approvedAt;
+        this.rejectedAt = rejectedAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.warehouseName = warehouseName;
+        this.createdByName = createdByName;
+        this.approvedByName = approvedByName;
+        this.rejectedByName = rejectedByName;
+        this.details = details;
+        this.hasNewGenerator = hasNewGenerator;
+        this.purchaseOrderId = purchaseOrderId;
+        this.period = period;
+        this.poCode = poCode;
+    }
+  
+
+    public Integer getPurchaseOrderId() {
+        return purchaseOrderId;
+    }
+
+    public void setPurchaseOrderId(Integer purchaseOrderId) {
+        this.purchaseOrderId = purchaseOrderId;
+    }
+
+    public String getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(String period) {
+        this.period = period;
+    }
+
+    public String getPoCode() {
+        return poCode;
+    }
+
+    public void setPoCode(String poCode) {
+        this.poCode = poCode;
+    }
+    
 
     public int getProposalId() {
         return proposalId;

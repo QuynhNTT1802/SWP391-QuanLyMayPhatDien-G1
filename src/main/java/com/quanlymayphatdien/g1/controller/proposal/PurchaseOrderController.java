@@ -1,0 +1,380 @@
+package com.quanlymayphatdien.g1.controller.proposal;
+
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
+import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.entity.ImportProposal;
+import com.quanlymayphatdien.g1.entity.PurchaseOrder;
+import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
+import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
+import com.quanlymayphatdien.g1.utils.PeriodUtils;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@WebServlet(name = "PurchaseOrderController", urlPatterns = {"/purchase-order"})
+public class PurchaseOrderController extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        if (action == null || action.isEmpty()) {
+            action = "list";
+        }
+
+        try {
+            switch (action) {
+                case "create":
+                    showCreateForm(request, response);
+                    break;
+                case "detail":
+                    showDetail(request, response);
+                    break;
+                case "reject":
+                    showRejectForm(request, response);
+                    break;
+                default:
+                    list(request, response);
+                    break;
+            }
+        } catch (Exception e) {
+            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.doGet", e.getMessage(), e);
+            e.printStackTrace();
+            request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
+        }
+
+        try {
+            switch (action) {
+                case "create":
+                    create(request, response);
+                    break;
+                case "sendToCeo":
+                    sendToCeo(request, response);
+                    break;
+                case "approve":
+                    approve(request, response);
+                    break;
+                case "reject":
+                    reject(request, response);
+                    break;
+                case "cancel":
+                    cancel(request, response);
+                    break;
+                default:
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.doPost", e.getMessage(), e);
+            e.printStackTrace();
+            request.getSession().setAttribute("message", "Lỗi xử lý: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+        }
+    }
+
+    private void list(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+
+        String period = request.getParameter("period");
+        int warehouseId = parseInt(request.getParameter("warehouseId"));
+        String status = request.getParameter("status");
+
+        // CEO mac dinh chi xem PENDING_CEO
+        boolean isCeoOnly = perms != null
+                && perms.contains("purchase_orders.approve")
+                && !perms.contains("purchase_orders.create");
+        if (isCeoOnly && (status == null || status.isEmpty())) {
+            status = GlobalUtils.PO_STATUS_PENDING_CEO;
+        }
+
+        int page = 1;
+        int pageSize = 10;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException e) {
+                page = 1;
+            }
+        }
+
+        PurchaseOrderDAO dao = new PurchaseOrderDAO();
+        int total = dao.countByFilters(period, warehouseId, status);
+        int totalPages = (int) Math.ceil((double) total / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        List<PurchaseOrder> pos = dao.findByFilters(period, warehouseId, status, page, pageSize);
+
+        request.setAttribute("purchaseOrders", pos);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalPOs", total);
+        request.setAttribute("periods", PeriodUtils.recentQuarters(4));
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());
+        request.setAttribute("period", period);
+        request.setAttribute("warehouseId", warehouseId);
+        request.setAttribute("status", status);
+        request.setAttribute("canCreate", perms != null && perms.contains("purchase_orders.create"));
+        request.setAttribute("canApprove", perms != null && perms.contains("purchase_orders.approve"));
+        request.setAttribute("activePage", "purchase-order");
+
+        request.getRequestDispatcher("/view/purchase/purchase-list.jsp").forward(request, response);
+    }
+
+    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.create")) {
+            session.setAttribute("message", "Bạn không có quyền tạo phiếu mua");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
+
+        String period = request.getParameter("period");
+        if (period == null || period.isEmpty()) {
+            period = PeriodUtils.currentPeriod();
+        }
+        int warehouseId = parseInt(request.getParameter("warehouseId"));
+
+        request.setAttribute("periods", PeriodUtils.recentQuarters(4));
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());
+        request.setAttribute("selectedPeriod", period);
+        request.setAttribute("selectedWarehouseId", warehouseId);
+        if (warehouseId > 0) {
+            request.setAttribute("aggregations",
+                    new PurchaseOrderDAO().aggregatePendingProposals(period, warehouseId));
+        }
+        request.setAttribute("activePage", "purchase-order");
+        request.getRequestDispatcher("/view/purchase/purchase-create.jsp").forward(request, response);
+    }
+
+    private void create(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
+
+        String period = request.getParameter("period");
+        int warehouseId = parseInt(request.getParameter("warehouseId"));
+        String submitType = request.getParameter("submitType");
+        String note = request.getParameter("note");
+
+        String[] genIds = request.getParameterValues("generatorId");
+        String[] finalQtys = request.getParameterValues("finalQuantity");
+        String[] detailNotes = request.getParameterValues("detailNote");
+
+        if (genIds == null || genIds.length == 0) {
+            session.setAttribute("message", "Chưa chọn dòng máy nào");
+            response.sendRedirect(request.getContextPath()
+                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
+            return;
+        }
+
+        try {
+            PurchaseOrderDAO dao = new PurchaseOrderDAO();
+            PurchaseOrder po = new PurchaseOrder();
+            po.setPoCode(dao.generatePoCode(period));
+            po.setPeriod(period);
+            po.setPeriodStart(PeriodUtils.startOf(period));
+            po.setPeriodEnd(PeriodUtils.endOf(period));
+            po.setWarehouseId(warehouseId);
+            po.setCreatedBy(user.getId());
+            po.setStatus("send".equals(submitType) ? GlobalUtils.PO_STATUS_PENDING_CEO : GlobalUtils.PO_STATUS_DRAFT);
+            po.setNote(note);
+
+            List<PurchaseOrderDetail> details = new ArrayList<>();
+            List<Integer> genIdList = new ArrayList<>();
+            int totalQty = 0;
+            for (int i = 0; i < genIds.length; i++) {
+                int gid = parseInt(genIds[i]);
+                int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
+                if (gid <= 0 || qty <= 0) continue;
+                String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
+                PurchaseOrderDetail d = new PurchaseOrderDetail();
+                d.setGeneratorId(gid);
+                d.setFinalQuantity(qty);
+                d.setNote(dNote);
+                details.add(d);
+                genIdList.add(gid);
+                totalQty += qty;
+            }
+            po.setTotalQuantity(totalQty);
+
+            int poId = dao.insert(po);
+            if (poId <= 0) {
+                throw new Exception("Insert PO failed");
+            }
+
+            // Lay current_stock + proposed_quantity tu aggregation
+            List<Map<String, Object>> aggs = dao.aggregatePendingProposals(period, warehouseId);
+            for (int i = 0; i < details.size(); i++) {
+                int gid = details.get(i).getGeneratorId();
+                int proposed = 0, stock = 0;
+                for (Map<String, Object> a : aggs) {
+                    if (((Number) a.get("generatorId")).intValue() == gid) {
+                        proposed = ((Number) a.get("totalProposed")).intValue();
+                        stock = ((Number) a.get("currentStock")).intValue();
+                        break;
+                    }
+                }
+                details.get(i).setProposedQuantity(proposed);
+                details.get(i).setCurrentStock(stock);
+            }
+            dao.insertDetails(poId, details);
+
+            int linked = dao.linkProposalsToPo(poId, period, warehouseId, genIdList);
+            dao.updateTotalProposals(poId, linked);
+
+            if ("send".equals(submitType)) {
+                dao.sendToCeo(poId);
+            }
+
+            session.setAttribute("message", "Tạo phiếu mua thành công");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
+        } catch (Exception e) {
+            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.create", e.getMessage(), e);
+            e.printStackTrace();
+            session.setAttribute("message", "Lỗi: " + e.getMessage());
+            response.sendRedirect(request.getContextPath()
+                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
+        }
+    }
+
+    private void showDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        int id = parseInt(request.getParameter("id"));
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
+
+        PurchaseOrderDAO dao = new PurchaseOrderDAO();
+        PurchaseOrder po = dao.findById(id);
+        if (po == null) {
+            session.setAttribute("message", "Không tìm thấy phiếu mua");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
+
+        List<ImportProposal> sourceProposals = dao.findProposalsByPo(id);
+        request.setAttribute("po", po);
+        request.setAttribute("sourceProposals", sourceProposals);
+        request.setAttribute("activePage", "purchase-order");
+        request.getRequestDispatcher("/view/purchase/purchase-detail.jsp").forward(request, response);
+    }
+
+    private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int id = parseInt(request.getParameter("id"));
+        request.setAttribute("po", new PurchaseOrderDAO().findById(id));
+        request.getRequestDispatcher("/view/purchase/purchase-reject.jsp").forward(request, response);
+    }
+
+    private void sendToCeo(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        int id = parseInt(request.getParameter("id"));
+        boolean ok = new PurchaseOrderDAO().sendToCeo(id);
+        if (ok) {
+            session.setAttribute("message", "Đã gửi CEO duyệt");
+        } else {
+            session.setAttribute("message", "Không thể gửi");
+        }
+        response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
+    }
+
+    private void approve(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
+        int id = parseInt(request.getParameter("id"));
+        boolean ok = new PurchaseOrderDAO().approve(id, user.getId());
+        if (ok) {
+            session.setAttribute("message", "Đã duyệt phiếu mua");
+        } else {
+            session.setAttribute("message", "Không thể duyệt");
+        }
+        response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
+    }
+
+    private void reject(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
+        int id = parseInt(request.getParameter("id"));
+        String reason = request.getParameter("rejectReason");
+        if (reason == null || reason.trim().isEmpty()) {
+            session.setAttribute("message", "Vui lòng nhập lý do từ chối");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=reject&id=" + id);
+            return;
+        }
+        boolean ok = new PurchaseOrderDAO().reject(id, user.getId(), reason.trim());
+        if (ok) {
+            session.setAttribute("message", "Đã từ chối phiếu mua");
+        } else {
+            session.setAttribute("message", "Không thể từ chối");
+        }
+        response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
+    }
+
+    private void cancel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        int id = parseInt(request.getParameter("id"));
+        boolean ok = new PurchaseOrderDAO().cancel(id);
+        if (ok) {
+            session.setAttribute("message", "Đã hủy phiếu mua");
+        } else {
+            session.setAttribute("message", "Không thể hủy");
+        }
+        response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+    }
+
+    private int parseInt(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+}

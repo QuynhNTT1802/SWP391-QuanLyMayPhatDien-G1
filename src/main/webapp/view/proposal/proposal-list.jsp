@@ -48,6 +48,10 @@
                 background: #e2e3e5;
                 color: #383d41;
             }
+            .status-pending_ceo {
+                background: #fff3cd;
+                color: #856404;
+            }
             .order-code {
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 13px;
@@ -124,6 +128,7 @@
                                 <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Nháp</option>
                             </c:if>
                             <option value="PENDING"   <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
+                            <option value="PENDING_CEO" <c:if test="${statusFilter == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                             <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
                             <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
@@ -144,6 +149,7 @@
                                     <th>Người tạo</th>
                                     <th>Ngày tạo</th>
                                     <th>Kho</th>
+                                    <th>Phiếu mua</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
                                 </tr>
@@ -167,10 +173,21 @@
                                                     </c:choose>
                                                 </td>
                                                 <td><c:out value="${p.warehouseName}"/></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty p.poCode}">
+                                                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${p.purchaseOrderId}" class="po-link" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent);"><c:out value="${p.poCode}"/></a>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color: var(--muted); font-size: 12px;">—</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td class="col-status">
                                                     <c:choose>
                                                         <c:when test="${p.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Nháp</span></c:when>
                                                         <c:when test="${p.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
+                                                        <c:when test="${p.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
