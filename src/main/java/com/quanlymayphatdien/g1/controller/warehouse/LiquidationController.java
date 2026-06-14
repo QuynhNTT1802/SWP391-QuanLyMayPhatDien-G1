@@ -442,8 +442,8 @@ public class LiquidationController extends HttpServlet {
                 serialNumberDAO.updateStatus(serialNumbers[i], "PENDING_LIQUIDATION");
             }
             
-            // Gửi thông báo cho Managers
-            List<User> managers = userDAO.findUsersWithRoles("Manager", null, null, 1, 1000);
+            // Gửi thông báo cho mọi user có quyền duyệt của Quản lý kho (kể cả admin được grant)
+            List<User> managers = userDAO.findUsersByPermission("liquidations", "approve_manager");
             for (User mgr : managers) {
                 NotificationService.send(
                         mgr.getId(),
@@ -501,8 +501,8 @@ public class LiquidationController extends HttpServlet {
                 liquidationId
         );
 
-        // Thông báo cho CEO
-        List<User> ceos = userDAO.findUsersWithRoles("CEO", null, null, 1, 100);
+        // Thông báo cho mọi user có quyền duyệt của CEO (kể cả admin được grant)
+        List<User> ceos = userDAO.findUsersByPermission("liquidations", "approve_ceo");
         for (User ceo : ceos) {
             NotificationService.send(
                     ceo.getId(),
@@ -620,7 +620,9 @@ public class LiquidationController extends HttpServlet {
         NotificationService.send(
                 l.getCreatedBy(),
                 isPermanent ? "CEO từ chối đơn thanh lý" : "CEO yêu cầu sửa đơn thanh lý",
-                "Đơn " + l.getLiquidationCode() + " bị CEO từ chối/yêu cầu sửa.",
+                isPermanent
+                        ? "Đơn " + l.getLiquidationCode() + " đã bị CEO từ chối và huỷ."
+                        : "Đơn " + l.getLiquidationCode() + " bị CEO yêu cầu sửa lại.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
@@ -656,7 +658,9 @@ public class LiquidationController extends HttpServlet {
         NotificationService.send(
                 l.getCreatedBy(),
                 isPermanent ? "Quản lý từ chối đơn thanh lý" : "Quản lý yêu cầu sửa đơn thanh lý",
-                "Đơn " + l.getLiquidationCode() + " bị quản lý từ chối/yêu cầu sửa.",
+                isPermanent
+                        ? "Đơn " + l.getLiquidationCode() + " đã bị Quản lý kho từ chối và huỷ."
+                        : "Đơn " + l.getLiquidationCode() + " bị Quản lý kho yêu cầu sửa lại.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
@@ -753,13 +757,20 @@ public class LiquidationController extends HttpServlet {
                 }
             }
             
-            // Bắn lại thông báo
-            List<User> managers = userDAO.findUsersWithRoles("Manager", null, null, 1, 1000);
-            for (User mgr : managers) {
+            // Bắn lại thông báo: nếu đơn đang ở CEO_REQUEST_EDIT thì gửi cho người có quyền duyệt CEO,
+            // còn lại (MANAGER_REQUEST_EDIT) gửi cho người có quyền duyệt Quản lý kho.
+            boolean wasCeoEdit = "CEO_REQUEST_EDIT".equals(l.getStatus());
+            String targetAction = wasCeoEdit ? "approve_ceo" : "approve_manager";
+            String notifTitle = wasCeoEdit
+                    ? "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa lại — chờ Sếp duyệt"
+                    : "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa lại — chờ Quản lý duyệt";
+            String notifMsg = "Nhân viên " + user.getName() + " đã cập nhật lại đơn thanh lý theo yêu cầu sửa.";
+            List<User> reviewers = userDAO.findUsersByPermission("liquidations", targetAction);
+            for (User rv : reviewers) {
                 NotificationService.send(
-                        mgr.getId(),
-                        "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa chữa",
-                        "Nhân viên " + user.getName() + " đã cập nhật lại đơn thanh lý.",
+                        rv.getId(),
+                        notifTitle,
+                        notifMsg,
                         request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                         "liquidation",
                         liquidationId

@@ -72,6 +72,19 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             l.setCustomerAddress(rs.getString("customer_address"));
         } catch (Exception e) {
         }
+        try {
+            int dc = rs.getInt("detail_count");
+            if (!rs.wasNull()) l.setDetailCount(dc);
+        } catch (Exception e) {
+        }
+        try {
+            l.setTotalOriginalPrice(rs.getBigDecimal("total_original_price"));
+        } catch (Exception e) {
+        }
+        try {
+            l.setTotalLiquidationPrice(rs.getBigDecimal("total_liquidation_price"));
+        } catch (Exception e) {
+        }
 
         return l;
     }
@@ -128,7 +141,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
     public List<Liquidation> findWithPagination(int limit, int offset, String search, String status, Integer createdBy) {
         List<Liquidation> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name, w.name AS warehouse_name, cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id JOIN warehouse w ON l.warehouse_id = w.warehouse_id LEFT JOIN customer cu ON l.customer_id = cu.id WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name, w.name AS warehouse_name, cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, mf.name AS manager_feedback_name, f.name AS ceo_feedback_name, agg.detail_count, agg.total_original_price, agg.total_liquidation_price FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id JOIN warehouse w ON l.warehouse_id = w.warehouse_id LEFT JOIN customer cu ON l.customer_id = cu.id LEFT JOIN category mf ON l.manager_feedback_id = mf.id LEFT JOIN category f ON l.ceo_feedback_id = f.id LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (createdBy != null) {
             sql.append(" AND l.created_by = ?");
@@ -188,7 +201,8 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     public Liquidation findById(int id) {
         String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, "
                 + "mf.name AS manager_feedback_name, w.name AS warehouse_name, "
-                + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address "
+                + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, "
+                + "agg.detail_count, agg.total_original_price, agg.total_liquidation_price "
                 + "FROM liquidation l "
                 + "JOIN user u ON l.created_by = u.id "
                 + "JOIN category c ON l.reason_id = c.id "
@@ -196,6 +210,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN category f ON l.ceo_feedback_id = f.id "
                 + "LEFT JOIN category mf ON l.manager_feedback_id = mf.id "
+                + "LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id "
                 + "WHERE l.liquidation_id = ?";
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
             p.setInt(1, id);

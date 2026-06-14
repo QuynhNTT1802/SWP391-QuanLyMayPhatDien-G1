@@ -1,0 +1,1158 @@
+/* ============================================================
+   LIQUIDATION MODULE - UI Specifics
+   Phu thuoc: variables.css, base.css, sidebar.css,
+              admin-user.css | create-user.css | user-detail.css
+   ============================================================ */
+
+/* ---------- Button variants (workflow approval) ---------- */
+.btn-warn {
+    background: var(--surface);
+    color: var(--warn);
+    border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+.btn-warn:hover { background: var(--warn-soft); }
+
+.btn-success {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+.btn-success:hover {
+    background: color-mix(in srgb, var(--accent) 88%, white);
+    border-color: color-mix(in srgb, var(--accent) 88%, white);
+}
+
+.btn-outline-warn {
+    background: transparent;
+    color: var(--warn);
+    border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+}
+.btn-outline-warn:hover { background: var(--warn-soft); }
+
+.btn-outline-danger {
+    background: transparent;
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.btn-outline-danger:hover { background: var(--danger-soft); }
+
+/* ---------- Pill status modifiers ---------- */
+.pill.liq-pending-mgr {
+    color: var(--info);
+    border-color: color-mix(in srgb, var(--info) 30%, transparent);
+    background: var(--info-soft);
+}
+.pill.liq-pending-mgr .pdot { background: var(--info); }
+
+.pill.liq-pending-ceo {
+    color: var(--purple);
+    border-color: color-mix(in srgb, var(--purple) 30%, transparent);
+    background: var(--purple-soft);
+}
+.pill.liq-pending-ceo .pdot { background: var(--purple); }
+
+.pill.liq-approved {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    background: var(--accent-soft);
+}
+.pill.liq-approved .pdot { background: var(--accent); }
+
+.pill.liq-edit {
+    color: var(--warn);
+    border-color: color-mix(in srgb, var(--warn) 30%, transparent);
+    background: var(--warn-soft);
+}
+.pill.liq-edit .pdot { background: var(--warn); }
+
+.pill.liq-rejected {
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+    background: var(--danger-soft);
+}
+.pill.liq-rejected .pdot { background: var(--danger); }
+
+.pill.liq-muted {
+    color: var(--muted);
+    border-color: var(--border);
+    background: var(--surface-2);
+}
+.pill.liq-muted .pdot { background: var(--muted-2); }
+
+/* ---------- Feedback banner ---------- */
+.feedback-banner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid;
+    margin-bottom: 16px;
+}
+.feedback-banner .icon {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+}
+.feedback-banner .body { flex: 1; min-width: 0; }
+.feedback-banner__label {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 3px;
+    letter-spacing: 0.01em;
+}
+.feedback-banner__body { font-size: 13px; line-height: 1.5; }
+.feedback-banner--warn {
+    background: var(--warn-soft);
+    border-color: color-mix(in srgb, var(--warn) 25%, transparent);
+    color: var(--warn);
+}
+.feedback-banner--danger {
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+    color: var(--danger);
+}
+
+/* ---------- Tabs ---------- */
+.tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+}
+.tab {
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-ui);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .12s ease, border-color .12s ease;
+}
+.tab:hover { color: var(--fg-soft); }
+.tab.active {
+    color: var(--fg);
+    border-bottom-color: var(--accent);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ---------- Detail-table (create/edit form) ---------- */
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+.detail-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.detail-table td {
+    padding: 8px 6px;
+    vertical-align: top;
+}
+.detail-table select,
+.detail-table input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13px;
+    font-family: var(--font-ui);
+    box-sizing: border-box;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+.detail-table select:focus,
+.detail-table input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.detail-table input[readonly] {
+    background: var(--surface-2);
+    color: var(--fg-soft);
+    cursor: pointer;
+}
+.detail-table input[readonly]:hover { border-color: var(--accent); }
+.detail-table input[name="originalPrice"][readonly] {
+    cursor: not-allowed;
+    color: var(--muted);
+    font-family: var(--font-mono);
+}
+
+.detail-table .col-num {
+    width: 36px;
+    text-align: center;
+    color: var(--muted);
+    font-weight: 600;
+    padding-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+.detail-table .col-del {
+    width: 40px;
+    text-align: center;
+}
+
+.row-del-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    display: inline-grid;
+    place-items: center;
+    transition: all .12s ease;
+}
+.row-del-btn:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+.row-del-btn svg {
+    width: 15px; height: 15px;
+    stroke: currentColor; fill: none; stroke-width: 1.8;
+}
+
+.add-row-btn {
+    margin-top: 12px;
+    font-size: 12.5px;
+}
+
+/* ---------- Side panel (chon Serial) ---------- */
+.side-panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: oklch(0% 0 0 / 0.4);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease;
+}
+.side-panel-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -440px;
+    width: 420px;
+    max-width: 100%;
+    height: 100%;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 32px oklch(0% 0 0 / 0.12);
+    z-index: 1001;
+    transition: right .3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+.side-panel.show { right: 0; }
+.side-panel-head {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.side-panel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--fg);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+.side-panel-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .12s ease;
+}
+.side-panel-close:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+.side-panel-close svg {
+    width: 14px; height: 14px;
+    stroke: currentColor; fill: none; stroke-width: 2;
+}
+.side-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 22px;
+}
+.side-panel-tools {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+.serial-search-box {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13px;
+    font-family: var(--font-ui);
+    box-sizing: border-box;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+.serial-search-box:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.serial-sort-select {
+    width: 130px;
+    padding: 9px 28px 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13px;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+.serial-loading {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.serial-loading.show { display: block; }
+.serial-loading svg {
+    animation: spin 1s linear infinite;
+    margin-bottom: 8px;
+    width: 22px; height: 22px;
+    stroke: currentColor; fill: none; stroke-width: 2;
+}
+
+.serial-list-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.serial-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.serial-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+.serial-card.serial-card--focused {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.serial-card.serial-card--focused .serial-card-icon {
+    opacity: 1;
+    transform: translateX(0);
+}
+.serial-card-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+.serial-number-text {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -0.01em;
+}
+.serial-meta {
+    font-size: 11.5px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    align-items: center;
+}
+.serial-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.serial-meta-item svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; fill: none; stroke-width: 1.8;
+    opacity: 0.7;
+}
+.serial-card-icon {
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity .12s ease, transform .12s ease;
+    transform: translateX(-6px);
+    flex-shrink: 0;
+}
+.serial-card:hover .serial-card-icon {
+    opacity: 1;
+    transform: translateX(0);
+}
+.serial-card-icon svg {
+    width: 18px; height: 18px;
+    stroke: currentColor; fill: none; stroke-width: 2;
+}
+
+.badge-avail {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.badge-avail .pdot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.empty-msg {
+    padding: 40px 20px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 13px;
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+/* ---------- Customer typeahead (detail page Manager UI) ---------- */
+.cust-search-wrap {
+    position: relative;
+    margin-top: 6px;
+}
+.cust-search-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13.5px;
+    font-family: var(--font-ui);
+    box-sizing: border-box;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+.cust-search-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.cust-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+    max-height: 280px;
+    overflow-y: auto;
+    display: none;
+}
+.cust-dropdown.show { display: block; }
+.cust-option {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background .12s ease;
+}
+.cust-option:last-child { border-bottom: none; }
+.cust-option:hover { background: var(--surface-2); }
+.cust-option .cust-name {
+    font-weight: 700;
+    color: var(--fg);
+}
+.cust-option .cust-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+}
+.cust-dropdown-empty {
+    padding: 14px;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ---------- Customer card ---------- */
+.cust-card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-top: 4px;
+    position: relative;
+}
+.cust-card-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: grid;
+    place-items: center;
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.cust-card-body {
+    flex: 1;
+    min-width: 0;
+}
+.cust-card-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cust-card-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+}
+.cust-card-row {
+    font-size: 11.5px;
+    color: var(--muted);
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+.cust-card-row svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+.cust-clear {
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    transition: all .12s ease;
+}
+.cust-clear:hover {
+    color: var(--danger);
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+.cust-clear svg {
+    width: 13px; height: 13px;
+    stroke: currentColor; fill: none; stroke-width: 2;
+}
+
+.add-cust-btn {
+    margin-top: 10px;
+    font-size: 12.5px;
+}
+
+/* ---------- Modal large variant ---------- */
+.modal.modal-lg { max-width: 560px; }
+.modal .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+}
+.modal .modal-grid .field.span-2 { grid-column: span 2; }
+.modal .modal-error {
+    display: none;
+    padding: 10px 12px;
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.modal .modal-error.show { display: block; }
+.modal .feedback-select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13.5px;
+    font-family: var(--font-ui);
+    box-sizing: border-box;
+    margin: 12px 0 4px;
+    cursor: pointer;
+    appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 36px;
+}
+.modal .feedback-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ---------- Hero (liquidation detail) ---------- */
+.liq-hero {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+.liq-hero-mark {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.liq-hero-mark svg {
+    width: 28px; height: 28px;
+    stroke: currentColor; fill: none; stroke-width: 1.6;
+}
+.liq-hero-body {
+    flex: 1;
+    min-width: 0;
+}
+.liq-hero-code {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.liq-hero-meta {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    align-items: center;
+}
+.liq-hero-meta .sep {
+    color: var(--muted-2);
+}
+.liq-hero-meta .mono {
+    font-family: var(--font-mono);
+    color: var(--fg-soft);
+}
+
+/* ---------- Product table (detail page) ---------- */
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+}
+.product-table th,
+.product-table td {
+    padding: 11px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.product-table th {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    background: var(--surface-2);
+    letter-spacing: 0.04em;
+}
+.product-table td { font-size: 13.5px; }
+.product-table tbody tr:hover { background: var(--surface-2); }
+.product-table tbody tr:last-child td { border-bottom: none; }
+.product-table .liq-price-input {
+    width: 100%;
+    max-width: 180px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    box-sizing: border-box;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+.product-table .liq-price-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* ---------- Action bar (detail) ---------- */
+.liq-action-section {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+.liq-action-section .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-left: auto;
+}
+.liq-action-hint {
+    font-size: 12.5px;
+    color: var(--muted);
+    flex: 1;
+    min-width: 200px;
+    max-width: 460px;
+}
+
+/* ---------- Activity log action badges (liquidation actions) ---------- */
+.act-badge.act-create_request,
+.act-badge.act-create {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+    background: var(--accent-soft);
+}
+.act-badge.act-edit_submit {
+    color: var(--info);
+    border-color: color-mix(in srgb, var(--info) 32%, transparent);
+    background: var(--info-soft);
+}
+.act-badge.act-approve_manager {
+    color: var(--info);
+    border-color: color-mix(in srgb, var(--info) 32%, transparent);
+    background: var(--info-soft);
+}
+.act-badge.act-approve_ceo {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+    background: var(--accent-soft);
+}
+.act-badge.act-request_edit_manager,
+.act-badge.act-request_edit_ceo {
+    color: var(--warn);
+    border-color: color-mix(in srgb, var(--warn) 32%, transparent);
+    background: var(--warn-soft);
+}
+.act-badge.act-reject_manager,
+.act-badge.act-reject_ceo {
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 32%, transparent);
+    background: var(--danger-soft);
+}
+
+/* ---------- Liquidation form summary card ---------- */
+.summary-rows .summary-value.mono {
+    font-family: var(--font-mono);
+}
+
+/* ---------- Stats row override (allow up to 5 KPIs) ---------- */
+.stats-row.liq-stats { grid-template-columns: repeat(5, 1fr); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+    .liq-hero { padding: 18px 20px; }
+    .liq-hero-mark { width: 56px; height: 56px; }
+    .liq-hero-code { font-size: 20px; }
+}
+@media (max-width: 760px) {
+    .liq-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .side-panel { width: 100%; }
+    .modal .modal-grid { grid-template-columns: 1fr; }
+    .modal .modal-grid .field.span-2 { grid-column: auto; }
+    .liq-action-section .actions { margin-left: 0; width: 100%; }
+}
+
+/* ============================================================
+   ADDITIONS - module thanh ly extras
+   ============================================================ */
+
+/* ---------- Sticky bottom action bar (detail page) ---------- */
+.liq-action-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 16px;
+    position: sticky;
+    bottom: 16px;
+    z-index: 10;
+    box-shadow: 0 -4px 16px oklch(0% 0 0 / 0.08);
+}
+.liq-action-bar .hint {
+    font-size: 12.5px;
+    color: var(--muted);
+    flex: 1;
+    min-width: 200px;
+    align-self: center;
+}
+
+/* ---------- Workflow stepper ---------- */
+.liq-stepper {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+}
+.liq-step {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-radius: var(--radius-sm);
+    position: relative;
+}
+.liq-step + .liq-step::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 22%;
+    bottom: 22%;
+    width: 1px;
+    background: var(--border);
+}
+.liq-step .step-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--muted-2);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.liq-step .step-num .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    flex-shrink: 0;
+}
+.liq-step .step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg-soft);
+    line-height: 1.3;
+}
+.liq-step .step-meta {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+.liq-step.is-done .step-num .dot { background: var(--accent); }
+.liq-step.is-done .step-title { color: var(--fg); }
+.liq-step.is-current { background: var(--accent-soft); }
+.liq-step.is-current .step-num { color: var(--accent); }
+.liq-step.is-current .step-num .dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.liq-step.is-current .step-title { color: var(--fg); font-weight: 700; }
+.liq-step.is-rejected .step-num .dot { background: var(--danger); }
+.liq-step.is-rejected .step-num { color: var(--danger); }
+.liq-step.is-rejected { background: var(--danger-soft); }
+.liq-step.is-edit-requested .step-num .dot { background: var(--warn); }
+.liq-step.is-edit-requested .step-num { color: var(--warn); }
+.liq-step.is-edit-requested { background: var(--warn-soft); }
+
+/* ---------- Summary card ---------- */
+.liq-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.liq-summary .cell { display: flex; flex-direction: column; gap: 4px; }
+.liq-summary .cell .lbl {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+.liq-summary .cell .val {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -0.01em;
+}
+.liq-summary .cell.delta .val { color: var(--danger); }
+.liq-summary .cell.delta.pos .val { color: var(--accent); }
+@media (max-width: 800px) {
+    .liq-summary { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Activity history timeline ---------- */
+.history-timeline { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+.history-item { display: flex; gap: 14px; padding-bottom: 18px; position: relative; }
+.history-item:last-child { padding-bottom: 0; }
+.history-rail { width: 22px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.history-rail .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 6px;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.history-rail .line { flex: 1; width: 2px; background: var(--border); margin-top: 4px; }
+.history-item:last-child .history-rail .line { display: none; }
+.history-body { flex: 1; min-width: 0; }
+.history-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+.history-head .when { font-family: var(--font-mono); color: var(--fg-soft); }
+.history-head .who { color: var(--fg); font-weight: 600; }
+.history-text { font-size: 13.5px; color: var(--fg); line-height: 1.55; }
+
+/* ---------- Feedback banner variants ---------- */
+.feedback-banner--from-mgr {
+    background: var(--warn-soft);
+    border-color: color-mix(in srgb, var(--warn) 25%, transparent);
+    color: var(--warn);
+}
+.feedback-banner--from-ceo {
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+    color: var(--danger);
+}
+
+/* ---------- Solid button variants ---------- */
+.btn.btn-success-solid {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+.btn.btn-success-solid:hover {
+    background: color-mix(in srgb, var(--accent) 88%, white);
+    border-color: color-mix(in srgb, var(--accent) 88%, white);
+}
+.btn.btn-danger-solid {
+    background: var(--danger);
+    color: var(--bg);
+    border-color: var(--danger);
+}
+.btn.btn-danger-solid:hover {
+    background: color-mix(in srgb, var(--danger) 88%, white);
+    border-color: color-mix(in srgb, var(--danger) 88%, white);
+}
+
+/* ---------- Code copy ---------- */
+.code-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+    transition: background .12s ease;
+}
+.code-copy:hover { background: var(--surface-2); }
+.code-copy .copy-icon {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    color: var(--muted-2);
+    opacity: 0;
+    transition: opacity .12s ease;
+}
+.code-copy:hover .copy-icon { opacity: 1; }
+.code-copy.copied .copy-icon { color: var(--accent); opacity: 1; }
+
+/* ---------- Live form total ---------- */
+.liq-form-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: 12px;
+}
+.liq-form-total .lbl {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+}
+.liq-form-total .val {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--fg);
+}
+.liq-form-total .val .unit { color: var(--muted); margin-inline-start: 4px; font-size: 13px; }
+
+/* ---------- Customer card fit variant ---------- */
+.cust-card.cust-card-fit { width: fit-content; }
+
+/* ---------- Pagination ellipsis ---------- */
+.pagination .controls .ellipsis {
+    color: var(--muted-2);
+    padding: 0 4px;
+    font-family: var(--font-mono);
+    user-select: none;
+}
+
+/* ---------- Empty state filter hint ---------- */
+.empty-state .clear-filter-hint { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.empty-state .clear-filter-hint a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* ---------- Responsive KPI grid ---------- */
+.stats-row.liq-stats { grid-template-columns: repeat(var(--kpi-cols, 5), minmax(0, 1fr)); }
+
+/* ---------- Add-row hint ---------- */
+.add-row-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.add-row-hint svg {
+    width: 12px; height: 12px;
+    stroke: currentColor; fill: none; stroke-width: 1.8;
+    opacity: 0.7;
+}
+
+
+/* ---------- Modal host (used by detail page) ---------- */
+.modal-host {
+    position: fixed;
+    inset: 0;
+    background: oklch(0% 0 0 / 0.45);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-host.show { display: flex; }
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 480px;
+    padding: 22px;
+    box-shadow: var(--shadow-md);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+.modal h3 { font-size: 16px; font-weight: 700; margin: 0 0 6px; color: var(--fg); letter-spacing: -0.01em; }
+.modal p { font-size: 13px; color: var(--muted); margin: 0 0 16px; line-height: 1.5; }
