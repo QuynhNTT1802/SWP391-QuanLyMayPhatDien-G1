@@ -163,8 +163,8 @@
         <div class="side-panel-tools">
             <input type="text" id="serialSearchInput" class="serial-search-box" placeholder="Tìm nhanh Serial..." autocomplete="off"/>
             <select id="serialSortOrder" class="serial-sort-select" title="Sắp xếp theo ngày nhập">
+                <option value="asc">Cũ nhất (ưu tiên)</option>
                 <option value="desc">Mới nhất</option>
-                <option value="asc">Cũ nhất</option>
             </select>
         </div>
 
@@ -251,7 +251,7 @@
         var searchInput = document.getElementById('serialSearchInput');
         var sortSelect = document.getElementById('serialSortOrder');
         searchInput.value = '';
-        sortSelect.value = 'desc';
+        sortSelect.value = 'asc';
 
         document.getElementById('sidePanelOverlay').classList.add('show');
         document.getElementById('sidePanel').classList.add('show');
@@ -292,6 +292,19 @@
                             }
                         }
 
+                        // Tinh tuoi ton kho
+                        var ageMonths = 0;
+                        var ageClass = 'age-fresh';
+                        var ageText = '';
+                        if (timestamp > 0) {
+                            ageMonths = Math.floor((Date.now() - timestamp) / (1000 * 60 * 60 * 24 * 30));
+                            ageText = ageMonths + ' th\u00e1ng';
+                            if (ageMonths >= 12) ageClass = 'age-old';
+                            else if (ageMonths >= 6) ageClass = 'age-mid';
+                        } else {
+                            ageText = 'Ch\u01b0a x\u00e1c \u0111\u1ecbnh';
+                        }
+
                         var card = document.createElement('div');
                         card.className = 'serial-card';
                         card.setAttribute('data-serial', sn.serialNumber.toLowerCase());
@@ -300,11 +313,8 @@
                         var html = '<div class="serial-card-left">'
                                  + '  <div class="serial-number-text">' + sn.serialNumber + '</div>'
                                  + '  <div class="serial-meta">'
-                                 + '    <span class="badge-avail"><span class="pdot"></span>IN STOCK</span>';
-                        if (sn.generatorName) {
-                            html += '<span class="serial-meta-item"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>' + sn.generatorName + '</span>';
-                        }
-                        html += '<span class="serial-meta-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + dateStr + '</span>'
+                                 + '    <span class="age-chip ' + ageClass + '"><span class="pdot"></span>' + ageText + '</span>'
+                                 + '    <span class="serial-meta-item">' + dateStr + '</span>'
                                  + '  </div>'
                                  + '</div>'
                                  + '<div class="serial-card-icon">'

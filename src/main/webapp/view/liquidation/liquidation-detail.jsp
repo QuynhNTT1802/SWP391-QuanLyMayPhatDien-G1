@@ -32,6 +32,33 @@
                 Quay lại danh sách
             </a>
 
+            <div class="liq-head">
+                <div class="liq-head-main">
+                    <span class="code-copy mono" data-copy="${liquidation.liquidationCode}" title="Click để sao chép">
+                        ${liquidation.liquidationCode}
+                        <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </span>
+                    <c:choose>
+                        <c:when test="${liquidation.status == 'PENDING_MANAGER'}"><span class="pill liq-pending-mgr"><span class="pdot"></span>Chờ Quản lý duyệt</span></c:when>
+                        <c:when test="${liquidation.status == 'PENDING_CEO'}"><span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span></c:when>
+                        <c:when test="${liquidation.status == 'APPROVED_BY_CEO'}"><span class="pill liq-approved"><span class="pdot"></span>Đã duyệt &amp; xuất</span></c:when>
+                        <c:when test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT'}"><span class="pill liq-edit"><span class="pdot"></span>Bị yêu cầu sửa</span></c:when>
+                        <c:when test="${liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'REJECTED_BY_CEO'}"><span class="pill liq-rejected"><span class="pdot"></span>Đã hủy</span></c:when>
+                    </c:choose>
+                    <span class="liq-head-sep"></span>
+                    <span class="liq-head-meta">${liquidation.createdByName} · <span class="mono">${liquidation.createdAt}</span></span>
+                </div>
+                <div class="liq-head-stats">
+                    <span class="metric-chip"><span class="lbl">Số máy</span><span class="val"><c:out value="${empty liquidation.detailCount ? 0 : liquidation.detailCount}"/></span></span>
+                    <span class="metric-chip"><span class="lbl">Giá gốc</span><span class="val"><c:choose><c:when test="${not empty liquidation.totalOriginalPrice}"><fmt:formatNumber value="${liquidation.totalOriginalPrice}" type="number" maxFractionDigits="0"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></span>
+                    <span class="metric-chip"><span class="lbl">Giá TL</span><span class="val"><c:choose><c:when test="${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}"><fmt:formatNumber value="${liquidation.totalLiquidationPrice}" type="number" maxFractionDigits="0"/></c:when><c:otherwise>—</c:otherwise></c:choose></span></span>
+                    <c:if test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
+                        <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
+                        <span class="metric-chip ${diffPct >= 0 ? 'pos' : 'neg'}"><span class="lbl">Chênh</span><span class="val"><fmt:formatNumber value="${diffPct}" maxFractionDigits="1"/>%</span></span>
+                    </c:if>
+                </div>
+            </div>
+
             <c:set var="st" value="${liquidation.status}"/>
             <c:set var="isCancelled" value="${st == 'REJECTED_BY_MANAGER' or st == 'REJECTED_BY_CEO'}"/>
             <c:set var="isMgrEdit" value="${st == 'MANAGER_REQUEST_EDIT'}"/>
@@ -78,7 +105,7 @@
                         </c:choose>
                     </div>
                 </div>
-                <div class="liq-step ${isApproved ? 'is-current' : ''}">
+                <div class="liq-step ${isApproved ? 'is-done' : ''}">
                     <div class="step-num"><span class="dot"></span>04</div>
                     <div class="step-title">Đã xuất kho</div>
                     <div class="step-meta">
@@ -120,119 +147,116 @@
                 <form action="${pageContext.request.contextPath}/liquidations" method="POST" id="mainForm">
                     <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
 
-                    <div class="section" style="padding: 18px 22px; margin-bottom: 20px;">
-                        <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Thông tin chung</h3>
-                        <div class="info-grid">
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
-                                    <c:choose>
-                                        <c:when test="${liquidation.status == 'PENDING_MANAGER'}"><span class="pill liq-pending-mgr"><span class="pdot"></span>Chờ Quản lý duyệt</span></c:when>
-                                        <c:when test="${liquidation.status == 'PENDING_CEO'}"><span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span></c:when>
-                                        <c:when test="${liquidation.status == 'APPROVED_BY_CEO'}"><span class="pill liq-approved"><span class="pdot"></span>Đã duyệt (Đã xuất)</span></c:when>
-                                        <c:when test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT'}"><span class="pill liq-edit"><span class="pdot"></span>Bị yêu cầu sửa</span></c:when>
-                                        <c:when test="${liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'REJECTED_BY_CEO'}"><span class="pill liq-rejected"><span class="pdot"></span>Đã bị hủy</span></c:when>
-                                        <c:otherwise><span class="pill liq-muted"><span class="pdot"></span>${liquidation.status}</span></c:otherwise>
-                                    </c:choose>
+                    <div class="liq-info-grid">
+                        <div class="section liq-info-block">
+                            <h3 class="liq-info-title">Thông tin đơn</h3>
+                            <div class="kv-list">
+                                <div class="kv-row">
+                                    <div class="kv-key">Lý do thanh lý</div>
+                                    <div class="kv-val">${liquidation.reasonName}</div>
                                 </div>
+                                <div class="kv-row">
+                                    <div class="kv-key">Kho hàng</div>
+                                    <div class="kv-val">${liquidation.warehouseName}</div>
+                                </div>
+                                <div class="kv-row">
+                                    <div class="kv-key">Người tạo</div>
+                                    <div class="kv-val">${liquidation.createdByName}</div>
+                                </div>
+                                <div class="kv-row">
+                                    <div class="kv-key">Ngày tạo</div>
+                                    <div class="kv-val mono">${liquidation.createdAt}</div>
+                                </div>
+                                <c:if test="${not empty liquidation.managerReviewedByName}">
+                                    <div class="kv-row">
+                                        <div class="kv-key">Quản lý duyệt</div>
+                                        <div class="kv-val">${liquidation.managerReviewedByName}</div>
+                                    </div>
+                                </c:if>
                             </div>
-                            <div class="info-field">
-                                <div class="info-label">Lý do thanh lý</div>
-                                <div class="info-value">${liquidation.reasonName}</div>
-                            </div>
-                            <c:if test="${not empty liquidation.customerName and not (isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT'))}">
-                            <div class="info-field">
-                                <div class="info-label">Khách hàng nhận</div>
-                                <div class="cust-card cust-card-fit">
-                                    <div class="cust-card-avatar">${fn:substring(liquidation.customerName,0,1)}</div>
-                                    <div class="cust-card-body">
-                                        <div class="cust-card-name">${liquidation.customerName}</div>
-                                        <div class="cust-card-rows">
-                                            <c:if test="${not empty liquidation.customerPhone}">
-                                            <div class="cust-card-row">
-                                                <svg viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
-                                                ${liquidation.customerPhone}
+                        </div>
+
+                        <div class="section liq-info-block">
+                            <h3 class="liq-info-title">Khách hàng nhận</h3>
+                            <c:choose>
+                                <c:when test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
+                                    <p class="kv-hint">Vui lòng chọn hoặc thêm khách hàng để làm cơ sở tạo phiếu xuất.</p>
+                                    <div id="managerCustomerArea">
+                                        <input type="hidden" name="customerId" id="customerIdHidden" value="${liquidation.customerId}" required/>
+
+                                        <div class="cust-search-wrap" id="custSearchWrap" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
+                                            <input type="text" id="custSearchInput" class="cust-search-input"
+                                                   placeholder="Nhập tên hoặc số điện thoại..." autocomplete="off" />
+                                            <div class="cust-dropdown" id="custDropdown"></div>
+                                        </div>
+
+                                        <div class="cust-card" id="custCard" style="${not empty liquidation.customerId ? '' : 'display:none;'}">
+                                            <div class="cust-card-avatar" id="custCardAvatar">${not empty liquidation.customerName ? fn:substring(liquidation.customerName,0,1) : ''}</div>
+                                            <div class="cust-card-body">
+                                                <div class="cust-card-name" id="custCardName">${liquidation.customerName}</div>
+                                                <div class="cust-card-rows">
+                                                    <div class="cust-card-row">
+                                                        <svg viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
+                                                        <span id="custCardPhone">${liquidation.customerPhone}</span>
+                                                    </div>
+                                                    <div class="cust-card-row" id="custCardEmailRow" style="${empty liquidation.customerEmail ? 'display:none;' : ''}">
+                                                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                                                        <span id="custCardEmail">${liquidation.customerEmail}</span>
+                                                    </div>
+                                                    <div class="cust-card-row" id="custCardAddrRow" style="${empty liquidation.customerAddress ? 'display:none;' : ''}">
+                                                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                        <span id="custCardAddr">${liquidation.customerAddress}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            </c:if>
-                                            <c:if test="${not empty liquidation.customerEmail}">
-                                            <div class="cust-card-row">
-                                                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-                                                ${liquidation.customerEmail}
+                                            <button type="button" class="cust-clear" onclick="clearCustomer()" title="Bỏ chọn">
+                                                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                            </button>
+                                        </div>
+
+                                        <button type="button" class="btn add-cust-btn" id="addNewCustBtn" onclick="openNewCustomerModal()" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
+                                            <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                            Thêm khách hàng mới
+                                        </button>
+                                    </div>
+                                </c:when>
+                                <c:when test="${not empty liquidation.customerName}">
+                                    <div class="cust-card cust-card--full">
+                                        <div class="cust-card-avatar">${fn:substring(liquidation.customerName,0,1)}</div>
+                                        <div class="cust-card-body">
+                                            <div class="cust-card-name">${liquidation.customerName}</div>
+                                            <div class="cust-card-rows">
+                                                <c:if test="${not empty liquidation.customerPhone}">
+                                                <div class="cust-card-row">
+                                                    <svg viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
+                                                    ${liquidation.customerPhone}
+                                                </div>
+                                                </c:if>
+                                                <c:if test="${not empty liquidation.customerEmail}">
+                                                <div class="cust-card-row">
+                                                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                                                    ${liquidation.customerEmail}
+                                                </div>
+                                                </c:if>
+                                                <c:if test="${not empty liquidation.customerAddress}">
+                                                <div class="cust-card-row">
+                                                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                    ${liquidation.customerAddress}
+                                                </div>
+                                                </c:if>
                                             </div>
-                                            </c:if>
-                                            <c:if test="${not empty liquidation.customerAddress}">
-                                            <div class="cust-card-row">
-                                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                                ${liquidation.customerAddress}
-                                            </div>
-                                            </c:if>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            </c:if>
-                            <div class="info-field">
-                                <div class="info-label">Kho hàng</div>
-                                <div class="info-value">${liquidation.warehouseName}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Người tạo</div>
-                                <div class="info-value">${liquidation.createdByName}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Ngày tạo</div>
-                                <div class="info-value mono">${liquidation.createdAt}</div>
-                            </div>
+                                </c:when>
+                                <c:otherwise>
+                                    <p class="kv-hint">Chưa có khách hàng. Sẽ được Quản lý kho gán khi duyệt đơn.</p>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
 
-                    <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
-                    <div class="section" style="padding: 18px 22px; margin-bottom: 20px;">
-                        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Thông tin Khách hàng</h3>
-                        <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Vui lòng chọn hoặc thêm mới khách hàng mua thanh lý để làm cơ sở tạo phiếu xuất sau này.</p>
-                        <div style="max-width: 400px;" id="managerCustomerArea">
-                            <input type="hidden" name="customerId" id="customerIdHidden" value="${liquidation.customerId}" required/>
-
-                            <div class="cust-search-wrap" id="custSearchWrap" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
-                                <input type="text" id="custSearchInput" class="cust-search-input"
-                                       placeholder="Nhập tên hoặc số điện thoại..." autocomplete="off" />
-                                <div class="cust-dropdown" id="custDropdown"></div>
-                            </div>
-
-                            <div class="cust-card" id="custCard" style="${not empty liquidation.customerId ? '' : 'display:none;'}">
-                                <div class="cust-card-avatar" id="custCardAvatar">${not empty liquidation.customerName ? fn:substring(liquidation.customerName,0,1) : ''}</div>
-                                <div class="cust-card-body">
-                                    <div class="cust-card-name" id="custCardName">${liquidation.customerName}</div>
-                                    <div class="cust-card-rows">
-                                        <div class="cust-card-row">
-                                            <svg viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
-                                            <span id="custCardPhone">${liquidation.customerPhone}</span>
-                                        </div>
-                                        <div class="cust-card-row" id="custCardEmailRow" style="${empty liquidation.customerEmail ? 'display:none;' : ''}">
-                                            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-                                            <span id="custCardEmail">${liquidation.customerEmail}</span>
-                                        </div>
-                                        <div class="cust-card-row" id="custCardAddrRow" style="${empty liquidation.customerAddress ? 'display:none;' : ''}">
-                                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                            <span id="custCardAddr">${liquidation.customerAddress}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="button" class="cust-clear" onclick="clearCustomer()" title="Bỏ chọn">
-                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                </button>
-                            </div>
-
-                            <button type="button" class="btn add-cust-btn" id="addNewCustBtn" onclick="openNewCustomerModal()" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                                Thêm khách hàng mới
-                            </button>
-                        </div>
-                    </div>
-                    </c:if>
-
-                    <div class="section" style="padding: 18px 22px;">
-                        <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Danh sách máy phát điện</h3>
+                    <div class="section liq-product-section">
+                        <h3 class="liq-info-title">Danh sách máy phát điện</h3>
                         <table class="product-table">
                             <thead>
                                 <tr>
@@ -264,38 +288,6 @@
                                 </c:forEach>
                             </tbody>
                         </table>
-
-                        <div class="liq-summary">
-                            <div class="cell">
-                                <div class="lbl">Số máy</div>
-                                <div class="val"><c:out value="${empty liquidation.detailCount ? 0 : liquidation.detailCount}"/></div>
-                            </div>
-                            <div class="cell">
-                                <div class="lbl">Tổng giá gốc</div>
-                                <div class="val">
-                                    <c:choose>
-                                        <c:when test="${not empty liquidation.totalOriginalPrice}"><fmt:formatNumber value="${liquidation.totalOriginalPrice}" type="number" maxFractionDigits="0"/> ₫</c:when>
-                                        <c:otherwise>—</c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <div class="cell">
-                                <div class="lbl">Tổng giá thanh lý</div>
-                                <div class="val">
-                                    <c:choose>
-                                        <c:when test="${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}"><fmt:formatNumber value="${liquidation.totalLiquidationPrice}" type="number" maxFractionDigits="0"/> ₫</c:when>
-                                        <c:otherwise><span style="color:var(--muted-2)">Chưa định giá</span></c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <c:if test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
-                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
-                                <div class="cell delta ${diffPct >= 0 ? 'pos' : ''}">
-                                    <div class="lbl">Chênh lệch</div>
-                                    <div class="val"><fmt:formatNumber value="${diffPct}" maxFractionDigits="1"/> %</div>
-                                </div>
-                            </c:if>
-                        </div>
                     </div>
 
                     <c:if test="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO') or (isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT')}">
@@ -327,24 +319,83 @@
                         <p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Chưa có lịch sử xử lý.</p>
                     </c:if>
                     <c:if test="${not empty liquidationHistory}">
-                        <div class="history-timeline">
-                            <c:forEach var="log" items="${liquidationHistory}">
-                                <div class="history-item">
-                                    <div class="history-rail">
-                                        <div class="dot"></div>
-                                        <div class="line"></div>
-                                    </div>
-                                    <div class="history-body">
-                                        <div class="history-head">
-                                            <span class="when"><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm" /></span>
-                                            <span class="act-badge act-${log.action}">${log.action}</span>
-                                            <span>bởi <span class="who">${log.username}</span> · #${log.userId}</span>
-                                        </div>
-                                        <div class="history-text">${log.details}</div>
-                                    </div>
-                                </div>
-                            </c:forEach>
+                        <div class="history-toolbar">
+                            <div class="history-search">
+                                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="historySearch" placeholder="Tìm theo người làm, ghi chú..." autocomplete="off"/>
+                            </div>
+                            <select id="historyFilter" class="history-filter">
+                                <option value="">Tất cả hành động</option>
+                                <option value="CREATE">Tạo đơn</option>
+                                <option value="EDIT_SUBMIT">Đã sửa &amp; gửi lại</option>
+                                <option value="MANAGER_APPROVE">Quản lý duyệt</option>
+                                <option value="MANAGER_REQUEST_EDIT">Quản lý yêu cầu sửa</option>
+                                <option value="REJECTED_BY_MANAGER">Quản lý từ chối</option>
+                                <option value="CEO_APPROVE">Sếp duyệt</option>
+                                <option value="CEO_REQUEST_EDIT">Sếp yêu cầu sửa</option>
+                                <option value="REJECTED_BY_CEO">Sếp từ chối</option>
+                                <option value="EXPORT_APPROVE">Đã xuất kho</option>
+                                <option value="AUTO_CREATE">Tự động tạo</option>
+                            </select>
+                            <span class="history-counter" id="historyCounter"></span>
                         </div>
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-time">Thời gian</th>
+                                    <th class="col-action">Hành động</th>
+                                    <th class="col-actor">Người làm</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody">
+                                <c:forEach var="log" items="${liquidationHistory}">
+                                    <c:set var="actLow">
+                                        <c:choose>
+                                            <c:when test="${log.action == 'MANAGER_APPROVE'}">approve_manager</c:when>
+                                            <c:when test="${log.action == 'CEO_APPROVE'}">approve_ceo</c:when>
+                                            <c:when test="${log.action == 'EXPORT_APPROVE'}">approve_ceo</c:when>
+                                            <c:when test="${log.action == 'MANAGER_REQUEST_EDIT'}">request_edit_manager</c:when>
+                                            <c:when test="${log.action == 'CEO_REQUEST_EDIT'}">request_edit_ceo</c:when>
+                                            <c:when test="${log.action == 'REJECTED_BY_MANAGER'}">reject_manager</c:when>
+                                            <c:when test="${log.action == 'REJECTED_BY_CEO'}">reject_ceo</c:when>
+                                            <c:when test="${log.action == 'EDIT_SUBMIT'}">edit_submit</c:when>
+                                            <c:when test="${log.action == 'CREATE' or log.action == 'AUTO_CREATE'}">create</c:when>
+                                            <c:otherwise>muted</c:otherwise>
+                                        </c:choose>
+                                    </c:set>
+                                    <tr data-action="${log.action}">
+                                        <td class="col-time mono"><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM HH:mm" /></td>
+                                        <td class="col-action">
+                                            <span class="act-badge act-${actLow}">
+                                                <c:choose>
+                                                    <c:when test="${log.action == 'CREATE'}">Tạo đơn</c:when>
+                                                    <c:when test="${log.action == 'AUTO_CREATE'}">Tự động tạo</c:when>
+                                                    <c:when test="${log.action == 'MANAGER_APPROVE'}">Quản lý duyệt</c:when>
+                                                    <c:when test="${log.action == 'MANAGER_REQUEST_EDIT'}">Quản lý yêu cầu sửa</c:when>
+                                                    <c:when test="${log.action == 'REJECTED_BY_MANAGER'}">Quản lý từ chối</c:when>
+                                                    <c:when test="${log.action == 'CEO_APPROVE'}">Sếp duyệt</c:when>
+                                                    <c:when test="${log.action == 'CEO_REQUEST_EDIT'}">Sếp yêu cầu sửa</c:when>
+                                                    <c:when test="${log.action == 'REJECTED_BY_CEO'}">Sếp từ chối</c:when>
+                                                    <c:when test="${log.action == 'EDIT_SUBMIT'}">Đã sửa &amp; gửi lại</c:when>
+                                                    <c:when test="${log.action == 'EXPORT_APPROVE'}">Đã xuất kho</c:when>
+                                                    <c:otherwise>${log.action}</c:otherwise>
+                                                </c:choose>
+                                            </span>
+                                        </td>
+                                        <td class="col-actor">
+                                            <span class="actor-name">${log.username}</span>
+                                            <span class="actor-id">#${log.userId}</span>
+                                        </td>
+                                        <td class="col-details">${log.details}</td>
+                                    </tr>
+                                </c:forEach>
+                                <tr id="historyEmptyRow" style="display:none;">
+                                    <td colspan="4" style="text-align:center; color:var(--muted); padding:24px 12px; font-size:13px;">Không có kết quả phù hợp.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="history-pager" id="historyPager"></div>
                     </c:if>
                 </div>
             </div> <!-- end tab-history -->
@@ -476,7 +527,99 @@
         document.getElementById('tab-' + tabId).classList.add('active');
         var clickedTab = document.querySelector('.tab[onclick="switchTab(\'' + tabId + '\')"]');
         if (clickedTab) clickedTab.classList.add('active');
+        if (tabId === 'history') applyHistoryFilter();
     }
+
+    /* ============ HISTORY: search + filter + pagination ============ */
+    var HISTORY_PAGE_SIZE = 8;
+    var historyState = { page: 1 };
+
+    function getHistoryRows() {
+        var body = document.getElementById('historyBody');
+        if (!body) return [];
+        return Array.from(body.querySelectorAll('tr[data-action]'));
+    }
+
+    function applyHistoryFilter() {
+        var rows = getHistoryRows();
+        if (rows.length === 0) return;
+        var qInput = document.getElementById('historySearch');
+        var fSel = document.getElementById('historyFilter');
+        var q = qInput ? qInput.value.toLowerCase().trim() : '';
+        var f = fSel ? fSel.value : '';
+
+        var matched = [];
+        rows.forEach(function(tr) {
+            var act = tr.getAttribute('data-action') || '';
+            var text = tr.innerText.toLowerCase();
+            var ok = (!f || act === f) && (!q || text.indexOf(q) !== -1);
+            tr.dataset.match = ok ? '1' : '0';
+            if (ok) matched.push(tr);
+        });
+
+        // paginate matched rows
+        var totalPages = Math.max(1, Math.ceil(matched.length / HISTORY_PAGE_SIZE));
+        if (historyState.page > totalPages) historyState.page = totalPages;
+        if (historyState.page < 1) historyState.page = 1;
+        var start = (historyState.page - 1) * HISTORY_PAGE_SIZE;
+        var end = start + HISTORY_PAGE_SIZE;
+
+        rows.forEach(function(tr) { tr.style.display = 'none'; });
+        matched.slice(start, end).forEach(function(tr) { tr.style.display = ''; });
+
+        var emptyRow = document.getElementById('historyEmptyRow');
+        if (emptyRow) emptyRow.style.display = matched.length === 0 ? '' : 'none';
+
+        var counter = document.getElementById('historyCounter');
+        if (counter) {
+            if (matched.length === 0) counter.textContent = '';
+            else counter.textContent = matched.length + ' kết quả';
+        }
+
+        renderHistoryPager(matched.length, totalPages);
+    }
+
+    function renderHistoryPager(total, totalPages) {
+        var pager = document.getElementById('historyPager');
+        if (!pager) return;
+        if (total <= HISTORY_PAGE_SIZE) { pager.innerHTML = ''; return; }
+        var html = '';
+        var p = historyState.page;
+        html += '<button type="button" class="page-btn" data-go="prev"' + (p <= 1 ? ' disabled' : '') + '>‹</button>';
+        var winStart = Math.max(1, p - 2);
+        var winEnd = Math.min(totalPages, p + 2);
+        if (winStart > 1) {
+            html += '<button type="button" class="page-btn" data-go="1">1</button>';
+            if (winStart > 2) html += '<span class="ellipsis">…</span>';
+        }
+        for (var i = winStart; i <= winEnd; i++) {
+            html += '<button type="button" class="page-btn ' + (i === p ? 'active' : '') + '" data-go="' + i + '">' + i + '</button>';
+        }
+        if (winEnd < totalPages) {
+            if (winEnd < totalPages - 1) html += '<span class="ellipsis">…</span>';
+            html += '<button type="button" class="page-btn" data-go="' + totalPages + '">' + totalPages + '</button>';
+        }
+        html += '<button type="button" class="page-btn" data-go="next"' + (p >= totalPages ? ' disabled' : '') + '>›</button>';
+        pager.innerHTML = html;
+
+        pager.querySelectorAll('button[data-go]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var go = btn.getAttribute('data-go');
+                if (go === 'prev') historyState.page = Math.max(1, historyState.page - 1);
+                else if (go === 'next') historyState.page = historyState.page + 1;
+                else historyState.page = parseInt(go, 10);
+                applyHistoryFilter();
+            });
+        });
+    }
+
+    (function initHistory() {
+        var search = document.getElementById('historySearch');
+        var filter = document.getElementById('historyFilter');
+        if (search) search.addEventListener('input', function() { historyState.page = 1; applyHistoryFilter(); });
+        if (filter) filter.addEventListener('change', function() { historyState.page = 1; applyHistoryFilter(); });
+        applyHistoryFilter();
+    })();
     function openModal(id) { document.getElementById(id).classList.add('show'); }
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
     function openConfirmApproveModal() { openModal('confirmApproveModal'); }
