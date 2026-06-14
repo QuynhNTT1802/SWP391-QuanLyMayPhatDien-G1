@@ -8,133 +8,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chi tiết thanh lý — Warehouse OS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
-    <style>
-        .cust-card {
-            display: flex; gap: 10px; align-items: center;
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm); padding: 8px 12px;
-            margin-top: 4px;
-            width: fit-content;
-        }
-        .cust-card-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: var(--accent);
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-weight: 700; font-size: 13px; flex-shrink: 0;
-        }
-        .cust-card-body { flex: 1; }
-        .cust-card-name { font-size: 13px; font-weight: 700; color: var(--fg); margin-bottom: 2px; }
-        .cust-card-rows { display: flex; flex-wrap: wrap; gap: 4px 12px; }
-        .cust-card-row { font-size: 11.5px; color: var(--muted); display: flex; gap: 4px; align-items: center; }
-        .cust-card-row svg { opacity: 0.6; width: 11px; height: 11px; }
-
-        a.btn, a.back-link { text-decoration: none; }
-        .product-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
-        .product-table th { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; background: var(--surface-2); letter-spacing: 0.04em; }
-        .product-table td { font-size: 13px; }
-        .product-table tbody tr:hover { background: var(--surface-2); }
-        .text-center { text-align: center; }
-        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status-pending { background: #fef3c7; color: #d97706; }
-        .status-revision { background: #fee2e2; color: #dc2626; }
-        .status-completed { background: #d1fae5; color: #059669; }
-        [data-theme="dark"] .status-pending { background: var(--warn-soft); color: var(--warn); }
-        [data-theme="dark"] .status-revision { background: var(--danger-soft); color: var(--danger); }
-        [data-theme="dark"] .status-completed { background: var(--accent-soft); color: var(--accent); }
-        .hero-avatar { background: oklch(58% 0.16 250); }
-
-        .action-bar-bottom { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 16px; position: sticky; bottom: 16px; z-index: 10; box-shadow: 0 -4px 16px rgba(0,0,0,0.08); }
-        .btn-warn { background: var(--warn); color: white; border-color: var(--warn); }
-        .btn-success { background: var(--accent); color: white; border-color: var(--accent); }
-        .btn-danger { background: var(--danger); color: white; border-color: var(--danger); }
-        .btn-outline-warn { background: transparent; color: var(--warn); border-color: var(--warn); }
-        .btn-outline-warn:hover { background: var(--warn-soft); }
-        .btn-outline-danger { background: transparent; color: var(--danger); border-color: var(--danger); }
-        .btn-outline-danger:hover { background: var(--danger-soft); }
-
-        .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
-        .tab { padding: 10px 18px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font-ui); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-        .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-        
-        /* Customer Search UI */
-        .cust-search-wrap { position: relative; margin-top: 6px; }
-        .cust-dropdown {
-            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-            background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 50;
-            max-height: 240px; overflow-y: auto; display: none;
-        }
-        .cust-dropdown.show { display: block; }
-        .cust-option {
-            padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 2px;
-        }
-        .cust-option:last-child { border-bottom: none; }
-        .cust-option:hover { background: var(--surface-2); }
-        .cust-option .cust-name { font-weight: 600; color: var(--fg); }
-        .cust-clear {
-            position: absolute; top: 10px; right: 12px;
-            background: none; border: none; cursor: pointer; color: var(--muted); padding: 2px;
-            border-radius: 4px;
-        }
-        .cust-clear:hover { color: var(--danger); background: var(--danger-soft); }
-        .add-cust-btn {
-            margin-top: 10px; font-size: 13px; gap: 6px;
-            background: var(--surface-2); border-color: var(--border);
-        }
-        /* New customer modal */
-        .nc-modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-            display: none; align-items: center; justify-content: center;
-            z-index: 2000; padding: 20px;
-        }
-        .nc-modal-overlay.show { display: flex; }
-        .nc-modal {
-            background: var(--bg); border: 1px solid var(--border);
-            border-radius: var(--radius-md); width: 100%; max-width: 540px;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.18); overflow: hidden;
-        }
-        .nc-modal-head {
-            padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .nc-modal-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
-        .nc-modal-body { padding: 20px 22px; display: flex; flex-direction: column; gap: 14px; }
-        .nc-field { display: flex; flex-direction: column; gap: 5px; }
-        .nc-field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-        .nc-field input, .nc-field select {
-            width: 100%; padding: 9px 12px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg);
-            color: var(--fg); font-size: 13px; font-family: var(--font-ui);
-            box-sizing: border-box; transition: border-color 0.2s;
-        }
-        .nc-field input:focus, .nc-field select:focus { outline: none; border-color: var(--accent); }
-        .nc-field input.error { border-color: var(--danger); }
-        .nc-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .nc-modal-foot {
-            padding: 14px 22px; border-top: 1px solid var(--border);
-            display: flex; justify-content: flex-end; gap: 8px; align-items: center;
-        }
-        .nc-error { font-size: 12px; color: var(--danger); display: none; }
-        .nc-error.show { display: block; }
-
-        
-        .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-        .modal-host.show { display: flex; }
-        .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-        .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-        .modal-card select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; margin-bottom: 15px; margin-top: 10px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
 </head>
 <body>
 <div class="app">
@@ -153,24 +32,80 @@
                 Quay lại danh sách
             </a>
 
+            <c:set var="st" value="${liquidation.status}"/>
+            <c:set var="isCancelled" value="${st == 'REJECTED_BY_MANAGER' or st == 'REJECTED_BY_CEO'}"/>
+            <c:set var="isMgrEdit" value="${st == 'MANAGER_REQUEST_EDIT'}"/>
+            <c:set var="isCeoEdit" value="${st == 'CEO_REQUEST_EDIT'}"/>
+            <c:set var="isApproved" value="${st == 'APPROVED_BY_CEO'}"/>
+            <c:set var="isPendingMgr" value="${st == 'PENDING_MANAGER'}"/>
+            <c:set var="isPendingCeo" value="${st == 'PENDING_CEO'}"/>
 
+            <div class="liq-stepper">
+                <div class="liq-step is-done">
+                    <div class="step-num"><span class="dot"></span>01</div>
+                    <div class="step-title">Đã tạo đơn</div>
+                    <div class="step-meta">${liquidation.createdByName}</div>
+                </div>
+                <div class="liq-step
+                    ${isPendingMgr ? 'is-current' : ''}
+                    ${isMgrEdit ? 'is-edit-requested' : ''}
+                    ${st == 'REJECTED_BY_MANAGER' ? 'is-rejected' : ''}
+                    ${isPendingCeo or isCeoEdit or isApproved or st == 'REJECTED_BY_CEO' ? 'is-done' : ''}">
+                    <div class="step-num"><span class="dot"></span>02</div>
+                    <div class="step-title">Quản lý duyệt</div>
+                    <div class="step-meta">
+                        <c:choose>
+                            <c:when test="${isMgrEdit}">Yêu cầu sửa</c:when>
+                            <c:when test="${st == 'REJECTED_BY_MANAGER'}">Đã từ chối</c:when>
+                            <c:when test="${not empty liquidation.managerReviewedByName}">${liquidation.managerReviewedByName}</c:when>
+                            <c:otherwise>—</c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+                <div class="liq-step
+                    ${isPendingCeo ? 'is-current' : ''}
+                    ${isCeoEdit ? 'is-edit-requested' : ''}
+                    ${st == 'REJECTED_BY_CEO' ? 'is-rejected' : ''}
+                    ${isApproved ? 'is-done' : ''}">
+                    <div class="step-num"><span class="dot"></span>03</div>
+                    <div class="step-title">Sếp duyệt</div>
+                    <div class="step-meta">
+                        <c:choose>
+                            <c:when test="${isCeoEdit}">Yêu cầu sửa</c:when>
+                            <c:when test="${st == 'REJECTED_BY_CEO'}">Đã từ chối</c:when>
+                            <c:when test="${isApproved}">Đã duyệt</c:when>
+                            <c:otherwise>—</c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+                <div class="liq-step ${isApproved ? 'is-current' : ''}">
+                    <div class="step-num"><span class="dot"></span>04</div>
+                    <div class="step-title">Đã xuất kho</div>
+                    <div class="step-meta">
+                        <c:choose>
+                            <c:when test="${isApproved}">Hoàn tất</c:when>
+                            <c:otherwise>—</c:otherwise>
+                        </c:choose>
+                    </div>
+                </div>
+            </div>
 
             <c:if test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'REJECTED_BY_CEO'}">
                 <c:if test="${not empty liquidation.ceoFeedbackName}">
-                    <div style="display: flex; gap: 10px; align-items: flex-start; background: var(--danger-soft); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); padding: 14px 16px; border-radius: var(--radius); margin-bottom: 20px; color: var(--danger);">
-                        <div>
-                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Phản hồi từ Sếp (CEO)</div>
-                            <div style="font-size: 13px;">${liquidation.ceoFeedbackName}</div>
+                    <div class="feedback-banner feedback-banner--from-ceo">
+                        <div class="body">
+                            <div class="feedback-banner__label">Phản hồi từ Sếp (CEO)</div>
+                            <div class="feedback-banner__body">${liquidation.ceoFeedbackName}</div>
                         </div>
                     </div>
                 </c:if>
             </c:if>
             <c:if test="${liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'REJECTED_BY_MANAGER'}">
                 <c:if test="${not empty liquidation.managerFeedbackName}">
-                    <div style="display: flex; gap: 10px; align-items: flex-start; background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); padding: 14px 16px; border-radius: var(--radius); margin-bottom: 20px; color: var(--warn);">
-                        <div>
-                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Phản hồi từ Quản lý kho</div>
-                            <div style="font-size: 13px;">${liquidation.managerFeedbackName}</div>
+                    <div class="feedback-banner feedback-banner--from-mgr">
+                        <div class="body">
+                            <div class="feedback-banner__label">Phản hồi từ Quản lý kho</div>
+                            <div class="feedback-banner__body">${liquidation.managerFeedbackName}</div>
                         </div>
                     </div>
                 </c:if>
@@ -185,124 +120,119 @@
                 <form action="${pageContext.request.contextPath}/liquidations" method="POST" id="mainForm">
                     <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
 
-
-
-                <div class="section" style="padding: 18px 22px; margin-bottom: 20px;">
-                    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Thông tin chung</h3>
-                    <div class="info-grid">
-                        <div class="info-field">
-                            <div class="info-label">Trạng thái</div>
-                            <div class="info-value">
-                                <c:choose>
-                                    <c:when test="${liquidation.status == 'PENDING_MANAGER'}"><span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ Quản lý duyệt</span></c:when>
-                                    <c:when test="${liquidation.status == 'PENDING_CEO'}"><span class="pill" style="color: var(--purple); border-color: color-mix(in srgb, var(--purple) 30%, transparent); background: var(--purple-soft);"><span class="pdot" style="background: var(--purple);"></span>Chờ Sếp duyệt</span></c:when>
-                                    <c:when test="${liquidation.status == 'APPROVED_BY_CEO'}"><span class="pill" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft);"><span class="pdot" style="background: var(--accent);"></span>Đã duyệt (Đã xuất)</span></c:when>
-                                    <c:when test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT'}"><span class="pill" style="color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft);"><span class="pdot" style="background: var(--warn);"></span>Bị yêu cầu sửa</span></c:when>
-                                    <c:when test="${liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'REJECTED_BY_CEO'}"><span class="pill" style="color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft);"><span class="pdot" style="background: var(--danger);"></span>Đã bị hủy</span></c:when>
-                                    <c:otherwise><span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>${liquidation.status}</span></c:otherwise>
-                                </c:choose>
-                            </div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Lý do thanh lý</div>
-                            <div class="info-value">${liquidation.reasonName}</div>
-                        </div>
-                        <c:if test="${not empty liquidation.customerName and not (isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT'))}">
-                        <div class="info-field">
-                            <div class="info-label">Khách hàng nhận</div>
-                            <div class="cust-card">
-                                <div class="cust-card-avatar">
-                                    ${fn:substring(liquidation.customerName,0,1)}
+                    <div class="section" style="padding: 18px 22px; margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Thông tin chung</h3>
+                        <div class="info-grid">
+                            <div class="info-field">
+                                <div class="info-label">Trạng thái</div>
+                                <div class="info-value">
+                                    <c:choose>
+                                        <c:when test="${liquidation.status == 'PENDING_MANAGER'}"><span class="pill liq-pending-mgr"><span class="pdot"></span>Chờ Quản lý duyệt</span></c:when>
+                                        <c:when test="${liquidation.status == 'PENDING_CEO'}"><span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span></c:when>
+                                        <c:when test="${liquidation.status == 'APPROVED_BY_CEO'}"><span class="pill liq-approved"><span class="pdot"></span>Đã duyệt (Đã xuất)</span></c:when>
+                                        <c:when test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT'}"><span class="pill liq-edit"><span class="pdot"></span>Bị yêu cầu sửa</span></c:when>
+                                        <c:when test="${liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'REJECTED_BY_CEO'}"><span class="pill liq-rejected"><span class="pdot"></span>Đã bị hủy</span></c:when>
+                                        <c:otherwise><span class="pill liq-muted"><span class="pdot"></span>${liquidation.status}</span></c:otherwise>
+                                    </c:choose>
                                 </div>
-                                <div class="cust-card-body">
-                                    <div class="cust-card-name">${liquidation.customerName}</div>
-                                    <div class="cust-card-rows">
-                                        <c:if test="${not empty liquidation.customerPhone}">
-                                        <div class="cust-card-row">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
-                                            ${liquidation.customerPhone}
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Lý do thanh lý</div>
+                                <div class="info-value">${liquidation.reasonName}</div>
+                            </div>
+                            <c:if test="${not empty liquidation.customerName and not (isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT'))}">
+                            <div class="info-field">
+                                <div class="info-label">Khách hàng nhận</div>
+                                <div class="cust-card cust-card-fit">
+                                    <div class="cust-card-avatar">${fn:substring(liquidation.customerName,0,1)}</div>
+                                    <div class="cust-card-body">
+                                        <div class="cust-card-name">${liquidation.customerName}</div>
+                                        <div class="cust-card-rows">
+                                            <c:if test="${not empty liquidation.customerPhone}">
+                                            <div class="cust-card-row">
+                                                <svg viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
+                                                ${liquidation.customerPhone}
+                                            </div>
+                                            </c:if>
+                                            <c:if test="${not empty liquidation.customerEmail}">
+                                            <div class="cust-card-row">
+                                                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                                                ${liquidation.customerEmail}
+                                            </div>
+                                            </c:if>
+                                            <c:if test="${not empty liquidation.customerAddress}">
+                                            <div class="cust-card-row">
+                                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                ${liquidation.customerAddress}
+                                            </div>
+                                            </c:if>
                                         </div>
-                                        </c:if>
-                                        <c:if test="${not empty liquidation.customerEmail}">
-                                        <div class="cust-card-row">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-                                            ${liquidation.customerEmail}
-                                        </div>
-                                        </c:if>
-                                        <c:if test="${not empty liquidation.customerAddress}">
-                                        <div class="cust-card-row">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                            ${liquidation.customerAddress}
-                                        </div>
-                                        </c:if>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        </c:if>
-                        <div class="info-field">
-                            <div class="info-label">Kho hàng</div>
-                            <div class="info-value">${liquidation.warehouseName}</div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Người tạo</div>
-                            <div class="info-value">${liquidation.createdByName}</div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Ngày tạo</div>
-                            <div class="info-value mono">${liquidation.createdAt}</div>
+                            </c:if>
+                            <div class="info-field">
+                                <div class="info-label">Kho hàng</div>
+                                <div class="info-value">${liquidation.warehouseName}</div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Người tạo</div>
+                                <div class="info-value">${liquidation.createdByName}</div>
+                            </div>
+                            <div class="info-field">
+                                <div class="info-label">Ngày tạo</div>
+                                <div class="info-value mono">${liquidation.createdAt}</div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
-                <div class="section" style="padding: 18px 22px; margin-bottom: 20px;">
-                    <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Thông tin Khách hàng</h3>
-                    <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Vui lòng chọn hoặc thêm mới khách hàng mua thanh lý để làm cơ sở tạo phiếu xuất sau này.</p>
-                    <div style="max-width: 400px;" id="managerCustomerArea">
-                        <input type="hidden" name="customerId" id="customerIdHidden" value="${liquidation.customerId}" required/>
-                        
-                        <div class="cust-search-wrap" id="custSearchWrap" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
-                            <input type="text" id="custSearchInput" class="input" style="width:100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;"
-                                   placeholder="Nhập tên hoặc số điện thoại..."
-                                   autocomplete="off" />
-                            <div class="cust-dropdown" id="custDropdown"></div>
-                        </div>
-                        
-                        <div class="cust-card" id="custCard" style="${not empty liquidation.customerId ? 'display:flex;' : 'display:none;'} width:100%;">
-                            <div class="cust-card-avatar" id="custCardAvatar">${not empty liquidation.customerName ? fn:substring(liquidation.customerName,0,1) : ''}</div>
-                            <div class="cust-card-body">
-                                <div class="cust-card-name" id="custCardName">${liquidation.customerName}</div>
-                                <div class="cust-card-rows">
-                                    <div class="cust-card-row">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
-                                        <span id="custCardPhone">${liquidation.customerPhone}</span>
-                                    </div>
-                                    <div class="cust-card-row" id="custCardEmailRow" style="${empty liquidation.customerEmail ? 'display:none;' : ''}">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
-                                        <span id="custCardEmail">${liquidation.customerEmail}</span>
-                                    </div>
-                                    <div class="cust-card-row" id="custCardAddrRow" style="${empty liquidation.customerAddress ? 'display:none;' : ''}">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                        <span id="custCardAddr">${liquidation.customerAddress}</span>
+                    <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
+                    <div class="section" style="padding: 18px 22px; margin-bottom: 20px;">
+                        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Thông tin Khách hàng</h3>
+                        <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Vui lòng chọn hoặc thêm mới khách hàng mua thanh lý để làm cơ sở tạo phiếu xuất sau này.</p>
+                        <div style="max-width: 400px;" id="managerCustomerArea">
+                            <input type="hidden" name="customerId" id="customerIdHidden" value="${liquidation.customerId}" required/>
+
+                            <div class="cust-search-wrap" id="custSearchWrap" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
+                                <input type="text" id="custSearchInput" class="cust-search-input"
+                                       placeholder="Nhập tên hoặc số điện thoại..." autocomplete="off" />
+                                <div class="cust-dropdown" id="custDropdown"></div>
+                            </div>
+
+                            <div class="cust-card" id="custCard" style="${not empty liquidation.customerId ? '' : 'display:none;'}">
+                                <div class="cust-card-avatar" id="custCardAvatar">${not empty liquidation.customerName ? fn:substring(liquidation.customerName,0,1) : ''}</div>
+                                <div class="cust-card-body">
+                                    <div class="cust-card-name" id="custCardName">${liquidation.customerName}</div>
+                                    <div class="cust-card-rows">
+                                        <div class="cust-card-row">
+                                            <svg viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4 4.18 2 2 0 0 1 6 2h2.09a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L9.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 23 17v-.08z"/></svg>
+                                            <span id="custCardPhone">${liquidation.customerPhone}</span>
+                                        </div>
+                                        <div class="cust-card-row" id="custCardEmailRow" style="${empty liquidation.customerEmail ? 'display:none;' : ''}">
+                                            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,12 2,6"/></svg>
+                                            <span id="custCardEmail">${liquidation.customerEmail}</span>
+                                        </div>
+                                        <div class="cust-card-row" id="custCardAddrRow" style="${empty liquidation.customerAddress ? 'display:none;' : ''}">
+                                            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            <span id="custCardAddr">${liquidation.customerAddress}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                <button type="button" class="cust-clear" onclick="clearCustomer()" title="Bỏ chọn">
+                                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
                             </div>
-                            <button type="button" class="cust-clear" onclick="clearCustomer()" title="Bỏ chọn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+                            <button type="button" class="btn add-cust-btn" id="addNewCustBtn" onclick="openNewCustomerModal()" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                Thêm khách hàng mới
                             </button>
                         </div>
-                        
-                        <button type="button" class="btn add-cust-btn" id="addNewCustBtn" onclick="openNewCustomerModal()" style="${not empty liquidation.customerId ? 'display:none;' : ''}">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                            Thêm khách hàng mới
-                        </button>
                     </div>
-                </div>
-                </c:if>
+                    </c:if>
 
-                <div class="section" style="padding: 18px 22px;">
-                    <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Danh sách máy phát điện</h3>
+                    <div class="section" style="padding: 18px 22px;">
+                        <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Danh sách máy phát điện</h3>
                         <table class="product-table">
                             <thead>
                                 <tr>
@@ -317,15 +247,15 @@
                                     <tr>
                                         <td><strong>${d.generatorModelName}</strong></td>
                                         <td class="mono">${d.serialNumber}</td>
-                                        <td class="mono">${d.originalPrice}</td>
+                                        <td class="mono"><fmt:formatNumber value="${d.originalPrice}" type="number" maxFractionDigits="0"/></td>
                                         <td>
                                             <input type="hidden" name="detailId" value="${d.liquidationDetailId}" />
                                             <c:choose>
                                                 <c:when test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
-                                                    <input type="number" name="liquidationPrice" value="${d.liquidationPrice}" placeholder="Điền giá đề xuất..." required style="padding: 6px; width: 100%; border: 1px solid var(--border); border-radius: 4px;" />
+                                                    <input type="number" class="liq-price-input" name="liquidationPrice" value="${d.liquidationPrice}" placeholder="Điền giá đề xuất..." required />
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <strong class="mono">${d.liquidationPrice}</strong>
+                                                    <strong class="mono"><fmt:formatNumber value="${d.liquidationPrice}" type="number" maxFractionDigits="0"/></strong>
                                                     <input type="hidden" name="liquidationPrice" value="${d.liquidationPrice}" />
                                                 </c:otherwise>
                                             </c:choose>
@@ -334,32 +264,57 @@
                                 </c:forEach>
                             </tbody>
                         </table>
+
+                        <div class="liq-summary">
+                            <div class="cell">
+                                <div class="lbl">Số máy</div>
+                                <div class="val"><c:out value="${empty liquidation.detailCount ? 0 : liquidation.detailCount}"/></div>
+                            </div>
+                            <div class="cell">
+                                <div class="lbl">Tổng giá gốc</div>
+                                <div class="val">
+                                    <c:choose>
+                                        <c:when test="${not empty liquidation.totalOriginalPrice}"><fmt:formatNumber value="${liquidation.totalOriginalPrice}" type="number" maxFractionDigits="0"/> ₫</c:when>
+                                        <c:otherwise>—</c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                            <div class="cell">
+                                <div class="lbl">Tổng giá thanh lý</div>
+                                <div class="val">
+                                    <c:choose>
+                                        <c:when test="${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}"><fmt:formatNumber value="${liquidation.totalLiquidationPrice}" type="number" maxFractionDigits="0"/> ₫</c:when>
+                                        <c:otherwise><span style="color:var(--muted-2)">Chưa định giá</span></c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                            <c:if test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
+                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
+                                <div class="cell delta ${diffPct >= 0 ? 'pos' : ''}">
+                                    <div class="lbl">Chênh lệch</div>
+                                    <div class="val"><fmt:formatNumber value="${diffPct}" maxFractionDigits="1"/> %</div>
+                                </div>
+                            </c:if>
+                        </div>
                     </div>
 
                     <c:if test="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO') or (isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT')}">
-                        <div class="section" style="padding: 18px 22px; margin-top: 20px;">
-                            <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Xử lý đơn thanh lý</h3>
-                            <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở phía trên trước khi ra quyết định.</p>
-                            
-                            <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')}">
-                                <!-- Manager Customer Area has been moved to its own section above -->
+                        <div class="liq-action-bar">
+                            <div class="hint">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở phía trên trước khi ra quyết định.</div>
+                            <c:if test="${isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT'}">
+                                <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liquidation.liquidationId}" class="btn btn-primary">Sửa đơn (Cập nhật lại)</a>
                             </c:if>
-                            
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <c:if test="${isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT'}">
-                                    <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liquidation.liquidationId}" class="btn btn-primary">Sửa đơn (Cập nhật lại)</a>
-                                </c:if>
-                                <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')}">
-                                    <button type="submit" name="action" value="approve_manager" class="btn btn-primary">Lưu giá & Gửi sếp duyệt</button>
-                                    <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_manager', 'Quản lý yêu cầu sửa', 'managerFeedbackId', 'btn-warn', 'select_manager_edit')">Yêu cầu sửa</button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger', 'select_manager_reject')">Từ chối (Hủy đơn)</button>
-                                </c:if>
-                                <c:if test="${isCeo and liquidation.status == 'PENDING_CEO'}">
-                                    <button type="submit" name="action" value="approve_ceo" class="btn btn-success" onclick="return confirm('Bạn có chắc chắn muốn duyệt và tạo Phiếu Xuất Kho cho đơn này?');">Duyệt & Xuất Kho</button>
-                                    <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">Yêu cầu sửa</button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">Từ chối (Hủy đơn)</button>
-                                </c:if>
-                            </div>
+                            <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')}">
+                                <button type="submit" name="action" value="approve_manager" class="btn btn-primary">Lưu giá &amp; Gửi sếp duyệt</button>
+                                <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_manager', 'Quản lý yêu cầu sửa', 'managerFeedbackId', 'btn-warn', 'select_manager_edit')">Yêu cầu sửa</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger-solid', 'select_manager_reject')">Từ chối (Hủy đơn)</button>
+                            </c:if>
+                            <c:if test="${isCeo and liquidation.status == 'PENDING_CEO'}">
+                                <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>
+                                <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">Yêu cầu sửa</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger-solid', 'select_ceo_reject')">Từ chối (Hủy đơn)</button>
+                                <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
+                            </c:if>
                         </div>
                     </c:if>
 
@@ -372,19 +327,20 @@
                         <p style="color: var(--muted); font-size: 13px; text-align: center; padding: 20px 0;">Chưa có lịch sử xử lý.</p>
                     </c:if>
                     <c:if test="${not empty liquidationHistory}">
-                        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 8px;">
+                        <div class="history-timeline">
                             <c:forEach var="log" items="${liquidationHistory}">
-                                <div style="display: flex; gap: 12px;">
-                                    <div style="display: flex; flex-direction: column; align-items: center; width: 24px; flex-shrink: 0;">
-                                        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent); margin-top: 4px;"></div>
-                                        <div style="flex: 1; width: 2px; background: var(--border); margin-top: 4px;"></div>
+                                <div class="history-item">
+                                    <div class="history-rail">
+                                        <div class="dot"></div>
+                                        <div class="line"></div>
                                     </div>
-                                    <div style="padding-bottom: 16px;">
-                                        <div style="font-size: 13px; color: var(--muted); margin-bottom: 2px;">
-                                            <fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm" /> - <strong>${log.action}</strong> 
-                                            (bởi <b>${log.username}</b> - #${log.userId})
+                                    <div class="history-body">
+                                        <div class="history-head">
+                                            <span class="when"><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm" /></span>
+                                            <span class="act-badge act-${log.action}">${log.action}</span>
+                                            <span>bởi <span class="who">${log.username}</span> · #${log.userId}</span>
                                         </div>
-                                        <div style="font-size: 14px; color: var(--fg); line-height: 1.5;">${log.details}</div>
+                                        <div class="history-text">${log.details}</div>
                                     </div>
                                 </div>
                             </c:forEach>
@@ -396,31 +352,42 @@
     </div>
 </div>
 
+<div class="modal-host" id="confirmApproveModal">
+    <div class="modal">
+        <h3>Xác nhận duyệt đơn</h3>
+        <p>Bạn có chắc chắn muốn <strong>duyệt</strong> đơn thanh lý này và <strong>tạo Phiếu Xuất Kho</strong>? Hành động này không thể hoàn tác.</p>
+        <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+            <button type="button" class="btn" onclick="closeModal('confirmApproveModal')">Huỷ</button>
+            <button type="button" class="btn btn-success-solid" onclick="document.getElementById('hiddenApproveCeoBtn').click();">Xác nhận duyệt &amp; xuất</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-host" id="feedbackModal">
-    <div class="modal-card">
+    <div class="modal modal-lg">
         <h3 id="feedbackModalTitle">Phản hồi</h3>
         <form method="POST" action="${pageContext.request.contextPath}/liquidations">
             <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
             <input type="hidden" name="action" id="feedbackModalAction" value="" />
-            
-            <select id="select_manager_reject" class="fb-select" style="display:none; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 16px; margin-top: 16px;">
+
+            <select id="select_manager_reject" class="fb-select feedback-select" style="display:none;">
                 <option value="">-- Chọn lý do --</option>
                 <c:forEach var="fb" items="${managerRejectFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
             </select>
-            <select id="select_manager_edit" class="fb-select" style="display:none; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 16px; margin-top: 16px;">
+            <select id="select_manager_edit" class="fb-select feedback-select" style="display:none;">
                 <option value="">-- Chọn lý do --</option>
                 <c:forEach var="fb" items="${managerEditFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
             </select>
-            <select id="select_ceo_reject" class="fb-select" style="display:none; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 16px; margin-top: 16px;">
+            <select id="select_ceo_reject" class="fb-select feedback-select" style="display:none;">
                 <option value="">-- Chọn lý do --</option>
                 <c:forEach var="fb" items="${ceoRejectFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
             </select>
-            <select id="select_ceo_edit" class="fb-select" style="display:none; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 16px; margin-top: 16px;">
+            <select id="select_ceo_edit" class="fb-select feedback-select" style="display:none;">
                 <option value="">-- Chọn lý do --</option>
                 <c:forEach var="fb" items="${ceoEditFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
             </select>
-            
-            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px;">
+
+            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
                 <button type="button" class="btn" onclick="closeModal('feedbackModal')">Huỷ</button>
                 <button type="submit" class="btn" id="feedbackModalSubmit">Xác nhận</button>
             </div>
@@ -429,49 +396,50 @@
 </div>
 
 <!-- New Customer Modal -->
-<div class="nc-modal-overlay" id="ncModalOverlay">
-    <div class="nc-modal">
-        <div class="nc-modal-head">
-            <h3>Thêm khách hàng mới</h3>
-            <button type="button" class="close-modal" onclick="closeNewCustomerModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">×</button>
+<div class="modal-host" id="ncModalOverlay">
+    <div class="modal modal-lg">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="margin: 0;">Thêm khách hàng mới</h3>
+            <button type="button" class="cust-clear" onclick="closeNewCustomerModal()" title="Đóng">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
-        <div class="nc-modal-body">
-            <span class="nc-error" id="ncError"></span>
-            <div class="nc-field">
-                <label>Họ và tên <span style="color:var(--danger)">*</span></label>
-                <input type="text" id="ncName" placeholder="Nguyễn Văn A" />
+
+        <div class="modal-error" id="ncError"></div>
+
+        <div class="modal-grid">
+            <div class="field span-2">
+                <label class="field-label">Họ và tên <span class="req">*</span></label>
+                <input type="text" id="ncName" class="input" placeholder="Nguyễn Văn A" />
             </div>
-            <div class="nc-row2">
-                <div class="nc-field">
-                    <label>Số điện thoại <span style="color:var(--danger)">*</span></label>
-                    <input type="tel" id="ncPhone" placeholder="0901234567" />
-                </div>
-                <div class="nc-field">
-                    <label>Email</label>
-                    <input type="email" id="ncEmail" placeholder="email@example.com" />
-                </div>
+            <div class="field">
+                <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                <input type="tel" id="ncPhone" class="input" placeholder="0901234567" />
             </div>
-            <div class="nc-field">
-                <label>Địa chỉ</label>
-                <input type="text" id="ncAddress" placeholder="Số nhà, đường, quận, tỉnh..." />
+            <div class="field">
+                <label class="field-label">Email</label>
+                <input type="email" id="ncEmail" class="input" placeholder="email@example.com" />
             </div>
-            <div class="nc-row2">
-                <div class="nc-field">
-                    <label>Tên công ty</label>
-                    <input type="text" id="ncCompanyName" placeholder="Công ty TNHH..." />
-                </div>
-                <div class="nc-field">
-                    <label>Loại khách hàng</label>
-                    <select id="ncTypeId">
-                        <option value="">-- Chọn loại --</option>
-                        <c:forEach var="ct" items="${customerTypes}">
-                            <option value="${ct.id}">${ct.name}</option>
-                        </c:forEach>
-                    </select>
-                </div>
+            <div class="field span-2">
+                <label class="field-label">Địa chỉ</label>
+                <input type="text" id="ncAddress" class="input" placeholder="Số nhà, đường, quận, tỉnh..." />
+            </div>
+            <div class="field">
+                <label class="field-label">Tên công ty</label>
+                <input type="text" id="ncCompanyName" class="input" placeholder="Công ty TNHH..." />
+            </div>
+            <div class="field">
+                <label class="field-label">Loại khách hàng</label>
+                <select id="ncTypeId" class="feedback-select" style="margin: 0;">
+                    <option value="">-- Chọn loại --</option>
+                    <c:forEach var="ct" items="${customerTypes}">
+                        <option value="${ct.id}">${ct.name}</option>
+                    </c:forEach>
+                </select>
             </div>
         </div>
-        <div class="nc-modal-foot">
+
+        <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
             <button type="button" class="btn" onclick="closeNewCustomerModal()">Huỷ</button>
             <button type="button" class="btn btn-primary" id="ncSaveBtn" onclick="saveNewCustomer()">Lưu khách hàng</button>
         </div>
@@ -485,20 +453,20 @@
         document.getElementById('feedbackModalTitle').innerText = title;
         document.getElementById('feedbackModalAction').value = actionValue;
         document.getElementById('feedbackModalSubmit').className = 'btn ' + btnClass;
-        
+
         document.querySelectorAll('.fb-select').forEach(function(el) {
             el.style.display = 'none';
             el.disabled = true;
             el.removeAttribute('name');
             el.removeAttribute('required');
         });
-        
+
         var activeSelect = document.getElementById(selectId);
         activeSelect.style.display = 'block';
         activeSelect.disabled = false;
         activeSelect.name = paramName;
         activeSelect.required = true;
-        
+
         openModal('feedbackModal');
     }
 
@@ -511,15 +479,20 @@
     }
     function openModal(id) { document.getElementById(id).classList.add('show'); }
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    function openConfirmApproveModal() { openModal('confirmApproveModal'); }
     document.querySelectorAll('.modal-host').forEach(function (m) {
         m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-host.show').forEach(function(m) { m.classList.remove('show'); });
+        }
     });
 
     /* ============ CUSTOMER SEARCH ============ */
     var custSearchInput = document.getElementById('custSearchInput');
     if (custSearchInput) {
         var custSearchTimer = null;
-        var ctxPath = '${pageContext.request.contextPath}';
 
         custSearchInput.addEventListener('input', function() {
             clearTimeout(custSearchTimer);
@@ -544,16 +517,15 @@
     function searchCustomers(q) {
         fetch('${pageContext.request.contextPath}/liquidations?action=search_customer&q=' + encodeURIComponent(q))
             .then(function(r) { return r.json(); })
-            .then(function(data) {
-                renderCustDropdown(data);
-            }).catch(function() { hideCustDropdown(); });
+            .then(function(data) { renderCustDropdown(data); })
+            .catch(function() { hideCustDropdown(); });
     }
 
     function renderCustDropdown(data) {
         var dd = document.getElementById('custDropdown');
         dd.innerHTML = '';
         if (!data || data.length === 0) {
-            dd.innerHTML = '<div style="padding:12px 14px; color:var(--muted); font-size:13px;">Không tìm thấy khách hàng</div>';
+            dd.innerHTML = '<div class="cust-dropdown-empty">Không tìm thấy khách hàng</div>';
             dd.classList.add('show');
             return;
         }
@@ -584,19 +556,19 @@
     function showCustCard(c) {
         document.getElementById('custSearchWrap').style.display = 'none';
         document.getElementById('addNewCustBtn').style.display = 'none';
-        
+
         document.getElementById('custCardAvatar').textContent = c.name.charAt(0).toUpperCase();
         document.getElementById('custCardName').textContent = c.name;
         document.getElementById('custCardPhone').textContent = c.phone;
-        
+
         var emailRow = document.getElementById('custCardEmailRow');
         document.getElementById('custCardEmail').textContent = c.email || '';
         emailRow.style.display = c.email ? 'flex' : 'none';
-        
+
         var addrRow = document.getElementById('custCardAddrRow');
         document.getElementById('custCardAddr').textContent = c.address || '';
         addrRow.style.display = c.address ? 'flex' : 'none';
-        
+
         document.getElementById('custCard').style.display = 'flex';
     }
 
@@ -627,7 +599,8 @@
 
     function showNcError(msg) {
         var el = document.getElementById('ncError');
-        el.textContent = msg; el.classList.add('show');
+        el.textContent = msg;
+        el.classList.add('show');
     }
     function hideNcError() {
         document.getElementById('ncError').classList.remove('show');
@@ -684,23 +657,19 @@
         var d = document.createElement('div'); d.appendChild(document.createTextNode(str || '')); return d.innerHTML;
     }
 
-    var ncOverlay = document.getElementById('ncModalOverlay');
-    if (ncOverlay) {
-        ncOverlay.addEventListener('click', function(e) {
-            if (e.target === this) closeNewCustomerModal();
+    var mainForm = document.getElementById('mainForm');
+    if (mainForm) {
+        mainForm.addEventListener('submit', function(e) {
+            var actionBtn = e.submitter;
+            if (actionBtn && actionBtn.value === 'approve_manager') {
+                var custId = document.getElementById('customerIdHidden').value;
+                if (!custId) {
+                    e.preventDefault();
+                    alert('Vui lòng tìm và chọn Khách hàng hoặc Thêm mới trước khi gửi Sếp duyệt.');
+                }
+            }
         });
     }
-    
-    document.getElementById('mainForm').addEventListener('submit', function(e) {
-        var actionBtn = e.submitter;
-        if (actionBtn && actionBtn.value === 'approve_manager') {
-            var custId = document.getElementById('customerIdHidden').value;
-            if (!custId) {
-                e.preventDefault();
-                alert('Vui lòng tìm và chọn Khách hàng hoặc Thêm mới trước khi gửi Sếp duyệt.');
-            }
-        }
-    });
 </script>
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">

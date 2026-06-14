@@ -6,12 +6,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Danh sách thanh lý — Warehouse OS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Đơn thanh lý — Warehouse OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
 </head>
 <body>
 <div class="app">
@@ -22,10 +23,12 @@
             <span class="crumb">/ Quản lý kho / Thanh lý</span>
             <div class="top-actions">
                 <jsp:include page="../common/admin/bell.jsp"/>
-                <a class="btn btn-primary" href="${pageContext.request.contextPath}/liquidations?action=create">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                    Tạo đơn thanh lý
-                </a>
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
+                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/liquidations?action=create">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Tạo đơn thanh lý
+                    </a>
+                </c:if>
             </div>
         </header>
         <main>
@@ -33,48 +36,44 @@
                 <div class="left">
                     <div class="eyebrow">Kho</div>
                     <h2 class="page-title">Quản lý thanh lý</h2>
-                    <div class="page-sub">Danh sách các đơn thanh lý</div>
+                    <div class="page-sub">Theo dõi và xử lý các đơn thanh lý thiết bị</div>
                 </div>
             </div>
 
-            <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px;">
+            <c:set var="kpiCount" value="1"/>
+            <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_manager')}"><c:set var="kpiCount" value="${kpiCount + 1}"/></c:if>
+            <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_ceo')}"><c:set var="kpiCount" value="${kpiCount + 1}"/></c:if>
+            <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
+            <div class="stats-row liq-stats" style="--kpi-cols: ${kpiCount};">
                 <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_manager')}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Cần Quản lý duyệt</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiPendingManager}</div>
-                </div>
+                    <div class="stat">
+                        <div class="lbl">Chờ Quản lý duyệt</div>
+                        <div class="val">${kpiPendingManager}</div>
+                    </div>
                 </c:if>
-
                 <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_ceo')}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Cần Sếp duyệt</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiPendingCeo}</div>
-                </div>
+                    <div class="stat">
+                        <div class="lbl">Chờ Sếp duyệt</div>
+                        <div class="val">${kpiPendingCeo}</div>
+                    </div>
                 </c:if>
-
                 <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Bị yêu cầu sửa</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiRequestEdit}</div>
-                </div>
+                    <div class="stat">
+                        <div class="lbl">Bị yêu cầu sửa</div>
+                        <div class="val">${kpiRequestEdit}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="lbl">Đã hủy</div>
+                        <div class="val">${kpiRejected}</div>
+                    </div>
                 </c:if>
-
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Đã bị hủy</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiRejected}</div>
+                <div class="stat">
+                    <div class="lbl">Đã xuất</div>
+                    <div class="val">${kpiApproved}</div>
                 </div>
-                </c:if>
-
-                <c:if test="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.approve_manager') or sessionScope.userPermissions.contains('liquidations.approve_ceo'))}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Đã xuất thành công</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiApproved}</div>
-                </div>
-                </c:if>
             </div>
 
-            <form method="get" action="${pageContext.request.contextPath}/liquidations" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px;">
+            <form method="get" action="${pageContext.request.contextPath}/liquidations" class="toolbar">
                 <input type="hidden" name="action" value="list"/>
                 <input type="hidden" name="page" value="1"/>
                 <div class="search-input">
@@ -83,21 +82,19 @@
                 </div>
                 <select class="filter-select" name="status" onchange="this.form.submit()">
                     <option value="">Trạng thái: Tất cả</option>
-                    
                     <c:if test="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.create') or sessionScope.userPermissions.contains('liquidations.approve_manager'))}">
                         <option value="PENDING_MANAGER" ${statusFilter == 'PENDING_MANAGER' ? 'selected' : ''}>Chờ Quản lý duyệt</option>
                         <option value="MANAGER_REQUEST_EDIT" ${statusFilter == 'MANAGER_REQUEST_EDIT' ? 'selected' : ''}>Quản lý yêu cầu sửa</option>
                         <option value="REJECTED_BY_MANAGER" ${statusFilter == 'REJECTED_BY_MANAGER' ? 'selected' : ''}>Quản lý từ chối</option>
                     </c:if>
-                    
                     <c:if test="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.create') or sessionScope.userPermissions.contains('liquidations.approve_ceo') or sessionScope.userPermissions.contains('liquidations.approve_manager'))}">
                         <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ Sếp duyệt</option>
                         <option value="CEO_REQUEST_EDIT" ${statusFilter == 'CEO_REQUEST_EDIT' ? 'selected' : ''}>Sếp yêu cầu sửa</option>
                         <option value="REJECTED_BY_CEO" ${statusFilter == 'REJECTED_BY_CEO' ? 'selected' : ''}>Sếp từ chối</option>
                     </c:if>
-                    
                     <option value="APPROVED_BY_CEO" ${statusFilter == 'APPROVED_BY_CEO' ? 'selected' : ''}>Đã duyệt</option>
                 </select>
+                <div class="spacer"></div>
                 <button type="submit" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                     Tìm kiếm
@@ -110,7 +107,7 @@
                 </c:if>
             </form>
 
-            <div class="table-card" style="margin-top:16px;">
+            <div class="table-card">
                 <table class="users">
                     <thead>
                         <tr>
@@ -118,6 +115,8 @@
                             <th>Người tạo</th>
                             <th>Lý do</th>
                             <th>Khách hàng</th>
+                            <th>Số máy</th>
+                            <th>Tổng giá TL</th>
                             <th>Ngày tạo</th>
                             <th>Trạng thái</th>
                             <th class="col-actions">Hành động</th>
@@ -127,44 +126,98 @@
                         <c:choose>
                             <c:when test="${empty liquidations}">
                                 <tr>
-                                    <td colspan="6">
-                                        <div class="empty-state"><strong>Không có đơn thanh lý nào.</strong></div>
+                                    <td colspan="9">
+                                        <div class="empty-state">
+                                            <div class="icon-wrap">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                                            </div>
+                                            <c:choose>
+                                                <c:when test="${not empty statusFilter or not empty search}">
+                                                    <strong>Không tìm thấy đơn nào khớp bộ lọc</strong>
+                                                    <p>Thử thay đổi từ khoá tìm kiếm hoặc trạng thái lọc.</p>
+                                                    <div class="clear-filter-hint">
+                                                        <a href="${pageContext.request.contextPath}/liquidations">Xoá lọc và xem tất cả</a>
+                                                    </div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <strong>Chưa có đơn thanh lý nào</strong>
+                                                    <p>Tạo đơn mới để bắt đầu quy trình thanh lý thiết bị.</p>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
                                     </td>
                                 </tr>
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="liq" items="${liquidations}">
-                                    <tr>
-                                        <td><strong>${liq.liquidationCode}</strong></td>
+                                    <tr onclick="window.location.href='${pageContext.request.contextPath}/liquidations?action=detail&id=${liq.liquidationId}'">
+                                        <td onclick="event.stopPropagation()">
+                                            <span class="code-copy" data-copy="${liq.liquidationCode}" title="Click để sao chép">
+                                                <strong class="mono">${liq.liquidationCode}</strong>
+                                                <svg class="copy-icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                            </span>
+                                        </td>
                                         <td>${liq.createdByName}</td>
                                         <td>${liq.reasonName}</td>
-                                        <td>${not empty liq.customerName ? liq.customerName : '<span style="color:var(--muted)">--</span>'}</td>
-                                        <td>${liq.createdAt}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty liq.customerName}">${liq.customerName}</c:when>
+                                                <c:otherwise><span style="color:var(--muted-2)">—</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="mono">
+                                            <c:choose>
+                                                <c:when test="${not empty liq.detailCount}">${liq.detailCount}</c:when>
+                                                <c:otherwise>0</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="mono">
+                                            <c:choose>
+                                                <c:when test="${not empty liq.totalLiquidationPrice and liq.totalLiquidationPrice > 0}">
+                                                    <fmt:formatNumber value="${liq.totalLiquidationPrice}" type="number" maxFractionDigits="0"/>
+                                                </c:when>
+                                                <c:otherwise><span style="color:var(--muted-2)">—</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="mono">${liq.createdAt}</td>
                                         <td>
                                             <c:choose>
                                                 <c:when test="${liq.status == 'PENDING_MANAGER'}">
-                                                    <span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ Quản lý duyệt</span>
+                                                    <span class="pill liq-pending-mgr"><span class="pdot"></span>Chờ QL duyệt</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'PENDING_CEO'}">
-                                                    <span class="pill" style="color: var(--purple); border-color: color-mix(in srgb, var(--purple) 30%, transparent); background: var(--purple-soft);"><span class="pdot" style="background: var(--purple);"></span>Chờ Sếp duyệt</span>
+                                                    <span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'APPROVED_BY_CEO'}">
-                                                    <span class="pill" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft);"><span class="pdot" style="background: var(--accent);"></span>Đã duyệt (Đã xuất)</span>
+                                                    <span class="pill liq-approved"><span class="pdot"></span>Đã xuất</span>
                                                 </c:when>
-                                                <c:when test="${liq.status == 'CEO_REQUEST_EDIT' or liq.status == 'MANAGER_REQUEST_EDIT'}">
-                                                    <span class="pill" style="color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft);"><span class="pdot" style="background: var(--warn);"></span>Bị yêu cầu sửa</span>
+                                                <c:when test="${liq.status == 'MANAGER_REQUEST_EDIT'}">
+                                                    <span class="pill liq-edit" title="Quản lý yêu cầu sửa: ${not empty liq.managerFeedbackName ? liq.managerFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Yêu cầu sửa</span>
                                                 </c:when>
-                                                <c:when test="${liq.status == 'REJECTED_BY_MANAGER' or liq.status == 'REJECTED_BY_CEO'}">
-                                                    <span class="pill" style="color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft);"><span class="pdot" style="background: var(--danger);"></span>Đã bị hủy</span>
+                                                <c:when test="${liq.status == 'CEO_REQUEST_EDIT'}">
+                                                    <span class="pill liq-edit" title="Sếp yêu cầu sửa: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Yêu cầu sửa</span>
                                                 </c:when>
-                                                <c:otherwise><span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>${liq.status}</span></c:otherwise>
+                                                <c:when test="${liq.status == 'REJECTED_BY_MANAGER'}">
+                                                    <span class="pill liq-rejected" title="Quản lý từ chối: ${not empty liq.managerFeedbackName ? liq.managerFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Đã hủy</span>
+                                                </c:when>
+                                                <c:when test="${liq.status == 'REJECTED_BY_CEO'}">
+                                                    <span class="pill liq-rejected" title="Sếp từ chối: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Đã hủy</span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <span class="pill liq-muted"><span class="pdot"></span>${liq.status}</span>
+                                                </c:otherwise>
                                             </c:choose>
                                         </td>
-                                        <td class="col-actions">
+                                        <td class="col-actions" onclick="event.stopPropagation()">
                                             <div class="row-actions">
                                                 <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liq.liquidationId}" class="icon-mini" title="Xem chi tiết">
-                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 </a>
+                                                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create') and (liq.status == 'MANAGER_REQUEST_EDIT' or liq.status == 'CEO_REQUEST_EDIT')}">
+                                                    <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liq.liquidationId}" class="icon-mini" title="Sửa đơn">
+                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                    </a>
+                                                </c:if>
                                             </div>
                                         </td>
                                     </tr>
@@ -175,16 +228,43 @@
                 </table>
 
                 <c:if test="${totalPages > 1}">
-                    <div class="pagination" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-                        <div class="info" style="font-size: 13px; color: var(--muted);">
+                    <div class="pagination">
+                        <div class="info">
                             Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong>
                         </div>
-                        <div class="controls" style="display: flex; gap: 4px;">
-                            <a href="?action=list&page=${currentPage - 1}&search=${search}&status=${statusFilter}" class="page-btn" ${currentPage == 1 ? 'style="pointer-events: none; opacity: 0.5;"' : ''}>Trước</a>
-                            <c:forEach begin="1" end="${totalPages}" var="p">
+                        <div class="controls">
+                            <c:choose>
+                                <c:when test="${currentPage > 1}">
+                                    <a href="?action=list&page=${currentPage - 1}&search=${search}&status=${statusFilter}" class="page-btn">‹</a>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="page-btn" style="opacity:0.4;cursor:not-allowed">‹</span>
+                                </c:otherwise>
+                            </c:choose>
+                            <c:set var="windowSize" value="2"/>
+                            <c:set var="winStart" value="${currentPage - windowSize}"/>
+                            <c:set var="winEnd" value="${currentPage + windowSize}"/>
+                            <c:if test="${winStart < 1}"><c:set var="winStart" value="1"/></c:if>
+                            <c:if test="${winEnd > totalPages}"><c:set var="winEnd" value="${totalPages}"/></c:if>
+                            <c:if test="${winStart > 1}">
+                                <a href="?action=list&page=1&search=${search}&status=${statusFilter}" class="page-btn ${1 == currentPage ? 'active' : ''}">1</a>
+                                <c:if test="${winStart > 2}"><span class="ellipsis">…</span></c:if>
+                            </c:if>
+                            <c:forEach begin="${winStart}" end="${winEnd}" var="p">
                                 <a href="?action=list&page=${p}&search=${search}&status=${statusFilter}" class="page-btn ${p == currentPage ? 'active' : ''}">${p}</a>
                             </c:forEach>
-                            <a href="?action=list&page=${currentPage + 1}&search=${search}&status=${statusFilter}" class="page-btn" ${currentPage == totalPages ? 'style="pointer-events: none; opacity: 0.5;"' : ''}>Sau</a>
+                            <c:if test="${winEnd < totalPages}">
+                                <c:if test="${winEnd < totalPages - 1}"><span class="ellipsis">…</span></c:if>
+                                <a href="?action=list&page=${totalPages}&search=${search}&status=${statusFilter}" class="page-btn ${totalPages == currentPage ? 'active' : ''}">${totalPages}</a>
+                            </c:if>
+                            <c:choose>
+                                <c:when test="${currentPage < totalPages}">
+                                    <a href="?action=list&page=${currentPage + 1}&search=${search}&status=${statusFilter}" class="page-btn">›</a>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="page-btn" style="opacity:0.4;cursor:not-allowed">›</span>
+                                </c:otherwise>
+                            </c:choose>
                         </div>
                     </div>
                 </c:if>
@@ -194,6 +274,34 @@
 </div>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    document.querySelectorAll('.code-copy').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var text = el.getAttribute('data-copy');
+            if (!text) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() { flashCopied(el); });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); flashCopied(el); } catch (err) {}
+                document.body.removeChild(ta);
+            }
+        });
+    });
+    function flashCopied(el) {
+        el.classList.add('copied');
+        var oldTitle = el.getAttribute('title');
+        el.setAttribute('title', 'Đã sao chép ✓');
+        setTimeout(function() {
+            el.classList.remove('copied');
+            el.setAttribute('title', oldTitle || 'Click để sao chép');
+        }, 1200);
+    }
+</script>
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">
     window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };

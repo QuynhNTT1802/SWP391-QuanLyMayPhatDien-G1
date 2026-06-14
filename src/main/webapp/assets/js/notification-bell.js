@@ -27,16 +27,16 @@
         if (isNaN(d.getTime())) return iso;
         var now = new Date();
         var diff = (now - d) / 1000;
-        if (diff < 60) return 'Vừa xong';
-        if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
-        if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
+        if (diff < 60) return 'V\u1EEBa xong';
+        if (diff < 3600) return Math.floor(diff / 60) + ' ph\u00FAt tr\u01B0\u1EDBc';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' gi\u1EDD tr\u01B0\u1EDBc';
         var pad = function (n) { return n < 10 ? '0' + n : n; };
         return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
     }
 
     function renderItems(items) {
         if (!items || items.length === 0) {
-            listEl.innerHTML = '<div class="bell-empty">Không có thông báo</div>';
+            listEl.innerHTML = '<div class="bell-empty">Kh\u00F4ng c\u00F3 th\u00F4ng b\u00E1o</div>';
             return;
         }
         var html = '';
@@ -82,7 +82,7 @@
     }
 
     function load() {
-        listEl.innerHTML = '<div class="bell-empty">Đang tải...</div>';
+        listEl.innerHTML = '<div class="bell-empty">\u0110ang t\u1EA3i...</div>';
         fetch(endpoint + '?action=dropdown', { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -91,7 +91,7 @@
                 loaded = true;
             })
             .catch(function () {
-                listEl.innerHTML = '<div class="bell-empty">Không tải được thông báo</div>';
+                listEl.innerHTML = '<div class="bell-empty">Kh\u00F4ng t\u1EA3i \u0111\u01B0\u1EE3c th\u00F4ng b\u00E1o</div>';
             });
     }
 
