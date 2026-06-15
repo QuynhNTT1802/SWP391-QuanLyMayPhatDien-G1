@@ -26,8 +26,8 @@
     color: var(--fg);
     line-height: 1.1;
 }
-.stat-dng .val { color: var(--warn); }
-.stat-hoan .val { color: var(--accent); }
+.stat-dng .val { color: var(--fg); }
+.stat-hoan .val { color: var(--fg); }
 
 .status-doing {
     display: inline-flex;
@@ -125,8 +125,8 @@
 .detail-table tbody tr:hover { background: var(--surface-2); }
 
 .qty-sys { font-weight: 600; color: var(--fg); }
-.qty-actual { font-weight: 600; color: var(--accent); }
-.qty-damaged { font-weight: 600; color: var(--danger); }
+/*.qty-actual { font-weight: 600; color: var(--accent); }*/
+/*.qty-damaged { font-weight: 600; color: var(--danger); }*/
 
 /* History timeline */
 .history-list {
@@ -157,9 +157,9 @@
     fill: none;
     stroke-width: 2;
 }
-.history-icon.create { background: var(--info-soft); color: var(--info); }
+/*.history-icon.create { background: var(--info-soft); color: var(--info); }
 .history-icon.update { background: var(--warn-soft); color: var(--warn); }
-.history-icon.complete { background: var(--accent-soft); color: var(--accent); }
+.history-icon.complete { background: var(--accent-soft); color: var(--accent); }*/
 .history-body { line-height: 1.4; }
 .history-title { font-size: 13px; font-weight: 600; color: var(--fg); }
 .history-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }

@@ -137,7 +137,7 @@
                                                         <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                     </a>
                                                     <c:if test="${c.status == 'doing'}">
-                                                        <a href="${pageContext.request.contextPath}/inventory-check?action=edit&id=${c.id}" class="icon-mini" title="Chỉnh sửa" style="color:var(--warn);">
+                                                        <a href="${pageContext.request.contextPath}/inventory-check?action=edit&id=${c.id}" class="icon-mini" title="Chỉnh sửa">
                                                             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                         </a>
                                                     </c:if>

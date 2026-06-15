@@ -17,7 +17,7 @@ public class InventoryCheck {
 
     private String warehouseName;
     private String createdByName;
-    private int discrepancyCount;
+    
 
     public InventoryCheck() {
     }
@@ -118,12 +118,6 @@ public class InventoryCheck {
         this.createdByName = createdByName;
     }
 
-    public int getDiscrepancyCount() {
-        return discrepancyCount;
-    }
-
-    public void setDiscrepancyCount(int discrepancyCount) {
-        this.discrepancyCount = discrepancyCount;
-    }
+    
     
 }
