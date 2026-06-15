@@ -400,6 +400,8 @@ CREATE TABLE `import_proposal` (
   `approved_by` int DEFAULT NULL,
   `rejected_by` int DEFAULT NULL,
   `proposal_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `period` varchar(10) DEFAULT NULL,
+  `purchase_order_id` int DEFAULT NULL,
   `note` text,
   `reject_reason` text,
   `approved_at` datetime DEFAULT NULL,
@@ -413,8 +415,11 @@ CREATE TABLE `import_proposal` (
   KEY `idx_proposal_approved` (`approved_by`),
   KEY `idx_proposal_rejected` (`rejected_by`),
   KEY `idx_proposal_status` (`status`),
+  KEY `idx_proposal_po` (`purchase_order_id`),
+  KEY `idx_proposal_period` (`period`,`warehouse_id`,`status`),
   CONSTRAINT `fk_proposal_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_proposal_po` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -962,7 +967,7 @@ CREATE TABLE `role_permission` (
 
 LOCK TABLES `role_permission` WRITE;
 /*!40000 ALTER TABLE `role_permission` DISABLE KEYS */;
-INSERT INTO `role_permission` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(2,10),(3,10),(5,10),(10,10),(1,11),(1,12),(1,22),(2,22),(3,22),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(1,27),(2,27),(1,45),(2,45),(3,45),(5,45),(10,45),(1,46),(5,46),(1,47),(5,47),(1,48),(5,48),(1,65),(2,65),(10,65),(1,66),(2,66),(1,91),(2,91),(3,91),(5,91),(10,91),(1,95),(2,95),(3,95),(5,95),(10,95),(1,96),(2,96),(3,96),(5,96),(10,96),(1,97),(2,97),(3,97),(5,97),(10,97),(1,98),(1,100),(10,100),(1,101),(2,101),(3,101),(1,102),(2,102),(3,102),(1,103),(2,103),(1,104),(2,104),(1,105),(10,105),(1,106),(2,106),(1,107),(1,108),(1,109),(1,110),(1,111),(1,112),(1,113),(1,114),(1,115),(1,116),(2,117),(5,117),(10,117),(5,118),(5,119),(5,120),(10,121),(10,122),(1,124),(2,124),(3,124),(10,124),(3,125),(2,126),(1,127),(10,127),(1,128),(2,128),(3,128),(13,128),(1,129),(2,129),(3,129),(1,130),(2,130),(1,131),(13,131),(13,124),(13,127);
+INSERT INTO `role_permission` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(2,10),(3,10),(5,10),(10,10),(1,11),(1,12),(1,22),(2,22),(3,22),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(1,27),(2,27),(1,45),(2,45),(3,45),(5,45),(10,45),(1,46),(5,46),(1,47),(5,47),(1,48),(5,48),(1,65),(2,65),(10,65),(1,66),(2,66),(1,91),(2,91),(3,91),(5,91),(10,91),(1,95),(2,95),(3,95),(5,95),(10,95),(1,96),(2,96),(3,96),(5,96),(10,96),(1,97),(2,97),(3,97),(5,97),(10,97),(1,98),(1,100),(10,100),(1,101),(2,101),(3,101),(1,102),(2,102),(3,102),(1,103),(2,103),(1,104),(2,104),(1,105),(10,105),(1,106),(2,106),(1,107),(1,108),(1,109),(1,110),(1,111),(1,112),(1,113),(1,114),(1,115),(1,116),(2,117),(5,117),(10,117),(5,118),(5,119),(5,120),(10,121),(10,122),(1,124),(2,124),(3,124),(10,124),(13,124),(3,125),(2,126),(1,127),(10,127),(13,127),(1,128),(2,128),(3,128),(13,128),(1,129),(2,129),(3,129),(1,130),(2,130),(1,131),(13,131);
 /*!40000 ALTER TABLE `role_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1326,7 +1331,6 @@ CREATE TABLE `user_permission` (
 
 LOCK TABLES `user_permission` WRITE;
 /*!40000 ALTER TABLE `user_permission` DISABLE KEYS */;
--- removed redundant admin overrides (admin role already has these permissions)
 /*!40000 ALTER TABLE `user_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1395,4 +1399,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-15 19:11:42
+-- Dump completed on 2026-06-15 20:01:20

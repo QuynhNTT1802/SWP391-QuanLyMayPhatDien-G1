@@ -78,6 +78,27 @@
             </div>
         </c:if>
 
+        <c:if test="${not empty perms and (perms.contains('proposals.approve') or perms.contains('proposals.create'))}">
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6a2 2 0 0 1 2 2v2H7V4a2 2 0 0 1 2-2z"/><rect x="5" y="6" width="14" height="16" rx="2"/><path d="M9 12h6M9 16h4"/></svg>
+                Đề xuất phiếu
+                <span id="proposalBadge" style="display:none; background:#ef4444; color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:9px; margin-left:6px;">0</span>
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <a href="${pageContext.request.contextPath}/proposal">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Đề xuất nhập kho
+                </a>
+                <c:if test="${perms.contains('purchase_orders.view')}">
+                    <a href="${pageContext.request.contextPath}/purchase-order">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>
+                        Phiếu mua
+                    </a>
+                </c:if>
+            </div>
+        </c:if>
+
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
             <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
@@ -247,5 +268,20 @@
         <div class="name"><c:out value="${fullName}"/></div>
         <div class="role"><c:out value="${roleDesc}"/></div>
     </div>
-</div>
 </aside>
+<script>
+    (function () {
+        var badge = document.getElementById('proposalBadge');
+        if (!badge) { return; }
+        var ctx = (window.APP_CTX || '${pageContext.request.contextPath}');
+        fetch(ctx + '/proposal?action=countPending', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && data.canApprove && data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.style.display = 'inline-block';
+                }
+            })
+            .catch(function () {});
+    })();
+</script>

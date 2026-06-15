@@ -175,6 +175,44 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return null;
     }
 
+    public Generator findByModel(String model) {
+        if (model == null || model.trim().isEmpty()) {
+            return null;
+        }
+        String sql = "SELECT * FROM generator WHERE model = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, model.trim());
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Generator g = getFromResultSet(resultSet);
+                g.setCategories(getCategoriesByGeneratorId(g.getId()));
+                return g;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public boolean isInWarehouse(int generatorId, int warehouseId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND warehouse_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            statement.setInt(2, warehouseId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
     public boolean activate(int id) {
         String sql = "UPDATE generator SET status = 'active' WHERE id = ?";
         try {

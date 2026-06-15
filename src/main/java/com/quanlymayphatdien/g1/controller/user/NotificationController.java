@@ -1,4 +1,4 @@
-package com.quanlymayphatdien.g1.controller;
+package com.quanlymayphatdien.g1.controller.user;
 
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.dal.NotificationDAO;
