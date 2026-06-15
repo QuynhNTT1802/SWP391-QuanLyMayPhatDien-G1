@@ -25,6 +25,8 @@ public class PurchaseOrder {
     private Integer approvedBy;
     private Integer rejectedBy;
     private String rejectReason;
+    private String cancelMode;
+    private String cancelReason;
     private int totalProposals;
     private int totalQuantity;
     private String note;
@@ -124,6 +126,22 @@ public class PurchaseOrder {
 
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
+    }
+
+    public String getCancelMode() {
+        return cancelMode;
+    }
+
+    public void setCancelMode(String cancelMode) {
+        this.cancelMode = cancelMode;
+    }
+
+    public String getCancelReason() {
+        return cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 
     public int getTotalProposals() {

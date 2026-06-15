@@ -19,6 +19,7 @@ public class GlobalUtils {
     public static final String PO_STATUS_APPROVED = "APPROVED";
     public static final String PO_STATUS_REJECTED = "REJECTED";
     public static final String PO_STATUS_CANCELLED = "CANCELLED";
+    public static final String PO_STATUS_RETURNED = "RETURNED";
 
     public static final String PROPOSAL_STATUS_PENDING_CEO = "PENDING_CEO";
 }

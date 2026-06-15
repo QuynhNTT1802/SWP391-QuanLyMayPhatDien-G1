@@ -120,7 +120,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return false;
     }
 
-    public int countByStatus(String status, Integer createdBy, boolean excludeDraft) {
+    public int countByStatus(String status, Integer createdBy, boolean excludeDraft, String period) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE status = ?");
         List<Object> params = new ArrayList<>();
         params.add(status);
@@ -131,6 +131,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         if (excludeDraft) {
             sql.append(" AND status != ?");
             params.add(GlobalUtils.STATUS_DRAFT);
+        }
+        if (period != null && !period.isEmpty()) {
+            sql.append(" AND period = ?");
+            params.add(period);
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -320,7 +324,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String period, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -361,6 +365,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 params.add(poFilter);
             }
         }
+        if (period != null && !period.isEmpty()) {
+            sql.append(" AND p.period = ?");
+            params.add(period);
+        }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -379,7 +387,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter) {
+    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String period) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -405,6 +413,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 sql.append(" AND p.purchase_order_id = ?");
                 params.add(poFilter);
             }
+        }
+        if (period != null && !period.isEmpty()) {
+            sql.append(" AND p.period = ?");
+            params.add(period);
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -548,10 +560,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         placeholders.append("?");
     }
     
-    String sql = "SELECT ip.*, w.name AS warehouse_name, u_c.name AS created_by_name "
+    String sql = "SELECT ip.*, w.name AS warehouse_name, u_c.name AS created_by_name, "
+               + "u_a.name AS approved_by_name, u_r.name AS rejected_by_name "
                + "FROM import_proposal ip "
                + "LEFT JOIN warehouse w ON w.warehouse_id = ip.warehouse_id "
                + "LEFT JOIN user u_c ON u_c.id = ip.created_by "
+               + "LEFT JOIN user u_a ON u_a.id = ip.approved_by "
+               + "LEFT JOIN user u_r ON u_r.id = ip.rejected_by "
                + "WHERE ip.proposal_id IN (" + placeholders + ") "
                + "  AND ip.status = 'PENDING' "
                + "  AND ip.purchase_order_id IS NULL "

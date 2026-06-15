@@ -139,6 +139,8 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             po.setRejectReason(rs.getString("reject_reason"));
         } catch (SQLException ignored) {
         }
+        try { po.setCancelMode(rs.getString("cancel_mode")); } catch (SQLException ignored) {}
+        try { po.setCancelReason(rs.getString("cancel_reason")); } catch (SQLException ignored) {}
         try {
             po.setTotalProposals(rs.getInt("total_proposals"));
         } catch (SQLException ignored) {
@@ -195,6 +197,108 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         } catch (SQLException ignored) {
         }
         return po;
+    }
+
+    public int createPoWithDetailsAndLinks(PurchaseOrder po, List<PurchaseOrderDetail> details, List<Integer> proposalIds) {
+        if (po == null || details == null || details.isEmpty()) {
+            return 0;
+        }
+        Connection c = null;
+        try {
+            c = getConnection();
+            c.setAutoCommit(false);
+
+            int poId;
+            try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO purchase_order (po_code, period, period_start, period_end, "
+                    + "warehouse_id, status, created_by, note, total_proposals, total_quantity) "
+                    + "VALUES (?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, po.getPoCode());
+                ps.setString(2, po.getPeriod());
+                ps.setDate(3, Date.valueOf(po.getPeriodStart()));
+                ps.setDate(4, Date.valueOf(po.getPeriodEnd()));
+                ps.setInt(5, po.getWarehouseId());
+                ps.setString(6, po.getStatus());
+                ps.setInt(7, po.getCreatedBy());
+                ps.setString(8, po.getNote());
+                ps.setInt(9, 0);
+                ps.setInt(10, po.getTotalQuantity());
+                ps.executeUpdate();
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    c.rollback();
+                    return 0;
+                }
+                poId = rs.getInt(1);
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO purchase_order_detail "
+                    + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
+                    + "VALUES (?,?,?,?,?,?)")) {
+                for (PurchaseOrderDetail d : details) {
+                    ps.setInt(1, poId);
+                    ps.setInt(2, d.getGeneratorId());
+                    ps.setInt(3, d.getProposedQuantity());
+                    ps.setInt(4, d.getCurrentStock());
+                    ps.setInt(5, d.getFinalQuantity());
+                    ps.setString(6, d.getNote());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            int linked = 0;
+            if (proposalIds != null && !proposalIds.isEmpty()) {
+                StringBuilder placeholders = new StringBuilder();
+                for (int i = 0; i < proposalIds.size(); i++) {
+                    if (i > 0) {
+                        placeholders.append(",");
+                    }
+                    placeholders.append("?");
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE import_proposal SET purchase_order_id = ? "
+                        + "WHERE proposal_id IN (" + placeholders + ") "
+                        + "  AND status = 'PENDING' "
+                        + "  AND purchase_order_id IS NULL")) {
+                    ps.setInt(1, poId);
+                    for (int i = 0; i < proposalIds.size(); i++) {
+                        ps.setInt(2 + i, proposalIds.get(i));
+                    }
+                    linked = ps.executeUpdate();
+                }
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE purchase_order SET total_proposals = ? WHERE po_id = ?")) {
+                ps.setInt(1, linked);
+                ps.setInt(2, poId);
+                ps.executeUpdate();
+            }
+
+            c.commit();
+            return poId;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                if (c != null) {
+                    c.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return 0;
+        } finally {
+            try {
+                if (c != null) {
+                    c.setAutoCommit(true);
+                    c.close();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public void insertDetails(int poId, List<PurchaseOrderDetail> details) {
@@ -259,6 +363,8 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 int rejectedBy = rs.getInt("rejected_by");
                 po.setRejectedBy(rs.wasNull() ? null : rejectedBy);
                 po.setRejectReason(rs.getString("reject_reason"));
+                po.setCancelMode(rs.getString("cancel_mode"));
+                po.setCancelReason(rs.getString("cancel_reason"));
                 po.setTotalProposals(rs.getInt("total_proposals"));
                 po.setTotalQuantity(rs.getInt("total_quantity"));
                 po.setNote(rs.getString("note"));
@@ -654,6 +760,205 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
     }
 
+    public boolean returnPo(int poId, int ceoId, String reason) {
+        if (poId <= 0 || ceoId <= 0 || reason == null || reason.trim().isEmpty()) {
+            return false;
+        }
+        try (Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            try (PreparedStatement ps1 = c.prepareStatement(
+                    "UPDATE purchase_order SET status = ?, reject_reason = ?, "
+                    + "rejected_by = ?, rejected_at = NOW() "
+                    + "WHERE po_id = ? AND status = ?")) {
+                ps1.setString(1, GlobalUtils.PO_STATUS_RETURNED);
+                ps1.setString(2, reason.trim());
+                ps1.setInt(3, ceoId);
+                ps1.setInt(4, poId);
+                ps1.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
+                if (ps1.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
+            }
+            try (PreparedStatement ps2 = c.prepareStatement(
+                    "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
+                    + "WHERE purchase_order_id = ?")) {
+                ps2.setString(1, GlobalUtils.STATUS_PENDING);
+                ps2.setInt(2, poId);
+                ps2.executeUpdate();
+            }
+            c.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateReturnedPo(PurchaseOrder po, List<PurchaseOrderDetail> details, List<Integer> proposalIds) {
+        if (po == null || po.getPoId() <= 0 || details == null || details.isEmpty()) {
+            return false;
+        }
+        Connection c = null;
+        try {
+            c = getConnection();
+            c.setAutoCommit(false);
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE purchase_order SET status = ?, note = ?, total_quantity = ?, "
+                    + "rejected_by = NULL, rejected_at = NULL, reject_reason = NULL "
+                    + "WHERE po_id = ? AND status = ?")) {
+                ps.setString(1, GlobalUtils.PO_STATUS_PENDING_CEO);
+                ps.setString(2, po.getNote());
+                ps.setInt(3, po.getTotalQuantity());
+                ps.setInt(4, po.getPoId());
+                ps.setString(5, GlobalUtils.PO_STATUS_RETURNED);
+                if (ps.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "DELETE FROM purchase_order_detail WHERE po_id = ?")) {
+                ps.setInt(1, po.getPoId());
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO purchase_order_detail "
+                    + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
+                    + "VALUES (?,?,?,?,?,?)")) {
+                for (PurchaseOrderDetail d : details) {
+                    ps.setInt(1, po.getPoId());
+                    ps.setInt(2, d.getGeneratorId());
+                    ps.setInt(3, d.getProposedQuantity());
+                    ps.setInt(4, d.getCurrentStock());
+                    ps.setInt(5, d.getFinalQuantity());
+                    ps.setString(6, d.getNote());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE import_proposal SET purchase_order_id = NULL "
+                    + "WHERE purchase_order_id = ?")) {
+                ps.setInt(1, po.getPoId());
+                ps.executeUpdate();
+            }
+
+            int linked = 0;
+            if (proposalIds != null && !proposalIds.isEmpty()) {
+                StringBuilder placeholders = new StringBuilder();
+                for (int i = 0; i < proposalIds.size(); i++) {
+                    if (i > 0) {
+                        placeholders.append(",");
+                    }
+                    placeholders.append("?");
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE import_proposal SET purchase_order_id = ? "
+                        + "WHERE proposal_id IN (" + placeholders + ") "
+                        + "  AND status = ? "
+                        + "  AND purchase_order_id IS NULL")) {
+                    ps.setInt(1, po.getPoId());
+                    for (int i = 0; i < proposalIds.size(); i++) {
+                        ps.setInt(2 + i, proposalIds.get(i));
+                    }
+                    ps.setString(2 + proposalIds.size(), GlobalUtils.STATUS_PENDING);
+                    linked = ps.executeUpdate();
+                }
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE purchase_order SET total_proposals = ? WHERE po_id = ?")) {
+                ps.setInt(1, linked);
+                ps.setInt(2, po.getPoId());
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE import_proposal SET status = ? "
+                    + "WHERE purchase_order_id = ?")) {
+                ps.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
+                ps.setInt(2, po.getPoId());
+                ps.executeUpdate();
+            }
+
+            c.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                if (c != null) {
+                    c.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        } finally {
+            try {
+                if (c != null) {
+                    c.setAutoCommit(true);
+                    c.close();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public boolean cancelWithMode(int poId, int ceoId, String mode, String reason) {
+        if (poId <= 0 || ceoId <= 0 || mode == null
+                || (!mode.equals("REBUILD") && !mode.equals("KILL"))) {
+            return false;
+        }
+        try (Connection c = getConnection()) {
+            c.setAutoCommit(false);
+            try (PreparedStatement ps1 = c.prepareStatement(
+                    "UPDATE purchase_order SET status = ?, cancel_mode = ?, cancel_reason = ?, "
+                    + "rejected_by = ?, rejected_at = NOW() "
+                    + "WHERE po_id = ? AND status NOT IN ('CANCELLED', 'APPROVED')")) {
+                ps1.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
+                ps1.setString(2, mode);
+                ps1.setString(3, reason);
+                ps1.setInt(4, ceoId);
+                ps1.setInt(5, poId);
+                if (ps1.executeUpdate() == 0) {
+                    c.rollback();
+                    return false;
+                }
+            }
+            if ("REBUILD".equals(mode)) {
+                try (PreparedStatement ps2 = c.prepareStatement(
+                        "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
+                        + "WHERE purchase_order_id = ?")) {
+                    ps2.setString(1, GlobalUtils.STATUS_PENDING);
+                    ps2.setInt(2, poId);
+                    ps2.executeUpdate();
+                }
+            } else {
+                try (PreparedStatement ps2 = c.prepareStatement(
+                        "UPDATE import_proposal SET status = ?, rejected_by = ?, rejected_at = NOW(), "
+                        + "reject_reason = ? "
+                        + "WHERE purchase_order_id = ?")) {
+                    ps2.setString(1, GlobalUtils.STATUS_REJECTED);
+                    ps2.setInt(2, ceoId);
+                    ps2.setString(3, "PO bị hủy hoàn toàn: " + reason);
+                    ps2.setInt(4, poId);
+                    ps2.executeUpdate();
+                }
+            }
+            c.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean cancel(int poId) {
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
@@ -681,6 +986,43 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<Map<String, Object>> findOpenQuarters(String currentPeriod, java.time.LocalDate currentPeriodEnd) {
+        if (currentPeriod == null || currentPeriodEnd == null) {
+            return new ArrayList<>();
+        }
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT w.warehouse_id, w.name AS warehouse_name, "
+                + "DATEDIFF(?, CURDATE()) AS days_left "
+                + "FROM warehouse w "
+                + "WHERE w.status = 'active' "
+                + "  AND NOT EXISTS ("
+                + "    SELECT 1 FROM purchase_order po "
+                + "    WHERE po.period = ? AND po.warehouse_id = w.warehouse_id "
+                + "      AND po.status IN ('PENDING_CEO', 'APPROVED')"
+                + "  ) "
+                + "ORDER BY w.warehouse_id";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(currentPeriodEnd));
+            ps.setString(2, currentPeriod);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int daysLeft = rs.getInt("days_left");
+                if (daysLeft < 0) {
+                    continue;
+                }
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("warehouseId", rs.getInt("warehouse_id"));
+                row.put("warehouseName", rs.getString("warehouse_name"));
+                row.put("daysLeft", daysLeft);
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public List<ImportProposal> findProposalsByPo(int poId) {
@@ -721,13 +1063,14 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
-    public PurchaseOrder findByPeriodWarehouse(String period, int warehouseId) {
+    public PurchaseOrder findActivePoByPeriodWarehouse(String period, int warehouseId) {
         if (period == null || period.isEmpty() || warehouseId <= 0) {
             return null;
         }
 
         String sql = "SELECT * FROM purchase_order "
                 + "WHERE period = ? AND warehouse_id = ? "
+                + "  AND status IN ('DRAFT', 'PENDING_CEO', 'RETURNED', 'APPROVED') "
                 + "ORDER BY po_id DESC "
                 + "LIMIT 1";
 
