@@ -4,9 +4,25 @@
         <servlet-name>OrderController</servlet-name>
         <servlet-class>com.quanlymayphatdien.g1.controller.order.OrderController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ProposalController</servlet-name>
+        <servlet-class>com.quanlymayphatdien.g1.controller.proposal.ProposalController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>OrderController</servlet-name>
         <url-pattern>/order</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProposalController</servlet-name>
+        <url-pattern>/proposal</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>PurchaseOrderController</servlet-name>
+        <servlet-class>com.quanlymayphatdien.g1.controller.proposal.PurchaseOrderController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PurchaseOrderController</servlet-name>
+        <url-pattern>/purchase-order</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>
@@ -26,6 +42,6 @@
     </error-page>
     <error-page>
         <error-code>500</error-code>
-        <location>/view/error/500.jsp</location>
+        <location>/view/error/404.jsp</location>
     </error-page>
 </web-app>
