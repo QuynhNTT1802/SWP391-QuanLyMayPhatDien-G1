@@ -130,6 +130,9 @@ public class RoleController extends HttpServlet {
 
         Map<String, Map<String, List<Permission>>> groupedByModule = buildGroupedByModule(allPermissions, permSearch);
         request.setAttribute("groupedByModule", groupedByModule);
+        request.setAttribute("taskLabels", TASK_LABELS);
+        request.setAttribute("totalPermCount", allPermissions.size());
+        request.setAttribute("totalModuleCount", groupedByModule.size());
 
         if (idParam != null && !idParam.isEmpty()) {
             int roleId = Integer.parseInt(idParam);
@@ -272,6 +275,9 @@ public class RoleController extends HttpServlet {
             String permSearch = request.getParameter("permSearch");
             Map<String, Map<String, List<Permission>>> groupedByModule = buildGroupedByModule(allPermissions, permSearch);
             request.setAttribute("groupedByModule", groupedByModule);
+            request.setAttribute("taskLabels", TASK_LABELS);
+            request.setAttribute("totalPermCount", allPermissions.size());
+            request.setAttribute("totalModuleCount", groupedByModule.size());
 
             if (excludeId > 0) {
                 List<Permission> rolePerms = perDAO.getPermissionByRoleId(excludeId);
@@ -346,7 +352,7 @@ public class RoleController extends HttpServlet {
                 }
             }
         }
-        // --- LOG: So sánh quyền cũ vs mới, chỉ log nếu có thay đổi ---
+
         try {
             List<Permission> oldPermList = perDAO.getPermissionByRoleId(roleId);
             Set<String> oldPermSet = new HashSet<>();
@@ -376,7 +382,7 @@ public class RoleController extends HttpServlet {
         }
         roleDAO.updatePermissionRole(roleId, new ArrayList<>(expanded));
 
-        // Báo cho SecurityFilter biết cần refresh lại quyền của tất cả user mang role này
+
         UserDAO userDAO = new UserDAO();
         List<Integer> affectedUsers = userDAO.getUserIdsByRoleId(roleId);
         for (Integer uid : affectedUsers) {
@@ -408,13 +414,26 @@ public class RoleController extends HttpServlet {
                     "RoleController.logRoleAction", e.getMessage(), e);
         }
     }
-private static final Map<String, String> MODULE_LABELS = Map.of(
-            "admin", "Quan tri he thong",
-            "warehouse", "Kho & Phieu",
-            "sales", "Ban hang",
-            "system", "He thong & Danh muc",
-            "report", "Bao cao",
-            "account", "Tai khoan ca nhan"
+    private static final Map<String, String> MODULE_LABELS = Map.of(
+            "admin", "Quản trị hệ thống",
+            "warehouse", "Kho & Phiếu",
+            "sales", "Bán hàng",
+            "system", "Hệ thống & Danh mục",
+            "report", "Báo cáo",
+            "account", "Tài khoản cá nhân"
+    );
+
+    private static final Map<String, String> TASK_LABELS = Map.ofEntries(
+            Map.entry("READ", "Xem"),
+            Map.entry("CREATE", "Tạo"),
+            Map.entry("UPDATE", "Sửa"),
+            Map.entry("DELETE", "Vô hiệu"),
+            Map.entry("APPROVE", "Duyệt"),
+            Map.entry("REJECT", "Từ chối"),
+            Map.entry("CANCEL", "Hủy"),
+            Map.entry("EXPORT", "Xuất"),
+            Map.entry("CONVERT", "Chuyển"),
+            Map.entry("ADJUST", "Điều chỉnh")
     );
 
     private Map<String, Map<String, List<Permission>>> buildGroupedByModule(
