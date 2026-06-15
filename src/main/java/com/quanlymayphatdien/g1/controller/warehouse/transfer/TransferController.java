@@ -249,13 +249,40 @@ public class TransferController extends HttpServlet {
 
         boolean isOwner = (t.getCreatedBy() == user.getId());
 
-        List<ActivityLog> history = activityLogDAO.findByEntityTypeAndId("transfer", id, 1, 100);
-        int totalHistory = activityLogDAO.countByEntityTypeAndId("transfer", id);
+        String tab = request.getParameter("tab");
+        String currentTab = "history".equals(tab) ? "history" : "info";
+        request.setAttribute("currentTab", currentTab);
+
+        if ("history".equals(currentTab)) {
+            String logSearch = request.getParameter("logSearch");
+            String logAction = request.getParameter("logAction");
+            String dateFrom = request.getParameter("dateFrom");
+            String dateTo = request.getParameter("dateTo");
+            int page = 1;
+            int pageSize = 20;
+            String pageStr = request.getParameter("page");
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try { page = Math.max(1, Integer.parseInt(pageStr)); }
+                catch (NumberFormatException ignored) { page = 1; }
+            }
+            List<ActivityLog> logs = activityLogDAO.findByEntityTypeAndId2("transfer", id, logSearch, logAction,
+                    dateFrom, dateTo, page, pageSize);
+            int totalLogs = activityLogDAO.countByEntityTypeAndId2("transfer", id, logSearch, logAction,
+                    dateFrom, dateTo);
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+            if (page > totalPages) page = totalPages;
+            request.setAttribute("logList", logs);
+            request.setAttribute("logPage", page);
+            request.setAttribute("logTotalPages", totalPages);
+            request.setAttribute("totalLogs", totalLogs);
+            request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+            request.setAttribute("logAction", logAction != null ? logAction : "");
+            request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+            request.setAttribute("dateTo", dateTo != null ? dateTo : "");
+        }
 
         request.setAttribute("transfer", t);
         request.setAttribute("isOwner", isOwner);
-        request.setAttribute("transferHistory", history);
-        request.setAttribute("totalHistory", totalHistory);
         request.setAttribute("activePage", "transfer-detail");
 
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-detail.jsp").forward(request, response);

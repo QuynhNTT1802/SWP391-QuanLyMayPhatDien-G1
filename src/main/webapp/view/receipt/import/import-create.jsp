@@ -172,6 +172,16 @@
                                 <div class="section-num">02 — CHI TIẾT DÒNG HÀNG</div>
                                 <h3 class="section-title">Danh sách máy phát điện</h3>
                             </div>
+                            <div class="section-actions" style="display:flex; gap:8px;">
+                                <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=template" title="Tải file mẫu Excel">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                    Tải mẫu Excel
+                                </a>
+                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="Nhập hàng loạt từ Excel (.xlsx)">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                                    Nhập từ Excel
+                                </button>
+                            </div>
                         </div>
                         <div id="warehouseWarn" class="alert alert-info" style="display:none;">
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -230,6 +240,15 @@
                         </button>
                     </section>
                 </div>
+            </form>
+
+            <form id="excelUploadForm" method="POST" enctype="multipart/form-data"
+                  action="${pageContext.request.contextPath}/import-receipt?action=importPreview" style="display:none;">
+                <input type="hidden" name="warehouseId" id="excelWarehouseId"/>
+                <input type="hidden" name="reasonId" id="excelReasonId"/>
+                <input type="hidden" name="note" id="excelNote"/>
+                <input type="file" name="excelFile" id="excelFileInput" accept=".xlsx"
+                       onchange="submitExcelUpload(this)"/>
             </form>
         </main>
     </div>
@@ -463,6 +482,24 @@
     document.addEventListener('DOMContentLoaded', function () {
         updateGrandTotal();
     });
+
+    function submitExcelUpload(input) {
+        if (!input.files || !input.files[0]) {
+            return;
+        }
+        var whId = document.getElementById('warehouseSelect').value;
+        if (!whId) {
+            toast('Vui lòng chọn kho trước khi nhập Excel', 'danger');
+            input.value = '';
+            return;
+        }
+        var reasonEl = document.querySelector('select[name="reasonId"]');
+        var noteEl = document.querySelector('textarea[name="note"]');
+        document.getElementById('excelWarehouseId').value = whId;
+        document.getElementById('excelReasonId').value = reasonEl ? reasonEl.value : '';
+        document.getElementById('excelNote').value = noteEl ? noteEl.value : '';
+        document.getElementById('excelUploadForm').submit();
+    }
 </script>
 </body>
 </html>
