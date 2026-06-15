@@ -245,7 +245,7 @@
                     </table>
                 </div>
 
-                <c:if test="${(isOwner && status == 'DRAFT') || (isOwner && isMgrRound1) || (isManager && isMgrRound1) || (isManager && isMgrRound2) || (isCeo && status == 'PENDING_CEO')}">
+                <c:if test="${status == 'DRAFT' || status == 'PENDING_MANAGER' || status == 'PENDING_CEO'}">
                 <div class="section" style="padding: 18px 22px; margin-top: 20px;">
                     <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Xử lý phiếu luân chuyển</h3>
                     <p style="margin-bottom: 16px; color: var(--muted); font-size: 13px;">Hãy kiểm tra kỹ thông tin kho nguồn/đích và danh sách máy ở phía trên trước khi ra quyết định.</p>
@@ -265,7 +265,7 @@
                             </form>
                         </c:if>
 
-                        <c:if test="${isManager && isMgrRound1}">
+                        <c:if test="${isMgrRound1}">
                             <form method="post" action="${pageContext.request.contextPath}/transfers?action=approve_manager" style="display:inline;">
                                 <input type="hidden" name="id" value="${t.transferId}"/>
                                 <button type="submit" class="btn btn-primary" onclick="return confirm('Duyệt phiếu và chuyển CEO?');">Duyệt → CEO</button>
@@ -273,7 +273,7 @@
                             <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('reject_manager', 'Từ chối phiếu (Manager)', 'managerNote')">Từ chối</button>
                         </c:if>
 
-                        <c:if test="${isManager && isMgrRound2}">
+                        <c:if test="${isMgrRound2}">
                             <form method="post" action="${pageContext.request.contextPath}/transfers?action=final_approve" style="display:inline;">
                                 <input type="hidden" name="id" value="${t.transferId}"/>
                                 <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận cuối và THỰC HIỆN chuyển kho?');">Xác nhận cuối &amp; Chuyển kho</button>
@@ -281,7 +281,7 @@
                             <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('final_reject', 'Từ chối xác nhận cuối', 'managerNote')">Từ chối (Hủy phiếu)</button>
                         </c:if>
 
-                        <c:if test="${isCeo && status == 'PENDING_CEO'}">
+                        <c:if test="${status == 'PENDING_CEO'}">
                             <form method="post" action="${pageContext.request.contextPath}/transfers?action=approve_ceo" style="display:inline;">
                                 <input type="hidden" name="id" value="${t.transferId}"/>
                                 <button type="submit" class="btn btn-primary" onclick="return confirm('Duyệt phiếu và trả về Manager xác nhận cuối?');">Duyệt → Manager</button>
