@@ -1,7 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -101,79 +100,51 @@
                         </div>
 
                         <div class="section">
-                            <div class="perm-toolbar">
-                                <input type="text" id="permSearch" class="perm-search-input" placeholder="Tìm theo tên tính năng, mô tả hoặc mã quyền..." value="${param.permSearch}" autocomplete="off">
-                                <span class="perm-summary">
-                                    Đã chọn <strong id="permCountSelected">0</strong> / ${totalPermCount} quyền · <strong id="permCountModules">0</strong> / ${totalModuleCount} module
-                                </span>
-                            </div>
-
-                            <c:if test="${role.roleName == 'admin'}">
-                                <div class="perm-readonly-banner">
-                                    Vai trò Quản trị viên có toàn quyền hệ thống — không thể chỉnh sửa danh sách quyền.
+                            <div class="section-head">
+                                <h3>Danh sách các quyền</h3>
+                                <div class="input has-icon" style="width:220px;">
+                                    <span class="leading">
+                                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                                    </span>
+                                    <input type="text" id="permSearch" placeholder="Tìm kiếm quyền..." value="${param.permSearch}" autocomplete="off">
                                 </div>
-                            </c:if>
+                            </div>
+                            <div class="perm-table" id="permTable">
 
-                            <div class="perm-tree" id="permTable" data-readonly="${role.roleName == 'admin' ? 'true' : 'false'}">
                                 <c:forEach var="moduleEntry" items="${groupedByModule}">
-                                    <div class="perm-module" data-module="${moduleEntry.key}">
-                                        <div class="perm-module-bar" data-toggle-collapse>
-                                            <span class="perm-tri" data-module-tri data-state="none" data-toggle-module></span>
-                                            <span class="perm-module-title">${moduleEntry.key}</span>
-                                            <span class="perm-module-count" data-module-count>0/0</span>
-                                            <button type="button" class="perm-module-quick" data-module-quick>Chọn tất cả</button>
-                                            <span class="perm-module-arrow">▾</span>
-                                        </div>
-                                        <div class="perm-module-body">
-                                            <c:forEach var="featureEntry" items="${moduleEntry.value}">
-                                                <div class="perm-feature" data-feature="${featureEntry.key}">
-                                                    <div class="perm-feature-head">
-                                                        <span class="perm-feature-name">${featureEntry.key}</span>
-                                                        <span class="perm-feature-count" data-feature-count>0/0</span>
-                                                        <button type="button" class="perm-feature-quick" data-feature-quick="all">Tất cả</button>
-                                                        <button type="button" class="perm-feature-quick" data-feature-quick="readonly">Chỉ xem</button>
-                                                        <button type="button" class="perm-feature-quick" data-feature-quick="none">Bỏ chọn</button>
-                                                    </div>
-                                                    <div class="perm-chips">
-                                                        <c:forEach var="perm" items="${featureEntry.value}">
-                                                            <c:set var="isChecked" value="false" />
-                                                            <c:forEach var="rPerm" items="${rolePermissions}">
-                                                                <c:if test="${rPerm.permissionId == perm.permissionId}">
-                                                                    <c:set var="isChecked" value="true" />
-                                                                </c:if>
-                                                            </c:forEach>
-                                                            <c:set var="taskLabel" value="${not empty taskLabels[perm.taskType] ? taskLabels[perm.taskType] : (not empty perm.taskType ? perm.taskType : perm.action)}" />
-                                                            <label class="perm-chip ${isChecked ? 'on' : ''}"
-                                                                   data-task="${perm.taskType}"
-                                                                   data-perm-code="${perm.resource}.${perm.action}"
-                                                                   data-perm-search="${fn:toLowerCase(perm.resource)} ${fn:toLowerCase(perm.action)} ${fn:toLowerCase(perm.featureName)} ${fn:toLowerCase(perm.description)}"
-                                                                   title="${perm.description} (${perm.resource}.${perm.action})">
-                                                                <input type="checkbox" name="perIds" value="${perm.permissionId}" ${isChecked ? 'checked' : ''}>
-                                                                ${taskLabel}
-                                                                <c:if test="${perm.action == 'approve_manager'}"> (Manager)</c:if>
-                                                                <c:if test="${perm.action == 'approve_ceo'}"> (CEO)</c:if>
-                                                            </label>
-                                                        </c:forEach>
-                                                    </div>
+                                    <div class="perm-module-header" style="margin:14px 0 6px; padding:6px 10px; background:#f3f6fb; border-left:3px solid var(--info); font-weight:600; color:#334; border-radius:4px;">
+                                        ${moduleEntry.key}
+                                    </div>
+                                    <c:forEach var="featureEntry" items="${moduleEntry.value}">
+                                        <div class="perm-row">
+                                            <div class="res-info">
+                                                <div>
+                                                    <div class="res-name">${featureEntry.key}</div>
+                                                </div>
+                                            </div>
+
+                                            <c:forEach var="perm" items="${featureEntry.value}">
+                                                <c:set var="isChecked" value="false" />
+                                                <c:forEach var="rPerm" items="${rolePermissions}">
+                                                    <c:if test="${rPerm.permissionId == perm.permissionId}">
+                                                        <c:set var="isChecked" value="true" />
+                                                    </c:if>
+                                                </c:forEach>
+
+                                                <div style="text-align: center;">
+                                                    <span style="font-size: 10px; color: gray; display:block; margin-bottom:4px;" title="${perm.description}">
+                                                        <c:out value="${empty perm.taskType ? perm.action : perm.taskType}" />
+                                                    </span>
+                                                    <label class="perm-toggle ${isChecked ? 'on' : ''}">
+                                                        <input type="checkbox" name="perIds" value="${perm.permissionId}" style="display:none;" ${isChecked ? 'checked' : ''}>
+                                                        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+                                                    </label>
                                                 </div>
                                             </c:forEach>
                                         </div>
-                                    </div>
+                                    </c:forEach>
                                 </c:forEach>
 
-                                <div class="perm-empty" id="permEmpty" style="display:none;">
-                                    Không tìm thấy quyền nào khớp với từ khóa.
-                                    <button type="button" class="perm-empty-clear" id="permClearSearch">Xoá tìm kiếm</button>
-                                </div>
-                            </div>
-
-                            <div class="perm-stickybar">
-                                <div class="perm-stickybar-info">
-                                    <strong id="permCountSelected2">0</strong> / ${totalPermCount} quyền đã chọn
-                                    <span class="dirty" id="permDirty" style="display:none;">· Có thay đổi chưa lưu</span>
-                                </div>
-                                <button type="button" class="btn" id="permResetBtn">Reset</button>
-                                <button type="submit" form="roleForm" class="btn btn-primary">Lưu thay đổi</button>
                             </div>
                         </div>
                     </div>
