@@ -69,6 +69,11 @@
                         window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
                             <c:remove var="message" scope="session"/>
                         </c:if>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>'};
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
+                        </c:if>
                     </script>
 
                     <div class="card" style="padding: 20px;">
@@ -145,18 +150,25 @@
                     <div class="action-bar">
                         <a href="${pageContext.request.contextPath}/purchase-order?action=list" class="btn">← Quay lại</a>
 
-                        <c:if test="${po.status == 'DRAFT'}">
+                        <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                        <c:set var="canApprovePo" value="${perms.contains('purchase_orders.approve')}"/>
+                        <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
+                        <c:set var="isOwnerPo" value="${sessionScope.loggedUser.id == po.createdBy}"/>
+
+                        <c:if test="${po.status == 'DRAFT' && canCreatePo}">
                             <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo" style="display:inline;">
                                 <input type="hidden" name="id" value="${po.poId}"/>
                                 <button type="submit" class="btn btn-primary">Gửi CEO duyệt</button>
                             </form>
-                            <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=cancel" style="display:inline;" onsubmit="return confirm('Hủy phiếu mua này?');">
-                                <input type="hidden" name="id" value="${po.poId}"/>
-                                <button type="submit" class="btn btn-danger">Hủy</button>
-                            </form>
+                            <c:if test="${isOwnerPo}">
+                                <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=cancel" style="display:inline;" onsubmit="return confirm('Hủy phiếu mua này?');">
+                                    <input type="hidden" name="id" value="${po.poId}"/>
+                                    <button type="submit" class="btn btn-danger">Hủy</button>
+                                </form>
+                            </c:if>
                         </c:if>
 
-                        <c:if test="${po.status == 'PENDING_CEO'}">
+                        <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
                             <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=approve" style="display:inline;" onsubmit="return confirm('Duyệt phiếu mua này?');">
                                 <input type="hidden" name="id" value="${po.poId}"/>
                                 <button type="submit" class="btn btn-primary">Duyệt</button>

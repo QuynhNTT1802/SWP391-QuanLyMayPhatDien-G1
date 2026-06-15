@@ -168,6 +168,8 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("status", status);
         request.setAttribute("canApprove", perms != null && perms.contains("purchase_orders.approve"));
+        request.setAttribute("canApprovePo", perms != null && perms.contains("purchase_orders.approve"));
+        request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
         request.setAttribute("activePage", "purchase-order");
 
         request.getRequestDispatcher("/view/purchase/purchase-list.jsp").forward(request, response);
@@ -478,6 +480,13 @@ public class PurchaseOrderController extends HttpServlet {
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.view")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền xem phiếu mua.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
         int id = parseInt(request.getParameter("id"));
         if (id <= 0) {
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
@@ -495,26 +504,46 @@ public class PurchaseOrderController extends HttpServlet {
         List<ImportProposal> sourceProposals = dao.findProposalsByPo(id);
         request.setAttribute("po", po);
         request.setAttribute("sourceProposals", sourceProposals);
+        request.setAttribute("canApprovePo", perms.contains("purchase_orders.approve"));
+        request.setAttribute("canCreatePo", perms.contains("purchase_orders.create"));
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-detail.jsp").forward(request, response);
     }
 
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.approve")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu mua.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
         int id = parseInt(request.getParameter("id"));
         request.setAttribute("po", new PurchaseOrderDAO().findById(id));
+        request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-reject.jsp").forward(request, response);
     }
 
     private void sendToCeo(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.create")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền gửi phiếu mua cho CEO duyệt.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
         int id = parseInt(request.getParameter("id"));
         boolean ok = new PurchaseOrderDAO().sendToCeo(id);
         if (ok) {
-            session.setAttribute("message", "Đã gửi CEO duyệt");
+            session.setAttribute("toastMessage", "Đã gửi CEO duyệt");
+            session.setAttribute("toastType", "success");
         } else {
-            session.setAttribute("message", "Không thể gửi");
+            session.setAttribute("toastMessage", "Không thể gửi");
+            session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
     }
@@ -522,13 +551,22 @@ public class PurchaseOrderController extends HttpServlet {
     private void approve(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.approve")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền duyệt phiếu mua.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
         User user = (User) session.getAttribute("loggedUser");
         int id = parseInt(request.getParameter("id"));
         boolean ok = new PurchaseOrderDAO().approve(id, user.getId());
         if (ok) {
-            session.setAttribute("message", "Đã duyệt phiếu mua");
+            session.setAttribute("toastMessage", "Đã duyệt phiếu mua");
+            session.setAttribute("toastType", "success");
         } else {
-            session.setAttribute("message", "Không thể duyệt");
+            session.setAttribute("toastMessage", "Không thể duyệt");
+            session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
     }
@@ -536,19 +574,29 @@ public class PurchaseOrderController extends HttpServlet {
     private void reject(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.approve")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu mua.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
         User user = (User) session.getAttribute("loggedUser");
         int id = parseInt(request.getParameter("id"));
         String reason = request.getParameter("rejectReason");
         if (reason == null || reason.trim().isEmpty()) {
-            session.setAttribute("message", "Vui lòng nhập lý do từ chối");
+            session.setAttribute("toastMessage", "Vui lòng nhập lý do từ chối");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=reject&id=" + id);
             return;
         }
         boolean ok = new PurchaseOrderDAO().reject(id, user.getId(), reason.trim());
         if (ok) {
-            session.setAttribute("message", "Đã từ chối phiếu mua");
+            session.setAttribute("toastMessage", "Đã từ chối phiếu mua");
+            session.setAttribute("toastType", "success");
         } else {
-            session.setAttribute("message", "Không thể từ chối");
+            session.setAttribute("toastMessage", "Không thể từ chối");
+            session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
     }
@@ -715,6 +763,13 @@ public class PurchaseOrderController extends HttpServlet {
     private void cancel(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("purchase_orders.create")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền hủy phiếu mua.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
         User user = (User) session.getAttribute("loggedUser");
         int id = parseInt(request.getParameter("id"));
         String cancelMode = request.getParameter("cancelMode");
@@ -723,12 +778,15 @@ public class PurchaseOrderController extends HttpServlet {
         PurchaseOrderDAO dao = new PurchaseOrderDAO();
         boolean ok;
         String message;
+        String toastType;
         if (cancelMode == null || cancelMode.trim().isEmpty()) {
             ok = dao.cancel(id);
             message = ok ? "Đã hủy phiếu mua" : "Không thể hủy";
+            toastType = ok ? "success" : "danger";
         } else {
             if (!"REBUILD".equals(cancelMode) && !"KILL".equals(cancelMode)) {
-                session.setAttribute("message", "Chế độ hủy không hợp lệ");
+                session.setAttribute("toastMessage", "Chế độ hủy không hợp lệ");
+                session.setAttribute("toastType", "danger");
                 response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
                 return;
             }
@@ -736,8 +794,10 @@ public class PurchaseOrderController extends HttpServlet {
             message = ok
                     ? ("REBUILD".equals(cancelMode) ? "Đã hủy và trả đề xuất về chờ duyệt" : "Đã hủy và từ chối các đề xuất")
                     : "Không thể hủy";
+            toastType = ok ? "success" : "danger";
         }
-        session.setAttribute("message", message);
+        session.setAttribute("toastMessage", message);
+        session.setAttribute("toastType", toastType);
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
     }
 
