@@ -17,54 +17,127 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
         <style>
-            .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-            .status-pill .pdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+            .status-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+            }
             .status-draft { background: #e2e3e5; color: #383d41; }
             .status-pending { background: #fff3cd; color: #856404; }
             .status-revision { background: #ffe5b4; color: #8a5a00; }
             .status-completed { background: #d4edda; color: #155724; }
             .status-cancelled { background: #f8d7da; color: #721c24; }
             .receipt-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--fg); font-weight: 600; }
-            .amount-cell { font-weight: 600; color: var(--accent); white-space: nowrap; }
+            .amount-cell { font-weight: 600; color: var(--accent); }
             .col-creator { white-space: nowrap; width: 110px; }
             .col-status { white-space: nowrap; width: 140px; }
             .col-date { white-space: nowrap; width: 130px; color: var(--muted); font-size: 13px; }
             .col-order { max-width: 180px; }
             .col-order a { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); text-decoration: none; }
             .col-order a:hover { text-decoration: underline; }
-            .col-reason { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .col-order .cust { font-size: 11px; color: var(--muted); margin-top: 2px; }
+            .col-reason { max-width: 200px; white-space: normal; word-wrap: break-word; }
             .col-actions { white-space: nowrap; }
             .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .empty-state { text-align: center; padding: 24px; color: var(--muted); }
-            .muted { color: var(--muted); }
+            .badge-avail {
+                display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
+                border-radius: 4px; font-size: 9px; font-weight: 700;
+                text-transform: uppercase; margin-bottom: 2px;
+            }
             .dropdown { position: relative; display: inline-block; }
-            .dropdown-btn { background: var(--surface); border: 1px solid var(--border); padding: 5px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--fg); display: inline-flex; align-items: center; gap: 6px; }
-            .dropdown-btn:hover { background: var(--surface-2); }
-            .dropdown-menu { position: fixed; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 160px; display: none; z-index: 50; }
-            .dropdown-menu.open { display: block; }
-            .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; color: var(--fg); text-decoration: none; cursor: pointer; background: none; border: none; width: 100%; text-align: left; }
-            .dropdown-item:hover { background: var(--surface-2); }
-            .dropdown-item svg { width: 14px; height: 14px; flex-shrink: 0; }
-            .dropdown-item.approve { color: var(--accent); }
-            .dropdown-item.reject { color: var(--danger); }
-            .dropdown-item.revision { color: var(--warn); }
-            .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
-            .user-name.link-ref { cursor: pointer; color: var(--accent); text-decoration: none; }
-            .user-name.link-ref:hover { text-decoration: underline; }
-            .ref-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-            .ref-modal-backdrop.open { display: flex; }
-            .ref-modal { background: var(--surface); border-radius: 8px; width: 100%; max-width: 480px; box-shadow: 0 10px 40px rgba(0,0,0,.25); overflow: hidden; animation: refModalPop .18s ease-out; }
-            @keyframes refModalPop { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-            .ref-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
-            .ref-modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
-            .ref-modal-close { background: transparent; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: var(--muted); padding: 0 4px; }
-            .ref-modal-close:hover { color: var(--fg); }
-            .ref-modal-body { padding: 16px 18px; }
-            .ref-info-row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13.5px; }
-            .ref-info-row:last-child { border-bottom: none; }
-            .ref-info-row .lbl { flex: 0 0 110px; color: var(--muted); font-weight: 500; }
-            .ref-info-row .val { flex: 1; color: var(--fg); word-break: break-word; }
-            .ref-modal-footer { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--surface-2); }
+            .dropdown-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 10px;
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                background: var(--surface);
+                color: var(--fg);
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all .12s ease;
+                font-family: inherit;
+                white-space: nowrap;
+            }
+            .dropdown-btn:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
+            .dropdown-btn .arrow {
+                transition: transform .2s ease;
+                margin-left: 2px;
+                font-size: 10px;
+            }
+            .dropdown-btn.open .arrow {
+                transform: rotate(180deg);
+            }
+            .dropdown-menu {
+                position: fixed;
+                z-index: 999;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                box-shadow: 0 4px 20px rgba(0,0,0,.12);
+                padding: 4px;
+                min-width: 170px;
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-4px);
+                transition: all .15s ease;
+                pointer-events: none;
+            }
+            .dropdown-menu.open {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+            .dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 7px 10px;
+                border: none;
+                border-radius: 4px;
+                background: transparent;
+                color: var(--fg);
+                font-size: 12.5px;
+                font-weight: 500;
+                cursor: pointer;
+                width: 100%;
+                text-align: left;
+                font-family: inherit;
+                text-decoration: none;
+                transition: background .1s ease;
+                box-sizing: border-box;
+                white-space: nowrap;
+            }
+            .dropdown-item:hover {
+                background: var(--surface-2);
+            }
+            .dropdown-item svg {
+                width: 14px;
+                height: 14px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                flex-shrink: 0;
+            }
+            .dropdown-item .label { flex: 1; }
+            .dropdown-item.approve svg { stroke: #155724; }
+            .dropdown-item.reject svg { stroke: #721c24; }
+            .dropdown-item.revision svg { stroke: #b15c00; }
+            .dropdown-divider {
+                height: 1px;
+                background: var(--border);
+                margin: 3px 0;
+            }
         </style>
     </head>
     <body>
@@ -171,15 +244,14 @@
                                                 <td class="col-order">
                                                     <c:choose>
                                                         <c:when test="${not empty r.orderCode}">
-                                                            <a href="javascript:void(0);" class="user-name link-ref"
-                                                               onclick="showRefModal(this)"
-                                                               data-ref-type="order"
-                                                               data-ref-id="<c:out value='${r.orderId}'/>"
-                                                               data-ref-code="<c:out value='${r.orderCode}'/>"
-                                                               data-ref-name="<c:out value='${r.customerName}'/>"
-                                                               title="Xem thông tin đơn hàng">
-                                                                <c:out value="${r.orderCode}"/>
-                                                            </a>
+                                                            <div class="badge-avail" style="background:#e0e7ff; color:#4338ca;">[Bán hàng]</div><br/>
+                                                            <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}">${r.orderCode}</a>
+                                                            <div class="cust">${r.customerName}</div>
+                                                        </c:when>
+                                                        <c:when test="${not empty r.liquidationCode}">
+                                                            <div class="badge-avail" style="background:#d1fae5; color:#059669;">[Thanh lý]</div><br/>
+                                                            <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${r.liquidationId}" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight:600;">${r.liquidationCode}</a>
+                                                            <div class="cust">${r.customerName}</div>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
@@ -187,7 +259,7 @@
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
-                                                            <span class="status-pill status-revision"><span class="pdot"></span>${r.reasonName}</span>
+                                                            <span class="status-pill" style="background:var(--surface-2); color:var(--fg); border:1px solid var(--border);"><span class="pdot"></span>${r.reasonName}</span>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
@@ -222,12 +294,33 @@
                                                                 <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                                 <span class="label">Chi tiết</span>
                                                             </a>
-                                                            <c:if test="${(r.status == 'NEEDS_REVISION' || r.status == 'DRAFT') && r.createdBy == sessionScope.loggedUser.id}">
+                                                            <c:if test="${(r.status == 'NEEDS_REVISION' || r.status == 'DRAFT') && r.createdBy == sessionScope.loggedUser.id && empty r.liquidationCode}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <a class="dropdown-item" href="${pageContext.request.contextPath}/export-receipt?action=edit&id=${r.receiptId}">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                                     <span class="label">Sửa</span>
                                                                 </a>
+                                                            </c:if>
+                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item approve" onclick="openApproveModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
+                                                                    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                                                                    <span class="label">Duyệt</span>
+                                                                </button>
+                                                            </c:if>
+                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item reject" onclick="openRejectModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
+                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                                    <span class="label">Từ chối</span>
+                                                                </button>
+                                                            </c:if>
+                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING' && empty r.liquidationCode}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item revision" onclick="openRevisionModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
+                                                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                                    <span class="label">Yêu cầu chỉnh sửa</span>
+                                                                </button>
                                                             </c:if>
                                                         </div>
                                                     </div>
@@ -270,80 +363,154 @@
             </div>
         </div>
 
-        <div class="ref-modal-backdrop" id="refModal" onclick="if (event.target === this) closeRefModal();">
-            <div class="ref-modal" role="dialog" aria-modal="true" aria-labelledby="refModalTitle">
-                <div class="ref-modal-header">
-                    <h3 id="refModalTitle">Thông tin đơn hàng</h3>
-                    <button type="button" class="ref-modal-close" onclick="closeRefModal()" aria-label="Đóng">&times;</button>
-                </div>
-                <div class="ref-modal-body">
-                    <div class="ref-info-row">
-                        <div class="lbl">Loại</div>
-                        <div class="val">Đơn hàng bán</div>
+        <div class="toast-host" id="toastHost"></div>
+
+        <div class="modal-host" id="revisionModal">
+            <div class="modal-card">
+                <h3>Yêu cầu chỉnh sửa</h3>
+                <div class="modal-sub">Gửi phiếu <strong id="revisionReceiptCode"></strong> lại cho nhân viên tạo phiếu kèm lý do để chỉnh sửa và gửi lại.</div>
+                <form method="POST" action="${pageContext.request.contextPath}/export-receipt" id="revisionForm">
+                    <input type="hidden" name="action" value="requestRevision" />
+                    <input type="hidden" name="id" id="revisionReceiptId" value="" />
+                    <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
+                    <textarea name="reason" id="revisionReason" placeholder="Mô tả chi tiết phần cần chỉnh sửa..." required></textarea>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeRevisionModal()">Huỷ</button>
+                        <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
                     </div>
-                    <div class="ref-info-row">
-                        <div class="lbl">Mã đơn</div>
-                        <div class="val" id="rm-code">—</div>
-                    </div>
-                    <div class="ref-info-row">
-                        <div class="lbl">Khách hàng</div>
-                        <div class="val" id="rm-name">—</div>
-                    </div>
-                </div>
-                <div class="ref-modal-footer">
-                    <button type="button" class="btn" onclick="closeRefModal()">Đóng</button>
-                    <a href="#" class="btn btn-primary" id="rm-detail-link">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        Xem chi tiết
-                    </a>
-                </div>
+                </form>
             </div>
         </div>
 
-        <div class="toast-host" id="toastHost"></div>
+        <div class="modal-host" id="approveModal">
+            <div class="modal-card">
+                <h3>Duyệt phiếu xuất</h3>
+                <div class="modal-sub">Xác nhận duyệt phiếu <strong id="approveReceiptCode"></strong>? Hệ thống sẽ cập nhật tồn kho tương ứng.</div>
+                <form method="POST" action="${pageContext.request.contextPath}/export-receipt" id="approveForm">
+                    <input type="hidden" name="action" value="approve" />
+                    <input type="hidden" name="id" id="approveReceiptId" value="" />
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeApproveModal()">Huỷ</button>
+                        <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal-host" id="rejectModal">
+            <div class="modal-card">
+                <h3>Từ chối phiếu xuất</h3>
+                <div class="modal-sub">Phiếu <strong id="rejectReceiptCode"></strong> sẽ bị huỷ và không cập nhật tồn kho. Hành động này không thể hoàn tác.</div>
+                <form method="POST" action="${pageContext.request.contextPath}/export-receipt" id="rejectForm">
+                    <input type="hidden" name="action" value="reject" />
+                    <input type="hidden" name="id" id="rejectReceiptId" value="" />
+                    <label>Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
+                    <textarea name="reason" id="rejectReason" placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, hàng không đạt chất lượng..." required></textarea>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeRejectModal()">Huỷ</button>
+                        <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <style>
+            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+            .modal-host.show { display: flex; }
+            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
+            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
+            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+        </style>
         <script>
+            function openApproveModal(receiptId, receiptCode) {
+                document.getElementById('approveReceiptId').value = receiptId;
+                document.getElementById('approveReceiptCode').textContent = receiptCode || '';
+                var m = document.getElementById('approveModal'); m.classList.add('show');
+            }
+            function closeApproveModal() { var m = document.getElementById('approveModal'); if (m) m.classList.remove('show'); }
+            function openRejectModal(receiptId, receiptCode) {
+                document.getElementById('rejectReceiptId').value = receiptId;
+                document.getElementById('rejectReceiptCode').textContent = receiptCode || '';
+                document.getElementById('rejectReason').value = '';
+                var m = document.getElementById('rejectModal'); m.classList.add('show');
+                setTimeout(function () { document.getElementById('rejectReason').focus(); }, 50);
+            }
+            function closeRejectModal() { var m = document.getElementById('rejectModal'); if (m) m.classList.remove('show'); }
+            function openRevisionModal(receiptId, receiptCode) {
+                document.getElementById('revisionReceiptId').value = receiptId;
+                document.getElementById('revisionReceiptCode').textContent = receiptCode || '';
+                document.getElementById('revisionReason').value = '';
+                var m = document.getElementById('revisionModal'); m.classList.add('show');
+                setTimeout(function () { document.getElementById('revisionReason').focus(); }, 50);
+            }
+            function closeRevisionModal() { var m = document.getElementById('revisionModal'); if (m) m.classList.remove('show'); }
+
+            (function () {
+                ['approveModal', 'rejectModal', 'revisionModal'].forEach(function (id) {
+                    var modal = document.getElementById(id);
+                    if (!modal) return;
+                    modal.addEventListener('click', function (e) {
+                        if (e.target === modal) modal.classList.remove('show');
+                    });
+                });
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    }
+                });
+                var rejectForm = document.getElementById('rejectForm');
+                if (rejectForm) {
+                    rejectForm.addEventListener('submit', function (e) {
+                        var ta = document.getElementById('rejectReason');
+                        if (ta && ta.value.trim() === '') { e.preventDefault(); ta.focus(); alert('Vui lòng nhập lý do từ chối.'); }
+                    });
+                }
+                var revisionForm = document.getElementById('revisionForm');
+                if (revisionForm) {
+                    revisionForm.addEventListener('submit', function (e) {
+                        var ta = document.getElementById('revisionReason');
+                        if (ta && ta.value.trim() === '') { e.preventDefault(); ta.focus(); alert('Vui lòng nhập lý do yêu cầu chỉnh sửa.'); }
+                    });
+                }
+            })();
+
             function toggleDropdown(btn) {
                 var menu = btn.nextElementSibling;
                 var isOpen = menu.classList.contains('open');
                 document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    if (m !== menu) { m.classList.remove('open'); m.previousElementSibling.classList.remove('open'); }
+                    if (m !== menu) {
+                        m.classList.remove('open');
+                        m.previousElementSibling.classList.remove('open');
+                    }
                 });
-                if (isOpen) { menu.classList.remove('open'); btn.classList.remove('open'); return; }
+                if (isOpen) {
+                    menu.classList.remove('open');
+                    btn.classList.remove('open');
+                    return;
+                }
                 var rect = btn.getBoundingClientRect();
                 menu.style.top = (rect.bottom + 4) + 'px';
                 menu.style.left = rect.left + 'px';
-                menu.style.minWidth = Math.max(150, rect.width) + 'px';
+                menu.style.minWidth = Math.max(170, rect.width) + 'px';
                 menu.classList.add('open');
                 btn.classList.add('open');
             }
             document.addEventListener('click', function (e) {
                 if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) { m.classList.remove('open'); });
-                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) { b.classList.remove('open'); });
-                }
-            });
-
-            function showRefModal(el) {
-                var id = el.getAttribute('data-ref-id') || '';
-                var code = el.getAttribute('data-ref-code') || '—';
-                var name = el.getAttribute('data-ref-name') || '—';
-
-                document.getElementById('rm-code').textContent = code;
-                document.getElementById('rm-name').textContent = name;
-                document.getElementById('rm-detail-link').href = window.APP_CTX + '/order?action=detail&id=' + id;
-
-                document.getElementById('refModal').classList.add('open');
-            }
-            function closeRefModal() {
-                document.getElementById('refModal').classList.remove('open');
-            }
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    closeRefModal();
+                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
+                        m.classList.remove('open');
+                    });
+                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
+                        b.classList.remove('open');
+                    });
                 }
             });
         </script>
