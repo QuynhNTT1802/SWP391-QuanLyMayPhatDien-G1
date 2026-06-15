@@ -176,6 +176,7 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("fromIndex", fromIndex);
         request.setAttribute("toIndex", toIndex);
         request.setAttribute("canApproveReceipt", perms != null && perms.contains("receipts.approve"));
+        request.setAttribute("canRejectReceipt", perms != null && perms.contains("receipts.reject"));
         request.getRequestDispatcher("/view/receipt/export/export-list.jsp").forward(request, response);
     }
 

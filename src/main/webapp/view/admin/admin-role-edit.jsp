@@ -111,31 +111,38 @@
                             </div>
                             <div class="perm-table" id="permTable">
 
-                                <c:forEach var="entry" items="${groupedPerms}">
-                                    <div class="perm-row">
-                                        <div class="res-info">
-                                            <div>
-                                                <div class="res-name">${entry.key}</div>
-                                            </div>
-                                        </div>
-
-                                        <c:forEach var="perm" items="${entry.value}">
-                                            <c:set var="isChecked" value="false" />
-                                            <c:forEach var="rPerm" items="${rolePermissions}">
-                                                <c:if test="${rPerm.permissionId == perm.permissionId}">
-                                                    <c:set var="isChecked" value="true" />
-                                                </c:if>
-                                            </c:forEach>
-
-                                            <div style="text-align: center;">
-                                                <span style="font-size: 10px; color: gray; display:block; margin-bottom:4px;">${perm.action}</span>
-                                                <label class="perm-toggle ${isChecked ? 'on' : ''}">
-                                                    <input type="checkbox" name="perIds" value="${perm.permissionId}" style="display:none;" ${isChecked ? 'checked' : ''}>
-                                                    <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
-                                                </label>
-                                            </div>
-                                        </c:forEach>
+                                <c:forEach var="moduleEntry" items="${groupedByModule}">
+                                    <div class="perm-module-header" style="margin:14px 0 6px; padding:6px 10px; background:#f3f6fb; border-left:3px solid var(--info); font-weight:600; color:#334; border-radius:4px;">
+                                        ${moduleEntry.key}
                                     </div>
+                                    <c:forEach var="featureEntry" items="${moduleEntry.value}">
+                                        <div class="perm-row">
+                                            <div class="res-info">
+                                                <div>
+                                                    <div class="res-name">${featureEntry.key}</div>
+                                                </div>
+                                            </div>
+
+                                            <c:forEach var="perm" items="${featureEntry.value}">
+                                                <c:set var="isChecked" value="false" />
+                                                <c:forEach var="rPerm" items="${rolePermissions}">
+                                                    <c:if test="${rPerm.permissionId == perm.permissionId}">
+                                                        <c:set var="isChecked" value="true" />
+                                                    </c:if>
+                                                </c:forEach>
+
+                                                <div style="text-align: center;">
+                                                    <span style="font-size: 10px; color: gray; display:block; margin-bottom:4px;" title="${perm.description}">
+                                                        <c:out value="${empty perm.taskType ? perm.action : perm.taskType}" />
+                                                    </span>
+                                                    <label class="perm-toggle ${isChecked ? 'on' : ''}">
+                                                        <input type="checkbox" name="perIds" value="${perm.permissionId}" style="display:none;" ${isChecked ? 'checked' : ''}>
+                                                        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+                                                    </label>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:forEach>
                                 </c:forEach>
 
                             </div>
