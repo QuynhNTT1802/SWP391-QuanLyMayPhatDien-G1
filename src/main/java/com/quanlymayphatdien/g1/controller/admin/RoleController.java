@@ -128,16 +128,8 @@ public class RoleController extends HttpServlet {
         List<Permission> allPermissions = perDAO.findAll();
 
 
-        Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
-        for (Permission p : allPermissions) {
-            if (permSearch != null && !permSearch.trim().isEmpty()) {
-                if (!p.getResource().toLowerCase().contains(permSearch.trim().toLowerCase())) {
-                    continue;
-                }
-            }
-            groupedPerms.computeIfAbsent(p.getResource(), k -> new ArrayList<>()).add(p);
-        }
-        request.setAttribute("groupedPerms", groupedPerms);
+        Map<String, Map<String, List<Permission>>> groupedByModule = buildGroupedByModule(allPermissions, permSearch);
+        request.setAttribute("groupedByModule", groupedByModule);
 
         if (idParam != null && !idParam.isEmpty()) {
             int roleId = Integer.parseInt(idParam);
@@ -278,16 +270,8 @@ public class RoleController extends HttpServlet {
 
             List<Permission> allPermissions = perDAO.findAll();
             String permSearch = request.getParameter("permSearch");
-            Map<String, List<Permission>> groupedPerms = new LinkedHashMap<>();
-            for (Permission p : allPermissions) {
-                if (permSearch != null && !permSearch.trim().isEmpty()) {
-                    if (!p.getResource().toLowerCase().contains(permSearch.trim().toLowerCase())) {
-                        continue;
-                    }
-                }
-                groupedPerms.computeIfAbsent(p.getResource(), k -> new ArrayList<>()).add(p);
-            }
-            request.setAttribute("groupedPerms", groupedPerms);
+            Map<String, Map<String, List<Permission>>> groupedByModule = buildGroupedByModule(allPermissions, permSearch);
+            request.setAttribute("groupedByModule", groupedByModule);
 
             if (excludeId > 0) {
                 List<Permission> rolePerms = perDAO.getPermissionByRoleId(excludeId);
@@ -423,5 +407,36 @@ public class RoleController extends HttpServlet {
             SystemLogger.error("Quản lý phân quyền",
                     "RoleController.logRoleAction", e.getMessage(), e);
         }
+    }
+private static final Map<String, String> MODULE_LABELS = Map.of(
+            "admin", "Quan tri he thong",
+            "warehouse", "Kho & Phieu",
+            "sales", "Ban hang",
+            "system", "He thong & Danh muc",
+            "report", "Bao cao",
+            "account", "Tai khoan ca nhan"
+    );
+
+    private Map<String, Map<String, List<Permission>>> buildGroupedByModule(
+            List<Permission> allPermissions, String permSearch) {
+        String needle = permSearch == null ? "" : permSearch.trim().toLowerCase();
+        Map<String, Map<String, List<Permission>>> result = new LinkedHashMap<>();
+        for (Permission p : allPermissions) {
+            if (!needle.isEmpty()) {
+                String hay = (p.getResource() + " " + (p.getFeatureName() == null ? "" : p.getFeatureName())
+                        + " " + (p.getDescription() == null ? "" : p.getDescription())).toLowerCase();
+                if (!hay.contains(needle)) continue;
+            }
+            String moduleKey = p.getModule() == null ? "other" : p.getModule();
+            String moduleLabel = MODULE_LABELS.getOrDefault(moduleKey, moduleKey);
+            String featureLabel = p.getFeatureName();
+            if (featureLabel == null || featureLabel.trim().isEmpty()) {
+                featureLabel = p.getResource();
+            }
+            result.computeIfAbsent(moduleLabel, k -> new LinkedHashMap<>())
+                  .computeIfAbsent(featureLabel, k -> new ArrayList<>())
+                  .add(p);
+        }
+        return result;
     }
 }

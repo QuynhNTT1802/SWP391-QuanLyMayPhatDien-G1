@@ -280,7 +280,7 @@
                                                                     <span class="label">Duyệt</span>
                                                                 </button>
                                                             </c:if>
-                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
+                                                            <c:if test="${canRejectReceipt && r.status == 'PENDING'}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <button class="dropdown-item reject" onclick="openRejectModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
