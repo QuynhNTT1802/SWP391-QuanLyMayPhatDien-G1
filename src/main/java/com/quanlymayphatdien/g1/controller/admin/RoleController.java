@@ -9,6 +9,7 @@ import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -54,7 +55,7 @@ public class RoleController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("quản lý phân quyền", "RoleController",
+            SystemLogger.error(LogModule.ROLE, "RoleController",
                 "Lỗi xử lý GET " + action + ": " + e.getMessage(), e);
             throw new ServletException(e);
         }
@@ -73,7 +74,7 @@ public class RoleController extends HttpServlet {
                 saveRoleFull(request, response);
             }
         } catch (Exception e) {
-            SystemLogger.error("quản lý phân quyền", "RoleController",
+            SystemLogger.error(LogModule.ROLE, "RoleController",
                 "Lỗi xử lý POST /admin/role/save: " + e.getMessage(), e);
             throw new ServletException(e);
         }
@@ -378,7 +379,7 @@ public class RoleController extends HttpServlet {
                 logRoleAction(request, roleId, name, "UPDATE_PERMISSIONS", permDetails.toString());
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phân quyền", "RoleController.log quyền", e.getMessage(), e);
+            SystemLogger.error(LogModule.ROLE, "RoleController.log quyền", e.getMessage(), e);
         }
         roleDAO.updatePermissionRole(roleId, new ArrayList<>(expanded));
 
@@ -410,7 +411,7 @@ public class RoleController extends HttpServlet {
             log.setDetails(details);
             logDAO.insert(log);
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phân quyền",
+            SystemLogger.error(LogModule.ROLE,
                     "RoleController.logRoleAction", e.getMessage(), e);
         }
     }

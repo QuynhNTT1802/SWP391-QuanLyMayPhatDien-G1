@@ -4,6 +4,7 @@ import com.quanlymayphatdien.g1.dal.SystemLogDAO;
 import com.quanlymayphatdien.g1.entity.SystemLog;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -62,7 +63,7 @@ public class SystemLogController extends HttpServlet {
                 page = Math.max(1, Integer.parseInt(p.trim()));
             }
         } catch (NumberFormatException ignored) {
-            SystemLogger.warn("System Log", "SystemLogController.doGet", "Lỗi định dạng trang: " + ignored.getMessage());
+            SystemLogger.warn(LogModule.SYSTEM, "SystemLogController.doGet", "Lỗi định dạng trang: " + ignored.getMessage());
         }
 
         List<SystemLog> logs = logDAO.findByFilter(level, module, search, dateFrom, dateTo, page, PAGE_SIZE);
@@ -82,6 +83,7 @@ public class SystemLogController extends HttpServlet {
         request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
         request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         request.setAttribute("activePage", "system-log");
+        request.setAttribute("moduleOptions", logDAO.findDistinctModules());
 
         request.getRequestDispatcher("/view/admin/admin-system-log.jsp")
                 .forward(request, response);

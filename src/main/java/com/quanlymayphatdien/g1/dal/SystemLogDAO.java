@@ -4,6 +4,7 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
+import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.SystemLog;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -66,7 +67,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
                 if (rs.next()) return rs.getInt(1);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -120,7 +121,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -173,9 +174,27 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
             ResultSet rs = p.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
+    }
+
+    /** Lấy danh sách module distinct (đã có dữ liệu) — phục vụ dropdown filter UI. */
+    public List<String> findDistinctModules() {
+        List<String> result = new ArrayList<>();
+        String sql = "SELECT DISTINCT module FROM system_log "
+                   + "WHERE module IS NOT NULL AND TRIM(module) <> '' "
+                   + "ORDER BY module";
+        try (Connection c = getConnection();
+             PreparedStatement p = c.prepareStatement(sql);
+             ResultSet rs = p.executeQuery()) {
+            while (rs.next()) {
+                result.add(rs.getString(1));
+            }
+        } catch (Exception e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "SystemLogDAO.findDistinctModules", e.getMessage(), e);
+        }
+        return result;
     }
 
 }
