@@ -379,6 +379,8 @@ public class UserManagementController extends HttpServlet {
                         fieldChanges.add("password: đã đặt lại");
                     }
 
+                    request.getServletContext().setAttribute("perm_refresh_" + userId, true);
+
                     request.getSession().setAttribute("message", "Update successfully");
                     String details;
                     if (fieldChanges.isEmpty()) {

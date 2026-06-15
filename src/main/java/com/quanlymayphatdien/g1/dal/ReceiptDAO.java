@@ -13,7 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -33,13 +35,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         List<Receipt> allReceipts = new ArrayList<>();
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
-                + "so.order_code, c.name AS customer_name, cr.name AS reason_name "
+                + "so.order_code, liq.liquidation_code, liq.liquidation_id, c.name AS customer_name, cr.name AS reason_name "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
         List<Object> inputs = new ArrayList<>();
@@ -102,7 +105,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         String sql = "SELECT COUNT(*) FROM receipt r "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
         List<Object> inputs = new ArrayList<>();
@@ -154,13 +158,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     public Receipt findById(int receiptId) {
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
-                + "so.order_code, c.name AS customer_name, cr.name AS reason_name "
+                + "so.order_code, liq.liquidation_code, liq.liquidation_id, c.name AS customer_name, cr.name AS reason_name "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
+                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE r.receipt_id = ?";
         try {
@@ -229,7 +234,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return -1;
     }
 
-    public boolean approveReceipt(int receiptId, int approvedBy) {
+    public List<String> approveReceipt(int receiptId, int approvedBy) {
+        List<String> errors = new ArrayList<>();
         try {
             connection = getConnection();
             connection.setAutoCommit(false);
@@ -244,9 +250,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             int updated = statement.executeUpdate();
             if (updated == 0) {
                 connection.rollback();
-                return false;
+                errors.add("Phi?u không ? tr?ng thái ch? duy?t");
+                return errors;
             }
-            // 2. Láº¥y receipt_detail
+            // 2. L?y receipt_detail
             String detailSql = "SELECT * FROM receipt_detail WHERE receipt_id = ?";
             statement = connection.prepareStatement(detailSql);
             statement.setInt(1, receiptId);
@@ -256,7 +263,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             while (resultSet.next()) {
                 details.add(rdDAO.getFromResultSet(resultSet));
             }
-            // 3. Láº¥y receipt_type Ä‘á»ƒ biáº¿t IMPORT hay EXPORT
+            // 3. L?y receipt_type ?? bi?t IMPORT hay EXPORT
             String typeSql = "SELECT receipt_type, warehouse_id, receipt_code FROM receipt WHERE receipt_id = ?";
             statement = connection.prepareStatement(typeSql);
             statement.setInt(1, receiptId);
@@ -271,20 +278,91 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             InventoryDAO invDAO = new InventoryDAO();
             StockCardDAO scDAO = new StockCardDAO();
-            // 4. Update inventory + ghi stock_card cho tá»«ng detail
-            for (ReceiptDetail detail : details) {
-                int genId = detail.getGeneratorId();
-                int qty = detail.getQuantity();
-                int change = "IMPORT".equals(receiptType) ? qty : -qty;
-                invDAO.updateQuantity(connection, warehouseId, genId, change);
-                int qtyAfter = change;
-                String qtySql = "SELECT quantity FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
+
+            // 4. Validate serial (IMPORT: khong duoc trung; EXPORT: phai IN_STOCK o dung kho)
+            if ("IMPORT".equals(receiptType)) {
+                for (ReceiptDetail d : details) {
+                    if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                        if (invDAO.isSerialExists(connection, d.getSerialNumber().trim())) {
+                            errors.add("Serial \"" + d.getSerialNumber().trim() + "\" ?ã t?n t?i trong h? th?ng");
+                        }
+                    }
+                }
+            } else if ("EXPORT".equals(receiptType)) {
+                for (ReceiptDetail d : details) {
+                    if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                        if (!invDAO.isInStockAtWarehouse(connection, d.getSerialNumber().trim(), warehouseId)) {
+                            errors.add("Serial \"" + d.getSerialNumber().trim() + "\" không t?n t?i IN_STOCK ? kho này");
+                        }
+                    }
+                }
+            }
+            if (!errors.isEmpty()) {
+                connection.rollback();
+                return errors;
+            }
+
+            // 5. Voi moi dong receipt_detail: ghi 1 stock_card (quantity_change = ±quantity, quantity_after = COUNT(inventory WHERE IN_STOCK))
+            //    Voi moi serial: them moi (IMPORT) hoac doi status (EXPORT)
+            for (ReceiptDetail d : details) {
+                if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
+                    continue;
+                }
+                String serial = d.getSerialNumber().trim();
+
+                if ("IMPORT".equals(receiptType)) {
+                    // Insert serial moi vao inventory
+                    try {
+                        invDAO.insert(connection, d.getGeneratorId(), serial, warehouseId, InventoryDAO.STATUS_IN_STOCK);
+                    } catch (SQLException ex) {
+                        if (ex.getMessage() != null && ex.getMessage().contains("Duplicate")) {
+                            errors.add("Serial \"" + serial + "\" ?ã t?n t?i (UNIQUE conflict)");
+                        } else {
+                            throw ex;
+                        }
+                    }
+                } else if ("EXPORT".equals(receiptType)) {
+                    boolean isLiquidation = false;
+                    String checkLiqSql = "SELECT liquidation_id FROM liquidation WHERE converted_receipt_id = ?";
+                    try (PreparedStatement checkLiqPs = connection.prepareStatement(checkLiqSql)) {
+                        checkLiqPs.setInt(1, receiptId);
+                        try (ResultSet liqRs = checkLiqPs.executeQuery()) {
+                            if (liqRs.next()) {
+                                isLiquidation = true;
+                            }
+                        }
+                    }
+                    String targetStatus = isLiquidation ? InventoryDAO.STATUS_LIQUIDATED : InventoryDAO.STATUS_SOLD;
+                    invDAO.updateStatusBySerial(connection, serial, targetStatus);
+                }
+            }
+            if (!errors.isEmpty()) {
+                connection.rollback();
+                return errors;
+            }
+
+            // 6. Ghi stock_card theo generator (gom theo generator_id, quantity_change = ±totalQty)
+            Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+            for (ReceiptDetail d : details) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+            for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+                int genId = entry.getKey();
+                List<ReceiptDetail> groupDetails = entry.getValue();
+                int totalQty = 0;
+                for (ReceiptDetail gd : groupDetails) {
+                    totalQty += gd.getQuantity();
+                }
+                int change = "IMPORT".equals(receiptType) ? totalQty : -totalQty;
+                // Tinh quantity_after = COUNT(inventory WHERE IN_STOCK AND warehouse=? AND generator=?)
+                int qtyAfter = 0;
+                String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
                 try (PreparedStatement qtyPs = connection.prepareStatement(qtySql)) {
                     qtyPs.setInt(1, warehouseId);
                     qtyPs.setInt(2, genId);
                     try (ResultSet qtyRs = qtyPs.executeQuery()) {
                         if (qtyRs.next()) {
-                            qtyAfter = qtyRs.getInt("quantity");
+                            qtyAfter = qtyRs.getInt(1);
                         }
                     }
                 }
@@ -295,13 +373,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 sc.setTransactionType(receiptType);
                 sc.setQuantityChange(change);
                 sc.setQuantityAfter(qtyAfter);
-                sc.setReferenceNote("Phiáº¿u " + receiptCode);
+                sc.setReferenceNote("Phi?u " + receiptCode);
                 sc.setCreatedAt(LocalDateTime.now());
                 sc.setCreatedBy(approvedBy);
                 scDAO.insert(connection, sc);
             }
+
             connection.commit();
-            return true;
+            return errors;
         } catch (SQLException e) {
             try {
                 if (connection != null) {
@@ -311,7 +390,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 ex.printStackTrace();
             }
             e.printStackTrace();
-            return false;
+            errors.add("L?i h? th?ng: " + e.getMessage());
+            return errors;
         } finally {
             try {
                 if (connection != null) {
@@ -548,6 +628,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         try {
             r.setOrderCode(rs.getString("order_code"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            r.setLiquidationCode(rs.getString("liquidation_code"));
+            int lid = rs.getInt("liquidation_id");
+            if (!rs.wasNull()) {
+                r.setLiquidationId(lid);
+            }
         } catch (SQLException ignored) {
         }
         try {

@@ -6,8 +6,6 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Inventory;
 import java.sql.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,71 +14,56 @@ import java.util.Map;
 /**
  *
  * @author FPTShop
+ *
+ * Moi serial = 1 dong trong bang inventory.
+ * Quan ly ton kho = quan ly serial.
  */
 public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
-    public List<Inventory> findByWarehouseId(int warehouseId) {
-        List<Inventory> list = new ArrayList<>();
-        String sql = "SELECT i.*, g.model AS generator_model "
-                + "FROM inventory i "
-                + "JOIN generator g ON i.generator_id = g.id "
-                + "WHERE i.warehouse_id = ? AND g.status = 'active'";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, warehouseId);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
+    public static final String STATUS_IN_STOCK = "IN_STOCK";
+    public static final String STATUS_SOLD = "SOLD";
+    public static final String STATUS_PENDING_LIQUIDATION = "PENDING_LIQUIDATION";
+    public static final String STATUS_LIQUIDATED = "LIQUIDATED";
+    public static final String STATUS_IN_TRANSIT = "IN_TRANSIT";
 
-    public List<Inventory> findWithFilters(Integer warehouseId, String search,
-            boolean outOfStock, Integer minYears, int page, int pageSize) {
+    // ============================================================
+    // PAGINATED LIST (cho trang /inventory/list)
+    // Moi dong = 1 serial, co the loc theo (warehouse, generator, status, search)
+    // ============================================================
+    public List<Inventory> findByFilters(Integer warehouseId, Integer generatorId,
+            String status, String search, int page, int pageSize) {
         List<Inventory> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT i.*, g.model AS generator_model, "
-                + "w.name AS warehouse_name, "
-                + "(SELECT c.name FROM generator_category gc "
-                + "  JOIN category c ON gc.category_id = c.id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand, "
-                + "sc.first_import_at "
-                + "FROM inventory i "
-                + "JOIN generator g ON i.generator_id = g.id "
-                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "LEFT JOIN (SELECT warehouse_id, generator_id, MIN(created_at) AS first_import_at "
-                + "             FROM stock_card WHERE transaction_type = 'IMPORT' "
-                + "             GROUP BY warehouse_id, generator_id) sc "
-                + "  ON sc.warehouse_id = i.warehouse_id AND sc.generator_id = i.generator_id "
-                + "WHERE w.status <> 'locked' ");
+                "SELECT i.*, "
+              + "  g.model AS generator_model, "
+              + "  (SELECT c.name FROM generator_category gc "
+              + "     JOIN category c ON gc.category_id = c.id "
+              + "     WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand, "
+              + "  w.name AS warehouse_name "
+              + "FROM inventory i "
+              + "JOIN generator g ON i.generator_id = g.id "
+              + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+              + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
             params.add(warehouseId);
         }
+        if (generatorId != null) {
+            sql.append("AND i.generator_id = ? ");
+            params.add(generatorId);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND i.status = ? ");
+            params.add(status.trim());
+        }
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (g.model LIKE ? OR EXISTS ("
-                    + "  SELECT 1 FROM generator_category gc "
-                    + "  JOIN category c ON gc.category_id = c.id "
-                    + "  WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?"
-                    + ")) ");
+            sql.append("AND (i.serial_number LIKE ? OR g.model LIKE ?) ");
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
         }
-        if (outOfStock) {
-            sql.append("AND i.quantity = 0 ");
-        }
-        if (minYears != null) {
-            sql.append("AND sc.first_import_at IS NOT NULL "
-                    + "AND sc.first_import_at <= (CURDATE() - INTERVAL ? YEAR) ");
-            params.add(minYears);
-        }
-        sql.append("ORDER BY w.name, g.model LIMIT ? OFFSET ?");
+        sql.append("ORDER BY i.updated_at DESC, i.inventory_id DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
         try {
@@ -93,51 +76,41 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);
                 try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
-                try {
-                    Timestamp ts = resultSet.getTimestamp("first_import_at");
-                    if (ts != null) inv.setFirstImportAt(ts.toLocalDateTime());
-                } catch (SQLException ignored) {}
+                try { inv.setGeneratorBrand(resultSet.getString("generator_brand")); } catch (SQLException ignored) {}
                 list.add(inv);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
 
-    public int countWithFilters(Integer warehouseId, String search,
-            boolean outOfStock, Integer minYears) {
+    public int countByFilters(Integer warehouseId, Integer generatorId, String status, String search) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM inventory i "
-                + "JOIN generator g ON i.generator_id = g.id "
-                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "LEFT JOIN (SELECT warehouse_id, generator_id, MIN(created_at) AS first_import_at "
-                + "             FROM stock_card WHERE transaction_type = 'IMPORT' "
-                + "             GROUP BY warehouse_id, generator_id) sc "
-                + "  ON sc.warehouse_id = i.warehouse_id AND sc.generator_id = i.generator_id "
-                + "WHERE w.status <> 'locked' ");
+              + "JOIN generator g ON i.generator_id = g.id "
+              + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+              + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
             params.add(warehouseId);
         }
+        if (generatorId != null) {
+            sql.append("AND i.generator_id = ? ");
+            params.add(generatorId);
+        }
+        if (status != null && !status.trim().isEmpty()) {
+            sql.append("AND i.status = ? ");
+            params.add(status.trim());
+        }
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (g.model LIKE ? OR EXISTS ("
-                    + "  SELECT 1 FROM generator_category gc "
-                    + "  JOIN category c ON gc.category_id = c.id "
-                    + "  WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?"
-                    + ")) ");
+            sql.append("AND (i.serial_number LIKE ? OR g.model LIKE ?) ");
             String like = "%" + search.trim() + "%";
             params.add(like);
             params.add(like);
-        }
-        if (outOfStock) {
-            sql.append("AND i.quantity = 0 ");
-        }
-        if (minYears != null) {
-            sql.append("AND sc.first_import_at IS NOT NULL "
-                    + "AND sc.first_import_at <= (CURDATE() - INTERVAL ? YEAR) ");
-            params.add(minYears);
         }
         try {
             connection = getConnection();
@@ -151,63 +124,227 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
-    public int countByWarehouseId(int warehouseId) {
-        String sql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, warehouseId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return 0;
-    }
+    // ============================================================
+    // TIM KIEM SERIAL (cho receipt xuat / thanh ly / chuyen kho)
+    // ============================================================
 
-    public Inventory findByWarehouseAndGenerator(int warehouseId, int generatorId) {
-        String sql = "SELECT * FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
+    public List<Inventory> findInStockByWarehouseAndGenerator(int warehouseId, int generatorId) {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+                   + "FROM inventory i "
+                   + "JOIN generator g ON i.generator_id = g.id "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                   + "WHERE i.warehouse_id = ? AND i.generator_id = ? AND i.status = ? "
+                   + "ORDER BY i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
             statement.setInt(2, generatorId);
+            statement.setString(3, STATUS_IN_STOCK);
             resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return getFromResultSet(resultSet);
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try { inv.setGeneratorModel(resultSet.getString("generator_model")); } catch (SQLException ignored) {}
+                try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                list.add(inv);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public Inventory findBySerialNumber(String serialNumber) {
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+                   + "FROM inventory i "
+                   + "JOIN generator g ON i.generator_id = g.id "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                   + "WHERE i.serial_number = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, serialNumber);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try { inv.setGeneratorModel(resultSet.getString("generator_model")); } catch (SQLException ignored) {}
+                try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                return inv;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
 
-    public boolean updateQuantity(Connection conn, int warehouseId, int generatorId, int quantityChange)
-            throws SQLException {
-        String sql = "INSERT INTO inventory (warehouse_id, generator_id, quantity) "
-                + "VALUES (?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setInt(1, warehouseId);
-        ps.setInt(2, generatorId);
-        ps.setInt(3, quantityChange);
-        ps.setInt(4, quantityChange);
-        return ps.executeUpdate() > 0;
+    // ============================================================
+    // MUTATIONS (insert / update status)
+    // ============================================================
+
+    /**
+     * Them 1 serial moi vao kho.
+     * Tra ve true neu insert thanh cong, false neu serial bi trung (UNIQUE conflict).
+     */
+    public boolean insert(Connection conn, int generatorId, String serialNumber, int warehouseId, String status) throws SQLException {
+        String sql = "INSERT INTO inventory (generator_id, serial_number, warehouse_id, status) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ps.setString(2, serialNumber);
+            ps.setInt(3, warehouseId);
+            ps.setString(4, status == null ? STATUS_IN_STOCK : status);
+            return ps.executeUpdate() > 0;
+        }
     }
 
-    public Map<Integer, Integer> countItemsByWarehouse() {
+    /**
+     * Cap nhat trang thai cua 1 serial.
+     * Tra ve so dong bi anh huong.
+     */
+    public int updateStatusBySerial(Connection conn, String serialNumber, String newStatus) throws SQLException {
+        String sql = "UPDATE inventory SET status = ? WHERE serial_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, newStatus);
+            ps.setString(2, serialNumber);
+            return ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Overload khong can connection (tu mo connection rieng).
+     */
+    public boolean updateStatusBySerial(String serialNumber, String newStatus) {
+        try (Connection c = getConnection()) {
+            return updateStatusBySerial(c, serialNumber, newStatus) > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Cap nhat trang thai nhieu serial cung luc.
+     */
+    public int updateStatusBatch(Connection conn, List<String> serialNumbers, String newStatus) throws SQLException {
+        if (serialNumbers == null || serialNumbers.isEmpty()) return 0;
+        String sql = "UPDATE inventory SET status = ? WHERE serial_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (String sn : serialNumbers) {
+                ps.setString(1, newStatus);
+                ps.setString(2, sn);
+                ps.addBatch();
+            }
+            int[] rs = ps.executeBatch();
+            int total = 0;
+            for (int r : rs) total += r;
+            return total;
+        }
+    }
+
+    /**
+     * Kiem tra serial co dang IN_STOCK o dung kho khong (dung cho xuat kho).
+     * Tra ve true neu OK, false neu khong ton tai hoac khong o trang thai IN_STOCK.
+     */
+    public boolean isInStockAtWarehouse(Connection conn, String serialNumber, int warehouseId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ? AND warehouse_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            ps.setInt(2, warehouseId);
+            ps.setString(3, STATUS_IN_STOCK);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean isInStockAtWarehouse(String serialNumber, int warehouseId) {
+        try (Connection c = getConnection()) {
+            return isInStockAtWarehouse(c, serialNumber, warehouseId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Kiem tra serial da ton tai trong he thong hay chua (bat ke trang thai nao).
+     */
+    public boolean isSerialExists(Connection conn, String serialNumber) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Lay danh sach serial IN_STOCK theo (warehouse, generator) - DUNG CHO CHUYEN KHO.
+     * Co gioi han (limit) de tranh query qua lon.
+     */
+    public List<String> findInStockSerialsForTransfer(Connection conn, int warehouseId, int generatorId, int limit) throws SQLException {
+        List<String> result = new ArrayList<>();
+        String sql = "SELECT serial_number FROM inventory "
+                   + "WHERE warehouse_id = ? AND generator_id = ? AND status = ? "
+                   + "ORDER BY created_at LIMIT ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            ps.setInt(2, generatorId);
+            ps.setString(3, STATUS_IN_STOCK);
+            ps.setInt(4, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getString("serial_number"));
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Cap nhat warehouse_id cua mot serial (dung cho chuyen kho).
+     */
+    public int updateWarehouseBySerial(Connection conn, String serialNumber, int newWarehouseId) throws SQLException {
+        String sql = "UPDATE inventory SET warehouse_id = ?, status = ? WHERE serial_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, newWarehouseId);
+            ps.setString(2, STATUS_IN_STOCK);
+            ps.setString(3, serialNumber);
+            return ps.executeUpdate();
+        }
+    }
+
+    // ============================================================
+    // AGGREGATE / KPI (tinh tu serial table)
+    // ============================================================
+
+    /**
+     * Dem tong so serial IN_STOCK theo kho.
+     */
+    public Map<Integer, Integer> countInStockByWarehouse() {
         Map<Integer, Integer> map = new HashMap<>();
         String sql = "SELECT i.warehouse_id, COUNT(*) AS cnt "
-                + "FROM inventory i "
-                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE w.status = 'active' "
-                + "GROUP BY i.warehouse_id";
+                   + "FROM inventory i "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                   + "WHERE w.status = 'active' AND i.status = 'IN_STOCK' "
+                   + "GROUP BY i.warehouse_id";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 map.put(rs.getInt("warehouse_id"), rs.getInt("cnt"));
@@ -218,21 +355,38 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return map;
     }
 
-    public Map<Integer, Integer> sumQtyByWarehouse() {
-        Map<Integer, Integer> map = new HashMap<>();
-        String sql = "SELECT i.warehouse_id, COALESCE(SUM(i.quantity), 0) AS total_qty "
-                + "FROM inventory i "
-                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE w.status = 'active' "
-                + "GROUP BY i.warehouse_id";
+    /**
+     * Dem tong serial theo (warehouse, generator) - de hien thi trang overview.
+     */
+    public Map<String, Integer> countItemsByWarehouseAndGenerator() {
+        Map<String, Integer> map = new HashMap<>();
+        String sql = "SELECT i.warehouse_id, i.generator_id, COUNT(*) AS cnt "
+                   + "FROM inventory i "
+                   + "WHERE i.status = 'IN_STOCK' "
+                   + "GROUP BY i.warehouse_id, i.generator_id";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                map.put(rs.getInt("warehouse_id"), rs.getInt("total_qty"));
+                String key = rs.getInt("warehouse_id") + "_" + rs.getInt("generator_id");
+                map.put(key, rs.getInt("cnt"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
         return map;
+    }
+
+    public long grandTotalInStock() {
+        String sql = "SELECT COUNT(*) FROM inventory i "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                   + "WHERE w.status = 'active' AND i.status = 'IN_STOCK'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
     }
 
     public int countActiveWarehouses() {
@@ -259,14 +413,31 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
-    public long grandTotalQty() {
-        String sql = "SELECT COALESCE(SUM(i.quantity), 0) "
-                + "FROM inventory i "
-                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE w.status = 'active'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getLong(1);
+    /**
+     * So luong model (generator) dang co trong 1 kho.
+     */
+    public int countDistinctGeneratorsInStockByWarehouse(int warehouseId) {
+        String sql = "SELECT COUNT(DISTINCT generator_id) FROM inventory WHERE warehouse_id = ? AND status = 'IN_STOCK'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * So serial IN_STOCK trong 1 kho.
+     */
+    public int countByWarehouseId(int warehouseId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND status = 'IN_STOCK'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -276,41 +447,114 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     @Override
     public List<Inventory> findAll() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+                   + "FROM inventory i "
+                   + "JOIN generator g ON i.generator_id = g.id "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try { inv.setGeneratorModel(resultSet.getString("generator_model")); } catch (SQLException ignored) {}
+                try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
     }
 
     @Override
     public boolean update(Inventory t) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public boolean delete(Inventory t) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public int insert(Inventory t) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        String sql = "INSERT INTO inventory (serial_number, generator_id, warehouse_id, status) VALUES (?, ?, ?, ?)";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, t.getSerialNumber());
+            statement.setInt(2, t.getGeneratorId());
+            statement.setInt(3, t.getWarehouseId());
+            statement.setString(4, t.getStatus() == null ? STATUS_IN_STOCK : t.getStatus());
+            int affected = statement.executeUpdate();
+            if (affected > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return -1;
     }
 
     @Override
     public Inventory getFromResultSet(ResultSet rs) throws SQLException {
         Inventory inv = new Inventory();
         inv.setInventoryId(rs.getInt("inventory_id"));
-        inv.setWarehouseId(rs.getInt("warehouse_id"));
+        inv.setSerialNumber(rs.getString("serial_number"));
         inv.setGeneratorId(rs.getInt("generator_id"));
-        inv.setQuantity(rs.getInt("quantity"));
-        // joined fields
-        try {
-            inv.setGeneratorModel(rs.getString("generator_model"));
-        } catch (SQLException ignored) {
-        }
-        try {
-            inv.setGeneratorBrand(rs.getString("generator_brand"));
-        } catch (SQLException ignored) {
-        }
+        inv.setWarehouseId(rs.getInt("warehouse_id"));
+        inv.setStatus(rs.getString("status"));
+        Timestamp ca = rs.getTimestamp("created_at");
+        if (ca != null) inv.setCreatedAt(ca.toLocalDateTime());
+        Timestamp ua = rs.getTimestamp("updated_at");
+        if (ua != null) inv.setUpdatedAt(ua.toLocalDateTime());
+        try { inv.setGeneratorModel(rs.getString("generator_model")); } catch (SQLException ignored) {}
+        try { inv.setGeneratorBrand(rs.getString("generator_brand")); } catch (SQLException ignored) {}
+        try { inv.setWarehouseName(rs.getString("warehouse_name")); } catch (SQLException ignored) {}
         return inv;
     }
-
+    public List<Inventory> findByWarehouseId(int warehouseId) {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model "
+                + "FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "WHERE i.warehouse_id = ? AND g.status = 'active'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+    public Inventory findByWarehouseAndGenerator(int warehouseId, int generatorId) {
+        String sql = "SELECT * FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setInt(2, generatorId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
 }

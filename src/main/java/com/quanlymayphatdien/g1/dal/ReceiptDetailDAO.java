@@ -39,7 +39,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -76,7 +76,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -84,7 +84,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     public int batchInsert(Connection conn, List<ReceiptDetail> details) throws SQLException {
         String sql = "INSERT INTO receipt_detail (receipt_id, generator_id, serial_number, quantity, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (ReceiptDetail rd : details) {
                 ps.setInt(1, rd.getReceiptId());
                 ps.setInt(2, rd.getGeneratorId());
@@ -99,10 +99,36 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 ps.addBatch();
             }
             ps.executeBatch();
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return -1;
+    }
+
+    public boolean isSerialExists(Connection conn, String serialNumber, int excludeReceiptId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM receipt_detail WHERE serial_number = ? AND receipt_id != ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            ps.setInt(2, excludeReceiptId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    public List<String> findSerialsByReceiptIdAndGenerator(int receiptId, int generatorId) {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT serial_number FROM receipt_detail WHERE receipt_id = ? AND generator_id = ? ORDER BY receipt_detail_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            ps.setInt(2, generatorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(rs.getString("serial_number"));
+                }
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return list;
     }
 
     @Override

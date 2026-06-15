@@ -523,7 +523,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         if (rs.getTimestamp("updated_at") != null) {
             s.setUpdatedAt(new Date(rs.getTimestamp("updated_at").getTime()));
         }
-
         return s;
     }
 

@@ -392,4 +392,38 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
 
         return g;
     }
+    public List<Generator> findAllActive() {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT * FROM generator WHERE status = 'active' ORDER BY model";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    } 
+    public List<Generator> findInStockByWarehouse(int warehouseId) {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT g.* FROM generator g "
+                + "JOIN inventory i ON i.generator_id = g.id "
+                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND g.status = 'active' "
+                + "ORDER BY g.model";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
 }

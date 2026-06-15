@@ -66,7 +66,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
                 if (rs.next()) return rs.getInt(1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -120,7 +120,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -138,7 +138,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         return log;
     }
 
-    /** Đếm tổng log theo filter — dùng cho phân trang */
+    /** ??m t?ng log theo filter � d�ng cho ph�n trang */
     public int countByFilter(String level, String module, String search, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder("WHERE 1=1 ");
@@ -173,7 +173,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
             ResultSet rs = p.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
