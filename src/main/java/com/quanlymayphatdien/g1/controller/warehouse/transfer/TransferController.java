@@ -1,12 +1,14 @@
 package com.quanlymayphatdien.g1.controller.warehouse.transfer;
 
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
+import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.TransferDAO;
 import com.quanlymayphatdien.g1.dal.TransferDetailDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
+import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Transfer;
 import com.quanlymayphatdien.g1.entity.TransferDetail;
@@ -25,7 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @WebServlet(name = "TransferController", urlPatterns = {"/transfers"})
 public class TransferController extends HttpServlet {
@@ -34,6 +35,7 @@ public class TransferController extends HttpServlet {
     private final TransferDetailDAO detailDAO = new TransferDetailDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
+    private final GeneratorDAO generatorDAO = new GeneratorDAO();
     private final UserDAO userDAO = new UserDAO();
     private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
 
@@ -50,12 +52,6 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("transfers.view")) {
-            request.setAttribute("requiredPerm", "transfers.view");
-            request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-            return;
-        }
 
         String action = request.getParameter("action");
         if (action == null || action.isEmpty()) {
@@ -68,26 +64,13 @@ public class TransferController extends HttpServlet {
                     showList(request, response);
                     break;
                 case "create":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     showCreateForm(request, response);
                     break;
                 case "edit_view":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     showEditView(request, response);
                     break;
                 case "detail":
                     showDetail(request, response);
-                    break;
-                case "get_serials":
-                    handleGetSerials(request, response);
                     break;
                 case "get_generator_stock":
                     handleGetGeneratorStock(request, response);
@@ -113,101 +96,41 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
 
         String action = request.getParameter("action");
         try {
             switch (action == null ? "" : action) {
                 case "create":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleCreate(request, response, user);
                     break;
                 case "create_and_submit":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleCreateAndSubmit(request, response, user);
                     break;
                 case "edit_submit":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleEditSubmit(request, response, user);
                     break;
                 case "submit":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleSubmit(request, response, user);
                     break;
                 case "cancel":
-                    if (!perms.contains("transfers.create")) {
-                        request.setAttribute("requiredPerm", "transfers.create");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleCancel(request, response, user);
                     break;
                 case "approve_manager":
-                    if (!perms.contains("transfers.approve_manager")) {
-                        request.setAttribute("requiredPerm", "transfers.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleManagerApprove(request, response, user);
                     break;
                 case "reject_manager":
-                    if (!perms.contains("transfers.approve_manager")) {
-                        request.setAttribute("requiredPerm", "transfers.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleManagerReject(request, response, user);
                     break;
                 case "approve_ceo":
-                    if (!perms.contains("transfers.approve_ceo")) {
-                        request.setAttribute("requiredPerm", "transfers.approve_ceo");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleCeoApprove(request, response, user);
                     break;
                 case "reject_ceo":
-                    if (!perms.contains("transfers.approve_ceo")) {
-                        request.setAttribute("requiredPerm", "transfers.approve_ceo");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleCeoReject(request, response, user);
                     break;
                 case "final_approve":
-                    if (!perms.contains("transfers.approve_manager")) {
-                        request.setAttribute("requiredPerm", "transfers.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleFinalApprove(request, response, user);
                     break;
                 case "final_reject":
-                    if (!perms.contains("transfers.approve_manager")) {
-                        request.setAttribute("requiredPerm", "transfers.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
                     handleFinalReject(request, response, user);
                     break;
                 default:
@@ -224,16 +147,6 @@ public class TransferController extends HttpServlet {
 
     private void showList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute("loggedUser");
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-
-        Integer filterUserId = null;
-        boolean canApprove = perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo");
-        if (!canApprove) {
-            filterUserId = user.getId();
-        }
-
         String search = request.getParameter("search");
         String statusFilter = request.getParameter("status");
         int page = parseInt(request.getParameter("page"), 1);
@@ -243,7 +156,7 @@ public class TransferController extends HttpServlet {
         int limit = 10;
         int offset = (page - 1) * limit;
 
-        int total = transferDAO.countTotal(search, statusFilter, filterUserId);
+        int total = transferDAO.countTotal(search, statusFilter, null);
         int totalPages = (int) Math.ceil((double) total / limit);
         if (totalPages < 1) {
             totalPages = 1;
@@ -253,8 +166,8 @@ public class TransferController extends HttpServlet {
         }
         offset = (page - 1) * limit;
 
-        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, filterUserId);
-        Map<String, Integer> kpis = transferDAO.getKpiCounts(filterUserId);
+        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, null);
+        Map<String, Integer> kpis = transferDAO.getKpiCounts(null);
 
         request.setAttribute("transfers", list);
         request.setAttribute("kpiDraft", kpis.getOrDefault("DRAFT", 0));
@@ -268,7 +181,6 @@ public class TransferController extends HttpServlet {
         request.setAttribute("total", total);
         request.setAttribute("search", search);
         request.setAttribute("statusFilter", statusFilter);
-        request.setAttribute("canApprove", canApprove);
         request.setAttribute("activePage", "transfer-list");
 
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-list.jsp").forward(request, response);
@@ -277,17 +189,14 @@ public class TransferController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setAttribute("warehouses", warehouseDAO.findAll());
-        // Load tat ca serial IN_STOCK de render dropdown (khong dung AJAX)
-        List<Inventory> allSerials = inventoryDAO.findByFilters(null, null, InventoryDAO.STATUS_IN_STOCK, null, 1, 10000);
-        request.setAttribute("allSerials", allSerials);
+        request.setAttribute("generators", generatorDAO.findAllActive());
+        request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "transfer-create");
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
     }
 
     private void showEditView(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute("loggedUser");
         int id = parseInt(request.getParameter("id"), 0);
         if (id <= 0) {
             response.sendRedirect(request.getContextPath() + "/transfers");
@@ -298,29 +207,33 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
-        if (t.getCreatedBy() != user.getId()) {
-            request.setAttribute("requiredPerm", "transfers.create");
-            request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-            return;
-        }
         if (!"DRAFT".equals(t.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
         }
         request.setAttribute("transfer", t);
         request.setAttribute("warehouses", warehouseDAO.findAll());
-        // Load tat ca serial IN_STOCK de render dropdown
-        List<Inventory> allSerials = inventoryDAO.findByFilters(null, null, InventoryDAO.STATUS_IN_STOCK, null, 1, 10000);
-        request.setAttribute("allSerials", allSerials);
+        request.setAttribute("generators", generatorDAO.findAllActive());
+        request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "transfer-edit");
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-edit.jsp").forward(request, response);
+    }
+
+    private List<Inventory> loadAllInStockSerials() {
+        List<Inventory> all = inventoryDAO.findAll();
+        List<Inventory> result = new ArrayList<>();
+        for (Inventory inv : all) {
+            if ("IN_STOCK".equals(inv.getStatus())) {
+                result.add(inv);
+            }
+        }
+        return result;
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User user = (User) session.getAttribute("loggedUser");
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
 
         int id = parseInt(request.getParameter("id"), 0);
         if (id <= 0) {
@@ -335,32 +248,17 @@ public class TransferController extends HttpServlet {
         }
 
         boolean isOwner = (t.getCreatedBy() == user.getId());
-        boolean isManager = perms.contains("transfers.approve_manager");
-        boolean isCeo = perms.contains("transfers.approve_ceo");
-        boolean isStaff = perms.contains("transfers.create");
 
         List<ActivityLog> history = activityLogDAO.findByEntityTypeAndId("transfer", id, 1, 100);
         int totalHistory = activityLogDAO.countByEntityTypeAndId("transfer", id);
 
         request.setAttribute("transfer", t);
         request.setAttribute("isOwner", isOwner);
-        request.setAttribute("isManager", isManager);
-        request.setAttribute("isCeo", isCeo);
-        request.setAttribute("isStaff", isStaff);
         request.setAttribute("transferHistory", history);
         request.setAttribute("totalHistory", totalHistory);
         request.setAttribute("activePage", "transfer-detail");
 
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-detail.jsp").forward(request, response);
-    }
-
-    private void handleGetSerials(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        // Method nay khong con can thiet: serial duoc load san trong JSP qua ${allSerials}.
-        // Giu lai de tuong thich URL (tra ve [] de khong loi).
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("[]");
     }
 
     private void handleGetGeneratorStock(HttpServletRequest request, HttpServletResponse response)
@@ -1178,5 +1076,15 @@ public class TransferController extends HttpServlet {
         } catch (NumberFormatException e) {
             return def;
         }
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+                .replace("\t", "\\t")
+                .replace("/", "\\/");
     }
 }
