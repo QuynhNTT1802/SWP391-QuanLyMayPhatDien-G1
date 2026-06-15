@@ -65,12 +65,22 @@
                             <h2 class="page-title">Danh sách phiếu mua</h2>
                             <div class="page-sub">${totalPOs} phiếu mua</div>
                         </div>
+                        <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                        <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
+                        <c:if test="${canCreatePo}">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/purchase-order?action=create">+ Tạo phiếu mua</a>
+                        </c:if>
                     </div>
 
                     <script>
                         <c:if test="${not empty sessionScope.message}">
                         window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
                             <c:remove var="message" scope="session"/>
+                        </c:if>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>'};
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
                         </c:if>
                     </script>
 
@@ -93,11 +103,38 @@
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
-                            <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
-                            <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                            <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
-                            <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+
+                            <%-- Sale Staff (chỉ có view): thấy trạng thái cuối, KHÔNG có Chờ CEO duyệt --%>
+                            <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
+
+                            <%-- CEO (chỉ có approve): thấy Chờ CEO, Đã duyệt, Từ chối --%>
+                            <c:if test="${perms.contains('purchase_orders.approve') and !perms.contains('purchase_orders.create')}">
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                            </c:if>
+
+                            <%-- Sale Manager (có create + view): thấy Nháp, Chờ CEO, Đã duyệt, Từ chối, Đã hủy --%>
+                            <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
+                                <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
+
+                            <%-- Có cả create + approve (admin/PM): thấy tất cả 5 status --%>
+                            <c:if test="${perms.contains('purchase_orders.approve') and perms.contains('purchase_orders.create')}">
+                                <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
                         </select>
 
                         <div class="spacer"></div>
