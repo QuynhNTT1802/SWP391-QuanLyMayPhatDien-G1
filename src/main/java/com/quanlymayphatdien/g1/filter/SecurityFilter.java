@@ -1,5 +1,6 @@
 package com.quanlymayphatdien.g1.filter;
 
+import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.Filter;
@@ -156,7 +157,7 @@ public class SecurityFilter implements Filter {
                 session.setAttribute("userPermissions", freshPerms);
                 req.getServletContext().removeAttribute("perm_refresh_" + userId);
             } catch (SQLException e) {
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le",
+                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                         e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }

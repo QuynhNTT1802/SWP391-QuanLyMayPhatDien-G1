@@ -16,6 +16,7 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.service.NotificationService;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -79,7 +80,7 @@ public class TransferController extends HttpServlet {
                     showList(request, response);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quan ly luan chuyen", "TransferController.doGet", e.getMessage(), e);
+            SystemLogger.error(LogModule.TRANSFER, "TransferController.doGet", e.getMessage(), e);
             e.printStackTrace();
             if (!response.isCommitted()) {
                 response.sendRedirect(request.getContextPath() + "/transfers");
@@ -137,7 +138,7 @@ public class TransferController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quan ly luan chuyen", "TransferController.doPost", e.getMessage(), e);
+            SystemLogger.error(LogModule.TRANSFER, "TransferController.doPost", e.getMessage(), e);
             e.printStackTrace();
             if (!response.isCommitted()) {
                 response.sendRedirect(request.getContextPath() + "/transfers?error=1");

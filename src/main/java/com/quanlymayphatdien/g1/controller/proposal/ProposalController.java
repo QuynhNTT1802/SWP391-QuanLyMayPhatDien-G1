@@ -13,6 +13,7 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -74,7 +75,7 @@ public class ProposalController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý đề xuất nhập", "ProposalController.doGet", e.getMessage(), e);
+            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doGet", e.getMessage(), e);
             e.printStackTrace();
             if (!response.isCommitted()) {
                 session.setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
@@ -132,7 +133,7 @@ public class ProposalController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý đề xuất nhập", "ProposalController.doPost", e.getMessage(), e);
+            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doPost", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
             session.setAttribute("toastType", "danger");

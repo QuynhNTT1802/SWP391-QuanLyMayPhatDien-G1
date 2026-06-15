@@ -9,6 +9,7 @@ import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -95,7 +96,7 @@ public class InventoryController extends HttpServlet {
             try {
                 selectedWarehouse = Integer.parseInt(whParam);
             } catch (NumberFormatException ignored) {
-                SystemLogger.warn("Quản lý kho", "InventoryController.doGet", "Lỗi định dạng kho: " + ignored.getMessage());
+                SystemLogger.warn(LogModule.INVENTORY, "InventoryController.doGet", "Lỗi định dạng kho: " + ignored.getMessage());
             }
         }
         if (selectedWarehouse != null) {
@@ -127,7 +128,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
-                SystemLogger.warn("Quản lý kho", "InventoryController.doGet", "Lỗi định dạng trang: " + e.getMessage());
+                SystemLogger.warn(LogModule.INVENTORY, "InventoryController.doGet", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }

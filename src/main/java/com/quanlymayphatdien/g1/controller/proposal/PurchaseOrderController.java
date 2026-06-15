@@ -10,6 +10,7 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -63,7 +64,7 @@ public class PurchaseOrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.doGet", e.getMessage(), e);
+            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.doGet", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
@@ -118,7 +119,7 @@ public class PurchaseOrderController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.doPost", e.getMessage(), e);
+            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.doPost", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi xử lý: " + e.getMessage());
             String redirect = action != null && (action.startsWith("submitReviewCreate") || action.startsWith("reviewCreate") || action.startsWith("submitEditReturned"))
@@ -346,7 +347,7 @@ public class PurchaseOrderController extends HttpServlet {
             session.setAttribute("message", "Tạo phiếu mua thành công");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.create", e.getMessage(), e);
+            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.create", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("message", "Lỗi: " + e.getMessage());
             response.sendRedirect(request.getContextPath()
@@ -464,7 +465,7 @@ public class PurchaseOrderController extends HttpServlet {
             session.setAttribute("message", "Tạo phiếu mua thành công");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.submitReviewCreate", e.getMessage(), e);
+            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.submitReviewCreate", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("message", "Lỗi: " + e.getMessage());
             StringBuilder back = new StringBuilder("/purchase-order?action=reviewCreate");
@@ -705,7 +706,7 @@ public class PurchaseOrderController extends HttpServlet {
             session.setAttribute("message", ok ? "Đã cập nhật và gửi lại CEO duyệt" : "Không thể cập nhật");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua", "PurchaseOrderController.submitEditReturnedPo", e.getMessage(), e);
+            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.submitEditReturnedPo", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("message", "Lỗi: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=editReturned&id=" + id);
