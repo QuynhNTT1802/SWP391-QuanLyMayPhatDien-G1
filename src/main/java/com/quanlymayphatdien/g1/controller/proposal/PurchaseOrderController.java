@@ -167,7 +167,6 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("period", period);
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("status", status);
-        request.setAttribute("canCreate", perms != null && perms.contains("purchase_orders.create"));
         request.setAttribute("canApprove", perms != null && perms.contains("purchase_orders.approve"));
         request.setAttribute("activePage", "purchase-order");
 

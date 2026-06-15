@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -85,8 +86,9 @@
                                 <tr>
                                     <th style="width:140px;">Thời gian</th>
                                     <th>Kho</th>
-                                    <th>Sản phẩm</th>
                                     <th style="width:100px;">Loại</th>
+                                    <th>Sản phẩm</th>
+                                    <th style="width:200px;">Serial</th>
                                     <th style="width:90px;">+/- SL</th>
                                     <th style="width:80px;">Tồn sau</th>
                                     <th>Mã phiếu</th>
@@ -98,7 +100,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty stockCards}">
-                                        <tr><td colspan="10">
+                                        <tr><td colspan="12">
                                             <div class="empty-state"><strong>Không có giao dịch nào</strong></div>
                                         </td></tr>
                                     </c:when>
@@ -113,6 +115,20 @@
                                                         <c:when test="${sc.transactionType == 'IMPORT'}"><span class="status active" style="--dot:var(--accent);"><span class="sdot"></span>Nhập</span></c:when>
                                                         <c:when test="${sc.transactionType == 'EXPORT'}"><span class="status locked" style="--dot:var(--danger);"><span class="sdot"></span>Xuất</span></c:when>
                                                         <c:otherwise><span class="status active" style="--dot:var(--warn);background:var(--warn-soft);color:var(--warn);"><span class="sdot"></span>Điều chỉnh</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td style="font-size:11px;font-family:monospace;max-width:200px;" title="<c:out value='${sc.serialList}'/>">
+                                                    <c:choose>
+                                                        <c:when test="${empty sc.serialList}">
+                                                            <span style="color:var(--muted);">—</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:set var="serialsArr" value="${fn:split(sc.serialList, ', ')}" />
+                                                            <c:out value="${serialsArr[0]}"/>
+                                                            <c:if test="${fn:length(serialsArr) > 1}">
+                                                                <span style="color:var(--accent);font-weight:600;"> +${fn:length(serialsArr) - 1}</span>
+                                                            </c:if>
+                                                        </c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td>

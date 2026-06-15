@@ -67,7 +67,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 permissions.add(key);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return permissions;
     }
@@ -96,7 +96,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         permissions.addAll(grants);
         permissions.removeAll(denies);
@@ -121,7 +121,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(new Permission(id, resource, action, desc));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -145,7 +145,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(value);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -163,7 +163,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             p.setString(4, type);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -177,7 +177,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             p.setInt(2, perId);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -231,7 +231,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(new Permission(id, resource, action, desc));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }

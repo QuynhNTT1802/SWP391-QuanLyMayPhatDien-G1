@@ -28,7 +28,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -45,7 +45,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -65,7 +65,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 }
             } 
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -83,7 +83,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
             ps.executeUpdate();
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -106,7 +106,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -130,13 +130,13 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback(); 
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }

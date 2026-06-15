@@ -66,7 +66,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
                 if (rs.next()) return rs.getInt(1);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -120,7 +120,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -173,7 +173,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
             ResultSet rs = p.executeQuery();
             if (rs.next()) return rs.getInt(1);
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }

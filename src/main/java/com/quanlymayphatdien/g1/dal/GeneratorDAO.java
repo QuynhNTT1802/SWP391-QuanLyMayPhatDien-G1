@@ -52,9 +52,9 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
 
     public List<Generator> findInStockByWarehouse(int warehouseId) {
         List<Generator> list = new ArrayList<>();
-        String sql = "SELECT g.* FROM generator g "
+        String sql = "SELECT DISTINCT g.* FROM generator g "
                 + "JOIN inventory i ON i.generator_id = g.id "
-                + "WHERE i.warehouse_id = ? AND i.quantity > 0 AND g.status = 'active' "
+                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND g.status = 'active' "
                 + "ORDER BY g.model";
         try {
             connection = getConnection();

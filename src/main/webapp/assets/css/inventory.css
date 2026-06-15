@@ -401,6 +401,74 @@ main {
 .status.disabled { color: var(--muted); }
 
 /* ========================================================
+   STATUS BADGE (cho bang inventory)
+   Moi serial co 1 trang thai: IN_STOCK / SOLD / PENDING_LIQUIDATION / LIQUIDATED / IN_TRANSIT
+   ======================================================== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+    border: 1px solid;
+}
+.status-badge .sdot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.status-badge.status-IN_STOCK {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.status-badge.status-IN_STOCK .sdot {
+    background: var(--accent);
+}
+.status-badge.status-SOLD {
+    color: var(--muted);
+    background: var(--surface-2);
+    border-color: var(--border);
+}
+.status-badge.status-SOLD .sdot {
+    background: var(--muted-2);
+}
+.status-badge.status-PENDING_LIQUIDATION {
+    color: var(--warn, #b07d00);
+    background: var(--warn-soft, #fff4d6);
+    border-color: color-mix(in srgb, var(--warn, #b07d00) 30%, transparent);
+}
+.status-badge.status-PENDING_LIQUIDATION .sdot {
+    background: var(--warn, #b07d00);
+}
+.status-badge.status-LIQUIDATED {
+    color: var(--info, #0a6ec5);
+    background: var(--info-soft, #d8ecfb);
+    border-color: color-mix(in srgb, var(--info, #0a6ec5) 30%, transparent);
+}
+.status-badge.status-LIQUIDATED .sdot {
+    background: var(--info, #0a6ec5);
+}
+.status-badge.status-IN_TRANSIT {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.status-badge.status-IN_TRANSIT .sdot {
+    background: var(--accent);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* ========================================================
    QTY CELL
    ======================================================== */
 .qty-cell { font-weight: 700; }

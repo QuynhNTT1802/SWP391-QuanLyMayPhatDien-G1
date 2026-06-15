@@ -363,8 +363,8 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 int rejectedBy = rs.getInt("rejected_by");
                 po.setRejectedBy(rs.wasNull() ? null : rejectedBy);
                 po.setRejectReason(rs.getString("reject_reason"));
-                po.setCancelMode(rs.getString("cancel_mode"));
-                po.setCancelReason(rs.getString("cancel_reason"));
+                try { po.setCancelMode(rs.getString("cancel_mode")); } catch (SQLException ignored) {}
+                try { po.setCancelReason(rs.getString("cancel_reason")); } catch (SQLException ignored) {}
                 po.setTotalProposals(rs.getInt("total_proposals"));
                 po.setTotalQuantity(rs.getInt("total_quantity"));
                 po.setNote(rs.getString("note"));
@@ -510,8 +510,8 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name, "
                 + "SUM(ipd.quantity) AS total_proposed, "
                 + "COUNT(DISTINCT ip.proposal_id) AS proposal_count, "
-                + "COALESCE((SELECT i.quantity FROM inventory i "
-                + "          WHERE i.generator_id = ipd.generator_id AND i.warehouse_id = ? LIMIT 1), 0) AS current_stock "
+                + "COALESCE((SELECT COUNT(*) FROM inventory i "
+                + "          WHERE i.generator_id = ipd.generator_id AND i.warehouse_id = ? AND i.status = 'IN_STOCK'), 0) AS current_stock "
                 + "FROM import_proposal ip "
                 + "JOIN import_proposal_detail ipd ON ipd.proposal_id = ip.proposal_id "
                 + "JOIN generator g ON g.id = ipd.generator_id "
@@ -559,8 +559,8 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name, "
                 + "SUM(ipd.quantity) AS total_proposed, "
                 + "COUNT(DISTINCT ip.proposal_id) AS proposal_count, "
-                + "COALESCE((SELECT i.quantity FROM inventory i "
-                + "          WHERE i.generator_id = ipd.generator_id AND i.warehouse_id = ? LIMIT 1), 0) AS current_stock "
+                + "COALESCE((SELECT COUNT(*) FROM inventory i "
+                + "          WHERE i.generator_id = ipd.generator_id AND i.warehouse_id = ? AND i.status = 'IN_STOCK'), 0) AS current_stock "
                 + "FROM import_proposal ip "
                 + "JOIN import_proposal_detail ipd ON ipd.proposal_id = ip.proposal_id "
                 + "JOIN generator g ON g.id = ipd.generator_id "

@@ -252,6 +252,7 @@
                                                     <td>
                                                         <span class="action-badge action-<c:choose>
                                                             <c:when test="${h.action == 'CREATE'}">create</c:when>
+                                                            <c:when test="${h.action == 'AUTO_CREATE'}">create</c:when>
                                                             <c:when test="${h.action == 'UPDATE'}">update</c:when>
                                                             <c:when test="${h.action == 'APPROVE'}">approve</c:when>
                                                             <c:when test="${h.action == 'REJECT'}">reject</c:when>
@@ -260,6 +261,7 @@
                                                         </c:choose>">
                                                         <c:choose>
                                                             <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
+                                                            <c:when test="${h.action == 'AUTO_CREATE'}">Tạo tự động</c:when>
                                                             <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
                                                             <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
                                                             <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
@@ -301,14 +303,15 @@
                                         <c:otherwise>
                                             <c:set var="grandTotal" value="0" />
                                             <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                                <c:set var="subtotal" value="${d.unitPrice * d.quantity}" />
+                                                <c:set var="uPrice" value="${d.unitPrice != null ? d.unitPrice : 0}" />
+                                                <c:set var="subtotal" value="${uPrice * d.quantity}" />
                                                 <c:set var="grandTotal" value="${grandTotal + subtotal}" />
                                                 <tr class="detail-row">
                                                     <td class="mono">${st.index + 1}</td>
                                                     <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
                                                     <td class="mono"><c:out value="${d.serialNumber}"/></td>
                                                     <td class="mono"><fmt:formatNumber value="${d.quantity}"/></td>
-                                                    <td class="mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
+                                                    <td class="mono"><fmt:formatNumber value="${uPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
                                                     <td class="mono" style="font-weight: 600;"><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
                                                     <td><c:out value="${d.note}"/></td>
                                                 </tr>
