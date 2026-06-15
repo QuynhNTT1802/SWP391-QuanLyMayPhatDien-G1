@@ -84,7 +84,6 @@ public class PurchaseOrderController extends HttpServlet {
         if (action == null) {
             action = "";
         }
-        System.out.println(">>> doPost action=" + action);
 
         try {
             switch (action) {
@@ -205,19 +204,15 @@ public class PurchaseOrderController extends HttpServlet {
 
     private void showReviewCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        System.out.println(">>> showReviewCreate start");
         HttpSession session = request.getSession();
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        System.out.println(">>> perms: " + (perms == null ? "null" : perms));
         if (perms == null || !perms.contains("purchase_orders.create")) {
-            System.out.println(">>> NO PERMISSION: purchase_orders.create");
             session.setAttribute("message", "Bạn không có quyền tạo phiếu mua");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
 
         String[] proposalIdArr = request.getParameterValues("proposalIds");
-        System.out.println(">>> proposalIdArr: " + java.util.Arrays.toString(proposalIdArr));
         if (proposalIdArr == null || proposalIdArr.length == 0) {
             session.setAttribute("message", "Chưa chọn phiếu đề xuất nào");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
@@ -231,45 +226,34 @@ public class PurchaseOrderController extends HttpServlet {
                 proposalIds.add(id);
             }
         }
-        System.out.println(">>> parsed proposalIds: " + proposalIds);
         if (proposalIds.isEmpty()) {
             session.setAttribute("message", "Danh sách phiếu đề xuất không hợp lệ");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
 
-        System.out.println(">>> calling findByIdsForReview...");
         ImportProposalDAO ipDao = new ImportProposalDAO();
         List<ImportProposal> proposals = ipDao.findByIdsForReview(proposalIds);
-        System.out.println(">>> findByIdsForReview returned: " + (proposals == null ? "null" : proposals.size() + " proposals"));
         if (proposals.size() != proposalIds.size()) {
             session.setAttribute("message", "Một số phiếu đề xuất không hợp lệ (đã bị xử lý hoặc không tồn tại)");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
 
-        System.out.println(">>> validating period+warehouse...");
         String period = proposals.get(0).getPeriod();
         int warehouseId = proposals.get(0).getWarehouseId();
         for (ImportProposal p : proposals) {
             if (!period.equals(p.getPeriod()) || warehouseId != p.getWarehouseId()) {
-                System.out.println(">>> MISMATCH: period=" + period + " vs " + p.getPeriod() + ", warehouse=" + warehouseId + " vs " + p.getWarehouseId());
                 session.setAttribute("message", "Tất cả phiếu đề xuất phải cùng kỳ và cùng kho");
                 response.sendRedirect(request.getContextPath() + "/proposal?action=list");
                 return;
             }
         }
-        System.out.println(">>> period=" + period + ", warehouseId=" + warehouseId);
 
-        System.out.println(">>> calling aggregateByProposalIds...");
         PurchaseOrderDAO poDao = new PurchaseOrderDAO();
         List<Map<String, Object>> aggregations = poDao.aggregateByProposalIds(proposalIds, warehouseId);
-        System.out.println(">>> aggregateByProposalIds returned: " + (aggregations == null ? "null" : aggregations.size() + " rows"));
-        System.out.println(">>> calling findActivePoByPeriodWarehouse...");
         PurchaseOrder existingPo = poDao.findActivePoByPeriodWarehouse(period, warehouseId);
-        System.out.println(">>> existingPo: " + (existingPo == null ? "null" : existingPo.getPoCode()));
 
-        System.out.println(">>> setting attributes & forwarding...");
         request.setAttribute("proposals", proposals);
         request.setAttribute("aggregations", aggregations);
         request.setAttribute("selectedPeriod", period);
@@ -278,7 +262,6 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("existingPo", existingPo);
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-review-create.jsp").forward(request, response);
-        System.out.println(">>> FORWARD DONE");
     }
 
     private void create(HttpServletRequest request, HttpServletResponse response)
