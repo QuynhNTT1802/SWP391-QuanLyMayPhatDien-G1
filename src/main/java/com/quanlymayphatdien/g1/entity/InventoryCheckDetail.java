@@ -13,6 +13,7 @@ public class InventoryCheckDetail {
     private String generatorModel;
     private String generatorBrand;
     private String powerRating;
+    private int discrepancyCount;
 
     public InventoryCheckDetail() {
     }
@@ -95,5 +96,12 @@ public class InventoryCheckDetail {
 
     public void setPowerRating(String powerRating) {
         this.powerRating = powerRating;
+    }
+    public int getDiscrepancyCount() {
+        return discrepancyCount;
+    }
+
+    public void setDiscrepancyCount(int discrepancyCount) {
+        this.discrepancyCount = discrepancyCount;
     }
 }
