@@ -342,8 +342,8 @@ public class ExportReceiptController extends HttpServlet {
                 }
             }
             item.put("brand", brand);
-            Inventory inv = inventoryDAO.findByWarehouseAndGenerator(whId, g.getId());
-            item.put("stockQty", inv != null ? inv.getQuantity() : 0);
+            int stockQty = inventoryDAO.findInStockByWarehouseAndGenerator(whId, g.getId()).size();
+            item.put("stockQty", stockQty);
             out.add(item);
         }
         new Gson().toJson(out, response.getWriter());
@@ -679,11 +679,11 @@ public class ExportReceiptController extends HttpServlet {
                     com.quanlymayphatdien.g1.dal.LiquidationDAO liqDAO = new com.quanlymayphatdien.g1.dal.LiquidationDAO();
                     liqDAO.updateStatus(r.getLiquidationId(), com.quanlymayphatdien.g1.utils.GlobalUtils.STATUS_CANCELLED, loggedUser.getId(), "warehouse", id);
                     
-                    com.quanlymayphatdien.g1.dal.SerialNumberDAO snDAO = new com.quanlymayphatdien.g1.dal.SerialNumberDAO();
+                    com.quanlymayphatdien.g1.dal.InventoryDAO invDAO = new com.quanlymayphatdien.g1.dal.InventoryDAO();
                     if (r.getDetails() != null) {
                         for (com.quanlymayphatdien.g1.entity.ReceiptDetail rd : r.getDetails()) {
                             if (rd.getSerialNumber() != null && !rd.getSerialNumber().trim().isEmpty()) {
-                                snDAO.updateStatus(rd.getSerialNumber().trim(), "IN_STOCK");
+                                invDAO.updateStatusBySerial(rd.getSerialNumber().trim(), com.quanlymayphatdien.g1.dal.InventoryDAO.STATUS_IN_STOCK);
                             }
                         }
                     }
@@ -900,8 +900,7 @@ public class ExportReceiptController extends HttpServlet {
             }
 
             if (warehouseId > 0) {
-                Inventory inv = inventoryDAO.findByWarehouseAndGenerator(warehouseId, genId);
-                int onHand = inv != null ? inv.getQuantity() : 0;
+                int onHand = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, genId).size();
                 Integer usedSoFar = genUsage.get(genId);
                 int need = qty + (usedSoFar == null ? 0 : usedSoFar);
                 if (onHand < need) {

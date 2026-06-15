@@ -278,14 +278,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             InventoryDAO invDAO = new InventoryDAO();
             StockCardDAO scDAO = new StockCardDAO();
-            SerialNumberDAO snDAO = new SerialNumberDAO();
 
-            // 4. Validate trùng serial toàn hệ thống (mọi receipt_detail)
+            // 4. Validate serial (IMPORT: khong duoc trung; EXPORT: phai IN_STOCK o dung kho)
             if ("IMPORT".equals(receiptType)) {
                 for (ReceiptDetail d : details) {
                     if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                        if (rdDAO.isSerialExists(connection, d.getSerialNumber().trim(), receiptId)) {
+                        if (invDAO.isSerialExists(connection, d.getSerialNumber().trim())) {
                             errors.add("Serial \"" + d.getSerialNumber().trim() + "\" đã tồn tại trong hệ thống");
+                        }
+                    }
+                }
+            } else if ("EXPORT".equals(receiptType)) {
+                for (ReceiptDetail d : details) {
+                    if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                        if (!invDAO.isInStockAtWarehouse(connection, d.getSerialNumber().trim(), warehouseId)) {
+                            errors.add("Serial \"" + d.getSerialNumber().trim() + "\" không tồn tại IN_STOCK ở kho này");
                         }
                     }
                 }
@@ -295,7 +302,46 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 return errors;
             }
 
-            // 5. Group details theo generator_id, cộng dồn số lượng
+            // 5. Voi moi dong receipt_detail: ghi 1 stock_card (quantity_change = ±quantity, quantity_after = COUNT(inventory WHERE IN_STOCK))
+            //    Voi moi serial: them moi (IMPORT) hoac doi status (EXPORT)
+            for (ReceiptDetail d : details) {
+                if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
+                    continue;
+                }
+                String serial = d.getSerialNumber().trim();
+
+                if ("IMPORT".equals(receiptType)) {
+                    // Insert serial moi vao inventory
+                    try {
+                        invDAO.insert(connection, d.getGeneratorId(), serial, warehouseId, InventoryDAO.STATUS_IN_STOCK);
+                    } catch (SQLException ex) {
+                        if (ex.getMessage() != null && ex.getMessage().contains("Duplicate")) {
+                            errors.add("Serial \"" + serial + "\" đã tồn tại (UNIQUE conflict)");
+                        } else {
+                            throw ex;
+                        }
+                    }
+                } else if ("EXPORT".equals(receiptType)) {
+                    boolean isLiquidation = false;
+                    String checkLiqSql = "SELECT liquidation_id FROM liquidation WHERE converted_receipt_id = ?";
+                    try (PreparedStatement checkLiqPs = connection.prepareStatement(checkLiqSql)) {
+                        checkLiqPs.setInt(1, receiptId);
+                        try (ResultSet liqRs = checkLiqPs.executeQuery()) {
+                            if (liqRs.next()) {
+                                isLiquidation = true;
+                            }
+                        }
+                    }
+                    String targetStatus = isLiquidation ? InventoryDAO.STATUS_LIQUIDATED : InventoryDAO.STATUS_SOLD;
+                    invDAO.updateStatusBySerial(connection, serial, targetStatus);
+                }
+            }
+            if (!errors.isEmpty()) {
+                connection.rollback();
+                return errors;
+            }
+
+            // 6. Ghi stock_card theo generator (gom theo generator_id, quantity_change = ±totalQty)
             Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
             for (ReceiptDetail d : details) {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
@@ -308,15 +354,15 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     totalQty += gd.getQuantity();
                 }
                 int change = "IMPORT".equals(receiptType) ? totalQty : -totalQty;
-                invDAO.updateQuantity(connection, warehouseId, genId, change);
-                int qtyAfter = change;
-                String qtySql = "SELECT quantity FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
+                // Tinh quantity_after = COUNT(inventory WHERE IN_STOCK AND warehouse=? AND generator=?)
+                int qtyAfter = 0;
+                String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
                 try (PreparedStatement qtyPs = connection.prepareStatement(qtySql)) {
                     qtyPs.setInt(1, warehouseId);
                     qtyPs.setInt(2, genId);
                     try (ResultSet qtyRs = qtyPs.executeQuery()) {
                         if (qtyRs.next()) {
-                            qtyAfter = qtyRs.getInt("quantity");
+                            qtyAfter = qtyRs.getInt(1);
                         }
                     }
                 }
@@ -332,47 +378,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 sc.setCreatedBy(approvedBy);
                 scDAO.insert(connection, sc);
             }
-            
-            // 6. Đồng bộ bảng serial_number
-            if ("IMPORT".equals(receiptType)) {
-                String insertSerialSql = "INSERT IGNORE INTO serial_number (generator_id, serial_number, warehouse_id, status) VALUES (?, ?, ?, 'IN_STOCK')";
-                try (PreparedStatement psInsertSn = connection.prepareStatement(insertSerialSql)) {
-                    for (ReceiptDetail d : details) {
-                        if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                            psInsertSn.setInt(1, d.getGeneratorId());
-                            psInsertSn.setString(2, d.getSerialNumber().trim());
-                            psInsertSn.setInt(3, warehouseId);
-                            psInsertSn.addBatch();
-                        }
-                    }
-                    psInsertSn.executeBatch();
-                }
-            } else if ("EXPORT".equals(receiptType)) {
-                boolean isLiquidation = false;
-                String checkLiqSql = "SELECT liquidation_id FROM liquidation WHERE converted_receipt_id = ?";
-                try (PreparedStatement checkLiqPs = connection.prepareStatement(checkLiqSql)) {
-                    checkLiqPs.setInt(1, receiptId);
-                    try (ResultSet liqRs = checkLiqPs.executeQuery()) {
-                        if (liqRs.next()) {
-                            isLiquidation = true;
-                        }
-                    }
-                }
-                String targetStatus = isLiquidation ? "LIQUIDATED" : "SOLD";
-                
-                String updateSerialSql = "UPDATE serial_number SET status = ? WHERE serial_number = ?";
-                try (PreparedStatement psUpdateSn = connection.prepareStatement(updateSerialSql)) {
-                    for (ReceiptDetail d : details) {
-                        if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                            psUpdateSn.setString(1, targetStatus);
-                            psUpdateSn.setString(2, d.getSerialNumber().trim());
-                            psUpdateSn.addBatch();
-                        }
-                    }
-                    psUpdateSn.executeBatch();
-                }
-            }
-            
+
             connection.commit();
             return errors;
         } catch (SQLException e) {
