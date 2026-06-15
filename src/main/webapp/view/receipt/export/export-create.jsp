@@ -345,7 +345,7 @@
         var html = '<option value="">-- Chọn máy --</option>';
         for (var i = 0; i < generatorCache.length; i++) {
             var g = generatorCache[i];
-            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '');
+            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' (' + (g.stockQty || 0) + ')';
             var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
             html += '<option value="' + g.id + '" data-price="' + (g.unitPrice || 0) + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
         }
