@@ -16,6 +16,9 @@ import com.quanlymayphatdien.g1.entity.Customer;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Liquidation;
 import com.quanlymayphatdien.g1.entity.LiquidationDetail;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
@@ -90,6 +93,9 @@ public class LiquidationController extends HttpServlet {
                 case "get_serials":
                     getSerials(request, response);
                     break;
+                case "get_serials_all":
+                    getSerialsAll(request, response);
+                    break;
                 case "search_customer":
                     searchCustomerJson(request, response);
                     break;
@@ -110,26 +116,101 @@ public class LiquidationController extends HttpServlet {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         int generatorId = Integer.parseInt(request.getParameter("generatorId"));
         List<Inventory> serials = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, generatorId);
+        List<java.util.Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerials(warehouseId, generatorId);
+
+        JsonArray available = new JsonArray();
+        for (Inventory inv : serials) {
+            JsonObject o = new JsonObject();
+            o.addProperty("serialNumber", inv.getSerialNumber());
+            if (inv.getGeneratorModel() != null) o.addProperty("generatorName", inv.getGeneratorModel());
+            if (inv.getCreatedAt() != null) o.addProperty("createdAt", inv.getCreatedAt().toString());
+            available.add(o);
+        }
+        JsonArray lockedArr = new JsonArray();
+        for (java.util.Map<String, Object> m : locked) {
+            JsonObject o = new JsonObject();
+            o.addProperty("serialNumber", (String) m.get("serialNumber"));
+            o.addProperty("liquidationId", (Integer) m.get("liquidationId"));
+            o.addProperty("liquidationCode", (String) m.get("liquidationCode"));
+            o.addProperty("liquidationStatus", (String) m.get("liquidationStatus"));
+            if (m.get("createdAt") != null) o.addProperty("createdAt", m.get("createdAt").toString());
+            lockedArr.add(o);
+        }
+        JsonObject root = new JsonObject();
+        root.add("available", available);
+        root.add("locked", lockedArr);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        StringBuilder json = new StringBuilder("[");
-        for (int i = 0; i < serials.size(); i++) {
-            Inventory inv = serials.get(i);
-            json.append("{\"serialNumber\":\"").append(inv.getSerialNumber()).append("\"");
-            if (inv.getGeneratorModel() != null) {
-                json.append(",\"generatorName\":\"").append(escapeJson(inv.getGeneratorModel())).append("\"");
-            }
-            if (inv.getCreatedAt() != null) {
-                json.append(",\"createdAt\":\"").append(inv.getCreatedAt().toString()).append("\"");
-            }
-            json.append("}");
-            if (i < serials.size() - 1) {
-                json.append(",");
-            }
+        response.getWriter().write(new Gson().toJson(root));
+    }
+
+    /**
+     * Lay tat ca serial IN_STOCK trong mot kho, group theo generator.
+     * Dung cho picker moi: 1 lan goi du hien thi het cac model trong kho.
+     */
+    /**
+     * Lay tat ca serial IN_STOCK trong mot kho, group theo generator.
+     */
+    private void getSerialsAll(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+        java.util.List<Inventory> all = inventoryDAO.findInStockByWarehouse(warehouseId);
+        java.util.List<java.util.Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
+
+        java.util.LinkedHashMap<Integer, java.util.List<Inventory>> grouped = new java.util.LinkedHashMap<>();
+        java.util.HashMap<Integer, String> modelMap = new java.util.HashMap<>();
+        for (Inventory inv : all) {
+            grouped.computeIfAbsent(inv.getGeneratorId(), k -> new java.util.ArrayList<>()).add(inv);
+            if (inv.getGeneratorModel() != null) modelMap.put(inv.getGeneratorId(), inv.getGeneratorModel());
         }
-        json.append("]");
-        response.getWriter().write(json.toString());
+
+        com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
+        java.util.HashMap<Integer, java.math.BigDecimal> priceMap = new java.util.HashMap<>();
+        for (com.quanlymayphatdien.g1.entity.Generator g : genDAO.findAll()) {
+            priceMap.put(g.getId(), g.getUnitPrice());
+        }
+
+        JsonArray generators = new JsonArray();
+        for (java.util.Map.Entry<Integer, java.util.List<Inventory>> e : grouped.entrySet()) {
+            int genId = e.getKey();
+            JsonObject g = new JsonObject();
+            g.addProperty("generatorId", genId);
+            g.addProperty("model", modelMap.getOrDefault(genId, ""));
+            java.math.BigDecimal price = priceMap.get(genId);
+            if (price != null) g.addProperty("unitPrice", price);
+            else g.add("unitPrice", com.google.gson.JsonNull.INSTANCE);
+
+            JsonArray serials = new JsonArray();
+            for (Inventory inv : e.getValue()) {
+                JsonObject s = new JsonObject();
+                s.addProperty("serialNumber", inv.getSerialNumber());
+                if (inv.getCreatedAt() != null) s.addProperty("createdAt", inv.getCreatedAt().toString());
+                serials.add(s);
+            }
+            g.add("serials", serials);
+            generators.add(g);
+        }
+
+        JsonArray lockedArr = new JsonArray();
+        for (java.util.Map<String, Object> m : locked) {
+            JsonObject o = new JsonObject();
+            o.addProperty("serialNumber", (String) m.get("serialNumber"));
+            o.addProperty("generatorId", (Integer) m.get("generatorId"));
+            o.addProperty("generatorModel", (String) m.get("generatorModel"));
+            o.addProperty("liquidationId", (Integer) m.get("liquidationId"));
+            o.addProperty("liquidationCode", (String) m.get("liquidationCode"));
+            o.addProperty("liquidationStatus", (String) m.get("liquidationStatus"));
+            if (m.get("createdAt") != null) o.addProperty("createdAt", m.get("createdAt").toString());
+            lockedArr.add(o);
+        }
+
+        JsonObject root = new JsonObject();
+        root.add("generators", generators);
+        root.add("locked", lockedArr);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(new Gson().toJson(root));
     }
 
     private void migrateSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -142,30 +223,24 @@ public class LiquidationController extends HttpServlet {
         String q = request.getParameter("q");
         if (q == null) q = "";
         List<Customer> customers = customerDAO.findByFilters(q.trim(), "active", null, 1, 20);
+
+        JsonArray arr = new JsonArray();
+        for (Customer c : customers) {
+            JsonObject o = new JsonObject();
+            o.addProperty("id", c.getId());
+            o.addProperty("name", c.getName());
+            o.addProperty("phone", c.getPhone());
+            o.addProperty("email", c.getEmail() != null ? c.getEmail() : "");
+            o.addProperty("address", c.getAddress() != null ? c.getAddress() : "");
+            o.addProperty("companyName", c.getCompanyName() != null ? c.getCompanyName() : "");
+            arr.add(o);
+        }
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        StringBuilder json = new StringBuilder("[");
-        for (int i = 0; i < customers.size(); i++) {
-            Customer c = customers.get(i);
-            json.append("{");
-            json.append("\"id\":").append(c.getId()).append(",");
-            json.append("\"name\":\"").append(escapeJson(c.getName())).append("\",");
-            json.append("\"phone\":\"").append(escapeJson(c.getPhone())).append("\",");
-            json.append("\"email\":\"").append(c.getEmail() != null ? escapeJson(c.getEmail()) : "").append("\",");
-            json.append("\"address\":\"").append(c.getAddress() != null ? escapeJson(c.getAddress()) : "").append("\",");
-            json.append("\"companyName\":\"").append(c.getCompanyName() != null ? escapeJson(c.getCompanyName()) : "").append("\"");
-            json.append("}");
-            if (i < customers.size() - 1) json.append(",");
-        }
-        json.append("]");
-        response.getWriter().write(json.toString());
+        response.getWriter().write(new Gson().toJson(arr));
     }
 
-    private String escapeJson(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
-    }
-    
+
     private void showList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String search = request.getParameter("search");
         String statusFilter = request.getParameter("status");
@@ -360,6 +435,7 @@ public class LiquidationController extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
+        Gson gson = new Gson();
         try {
             String name = request.getParameter("custName");
             String phone = request.getParameter("custPhone");
@@ -369,20 +445,16 @@ public class LiquidationController extends HttpServlet {
             String typeIdStr = request.getParameter("custTypeId");
 
             if (name == null || name.trim().isEmpty() || phone == null || phone.trim().isEmpty()) {
-                out.write("{\"success\":false,\"error\":\"Họ tên và SĐT là bắt buộc\"}");
+                JsonObject err = new JsonObject();
+                err.addProperty("success", false);
+                err.addProperty("error", "Họ tên và SĐT là bắt buộc");
+                out.write(gson.toJson(err));
                 return;
             }
-            // Check duplicate phone
             if (customerDAO.isPhoneExists(phone.trim(), null)) {
                 Customer existing = customerDAO.findByPhone(phone.trim());
                 if (existing != null) {
-                    out.write("{\"success\":true,\"existing\":true,\"id\":" + existing.getId()
-                        + ",\"name\":\"" + escapeJson(existing.getName()) + "\""
-                        + ",\"phone\":\"" + escapeJson(existing.getPhone()) + "\""
-                        + ",\"email\":\"" + (existing.getEmail() != null ? escapeJson(existing.getEmail()) : "") + "\""
-                        + ",\"address\":\"" + (existing.getAddress() != null ? escapeJson(existing.getAddress()) : "") + "\""
-                        + ",\"companyName\":\"" + (existing.getCompanyName() != null ? escapeJson(existing.getCompanyName()) : "") + "\""
-                        + "}");
+                    out.write(gson.toJson(customerToJson(existing, true)));
                     return;
                 }
             }
@@ -399,19 +471,33 @@ public class LiquidationController extends HttpServlet {
             c.setCreatedBy(user.getId());
             int newId = customerDAO.insert(c);
             if (newId > 0) {
-                out.write("{\"success\":true,\"existing\":false,\"id\":" + newId
-                    + ",\"name\":\"" + escapeJson(c.getName()) + "\""
-                    + ",\"phone\":\"" + escapeJson(c.getPhone()) + "\""
-                    + ",\"email\":\"" + (c.getEmail() != null ? escapeJson(c.getEmail()) : "") + "\""
-                    + ",\"address\":\"" + (c.getAddress() != null ? escapeJson(c.getAddress()) : "") + "\""
-                    + ",\"companyName\":\"" + (c.getCompanyName() != null ? escapeJson(c.getCompanyName()) : "") + "\""
-                    + "}");
+                c.setId(newId);
+                out.write(gson.toJson(customerToJson(c, false)));
             } else {
-                out.write("{\"success\":false,\"error\":\"Không thể lưu khách hàng\"}");
+                JsonObject err = new JsonObject();
+                err.addProperty("success", false);
+                err.addProperty("error", "Không thể lưu khách hàng");
+                out.write(gson.toJson(err));
             }
         } catch (Exception e) {
-            out.write("{\"success\":false,\"error\":\"" + escapeJson(e.getMessage()) + "\"}");
+            JsonObject err = new JsonObject();
+            err.addProperty("success", false);
+            err.addProperty("error", e.getMessage() != null ? e.getMessage() : "");
+            out.write(gson.toJson(err));
         }
+    }
+
+    private JsonObject customerToJson(Customer c, boolean existing) {
+        JsonObject o = new JsonObject();
+        o.addProperty("success", true);
+        o.addProperty("existing", existing);
+        o.addProperty("id", c.getId());
+        o.addProperty("name", c.getName());
+        o.addProperty("phone", c.getPhone());
+        o.addProperty("email", c.getEmail() != null ? c.getEmail() : "");
+        o.addProperty("address", c.getAddress() != null ? c.getAddress() : "");
+        o.addProperty("companyName", c.getCompanyName() != null ? c.getCompanyName() : "");
+        return o;
     }
 
     private void handleCreate(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
@@ -422,14 +508,51 @@ public class LiquidationController extends HttpServlet {
         String[] originalPrices = request.getParameterValues("originalPrice");
         String customerIdStr = request.getParameter("customerId");
 
-        Liquidation l = new Liquidation();
-        l.setLiquidationCode("LIQ" + System.currentTimeMillis());
-        l.setCreatedBy(user.getId());
-        l.setReasonId(reasonId);
-        l.setWarehouseId(warehouseId);
-        
-        int insertedId = liquidationDAO.insert(l);
-        if (insertedId > 0 && generatorIds != null) {
+        if (generatorIds == null || serialNumbers == null || generatorIds.length == 0) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + java.net.URLEncoder.encode("Phải chọn ít nhất 1 máy", "UTF-8"));
+            return;
+        }
+
+        // Kiểm tra trùng serial trong cùng phiếu
+        java.util.Set<String> uniqueSerials = new java.util.LinkedHashSet<>();
+        for (String sn : serialNumbers) uniqueSerials.add(sn);
+        if (uniqueSerials.size() != serialNumbers.length) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + java.net.URLEncoder.encode("Có serial trùng trong phiếu", "UTF-8"));
+            return;
+        }
+
+        java.util.List<String> serialList = new java.util.ArrayList<>(uniqueSerials);
+
+        // Atomic claim: chỉ thành công khi tất cả serial đang IN_STOCK ở đúng warehouse.
+        java.sql.Connection conn = null;
+        try {
+            conn = inventoryDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            int affected = inventoryDAO.claimInStockBatch(conn, serialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
+            if (affected != serialList.size()) {
+                java.util.List<String> bad = inventoryDAO.findUnavailableSerials(conn, serialList, warehouseId);
+                conn.rollback();
+                String msg = "Không tạo được phiếu — các serial sau đã bị giữ chỗ hoặc không thuộc kho này: "
+                        + String.join(", ", bad);
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
+                        + java.net.URLEncoder.encode(msg, "UTF-8"));
+                return;
+            }
+
+            Liquidation l = new Liquidation();
+            l.setLiquidationCode("LIQ" + System.currentTimeMillis());
+            l.setCreatedBy(user.getId());
+            l.setReasonId(reasonId);
+            l.setWarehouseId(warehouseId);
+
+            int insertedId = liquidationDAO.insert(l);
+            if (insertedId <= 0) {
+                conn.rollback();
+                response.sendRedirect(request.getContextPath() + "/liquidations?error=" + java.net.URLEncoder.encode("Không lưu được phiếu thanh lý", "UTF-8"));
+                return;
+            }
+
             for (int i = 0; i < generatorIds.length; i++) {
                 LiquidationDetail d = new LiquidationDetail();
                 d.setLiquidationId(insertedId);
@@ -437,11 +560,10 @@ public class LiquidationController extends HttpServlet {
                 d.setSerialNumber(serialNumbers[i]);
                 d.setOriginalPrice(new BigDecimal(originalPrices[i]));
                 detailDAO.insert(d);
-                
-                // Cập nhật trạng thái serial sang PENDING_LIQUIDATION
-                inventoryDAO.updateStatusBySerial(serialNumbers[i], InventoryDAO.STATUS_PENDING_LIQUIDATION);
             }
-            
+
+            conn.commit();
+
             // Gửi thông báo cho mọi user có quyền duyệt của Quản lý kho (kể cả admin được grant)
             List<User> managers = userDAO.findUsersByPermission("liquidations", "approve_manager");
             for (User mgr : managers) {
@@ -454,7 +576,7 @@ public class LiquidationController extends HttpServlet {
                         insertedId
                 );
             }
-            
+
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
             log.setEntityType("liquidation");
@@ -463,8 +585,18 @@ public class LiquidationController extends HttpServlet {
             log.setEntityName(l.getLiquidationCode());
             log.setDetails("Tạo mới đơn thanh lý " + l.getLiquidationCode());
             activityLogDAO.insert(log);
+
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+        } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (Exception ignored) {}
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+            }
         }
-        response.sendRedirect(request.getContextPath() + "/liquidations");
     }
 
     private void handleManagerApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
@@ -714,51 +846,81 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
-        // Trả lại trạng thái cũ cho serials cũ
-        List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
-        for (LiquidationDetail oldD : oldDetails) {
-            inventoryDAO.updateStatusBySerial(oldD.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
+        if (generatorIds == null || serialNumbers == null || generatorIds.length == 0) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + java.net.URLEncoder.encode("Phải chọn ít nhất 1 máy", "UTF-8"));
+            return;
         }
 
-        // Cập nhật reason và reset trạng thái về PENDING_MANAGER (update warehouseId thủ công)
-        boolean updated = liquidationDAO.updateReasonAndStatus(liquidationId, reasonId);
-        if (updated) {
-            // Hacky: Update warehouse_id via a direct SQL if needed, but since it doesn't change we can just update it using another DAO method. 
-            // Cập nhật warehouseId nếu thay đổi
-            // Cập nhật warehouseId và customerId
+        java.util.Set<String> uniqueSerials = new java.util.LinkedHashSet<>();
+        for (String sn : serialNumbers) uniqueSerials.add(sn);
+        if (uniqueSerials.size() != serialNumbers.length) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + java.net.URLEncoder.encode("Có serial trùng trong phiếu", "UTF-8"));
+            return;
+        }
+        java.util.List<String> newSerialList = new java.util.ArrayList<>(uniqueSerials);
+
+        java.sql.Connection conn = null;
+        try {
+            conn = inventoryDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            // Trả lại trạng thái cũ (PENDING_LIQUIDATION -> IN_STOCK) cho serials cũ
+            List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
+            java.util.List<String> oldSerials = new java.util.ArrayList<>();
+            for (LiquidationDetail oldD : oldDetails) oldSerials.add(oldD.getSerialNumber());
+            if (!oldSerials.isEmpty()) {
+                inventoryDAO.updateStatusBatch(conn, oldSerials, InventoryDAO.STATUS_IN_STOCK);
+            }
+
+            // Atomic claim cho serials mới
+            int affected = inventoryDAO.claimInStockBatch(conn, newSerialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
+            if (affected != newSerialList.size()) {
+                java.util.List<String> bad = inventoryDAO.findUnavailableSerials(conn, newSerialList, warehouseId);
+                conn.rollback();
+                String msg = "Không lưu được — các serial sau đã bị giữ chỗ hoặc không thuộc kho này: "
+                        + String.join(", ", bad);
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=edit_view&id=" + liquidationId
+                        + "&error=" + java.net.URLEncoder.encode(msg, "UTF-8"));
+                return;
+            }
+
+            // Cập nhật reason -> PENDING_MANAGER
+            boolean updated = liquidationDAO.updateReasonAndStatus(liquidationId, reasonId);
+            if (!updated) {
+                conn.rollback();
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+                return;
+            }
+
             String customerIdStr = request.getParameter("customerId");
             Integer newCustomerId = null;
             if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
                 try { newCustomerId = Integer.parseInt(customerIdStr.trim()); } catch (NumberFormatException ignore) {}
             }
             String updateWarehouseSql = "UPDATE liquidation SET warehouse_id = ?, customer_id = ? WHERE liquidation_id = ?";
-            try (java.sql.Connection c = liquidationDAO.getConnection(); java.sql.PreparedStatement p = c.prepareStatement(updateWarehouseSql)) {
+            try (java.sql.PreparedStatement p = conn.prepareStatement(updateWarehouseSql)) {
                 p.setInt(1, warehouseId);
                 if (newCustomerId != null) p.setInt(2, newCustomerId); else p.setNull(2, java.sql.Types.INTEGER);
                 p.setInt(3, liquidationId);
                 p.executeUpdate();
             }
 
-            // Xóa hết details cũ
+            // Xóa hết details cũ + thêm lại details mới
             detailDAO.deleteByLiquidationId(liquidationId);
-
-            // Thêm lại details mới
-            if (generatorIds != null) {
-                for (int i = 0; i < generatorIds.length; i++) {
-                    LiquidationDetail d = new LiquidationDetail();
-                    d.setLiquidationId(liquidationId);
-                    d.setGeneratorId(Integer.parseInt(generatorIds[i]));
-                    d.setSerialNumber(serialNumbers[i]);
-                    d.setOriginalPrice(new java.math.BigDecimal(originalPrices[i]));
-                    detailDAO.insert(d);
-                    
-                    // Giữ lại serials mới
-                    inventoryDAO.updateStatusBySerial(serialNumbers[i], InventoryDAO.STATUS_PENDING_LIQUIDATION);
-                }
+            for (int i = 0; i < generatorIds.length; i++) {
+                LiquidationDetail d = new LiquidationDetail();
+                d.setLiquidationId(liquidationId);
+                d.setGeneratorId(Integer.parseInt(generatorIds[i]));
+                d.setSerialNumber(serialNumbers[i]);
+                d.setOriginalPrice(new java.math.BigDecimal(originalPrices[i]));
+                detailDAO.insert(d);
             }
-            
-            // Bắn lại thông báo: nếu đơn đang ở CEO_REQUEST_EDIT thì gửi cho người có quyền duyệt CEO,
-            // còn lại (MANAGER_REQUEST_EDIT) gửi cho người có quyền duyệt Quản lý kho.
+
+            conn.commit();
+
+            // Bắn lại thông báo
             boolean wasCeoEdit = "CEO_REQUEST_EDIT".equals(l.getStatus());
             String targetAction = wasCeoEdit ? "approve_ceo" : "approve_manager";
             String notifTitle = wasCeoEdit
@@ -784,8 +946,17 @@ public class LiquidationController extends HttpServlet {
             log.setEntityName(l.getLiquidationCode());
             log.setDetails("Nhân viên đã cập nhật lại thông tin đơn thanh lý theo yêu cầu");
             activityLogDAO.insert(log);
+
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+        } catch (Exception e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (Exception ignored) {}
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+            }
         }
-        
-        response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 }

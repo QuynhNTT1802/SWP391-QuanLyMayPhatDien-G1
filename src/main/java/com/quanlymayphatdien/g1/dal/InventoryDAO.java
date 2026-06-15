@@ -163,6 +163,78 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
+    /**
+     * Lay tat ca serial IN_STOCK cua mot warehouse, group theo generator.
+     * Dung cho serial-picker mới: 1 lan goi de hien tat ca model trong kho.
+     */
+    public List<Inventory> findInStockByWarehouse(int warehouseId) {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model, g.unit_price AS generator_price, w.name AS warehouse_name "
+                   + "FROM inventory i "
+                   + "JOIN generator g ON i.generator_id = g.id "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                   + "WHERE i.warehouse_id = ? AND i.status = ? "
+                   + "ORDER BY g.model, i.created_at, i.inventory_id";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setString(2, STATUS_IN_STOCK);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try { inv.setGeneratorModel(resultSet.getString("generator_model")); } catch (SQLException ignored) {}
+                try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    /**
+     * Lay danh sach serial dang bi khoa (PENDING_LIQUIDATION) cho ca mot warehouse,
+     * khong filter generator. Dung cho serial-picker moi.
+     */
+    public List<Map<String, Object>> findPendingLiquidationSerialsByWarehouse(int warehouseId) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        String sql = "SELECT i.serial_number, i.generator_id, i.created_at, g.model AS generator_model, "
+                   + "       l.liquidation_id, l.liquidation_code, l.status AS liq_status "
+                   + "FROM inventory i "
+                   + "JOIN generator g ON i.generator_id = g.id "
+                   + "JOIN liquidation_detail ld ON ld.serial_number = i.serial_number "
+                   + "JOIN liquidation l ON l.liquidation_id = ld.liquidation_id "
+                   + "WHERE i.warehouse_id = ? "
+                   + "  AND i.status = ? "
+                   + "  AND l.status IN ('PENDING_MANAGER','PENDING_CEO','MANAGER_REQUEST_EDIT','CEO_REQUEST_EDIT')";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setString(2, STATUS_PENDING_LIQUIDATION);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("serialNumber", resultSet.getString("serial_number"));
+                m.put("generatorId", resultSet.getInt("generator_id"));
+                m.put("generatorModel", resultSet.getString("generator_model"));
+                m.put("createdAt", resultSet.getTimestamp("created_at"));
+                m.put("liquidationId", resultSet.getInt("liquidation_id"));
+                m.put("liquidationCode", resultSet.getString("liquidation_code"));
+                m.put("liquidationStatus", resultSet.getString("liq_status"));
+                result.add(m);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return result;
+    }
+
     public Inventory findBySerialNumber(String serialNumber) {
         String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
                    + "FROM inventory i "
@@ -205,6 +277,101 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             ps.setString(4, status == null ? STATUS_IN_STOCK : status);
             return ps.executeUpdate() > 0;
         }
+    }
+
+    /**
+     * Atomic claim: chuyển status IN_STOCK -> targetStatus cho list serial,
+     * CHỈ UPDATE row đang IN_STOCK đúng warehouse. Trả về số row affected.
+     * Caller so sánh affected với serials.size() để phát hiện race condition.
+     */
+    public int claimInStockBatch(Connection conn, List<String> serialNumbers,
+                                  int warehouseId, String targetStatus) throws SQLException {
+        if (serialNumbers == null || serialNumbers.isEmpty()) return 0;
+        StringBuilder sql = new StringBuilder(
+                "UPDATE inventory SET status = ? "
+              + "WHERE warehouse_id = ? AND status = ? AND serial_number IN (");
+        for (int i = 0; i < serialNumbers.size(); i++) {
+            sql.append(i == 0 ? "?" : ",?");
+        }
+        sql.append(")");
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setString(idx++, targetStatus);
+            ps.setInt(idx++, warehouseId);
+            ps.setString(idx++, STATUS_IN_STOCK);
+            for (String sn : serialNumbers) {
+                ps.setString(idx++, sn);
+            }
+            return ps.executeUpdate();
+        }
+    }
+
+    /**
+     * Trả về list serial đang KHÔNG ở trạng thái IN_STOCK ở warehouse cho trước.
+     * Dùng để báo lỗi rõ "Serial X đã bị chiếm chỗ" khi atomic claim fail.
+     */
+    public List<String> findUnavailableSerials(Connection conn, List<String> serialNumbers, int warehouseId) throws SQLException {
+        List<String> result = new ArrayList<>();
+        if (serialNumbers == null || serialNumbers.isEmpty()) return result;
+        StringBuilder sql = new StringBuilder(
+                "SELECT serial_number FROM inventory "
+              + "WHERE serial_number IN (");
+        for (int i = 0; i < serialNumbers.size(); i++) {
+            sql.append(i == 0 ? "?" : ",?");
+        }
+        sql.append(") AND (warehouse_id <> ? OR status <> ?)");
+        try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int idx = 1;
+            for (String sn : serialNumbers) {
+                ps.setString(idx++, sn);
+            }
+            ps.setInt(idx++, warehouseId);
+            ps.setString(idx++, STATUS_IN_STOCK);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.add(rs.getString("serial_number"));
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Lấy thông tin serial đang bị khoá ở liquidation khác cho cùng warehouse + generator.
+     * Trả về Map: serialNumber -> Map{liquidationId, liquidationCode, status}
+     */
+    public List<Map<String, Object>> findPendingLiquidationSerials(int warehouseId, int generatorId) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        String sql = "SELECT i.serial_number, i.created_at, "
+                   + "       l.liquidation_id, l.liquidation_code, l.status AS liq_status "
+                   + "FROM inventory i "
+                   + "JOIN liquidation_detail ld ON ld.serial_number = i.serial_number "
+                   + "JOIN liquidation l ON l.liquidation_id = ld.liquidation_id "
+                   + "WHERE i.warehouse_id = ? AND i.generator_id = ? "
+                   + "  AND i.status = ? "
+                   + "  AND l.status IN ('PENDING_MANAGER','PENDING_CEO','MANAGER_REQUEST_EDIT','CEO_REQUEST_EDIT')";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setInt(2, generatorId);
+            statement.setString(3, STATUS_PENDING_LIQUIDATION);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("serialNumber", resultSet.getString("serial_number"));
+                m.put("createdAt", resultSet.getTimestamp("created_at"));
+                m.put("liquidationId", resultSet.getInt("liquidation_id"));
+                m.put("liquidationCode", resultSet.getString("liquidation_code"));
+                m.put("liquidationStatus", resultSet.getString("liq_status"));
+                result.add(m);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return result;
     }
 
     /**
