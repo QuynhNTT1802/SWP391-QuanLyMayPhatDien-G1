@@ -400,6 +400,8 @@ CREATE TABLE `import_proposal` (
   `approved_by` int DEFAULT NULL,
   `rejected_by` int DEFAULT NULL,
   `proposal_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `period` varchar(10) DEFAULT NULL,
+  `purchase_order_id` int DEFAULT NULL,
   `note` text,
   `reject_reason` text,
   `approved_at` datetime DEFAULT NULL,
@@ -413,8 +415,11 @@ CREATE TABLE `import_proposal` (
   KEY `idx_proposal_approved` (`approved_by`),
   KEY `idx_proposal_rejected` (`rejected_by`),
   KEY `idx_proposal_status` (`status`),
+  KEY `idx_proposal_po` (`purchase_order_id`),
+  KEY `idx_proposal_period` (`period`,`warehouse_id`,`status`),
   CONSTRAINT `fk_proposal_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_proposal_po` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -722,9 +727,12 @@ CREATE TABLE `permission` (
   `resource` varchar(100) NOT NULL,
   `action` varchar(50) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
+  `module` varchar(50) DEFAULT NULL,
+  `feature_name` varchar(100) DEFAULT NULL,
+  `task_type` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_resource_action` (`resource`,`action`)
-) ENGINE=InnoDB AUTO_INCREMENT=132 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -733,8 +741,92 @@ CREATE TABLE `permission` (
 
 LOCK TABLES `permission` WRITE;
 /*!40000 ALTER TABLE `permission` DISABLE KEYS */;
-INSERT INTO `permission` VALUES (1,'users','view','Xem danh sach nguoi dung'),(2,'users','create','Them nguoi dung moi'),(3,'users','update','Cap nhat thong tin nguoi dung'),(4,'users','deactivate','Vo hieu hoa nguoi dung'),(5,'roles','view','Xem danh sach vai tro'),(6,'roles','create','Them vai tro moi'),(7,'roles','update','Cap nhat vai tro'),(8,'roles','deactivate','Vo hieu hoa vai tro'),(9,'roles','edit_permissions','Chinh sua quyen cua vai tro'),(10,'generators','view','Xem danh sach may phat dien'),(11,'generators','create','Them may phat dien moi'),(12,'generators','update','Cap nhat thong tin may'),(22,'inventory','view','Xem ton kho'),(24,'inventory','adjust','Dieu chinh ton kho'),(25,'warehouses','view','Xem thong tin kho'),(26,'warehouses','create','Them kho moi'),(27,'warehouses','update','Cap nhat thong tin kho'),(45,'orders','view','Xem don hang'),(46,'orders','create','Tao don hang'),(47,'orders','update','Cap nhat don hang'),(48,'orders','cancel','Huy don hang'),(65,'reports','view','Xem bao cao'),(66,'reports','export','Xuat bao cao'),(91,'dashboard','view','Xem dashboard'),(95,'profile','view','Xem ho so ca nhan'),(96,'profile','edit','Sua ho so ca nhan'),(97,'password','change','Doi mat khau'),(98,'forgot_pw','process','Xu ly yeu cau reset mat khau'),(100,'orders','approve','Duyet don hang (sale_manager)'),(101,'receipts','view','Xem phieu xuat/nhap kho'),(102,'receipts','create','Tao phieu xuat/nhap kho'),(103,'receipts','approve','Duyet phieu xuat/nhap kho (warehouse_manager)'),(104,'stock_card','view','Xem the kho'),(105,'orders','reject','Tu choi don hang (sale_manager)'),(106,'receipts','reject','Tu choi phieu xuat/nhap kho (warehouse_manager)'),(107,'categories','view','Xem danh mục'),(108,'categories','create','Tạo danh mục mới'),(109,'categories','update','Sửa danh mục'),(110,'categories','delete','Xóa danh mục'),(111,'activity_log','view','Xem lịch sử hoạt động'),(112,'system_log','view','Xem nhật ký hệ thống'),(113,'customers','view','Xem danh sách khách hàng'),(114,'customers','create','Thêm khách hàng mới'),(115,'customers','update','Sửa thông tin khách hàng'),(116,'customers','deactivate','Vô hiệu hóa khách hàng'),(117,'proposals','view','Xem phiếu đề xuất nhập kho'),(118,'proposals','create','Tạo phiếu đề xuất nhập kho'),(119,'proposals','update','Cập nhật phiếu đề xuất nhập kho'),(120,'proposals','cancel','Hủy phiếu đề xuất nhập kho'),(121,'proposals','approve','Duyệt phiếu đề xuất nhập kho (sale_manager)'),(122,'proposals','reject','Từ chối phiếu đề xuất nhập kho (sale_manager)'),(123,'proposals','convert','Tạo phiếu nhập từ đề xuất đã duyệt (warehouse_manager)'),(124,'liquidations','view','Xem danh sách đơn thanh lý'),(125,'liquidations','create','Tạo đơn thanh lý (Warehouse Staff)'),(126,'liquidations','approve_manager','Duyệt và báo giá đơn thanh lý (Warehouse Manager)'),(127,'liquidations','approve_ceo','Duyệt/Yêu cầu sửa đơn thanh lý (CEO)'),(128,'transfers','view','Xem phiếu luân chuyển kho'),(129,'transfers','create','Tạo phiếu luân chuyển kho'),(130,'transfers','approve_manager','Duyệt phiếu luân chuyển (warehouse_manager)'),(131,'transfers','approve_ceo','Duyệt phiếu luân chuyển (ceo)');
+INSERT INTO `permission` VALUES (1,'users','view','Xem danh sach nguoi dung','admin','Người dùng','READ'),(2,'users','create','Them nguoi dung moi','admin','Người dùng','CREATE'),(3,'users','update','Cap nhat thong tin nguoi dung','admin','Người dùng','UPDATE'),(4,'users','deactivate','Vo hieu hoa nguoi dung','admin','Người dùng','DELETE'),(5,'roles','view','Xem danh sach vai tro','admin','Vai trò','READ'),(6,'roles','create','Them vai tro moi','admin','Vai trò','CREATE'),(7,'roles','update','Cap nhat vai tro','admin','Vai trò','UPDATE'),(8,'roles','deactivate','Vo hieu hoa vai tro','admin','Vai trò','DELETE'),(9,'roles','edit_permissions','Chinh sua quyen cua vai tro','admin','Vai trò','UPDATE'),(10,'generators','view','Xem danh sach may phat dien','warehouse','Máy phát điện','READ'),(11,'generators','create','Them may phat dien moi','warehouse','Máy phát điện','CREATE'),(12,'generators','update','Cap nhat thong tin may','warehouse','Máy phát điện','UPDATE'),(22,'inventory','view','Xem ton kho','warehouse','Tồn kho','READ'),(24,'inventory','adjust','Dieu chinh ton kho','warehouse','Tồn kho','ADJUST'),(25,'warehouses','view','Xem thong tin kho','warehouse','Kho','READ'),(26,'warehouses','create','Them kho moi','warehouse','Kho','CREATE'),(27,'warehouses','update','Cap nhat thong tin kho','warehouse','Kho','UPDATE'),(45,'orders','view','Xem don hang','sales','Đơn hàng','READ'),(46,'orders','create','Tao don hang','sales','Đơn hàng','CREATE'),(47,'orders','update','Cap nhat don hang','sales','Đơn hàng','UPDATE'),(48,'orders','cancel','Huy don hang','sales','Đơn hàng','CANCEL'),(65,'reports','view','Xem bao cao','report','Báo cáo','READ'),(66,'reports','export','Xuat bao cao','report','Báo cáo','EXPORT'),(91,'dashboard','view','Xem dashboard','system','Dashboard','READ'),(95,'profile','view','Xem ho so ca nhan','account','Hồ sơ cá nhân','READ'),(96,'profile','edit','Sua ho so ca nhan','account','Hồ sơ cá nhân','UPDATE'),(97,'password','change','Doi mat khau','account','Mật khẩu','UPDATE'),(98,'forgot_pw','process','Xu ly yeu cau reset mat khau','account','Đặt lại mật khẩu','UPDATE'),(100,'orders','approve','Duyet don hang (sale_manager)','sales','Đơn hàng','APPROVE'),(101,'receipts','view','Xem phieu xuat/nhap kho','warehouse','Phiếu xuất/nhập','READ'),(102,'receipts','create','Tao phieu xuat/nhap kho','warehouse','Phiếu xuất/nhập','CREATE'),(103,'receipts','approve','Duyet phieu xuat/nhap kho (warehouse_manager)','warehouse','Phiếu xuất/nhập','APPROVE'),(104,'stock_card','view','Xem the kho','warehouse','Thẻ kho','READ'),(105,'orders','reject','Tu choi don hang (sale_manager)','sales','Đơn hàng','REJECT'),(106,'receipts','reject','Tu choi phieu xuat/nhap kho (warehouse_manager)','warehouse','Phiếu xuất/nhập','REJECT'),(107,'categories','view','Xem danh mục','system','Danh mục','READ'),(108,'categories','create','Tạo danh mục mới','system','Danh mục','CREATE'),(109,'categories','update','Sửa danh mục','system','Danh mục','UPDATE'),(110,'categories','delete','Xóa danh mục','system','Danh mục','DELETE'),(111,'activity_log','view','Xem lịch sử hoạt động','system','Lịch sử hoạt động','READ'),(112,'system_log','view','Xem nhật ký hệ thống','system','Nhật ký hệ thống','READ'),(113,'customers','view','Xem danh sách khách hàng','sales','Khách hàng','READ'),(114,'customers','create','Thêm khách hàng mới','sales','Khách hàng','CREATE'),(115,'customers','update','Sửa thông tin khách hàng','sales','Khách hàng','UPDATE'),(116,'customers','deactivate','Vô hiệu hóa khách hàng','sales','Khách hàng','DELETE'),(117,'proposals','view','Xem phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','READ'),(118,'proposals','create','Tạo phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','CREATE'),(119,'proposals','update','Cập nhật phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','UPDATE'),(120,'proposals','cancel','Hủy phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','CANCEL'),(121,'proposals','approve','Duyệt phiếu đề xuất nhập kho (sale_manager)','sales','Đề xuất nhập kho','APPROVE'),(122,'proposals','reject','Từ chối phiếu đề xuất nhập kho (sale_manager)','sales','Đề xuất nhập kho','REJECT'),(124,'liquidations','view','Xem danh sách đơn thanh lý','warehouse','Đơn thanh lý','READ'),(125,'liquidations','create','Tạo đơn thanh lý (Warehouse Staff)','warehouse','Đơn thanh lý','CREATE'),(126,'liquidations','approve_manager','Duyệt và báo giá đơn thanh lý (Warehouse Manager)','warehouse','Đơn thanh lý','APPROVE'),(127,'liquidations','approve_ceo','Duyệt/Yêu cầu sửa đơn thanh lý (CEO)','warehouse','Đơn thanh lý','APPROVE'),(128,'transfers','view','Xem phiếu luân chuyển kho','warehouse','Phiếu luân chuyển','READ'),(129,'transfers','create','Tạo phiếu luân chuyển kho','warehouse','Phiếu luân chuyển','CREATE'),(130,'transfers','approve_manager','Duyệt phiếu luân chuyển (warehouse_manager)','warehouse','Phiếu luân chuyển','APPROVE'),(131,'transfers','approve_ceo','Duyệt phiếu luân chuyển (ceo)','warehouse','Phiếu luân chuyển','APPROVE'),(132,'purchase_orders','reject','Từ chối phiếu mua (CEO)','sales','Phiếu mua hàng','REJECT'),(133,'purchase_orders','view','Xem phiếu mua','sales','Phiếu mua hàng','READ'),(134,'purchase_orders','create','Tạo/gom phiếu mua (sale_manager)','sales','Phiếu mua hàng','CREATE'),(135,'purchase_orders','send_ceo','Gửi phiếu mua cho CEO','sales','Phiếu mua hàng','APPROVE'),(136,'purchase_orders','approve','Duyệt phiếu mua (CEO)','sales','Phiếu mua hàng','APPROVE');
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `purchase_order`
+--
+
+DROP TABLE IF EXISTS `purchase_order`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `purchase_order` (
+  `po_id` int NOT NULL AUTO_INCREMENT,
+  `po_code` varchar(50) NOT NULL,
+  `period` varchar(10) NOT NULL COMMENT 'YYYYQn (vd 2026Q1)',
+  `period_start` date NOT NULL,
+  `period_end` date NOT NULL,
+  `warehouse_id` int NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'DRAFT',
+  `created_by` int NOT NULL,
+  `approved_by` int DEFAULT NULL,
+  `rejected_by` int DEFAULT NULL,
+  `reject_reason` text,
+  `total_proposals` int NOT NULL DEFAULT '0',
+  `total_quantity` int NOT NULL DEFAULT '0',
+  `note` text,
+  `sent_to_ceo_at` datetime DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `rejected_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`po_id`),
+  UNIQUE KEY `uk_po_code` (`po_code`),
+  UNIQUE KEY `uk_po_period_warehouse` (`period`,`warehouse_id`),
+  KEY `idx_po_status` (`status`),
+  KEY `idx_po_created` (`created_by`),
+  KEY `idx_po_approved` (`approved_by`),
+  KEY `idx_po_warehouse` (`warehouse_id`),
+  KEY `fk_po_rejected` (`rejected_by`),
+  CONSTRAINT `fk_po_approved` FOREIGN KEY (`approved_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_po_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`),
+  CONSTRAINT `fk_po_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_po_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `purchase_order`
+--
+
+LOCK TABLES `purchase_order` WRITE;
+/*!40000 ALTER TABLE `purchase_order` DISABLE KEYS */;
+/*!40000 ALTER TABLE `purchase_order` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `purchase_order_detail`
+--
+
+DROP TABLE IF EXISTS `purchase_order_detail`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `purchase_order_detail` (
+  `po_detail_id` int NOT NULL AUTO_INCREMENT,
+  `po_id` int NOT NULL,
+  `generator_id` int NOT NULL,
+  `proposed_quantity` int NOT NULL DEFAULT '0' COMMENT 'Tong SL tu cac proposal goc',
+  `current_stock` int NOT NULL DEFAULT '0' COMMENT 'Ton kho luc gom',
+  `final_quantity` int NOT NULL DEFAULT '0' COMMENT 'Sale manager chot',
+  `note` text,
+  PRIMARY KEY (`po_detail_id`),
+  UNIQUE KEY `uk_po_detail_generator` (`po_id`,`generator_id`),
+  KEY `idx_pod_po` (`po_id`),
+  KEY `idx_pod_generator` (`generator_id`),
+  CONSTRAINT `fk_pod_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`),
+  CONSTRAINT `fk_pod_po` FOREIGN KEY (`po_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `purchase_order_detail`
+--
+
+LOCK TABLES `purchase_order_detail` WRITE;
+/*!40000 ALTER TABLE `purchase_order_detail` DISABLE KEYS */;
+/*!40000 ALTER TABLE `purchase_order_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -848,7 +940,7 @@ CREATE TABLE `role` (
 
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-INSERT INTO `role` VALUES (1,'admin','Quản trị hệ thống','active','2026-05-15 16:43:03','2026-06-12 03:41:48'),(2,'warehouse_manager','Quản lý kho - Duyệt phiếu xuất/nhập','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(3,'warehouse_staff','Nhân viên kho - Tạo phiếu, quét serial','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(5,'sales_staff','Nhân viên kinh doanh - Tạo đơn hàng','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(10,'sale_manager','Trưởng phòng kinh doanh - Duyệt đơn hàng','active','2026-05-21 00:00:00','2026-05-21 00:00:00'),(11,'Logger','Track System Status','active','2026-05-22 17:18:39','2026-05-22 17:18:39'),(13,'ceo','Giám đốc điều hành - Duyệt các đơn thanh lý và quyết định cấp cao','active','2026-06-09 21:49:56','2026-06-09 21:49:56');
+INSERT INTO `role` VALUES (1,'admin','Quản trị hệ thống','active','2026-05-15 16:43:03','2026-06-12 03:41:48'),(2,'warehouse_manager','Quản lý kho - Duyệt phiếu xuất/nhập','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(3,'warehouse_staff','Nhân viên kho - Tạo phiếu, quét serial','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(5,'sales_staff','Nhân viên kinh doanh - Tạo đơn hàng','active','2026-05-15 16:43:03','2026-05-21 08:00:00'),(10,'sale_manager','Trưởng phòng kinh doanh - Duyệt đơn hàng','active','2026-05-21 00:00:00','2026-05-21 00:00:00'),(13,'ceo','Giám đốc điều hành - Duyệt các đơn thanh lý và quyết định cấp cao','active','2026-06-09 21:49:56','2026-06-09 21:49:56');
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -875,7 +967,7 @@ CREATE TABLE `role_permission` (
 
 LOCK TABLES `role_permission` WRITE;
 /*!40000 ALTER TABLE `role_permission` DISABLE KEYS */;
-INSERT INTO `role_permission` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(2,10),(3,10),(5,10),(10,10),(1,11),(1,12),(1,22),(2,22),(3,22),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(1,27),(2,27),(1,45),(2,45),(3,45),(5,45),(10,45),(1,46),(5,46),(1,47),(5,47),(1,48),(5,48),(1,65),(2,65),(10,65),(1,66),(2,66),(1,91),(2,91),(3,91),(5,91),(10,91),(1,95),(2,95),(3,95),(5,95),(10,95),(1,96),(2,96),(3,96),(5,96),(10,96),(1,97),(2,97),(3,97),(5,97),(10,97),(1,98),(1,100),(10,100),(1,101),(2,101),(3,101),(1,102),(2,102),(3,102),(1,103),(2,103),(1,104),(2,104),(1,105),(10,105),(1,106),(2,106),(1,107),(1,108),(1,109),(1,110),(1,111),(1,112),(1,113),(1,114),(1,115),(1,116),(2,117),(5,117),(10,117),(5,118),(5,119),(5,120),(10,121),(10,122),(2,123),(1,124),(2,124),(3,124),(10,124),(3,125),(2,126),(1,127),(10,127),(1,128),(2,128),(3,128),(13,128),(1,129),(2,129),(3,129),(1,130),(2,130),(1,131),(13,131);
+INSERT INTO `role_permission` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(2,10),(3,10),(5,10),(10,10),(1,11),(1,12),(1,22),(2,22),(3,22),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(1,27),(2,27),(1,45),(2,45),(3,45),(5,45),(10,45),(1,46),(5,46),(1,47),(5,47),(1,48),(5,48),(1,65),(2,65),(10,65),(1,66),(2,66),(1,91),(2,91),(3,91),(5,91),(10,91),(1,95),(2,95),(3,95),(5,95),(10,95),(1,96),(2,96),(3,96),(5,96),(10,96),(1,97),(2,97),(3,97),(5,97),(10,97),(1,98),(1,100),(10,100),(1,101),(2,101),(3,101),(1,102),(2,102),(3,102),(1,103),(2,103),(1,104),(2,104),(1,105),(10,105),(1,106),(2,106),(1,107),(1,108),(1,109),(1,110),(1,111),(1,112),(1,113),(1,114),(1,115),(1,116),(2,117),(5,117),(10,117),(5,118),(5,119),(5,120),(10,121),(10,122),(1,124),(2,124),(3,124),(10,124),(13,124),(3,125),(2,126),(1,127),(10,127),(13,127),(1,128),(2,128),(3,128),(13,128),(1,129),(2,129),(3,129),(1,130),(2,130),(1,131),(13,131);
 /*!40000 ALTER TABLE `role_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -927,6 +1019,39 @@ LOCK TABLES `sale_order` WRITE;
 /*!40000 ALTER TABLE `sale_order` DISABLE KEYS */;
 INSERT INTO `sale_order` VALUES (1,'SO-20260521-001',1,4,5,'APPROVED',85000000.00,'Đơn hàng gấp, yêu cầu giao trong tuần',NULL,'2026-05-21 09:00:00','2026-06-04 19:17:06','2026-05-21 09:00:00','2026-06-04 19:17:06',NULL,NULL,NULL,NULL,NULL),(2,'SO-20260521-002',2,4,5,'CANCELLED',96000000.00,NULL,NULL,'2026-05-21 10:00:00','2026-05-21 10:30:00','2026-05-21 10:00:00','2026-06-02 12:15:07',3,'2026-06-02 12:15:07',NULL,NULL,NULL),(3,'SO-20260605-001',1,4,NULL,'PENDING',75000000.00,'Đơn hàng cho dự án X',NULL,'2026-06-05 10:00:00',NULL,'2026-06-05 16:27:10','2026-06-05 16:27:10',NULL,NULL,NULL,NULL,NULL),(4,'SO-20260605-002',2,4,5,'APPROVED',120000000.00,'Giao hàng trong tuần',NULL,'2026-06-05 11:00:00','2026-06-05 11:30:00','2026-06-05 16:27:10','2026-06-05 16:27:10',NULL,NULL,5,NULL,NULL),(5,'SO-20260605-003',1,4,NULL,'CANCELLED',50000000.00,NULL,NULL,'2026-06-05 12:00:00',NULL,'2026-06-05 16:27:10','2026-06-05 16:27:10',3,'2026-06-05 12:30:00',3,NULL,NULL),(18,'SO-20260605-004',1,4,5,'APPROVED',85000000.00,'Giao trong tuần',NULL,'2026-06-05 09:00:00','2026-06-05 09:30:00','2026-06-05 16:31:28','2026-06-05 16:31:28',NULL,NULL,NULL,NULL,NULL),(19,'SO-20260605-005',2,4,5,'APPROVED',168000000.00,'Khách VIP ưu tiên',NULL,'2026-06-05 10:00:00','2026-06-05 10:30:00','2026-06-05 16:31:28','2026-06-05 16:31:28',NULL,NULL,NULL,NULL,NULL),(20,'SO-20260605-006',1,4,5,'APPROVED',48000000.00,NULL,NULL,'2026-06-05 11:00:00','2026-06-05 11:30:00','2026-06-05 16:31:28','2026-06-05 16:31:28',NULL,NULL,NULL,NULL,NULL),(26,'123',5,3,3,'APPROVED',179000000.00,NULL,'123','2026-06-17 00:00:00','2026-06-07 05:15:32','2026-06-07 05:15:24','2026-06-07 05:15:32',NULL,NULL,NULL,NULL,NULL),(27,'ORD-20260609-001',7,2,NULL,'PENDING',48000000.00,NULL,'','2026-06-09 00:00:00',NULL,'2026-06-09 12:07:22','2026-06-09 12:07:22',NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `sale_order` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `serial_number`
+--
+
+DROP TABLE IF EXISTS `serial_number`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `serial_number` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `generator_id` int NOT NULL,
+  `serial_number` varchar(100) NOT NULL,
+  `warehouse_id` int NOT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'IN_STOCK',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_serial_number` (`serial_number`),
+  KEY `fk_sn_generator` (`generator_id`),
+  KEY `fk_sn_warehouse` (`warehouse_id`),
+  CONSTRAINT `fk_sn_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_sn_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `serial_number`
+--
+
+LOCK TABLES `serial_number` WRITE;
+/*!40000 ALTER TABLE `serial_number` DISABLE KEYS */;
+/*!40000 ALTER TABLE `serial_number` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1206,7 +1331,6 @@ CREATE TABLE `user_permission` (
 
 LOCK TABLES `user_permission` WRITE;
 /*!40000 ALTER TABLE `user_permission` DISABLE KEYS */;
-INSERT INTO `user_permission` VALUES (3,101,'GRANT'),(3,102,'GRANT'),(3,103,'GRANT'),(3,106,'GRANT'),(3,128,'GRANT'),(3,129,'GRANT'),(3,130,'GRANT'),(3,131,'GRANT');
 /*!40000 ALTER TABLE `user_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1275,4 +1399,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-15 11:51:02
+-- Dump completed on 2026-06-15 20:01:20

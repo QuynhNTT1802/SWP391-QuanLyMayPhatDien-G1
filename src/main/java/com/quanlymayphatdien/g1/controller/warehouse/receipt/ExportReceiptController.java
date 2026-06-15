@@ -186,6 +186,7 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+        request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "export-create");
 
         String orderIdStr = request.getParameter("orderId");
@@ -249,6 +250,7 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+        request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "export-edit");
         request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
     }
@@ -433,6 +435,7 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
             return;
         }
@@ -461,6 +464,7 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("warehouses", warehouseDAO.findAll());
             request.setAttribute("generators", new ArrayList<>());
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
             return;
         }
@@ -562,6 +566,7 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
             return;
         }
@@ -603,6 +608,7 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
         }
     }
@@ -836,6 +842,10 @@ public class ExportReceiptController extends HttpServlet {
             brandMap.put(g.getId(), brand);
         }
         return brandMap;
+    }
+
+    private List<Inventory> loadAllInStockSerials() {
+        return inventoryDAO.findAllInStock();
     }
 
     private String buildErrorMessage(String prefix, List<String> errors) {

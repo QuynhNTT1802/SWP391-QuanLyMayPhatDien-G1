@@ -474,6 +474,32 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
+    public List<Inventory> findAllInStock() {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+                   + "FROM inventory i "
+                   + "JOIN generator g ON i.generator_id = g.id "
+                   + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                   + "WHERE i.status = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, STATUS_IN_STOCK);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try { inv.setGeneratorModel(resultSet.getString("generator_model")); } catch (SQLException ignored) {}
+                try { inv.setWarehouseName(resultSet.getString("warehouse_name")); } catch (SQLException ignored) {}
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
     @Override
     public boolean update(Inventory t) {
         throw new UnsupportedOperationException("Not supported yet.");
