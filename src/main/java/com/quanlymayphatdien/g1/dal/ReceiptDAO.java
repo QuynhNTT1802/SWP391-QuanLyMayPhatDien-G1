@@ -68,8 +68,9 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
-                    + "OR c.name LIKE ? OR u1.name LIKE ?) ";
+                    + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ?) ";
             String like = "%" + search.trim() + "%";
+            inputs.add(like);
             inputs.add(like);
             inputs.add(like);
             inputs.add(like);
@@ -132,8 +133,9 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
-                    + "OR c.name LIKE ? OR u1.name LIKE ?) ";
+                    + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ?) ";
             String like = "%" + search.trim() + "%";
+            inputs.add(like);
             inputs.add(like);
             inputs.add(like);
             inputs.add(like);
@@ -191,9 +193,9 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (status == null || status.trim().isEmpty()) {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
-        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, "
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, proposal_id, "
                 + "warehouse_id, created_by, status, note, reason_id, total_amount, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -204,21 +206,26 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 statement.setNull(3, Types.INTEGER);
             }
-            statement.setInt(4, r.getWarehouseId());
-            statement.setInt(5, r.getCreatedBy());
-            statement.setString(6, status);
-            statement.setString(7, r.getNote());
-            if (r.getReasonId() != null) {
-                statement.setInt(8, r.getReasonId());
+            if (r.getProposalId() != null) {
+                statement.setInt(4, r.getProposalId());
             } else {
-                statement.setNull(8, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
+            }
+            statement.setInt(5, r.getWarehouseId());
+            statement.setInt(6, r.getCreatedBy());
+            statement.setString(7, status);
+            statement.setString(8, r.getNote());
+            if (r.getReasonId() != null) {
+                statement.setInt(9, r.getReasonId());
+            } else {
+                statement.setNull(9, Types.INTEGER);
             }
             if (r.getTotalAmount() != null) {
-                statement.setBigDecimal(9, r.getTotalAmount());
+                statement.setBigDecimal(10, r.getTotalAmount());
             } else {
-                statement.setNull(9, Types.DECIMAL);
+                statement.setNull(10, Types.DECIMAL);
             }
-            statement.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -588,6 +595,12 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         } else {
             r.setOrderId(oid);
         }
+        int pid = rs.getInt("proposal_id");
+        if (rs.wasNull()) {
+            r.setProposalId(null);
+        } else {
+            r.setProposalId(pid);
+        }
         r.setWarehouseId(rs.getInt("warehouse_id"));
         r.setCreatedBy(rs.getInt("created_by"));
         int aid = rs.getInt("approved_by");
@@ -640,6 +653,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         try {
             r.setCustomerName(rs.getString("customer_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            r.setProposalCode(rs.getString("proposal_code"));
         } catch (SQLException ignored) {
         }
         int rid = rs.getInt("reason_id");

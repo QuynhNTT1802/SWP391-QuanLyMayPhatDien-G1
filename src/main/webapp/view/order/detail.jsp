@@ -1,17 +1,17 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
-        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Chi tiết đơn hàng — Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
@@ -53,18 +53,16 @@
             <div>
                 <header class="topbar">
                     <h1>Chi tiết đơn hàng</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <span id="crumbId"><c:out value="${order.orderCode}"/></span></span>
+                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <span><c:out value="${order.orderCode}"/></span></span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
-                        <c:if test="${order.status == 'PENDING'}">
-                            <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Chỉnh sửa
-                            </a>
-                        </c:if>
+                        <button type="button" class="btn" onclick="window.print()" title="In đơn hàng">
+                            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            In đơn
+                        </button>
                     </div>
                 </header>
 
@@ -405,7 +403,72 @@
             </div>
         </div>
 
+        <div class="toast-host" id="toastHost"></div>
+
+        <script>
+            <c:if test="${not empty sessionScope.message}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${sessionScope.message}"/>';
+            window.SESSION_DATA.type = '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>';
+            </c:if>
+        </script>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script>
+            (function () {
+                var rows = document.querySelectorAll('#detailBody .detail-row');
+                if (rows.length <= 10) return;
+                var pageSize = 10;
+                var current = 1;
+                var totalPages = Math.ceil(rows.length / pageSize);
+                var info = document.getElementById('detailPageInfo');
+                var prevBtn = document.getElementById('prevDetailPage');
+                var nextBtn = document.getElementById('nextDetailPage');
+                function render() {
+                    rows.forEach(function (r, i) {
+                        var page = Math.floor(i / pageSize) + 1;
+                        r.style.display = (page === current) ? '' : 'none';
+                    });
+                    if (info) info.textContent = 'Trang ' + current + ' / ' + totalPages;
+                    if (prevBtn) prevBtn.disabled = (current <= 1);
+                    if (nextBtn) nextBtn.disabled = (current >= totalPages);
+                }
+                if (prevBtn) prevBtn.addEventListener('click', function () { if (current > 1) { current--; render(); } });
+                if (nextBtn) nextBtn.addEventListener('click', function () { if (current < totalPages) { current++; render(); } });
+                render();
+            })();
+
+            function showGenModal(el) {
+                if (window.event) window.event.stopPropagation();
+                var id = el.getAttribute('data-gen-id') || '';
+                var model = el.getAttribute('data-gen-model') || '—';
+                var qty = el.getAttribute('data-gen-qty') || '—';
+                var unitPrice = el.getAttribute('data-gen-unit-price') || '—';
+
+                document.getElementById('gm-id').textContent = id || '—';
+                document.getElementById('gm-model').textContent = model;
+                document.getElementById('gm-qty').textContent = qty;
+                document.getElementById('gm-unit-price').textContent = unitPrice;
+                document.getElementById('gm-detail-link').href = window.APP_CTX + '/warehouse/generators?action=view&id=' + id;
+
+                document.getElementById('genModal').classList.add('open');
+            }
+            function closeGenModal() {
+                document.getElementById('genModal').classList.remove('open');
+            }
+
+            function confirmApproveAction() {
+                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
+            }
+            function confirmCancelAction() {
+                return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeGenModal();
+            });
+        </script>
     </body>
 </html>
