@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.quanlymayphatdien.g1.controller.warehouse.inventory;
 
@@ -16,13 +16,16 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
  *
  * @author FPTShop
+ *
+ * Moi serial = 1 dong trong bang inventory.
+ * Trang /inventory/list liet ke tung serial voi cac filter (warehouse, generator, status, search).
+ * Trang /inventory (overview) hien thi KPI tong ton theo COUNT(inventory WHERE IN_STOCK).
  */
 @WebServlet(name = "InventoryController", urlPatterns = {"/inventory", "/inventory/*"})
 public class InventoryController extends HttpServlet {
@@ -45,13 +48,13 @@ public class InventoryController extends HttpServlet {
         List<Warehouse> warehouses = warehouseDAO.findAll();
         request.setAttribute("warehouses", warehouses);
 
-        Map<Integer, Integer> itemCountMap = inventoryDAO.countItemsByWarehouse();
-        Map<Integer, Integer> qtySumMap = inventoryDAO.sumQtyByWarehouse();
+        Map<Integer, Integer> itemCountMap = inventoryDAO.countInStockByWarehouse();
+        Map<String, Integer> itemsByWhGen = inventoryDAO.countItemsByWarehouseAndGenerator();
         int activeWh = inventoryDAO.countActiveWarehouses();
         int lockedWh = inventoryDAO.countLockedWarehouses();
-        long grandQty = inventoryDAO.grandTotalQty();
+        long grandQty = inventoryDAO.grandTotalInStock();
         request.setAttribute("warehouseItemCount", itemCountMap);
-        request.setAttribute("warehouseQtySum", qtySumMap);
+        request.setAttribute("warehouseItemsByWhGen", itemsByWhGen);
         request.setAttribute("kpiActiveWarehouses", activeWh);
         request.setAttribute("kpiLockedWarehouses", lockedWh);
         request.setAttribute("kpiTotalQty", grandQty);
@@ -103,19 +106,18 @@ public class InventoryController extends HttpServlet {
                 selectedWarehouse = null;
             }
         }
-        String search = request.getParameter("search");
 
-        boolean outOfStock = "1".equals(request.getParameter("outOfStock"));
-        Integer minYears = null;
-        String minYearsParam = request.getParameter("minYears");
-        if (minYearsParam != null && !minYearsParam.trim().isEmpty()) {
+        String genParam = request.getParameter("generator");
+        Integer selectedGenerator = null;
+        if (genParam != null && !genParam.isEmpty()) {
             try {
-                int n = Integer.parseInt(minYearsParam.trim());
-                if (n >= 0) minYears = n;
+                selectedGenerator = Integer.parseInt(genParam);
             } catch (NumberFormatException ignored) {
-                SystemLogger.warn("Quản lý kho", "InventoryController.doGet", "Lỗi định dạng minYears: " + minYearsParam);
             }
         }
+
+        String status = request.getParameter("status");
+        String search = request.getParameter("search");
 
         int page = 1;
         int pageSize = 10;
@@ -130,21 +132,20 @@ public class InventoryController extends HttpServlet {
             }
         }
 
-        int totalItems = inventoryDAO.countWithFilters(selectedWarehouse, search, outOfStock, minYears);
+        int totalItems = inventoryDAO.countByFilters(selectedWarehouse, selectedGenerator, status, search);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<Inventory> inventoryList = inventoryDAO.findWithFilters(selectedWarehouse, search, outOfStock, minYears, page, pageSize);
+        List<Inventory> serialList = inventoryDAO.findByFilters(selectedWarehouse, selectedGenerator, status, search, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("selectedWarehouse", selectedWarehouse);
+        request.setAttribute("selectedGenerator", selectedGenerator);
         request.setAttribute("search", search);
-        request.setAttribute("outOfStock", outOfStock);
-        request.setAttribute("minYears", minYears);
-        request.setAttribute("today", LocalDate.now());
-        request.setAttribute("inventoryList", inventoryList);
+        request.setAttribute("status", status);
+        request.setAttribute("serialList", serialList);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);

@@ -5,7 +5,7 @@ import com.quanlymayphatdien.g1.dal.LiquidationDAO;
 import com.quanlymayphatdien.g1.dal.LiquidationDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
-import com.quanlymayphatdien.g1.dal.SerialNumberDAO;
+import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
@@ -13,11 +13,11 @@ import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Customer;
+import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Liquidation;
 import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
-import com.quanlymayphatdien.g1.entity.SerialNumber;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.service.NotificationService;
 import jakarta.servlet.ServletException;
@@ -42,7 +42,7 @@ public class LiquidationController extends HttpServlet {
     private final CategoryDAO categoryDAO = new CategoryDAO();
     private final ReceiptDAO receiptDAO = new ReceiptDAO();
     private final ReceiptDetailDAO receiptDetailDAO = new ReceiptDetailDAO();
-    private final SerialNumberDAO serialNumberDAO = new SerialNumberDAO();
+    private final InventoryDAO inventoryDAO = new InventoryDAO();
     private final UserDAO userDAO = new UserDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final CustomerDAO customerDAO = new CustomerDAO();
@@ -109,20 +109,19 @@ public class LiquidationController extends HttpServlet {
     private void getSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         int generatorId = Integer.parseInt(request.getParameter("generatorId"));
-        List<SerialNumber> serials = serialNumberDAO.findByWarehouseAndGeneratorAndStatus(warehouseId, generatorId, "IN_STOCK");
-        
+        List<Inventory> serials = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, generatorId);
+
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < serials.size(); i++) {
-            SerialNumber sn = serials.get(i);
-            json.append("{\"serialNumber\":\"").append(sn.getSerialNumber()).append("\"");
-            if (sn.getGeneratorName() != null) {
-                json.append(",\"generatorName\":\"").append(escapeJson(sn.getGeneratorName())).append("\"");
+            Inventory inv = serials.get(i);
+            json.append("{\"serialNumber\":\"").append(inv.getSerialNumber()).append("\"");
+            if (inv.getGeneratorModel() != null) {
+                json.append(",\"generatorName\":\"").append(escapeJson(inv.getGeneratorModel())).append("\"");
             }
-            if (sn.getCreatedAt() != null) {
-                // format ISO date string for JS parsing, e.g. 2025-05-12T10:00:00
-                json.append(",\"createdAt\":\"").append(sn.getCreatedAt().toString()).append("\"");
+            if (inv.getCreatedAt() != null) {
+                json.append(",\"createdAt\":\"").append(inv.getCreatedAt().toString()).append("\"");
             }
             json.append("}");
             if (i < serials.size() - 1) {
@@ -134,8 +133,9 @@ public class LiquidationController extends HttpServlet {
     }
 
     private void migrateSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        serialNumberDAO.migrateFromReceiptDetail();
-        response.getWriter().write("Migration completed successfully!");
+        // Method nay khong con can thiet vi serial_number da gop vao inventory.
+        // Giu lai de tuong thich URL, tra ve thong bao.
+        response.getWriter().write("Migration da hoan tat (serial_number da gop vao inventory tu truoc).");
     }
 
     private void searchCustomerJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -439,7 +439,7 @@ public class LiquidationController extends HttpServlet {
                 detailDAO.insert(d);
                 
                 // Cập nhật trạng thái serial sang PENDING_LIQUIDATION
-                serialNumberDAO.updateStatus(serialNumbers[i], "PENDING_LIQUIDATION");
+                inventoryDAO.updateStatusBySerial(serialNumbers[i], InventoryDAO.STATUS_PENDING_LIQUIDATION);
             }
             
             // Gửi thông báo cho Managers
@@ -612,7 +612,7 @@ public class LiquidationController extends HttpServlet {
             // Hoàn lại trạng thái serial number
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
             for (LiquidationDetail d : details) {
-                serialNumberDAO.updateStatus(d.getSerialNumber(), "IN_STOCK");
+                inventoryDAO.updateStatusBySerial(d.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
             }
         }
         
@@ -648,7 +648,7 @@ public class LiquidationController extends HttpServlet {
             // Hoàn lại trạng thái serial number
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
             for (LiquidationDetail d : details) {
-                serialNumberDAO.updateStatus(d.getSerialNumber(), "IN_STOCK");
+                inventoryDAO.updateStatusBySerial(d.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
             }
         }
 
@@ -713,7 +713,7 @@ public class LiquidationController extends HttpServlet {
         // Trả lại trạng thái cũ cho serials cũ
         List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
         for (LiquidationDetail oldD : oldDetails) {
-            serialNumberDAO.updateStatus(oldD.getSerialNumber(), "IN_STOCK");
+            inventoryDAO.updateStatusBySerial(oldD.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
         }
 
         // Cập nhật reason và reset trạng thái về PENDING_MANAGER (update warehouseId thủ công)
@@ -749,7 +749,7 @@ public class LiquidationController extends HttpServlet {
                     detailDAO.insert(d);
                     
                     // Giữ lại serials mới
-                    serialNumberDAO.updateStatus(serialNumbers[i], "PENDING_LIQUIDATION");
+                    inventoryDAO.updateStatusBySerial(serialNumbers[i], InventoryDAO.STATUS_PENDING_LIQUIDATION);
                 }
             }
             

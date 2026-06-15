@@ -463,33 +463,113 @@ UNLOCK TABLES;
 
 --
 -- Table structure for table `inventory`
+-- (Moi serial = 1 dong, quan ly ton kho = quan ly serial)
 --
 
 DROP TABLE IF EXISTS `inventory`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `inventory` (
-  `inventory_id` int NOT NULL AUTO_INCREMENT,
-  `warehouse_id` int NOT NULL,
-  `generator_id` int NOT NULL,
-  `quantity` int NOT NULL DEFAULT '0',
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `inventory_id`  int NOT NULL AUTO_INCREMENT,
+  `serial_number` varchar(100) NOT NULL,
+  `generator_id`  int NOT NULL,
+  `warehouse_id`  int NOT NULL,
+  `status`        varchar(50) NOT NULL DEFAULT 'IN_STOCK' COMMENT 'IN_STOCK | SOLD | PENDING_LIQUIDATION | LIQUIDATED | IN_TRANSIT',
+  `created_at`    datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`    datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`inventory_id`),
-  UNIQUE KEY `uk_inventory_wh_gen` (`warehouse_id`,`generator_id`),
+  UNIQUE KEY `uk_inv_serial` (`serial_number`),
   KEY `idx_inv_warehouse` (`warehouse_id`),
   KEY `idx_inv_generator` (`generator_id`),
+  KEY `idx_inv_status` (`status`),
   CONSTRAINT `fk_inv_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_inv_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Dumping data for table `inventory`
+-- (Goop tu serial_number cu + them 52 serial IN_STOCK + 3 IN_TRANSIT)
 --
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
-INSERT INTO `inventory` VALUES (1,1,1,29,'2026-06-12 02:44:59'),(2,1,2,11,'2026-06-12 13:54:52'),(3,1,3,4,'2026-06-07 05:33:20'),(4,2,4,5,'2026-06-07 05:37:18'),(5,2,5,2,'2026-06-07 05:37:26'),(15,1,4,1,'2026-06-12 16:45:03'),(22,1,5,0,'2026-06-12 02:39:42');
+INSERT INTO `inventory` (`inventory_id`, `serial_number`, `generator_id`, `warehouse_id`, `status`, `created_at`, `updated_at`) VALUES
+  (1,  'SR3213232323',   4, 1, 'SOLD',                '2026-06-11 17:07:07', '2026-06-11 17:24:15'),
+  (2,  'SR2132323234',   2, 1, 'LIQUIDATED',          '2026-06-11 17:07:07', '2026-06-11 17:16:23'),
+  (3,  '232323232323',   4, 1, 'SOLD',                '2026-06-11 23:16:09', '2026-06-12 04:32:14'),
+  (4,  '232323232321',   1, 1, 'SOLD',                '2026-06-11 23:16:09', '2026-06-11 23:17:50'),
+  (5,  '213232323232323',2, 1, 'PENDING_LIQUIDATION', '2026-06-12 02:26:13', '2026-06-12 02:26:36'),
+  (6,  '232323232323232',5, 1, 'SOLD',                '2026-06-12 02:26:13', '2026-06-12 02:39:42'),
+  (7,  '12323232323',    1, 1, 'PENDING_LIQUIDATION', '2026-06-12 02:44:59', '2026-06-12 04:36:59'),
+  (8,  '23232321435',    4, 1, 'SOLD',                '2026-06-12 02:44:59', '2026-06-12 04:18:13'),
+  (9,  '2323232323',     1, 1, 'PENDING_LIQUIDATION', '2026-06-12 02:44:59', '2026-06-12 04:48:24'),
+  (10, '123456789',      4, 1, 'LIQUIDATED',          '2026-06-12 13:50:44', '2026-06-12 16:07:37'),
+  (11, '987654321',      2, 1, 'LIQUIDATED',          '2026-06-12 13:50:44', '2026-06-12 13:54:52'),
+  (12, '123232323',      4, 1, 'PENDING_LIQUIDATION', '2026-06-12 16:04:46', '2026-06-12 16:21:31'),
+  (13, '12324343535',    4, 1, 'LIQUIDATED',          '2026-06-12 16:41:32', '2026-06-12 16:45:03'),
+  -- Honda EG4500CX (gen 1) @ Kho Hà Nội (wh 1) - 29 IN_STOCK
+  (14, 'HON-EG4500CX-NH-001', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (15, 'HON-EG4500CX-NH-002', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (16, 'HON-EG4500CX-NH-003', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (17, 'HON-EG4500CX-NH-004', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (18, 'HON-EG4500CX-NH-005', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (19, 'HON-EG4500CX-NH-006', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (20, 'HON-EG4500CX-NH-007', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (21, 'HON-EG4500CX-NH-008', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (22, 'HON-EG4500CX-NH-009', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (23, 'HON-EG4500CX-NH-010', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (24, 'HON-EG4500CX-NH-011', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (25, 'HON-EG4500CX-NH-012', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (26, 'HON-EG4500CX-NH-013', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (27, 'HON-EG4500CX-NH-014', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (28, 'HON-EG4500CX-NH-015', 1, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (29, 'HON-EG4500CX-NH-016', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (30, 'HON-EG4500CX-NH-017', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (31, 'HON-EG4500CX-NH-018', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (32, 'HON-EG4500CX-NH-019', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (33, 'HON-EG4500CX-NH-020', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (34, 'HON-EG4500CX-NH-021', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (35, 'HON-EG4500CX-NH-022', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (36, 'HON-EG4500CX-NH-023', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (37, 'HON-EG4500CX-NH-024', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (38, 'HON-EG4500CX-NH-025', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (39, 'HON-EG4500CX-NH-026', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (40, 'HON-EG4500CX-NH-027', 1, 1, 'IN_STOCK', '2026-06-07 05:34:11', '2026-06-07 05:34:11'),
+  (41, 'HON-EG4500CX-NH-028', 1, 1, 'IN_STOCK', '2026-06-12 02:44:55', '2026-06-12 02:44:55'),
+  (42, 'HON-EG4500CX-NH-029', 1, 1, 'IN_STOCK', '2026-06-12 02:44:55', '2026-06-12 02:44:55'),
+  -- Yamaha EF6000 (gen 2) @ Kho Hà Nội (wh 1) - 11 IN_STOCK
+  (43, 'YAM-EF6000-NH-001', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (44, 'YAM-EF6000-NH-002', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (45, 'YAM-EF6000-NH-003', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (46, 'YAM-EF6000-NH-004', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (47, 'YAM-EF6000-NH-005', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (48, 'YAM-EF6000-NH-006', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (49, 'YAM-EF6000-NH-007', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (50, 'YAM-EF6000-NH-008', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (51, 'YAM-EF6000-NH-009', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (52, 'YAM-EF6000-NH-010', 2, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (53, 'YAM-EF6000-NH-011', 2, 1, 'IN_STOCK', '2026-06-12 13:54:52', '2026-06-12 13:54:52'),
+  -- Hyundai DHY8000 (gen 3) @ Kho Hà Nội (wh 1) - 4 IN_STOCK
+  (54, 'HYU-DHY8000-NH-001', 3, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (55, 'HYU-DHY8000-NH-002', 3, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (56, 'HYU-DHY8000-NH-003', 3, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (57, 'HYU-DHY8000-NH-004', 3, 1, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  -- Cummins C10D5 (gen 4) @ Kho HCM (wh 2) - 5 IN_STOCK
+  (58, 'CUM-C10D5-HCM-001', 4, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (59, 'CUM-C10D5-HCM-002', 4, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (60, 'CUM-C10D5-HCM-003', 4, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (61, 'CUM-C10D5-HCM-004', 4, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (62, 'CUM-C10D5-HCM-005', 4, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  -- Mitsubishi MGP-15 (gen 5) @ Kho HCM (wh 2) - 2 IN_STOCK
+  (63, 'MIT-MGP15-HCM-001', 5, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  (64, 'MIT-MGP15-HCM-002', 5, 2, 'IN_STOCK', '2026-05-20 08:00:00', '2026-05-20 08:00:00'),
+  -- Cummins C10D5 (gen 4) @ Kho Hà Nội (wh 1) - 1 IN_STOCK
+  (65, 'CUM-C10D5-NH-001', 4, 1, 'IN_STOCK', '2026-06-12 16:41:32', '2026-06-12 16:41:32'),
+  -- IN_TRANSIT (test chuyen kho)
+  (66, 'HON-EG4500CX-TR-001', 1, 1, 'IN_TRANSIT', '2026-06-13 09:00:00', '2026-06-13 09:00:00'),
+  (67, 'YAM-EF6000-TR-001',   2, 1, 'IN_TRANSIT', '2026-06-13 09:00:00', '2026-06-13 09:00:00'),
+  (68, 'CUM-C10D5-TR-001',    4, 2, 'IN_TRANSIT', '2026-06-13 09:00:00', '2026-06-13 09:00:00');
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -928,37 +1008,16 @@ UNLOCK TABLES;
 
 --
 -- Table structure for table `serial_number`
+-- (Da gop vao bang `inventory` - bo schema nay, giu lai comment de lich su)
+-- DROP TABLE IF EXISTS `serial_number`;
+-- Bang `serial_number` cu da duoc migrate vao `inventory`:
+--   13 ban ghi lich su (SOLD / LIQUIDATED / PENDING_LIQUIDATION) -> inventory_id 1..13
+--   Moi serial = 1 dong trong `inventory`
+-- Truy van thay the:
+--   SELECT * FROM inventory WHERE status = 'IN_STOCK';          -- lay serial dang ton kho
+--   SELECT * FROM inventory WHERE serial_number = 'xxx';        -- tim serial
+--   SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK';  -- tong ton theo (kho, may)
 --
-
-DROP TABLE IF EXISTS `serial_number`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `serial_number` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `generator_id` int NOT NULL,
-  `serial_number` varchar(100) NOT NULL,
-  `warehouse_id` int NOT NULL,
-  `status` varchar(50) NOT NULL DEFAULT 'IN_STOCK',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_serial_number` (`serial_number`),
-  KEY `fk_sn_generator` (`generator_id`),
-  KEY `fk_sn_warehouse` (`warehouse_id`),
-  CONSTRAINT `fk_sn_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
-  CONSTRAINT `fk_sn_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `serial_number`
---
-
-LOCK TABLES `serial_number` WRITE;
-/*!40000 ALTER TABLE `serial_number` DISABLE KEYS */;
-INSERT INTO `serial_number` VALUES (1,4,'SR3213232323',1,'SOLD','2026-06-11 17:07:07','2026-06-11 17:24:15'),(2,2,'SR2132323234',1,'LIQUIDATED','2026-06-11 17:07:07','2026-06-11 17:16:23'),(3,4,'232323232323',1,'SOLD','2026-06-11 23:16:09','2026-06-12 04:32:14'),(4,1,'232323232321',1,'SOLD','2026-06-11 23:16:09','2026-06-11 23:17:50'),(5,2,'213232323232323',1,'PENDING_LIQUIDATION','2026-06-12 02:26:13','2026-06-12 02:26:36'),(6,5,'232323232323232',1,'SOLD','2026-06-12 02:26:13','2026-06-12 02:39:42'),(7,1,'12323232323',1,'PENDING_LIQUIDATION','2026-06-12 02:44:59','2026-06-12 04:36:59'),(8,4,'23232321435',1,'SOLD','2026-06-12 02:44:59','2026-06-12 04:18:13'),(9,1,'2323232323',1,'PENDING_LIQUIDATION','2026-06-12 02:44:59','2026-06-12 04:48:24'),(10,4,'123456789',1,'LIQUIDATED','2026-06-12 13:50:44','2026-06-12 16:07:37'),(11,2,'987654321',1,'LIQUIDATED','2026-06-12 13:50:44','2026-06-12 13:54:52'),(12,4,'123232323',1,'PENDING_LIQUIDATION','2026-06-12 16:04:46','2026-06-12 16:21:31'),(13,4,'12324343535',1,'LIQUIDATED','2026-06-12 16:41:32','2026-06-12 16:45:03');
-/*!40000 ALTER TABLE `serial_number` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `stock_card`
@@ -972,7 +1031,7 @@ CREATE TABLE `stock_card` (
   `warehouse_id` int NOT NULL,
   `generator_id` int NOT NULL,
   `receipt_id` int DEFAULT NULL,
-  `transaction_type` enum('IMPORT','EXPORT','ADJUST') NOT NULL,
+  `transaction_type` enum('IMPORT','EXPORT','ADJUST','TRANSFER_OUT','TRANSFER_IN') NOT NULL,
   `quantity_change` int NOT NULL,
   `quantity_after` int NOT NULL,
   `reference_note` text,
