@@ -67,7 +67,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 permissions.add(key);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return permissions;
     }
@@ -96,7 +96,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         permissions.addAll(grants);
         permissions.removeAll(denies);
@@ -106,7 +106,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     //xem detail cua mot role cu the co nhung quyen j
     public List<Permission> getPermissionByRoleId(int roleId) throws SQLException {
         List<Permission> list = new ArrayList<>();
-        String sql = "select * from permission p join role_permission rp "
+        String sql = "select p.* from permission p join role_permission rp "
                 + "on p.id = rp.permission_id "
                 + "where rp.role_id = ?";
         try (Connection c = getConnection()) {
@@ -114,14 +114,10 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             p.setInt(1, roleId);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String resource = rs.getString("resource");
-                String action = rs.getString("action");
-                String desc = rs.getString("description");
-                list.add(new Permission(id, resource, action, desc));
+                list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -145,7 +141,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(value);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -163,7 +159,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             p.setString(4, type);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -177,7 +173,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             p.setInt(2, perId);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -218,20 +214,15 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     @Override
     public List<Permission> findAll() {
         List<Permission> list = new ArrayList<>();
-        String sql = "select * from permission order by resource, action";
+        String sql = "select * from permission order by module, feature_name, action";
         try (Connection c = getConnection()) {
             PreparedStatement p = c.prepareStatement(sql);
             ResultSet rs = p.executeQuery();
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String resource = rs.getString("resource");
-                String action = rs.getString("action");
-                String desc = rs.getString("description");
-
-                list.add(new Permission(id, resource, action, desc));
+                list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -257,7 +248,10 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             rs.getInt("id"),
             rs.getString("resource"),
             rs.getString("action"),
-            rs.getString("description")
+            rs.getString("description"),
+            rs.getString("module"),
+            rs.getString("feature_name"),
+            rs.getString("task_type")
          );
     }
 

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -9,10 +10,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/role/rbac-role-edit.css">
 </head>
 <body>
@@ -28,10 +30,26 @@
             </a>
             <div class="topbar-info">
                 <h1>${empty role ? 'Tạo vai trò mới' : 'Chỉnh sửa vai trò'}</h1>
-                <span class="crumb">/ <a href="#">Quản trị</a> / <a href="${pageContext.request.contextPath}/admin/roles">Phân quyền</a></span>
+                <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/dashboard">Quản trị</a> / <a href="${pageContext.request.contextPath}/admin/roles">Phân quyền</a></span>
             </div>
             <button type="submit" form="roleForm" class="btn btn-primary">Lưu thay đổi</button>
         </header>
+
+        <c:if test="${role.roleId > 0}">
+        <div class="tab-bar">
+            <a href="javascript:void(0)" id="tabInfoBtn" class="tab ${activeTab != 'history' ? 'active' : ''}" onclick="switchTab('info')">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Thông tin &amp; Quyền
+            </a>
+            <a href="javascript:void(0)" id="tabHistoryBtn" class="tab ${activeTab == 'history' ? 'active' : ''}" onclick="switchTab('history')">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Lịch sử
+                <c:if test="${histTotal > 0}"><span class="tab-badge">${histTotal}</span></c:if>
+            </a>
+        </div>
+        </c:if>
+
+        <div id="tab-info" class="tab-content ${activeTab == 'history' ? 'tab-hidden' : ''}">
 
         <form id="roleForm" action="${pageContext.request.contextPath}/admin/role/save" method="POST">
             <input type="hidden" name="id" value="${role.roleId}">
@@ -93,32 +111,38 @@
                             </div>
                             <div class="perm-table" id="permTable">
 
-                                <c:forEach var="entry" items="${groupedPerms}">
-                                    <div class="perm-row">
-                                        <div class="res-info">
-<!--                                            <div class="res-icon">Edit</div>-->
-                                            <div>
-                                                <div class="res-name">${entry.key}</div>
-                                            </div>
-                                        </div>
-
-                                        <c:forEach var="perm" items="${entry.value}">
-                                            <c:set var="isChecked" value="false" />
-                                            <c:forEach var="rPerm" items="${rolePermissions}">
-                                                <c:if test="${rPerm.permissionId == perm.permissionId}">
-                                                    <c:set var="isChecked" value="true" />
-                                                </c:if>
-                                            </c:forEach>
-
-                                            <div style="text-align: center;">
-                                                <span style="font-size: 10px; color: gray; display:block; margin-bottom:4px;">${perm.action}</span>
-                                                <label class="perm-toggle ${isChecked ? 'on' : ''}">
-                                                    <input type="checkbox" name="perIds" value="${perm.permissionId}" style="display:none;" ${isChecked ? 'checked' : ''}>
-                                                    <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
-                                                </label>
-                                            </div>
-                                        </c:forEach>
+                                <c:forEach var="moduleEntry" items="${groupedByModule}">
+                                    <div class="perm-module-header" style="margin:14px 0 6px; padding:6px 10px; background:#f3f6fb; border-left:3px solid var(--info); font-weight:600; color:#334; border-radius:4px;">
+                                        ${moduleEntry.key}
                                     </div>
+                                    <c:forEach var="featureEntry" items="${moduleEntry.value}">
+                                        <div class="perm-row">
+                                            <div class="res-info">
+                                                <div>
+                                                    <div class="res-name">${featureEntry.key}</div>
+                                                </div>
+                                            </div>
+
+                                            <c:forEach var="perm" items="${featureEntry.value}">
+                                                <c:set var="isChecked" value="false" />
+                                                <c:forEach var="rPerm" items="${rolePermissions}">
+                                                    <c:if test="${rPerm.permissionId == perm.permissionId}">
+                                                        <c:set var="isChecked" value="true" />
+                                                    </c:if>
+                                                </c:forEach>
+
+                                                <div style="text-align: center;">
+                                                    <span style="font-size: 10px; color: gray; display:block; margin-bottom:4px;" title="${perm.description}">
+                                                        <c:out value="${empty perm.taskType ? perm.action : perm.taskType}" />
+                                                    </span>
+                                                    <label class="perm-toggle ${isChecked ? 'on' : ''}">
+                                                        <input type="checkbox" name="perIds" value="${perm.permissionId}" style="display:none;" ${isChecked ? 'checked' : ''}>
+                                                        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+                                                    </label>
+                                                </div>
+                                            </c:forEach>
+                                        </div>
+                                    </c:forEach>
                                 </c:forEach>
 
                             </div>
@@ -136,9 +160,148 @@
             </main>
 
         </form>
+        </div>
+
+        <c:if test="${role.roleId > 0}">
+        <div id="tab-history" class="tab-content ${activeTab == 'history' ? '' : 'tab-hidden'}">
+            <div class="table-card history-card" style="margin: 20px 24px;">
+                <form method="get" action="${pageContext.request.contextPath}/admin/role/edit" class="history-filter-bar" style="display:flex; gap:12px; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border); background:var(--surface);">
+                    <input type="hidden" name="id" value="${role.roleId}"/>
+                    <input type="hidden" name="activeTab" value="history"/>
+                    <input type="hidden" name="histPage" value="1"/>
+
+                    <div class="search-input hf-search" style="position:relative; display:flex; align-items:center; flex:1;">
+                        <svg viewBox="0 0 24 24" style="position:absolute; left:12px; width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input name="histSearch" value="${histSearch}" placeholder="Tìm người dùng..." autocomplete="off" style="width:100%; padding:8px 12px 8px 36px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none;"/>
+                    </div>
+                    <select name="histAction" class="filter-select" style="padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; background:var(--surface);">
+                        <option value="" ${empty histAction ? 'selected' : ''}>Tất cả hành động</option>
+                        <option value="CREATE_ROLE" ${histAction == 'CREATE_ROLE' ? 'selected' : ''}>Tạo vai trò</option>
+                        <option value="UPDATE_ROLE" ${histAction == 'UPDATE_ROLE' ? 'selected' : ''}>Cập nhật</option>
+                        <option value="DEACTIVATE_ROLE" ${histAction == 'DEACTIVATE_ROLE' ? 'selected' : ''}>Khóa vai trò</option>
+                        <option value="UPDATE_PERMISSIONS" ${histAction == 'UPDATE_PERMISSIONS' ? 'selected' : ''}>Sửa quyền</option>
+                    </select>
+                    <div class="date-range" style="display:flex; align-items:center; gap:8px;">
+                        <label class="date-label" style="font-size:13px; color:var(--muted);">Từ</label>
+                        <input type="date" name="histDateFrom" value="${histDateFrom}" class="date-input" style="padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none;"/>
+                        <label class="date-label" style="font-size:13px; color:var(--muted);">đến</label>
+                        <input type="date" name="histDateTo"   value="${histDateTo}"   class="date-input" style="padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none;"/>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding:8px 16px;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; margin-right:6px;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        Lọc
+                    </button>
+                    <c:if test="${not empty histSearch or not empty histAction or not empty histDateFrom or not empty histDateTo}">
+                        <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history" class="btn" style="padding:8px 16px;">
+                            <svg class="icon" viewBox="0 0 24 24" style="width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; margin-right:6px;"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            Xóa lọc
+                        </a>
+                    </c:if>
+                </form>
+
+                <div class="result-summary" style="padding:12px 20px; font-size:13px; color:var(--muted); border-bottom:1px solid var(--border);">
+                    Tìm thấy <strong>${histTotal}</strong> bản ghi
+                    <c:if test="${not empty histSearch or not empty histAction or not empty histDateFrom or not empty histDateTo}">
+                        &nbsp;—&nbsp;<span class="filter-active-badge" style="color:var(--brand-color); font-weight:500;">Bộ lọc đang hoạt động</span>
+                    </c:if>
+                </div>
+
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th style="width:155px;">Thời gian</th>
+                            <th style="width:155px;">Người thực hiện</th>
+                            <th style="width:160px;">Hành động</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <c:choose>
+                        <c:when test="${empty roleHistory}">
+                            <tr><td colspan="4" style="text-align:center;padding:48px;color:var(--muted);">Chưa có lịch sử nào</td></tr>
+                        </c:when>
+                        <c:otherwise>
+                            <c:forEach var="hlog" items="${roleHistory}">
+                            <tr>
+                                <td style="color:var(--muted);font-size:12.5px;">
+                                    <fmt:formatDate value="${hlog.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/>
+                                </td>
+                                <td style="font-weight:600;">${hlog.username}</td>
+                                <td>
+                                    <c:choose>
+                                        <c:when test="${hlog.action == 'CREATE_ROLE'}">
+                                            <span class="action-badge action-create">Tạo vai trò</span>
+                                        </c:when>
+                                        <c:when test="${hlog.action == 'UPDATE_ROLE'}">
+                                            <span class="action-badge action-update">Cập nhật</span>
+                                        </c:when>
+                                        <c:when test="${hlog.action == 'DEACTIVATE_ROLE'}">
+                                            <span class="action-badge action-delete">Khóa vai trò</span>
+                                        </c:when>
+                                        <c:when test="${hlog.action == 'UPDATE_PERMISSIONS'}">
+                                            <span class="action-badge action-export">Sửa quyền</span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="action-badge action-default">${hlog.action}</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </td>
+                                <td style="color:var(--muted);">${hlog.details}</td>
+                            </tr>
+                            </c:forEach>
+                        </c:otherwise>
+                    </c:choose>
+                    </tbody>
+                </table>
+
+                <c:if test="${histTotalPages > 1}">
+                <div class="pagination">
+                    <div class="info">Hiển thị <strong>${(histPage-1)*10 + 1}</strong>–<strong>${histPage*10 > histTotal ? histTotal : histPage*10}</strong> / <strong>${histTotal}</strong> bản ghi</div>
+                    <div class="controls">
+                        <c:if test="${histPage > 1}">
+                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage - 1}<c:if test="${not empty histSearch}">&amp;histSearch=<c:out value="${histSearch}"/></c:if><c:if test="${not empty histAction}">&amp;histAction=${histAction}</c:if><c:if test="${not empty histDateFrom}">&amp;histDateFrom=${histDateFrom}</c:if><c:if test="${not empty histDateTo}">&amp;histDateTo=${histDateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${histTotalPages}" var="hp">
+                            <c:choose>
+                                <c:when test="${hp == histPage}">
+                                    <span class="page-btn active">${hp}</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${hp}<c:if test="${not empty histSearch}">&amp;histSearch=<c:out value="${histSearch}"/></c:if><c:if test="${not empty histAction}">&amp;histAction=${histAction}</c:if><c:if test="${not empty histDateFrom}">&amp;histDateFrom=${histDateFrom}</c:if><c:if test="${not empty histDateTo}">&amp;histDateTo=${histDateTo}</c:if>" class="page-btn">${hp}</a>
+                                </c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                        <c:if test="${histPage < histTotalPages}">
+                            <a href="${pageContext.request.contextPath}/admin/role/edit?id=${role.roleId}&amp;activeTab=history&amp;histPage=${histPage + 1}<c:if test="${not empty histSearch}">&amp;histSearch=<c:out value="${histSearch}"/></c:if><c:if test="${not empty histAction}">&amp;histAction=${histAction}</c:if><c:if test="${not empty histDateFrom}">&amp;histDateFrom=${histDateFrom}</c:if><c:if test="${not empty histDateTo}">&amp;histDateTo=${histDateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                        </c:if>
+                    </div>
+                </div>
+                </c:if>
+            </div>
+        </div>
+        </c:if>
     </div>
 </div>
 
+<script>
+function switchTab(tab) {
+    var infoEl  = document.getElementById('tab-info');
+    var histEl  = document.getElementById('tab-history');
+    var btnInfo = document.getElementById('tabInfoBtn');
+    var btnHist = document.getElementById('tabHistoryBtn');
+    if (tab === 'history') {
+        if (infoEl)  infoEl.classList.add('tab-hidden');
+        if (histEl)  histEl.classList.remove('tab-hidden');
+        if (btnInfo) btnInfo.classList.remove('active');
+        if (btnHist) btnHist.classList.add('active');
+    } else {
+        if (infoEl)  infoEl.classList.remove('tab-hidden');
+        if (histEl)  histEl.classList.add('tab-hidden');
+        if (btnInfo) btnInfo.classList.add('active');
+        if (btnHist) btnHist.classList.remove('active');
+    }
+}
+</script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/role/rbac-role-edit.js"></script>

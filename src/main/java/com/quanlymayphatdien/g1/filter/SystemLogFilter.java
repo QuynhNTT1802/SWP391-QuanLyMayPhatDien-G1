@@ -20,8 +20,8 @@ public class SystemLogFilter implements Filter {
             throws IOException, ServletException {
         try {
             chain.doFilter(request, response);
-        } catch (Exception e) {
-            // Xác định URI request để biết lỗi xảy ra ở đâu
+        } catch (Throwable e) {
+            // X�c ??nh URI request ?? bi?t l?i x?y ra ? ?�u
             String source = "Unknown";
             if (request instanceof HttpServletRequest) {
                 String uri = ((HttpServletRequest) request).getRequestURI();
@@ -30,10 +30,14 @@ public class SystemLogFilter implements Filter {
             }
 
             String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
-            SystemLogger.error("hệ thống", source, message, e);
+            SystemLogger.error("h? th?ng", source, message, e);
 
-            // Re-throw để server tiếp tục xử lý (hiển thị trang lỗi 500)
-            throw e;
+            // Re-throw ?? server ti?p t?c x? l� (hi?n th? trang l?i 500)
+            if (e instanceof IOException) throw (IOException) e;
+            if (e instanceof ServletException) throw (ServletException) e;
+            if (e instanceof RuntimeException) throw (RuntimeException) e;
+            if (e instanceof Error) throw (Error) e;
+            throw new ServletException(e);
         }
     }
 }

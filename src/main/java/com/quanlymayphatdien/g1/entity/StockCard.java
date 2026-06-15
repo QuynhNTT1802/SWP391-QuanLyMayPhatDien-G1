@@ -30,6 +30,7 @@ public class StockCard {
     private String generatorModel;
     private String receiptCode;
     private String createdByName;
+    private String serialList;
 
     public StockCard() {
     }
@@ -151,5 +152,13 @@ public class StockCard {
 
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
+    }
+
+    public String getSerialList() {
+        return serialList;
+    }
+
+    public void setSerialList(String serialList) {
+        this.serialList = serialList;
     }
 }

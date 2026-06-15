@@ -25,7 +25,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -33,14 +33,14 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     @Override
     public boolean update(Admin t) {
         String updateUser = "UPDATE user SET name=?, username=?, password=?, email=?, phone=?, address=?, status=?, updated_by=? WHERE id=?";
-        // Nên dùng transaction để đảm bảo toàn vẹn dữ liệu
+        // N�n d�ng transaction ?? ??m b?o to�n v?n d? li?u
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement psUser = conn.prepareStatement(updateUser)) {
                 // Update user
                 psUser.setString(1, t.getName());
                 psUser.setString(2, t.getUsername());
-                psUser.setString(3, t.getPassword());  // Nên hash
+                psUser.setString(3, t.getPassword());  // N�n hash
                 psUser.setString(4, t.getEmail());
                 psUser.setString(5, t.getPhone());
                 psUser.setString(6, t.getAddress());
@@ -55,20 +55,20 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
 
     @Override
     public boolean delete(Admin t) {
-        // Xóa admin trước vì khóa ngoại, sau đó xóa user
+        // X�a admin tr??c v� kh�a ngo?i, sau ?� x�a user
         String deleteAdmin = "DELETE FROM admin WHERE admin_id=?";
         String deleteUser = "DELETE FROM user WHERE id=?";
         try (Connection conn = getConnection()) {
@@ -86,20 +86,20 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
 
     @Override
     public int insert(Admin t) {
-        // Insert user trước, lấy ID, rồi insert admin
+        // Insert user tr??c, l?y ID, r?i insert admin
         String insertUser = "INSERT INTO user (name, username, password, email, phone, address, status, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         String insertAdmin = "INSERT INTO admin (admin_id, department, last_login) VALUES (?, ?, ?)";
         try (Connection conn = getConnection()) {
@@ -131,7 +131,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 if (rs.next()) {
                     generatedId = rs.getInt(1);
                 } else {
-                    throw new SQLException("Không lấy được ID sau khi insert user.");
+                    throw new SQLException("Kh�ng l?y ???c ID sau khi insert user.");
                 }
 
                 // Insert admin
@@ -148,20 +148,20 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return generatedId;
             } catch (SQLException e) {
                 conn.rollback();
-                e.printStackTrace();
+                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
                 return -1;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return -1;
         }
     }
 
     @Override
     public Admin getFromResultSet(ResultSet rs) throws SQLException {
-        // Các cột từ user
+        // C�c c?t t? user
         int id = rs.getInt("id");
         String name = rs.getString("name");
         String username = rs.getString("username");
@@ -179,7 +179,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
         Integer createdBy = rs.getObject("created_by") != null ? rs.getInt("created_by") : null;
         Integer updatedBy = rs.getObject("updated_by") != null ? rs.getInt("updated_by") : null;
 
-        // Các cột từ admin
+        // C�c c?t t? admin
         String department = rs.getString("department");
         LocalDateTime lastLogin = rs.getTimestamp("last_login") != null
                 ? rs.getTimestamp("last_login").toLocalDateTime() : null;
@@ -198,7 +198,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                          department, lastLogin);
     }
 
-    // Tiện ích: tìm Admin theo ID
+    // Ti?n �ch: t�m Admin theo ID
     public Admin findById(int id) {
         String sql = "SELECT u.id, u.name, u.username, u.password, u.email, u.phone, u.address, u.status, " +
                      "u.created_at, u.updated_at, u.created_by, u.updated_by, " +
@@ -213,7 +213,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return getFromResultSet(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return null;
     }

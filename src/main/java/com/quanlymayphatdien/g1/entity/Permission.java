@@ -13,6 +13,9 @@ public class Permission {
     private String resource;
     private String action;
     private String description;
+    private String module;
+    private String featureName;
+    private String taskType;
 
     public Permission() {
     }
@@ -22,6 +25,17 @@ public class Permission {
         this.resource = resource;
         this.action = action;
         this.description = description;
+    }
+
+    public Permission(int permissionId, String resource, String action, String description,
+                      String module, String featureName, String taskType) {
+        this.permissionId = permissionId;
+        this.resource = resource;
+        this.action = action;
+        this.description = description;
+        this.module = module;
+        this.featureName = featureName;
+        this.taskType = taskType;
     }
 
     public int getPermissionId() {
@@ -55,5 +69,32 @@ public class Permission {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
+
+    public String getFeatureName() {
+        return featureName;
+    }
+
+    public void setFeatureName(String featureName) {
+        this.featureName = featureName;
+    }
+
+    public String getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(String taskType) {
+        this.taskType = taskType;
+    }
+
+    public String getCode() {
+        return resource + "." + action;
+    }
 }

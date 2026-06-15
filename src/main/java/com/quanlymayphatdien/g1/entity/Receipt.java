@@ -37,6 +37,18 @@ public class Receipt {
     private String reasonName;
     private BigDecimal totalAmount;
     private List<ReceiptDetail> details;
+    
+    // Additional fields for displaying references
+    private String liquidationCode;
+    private Integer liquidationId;
+
+    public Integer getLiquidationId() {
+        return liquidationId;
+    }
+
+    public void setLiquidationId(Integer liquidationId) {
+        this.liquidationId = liquidationId;
+    }
 
     public Integer getApprovedBy() {
         return approvedBy;
@@ -215,6 +227,14 @@ public class Receipt {
 
     public void setReasonName(String reasonName) {
         this.reasonName = reasonName;
+    }
+
+    public String getLiquidationCode() {
+        return liquidationCode;
+    }
+
+    public void setLiquidationCode(String liquidationCode) {
+        this.liquidationCode = liquidationCode;
     }
 
 }

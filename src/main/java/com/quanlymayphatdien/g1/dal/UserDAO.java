@@ -455,5 +455,63 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         }
     }
+    public List<User> findUsersByPermission(String resource, String action) {
+        List<User> list = new ArrayList<>();
+        String sql =
+            "SELECT DISTINCT u.* FROM user u "
+          + "WHERE u.status = 'active' AND ( "
+          + "  EXISTS ( "
+          + "    SELECT 1 FROM user_role ur "
+          + "    JOIN role r ON r.id = ur.role_id AND r.status = 'active' "
+          + "    JOIN role_permission rp ON rp.role_id = ur.role_id "
+          + "    JOIN permission p ON p.id = rp.permission_id "
+          + "    WHERE ur.user_id = u.id AND p.resource = ? AND p.action = ? "
+          + "  ) "
+          + "  OR EXISTS ( "
+          + "    SELECT 1 FROM user_permission up "
+          + "    JOIN permission p ON p.id = up.permission_id "
+          + "    WHERE up.user_id = u.id AND up.type = 'GRANT' "
+          + "    AND p.resource = ? AND p.action = ? "
+          + "  ) "
+          + ") AND NOT EXISTS ( "
+          + "  SELECT 1 FROM user_permission up2 "
+          + "  JOIN permission p2 ON p2.id = up2.permission_id "
+          + "  WHERE up2.user_id = u.id AND up2.type = 'DENY' "
+          + "  AND p2.resource = ? AND p2.action = ? "
+          + ")";
+        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+            p.setString(1, resource);
+            p.setString(2, action);
+            p.setString(3, resource);
+            p.setString(4, action);
+            p.setString(5, resource);
+            p.setString(6, action);
+            try (ResultSet rs = p.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("findUsersByPermission error: " + e.getMessage());
+        }
+        return list;
+    }
+    public List<Integer> getUserIdsByRoleId(int roleId) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
+        try {
+            Connection c = getConnection();
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("user_id"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+
 
 }
