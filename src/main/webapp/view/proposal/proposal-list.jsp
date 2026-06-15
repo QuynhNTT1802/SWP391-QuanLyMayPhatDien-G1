@@ -64,6 +64,11 @@
             .col-actions {
                 white-space: nowrap;
             }
+            .col-check { width: 36px; text-align: center; }
+            .row-check { cursor: pointer; }
+            .row-check:disabled { cursor: not-allowed; opacity: 0.4; }
+            #groupBtn { display: none; }
+            #groupBtn.show { display: inline-flex; }
         </style>
     </head>
     <body>
@@ -84,6 +89,12 @@
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                 Tạo phiếu đề xuất
                             </a>
+                        </c:if>
+                        <c:if test="${canCreatePo}">
+                            <button type="button" id="groupBtn" class="btn btn-primary" onclick="document.getElementById('reviewForm').submit();">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+                                Gom và Tổng hợp (<span id="tickedCount">0</span>)
+                            </button>
                         </c:if>
                     </div>
                 </header>
@@ -122,6 +133,13 @@
                             <input name="search" value="<c:out value="${search}"/>" placeholder="Tìm theo mã phiếu hoặc ghi chú" autocomplete="off" />
                         </div>
 
+                        <select class="filter-select" name="period" onchange="this.form.submit()">
+                            <option value="">Kỳ: Tất cả</option>
+                            <c:forEach var="p" items="${periods}">
+                                <option value="${p}" <c:if test="${p == periodFilter}">selected</c:if>>${p}</option>
+                            </c:forEach>
+                        </select>
+
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
                             <c:if test="${!canApproveProposal}">
@@ -142,12 +160,17 @@
                     </form>
 
                     <div class="table-card">
+                        <form id="reviewForm" method="post" action="${pageContext.request.contextPath}/purchase-order?action=reviewCreate">
                         <table class="users" id="proposalsTable">
                             <thead>
                                 <tr>
+                                    <c:if test="${canCreatePo}">
+                                        <th class="col-check"><input type="checkbox" id="selectAll" title="Chọn tất cả"/></th>
+                                    </c:if>
                                     <th>Mã phiếu</th>
                                     <th>Người tạo</th>
                                     <th>Ngày tạo</th>
+                                    <th>Kỳ</th>
                                     <th>Kho</th>
                                     <th>Phiếu mua</th>
                                     <th class="col-status">Trạng thái</th>
@@ -157,11 +180,17 @@
                             <tbody id="proposalsBody">
                                 <c:choose>
                                     <c:when test="${empty proposals}">
-                                        <tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu đề xuất nào.</td></tr>
+                                        <tr><td colspan="${canCreatePo ? 9 : 8}" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu đề xuất nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="p" items="${proposals}" varStatus="loop">
                                             <tr data-id="${p.proposalId}">
+                                                <c:if test="${canCreatePo}">
+                                                    <td class="col-check">
+                                                        <c:set var="canTick" value="${p.status == 'PENDING' && empty p.poCode}"/>
+                                                        <input type="checkbox" class="row-check" name="proposalIds" value="${p.proposalId}" data-period="${p.period}" data-warehouse="${p.warehouseId}" <c:if test="${!canTick}">disabled</c:if>/>
+                                                    </td>
+                                                </c:if>
                                                 <td>
                                                     <div class="order-code"><c:out value="${p.proposalCode}"/></div>
                                                 </td>
@@ -172,6 +201,7 @@
                                                         <c:otherwise>${p.proposalDate.format(propFmt)}</c:otherwise>
                                                     </c:choose>
                                                 </td>
+                                                <td><strong><c:out value="${p.period}"/></strong></td>
                                                 <td><c:out value="${p.warehouseName}"/></td>
                                                 <td>
                                                     <c:choose>
@@ -205,20 +235,21 @@
                                 </c:choose>
                             </tbody>
                         </table>
+                        </form>
                         <div class="pagination">
                             <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalProposals ? totalProposals : currentPage * 10}</strong> / <strong>${totalProposals}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">‹</a>
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty periodFilter}">&period=<c:out value="${periodFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty periodFilter}">&period=<c:out value="${periodFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">›</a>
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty periodFilter}">&period=<c:out value="${periodFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>
@@ -241,6 +272,68 @@
                     } else {
                         alert(window.SESSION_DATA.message);
                     }
+                }
+
+                const selectAll = document.getElementById('selectAll');
+                const rowChecks = document.querySelectorAll('.row-check:not(:disabled)');
+                const groupBtn = document.getElementById('groupBtn');
+                const tickedCountEl = document.getElementById('tickedCount');
+                const reviewForm = document.getElementById('reviewForm');
+
+                function updateCount() {
+                    const ticked = document.querySelectorAll('.row-check:checked').length;
+                    tickedCountEl.textContent = ticked;
+                    if (groupBtn) {
+                        if (ticked > 0) {
+                            groupBtn.classList.add('show');
+                        } else {
+                            groupBtn.classList.remove('show');
+                        }
+                    }
+                    if (selectAll) {
+                        const enabledCount = rowChecks.length;
+                        selectAll.checked = enabledCount > 0 && ticked === enabledCount;
+                        selectAll.indeterminate = ticked > 0 && ticked < enabledCount;
+                    }
+                }
+
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        rowChecks.forEach(function (cb) {
+                            cb.checked = selectAll.checked;
+                        });
+                        updateCount();
+                    });
+                }
+
+                rowChecks.forEach(function (cb) {
+                    cb.addEventListener('change', updateCount);
+                });
+
+                if (reviewForm) {
+                    reviewForm.addEventListener('submit', function (e) {
+                        const ticked = document.querySelectorAll('.row-check:checked');
+                        if (ticked.length === 0) {
+                            e.preventDefault();
+                            alert('Vui lòng chọn ít nhất 1 phiếu đề xuất');
+                            return;
+                        }
+                        const firstPeriod = ticked[0].getAttribute('data-period');
+                        const firstWarehouse = ticked[0].getAttribute('data-warehouse');
+                        const firstLabel = ticked[0].closest('tr').querySelector('.order-code').textContent.trim();
+                        for (let i = 1; i < ticked.length; i++) {
+                            const p = ticked[i].getAttribute('data-period');
+                            const w = ticked[i].getAttribute('data-warehouse');
+                            if (p !== firstPeriod || w !== firstWarehouse) {
+                                e.preventDefault();
+                                const lbl = ticked[i].closest('tr').querySelector('.order-code').textContent.trim();
+                                alert('Không thể gom các phiếu khác kỳ hoặc khác kho.\n\n'
+                                        + 'Phiếu gốc: ' + firstLabel + ' (kỳ ' + firstPeriod + ')\n'
+                                        + 'Phiếu khác: ' + lbl + ' (kỳ ' + p + ')');
+                                return;
+                            }
+                        }
+                    });
                 }
             });
         </script>

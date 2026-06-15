@@ -2,6 +2,7 @@ package com.quanlymayphatdien.g1.utils;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,19 @@ public class PeriodUtils {
             d = d.minusMonths(3);
         }
         return list;
+    }
+
+    public static long daysUntilEnd(String period) {
+        if (period == null || period.isEmpty()) {
+            return -1;
+        }
+        LocalDate end = endOf(period);
+        return ChronoUnit.DAYS.between(LocalDate.now(), end);
+    }
+
+    public static boolean isNearDeadline(String period, int thresholdDays) {
+        long daysLeft = daysUntilEnd(period);
+        return daysLeft >= 0 && daysLeft <= thresholdDays;
     }
 }
 

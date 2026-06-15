@@ -10,6 +10,7 @@ import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
+import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import jakarta.servlet.ServletException;
@@ -152,6 +153,7 @@ public class ProposalController extends HttpServlet {
 
         String statusFilter = request.getParameter("status");
         String search = request.getParameter("search");
+        String periodFilter = request.getParameter("period");
 
         int page = 1;
         int pageSize = 10;
@@ -174,7 +176,7 @@ public class ProposalController extends HttpServlet {
         }
 
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, periodFilter);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -183,7 +185,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, periodFilter, page, pageSize);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("totalProposals", total);
@@ -192,16 +194,19 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("search", search);
         request.setAttribute("poFilter", poFilter);
+        request.setAttribute("periodFilter", periodFilter);
+        request.setAttribute("periods", PeriodUtils.recentQuarters(4));
 
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
+        request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
         request.setAttribute("canApproveProposal", canApprove);
         request.setAttribute("userPermissions", perms);
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft));
-        request.setAttribute("draftCount",     canApprove ? 0 : dao.countByStatus(GlobalUtils.STATUS_DRAFT, loggedUser.getId(), false));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft, periodFilter));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft, periodFilter));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft, periodFilter));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft, periodFilter));
+        request.setAttribute("draftCount",     canApprove ? 0 : dao.countByStatus(GlobalUtils.STATUS_DRAFT, loggedUser.getId(), false, periodFilter));
 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }

@@ -16,6 +16,14 @@
         <servlet-name>ProposalController</servlet-name>
         <url-pattern>/proposal</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>PurchaseOrderController</servlet-name>
+        <servlet-class>com.quanlymayphatdien.g1.controller.proposal.PurchaseOrderController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PurchaseOrderController</servlet-name>
+        <url-pattern>/purchase-order</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>
             30
