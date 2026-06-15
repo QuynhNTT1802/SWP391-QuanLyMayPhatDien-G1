@@ -113,6 +113,13 @@
         </a>
     </c:if>
 
+    <c:if test="${not empty perms and perms.contains('transfers.view')}">
+        <a href="${pageContext.request.contextPath}/transfers" class="${activePage == 'transfer-list' or activePage == 'transfer-detail' or activePage == 'transfer-create' or activePage == 'transfer-edit' ? 'active' : ''}">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            Luân chuyển kho
+        </a>
+    </c:if>
+
 
     <div class="nav-section">Quản trị</div>
 

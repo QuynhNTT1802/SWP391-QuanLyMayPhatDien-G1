@@ -21,14 +21,15 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
 
     public List<Warehouse> findWithSearch(String search, int page, int pageSize) {
         List<Warehouse> list = new ArrayList<>();
-        String base = "SELECT w.*, COALESCE(SUM(i.quantity), 0) AS total_inventory, COUNT(i.inventory_id) AS item_count "
-                + "FROM warehouse w "
-                + "LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id ";
+        String base = "SELECT w.*, "
+                + "  COALESCE((SELECT COUNT(*) FROM inventory i WHERE i.warehouse_id = w.warehouse_id AND i.status = 'IN_STOCK'), 0) AS total_inventory, "
+                + "  (SELECT COUNT(DISTINCT i.generator_id) FROM inventory i WHERE i.warehouse_id = w.warehouse_id AND i.status = 'IN_STOCK') AS item_count "
+                + "FROM warehouse w ";
         String where = "";
         if (search != null && !search.trim().isEmpty()) {
             where = "WHERE w.name LIKE ? OR w.address LIKE ? ";
         }
-        String sql = base + where + "GROUP BY w.warehouse_id ORDER BY w.status, w.name LIMIT ? OFFSET ?";
+        String sql = base + where + "ORDER BY w.status, w.name LIMIT ? OFFSET ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             int idx = 1;
             if (search != null && !search.trim().isEmpty()) {
@@ -68,15 +69,14 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
         }
         return 0;
     }
-
     @Override
     public List<Warehouse> findAll() {
         List<Warehouse> list = new ArrayList<>();
-        String sql = "SELECT w.*, COALESCE(SUM(i.quantity), 0) AS total_inventory "
+        String sql = "SELECT w.*, "
+                + "  COALESCE((SELECT COUNT(*) FROM inventory i WHERE i.warehouse_id = w.warehouse_id AND i.status = 'IN_STOCK'), 0) AS total_inventory "
                 + "FROM warehouse w "
-                + "LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id "
                 + "WHERE w.status = 'active' "
-                + "GROUP BY w.warehouse_id ";
+                + "ORDER BY w.warehouse_id";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(getFromResultSet(rs));
@@ -88,12 +88,12 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
     }
 
     public Warehouse findById(int id) {
-        String sql = "SELECT w.*, COALESCE(SUM(i.quantity), 0) AS total_inventory "
+        String sql = "SELECT w.*, "
+                + "  COALESCE((SELECT COUNT(*) FROM inventory i WHERE i.warehouse_id = w.warehouse_id AND i.status = 'IN_STOCK'), 0) AS total_inventory "
                 + "FROM warehouse w "
-                + "LEFT JOIN inventory i ON w.warehouse_id = i.warehouse_id "
-                + "WHERE w.warehouse_id = ? "
-                + "GROUP BY w.warehouse_id ";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+                + "WHERE w.warehouse_id = ?";
+        try (Connection c = getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {

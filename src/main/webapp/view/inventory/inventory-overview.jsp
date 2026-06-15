@@ -1,6 +1,17 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@page import="com.quanlymayphatdien.g1.dal.InventoryDAO"%>
+<%@page import="com.quanlymayphatdien.g1.dal.GeneratorDAO"%>
+<%@page import="com.quanlymayphatdien.g1.entity.Generator"%>
+<%@page import="java.util.List"%>
+<%@page import="java.util.Map"%>
+<%
+    InventoryDAO invDAO = new InventoryDAO();
+    GeneratorDAO gDAO = new GeneratorDAO();
+    List<Generator> allGens = gDAO.findAllActive();
+    request.setAttribute("allGens", allGens);
+%>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -41,7 +52,7 @@
                 <div class="left">
                     <div class="eyebrow">Kho · Tồn kho</div>
                     <h2 class="page-title">Tồn kho hiện tại</h2>
-                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện đang được lưu trữ tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
+                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện đang IN_STOCK tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
                 </div>
             </div>
 
@@ -50,7 +61,7 @@
                     <div class="kpi-icon">
                         <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
                     </div>
-                    <div class="kpi-title">Tổng tồn kho</div>
+                    <div class="kpi-title">Tổng IN_STOCK</div>
                     <div class="kpi-value"><fmt:formatNumber value="${kpiTotalQty}"/></div>
                 </div>
                 <div class="kpi-card kpi-active">
@@ -79,8 +90,8 @@
                         <tr>
                             <th style="width:60px;text-align:center;font-family:var(--font-mono);">ID</th>
                             <th>Tên kho</th>
+                            <th style="width:160px;text-align:right;">Số serial</th>
                             <th style="width:160px;text-align:right;">Số mặt hàng</th>
-                            <th style="width:160px;text-align:right;">Tổng tồn</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,7 +100,7 @@
                                 <tr><td colspan="4">
                                     <div class="empty-state">
                                         <div class="icon-wrap">
-                                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                         </div>
                                         <strong>Chưa có kho nào</strong>
                                     </div>
@@ -111,7 +122,14 @@
                                             </span>
                                         </td>
                                         <td style="text-align:right;font-family:var(--font-mono);font-weight:700;color:var(--muted);">
-                                            <fmt:formatNumber value="${warehouseQtySum[w.warehouseId] != null ? warehouseQtySum[w.warehouseId] : 0}"/>
+                                            <c:set var="whItems" value="0"/>
+                                            <c:forEach var="g" items="${allGens}">
+                                                <c:set var="key" value="${w.warehouseId}_${g.id}"/>
+                                                <c:if test="${warehouseItemsByWhGen[key] != null}">
+                                                    <c:set var="whItems" value="${whItems + 1}"/>
+                                                </c:if>
+                                            </c:forEach>
+                                            <fmt:formatNumber value="${whItems}"/>
                                         </td>
                                     </tr>
                                 </c:forEach>

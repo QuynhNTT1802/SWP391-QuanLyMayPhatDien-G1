@@ -825,7 +825,12 @@ td.col-actions, th.col-actions {
 
 .row-actions {
     display: inline-flex;
-    gap: 2px;
+    gap: 4px;
+    opacity: 1;
+    transition: opacity .15s ease;
+}
+tbody tr:hover .row-actions {
+    opacity: 1;
 }
 .row-actions .icon-mini {
     width: 26px;
@@ -849,12 +854,13 @@ td.col-actions, th.col-actions {
     border-color: color-mix(in srgb, var(--danger) 30%, transparent);
     background: var(--danger-soft);
 }
-.row-actions svg {
+.row-actions .icon-mini svg {
     width: 14px;
     height: 14px;
     stroke: currentColor;
     fill: none;
     stroke-width: 1.8;
+    pointer-events: none;
 }
 
 .pagination {

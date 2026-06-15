@@ -43,13 +43,14 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
+
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     list.add(getFromResultSet(rs));
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -183,7 +184,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -223,25 +224,20 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return 0;
     }
 
     public List<SaleOrder> findAll() {
         List<SaleOrder> list = new ArrayList<>();
-        String sql = "SELECT so.*, c.name AS customer_name, c.phone AS customer_phone, "
-                + "c.email AS customer_email, c.address AS customer_address, "
-                + "c.company_name AS customer_company_name "
-                + "FROM sale_order so "
-                + "LEFT JOIN customer c ON so.customer_id = c.id "
-                + "ORDER BY so.created_at DESC";
+        String sql = "SELECT * FROM sale_order ORDER BY created_at DESC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return list;
     }
@@ -284,13 +280,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -344,7 +340,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             return rowsAffected > 0;
 
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -361,7 +357,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             int rowsAffected = ps.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -391,7 +387,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return null;
     }
@@ -427,7 +423,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return 0;
     }
@@ -439,7 +435,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 return rs.getInt(1);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         }
         return 0;
     }
@@ -583,13 +579,13 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }

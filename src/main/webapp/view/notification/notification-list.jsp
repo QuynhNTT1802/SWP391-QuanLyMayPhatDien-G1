@@ -93,6 +93,7 @@
                                                         <c:when test="${n.entityType eq 'order'}">Đơn hàng</c:when>
                                                         <c:when test="${n.entityType eq 'import_receipt'}">Nhập kho</c:when>
                                                         <c:when test="${n.entityType eq 'export_receipt'}">Xuất kho</c:when>
+                                                        <c:when test="${n.entityType eq 'transfer'}">Luân chuyển</c:when>
                                                         <c:otherwise>${n.entityType}</c:otherwise>
                                                     </c:choose>
                                                 </span>

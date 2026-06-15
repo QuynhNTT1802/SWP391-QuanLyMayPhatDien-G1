@@ -263,8 +263,8 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
             item.put("brand", brand);
-            Inventory inv = inventoryDAO.findByWarehouseAndGenerator(whId, g.getId());
-            item.put("stockQty", inv != null ? inv.getQuantity() : 0);
+            int stockQty = inventoryDAO.findInStockByWarehouseAndGenerator(whId, g.getId()).size();
+            item.put("stockQty", stockQty);
             out.add(item);
         }
         new Gson().toJson(out, response.getWriter());

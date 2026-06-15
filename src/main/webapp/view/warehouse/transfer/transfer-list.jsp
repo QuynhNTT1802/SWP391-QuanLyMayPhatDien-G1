@@ -1,0 +1,236 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<!doctype html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phiếu luân chuyển kho — Warehouse OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+</head>
+<body>
+<div class="app">
+    <jsp:include page="../../common/admin/aside.jsp"></jsp:include>
+    <div>
+        <header class="topbar">
+            <h1>Phiếu luân chuyển kho</h1>
+            <span class="crumb">/ Quản lý kho / Luân chuyển</span>
+            <div class="top-actions">
+                <jsp:include page="../../common/admin/bell.jsp"/>
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
+                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/transfers?action=create">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Tạo phiếu luân chuyển
+                    </a>
+                </c:if>
+            </div>
+        </header>
+        <main>
+            <div class="page-head">
+                <div class="left">
+                    <div class="eyebrow">Kho</div>
+                    <h2 class="page-title">Quản lý luân chuyển</h2>
+                    <div class="page-sub">Danh sách các phiếu luân chuyển giữa các kho</div>
+                </div>
+            </div>
+
+            <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px;">
+                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Nháp</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiDraft}</div>
+                </div>
+
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_manager')}">
+                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Chờ Manager duyệt</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiPendingManager}</div>
+                </div>
+                </c:if>
+
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_ceo')}">
+                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Chờ CEO duyệt</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiPendingCeo}</div>
+                </div>
+                </c:if>
+
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_manager')}">
+                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Hoàn tất</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiCompleted}</div>
+                </div>
+                </c:if>
+
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
+                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Bị từ chối / Hủy</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiRejected + kpiCancelled}</div>
+                </div>
+                </c:if>
+            </div>
+
+            <form method="get" action="${pageContext.request.contextPath}/transfers" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px;">
+                <input type="hidden" name="action" value="list"/>
+                <input type="hidden" name="page" value="1"/>
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu..." autocomplete="off" />
+                </div>
+                <select class="filter-select" name="status" onchange="this.form.submit()">
+                    <option value="">Trạng thái: Tất cả</option>
+
+                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
+                        <option value="DRAFT" ${statusFilter == 'DRAFT' ? 'selected' : ''}>Nháp</option>
+                        <option value="PENDING_MANAGER" ${statusFilter == 'PENDING_MANAGER' ? 'selected' : ''}>Chờ Manager duyệt</option>
+                    </c:if>
+
+                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_ceo')}">
+                        <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ CEO duyệt</option>
+                    </c:if>
+
+                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_manager')}">
+                        <option value="COMPLETED" ${statusFilter == 'COMPLETED' ? 'selected' : ''}>Hoàn tất</option>
+                    </c:if>
+
+                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
+                        <option value="REJECTED" ${statusFilter == 'REJECTED' ? 'selected' : ''}>Bị từ chối</option>
+                        <option value="CANCELLED" ${statusFilter == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
+                    </c:if>
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    Tìm kiếm
+                </button>
+                <c:if test="${not empty statusFilter or not empty search}">
+                    <a href="${pageContext.request.contextPath}/transfers" class="btn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Xóa lọc
+                    </a>
+                </c:if>
+            </form>
+
+            <div class="table-card" style="margin-top:16px;">
+                <table class="users">
+                    <thead>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Kho nguồn → Kho đích</th>
+                            <th>Người tạo</th>
+                            <th>Ngày tạo</th>
+                            <th>Trạng thái</th>
+                            <th class="col-actions">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:choose>
+                            <c:when test="${empty transfers}">
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="empty-state"><strong>Chưa có phiếu luân chuyển nào.</strong></div>
+                                    </td>
+                                </tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="t" items="${transfers}">
+                                    <tr>
+                                        <td><strong style="font-family: var(--font-mono);">${t.transferCode}</strong></td>
+                                        <td>
+                                            <div>${t.sourceWarehouseName}</div>
+                                            <div style="color: var(--muted); font-size: 12px;">↓</div>
+                                            <div>${t.destWarehouseName}</div>
+                                        </td>
+                                        <td>${t.createdByName}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${not empty t.createdAt}">
+                                                    <fmt:formatDate value="${t.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/>
+                                                </c:when>
+                                                <c:otherwise>—</c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${t.status == 'DRAFT'}">
+                                                    <span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>Nháp</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'PENDING_MANAGER' && empty t.ceoReviewedAt}">
+                                                    <span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ Manager duyệt lần 1</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'PENDING_MANAGER' && not empty t.ceoReviewedAt}">
+                                                    <span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ Manager xác nhận cuối</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'PENDING_CEO'}">
+                                                    <span class="pill" style="color: var(--purple); border-color: color-mix(in srgb, var(--purple) 30%, transparent); background: var(--purple-soft);"><span class="pdot" style="background: var(--purple);"></span>Chờ CEO duyệt</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'COMPLETED'}">
+                                                    <span class="pill" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft);"><span class="pdot" style="background: var(--accent);"></span>Hoàn tất</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'REJECTED'}">
+                                                    <span class="pill" style="color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft);"><span class="pdot" style="background: var(--danger);"></span>Bị từ chối</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'CANCELLED'}">
+                                                    <span class="pill" style="color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft);"><span class="pdot" style="background: var(--warn);"></span>Đã hủy</span>
+                                                </c:when>
+                                                <c:otherwise><span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>${t.status}</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
+                                        <td class="col-actions">
+                                            <div class="row-actions">
+                                                <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}" class="icon-mini" title="Xem chi tiết">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                </a>
+                                                <c:if test="${t.status == 'DRAFT' and not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
+                                                    <a href="${pageContext.request.contextPath}/transfers?action=edit_view&id=${t.transferId}" class="icon-mini" title="Chỉnh sửa">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                                    </a>
+                                                </c:if>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                    </tbody>
+                </table>
+
+                <c:if test="${totalPages > 1}">
+                    <div class="pagination" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="info" style="font-size: 13px; color: var(--muted);">
+                            Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong> · Tổng <strong>${total}</strong> phiếu
+                        </div>
+                        <div class="controls" style="display: flex; gap: 4px;">
+                            <a href="?action=list&page=${currentPage - 1}&search=${search}&status=${statusFilter}" class="page-btn" ${currentPage == 1 ? 'style="pointer-events: none; opacity: 0.5;"' : ''}>Trước</a>
+                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                <a href="?action=list&page=${p}&search=${search}&status=${statusFilter}" class="page-btn ${p == currentPage ? 'active' : ''}">${p}</a>
+                            </c:forEach>
+                            <a href="?action=list&page=${currentPage + 1}&search=${search}&status=${statusFilter}" class="page-btn" ${currentPage == totalPages ? 'style="pointer-events: none; opacity: 0.5;"' : ''}>Sau</a>
+                        </div>
+                    </div>
+                </c:if>
+            </div>
+        </main>
+    </div>
+</div>
+<script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    <c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+        <c:remove var="toastMessage" scope="session"/>
+        <c:remove var="toastType" scope="session"/>
+    </c:if>
+    <c:if test="${not empty requestScope.toastMessage}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+    </c:if>
+</script>
+<div class="toast-host" id="toastHost"></div>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+</body>
+</html>
