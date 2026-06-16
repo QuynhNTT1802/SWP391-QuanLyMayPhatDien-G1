@@ -128,6 +128,28 @@
         </a>
     </c:if>
 
+    <c:if test="${not empty perms and (perms.contains('customers.view') or perms.contains('suppliers.view'))}">
+        <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Khách hàng &amp; NCC
+            <span class="arrow"></span>
+        </div>
+        <div class="nav-children">
+            <c:if test="${perms.contains('customers.view')}">
+                <a href="${pageContext.request.contextPath}/warehouse/customers">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Khách hàng
+                </a>
+            </c:if>
+            <c:if test="${perms.contains('suppliers.view')}">
+                <a href="${pageContext.request.contextPath}/warehouse/suppliers">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    Nhà cung cấp
+                </a>
+            </c:if>
+        </div>
+    </c:if>
+
     <c:if test="${not empty perms and perms.contains('liquidations.view')}">
         <a href="${pageContext.request.contextPath}/liquidations">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
