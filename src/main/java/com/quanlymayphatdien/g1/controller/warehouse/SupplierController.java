@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet(name = "SupplierController", urlPatterns = {"/warehouse/suppliers"})
 public class SupplierController extends HttpServlet {
@@ -88,6 +89,11 @@ public class SupplierController extends HttpServlet {
 
     private void listSuppliers(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.view")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         String search = request.getParameter("search");
         String status = request.getParameter("status");
         String typeIdStr = request.getParameter("supplierTypeId");
@@ -131,6 +137,11 @@ public class SupplierController extends HttpServlet {
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.view")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -174,6 +185,11 @@ public class SupplierController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.create")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("supplierTypeList", catDAO.findByType("customer_type"));
         request.getRequestDispatcher("/view/supplier/supplier-create.jsp").forward(request, response);
@@ -181,6 +197,11 @@ public class SupplierController extends HttpServlet {
 
     private void createSupplier(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.create")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         try {
             String name = request.getParameter("name");
             String phone = request.getParameter("phone");
@@ -234,6 +255,11 @@ public class SupplierController extends HttpServlet {
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.update")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -252,6 +278,11 @@ public class SupplierController extends HttpServlet {
 
     private void updateSupplier(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.update")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             String name = request.getParameter("name");
@@ -306,6 +337,11 @@ public class SupplierController extends HttpServlet {
 
     private void activateSupplier(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.deactivate")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
@@ -331,6 +367,11 @@ public class SupplierController extends HttpServlet {
 
     private void deactivateSupplier(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("suppliers.deactivate")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/suppliers?action=list");
+            return;
+        }
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
