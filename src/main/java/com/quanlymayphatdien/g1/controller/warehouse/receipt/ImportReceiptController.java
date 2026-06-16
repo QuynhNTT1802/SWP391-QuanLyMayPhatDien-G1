@@ -8,6 +8,7 @@ import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
@@ -15,6 +16,8 @@ import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Inventory;
+import com.quanlymayphatdien.g1.entity.PurchaseOrder;
+import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
@@ -82,6 +85,9 @@ public class ImportReceiptController extends HttpServlet {
                     break;
                 case "loadGenerators":
                     loadGeneratorsJson(request, response);
+                    break;
+                case "selectPurchase":
+                    showSelectPurchaseOrder(request, response);
                     break;
                 case "template":
                     downloadTemplate(request, response);
@@ -188,7 +194,63 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
         request.setAttribute("activePage", "import-create");
+
+        String poIdStr = request.getParameter("poId");
+        if (poIdStr != null && !poIdStr.isEmpty()) {
+            int poId = parseId(poIdStr);
+            PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
+            if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
+                List<PurchaseOrderDetail> pods = po.getDetails();
+                Receipt prefill = new Receipt();
+                prefill.setProposalId(poId);
+                prefill.setWarehouseId(po.getWarehouseId());
+                prefill.setReceiptType(TYPE);
+                prefill.setNote("Tạo từ phiếu purchase " + po.getPoCode());
+                List<ReceiptDetail> ds = new ArrayList<>();
+                if (pods != null) {
+                    for (PurchaseOrderDetail pod : pods) {
+                        int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity() : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                        for (int k = 0; k < qty; k++) {
+                            ReceiptDetail rd = new ReceiptDetail();
+                            rd.setGeneratorId(pod.getGeneratorId());
+                            rd.setNote(pod.getNote());
+                            ds.add(rd);
+                        }
+                    }
+                }
+                prefill.setDetails(ds);
+                request.setAttribute("receipt", prefill);
+                request.setAttribute("purchaseOrder", po);
+            }
+        }
+
         request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
+    }
+
+    private void showSelectPurchaseOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String period = request.getParameter("period");
+        int warehouseId = parseId(request.getParameter("warehouseId"));
+        int page = parsePage(request.getParameter("page"));
+        int pageSize = 10;
+
+        PurchaseOrderDAO dao = new PurchaseOrderDAO();
+        int totalItems = dao.countByFilters(period, warehouseId, "APPROVED");
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+        if (page > totalPages) page = totalPages;
+        List<PurchaseOrder> approvedPOs = dao.findByFilters(period, warehouseId, "APPROVED", page, pageSize);
+        int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
+        int toIndex = Math.min(page * pageSize, totalItems);
+
+        request.setAttribute("approvedPOs", approvedPOs);
+        request.setAttribute("period", period);
+        request.setAttribute("warehouseId", warehouseId);
+        request.setAttribute("warehouses", warehouseDAO.findAll());
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
+        request.getRequestDispatcher("/view/receipt/import/import-select-purchase.jsp").forward(request, response);
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
@@ -367,6 +429,12 @@ public class ImportReceiptController extends HttpServlet {
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
         r.setReasonId(reasonId);
+        String pid = request.getParameter("poId");
+        if (pid != null && !pid.isEmpty()) {
+            try {
+                r.setProposalId(Integer.parseInt(pid));
+            } catch (NumberFormatException ignored) {}
+        }
         r.setTotalAmount(computeTotal(details));
         r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
 

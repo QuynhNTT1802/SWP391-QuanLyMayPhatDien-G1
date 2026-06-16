@@ -125,11 +125,18 @@
                     <h2 class="hero-name">Phiếu nhập kho</h2>
                     <div class="hero-meta">
                         <span>Chọn kho trước, sau đó chọn mẫu máy để nhập</span>
+                        <c:if test="${not empty purchaseOrder}">
+                            <span class="sep">·</span>
+                            <span>Tạo từ phiếu purchase <span class="id">${purchaseOrder.poCode}</span></span>
+                        </c:if>
                     </div>
                 </div>
             </div>
 
             <form id="receiptForm" action="${pageContext.request.contextPath}/import-receipt?action=save" method="POST" onsubmit="return validateReceiptForm()">
+                <c:if test="${not empty receipt.proposalId}">
+                    <input type="hidden" name="poId" value="${receipt.proposalId}" />
+                </c:if>
                 <div class="content">
                     <section class="section">
                         <div class="section-head">
@@ -159,6 +166,14 @@
                                 </select>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
+                            <c:if test="${not empty purchaseOrder}">
+                                <div class="form-field full">
+                                    <label>Phiếu purchase nguồn</label>
+                                    <div class="order-pin">
+                                        <strong>${purchaseOrder.poCode}</strong>
+                                    </div>
+                                </div>
+                            </c:if>
                             <div class="form-field full">
                                 <label>Ghi chú phiếu</label>
                                 <textarea name="note" placeholder="Nhập ghi chú nếu có..."></textarea>
@@ -272,6 +287,13 @@
 <script>
     var ctx = window.APP_CTX;
     var generatorCache = [];
+    <c:if test="${not empty receipt.details}">
+    var prefillDetails = [
+        <c:forEach var="d" items="${receipt.details}" varStatus="st">
+        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
+        </c:forEach>
+    ];
+    </c:if>
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -321,12 +343,14 @@
                 generatorCache = data || [];
                 disableAllRows(false);
                 refreshAllGeneratorSelects();
+                applyPrefill();
             })
             .catch(function (err) {
                 console.error(err);
                 generatorCache = [];
                 disableAllRows(false);
                 refreshAllGeneratorSelects();
+                applyPrefill();
             });
     }
 
@@ -334,6 +358,20 @@
         document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
             renderGeneratorOptions(sel);
         });
+    }
+
+    function applyPrefill() {
+        if (!prefillDetails || prefillDetails.length === 0) return;
+        var tbody = document.getElementById('detailBody');
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        prefillDetails.forEach(function (p) {
+            var tr = buildEmptyRow(p.generatorId);
+            var noteInput = tr.querySelector('input[name="detailNote"]');
+            if (noteInput && p.note) noteInput.value = p.note;
+            tbody.appendChild(tr);
+        });
+        updateRowNumbers();
+        updateGrandTotal();
     }
 
     function disableAllRows(disabled) {
@@ -379,7 +417,7 @@
         document.getElementById('grandTotal').textContent = formatVND(grand);
     }
 
-    function buildEmptyRow() {
+    function buildEmptyRow(presetGenId) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
@@ -389,6 +427,9 @@
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
         var sel = tr.querySelector('select[name="generatorId"]');
+        if (presetGenId) {
+            sel.setAttribute('data-current', presetGenId);
+        }
         renderGeneratorOptions(sel);
         return tr;
     }
@@ -453,6 +494,13 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         updateGrandTotal();
+        <c:if test="${not empty receipt and receipt.warehouseId > 0}">
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect) {
+            whSelect.value = '${receipt.warehouseId}';
+            onWarehouseChange();
+        }
+        </c:if>
     });
 
     function submitExcelUpload(input) {
