@@ -595,6 +595,20 @@ main {
 }
 
 /* ========================================================
+   MODEL GROUP VIEW
+   ======================================================== */
+.clickable-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.clickable-row:hover {
+    background: var(--bg-hover, rgba(0,0,0,0.03));
+}
+.model-selector h3 {
+    margin-bottom: 0;
+}
+
+/* ========================================================
    RESPONSIVE
    ======================================================== */
 @media (max-width: 760px) {

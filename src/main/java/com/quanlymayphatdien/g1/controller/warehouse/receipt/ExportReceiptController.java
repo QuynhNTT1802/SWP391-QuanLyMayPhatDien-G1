@@ -33,6 +33,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -187,6 +188,7 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+        request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "export-create");
 
         String orderIdStr = request.getParameter("orderId");
@@ -205,7 +207,6 @@ public class ExportReceiptController extends HttpServlet {
                     for (int k = 0; k < qty; k++) {
                         ReceiptDetail rd = new ReceiptDetail();
                         rd.setGeneratorId(od.getGeneratorId());
-                        rd.setQuantity(1);
                         rd.setNote(od.getNote());
                         ds.add(rd);
                     }
@@ -250,6 +251,7 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+        request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "export-edit");
         request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
     }
@@ -277,14 +279,42 @@ public class ExportReceiptController extends HttpServlet {
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean isManager = perms != null && perms.contains("receipts.approve");
         boolean isOwner = receipt.getCreatedBy() == loggedUser.getId();
-        List<ActivityLog> history = activityLogDAO.findByEntityTypeAndId("receipt", id, 1, 100);
-        int totalHistory = activityLogDAO.countByEntityTypeAndId("receipt", id);
+
+        String tab = request.getParameter("tab");
+        String currentTab = "history".equals(tab) ? "history" : "info";
+        request.setAttribute("currentTab", currentTab);
+
+        if ("history".equals(currentTab)) {
+            String logSearch = request.getParameter("logSearch");
+            String logAction = request.getParameter("logAction");
+            String dateFrom = request.getParameter("dateFrom");
+            String dateTo = request.getParameter("dateTo");
+            int page = 1;
+            int pageSize = 20;
+            String pageStr = request.getParameter("page");
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try { page = Math.max(1, Integer.parseInt(pageStr)); }
+                catch (NumberFormatException ignored) { page = 1; }
+            }
+            List<ActivityLog> logs = activityLogDAO.findByEntityTypeAndId2("receipt", id, logSearch, logAction,
+                    dateFrom, dateTo, page, pageSize);
+            int totalLogs = activityLogDAO.countByEntityTypeAndId2("receipt", id, logSearch, logAction,
+                    dateFrom, dateTo);
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+            if (page > totalPages) page = totalPages;
+            request.setAttribute("logList", logs);
+            request.setAttribute("logPage", page);
+            request.setAttribute("logTotalPages", totalPages);
+            request.setAttribute("totalLogs", totalLogs);
+            request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+            request.setAttribute("logAction", logAction != null ? logAction : "");
+            request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+            request.setAttribute("dateTo", dateTo != null ? dateTo : "");
+        }
 
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
         request.setAttribute("isOwner", isOwner);
-        request.setAttribute("receiptHistory", history);
-        request.setAttribute("totalHistory", totalHistory);
         request.setAttribute("activePage", "export-detail");
         request.getRequestDispatcher("/view/receipt/export/export-detail.jsp").forward(request, response);
     }
@@ -384,15 +414,14 @@ public class ExportReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] quantities = request.getParameterValues("quantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details;
         if (isDraft) {
-            details = parseDetailsLenient(genIds, serials, quantities, unitPrices, detailNotes);
+            details = parseDetailsLenient(genIds, serials, unitPrices, detailNotes);
         } else {
-            details = parseDetailsStrict(genIds, serials, quantities, unitPrices, detailNotes, warehouseId, errors);
+            details = parseDetailsStrict(genIds, serials, unitPrices, detailNotes, warehouseId, errors);
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
                 errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
             }
@@ -406,6 +435,7 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
             return;
         }
@@ -434,12 +464,56 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("warehouses", warehouseDAO.findAll());
             request.setAttribute("generators", new ArrayList<>());
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
             return;
         }
-        for (ReceiptDetail d : details) {
-            d.setReceiptId(receiptId);
-            detailDAO.insert(d);
+
+        java.sql.Connection conn = null;
+        boolean ok = false;
+        try {
+            conn = receiptDAO.getConnection();
+            conn.setAutoCommit(false);
+            for (ReceiptDetail d : details) {
+                if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
+                    continue;
+                }
+                Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
+                if (inv == null) {
+                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
+                }
+                if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
+                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
+                }
+                if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                }
+                d.setReceiptId(receiptId);
+                d.setInventoryId(inv.getInventoryId());
+            }
+            detailDAO.batchInsert(conn, details);
+            conn.commit();
+            ok = true;
+        } catch (java.sql.SQLException ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+            }
+            errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+            }
+        }
+        if (!ok) {
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", buildErrorMessage("Lưu phiếu thất bại:", errors));
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", genDAO.findAllActive());
+            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
+            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
+            request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
+            return;
         }
 
         ActivityLog log = new ActivityLog();
@@ -511,15 +585,14 @@ public class ExportReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] quantities = request.getParameterValues("quantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details;
         if (isSaveDraft) {
-            details = parseDetailsLenient(genIds, serials, quantities, unitPrices, detailNotes);
+            details = parseDetailsLenient(genIds, serials, unitPrices, detailNotes);
         } else {
-            details = parseDetailsStrict(genIds, serials, quantities, unitPrices, detailNotes, warehouseId, errors);
+            details = parseDetailsStrict(genIds, serials, unitPrices, detailNotes, warehouseId, errors);
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
                 errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
             }
@@ -535,6 +608,53 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
+            request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
+            return;
+        }
+
+        // Reserve new inventory rows (RESERVED_EXPORT) truoc khi updateReceipt
+        java.sql.Connection conn = null;
+        boolean inventoryReserved = false;
+        try {
+            conn = receiptDAO.getConnection();
+            conn.setAutoCommit(false);
+            for (ReceiptDetail d : details) {
+                if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
+                    continue;
+                }
+                Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
+                if (inv == null) {
+                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại");
+                }
+                if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
+                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không IN_STOCK tại kho");
+                }
+                if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                }
+                d.setInventoryId(inv.getInventoryId());
+            }
+            conn.commit();
+            inventoryReserved = true;
+        } catch (java.sql.SQLException ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+            }
+            errors.add("Lỗi khi reserve serial: " + ex.getMessage());
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+            }
+        }
+        if (!inventoryReserved) {
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", buildErrorMessage("Cập nhật phiếu thất bại:", errors));
+            request.setAttribute("isDraft", isDraft);
+            request.setAttribute("receipt", existing);
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", genDAO.findAllActive());
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
             return;
         }
@@ -576,6 +696,7 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("allSerials", loadAllInStockSerials());
             request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
         }
     }
@@ -811,6 +932,10 @@ public class ExportReceiptController extends HttpServlet {
         return brandMap;
     }
 
+    private List<Inventory> loadAllInStockSerials() {
+        return inventoryDAO.findAllInStock();
+    }
+
     private String buildErrorMessage(String prefix, List<String> errors) {
         StringBuilder msg = new StringBuilder(prefix);
         for (String e : errors) {
@@ -823,13 +948,13 @@ public class ExportReceiptController extends HttpServlet {
         java.math.BigDecimal total = java.math.BigDecimal.ZERO;
         for (ReceiptDetail d : details) {
             if (d.getUnitPrice() != null) {
-                total = total.add(d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
+                total = total.add(d.getUnitPrice());
             }
         }
         return total;
     }
 
-    private List<ReceiptDetail> parseDetailsStrict(String[] genIds, String[] serials, String[] quantities,
+    private List<ReceiptDetail> parseDetailsStrict(String[] genIds, String[] serials,
             String[] unitPrices, String[] detailNotes, int warehouseId, List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) {
@@ -840,7 +965,6 @@ public class ExportReceiptController extends HttpServlet {
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
-            String qtyStr = (quantities != null && i < quantities.length) ? quantities[i] : null;
             String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
             boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
                     && (serial == null || serial.trim().isEmpty());
@@ -857,24 +981,6 @@ public class ExportReceiptController extends HttpServlet {
             }
             if (genId <= 0) {
                 errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
-                continue;
-            }
-
-            int qty = 1;
-            if (qtyStr != null && !qtyStr.trim().isEmpty()) {
-                try {
-                    qty = Integer.parseInt(qtyStr.trim());
-                } catch (NumberFormatException e) {
-                    errors.add("Dòng " + rowNum + ": Số lượng không hợp lệ");
-                    continue;
-                }
-            }
-            if (qty <= 0) {
-                errors.add("Dòng " + rowNum + ": Số lượng phải lớn hơn 0");
-                continue;
-            }
-            if (qty > MAX_QUANTITY) {
-                errors.add("Dòng " + rowNum + ": Số lượng không được vượt quá " + MAX_QUANTITY);
                 continue;
             }
 
@@ -904,9 +1010,9 @@ public class ExportReceiptController extends HttpServlet {
             if (warehouseId > 0) {
                 int onHand = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, genId).size();
                 Integer usedSoFar = genUsage.get(genId);
-                int need = qty + (usedSoFar == null ? 0 : usedSoFar);
+                int need = 1 + (usedSoFar == null ? 0 : usedSoFar);
                 if (onHand < need) {
-                    errors.add("Dòng " + rowNum + ": Kho chỉ còn " + onHand + " máy " + (usedSoFar == null ? "" : "(đã dùng " + usedSoFar + ")") + ", không đủ " + qty);
+                    errors.add("Dòng " + rowNum + ": Kho chỉ còn " + onHand + " máy " + (usedSoFar == null ? "" : "(đã dùng " + usedSoFar + ")"));
                     continue;
                 }
                 genUsage.put(genId, need);
@@ -925,7 +1031,6 @@ public class ExportReceiptController extends HttpServlet {
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);
-            d.setQuantity(qty);
             d.setUnitPrice(price);
             d.setNote(detailNote);
             details.add(d);
@@ -933,7 +1038,7 @@ public class ExportReceiptController extends HttpServlet {
         return details;
     }
 
-    private List<ReceiptDetail> parseDetailsLenient(String[] genIds, String[] serials, String[] quantities,
+    private List<ReceiptDetail> parseDetailsLenient(String[] genIds, String[] serials,
             String[] unitPrices, String[] detailNotes) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) {
@@ -942,7 +1047,6 @@ public class ExportReceiptController extends HttpServlet {
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
-            String qtyStr = (quantities != null && i < quantities.length) ? quantities[i] : null;
             String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
             boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
                     && (serial == null || serial.trim().isEmpty());
@@ -957,19 +1061,6 @@ public class ExportReceiptController extends HttpServlet {
             }
             if (genId <= 0) {
                 continue;
-            }
-            int qty = 1;
-            if (qtyStr != null && !qtyStr.trim().isEmpty()) {
-                try {
-                    qty = Integer.parseInt(qtyStr.trim());
-                } catch (NumberFormatException e) {
-                    qty = 1;
-                }
-            }
-            if (qty <= 0) {
-                qty = 1;
-            } else if (qty > MAX_QUANTITY) {
-                qty = MAX_QUANTITY;
             }
             if (serial != null) {
                 serial = serial.trim();
@@ -994,7 +1085,6 @@ public class ExportReceiptController extends HttpServlet {
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);
-            d.setQuantity(qty);
             d.setUnitPrice(price);
             d.setNote(detailNote);
             details.add(d);

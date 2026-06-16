@@ -16,47 +16,33 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
         <style>
             a.btn, a.back-link { text-decoration: none; }
-            .product-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
-            .product-table th { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 600; background: var(--surface-2); letter-spacing: 0.04em; }
-            .product-table td { font-size: 13px; }
-            .product-table tbody tr:hover { background: var(--surface-2); }
-            .text-center { text-align: center; }
-            .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-            .status-pending { background: #fff3cd; color: #856404; }
-            .status-revision { background: #ffe0b2; color: #b15c00; }
-            .status-completed { background: #d4edda; color: #155724; }
-            .status-cancelled { background: #f8d7da; color: #721c24; }
-            [data-theme="dark"] .status-pending { background: var(--warn-soft); color: var(--warn); }
-            [data-theme="dark"] .status-revision { background: var(--warn-soft); color: var(--warn); }
-            [data-theme="dark"] .status-completed { background: var(--accent-soft); color: var(--accent); }
-            [data-theme="dark"] .status-cancelled { background: var(--danger-soft); color: var(--danger); }
-            .hero-avatar { background: oklch(58% 0.16 145); }
             .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
             .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
             .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
             .alert-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
             .action-bar-top { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
-            .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
-            .tab { padding: 10px 18px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font-ui); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-            .tab:hover { color: var(--fg); }
-            .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
-            .tab-panel { display: none; }
-            .tab-panel.active { display: block; }
+            .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+            .filter-active-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 11px; }
+            .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; gap: 8px; color: var(--muted); }
+            .empty-state .icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+            .empty-state .icon-wrap svg { width: 22px; height: 22px; stroke: var(--muted); }
+            .empty-state strong { color: var(--fg); font-size: 14px; }
+
+            .product-table { width: 100%; border-collapse: collapse; }
+            .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+            .product-table th { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; background: var(--surface-2); letter-spacing: 0.04em; }
+            .product-table td { font-size: 13px; }
+            .product-table tbody tr:hover { background: var(--surface-2); }
+            .product-table tfoot td { background: var(--surface-2); font-weight: 700; }
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+
             .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55; padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
-            .history-item { display: grid; grid-template-columns: 36px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
-            .history-item:last-child { border-bottom: 0; }
-            .history-icon { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
-            .history-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-            .history-icon.create { background: var(--info-soft); color: var(--info); }
-            .history-icon.approve { background: var(--accent-soft); color: var(--accent); }
-            .history-icon.reject { background: var(--danger-soft); color: var(--danger); }
-            .history-icon.revision { background: var(--warn-soft); color: var(--warn); }
-            .history-body { line-height: 1.4; }
-            .history-title { font-size: 13px; font-weight: 600; color: var(--fg); }
-            .history-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+            .info-value .status-pill { white-space: nowrap; }
+
             .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
             .modal-host.show { display: flex; }
             .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
@@ -66,20 +52,6 @@
             .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
             .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
             .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-            .action-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-            .action-badge.action-create { background: #d4edda; color: #155724; }
-            .action-badge.action-update { background: #fff3cd; color: #856404; }
-            .action-badge.action-approve { background: #cce5ff; color: #004085; }
-            .action-badge.action-reject { background: #f8d7da; color: #721c24; }
-            .action-badge.action-revision { background: #fff3cd; color: #856404; }
-            .action-badge.action-default { background: #e2e3e5; color: #383d41; }
-            .history-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; background: var(--bg); }
-            .history-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-            .history-table th { padding: 10px 14px; font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.04em; background: var(--surface-2); text-align: left; border-bottom: 2px solid var(--border); }
-            .history-table td { padding: 11px 14px; font-size: 13px; color: var(--fg); border-bottom: 1px solid var(--border); vertical-align: middle; }
-            .history-table tbody tr:hover { background: var(--surface-2); }
-            .history-table .detail-cell { color: var(--fg-soft); line-height: 1.55; max-width: 360px; }
-            .history-table .mono { font-family: var(--font-mono); font-size: 12px; color: var(--fg); }
         </style>
     </head>
     <body>
@@ -114,26 +86,56 @@
                         </div>
                     </c:if>
 
+                    <c:choose>
+                        <c:when test="${receipt.status == 'DRAFT'}">
+                            <c:set var="statusLabel" value="Bản nháp"/>
+                            <c:set var="statusBg" value="#d1ecf1"/>
+                            <c:set var="statusFg" value="#0c5460"/>
+                        </c:when>
+                        <c:when test="${receipt.status == 'PENDING'}">
+                            <c:set var="statusLabel" value="Chờ duyệt"/>
+                            <c:set var="statusBg" value="#fff3cd"/>
+                            <c:set var="statusFg" value="#856404"/>
+                        </c:when>
+                        <c:when test="${receipt.status == 'NEEDS_REVISION'}">
+                            <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
+                            <c:set var="statusBg" value="#ffe0b2"/>
+                            <c:set var="statusFg" value="#b15c00"/>
+                        </c:when>
+                        <c:when test="${receipt.status == 'COMPLETED'}">
+                            <c:set var="statusLabel" value="Hoàn thành"/>
+                            <c:set var="statusBg" value="#d4edda"/>
+                            <c:set var="statusFg" value="#155724"/>
+                        </c:when>
+                        <c:when test="${receipt.status == 'CANCELLED'}">
+                            <c:set var="statusLabel" value="Đã từ chối"/>
+                            <c:set var="statusBg" value="#f8d7da"/>
+                            <c:set var="statusFg" value="#721c24"/>
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="statusLabel" value="${receipt.status}"/>
+                            <c:set var="statusBg" value="#e2e3e5"/>
+                            <c:set var="statusFg" value="#383d41"/>
+                        </c:otherwise>
+                    </c:choose>
+
                     <div class="hero">
-                        <div class="hero-avatar">N</div>
+                        <div class="hero-avatar" style="background: oklch(58% 0.16 145);">N</div>
                         <div class="hero-body">
                             <h2 class="hero-name">
                                 <c:out value="${receipt.receiptCode}"/>
-                                <c:choose>
-                                    <c:when test="${receipt.status == 'DRAFT'}"><span class="status-pill" style="background: var(--info-soft); color: var(--info);"><span class="pdot"></span>Bản nháp</span></c:when>
-                                    <c:when test="${receipt.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                                    <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
-                                    <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
-                                    <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
-                                    <c:otherwise><span class="status-pill"><c:out value="${receipt.status}"/></span></c:otherwise>
-                                </c:choose>
+                                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+                                    <span class="pdot"></span>${statusLabel}
+                                </span>
                             </h2>
                             <div class="hero-meta">
                                 <span>Phiếu nhập kho</span>
                                 <span class="sep">·</span>
                                 <span class="id">#${receipt.receiptId}</span>
-                                <span class="sep">·</span>
-                                <span>Ngày tạo: ${receipt.createdAt}</span>
+                                <c:if test="${not empty receipt.createdAt}">
+                                    <span class="sep">·</span>
+                                    <span>Ngày tạo: ${receipt.createdAt}</span>
+                                </c:if>
                             </div>
                             <div class="hero-pills">
                                 <span class="pill warehouse"><span class="pdot"></span><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}" style="color:inherit;text-decoration:underline;"><c:out value="${receipt.warehouseName}"/></a></span>
@@ -162,178 +164,267 @@
                         </div>
                     </c:if>
 
-                    <div class="section" style="padding: 18px 22px;">
-                        <div class="tabs">
-                            <button type="button" class="tab active" data-tab="info">Thông tin chung</button>
-                            <button type="button" class="tab" data-tab="products">Chi tiết dòng hàng</button>
-                            <button type="button" class="tab" data-tab="history">Lịch sử cập nhật</button>
-                        </div>
+                    <div class="tab-bar">
+                        <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
+                            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                            Thông tin & các máy
+                        </a>
+                        <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
+                            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Lịch sử cập nhật
+                        </a>
+                    </div>
 
-                        <div class="tab-panel active" id="tab-info">
-                            <div class="info-grid">
-                                <div class="info-field">
-                                    <div class="info-label">Loại phiếu</div>
-                                    <div class="info-value">Nhập kho</div>
-                                </div>
-                                <div class="info-field">
-                                    <div class="info-label">Kho</div>
-                                    <div class="info-value"><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></div>
-                                </div>
-                                <div class="info-field">
-                                    <div class="info-label">Người tạo</div>
-                                    <div class="info-value"><c:out value="${receipt.createdByName}"/></div>
-                                </div>
-                                <div class="info-field">
-                                    <div class="info-label">Ngày tạo</div>
-                                    <div class="info-value mono">${receipt.createdAt}</div>
-                                </div>
-                                <c:if test="${not empty receipt.approvedByName}">
-                                    <div class="info-field">
-                                        <div class="info-label">Người duyệt</div>
-                                        <div class="info-value"><c:out value="${receipt.approvedByName}"/></div>
-                                    </div>
-                                </c:if>
-                                <c:if test="${not empty receipt.approvedAt}">
-                                    <div class="info-field">
-                                        <div class="info-label">Ngày duyệt</div>
-                                        <div class="info-value mono">${receipt.approvedAt}</div>
-                                    </div>
-                                </c:if>
-                                <div class="info-field">
-                                    <div class="info-label">Trạng thái</div>
-                                    <div class="info-value">
-                                        <c:choose>
-                                            <c:when test="${receipt.status == 'DRAFT'}"><span class="status-pill" style="background: var(--info-soft); color: var(--info);"><span class="pdot"></span>Bản nháp</span></c:when>
-                                            <c:when test="${receipt.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                                            <c:when test="${receipt.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
-                                            <c:when test="${receipt.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
-                                            <c:when test="${receipt.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã từ chối</span></c:when>
-                                            <c:otherwise><span class="status-pill"><c:out value="${receipt.status}"/></span></c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                            </div>
-                            <c:if test="${not empty receipt.note}">
-                                <div style="margin-top: 18px;">
-                                    <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
-                                    <div class="note-soft"><c:out value="${receipt.note}"/></div>
-                                </div>
-                            </c:if>
-                        </div>
+                    <c:choose>
+                        <c:when test="${currentTab == 'history'}">
+                            <div class="table-card history-card">
+                                <form method="get" action="${pageContext.request.contextPath}/import-receipt" class="history-filter-bar">
+                                    <input type="hidden" name="action" value="detail"/>
+                                    <input type="hidden" name="id" value="${receipt.receiptId}"/>
+                                    <input type="hidden" name="tab" value="history"/>
+                                    <input type="hidden" name="page" value="1"/>
 
-                        <div class="tab-panel" id="tab-history">
-                            <c:if test="${not empty receipt.reasonName}">
-                                <div style="margin-bottom: 18px; padding: 12px 16px; background: var(--warn-soft); border-radius: var(--radius-sm);">
-                                    <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Lý do</div>
-                                    <span class="status-pill status-pending"><span class="pdot"></span><c:out value="${receipt.reasonName}"/></span>
-                                    <c:if test="${not empty receipt.reasonNote}">
-                                        <div style="margin-top:4px;font-size:12.5px;color:var(--fg);"><c:out value="${receipt.reasonNote}"/></div>
+                                    <div class="search-input hf-search">
+                                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
+                                    </div>
+                                    <select name="logAction" class="filter-select">
+                                        <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
+                                        <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu</option>
+                                        <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                                        <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
+                                        <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
+                                        <option value="REVISION" ${logAction == 'REVISION' ? 'selected' : ''}>Yêu cầu sửa</option>
+                                        <option value="DRAFT_UPDATE" ${logAction == 'DRAFT_UPDATE' ? 'selected' : ''}>Lưu nháp</option>
+                                        <option value="SUBMIT_DRAFT" ${logAction == 'SUBMIT_DRAFT' ? 'selected' : ''}>Gửi duyệt</option>
+                                    </select>
+                                    <div class="date-range">
+                                        <label class="date-label">Từ</label>
+                                        <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
+                                        <label class="date-label">đến</label>
+                                        <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        Áp dụng
+                                    </button>
+                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                        <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history" class="btn">
+                                            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            Xóa lọc
+                                        </a>
+                                    </c:if>
+                                </form>
+
+                                <div class="result-summary">
+                                    Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                        &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
                                     </c:if>
                                 </div>
-                            </c:if>
-                            <div class="table-card history-card">
-                                <div class="result-summary" style="margin-bottom:8px;">Tìm thấy <strong>${totalHistory}</strong> bản ghi</div>
-                                <table class="history-table">
+
+                                <table>
                                     <thead><tr>
                                         <th style="width:150px;">Thời gian</th>
                                         <th style="width:180px;">Người thực hiện</th>
-                                        <th style="width:140px;">Hành động</th>
+                                        <th style="width:160px;">Hành động</th>
                                         <th>Chi tiết thay đổi</th>
                                     </tr></thead>
                                     <tbody>
                                     <c:choose>
-                                        <c:when test="${empty receiptHistory}">
-                                            <tr><td colspan="4"><div class="empty-state"><strong>Không có bản ghi nào</strong></div></td></tr>
+                                        <c:when test="${empty logList}">
+                                            <tr><td colspan="4">
+                                                <div class="empty-state">
+                                                    <div class="icon-wrap">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                    </div>
+                                                    <strong>Không có bản ghi nào</strong>
+                                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                                        <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history">xóa lọc</a></span>
+                                                    </c:if>
+                                                </div>
+                                            </td></tr>
                                         </c:when>
                                         <c:otherwise>
-                                            <c:forEach var="h" items="${receiptHistory}">
+                                            <c:forEach var="log" items="${logList}">
                                                 <tr>
-                                                    <td class="mono"><fmt:formatDate value="${h.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                                    <td><c:out value="${h.username}"/></td>
+                                                    <td style="font-family:var(--font-mono);"><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td>
+                                                        <div style="font-weight:600;color:var(--fg);"><c:out value="${log.username}"/></div>
+                                                    </td>
                                                     <td>
                                                         <span class="action-badge action-<c:choose>
-                                                            <c:when test="${h.action == 'CREATE'}">create</c:when>
-                                                            <c:when test="${h.action == 'UPDATE'}">update</c:when>
-                                                            <c:when test="${h.action == 'APPROVE'}">approve</c:when>
-                                                            <c:when test="${h.action == 'REJECT'}">reject</c:when>
-                                                            <c:when test="${h.action == 'REVISION'}">revision</c:when>
+                                                            <c:when test="${log.action == 'CREATE'}">create</c:when>
+                                                            <c:when test="${log.action == 'UPDATE'}">update</c:when>
+                                                            <c:when test="${log.action == 'APPROVE'}">approve</c:when>
+                                                            <c:when test="${log.action == 'REJECT'}">reject</c:when>
+                                                            <c:when test="${log.action == 'REVISION'}">revision</c:when>
+                                                            <c:when test="${log.action == 'DRAFT_UPDATE'}">draft_update</c:when>
+                                                            <c:when test="${log.action == 'SUBMIT_DRAFT'}">submit_draft</c:when>
                                                             <c:otherwise>default</c:otherwise>
                                                         </c:choose>">
                                                         <c:choose>
-                                                            <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
-                                                            <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
-                                                            <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
-                                                            <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
-                                                            <c:when test="${h.action == 'REVISION'}">Yêu cầu sửa</c:when>
-                                                            <c:otherwise>${h.action}</c:otherwise>
+                                                            <c:when test="${log.action == 'CREATE'}">Tạo phiếu</c:when>
+                                                            <c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when>
+                                                            <c:when test="${log.action == 'APPROVE'}">Duyệt</c:when>
+                                                            <c:when test="${log.action == 'REJECT'}">Từ chối</c:when>
+                                                            <c:when test="${log.action == 'REVISION'}">Yêu cầu sửa</c:when>
+                                                            <c:when test="${log.action == 'DRAFT_UPDATE'}">Lưu nháp</c:when>
+                                                            <c:when test="${log.action == 'SUBMIT_DRAFT'}">Gửi duyệt</c:when>
+                                                            <c:otherwise>${log.action}</c:otherwise>
                                                         </c:choose></span>
                                                     </td>
-                                                    <td class="detail-cell"><c:out value="${h.details}"/></td>
+                                                    <td style="max-width:380px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                                        <c:out value="${log.details}"/>
+                                                    </td>
                                                 </tr>
                                             </c:forEach>
                                         </c:otherwise>
                                     </c:choose>
                                     </tbody>
                                 </table>
-                            </div>
-                        </div>
 
-                        <div class="tab-panel" id="tab-products">
-                            <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
-                                <div style="margin-bottom: 8px; font-size: 12px; color: var(--muted);" id="detailCount"></div>
-                            </c:if>
-                            <table class="product-table" id="detailTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 40px;">#</th>
-                                        <th>Máy phát / Hãng</th>
-                                        <th>Serial</th>
-                                        <th style="width: 60px;">SL</th>
-                                        <th style="width: 140px;">Đơn giá</th>
-                                        <th style="width: 140px;">Thành tiền</th>
-                                        <th>Ghi chú</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailBody">
-                                    <c:choose>
-                                        <c:when test="${empty receipt.details}">
-                                            <tr><td colspan="7" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <c:set var="grandTotal" value="0" />
-                                            <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                                <c:set var="subtotal" value="${d.unitPrice * d.quantity}" />
-                                                <c:set var="grandTotal" value="${grandTotal + subtotal}" />
-                                                <tr class="detail-row">
-                                                    <td class="mono">${st.index + 1}</td>
-                                                    <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong> <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span></td>
-                                                    <td class="mono"><c:out value="${d.serialNumber}"/></td>
-                                                    <td class="mono"><fmt:formatNumber value="${d.quantity}"/></td>
-                                                    <td class="mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
-                                                    <td class="mono" style="font-weight: 600;"><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
-                                                    <td><c:out value="${d.note}"/></td>
-                                                </tr>
-                                            </c:forEach>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="5" style="text-align: right; padding: 12px; font-weight: 700; border-top: 2px solid var(--border);">Tổng cộng:</td>
-                                        <td class="mono" style="padding: 12px; font-weight: 700; border-top: 2px solid var(--border);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
-                                        <td style="border-top: 2px solid var(--border);"></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <c:if test="${not empty receipt.details and fn:length(receipt.details) > 10}">
-                                <div class="detail-pager" id="detailPagination">
-                                    <button type="button" class="btn" id="prevDetailPage">‹ Trước</button>
-                                    <span class="page-info" id="detailPageInfo"></span>
-                                    <button type="button" class="btn" id="nextDetailPage">Sau ›</button>
+                                <c:if test="${logTotalPages > 1}">
+                                <div class="pagination">
+                                    <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
+                                    <div class="controls">
+                                        <c:if test="${logPage > 1}">
+                                            <a href="${pageContext.request.contextPath}/import-receipt?action=detail&amp;id=${receipt.receiptId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                                        </c:if>
+                                        <c:forEach begin="1" end="${logTotalPages}" var="p">
+                                            <c:choose>
+                                                <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
+                                                <c:otherwise><a href="${pageContext.request.contextPath}/import-receipt?action=detail&amp;id=${receipt.receiptId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                        <c:if test="${logPage < logTotalPages}">
+                                            <a href="${pageContext.request.contextPath}/import-receipt?action=detail&amp;id=${receipt.receiptId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                                        </c:if>
+                                    </div>
                                 </div>
-                            </c:if>
-                        </div>
-                    </div>
+                                </c:if>
+                            </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="section" style="padding: 18px 22px;">
+                                <div class="info-grid">
+                                    <div class="info-field">
+                                        <div class="info-label">Loại phiếu</div>
+                                        <div class="info-value">Nhập kho</div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Mã phiếu</div>
+                                        <div class="info-value mono"><c:out value="${receipt.receiptCode}"/></div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Kho nhập</div>
+                                        <div class="info-value"><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Người tạo</div>
+                                        <div class="info-value"><c:out value="${receipt.createdByName}"/></div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Ngày tạo</div>
+                                        <div class="info-value mono">${receipt.createdAt}</div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Tổng giá trị</div>
+                                        <div class="info-value mono"><fmt:formatNumber value="${receipt.totalAmount}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</div>
+                                    </div>
+                                    <c:if test="${not empty receipt.approvedByName}">
+                                        <div class="info-field">
+                                            <div class="info-label">Người duyệt</div>
+                                            <div class="info-value"><c:out value="${receipt.approvedByName}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <c:if test="${not empty receipt.approvedAt}">
+                                        <div class="info-field">
+                                            <div class="info-label">Ngày duyệt</div>
+                                            <div class="info-value mono">${receipt.approvedAt}</div>
+                                        </div>
+                                    </c:if>
+                                    <c:if test="${not empty receipt.reasonName}">
+                                        <div class="info-field">
+                                            <div class="info-label">Lý do</div>
+                                            <div class="info-value"><c:out value="${receipt.reasonName}"/><c:if test="${not empty receipt.reasonNote}"> — <c:out value="${receipt.reasonNote}"/></c:if></div>
+                                        </div>
+                                    </c:if>
+                                    <div class="info-field">
+                                        <div class="info-label">Trạng thái</div>
+                                        <div class="info-value">
+                                            <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+                                                <span class="pdot"></span>${statusLabel}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <c:if test="${not empty receipt.note}">
+                                    <div style="margin-top: 18px;">
+                                        <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
+                                        <div class="note-soft"><c:out value="${receipt.note}"/></div>
+                                    </div>
+                                </c:if>
+                            </div>
+
+                            <div class="table-card history-card" style="margin-top: 18px;">
+                                <div class="result-summary" style="display:flex;align-items:center;justify-content:space-between;">
+                                    <span>Danh sách máy phát điện (<strong>${not empty receipt.details ? fn:length(receipt.details) : 0}</strong> dòng)</span>
+                                    <c:set var="grandTotal" value="0" />
+                                    <c:if test="${not empty receipt.details}">
+                                        <c:forEach var="d" items="${receipt.details}">
+                                            <c:set var="grandTotal" value="${grandTotal + d.unitPrice}" />
+                                        </c:forEach>
+                                    </c:if>
+                                    <span>Tổng giá trị: <strong style="color:var(--fg);font-family:var(--font-mono);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</strong></span>
+                                </div>
+                                <table class="product-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;">#</th>
+                                            <th>Máy phát / Hãng</th>
+                                            <th>Serial</th>
+                                            <th style="width: 140px;">Đơn giá</th>
+                                            <th style="width: 140px;">Thành tiền</th>
+                                            <th>Ghi chú</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:choose>
+                                            <c:when test="${empty receipt.details}">
+                                                <tr><td colspan="6" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="d" items="${receipt.details}" varStatus="st">
+                                                    <c:set var="subtotal" value="${d.unitPrice}" />
+                                                    <tr>
+                                                        <td class="mono" style="font-family:var(--font-mono);">${st.index + 1}</td>
+                                                        <td>
+                                                            <strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong>
+                                                            <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span>
+                                                        </td>
+                                                        <td style="font-family:var(--font-mono);"><c:out value="${d.serialNumber}"/></td>
+                                                        <td style="font-family:var(--font-mono);"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
+                                                        <td style="font-family:var(--font-mono); font-weight: 600;"><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
+                                                        <td><c:out value="${d.note}"/></td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </tbody>
+                                    <c:if test="${not empty receipt.details}">
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="5" style="text-align: right; padding: 12px; font-weight: 700; border-top: 2px solid var(--border);">Tổng cộng:</td>
+                                                <td style="padding: 12px; font-weight: 700; border-top: 2px solid var(--border); font-family:var(--font-mono);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
+                                                <td style="border-top: 2px solid var(--border);"></td>
+                                            </tr>
+                                        </tfoot>
+                                    </c:if>
+                                </table>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
                 </main>
             </div>
         </div>
@@ -404,47 +495,6 @@
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
-            (function () {
-                var tabs = document.querySelectorAll('.tab');
-                var panels = document.querySelectorAll('.tab-panel');
-                tabs.forEach(function (t) {
-                    t.addEventListener('click', function () {
-                        var key = t.getAttribute('data-tab');
-                        tabs.forEach(function (x) { x.classList.remove('active'); });
-                        panels.forEach(function (p) { p.classList.remove('active'); });
-                        t.classList.add('active');
-                        var panel = document.getElementById('tab-' + key);
-                        if (panel) panel.classList.add('active');
-                    });
-                });
-            })();
-
-            (function () {
-                var rows = document.querySelectorAll('#detailBody .detail-row');
-                if (rows.length <= 10) return;
-                var pageSize = 10;
-                var current = 1;
-                var totalPages = Math.ceil(rows.length / pageSize);
-                var info = document.getElementById('detailPageInfo');
-                var count = document.getElementById('detailCount');
-                var prevBtn = document.getElementById('prevDetailPage');
-                var nextBtn = document.getElementById('nextDetailPage');
-
-                function render() {
-                    rows.forEach(function (r, i) {
-                        var page = Math.floor(i / pageSize) + 1;
-                        r.style.display = (page === current) ? '' : 'none';
-                    });
-                    info.textContent = 'Trang ' + current + ' / ' + totalPages;
-                    if (count) count.textContent = '(' + rows.length + ' dòng)';
-                    prevBtn.disabled = current === 1;
-                    nextBtn.disabled = current === totalPages;
-                }
-                prevBtn.addEventListener('click', function () { if (current > 1) { current--; render(); } });
-                nextBtn.addEventListener('click', function () { if (current < totalPages) { current++; render(); } });
-                render();
-            })();
-
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
             document.querySelectorAll('.modal-host').forEach(function (m) {
