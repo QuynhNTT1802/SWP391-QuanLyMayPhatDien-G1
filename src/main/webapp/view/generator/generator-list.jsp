@@ -101,7 +101,6 @@
                                     <th>Mẫu máy</th>
                                     <th>Thương hiệu</th>
                                     <th>Công suất</th>
-                                    <th>Đơn giá</th>
                                     <th>Loại máy</th>
                                     <th>Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
@@ -134,7 +133,6 @@
                                                     <c:out value="${not empty foundBrand ? foundBrand : '—'}"/>
                                                 </td>
                                                 <td><span class="mono"><c:out value="${g.powerRating}"/> kVA</span></td>
-                                                <td><span class="mono"><c:out value="${g.unitPrice}"/> đ</span></td>
                                                 <td>
                                                     <c:set var="foundType" value=""/>
                                                     <c:forEach var="cat" items="${g.categories}">

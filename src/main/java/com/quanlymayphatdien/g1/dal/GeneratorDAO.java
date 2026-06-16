@@ -36,7 +36,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
 
     @Override
     public boolean update(Generator g) {
-        String sql = "UPDATE generator SET model=?, power_rating=?, unit_price=?, "
+        String sql = "UPDATE generator SET model=?, power_rating=?, "
                 + "frequency=?, weight=?, description=?, status=?, "
                 + "updated_at=?, updated_by=? WHERE id=?";
         try {
@@ -44,7 +44,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             statement = connection.prepareStatement(sql);
             statement.setString(1, g.getModel());
             statement.setBigDecimal(2, g.getPowerRating());
-            statement.setBigDecimal(3, g.getUnitPrice());
             statement.setString(4, g.getFrequency());
             if (g.getWeight() != null) {
                 statement.setBigDecimal(5, g.getWeight());
@@ -91,7 +90,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, g.getModel());
             statement.setBigDecimal(2, g.getPowerRating());
-            statement.setBigDecimal(3, g.getUnitPrice());
             statement.setString(4, g.getFrequency());
             if (g.getWeight() != null) {
                 statement.setBigDecimal(5, g.getWeight());
@@ -363,7 +361,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         g.setId(rs.getInt("id"));
         g.setModel(rs.getString("model"));
         g.setPowerRating(rs.getBigDecimal("power_rating"));
-        g.setUnitPrice(rs.getBigDecimal("unit_price"));
         g.setFrequency(rs.getString("frequency"));
         BigDecimal w = rs.getBigDecimal("weight");
         if (!rs.wasNull()) {

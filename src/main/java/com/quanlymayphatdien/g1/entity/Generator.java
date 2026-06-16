@@ -8,7 +8,6 @@ public class Generator {
     private int id;
     private String model;
     private BigDecimal powerRating;
-    private BigDecimal unitPrice;
     private String frequency;
     private BigDecimal weight;
     private String description;
@@ -23,14 +22,13 @@ public class Generator {
     }
 
     public Generator(int id, String model, BigDecimal powerRating,
-            BigDecimal unitPrice, String frequency, BigDecimal weight,
+            String frequency, BigDecimal weight,
             String description, String status, LocalDateTime createdAt,
             LocalDateTime updatedAt, Integer createdBy, Integer updatedBy,
             List<Category> categories) {
         this.id = id;
         this.model = model;
         this.powerRating = powerRating;
-        this.unitPrice = unitPrice;
         this.frequency = frequency;
         this.weight = weight;
         this.description = description;
@@ -66,13 +64,6 @@ public class Generator {
         this.powerRating = powerRating;
     }
 
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
-
-    public void setUnitPrice(BigDecimal unitPrice) {
-        this.unitPrice = unitPrice;
-    }
 
     public String getFrequency() {
         return frequency;
@@ -152,7 +143,6 @@ public class Generator {
                 + "id=" + id
                 + ", model='" + model + '\''
                 + ", powerRating=" + powerRating
-                + ", unitPrice=" + unitPrice
                 + ", frequency='" + frequency + '\''
                 + ", weight=" + weight
                 + ", description='" + description + '\''

@@ -108,10 +108,6 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Đơn giá (VNĐ) <span class="req">*</span></label>
-                                        <input class="input mono" name="unitPrice" type="number" step="1" min="0" placeholder="VD: 15000000" value="<c:out value="${sessionScope.fieldPrice}"/>" required />
-                                    </div>
                                     <div class="field full-width">
                                         <label class="field-label">Mô tả</label>
                                         <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${sessionScope.fieldDesc}"/></textarea>
