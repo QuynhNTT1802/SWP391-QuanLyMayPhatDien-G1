@@ -297,6 +297,23 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
+    public boolean requestRevision(int proposalId, int userId, String reason) {
+        String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
+                + "rejected_by = ?, rejected_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            ps.setString(2, reason);
+            ps.setInt(3, userId);
+            ps.setInt(4, proposalId);
+            ps.setString(5, GlobalUtils.STATUS_PENDING);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String dateFrom, String dateTo, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
@@ -421,6 +438,46 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean replaceDetails(int proposalId, List<ImportProposalDetail> details) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM import_proposal_detail WHERE proposal_id = ?")) {
+                ps.setInt(1, proposalId);
+                ps.executeUpdate();
+            }
+            if (details != null && !details.isEmpty()) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, current_stock, unit_price, note) "
+                        + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                    for (ImportProposalDetail d : details) {
+                        ps.setInt(1, d.getProposalId());
+                        ps.setInt(2, d.getGeneratorId());
+                        ps.setInt(3, d.getQuantity());
+                        ps.setInt(4, d.getCurrentStock());
+                        if (d.getUnitPrice() != null) {
+                            ps.setBigDecimal(5, d.getUnitPrice());
+                        } else {
+                            ps.setNull(5, java.sql.Types.DECIMAL);
+                        }
+                        ps.setString(6, d.getNote());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            }
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
+        } finally {
+            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException e) { e.printStackTrace(); }
         }
     }
 
@@ -575,12 +632,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     @Override
     public boolean update(ImportProposal t) {
         String sql = "UPDATE import_proposal SET note = ?, status = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status = ?";
+                + "WHERE proposal_id = ? AND status IN (?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getNote());
             ps.setString(2, t.getStatus());
             ps.setInt(3, t.getProposalId());
-            ps.setString(4, GlobalUtils.STATUS_DRAFT);   // chỉ update khi DRAFT
+            ps.setString(4, GlobalUtils.STATUS_DRAFT);
+            ps.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

@@ -25,9 +25,25 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
         String sql = "SELECT d.*, "
                 + "g.model AS generator_code, "
                 + "g.model AS generator_name, "
+                + "g.power_rating, g.frequency, g.weight, "
                 + "(SELECT c.name FROM generator_category gc "
                 + "   JOIN category c ON c.id = gc.category_id "
                 + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON c.id = gc.category_id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'origin' LIMIT 1) AS origin_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON c.id = gc.category_id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'condition' LIMIT 1) AS condition_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON c.id = gc.category_id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'fuel' LIMIT 1) AS fuel_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON c.id = gc.category_id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'phase' LIMIT 1) AS phase_name, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON c.id = gc.category_id "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'type' LIMIT 1) AS gen_type_name, "
                 + "s.id AS s_id, "
                 + "s.name AS supplier_name, "
                 + "s.phone AS supplier_phone, "
@@ -189,6 +205,16 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
         d.setGeneratorCode(rs.getString("generator_code"));
         d.setGeneratorName(rs.getString("generator_name"));
         d.setBrandName(rs.getString("brand_name"));
+        d.setOriginName(rs.getString("origin_name"));
+        d.setConditionName(rs.getString("condition_name"));
+        d.setFuelName(rs.getString("fuel_name"));
+        d.setPhaseName(rs.getString("phase_name"));
+        d.setGenTypeName(rs.getString("gen_type_name"));
+        BigDecimal pr = rs.getBigDecimal("power_rating");
+        if (pr != null) d.setPowerRating(pr);
+        d.setFrequency(rs.getString("frequency"));
+        BigDecimal w = rs.getBigDecimal("weight");
+        if (w != null) d.setWeight(w);
         d.setSupplierName(rs.getString("supplier_name"));
         d.setSupplierPhone(rs.getString("supplier_phone"));
         d.setSupplierEmail(rs.getString("supplier_email"));

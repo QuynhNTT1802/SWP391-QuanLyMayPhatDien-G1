@@ -263,7 +263,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     placeholders.append("?");
                 }
                 try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE import_proposal SET purchase_order_id = ? "
+                        "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                         + "WHERE proposal_id IN (" + placeholders + ") "
                         + "  AND status = 'PENDING' "
                         + "  AND purchase_order_id IS NULL")) {
@@ -643,7 +643,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             }
             placeholders.append("?");
         }
-        String sql = "UPDATE import_proposal SET purchase_order_id = ? "
+        String sql = "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                 + "WHERE period = ? AND warehouse_id = ? AND status = 'PENDING' "
                 + "AND purchase_order_id IS NULL "
                 + "AND proposal_id IN ("
@@ -675,7 +675,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             }
             placeholders.append("?");
         }
-        String sql = "UPDATE import_proposal SET purchase_order_id = ? "
+        String sql = "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                 + "WHERE proposal_id IN (" + placeholders + ") "
                 + "AND status = 'PENDING' "
                 + "AND purchase_order_id IS NULL";

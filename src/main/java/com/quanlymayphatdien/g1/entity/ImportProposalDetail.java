@@ -16,6 +16,14 @@ public class ImportProposalDetail {
     private String generatorCode;
     private String generatorName;
     private String brandName;
+    private String originName;
+    private String conditionName;
+    private String fuelName;
+    private String phaseName;
+    private String genTypeName;
+    private BigDecimal powerRating;
+    private String frequency;
+    private BigDecimal weight;
 
     private String supplierName;
     private String supplierPhone;
@@ -111,6 +119,70 @@ public class ImportProposalDetail {
 
     public void setBrandName(String brandName) {
         this.brandName = brandName;
+    }
+
+    public String getOriginName() {
+        return originName;
+    }
+
+    public void setOriginName(String originName) {
+        this.originName = originName;
+    }
+
+    public String getConditionName() {
+        return conditionName;
+    }
+
+    public void setConditionName(String conditionName) {
+        this.conditionName = conditionName;
+    }
+
+    public String getFuelName() {
+        return fuelName;
+    }
+
+    public void setFuelName(String fuelName) {
+        this.fuelName = fuelName;
+    }
+
+    public String getPhaseName() {
+        return phaseName;
+    }
+
+    public void setPhaseName(String phaseName) {
+        this.phaseName = phaseName;
+    }
+
+    public String getGenTypeName() {
+        return genTypeName;
+    }
+
+    public void setGenTypeName(String genTypeName) {
+        this.genTypeName = genTypeName;
+    }
+
+    public BigDecimal getPowerRating() {
+        return powerRating;
+    }
+
+    public void setPowerRating(BigDecimal powerRating) {
+        this.powerRating = powerRating;
+    }
+
+    public String getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(String frequency) {
+        this.frequency = frequency;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
     }
 
     public String getSupplierName() {

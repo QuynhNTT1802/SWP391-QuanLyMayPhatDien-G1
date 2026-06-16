@@ -166,6 +166,7 @@
                                                 <th style="width:100px;">SL đề xuất</th>
                                                 <th style="width:80px;">Tồn kho</th>
                                                 <th style="width:100px;">SL mua cuối</th>
+                                                <th style="width:120px;">Đơn giá</th>
                                                 <th>Ghi chú</th>
                                             </tr>
                                         </thead>
@@ -181,13 +182,14 @@
                                                         <input type="number" name="finalQuantity" value="${agg.totalProposed}" min="0" class="qty-input" data-proposed="${agg.totalProposed}"/>
                                                         <div class="qty-warn">SL mua cuối = 0 hoặc nhỏ hơn SL đề xuất — cần nhập ghi chú</div>
                                                     </td>
+                                                    <td><input type="text" name="unitPrice" class="qty-input" placeholder="VNĐ"/></td>
                                                     <td><input type="text" name="detailNote" class="note-input" placeholder="Ghi chú..."/></td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td colspan="5" style="text-align: right;">Tổng SL mua:</td>
+                                                <td colspan="6" style="text-align: right;">Tổng SL mua:</td>
                                                 <td><span id="grandTotal">0</span></td>
                                                 <td></td>
                                             </tr>

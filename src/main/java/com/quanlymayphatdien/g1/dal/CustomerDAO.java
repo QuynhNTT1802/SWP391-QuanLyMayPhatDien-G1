@@ -17,7 +17,7 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
     @Override
     public List<Customer> findAll() {
         List<Customer> list = new ArrayList<>();
-        String sql = "SELECT * FROM customer ORDER BY created_at DESC";
+        String sql = "SELECT * FROM customer WHERE status = 'active' ORDER BY created_at DESC";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
