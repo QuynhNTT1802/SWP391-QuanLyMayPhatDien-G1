@@ -108,49 +108,8 @@ public class ProposalExcelSupport {
             cell.setCellStyle(headerStyle);
         }
 
-        int sampleCount = sampleGenerators != null ? Math.min(sampleGenerators.size(), 3) : 0;
-        int[] sampleQty = {2, 5, 1};
-        long[] sampleUnitPrice = {18_000_000L, 35_000_000L, 85_000_000L};
-
-        for (int i = 0; i < sampleCount; i++) {
-            Generator g = sampleGenerators.get(i);
-            Supplier sup = (sampleSuppliers != null && sampleSuppliers.size() > i) ? sampleSuppliers.get(i) : null;
-
-            Map<Integer, String> brandMap = categoryMapByType.getOrDefault("brand", new LinkedHashMap<>());
-            Map<Integer, String> originMap = categoryMapByType.getOrDefault("origin", new LinkedHashMap<>());
-            Map<Integer, String> conditionMap = categoryMapByType.getOrDefault("condition", new LinkedHashMap<>());
-            Map<Integer, String> fuelMap = categoryMapByType.getOrDefault("fuel_type", new LinkedHashMap<>());
-            Map<Integer, String> phaseMap = categoryMapByType.getOrDefault("phase", new LinkedHashMap<>());
-            Map<Integer, String> genTypeMap = categoryMapByType.getOrDefault("generator_type", new LinkedHashMap<>());
-
-            String brand = pickCategoryName(g, "brand", brandMap);
-            String origin = pickCategoryName(g, "origin", originMap);
-            String condition = pickCategoryName(g, "condition", conditionMap);
-            String fuel = pickCategoryName(g, "fuel_type", fuelMap);
-            String phase = pickCategoryName(g, "phase", phaseMap);
-            String genType = pickCategoryName(g, "generator_type", genTypeMap);
-
-            Row row = sheet.createRow(i + 1);
-            int col = 0;
-            row.createCell(col++).setCellValue(i + 1);
-            row.createCell(col++).setCellValue(g.getModel() != null ? g.getModel() : "");
-            row.createCell(col++).setCellValue(brand);
-            row.createCell(col++).setCellValue(origin);
-            row.createCell(col++).setCellValue(condition);
-            row.createCell(col++).setCellValue(fuel);
-            row.createCell(col++).setCellValue(phase);
-            row.createCell(col++).setCellValue(genType);
-            row.createCell(col++).setCellValue(g.getPowerRating() != null ? g.getPowerRating().toPlainString() : "");
-            row.createCell(col++).setCellValue(g.getFrequency() != null ? g.getFrequency() : "");
-            row.createCell(col++).setCellValue(g.getWeight() != null ? g.getWeight().toPlainString() : "");
-            row.createCell(col++).setCellValue(g.getDescription() != null ? g.getDescription() : "");
-            row.createCell(col++).setCellValue(sup != null && sup.getName() != null ? sup.getName() : "");
-            row.createCell(col++).setCellValue(sampleUnitPrice[i]);
-            row.createCell(col++).setCellValue(sampleQty[i]);
-            row.createCell(col++).setCellValue("");
-        }
-
-        if (sampleCount == 0) {
+        // Luôn chỉ dùng 1 dòng mẫu static (Honda), không lấy từ DB
+        {
             Row row = sheet.createRow(1);
             int col = 0;
             row.createCell(col++).setCellValue(1);
@@ -165,7 +124,7 @@ public class ProposalExcelSupport {
             row.createCell(col++).setCellValue("50Hz");
             row.createCell(col++).setCellValue(85);
             row.createCell(col++).setCellValue("Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha");
-            row.createCell(col++).setCellValue("");
+            row.createCell(col++).setCellValue("Công ty Máy Phát Điện Đông Dương");
             row.createCell(col++).setCellValue(18_000_000);
             row.createCell(col++).setCellValue(2);
             row.createCell(col++).setCellValue("");

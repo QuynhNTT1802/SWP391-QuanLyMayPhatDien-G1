@@ -254,9 +254,11 @@ public class SupplierController extends HttpServlet {
                         || returnUrl.contains("importExcel")
                         || returnUrl.contains("assignSupplier"))) {
                     String separator = returnUrl.contains("?") ? "&" : "?";
+                    String rowIdx = request.getParameter("rowIndex");
                     response.sendRedirect(returnUrl + separator
                             + "newSupplierId=" + newId
-                            + "&newSupplierName=" + java.net.URLEncoder.encode(name.trim(), "UTF-8"));
+                            + "&newSupplierName=" + java.net.URLEncoder.encode(name.trim(), "UTF-8")
+                            + (rowIdx != null && !rowIdx.isEmpty() ? "&assignedRow=" + rowIdx : ""));
                     return;
                 }
             } else {

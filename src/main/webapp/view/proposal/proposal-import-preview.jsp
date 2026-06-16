@@ -278,7 +278,7 @@
                                                     </c:choose>
                                                 </td>
                                                 <td style="text-align:right">
-                                                    <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=<c:out value='${row.supplierQuery}'/>&amp;returnUrl=${pageContext.request.contextPath}/proposal?action%3DimportConfirm&amp;rowIndex=<c:out value='${st.index}'/>" target="_self">Tạo NCC mới</a>
+                                                    <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=${java.net.URLEncoder.encode(row.supplierQuery, 'UTF-8')}&amp;returnUrl=${pageContext.request.contextPath}/proposal?action%3DimportConfirm&amp;rowIndex=${st.index}" target="_self">Tạo NCC mới</a>
                                                     <button type="button" class="btn btn-primary" onclick="openSupplierPanel(<c:out value='${st.index}'/>, '<c:out value='${row.supplierQuery}'/>', this.closest('tr'))">Chọn lại từ DS</button>
                                                 </td>
                                             </tr>
@@ -449,13 +449,15 @@
                 currentRowIndex = rowIndex;
                 currentUnresolvedRow = tr || null;
                 var searchInput = document.getElementById('supplierSearchInput');
-                searchInput.value = query || '';
                 document.getElementById('sidePanelOverlay').classList.add('show');
                 document.getElementById('sidePanel').classList.add('show');
                 document.getElementById('supplierList').innerHTML = '';
                 document.getElementById('supplierLoading').style.display = 'block';
                 setTimeout(function () { searchInput.focus(); }, 280);
-                loadSuppliers(searchInput.value);
+                loadSuppliers(function () {
+                    searchInput.value = query || '';
+                    searchInput.dispatchEvent(new Event('input'));
+                });
             }
 
             function closeSupplierPanel() {
@@ -465,9 +467,9 @@
                 currentUnresolvedRow = null;
             }
 
-            function loadSuppliers(q) {
+            function loadSuppliers(callback) {
                 document.getElementById('supplierLoading').style.display = 'block';
-                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q=' + encodeURIComponent(q || ''))
+                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q=')
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         document.getElementById('supplierLoading').style.display = 'none';
@@ -475,6 +477,7 @@
                         listWrap.innerHTML = '';
                         if (!data || data.length === 0) {
                             listWrap.innerHTML = '<div class="empty-msg">Không tìm thấy nhà cung cấp nào.</div>';
+                            if (callback) callback();
                             return;
                         }
                         data.forEach(function (s) {
@@ -507,10 +510,12 @@
                             card.onclick = function () { pickSupplier(s); };
                             listWrap.appendChild(card);
                         });
+                        if (callback) callback();
                     })
                     .catch(function (err) {
                         document.getElementById('supplierLoading').style.display = 'none';
                         document.getElementById('supplierList').innerHTML = '<div class="empty-msg" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
+                        if (callback) callback();
                     });
             }
 
@@ -524,8 +529,7 @@
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data && data.ok) {
-                        // Move unresolved row to "Hợp lệ" by reloading the page
-                        window.location.reload();
+                        window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
                     } else {
                         alert('Không thể gán nhà cung cấp: ' + (data && data.error ? data.error : 'unknown'));
                     }
