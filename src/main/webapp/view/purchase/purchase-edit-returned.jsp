@@ -65,7 +65,7 @@
 
                     <div class="po-info">
                         <div><span class="lbl">Mã phiếu mua</span><span class="val"><c:out value="${po.poCode}"/></span></div>
-                        <div><span class="lbl">Kỳ</span><span class="val"><c:out value="${po.period}"/></span></div>
+                        <div><span class="lbl">Tháng</span><span class="val"><c:out value="${po.period}"/></span></div>
                         <div>
                             <span class="lbl">Kho</span>
                             <span class="val">

@@ -1,5 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -39,8 +40,8 @@
                     <div class="page-head">
                         <div class="left">
                             <div class="eyebrow">Kinh doanh · Phiếu mua</div>
-                            <h2 class="page-title">Gom đề xuất theo quý + kho</h2>
-                            <div class="page-sub">Chọn quý và kho để xem các đề xuất PENDING cần mua.</div>
+                            <h2 class="page-title">Gom đề xuất theo tháng + kho</h2>
+                            <div class="page-sub">Chọn tháng và kho để xem các đề xuất PENDING cần mua.</div>
                         </div>
                     </div>
 
@@ -60,8 +61,8 @@
                         <div class="alert alert-error" style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 14px 18px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
                             <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                             <div>
-                                <strong>Quý ${blockedPeriod}</strong> tại kho này đã bị CEO từ chối PO.
-                                Không thể tạo PO mới cho quý này.
+                                <strong>Tháng ${blockedPeriod}</strong> tại kho này đã bị CEO từ chối PO.
+                                Không thể tạo PO mới cho tháng này.
                             </div>
                         </div>
                     </c:if>
@@ -69,12 +70,15 @@
                     <form method="get" action="${pageContext.request.contextPath}/purchase-order" id="filterForm">
                         <input type="hidden" name="action" value="create"/>
                         <div class="filter-row">
-                            <label><strong>Quý:</strong>
-                                <select name="period" onchange="document.getElementById('filterForm').submit()">
-                                    <c:forEach var="p" items="${periods}">
-                                        <option value="${p}" <c:if test="${p == selectedPeriod}">selected</c:if>>${p}</option>
-                                    </c:forEach>
-                                </select>
+                            <label><strong>Tháng:</strong>
+                                <c:set var="selPeriodVal">
+                                    <c:choose>
+                                        <c:when test="${fn:length(selectedPeriod) eq 6}">${fn:substring(selectedPeriod,0,4)}-${fn:substring(selectedPeriod,4)}</c:when>
+                                        <c:otherwise>${selectedPeriod}</c:otherwise>
+                                    </c:choose>
+                                </c:set>
+                                <input type="month" name="period" value="${selPeriodVal}"
+                                       onchange="document.getElementById('filterForm').submit()">
                             </label>
                             <label><strong>Kho:</strong>
                                 <select name="warehouseId" onchange="document.getElementById('filterForm').submit()">
@@ -91,13 +95,13 @@
                         <c:choose>
                             <c:when test="${empty aggregations}">
                                 <div class="card" style="padding: 24px; text-align: center; color: var(--muted);">
-                                    Quý <strong>${selectedPeriod}</strong> chưa có đề xuất PENDING nào trong kho này.
+                                    Tháng <strong>${selectedPeriod}</strong> chưa có đề xuất PENDING nào trong kho này.
                                 </div>
                             </c:when>
                             <c:otherwise>
                                 <c:if test="${quarterBlocked}">
                                     <div class="card" style="padding: 24px; text-align: center; color: var(--muted);">
-                                        Vui lòng chọn quý hoặc kho khác.
+                                        Vui lòng chọn tháng hoặc kho khác.
                                     </div>
                                 </c:if>
                                 <c:if test="${!quarterBlocked}">

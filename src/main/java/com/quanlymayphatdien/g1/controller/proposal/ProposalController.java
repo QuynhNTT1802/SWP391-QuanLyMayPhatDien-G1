@@ -173,7 +173,8 @@ public class ProposalController extends HttpServlet {
 
         String statusFilter = request.getParameter("status");
         String search = request.getParameter("search");
-        String periodFilter = request.getParameter("period");
+        String dateFrom = request.getParameter("dateFrom");
+        String dateTo = request.getParameter("dateTo");
 
         int page = 1;
         int pageSize = 10;
@@ -196,7 +197,7 @@ public class ProposalController extends HttpServlet {
         }
 
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, periodFilter);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, dateFrom, dateTo);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -205,7 +206,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, periodFilter, page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, dateFrom, dateTo, page, pageSize);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("totalProposals", total);
@@ -214,19 +215,19 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("search", search);
         request.setAttribute("poFilter", poFilter);
-        request.setAttribute("periodFilter", periodFilter);
-        request.setAttribute("periods", PeriodUtils.recentQuarters(4));
+        request.setAttribute("dateFrom", dateFrom);
+        request.setAttribute("dateTo", dateTo);
 
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
         request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
         request.setAttribute("canApproveProposal", canApprove);
         request.setAttribute("userPermissions", perms);
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft, periodFilter));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft, periodFilter));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft, periodFilter));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft, periodFilter));
-        request.setAttribute("draftCount",     canApprove ? 0 : dao.countByStatus(GlobalUtils.STATUS_DRAFT, loggedUser.getId(), false, periodFilter));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft, dateFrom, dateTo));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft, dateFrom, dateTo));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft, dateFrom, dateTo));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft, dateFrom, dateTo));
+        request.setAttribute("draftCount",     canApprove ? 0 : dao.countByStatus(GlobalUtils.STATUS_DRAFT, loggedUser.getId(), false, dateFrom, dateTo));
 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }
@@ -368,7 +369,7 @@ public class ProposalController extends HttpServlet {
         String currentPeriod = PeriodUtils.currentPeriod();
         if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
             session.setAttribute("toastMessage",
-                    "Quý " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
+                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
             return;
@@ -665,7 +666,7 @@ public class ProposalController extends HttpServlet {
         String currentPeriod = PeriodUtils.currentPeriod();
         if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
             session.setAttribute("toastMessage",
-                    "Quý " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
+                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
             return;
@@ -988,7 +989,7 @@ public class ProposalController extends HttpServlet {
         String currentPeriod = PeriodUtils.currentPeriod();
         if (new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
             session.setAttribute("toastMessage",
-                    "Quý " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
+                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
             return;
