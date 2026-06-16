@@ -83,6 +83,9 @@ public class ProposalController extends HttpServlet {
                 case "redirectCreateSupplier":
                     redirectCreateSupplier(request, response);
                     return;
+                case "importConfirm":
+                    reShowImportPreview(request, response);
+                    return;
                 default:
                     listProposals(request, response);
                     break;
@@ -840,6 +843,115 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("invalidRows", invalidRows);
         request.setAttribute("unresolvedSupplierRows", unresolvedSupplierRows);
         request.setAttribute("currentWarehouseId", warehouseId);
+        request.setAttribute("currentNote", note != null ? note : "");
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());
+        request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
+                .forward(request, response);
+    }
+
+    private void reShowImportPreview(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
+        if (pendingRows == null || pendingRows.isEmpty()) {
+            session.setAttribute("toastMessage", "Phiên import đã hết hạn, vui lòng tải lại file Excel.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        Integer warehouseId = (Integer) session.getAttribute("pendingImportWarehouseId");
+        String note = (String) session.getAttribute("pendingImportNote");
+
+        String newSupplierIdStr = request.getParameter("newSupplierId");
+        String assignedRowStr = request.getParameter("assignedRow");
+
+        // Nếu có newSupplierId + assignedRow, gán trực tiếp vào pendingImportRows
+        if (newSupplierIdStr != null && !newSupplierIdStr.isEmpty()
+                && assignedRowStr != null && !assignedRowStr.isEmpty()) {
+            try {
+                int newId = Integer.parseInt(newSupplierIdStr);
+                int rowIdx = Integer.parseInt(assignedRowStr);
+                Supplier newSup = new SupplierDAO().findById(newId);
+                if (newSup != null && rowIdx >= 0 && rowIdx < pendingRows.size()) {
+                    Map<String, String> target = pendingRows.get(rowIdx);
+                    target.put("supplierId", String.valueOf(newId));
+                    target.put("supplierNameResolved", newSup.getName());
+                    target.put("supplierQuery", newSup.getName());
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        SupplierDAO supDAO = new SupplierDAO();
+        List<Map<String, String>> validRows = new ArrayList<>();
+        List<Map<String, String>> warningRows = new ArrayList<>();
+        List<Map<String, String>> invalidRows = new ArrayList<>();
+        List<Map<String, String>> unresolvedSupplierRows = new ArrayList<>();
+
+        for (Map<String, String> enriched : pendingRows) {
+            String supplierNameRaw = enriched.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
+            Map<String, String> copy = new LinkedHashMap<>(enriched);
+            String supplierQuery = supplierNameRaw == null ? "" : supplierNameRaw.trim();
+            copy.put("supplierQuery", supplierQuery);
+
+            Integer resolvedSupplierId = null;
+            String resolvedSupplierName = null;
+            boolean supplierResolved = false;
+
+            // Nếu đã gán sẵn supplierId (từ newSupplier), dùng luôn
+            String sidStr = copy.get("supplierId");
+            if (sidStr != null && !sidStr.isEmpty()) {
+                try {
+                    resolvedSupplierId = Integer.parseInt(sidStr);
+                    resolvedSupplierName = copy.get("supplierNameResolved");
+                    if (resolvedSupplierId != null && resolvedSupplierId > 0) {
+                        supplierResolved = true;
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+
+            if (!supplierResolved && !supplierQuery.isEmpty()) {
+                List<Supplier> found = supDAO.findByNameExact(supplierQuery);
+                if (found.size() == 1) {
+                    resolvedSupplierId = found.get(0).getId();
+                    resolvedSupplierName = found.get(0).getName();
+                    supplierResolved = true;
+                    copy.put("supplierId", String.valueOf(resolvedSupplierId));
+                    copy.put("supplierNameResolved", resolvedSupplierName);
+                } else if (found.size() >= 2) {
+                    copy.put("supplierMultiple", "true");
+                    copy.put("supplierMultipleCount", String.valueOf(found.size()));
+                } else {
+                    copy.put("supplierMultiple", "false");
+                }
+            }
+
+            String errors = copy.get("gerrors");
+            String warnings = copy.get("gwarnings");
+            if (errors != null && !errors.isEmpty()) {
+                invalidRows.add(copy);
+            } else if (!supplierResolved) {
+                unresolvedSupplierRows.add(copy);
+            } else if (warnings != null && !warnings.isEmpty()) {
+                warningRows.add(copy);
+            } else {
+                validRows.add(copy);
+            }
+        }
+
+        request.setAttribute("validRows", validRows);
+        request.setAttribute("warningRows", warningRows);
+        request.setAttribute("invalidRows", invalidRows);
+        request.setAttribute("unresolvedSupplierRows", unresolvedSupplierRows);
+        request.setAttribute("currentWarehouseId", warehouseId != null ? warehouseId : 0);
         request.setAttribute("currentNote", note != null ? note : "");
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
