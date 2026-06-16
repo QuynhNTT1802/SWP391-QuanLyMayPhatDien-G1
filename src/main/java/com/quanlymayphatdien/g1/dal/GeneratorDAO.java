@@ -34,45 +34,9 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return list;
     }
 
-    public List<Generator> findAllActive() {
-        List<Generator> list = new ArrayList<>();
-        String sql = "SELECT * FROM generator WHERE status = 'active' ORDER BY model";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
-
-    public List<Generator> findInStockByWarehouse(int warehouseId) {
-        List<Generator> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT g.* FROM generator g "
-                + "JOIN inventory i ON i.generator_id = g.id "
-                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND g.status = 'active' "
-                + "ORDER BY g.model";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, warehouseId);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
-
     @Override
     public boolean update(Generator g) {
-        String sql = "UPDATE generator SET model=?, power_rating=?, unit_price=?, "
+        String sql = "UPDATE generator SET model=?, power_rating=?, "
                 + "frequency=?, weight=?, description=?, status=?, "
                 + "updated_at=?, updated_by=? WHERE id=?";
         try {
@@ -80,7 +44,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             statement = connection.prepareStatement(sql);
             statement.setString(1, g.getModel());
             statement.setBigDecimal(2, g.getPowerRating());
-            statement.setBigDecimal(3, g.getUnitPrice());
             statement.setString(4, g.getFrequency());
             if (g.getWeight() != null) {
                 statement.setBigDecimal(5, g.getWeight());
@@ -127,7 +90,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, g.getModel());
             statement.setBigDecimal(2, g.getPowerRating());
-            statement.setBigDecimal(3, g.getUnitPrice());
             statement.setString(4, g.getFrequency());
             if (g.getWeight() != null) {
                 statement.setBigDecimal(5, g.getWeight());
@@ -173,44 +135,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             System.out.println(e.getMessage());
         }
         return null;
-    }
-
-    public Generator findByModel(String model) {
-        if (model == null || model.trim().isEmpty()) {
-            return null;
-        }
-        String sql = "SELECT * FROM generator WHERE LOWER(TRIM(model)) = LOWER(TRIM(?))";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, model.trim());
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                Generator g = getFromResultSet(resultSet);
-                g.setCategories(getCategoriesByGeneratorId(g.getId()));
-                return g;
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
-
-    public boolean isInWarehouse(int generatorId, int warehouseId) {
-        String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND warehouse_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, generatorId);
-            statement.setInt(2, warehouseId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return false;
     }
 
     public boolean activate(int id) {
@@ -437,7 +361,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         g.setId(rs.getInt("id"));
         g.setModel(rs.getString("model"));
         g.setPowerRating(rs.getBigDecimal("power_rating"));
-        g.setUnitPrice(rs.getBigDecimal("unit_price"));
         g.setFrequency(rs.getString("frequency"));
         BigDecimal w = rs.getBigDecimal("weight");
         if (!rs.wasNull()) {
@@ -465,5 +388,39 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         }
 
         return g;
+    }
+    public List<Generator> findAllActive() {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT * FROM generator WHERE status = 'active' ORDER BY model";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    } 
+    public List<Generator> findInStockByWarehouse(int warehouseId) {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT g.* FROM generator g "
+                + "JOIN inventory i ON i.generator_id = g.id "
+                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND g.status = 'active' "
+                + "ORDER BY g.model";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
     }
 }

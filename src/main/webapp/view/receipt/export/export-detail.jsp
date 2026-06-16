@@ -386,7 +386,7 @@
                                     <c:if test="${not empty receipt.details}">
                                         <c:forEach var="d" items="${receipt.details}">
                                             <c:set var="uPrice" value="${d.unitPrice != null ? d.unitPrice : 0}" />
-                                            <c:set var="grandTotal" value="${grandTotal + (uPrice * d.quantity)}" />
+                                            <c:set var="grandTotal" value="${grandTotal + uPrice}" />
                                         </c:forEach>
                                     </c:if>
                                     <span>Tổng giá trị: <strong style="color:var(--fg);font-family:var(--font-mono);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</strong></span>
@@ -397,7 +397,6 @@
                                             <th style="width: 40px;">#</th>
                                             <th>Máy phát / Hãng</th>
                                             <th>Serial</th>
-                                            <th style="width: 80px;">SL</th>
                                             <th style="width: 140px;">Đơn giá</th>
                                             <th style="width: 140px;">Thành tiền</th>
                                             <th>Ghi chú</th>
@@ -406,12 +405,12 @@
                                     <tbody>
                                         <c:choose>
                                             <c:when test="${empty receipt.details}">
-                                                <tr><td colspan="7" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                                <tr><td colspan="6" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="d" items="${receipt.details}" varStatus="st">
                                                     <c:set var="uPrice" value="${d.unitPrice != null ? d.unitPrice : 0}" />
-                                                    <c:set var="subtotal" value="${uPrice * d.quantity}" />
+                                                    <c:set var="subtotal" value="${uPrice}" />
                                                     <tr>
                                                         <td class="mono" style="font-family:var(--font-mono);">${st.index + 1}</td>
                                                         <td>
@@ -419,7 +418,6 @@
                                                             <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span>
                                                         </td>
                                                         <td style="font-family:var(--font-mono);"><c:out value="${d.serialNumber}"/></td>
-                                                        <td style="font-family:var(--font-mono);"><fmt:formatNumber value="${d.quantity}"/></td>
                                                         <td style="font-family:var(--font-mono);"><fmt:formatNumber value="${uPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
                                                         <td style="font-family:var(--font-mono); font-weight: 600;"><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
                                                         <td><c:out value="${d.note}"/></td>

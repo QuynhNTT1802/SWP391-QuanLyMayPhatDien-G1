@@ -196,7 +196,6 @@
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát</th>
                                     <th class="col-serial">Serial</th>
-                                    <th class="col-qty" style="width:70px;">SL</th>
                                     <th style="width:130px;">Đơn giá</th>
                                     <th style="width:130px;">Thành tiền</th>
                                     <th class="col-note">Ghi chú</th>
@@ -214,7 +213,6 @@
                                         <span class="field-error" style="display:none;"></span>
                                     </td>
                                     <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
-                                    <td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly disabled oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
                                     <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>
                                     <td class="col-price mono row-subtotal">0₫</td>
                                     <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
@@ -227,7 +225,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
-                                    <td colspan="5" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
+                                    <td colspan="4" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
                                     <td class="mono" id="grandTotal" style="padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">0₫</td>
                                     <td colspan="2" style="border-top:2px solid var(--border);"></td>
                                 </tr>
@@ -359,27 +357,24 @@
             priceInput.value = price;
         }
         updateStockInfo(sel);
-        updateRowTotal(row.querySelector('input[name="quantity"]'));
+        updateRowTotal(row.querySelector('input[name="unitPrice"]'));
     }
 
     function updateRowTotal(el) {
         var row = el ? el.closest('tr') : null;
         if (!row) return;
-        var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
         var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
         var price = parseFloat(priceStr) || 0;
-        var subtotal = qty * price;
-        row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
+        row.querySelector('.row-subtotal').textContent = formatVND(price);
         updateGrandTotal();
     }
 
     function updateGrandTotal() {
         var grand = 0;
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
             var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
             var price = parseFloat(priceStr) || 0;
-            grand += qty * price;
+            grand += price;
         });
         document.getElementById('grandTotal').textContent = formatVND(grand);
     }
@@ -389,7 +384,6 @@
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
                 + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
@@ -419,19 +413,6 @@
         });
     }
 
-    function validateQty(input) {
-        var v = input.value.replace(/[^0-9]/g, '');
-        var n = parseInt(v);
-        if (isNaN(n) || n < 1) {
-            input.value = 1;
-        } else if (n > 100000) {
-            input.value = 100000;
-        } else {
-            input.value = n;
-        }
-        validateField(input);
-    }
-
     function validateField(el) {
         var err = el.parentElement.querySelector('.field-error');
         if (err === null) return true;
@@ -439,15 +420,6 @@
             el.style.borderColor = '#dc3545';
             err.style.display = 'block';
             return false;
-        }
-        if (el.name === 'quantity') {
-            var q = parseInt(el.value);
-            if (isNaN(q) || q < 1) {
-                el.style.borderColor = '#dc3545';
-                err.textContent = 'Số lượng phải ≥ 1';
-                err.style.display = 'block';
-                return false;
-            }
         }
         el.style.borderColor = '';
         err.style.display = 'none';
