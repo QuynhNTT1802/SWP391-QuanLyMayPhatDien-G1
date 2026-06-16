@@ -55,7 +55,7 @@ public class SystemLogController extends HttpServlet {
             dateTo = null;
         }
 
-        // ---- Phân trang ----
+
         int page = 1;
         try {
             String p = request.getParameter("page");

@@ -6,6 +6,7 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,7 +33,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 if (rs.next()) return getFromResultSet(rs);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return null;
     }
@@ -49,7 +50,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -65,7 +66,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -80,7 +81,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 types.add(rs.getString("type"));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return types;
     }
@@ -112,7 +113,8 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
             }
             ResultSet rs = p.executeQuery();
             while (rs.next()) list.add(getFromResultSet(rs));
-        } catch (SQLException e) { com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
+        } catch (SQLException e) { 
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
         return list;
     }
 
@@ -149,7 +151,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -165,18 +167,12 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 types.add(rs.getString("type"));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return types;
     }
 
-    /**
-     * Lấy MIN(id) theo từng type trong một module.
-     * Dùng để hiển thị cột ID đại diện trong bảng Tổng quan danh mục.
-     *
-     * @param module tên module, VD "quản lý vật tư"
-     * @return Map&lt;type, minId&gt;
-     */
+
     public Map<String, Integer> getMinIdByType(String module) {
         Map<String, Integer> result = new HashMap<>();
         String sql = "SELECT type, MIN(id) AS min_id FROM category WHERE module = ? GROUP BY type";
@@ -189,7 +185,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 }
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return result;
     }
@@ -209,7 +205,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -225,7 +221,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 list.add((Category) getFromResultSet(rs));
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -244,7 +240,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
             p.setInt(7, category.getId());
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -258,7 +254,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
             p.setInt(2, t.getId());
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -285,7 +281,7 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
                 }
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }

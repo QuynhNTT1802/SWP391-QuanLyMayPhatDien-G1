@@ -19,10 +19,12 @@ import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
+import com.quanlymayphatdien.g1.dal.GeneratorDAO;
+import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.service.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -34,12 +36,21 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
+import static java.net.URLEncoder.encode;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @WebServlet(name = "LiquidationController", urlPatterns = {"/liquidations"})
 @MultipartConfig
 public class LiquidationController extends HttpServlet {
-    
+
     private final LiquidationDAO liquidationDAO = new LiquidationDAO();
     private final LiquidationDetailDAO detailDAO = new LiquidationDetailDAO();
     private final CategoryDAO categoryDAO = new CategoryDAO();
@@ -59,21 +70,24 @@ public class LiquidationController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
-        java.util.Set<String> perms = (java.util.Set<String>) session.getAttribute("userPermissions");
+
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         if (perms == null || !perms.contains("liquidations.view")) {
             request.setAttribute("requiredPerm", "liquidations.view");
             request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
             return;
         }
         String action = request.getParameter("action");
-        if (action == null) action = "list";
-        
+        if (action == null) {
+            action = "list";
+        }
+
         try {
             switch (action) {
                 case "create":
                     List<Category> reasons = categoryDAO.findByType("liquidation_reason");
                     request.setAttribute("reasons", reasons);
-                    com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
+                    GeneratorDAO genDAO = new GeneratorDAO();
                     request.setAttribute("generators", genDAO.findAll());
                     request.setAttribute("warehouses", warehouseDAO.findAll());
                     request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
@@ -99,9 +113,6 @@ public class LiquidationController extends HttpServlet {
                 case "search_customer":
                     searchCustomerJson(request, response);
                     break;
-                case "migrate_serials":
-                    migrateSerials(request, response);
-                    break;
                 case "list":
                 default:
                     showList(request, response);
@@ -116,24 +127,30 @@ public class LiquidationController extends HttpServlet {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         int generatorId = Integer.parseInt(request.getParameter("generatorId"));
         List<Inventory> serials = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, generatorId);
-        List<java.util.Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerials(warehouseId, generatorId);
+        List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerials(warehouseId, generatorId);
 
         JsonArray available = new JsonArray();
         for (Inventory inv : serials) {
             JsonObject o = new JsonObject();
             o.addProperty("serialNumber", inv.getSerialNumber());
-            if (inv.getGeneratorModel() != null) o.addProperty("generatorName", inv.getGeneratorModel());
-            if (inv.getCreatedAt() != null) o.addProperty("createdAt", inv.getCreatedAt().toString());
+            if (inv.getGeneratorModel() != null) {
+                o.addProperty("generatorName", inv.getGeneratorModel());
+            }
+            if (inv.getCreatedAt() != null) {
+                o.addProperty("createdAt", inv.getCreatedAt().toString());
+            }
             available.add(o);
         }
         JsonArray lockedArr = new JsonArray();
-        for (java.util.Map<String, Object> m : locked) {
+        for (Map<String, Object> m : locked) {
             JsonObject o = new JsonObject();
             o.addProperty("serialNumber", (String) m.get("serialNumber"));
             o.addProperty("liquidationId", (Integer) m.get("liquidationId"));
             o.addProperty("liquidationCode", (String) m.get("liquidationCode"));
             o.addProperty("liquidationStatus", (String) m.get("liquidationStatus"));
-            if (m.get("createdAt") != null) o.addProperty("createdAt", m.get("createdAt").toString());
+            if (m.get("createdAt") != null) {
+                o.addProperty("createdAt", m.get("createdAt").toString());
+            }
             lockedArr.add(o);
         }
         JsonObject root = new JsonObject();
@@ -145,46 +162,46 @@ public class LiquidationController extends HttpServlet {
         response.getWriter().write(new Gson().toJson(root));
     }
 
-    /**
-     * Lay tat ca serial IN_STOCK trong mot kho, group theo generator.
-     * Dung cho picker moi: 1 lan goi du hien thi het cac model trong kho.
-     */
-    /**
-     * Lay tat ca serial IN_STOCK trong mot kho, group theo generator.
-     */
     private void getSerialsAll(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
-        java.util.List<Inventory> all = inventoryDAO.findInStockByWarehouse(warehouseId);
-        java.util.List<java.util.Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
+        List<Inventory> all = inventoryDAO.findInStockByWarehouse(warehouseId);
+        List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
 
-        java.util.LinkedHashMap<Integer, java.util.List<Inventory>> grouped = new java.util.LinkedHashMap<>();
-        java.util.HashMap<Integer, String> modelMap = new java.util.HashMap<>();
+        LinkedHashMap<Integer, List<Inventory>> grouped = new LinkedHashMap<>();
+        HashMap<Integer, String> modelMap = new HashMap<>();
         for (Inventory inv : all) {
             grouped.computeIfAbsent(inv.getGeneratorId(), k -> new java.util.ArrayList<>()).add(inv);
-            if (inv.getGeneratorModel() != null) modelMap.put(inv.getGeneratorId(), inv.getGeneratorModel());
+            if (inv.getGeneratorModel() != null) {
+                modelMap.put(inv.getGeneratorId(), inv.getGeneratorModel());
+            }
         }
 
-        com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
-        java.util.HashMap<Integer, java.math.BigDecimal> priceMap = new java.util.HashMap<>();
-        for (com.quanlymayphatdien.g1.entity.Generator g : genDAO.findAll()) {
+        GeneratorDAO genDAO = new GeneratorDAO();
+        HashMap<Integer, java.math.BigDecimal> priceMap = new HashMap<>();
+        for (Generator g : genDAO.findAll()) {
             priceMap.put(g.getId(), g.getUnitPrice());
         }
 
         JsonArray generators = new JsonArray();
-        for (java.util.Map.Entry<Integer, java.util.List<Inventory>> e : grouped.entrySet()) {
+        for (Map.Entry<Integer, List<Inventory>> e : grouped.entrySet()) {
             int genId = e.getKey();
             JsonObject g = new JsonObject();
             g.addProperty("generatorId", genId);
             g.addProperty("model", modelMap.getOrDefault(genId, ""));
-            java.math.BigDecimal price = priceMap.get(genId);
-            if (price != null) g.addProperty("unitPrice", price);
-            else g.add("unitPrice", com.google.gson.JsonNull.INSTANCE);
+            BigDecimal price = priceMap.get(genId);
+            if (price != null) {
+                g.addProperty("unitPrice", price);
+            } else {
+                g.add("unitPrice", com.google.gson.JsonNull.INSTANCE);
+            }
 
             JsonArray serials = new JsonArray();
             for (Inventory inv : e.getValue()) {
                 JsonObject s = new JsonObject();
                 s.addProperty("serialNumber", inv.getSerialNumber());
-                if (inv.getCreatedAt() != null) s.addProperty("createdAt", inv.getCreatedAt().toString());
+                if (inv.getCreatedAt() != null) {
+                    s.addProperty("createdAt", inv.getCreatedAt().toString());
+                }
                 serials.add(s);
             }
             g.add("serials", serials);
@@ -192,7 +209,7 @@ public class LiquidationController extends HttpServlet {
         }
 
         JsonArray lockedArr = new JsonArray();
-        for (java.util.Map<String, Object> m : locked) {
+        for (Map<String, Object> m : locked) {
             JsonObject o = new JsonObject();
             o.addProperty("serialNumber", (String) m.get("serialNumber"));
             o.addProperty("generatorId", (Integer) m.get("generatorId"));
@@ -200,7 +217,9 @@ public class LiquidationController extends HttpServlet {
             o.addProperty("liquidationId", (Integer) m.get("liquidationId"));
             o.addProperty("liquidationCode", (String) m.get("liquidationCode"));
             o.addProperty("liquidationStatus", (String) m.get("liquidationStatus"));
-            if (m.get("createdAt") != null) o.addProperty("createdAt", m.get("createdAt").toString());
+            if (m.get("createdAt") != null) {
+                o.addProperty("createdAt", m.get("createdAt").toString());
+            }
             lockedArr.add(o);
         }
 
@@ -213,15 +232,11 @@ public class LiquidationController extends HttpServlet {
         response.getWriter().write(new Gson().toJson(root));
     }
 
-    private void migrateSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Method nay khong con can thiet vi serial_number da gop vao inventory.
-        // Giu lai de tuong thich URL, tra ve thong bao.
-        response.getWriter().write("Migration da hoan tat (serial_number da gop vao inventory tu truoc).");
-    }
-
     private void searchCustomerJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String q = request.getParameter("q");
-        if (q == null) q = "";
+        if (q == null) {
+            q = "";
+        }
         List<Customer> customers = customerDAO.findByFilters(q.trim(), "active", null, 1, 20);
 
         JsonArray arr = new JsonArray();
@@ -240,7 +255,6 @@ public class LiquidationController extends HttpServlet {
         response.getWriter().write(new Gson().toJson(arr));
     }
 
-
     private void showList(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String search = request.getParameter("search");
         String statusFilter = request.getParameter("status");
@@ -258,7 +272,7 @@ public class LiquidationController extends HttpServlet {
         HttpSession session = request.getSession(false);
         java.util.Set<String> perms = session != null ? (java.util.Set<String>) session.getAttribute("userPermissions") : null;
         User currentUser = session != null ? (User) session.getAttribute("loggedUser") : null;
-        
+
         Integer filterUserId = null;
         if (perms != null && !perms.contains("liquidations.approve_manager") && !perms.contains("liquidations.approve_ceo")) {
             if (currentUser != null) {
@@ -268,40 +282,40 @@ public class LiquidationController extends HttpServlet {
 
         int totalRecords = liquidationDAO.countTotal(search, statusFilter, filterUserId);
         int totalPages = (int) Math.ceil((double) totalRecords / limit);
-        
+
         List<Liquidation> list = liquidationDAO.findWithPagination(limit, offset, search, statusFilter, filterUserId);
-        
+
         java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts(filterUserId);
         int kpiPendingManager = kpis.getOrDefault("PENDING_MANAGER", 0);
         int kpiPendingCeo = kpis.getOrDefault("PENDING_CEO", 0);
         int kpiApproved = kpis.getOrDefault("APPROVED_BY_CEO", 0);
         int kpiRequestEdit = kpis.getOrDefault("MANAGER_REQUEST_EDIT", 0) + kpis.getOrDefault("CEO_REQUEST_EDIT", 0);
         int kpiRejected = kpis.getOrDefault("REJECTED_BY_MANAGER", 0) + kpis.getOrDefault("REJECTED_BY_CEO", 0);
-        
+
         request.setAttribute("kpiPendingManager", kpiPendingManager);
         request.setAttribute("kpiPendingCeo", kpiPendingCeo);
         request.setAttribute("kpiApproved", kpiApproved);
         request.setAttribute("kpiRequestEdit", kpiRequestEdit);
         request.setAttribute("kpiRejected", kpiRejected);
-        
+
         request.setAttribute("liquidations", list);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("search", search);
         request.setAttribute("statusFilter", statusFilter);
-        
+
         request.getRequestDispatcher("/view/liquidation/liquidation-list.jsp").forward(request, response);
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        
-        Liquidation l = liquidationDAO.findById(id); 
+
+        Liquidation l = liquidationDAO.findById(id);
         request.setAttribute("liquidation", l);
-        
+
         List<LiquidationDetail> details = detailDAO.findByLiquidationId(id);
         request.setAttribute("details", details);
-        
+
         List<Category> managerRejectFeedbacks = categoryDAO.findByType("manager_reject_reason");
         List<Category> managerEditFeedbacks = categoryDAO.findByType("manager_request_edit_reason");
         List<Category> ceoRejectFeedbacks = categoryDAO.findByType("ceo_reject_reason");
@@ -310,12 +324,12 @@ public class LiquidationController extends HttpServlet {
         request.setAttribute("managerEditFeedbacks", managerEditFeedbacks);
         request.setAttribute("ceoRejectFeedbacks", ceoRejectFeedbacks);
         request.setAttribute("ceoEditFeedbacks", ceoEditFeedbacks);
-        
+
         request.setAttribute("customers", customerDAO.findAll());
-        
+
         HttpSession session = request.getSession(false);
         if (session != null) {
-            java.util.Set<String> perms = (java.util.Set<String>) session.getAttribute("userPermissions");
+            Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
             boolean isManager = perms != null && perms.contains("liquidations.approve_manager");
             boolean isCeo = perms != null && perms.contains("liquidations.approve_ceo");
             boolean isStaff = perms != null && perms.contains("liquidations.create");
@@ -323,7 +337,7 @@ public class LiquidationController extends HttpServlet {
             request.setAttribute("isCeo", isCeo);
             request.setAttribute("isStaff", isStaff);
         }
-        
+
         List<ActivityLog> history = activityLogDAO.findByEntityTypeAndId("liquidation", id, 1, 100);
         int totalHistory = activityLogDAO.countByEntityTypeAndId("liquidation", id);
         request.setAttribute("liquidationHistory", history);
@@ -339,7 +353,7 @@ public class LiquidationController extends HttpServlet {
         String action = request.getParameter("action");
         HttpSession session = request.getSession();
         User currentUser = (User) session.getAttribute("loggedUser");
-        
+
         if (currentUser == null) {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
@@ -465,7 +479,10 @@ public class LiquidationController extends HttpServlet {
             c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
             c.setCompanyName(companyName != null && !companyName.trim().isEmpty() ? companyName.trim() : null);
             if (typeIdStr != null && !typeIdStr.isEmpty()) {
-                try { c.setCustomerTypeId(Integer.parseInt(typeIdStr)); } catch (NumberFormatException ignore) {}
+                try {
+                    c.setCustomerTypeId(Integer.parseInt(typeIdStr));
+                } catch (NumberFormatException ignore) {
+                }
             }
             c.setStatus("active");
             c.setCreatedBy(user.getId());
@@ -509,29 +526,31 @@ public class LiquidationController extends HttpServlet {
         String customerIdStr = request.getParameter("customerId");
 
         if (generatorIds == null || serialNumbers == null || generatorIds.length == 0) {
-            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + java.net.URLEncoder.encode("Phải chọn ít nhất 1 máy", "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Phải chọn ít nhất 1 máy", "UTF-8"));
             return;
         }
 
         // Kiểm tra trùng serial trong cùng phiếu
-        java.util.Set<String> uniqueSerials = new java.util.LinkedHashSet<>();
-        for (String sn : serialNumbers) uniqueSerials.add(sn);
+        Set<String> uniqueSerials = new LinkedHashSet<>();
+        for (String sn : serialNumbers) {
+            uniqueSerials.add(sn);
+        }
         if (uniqueSerials.size() != serialNumbers.length) {
-            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + java.net.URLEncoder.encode("Có serial trùng trong phiếu", "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Có serial trùng trong phiếu", "UTF-8"));
             return;
         }
 
-        java.util.List<String> serialList = new java.util.ArrayList<>(uniqueSerials);
+        List<String> serialList = new ArrayList<>(uniqueSerials);
 
-        // Atomic claim: chỉ thành công khi tất cả serial đang IN_STOCK ở đúng warehouse.
-        java.sql.Connection conn = null;
+        //chỉ thành công khi tất cả serial đang IN_STOCK ở đúng warehouse.
+        Connection conn = null;
         try {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
 
             int affected = inventoryDAO.claimInStockBatch(conn, serialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
             if (affected != serialList.size()) {
-                java.util.List<String> bad = inventoryDAO.findUnavailableSerials(conn, serialList, warehouseId);
+                List<String> bad = inventoryDAO.findUnavailableSerials(conn, serialList, warehouseId);
                 conn.rollback();
                 String msg = "Không tạo được phiếu — các serial sau đã bị giữ chỗ hoặc không thuộc kho này: "
                         + String.join(", ", bad);
@@ -564,7 +583,7 @@ public class LiquidationController extends HttpServlet {
 
             conn.commit();
 
-            // Gửi thông báo cho mọi user có quyền duyệt của Quản lý kho (kể cả admin được grant)
+            // Gửi thông báo cho mọi user có quyền duyệt của Quản lý kho ( được grant)
             List<User> managers = userDAO.findUsersByPermission("liquidations", "approve_manager");
             for (User mgr : managers) {
                 NotificationService.send(
@@ -589,12 +608,19 @@ public class LiquidationController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/liquidations");
         } catch (Exception e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (Exception ignored) {}
+                try {
+                    conn.rollback();
+                } catch (Exception ignored) {
+                }
             }
             throw e;
         } finally {
             if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (Exception ignored) {
+                }
             }
         }
     }
@@ -604,7 +630,7 @@ public class LiquidationController extends HttpServlet {
         String[] detailIds = request.getParameterValues("detailId");
         String[] liquidationPrices = request.getParameterValues("liquidationPrice");
         String customerIdStr = request.getParameter("customerId");
-        
+
         if (detailIds != null) {
             for (int i = 0; i < detailIds.length; i++) {
                 LiquidationDetail d = new LiquidationDetail();
@@ -613,16 +639,16 @@ public class LiquidationController extends HttpServlet {
                 detailDAO.update(d);
             }
         }
-        
+
         if (customerIdStr == null || customerIdStr.trim().isEmpty()) {
             throw new Exception("Quản lý kho phải chọn Khách hàng trước khi gửi Sếp duyệt.");
         }
         liquidationDAO.updateCustomer(liquidationId, Integer.parseInt(customerIdStr));
-        
+
         liquidationDAO.updateStatus(liquidationId, "PENDING_CEO", user.getId(), "manager", null);
-        
+
         Liquidation l = liquidationDAO.findById(liquidationId);
-        
+
         // Thông báo cho nhân viên
         NotificationService.send(
                 l.getCreatedBy(),
@@ -660,18 +686,18 @@ public class LiquidationController extends HttpServlet {
     private void handleCEOApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         Liquidation l = liquidationDAO.findById(liquidationId);
-        
+
         Receipt r = new Receipt();
         r.setReceiptCode("PX-LIQ-" + System.currentTimeMillis());
         r.setReceiptType("EXPORT");
         r.setWarehouseId(l.getWarehouseId()); // Lấy kho từ đơn thanh lý
         r.setCreatedBy(l.getCreatedBy());
-        r.setStatus("PENDING"); 
+        r.setStatus("PENDING");
         r.setNote("Phiếu xuất cho đơn thanh lý ID: " + liquidationId);
         r.setReasonId(l.getReasonId()); // Copy reason from liquidation
-        
+
         int newReceiptId = receiptDAO.insert(r);
-        
+
         if (newReceiptId > 0) {
             BigDecimal total = BigDecimal.ZERO;
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
@@ -684,22 +710,22 @@ public class LiquidationController extends HttpServlet {
                 rd.setUnitPrice(d.getLiquidationPrice());
                 rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
                 receiptDetailDAO.insert(rd);
-                
+
                 if (d.getLiquidationPrice() != null) {
                     total = total.add(d.getLiquidationPrice());
                 }
             }
-            
+
             // Cập nhật tổng tiền cho Receipt
             String updateReceiptTotalSql = "UPDATE receipt SET total_amount = ? WHERE receipt_id = ?";
-            try (java.sql.Connection c = receiptDAO.getConnection(); java.sql.PreparedStatement p = c.prepareStatement(updateReceiptTotalSql)) {
+            try (Connection c = receiptDAO.getConnection(); PreparedStatement p = c.prepareStatement(updateReceiptTotalSql)) {
                 p.setBigDecimal(1, total);
                 p.setInt(2, newReceiptId);
                 p.executeUpdate();
             }
-            
+
             liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);
-            
+
             // Lịch sử tự động tạo phiếu
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
@@ -709,7 +735,7 @@ public class LiquidationController extends HttpServlet {
             log.setEntityName(r.getReceiptCode());
             log.setDetails("Hệ thống tự động tạo phiếu xuất kho chờ duyệt sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
             activityLogDAO.insert(log);
-            
+
             // Thông báo cho nhân viên
             NotificationService.send(
                     l.getCreatedBy(),
@@ -719,7 +745,7 @@ public class LiquidationController extends HttpServlet {
                     "liquidation",
                     liquidationId
             );
-            
+
             ActivityLog liqLog = new ActivityLog();
             liqLog.setUserId(user.getId());
             liqLog.setEntityType("liquidation");
@@ -729,16 +755,16 @@ public class LiquidationController extends HttpServlet {
             liqLog.setDetails("CEO duyệt đơn thanh lý và tự động sinh Phiếu Xuất Kho chờ duyệt: " + r.getReceiptCode());
             activityLogDAO.insert(liqLog);
         }
-        
+
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
     private void handleCEOReject(HttpServletRequest request, HttpServletResponse response, User user, boolean isPermanent) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         int feedbackId = Integer.parseInt(request.getParameter("ceoFeedbackId"));
-        
+
         liquidationDAO.updateCeoReject(liquidationId, user.getId(), feedbackId, isPermanent);
-        
+
         Liquidation l = liquidationDAO.findById(liquidationId);
         if (isPermanent) {
             // Hoàn lại trạng thái serial number
@@ -747,7 +773,7 @@ public class LiquidationController extends HttpServlet {
                 inventoryDAO.updateStatusBySerial(d.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
             }
         }
-        
+
         // Thông báo
         NotificationService.send(
                 l.getCreatedBy(),
@@ -767,16 +793,16 @@ public class LiquidationController extends HttpServlet {
         log.setEntityName(l.getLiquidationCode());
         log.setDetails(isPermanent ? "CEO từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "CEO yêu cầu sửa đơn thanh lý");
         activityLogDAO.insert(log);
-        
+
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
     private void handleManagerReject(HttpServletRequest request, HttpServletResponse response, User user, boolean isPermanent) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         int feedbackId = Integer.parseInt(request.getParameter("managerFeedbackId"));
-        
+
         liquidationDAO.updateManagerReject(liquidationId, user.getId(), feedbackId, isPermanent);
-        
+
         Liquidation l = liquidationDAO.findById(liquidationId);
         if (isPermanent) {
             // Hoàn lại trạng thái serial number
@@ -805,14 +831,14 @@ public class LiquidationController extends HttpServlet {
         log.setEntityName(l.getLiquidationCode());
         log.setDetails(isPermanent ? "Quản lý từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "Quản lý yêu cầu sửa đơn thanh lý");
         activityLogDAO.insert(log);
-        
+
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
     private void showEditView(HttpServletRequest request, HttpServletResponse response) throws Exception {
         int id = Integer.parseInt(request.getParameter("id"));
         Liquidation l = liquidationDAO.findById(id);
-        
+
         if (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + id);
             return;
@@ -824,7 +850,7 @@ public class LiquidationController extends HttpServlet {
 
         List<Category> reasons = categoryDAO.findByType("liquidation_reason");
         request.setAttribute("reasons", reasons);
-        com.quanlymayphatdien.g1.dal.GeneratorDAO genDAO = new com.quanlymayphatdien.g1.dal.GeneratorDAO();
+        GeneratorDAO genDAO = new GeneratorDAO();
         request.setAttribute("generators", genDAO.findAll());
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
@@ -852,24 +878,28 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
-        java.util.Set<String> uniqueSerials = new java.util.LinkedHashSet<>();
-        for (String sn : serialNumbers) uniqueSerials.add(sn);
+        Set<String> uniqueSerials = new LinkedHashSet<>();
+        for (String sn : serialNumbers) {
+            uniqueSerials.add(sn);
+        }
         if (uniqueSerials.size() != serialNumbers.length) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
                     + "&error=" + java.net.URLEncoder.encode("Có serial trùng trong phiếu", "UTF-8"));
             return;
         }
-        java.util.List<String> newSerialList = new java.util.ArrayList<>(uniqueSerials);
+        List<String> newSerialList = new ArrayList<>(uniqueSerials);
 
-        java.sql.Connection conn = null;
+        Connection conn = null;
         try {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
 
             // Trả lại trạng thái cũ (PENDING_LIQUIDATION -> IN_STOCK) cho serials cũ
             List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
-            java.util.List<String> oldSerials = new java.util.ArrayList<>();
-            for (LiquidationDetail oldD : oldDetails) oldSerials.add(oldD.getSerialNumber());
+            List<String> oldSerials = new ArrayList<>();
+            for (LiquidationDetail oldD : oldDetails) {
+                oldSerials.add(oldD.getSerialNumber());
+            }
             if (!oldSerials.isEmpty()) {
                 inventoryDAO.updateStatusBatch(conn, oldSerials, InventoryDAO.STATUS_IN_STOCK);
             }
@@ -877,7 +907,7 @@ public class LiquidationController extends HttpServlet {
             // Atomic claim cho serials mới
             int affected = inventoryDAO.claimInStockBatch(conn, newSerialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
             if (affected != newSerialList.size()) {
-                java.util.List<String> bad = inventoryDAO.findUnavailableSerials(conn, newSerialList, warehouseId);
+                List<String> bad = inventoryDAO.findUnavailableSerials(conn, newSerialList, warehouseId);
                 conn.rollback();
                 String msg = "Không lưu được — các serial sau đã bị giữ chỗ hoặc không thuộc kho này: "
                         + String.join(", ", bad);
@@ -897,12 +927,19 @@ public class LiquidationController extends HttpServlet {
             String customerIdStr = request.getParameter("customerId");
             Integer newCustomerId = null;
             if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
-                try { newCustomerId = Integer.parseInt(customerIdStr.trim()); } catch (NumberFormatException ignore) {}
+                try {
+                    newCustomerId = Integer.parseInt(customerIdStr.trim());
+                } catch (NumberFormatException ignore) {
+                }
             }
             String updateWarehouseSql = "UPDATE liquidation SET warehouse_id = ?, customer_id = ? WHERE liquidation_id = ?";
-            try (java.sql.PreparedStatement p = conn.prepareStatement(updateWarehouseSql)) {
+            try (PreparedStatement p = conn.prepareStatement(updateWarehouseSql)) {
                 p.setInt(1, warehouseId);
-                if (newCustomerId != null) p.setInt(2, newCustomerId); else p.setNull(2, java.sql.Types.INTEGER);
+                if (newCustomerId != null) {
+                    p.setInt(2, newCustomerId);
+                } else {
+                    p.setNull(2, java.sql.Types.INTEGER);
+                }
                 p.setInt(3, liquidationId);
                 p.executeUpdate();
             }
@@ -950,12 +987,19 @@ public class LiquidationController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
         } catch (Exception e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (Exception ignored) {}
+                try {
+                    conn.rollback();
+                } catch (Exception ignored) {
+                }
             }
             throw e;
         } finally {
             if (conn != null) {
-                try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (Exception ignored) {
+                }
             }
         }
     }

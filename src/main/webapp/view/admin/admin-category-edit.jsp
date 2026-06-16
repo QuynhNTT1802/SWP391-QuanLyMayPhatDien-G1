@@ -64,7 +64,7 @@
             </c:if>
 
 
-            <%-- ===== TAB: THÔNG TIN ===== --%>
+
             <div id="tab-info" class="tab-content ${activeTab == 'history' ? 'tab-hidden' : ''}">
             <div class="form-layout">
                 <form class="form-card" id="categoryForm" method="post" action="${pageContext.request.contextPath}/admin/category/save">
@@ -283,7 +283,7 @@
             </div><%-- end form-layout --%>
             </div><%-- end tab-info --%>
 
-            <%-- ===== TAB: LỊCH SỬ (cấp 2) ===== --%>
+
             <c:if test="${category.id > 0}">
             <div id="tab-history" class="tab-content ${activeTab == 'history' ? '' : 'tab-hidden'}">
 
@@ -323,7 +323,6 @@
                         </c:if>
                     </form>
 
-                    <%-- Thông tin tổng số --%>
                     <div class="result-summary">
                         Tìm thấy <strong>${histTotalLogs}</strong> bản ghi
                         <c:if test="${not empty historyAction or not empty histSearch or not empty histDateFrom or not empty histDateTo}">
