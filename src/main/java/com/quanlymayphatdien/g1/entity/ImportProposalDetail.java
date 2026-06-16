@@ -1,27 +1,26 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.quanlymayphatdien.g1.entity;
 
-/**
- *
- * @author Phuong Linh
- */
+import java.math.BigDecimal;
 
 public class ImportProposalDetail {
 
     private int proposalDetailId;
     private int proposalId;
     private int generatorId;
+    private Integer supplierId;
     private int quantity;
     private int currentStock;
+    private BigDecimal unitPrice;
     private String note;
 
-    
     private String generatorCode;
     private String generatorName;
     private String brandName;
+
+    private String supplierName;
+    private String supplierPhone;
+    private String supplierEmail;
+    private String supplierCompany;
 
     public ImportProposalDetail() {
     }
@@ -50,6 +49,14 @@ public class ImportProposalDetail {
         this.generatorId = generatorId;
     }
 
+    public Integer getSupplierId() {
+        return supplierId;
+    }
+
+    public void setSupplierId(Integer supplierId) {
+        this.supplierId = supplierId;
+    }
+
     public int getQuantity() {
         return quantity;
     }
@@ -64,6 +71,14 @@ public class ImportProposalDetail {
 
     public void setCurrentStock(int currentStock) {
         this.currentStock = currentStock;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
     public String getNote() {
@@ -98,4 +113,35 @@ public class ImportProposalDetail {
         this.brandName = brandName;
     }
 
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+    }
+
+    public String getSupplierPhone() {
+        return supplierPhone;
+    }
+
+    public void setSupplierPhone(String supplierPhone) {
+        this.supplierPhone = supplierPhone;
+    }
+
+    public String getSupplierEmail() {
+        return supplierEmail;
+    }
+
+    public void setSupplierEmail(String supplierEmail) {
+        this.supplierEmail = supplierEmail;
+    }
+
+    public String getSupplierCompany() {
+        return supplierCompany;
+    }
+
+    public void setSupplierCompany(String supplierCompany) {
+        this.supplierCompany = supplierCompany;
+    }
 }

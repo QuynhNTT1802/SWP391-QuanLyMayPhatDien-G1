@@ -34,45 +34,9 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return list;
     }
 
-    public List<Generator> findAllActive() {
-        List<Generator> list = new ArrayList<>();
-        String sql = "SELECT * FROM generator WHERE status = 'active' ORDER BY model";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
-
-    public List<Generator> findInStockByWarehouse(int warehouseId) {
-        List<Generator> list = new ArrayList<>();
-        String sql = "SELECT DISTINCT g.* FROM generator g "
-                + "JOIN inventory i ON i.generator_id = g.id "
-                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND g.status = 'active' "
-                + "ORDER BY g.model";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, warehouseId);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
-
     @Override
     public boolean update(Generator g) {
-        String sql = "UPDATE generator SET model=?, power_rating=?, unit_price=?, "
+        String sql = "UPDATE generator SET model=?, power_rating=?, "
                 + "frequency=?, weight=?, description=?, status=?, "
                 + "updated_at=?, updated_by=? WHERE id=?";
         try {
@@ -80,22 +44,21 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             statement = connection.prepareStatement(sql);
             statement.setString(1, g.getModel());
             statement.setBigDecimal(2, g.getPowerRating());
-            statement.setBigDecimal(3, g.getUnitPrice());
-            statement.setString(4, g.getFrequency());
+            statement.setString(3, g.getFrequency());
             if (g.getWeight() != null) {
-                statement.setBigDecimal(5, g.getWeight());
+                statement.setBigDecimal(4, g.getWeight());
             } else {
-                statement.setNull(5, Types.DECIMAL);
+                statement.setNull(4, Types.DECIMAL);
             }
-            statement.setString(6, g.getDescription());
-            statement.setString(7, g.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(g.getUpdatedAt()));
+            statement.setString(5, g.getDescription());
+            statement.setString(6, g.getStatus());
+            statement.setTimestamp(7, Timestamp.valueOf(g.getUpdatedAt()));
             if (g.getUpdatedBy() != null) {
-                statement.setInt(9, g.getUpdatedBy());
+                statement.setInt(8, g.getUpdatedBy());
             } else {
-                statement.setNull(9, Types.INTEGER);
+                statement.setNull(8, Types.INTEGER);
             }
-            statement.setInt(10, g.getId());
+            statement.setInt(9, g.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -119,28 +82,27 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
 
     @Override
     public int insert(Generator g) {
-        String sql = "INSERT INTO generator (model, power_rating, unit_price, "
+        String sql = "INSERT INTO generator (model, power_rating, "
                 + "frequency, weight, description, status, created_at, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, g.getModel());
             statement.setBigDecimal(2, g.getPowerRating());
-            statement.setBigDecimal(3, g.getUnitPrice());
-            statement.setString(4, g.getFrequency());
+            statement.setString(3, g.getFrequency());
             if (g.getWeight() != null) {
-                statement.setBigDecimal(5, g.getWeight());
+                statement.setBigDecimal(4, g.getWeight());
             } else {
-                statement.setNull(5, Types.DECIMAL);
+                statement.setNull(4, Types.DECIMAL);
             }
-            statement.setString(6, g.getDescription());
-            statement.setString(7, g.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(g.getCreatedAt()));
+            statement.setString(5, g.getDescription());
+            statement.setString(6, g.getStatus());
+            statement.setTimestamp(7, Timestamp.valueOf(g.getCreatedAt()));
             if (g.getCreatedBy() != null) {
-                statement.setInt(9, g.getCreatedBy());
+                statement.setInt(8, g.getCreatedBy());
             } else {
-                statement.setNull(9, Types.INTEGER);
+                statement.setNull(8, Types.INTEGER);
             }
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
@@ -437,7 +399,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         g.setId(rs.getInt("id"));
         g.setModel(rs.getString("model"));
         g.setPowerRating(rs.getBigDecimal("power_rating"));
-        g.setUnitPrice(rs.getBigDecimal("unit_price"));
         g.setFrequency(rs.getString("frequency"));
         BigDecimal w = rs.getBigDecimal("weight");
         if (!rs.wasNull()) {
@@ -465,5 +426,39 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         }
 
         return g;
+    }
+    public List<Generator> findAllActive() {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT * FROM generator WHERE status = 'active' ORDER BY model";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    } 
+    public List<Generator> findInStockByWarehouse(int warehouseId) {
+        List<Generator> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT g.* FROM generator g "
+                + "JOIN inventory i ON i.generator_id = g.id "
+                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND g.status = 'active' "
+                + "ORDER BY g.model";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
     }
 }

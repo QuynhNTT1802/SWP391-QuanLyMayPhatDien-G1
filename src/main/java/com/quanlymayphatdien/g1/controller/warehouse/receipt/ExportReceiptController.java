@@ -331,7 +331,7 @@ public class ExportReceiptController extends HttpServlet {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("id", g.getId());
             item.put("model", g.getModel());
-            item.put("unitPrice", g.getUnitPrice());
+           
             String brand = "";
             if (g.getCategories() != null) {
                 for (Category c : g.getCategories()) {

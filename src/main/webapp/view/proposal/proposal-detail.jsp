@@ -307,6 +307,8 @@
                                 <tr>
                                     <th style="width:50px;">#</th>
                                     <th>Máy phát / Hãng</th>
+                                    <th style="width:200px;">Nhà cung cấp</th>
+                                    <th style="width:140px;" class="text-right">Đơn giá (VNĐ)</th>
                                     <th style="width:100px;" class="text-right">Số lượng</th>
                                     <th style="width:130px;" class="text-right">Tồn kho hiện tại</th>
                                     <th>Ghi chú</th>
@@ -315,7 +317,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty proposal.details}">
-                                        <tr><td colspan="5" class="text-center empty-state">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                        <tr><td colspan="7" class="text-center empty-state">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="d" items="${proposal.details}" varStatus="st">
@@ -324,6 +326,31 @@
                                                 <td>
                                                     <strong><c:out value="${d.generatorName}"/></strong>
                                                     <span style="color:var(--muted);"> · <c:out value="${d.brandName}"/></span>
+                                                </td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty d.supplierName}">
+                                                            <strong><c:out value="${d.supplierName}"/></strong>
+                                                            <c:if test="${not empty d.supplierPhone}">
+                                                                <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">
+                                                                    <c:out value="${d.supplierPhone}"/>
+                                                                </div>
+                                                            </c:if>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color:var(--muted);">—</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td class="mono text-right">
+                                                    <c:choose>
+                                                        <c:when test="${not empty d.unitPrice}">
+                                                            <fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span style="color:var(--muted);">—</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                 </td>
                                                 <td class="mono text-right"><fmt:formatNumber value="${d.quantity}"/></td>
                                                 <td class="mono text-right"><fmt:formatNumber value="${d.currentStock}"/></td>

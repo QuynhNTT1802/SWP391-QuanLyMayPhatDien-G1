@@ -243,38 +243,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     public List<ImportProposalDetail> findDetailsByProposalId(int proposalId) {
-        List<ImportProposalDetail> list = new ArrayList<>();
-        String sql = "SELECT d.*, "
-                + "g.model AS generator_code, "
-                + "g.model AS generator_name, "
-                + "(SELECT c.name FROM generator_category gc "
-                + "   JOIN category c ON c.id = gc.category_id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name "
-                + "FROM import_proposal_detail d "
-                + "LEFT JOIN generator g ON g.id = d.generator_id "
-                + "WHERE d.proposal_id = ? "
-                + "ORDER BY d.proposal_detail_id ASC";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, proposalId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ImportProposalDetail d = new ImportProposalDetail();
-                    d.setProposalDetailId(rs.getInt("proposal_detail_id"));
-                    d.setProposalId(rs.getInt("proposal_id"));
-                    d.setGeneratorId(rs.getInt("generator_id"));
-                    d.setQuantity(rs.getInt("quantity"));
-                    d.setCurrentStock(rs.getInt("current_stock"));
-                    d.setNote(rs.getString("note"));
-                    d.setGeneratorCode(rs.getString("generator_code"));
-                    d.setGeneratorName(rs.getString("generator_name"));
-                    d.setBrandName(rs.getString("brand_name"));
-                    list.add(d);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
+        return new ImportProposalDetailDAO().findByProposalId(proposalId);
     }
 
     public boolean approveProposal(int proposalId, int approverId) {

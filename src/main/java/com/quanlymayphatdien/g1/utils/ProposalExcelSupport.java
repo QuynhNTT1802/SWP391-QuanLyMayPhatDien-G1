@@ -4,7 +4,9 @@
  */
 package com.quanlymayphatdien.g1.utils;
 
+import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.Supplier;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,12 +32,40 @@ public class ProposalExcelSupport {
 
     public static final String HEADER_STT = "STT";
     public static final String HEADER_MODEL = "Mã máy phát";
-    public static final String HEADER_NAME = "Tên máy phát (tham khảo)";
+    public static final String HEADER_BRAND = "Thương hiệu";
+    public static final String HEADER_ORIGIN = "Xuất xứ";
+    public static final String HEADER_CONDITION = "Tình trạng";
+    public static final String HEADER_FUEL = "Nhiên liệu";
+    public static final String HEADER_PHASE = "Số pha";
+    public static final String HEADER_GEN_TYPE = "Loại máy phát";
+    public static final String HEADER_POWER = "Công suất (kVA)";
+    public static final String HEADER_FREQUENCY = "Tần số";
+    public static final String HEADER_WEIGHT = "Trọng lượng (kg)";
+    public static final String HEADER_DESCRIPTION = "Mô tả";
+    public static final String HEADER_SUPPLIER_NAME = "Tên nhà cung cấp";
+    public static final String HEADER_UNIT_PRICE = "Đơn giá đề xuất (VNĐ)";
     public static final String HEADER_QUANTITY = "Số lượng";
     public static final String HEADER_NOTE = "Ghi chú dòng";
 
     public static String[] getDetailHeaders() {
-        return new String[]{HEADER_STT, HEADER_MODEL, HEADER_NAME, HEADER_QUANTITY, HEADER_NOTE};
+        return new String[]{
+            HEADER_STT,
+            HEADER_MODEL,
+            HEADER_BRAND,
+            HEADER_ORIGIN,
+            HEADER_CONDITION,
+            HEADER_FUEL,
+            HEADER_PHASE,
+            HEADER_GEN_TYPE,
+            HEADER_POWER,
+            HEADER_FREQUENCY,
+            HEADER_WEIGHT,
+            HEADER_DESCRIPTION,
+            HEADER_SUPPLIER_NAME,
+            HEADER_UNIT_PRICE,
+            HEADER_QUANTITY,
+            HEADER_NOTE
+        };
     }
 
     private static CellStyle buildHeaderStyle(XSSFWorkbook workbook) {
@@ -53,7 +83,18 @@ public class ProposalExcelSupport {
         return headerStyle;
     }
 
-    public static XSSFWorkbook createTemplateWorkbook(List<Generator> sampleGenerators) {
+    /**
+     * Tạo file mẫu Excel với 16 cột. Mỗi sample row điền đủ thông tin máy (tham khảo) +
+     * tên nhà cung cấp + đơn giá + số lượng để người dùng đối chiếu.
+     *
+     * @param sampleGenerators danh sách máy phát active (tối đa 3 sẽ được lấy làm mẫu)
+     * @param sampleSuppliers  danh sách NCC active (tối đa 3 sẽ được lấy làm mẫu)
+     * @param categoryMapByType map[type → Map<categoryId, name>] cho brand/origin/condition/fuel/phase/gen_type
+     */
+    public static XSSFWorkbook createTemplateWorkbook(
+            List<Generator> sampleGenerators,
+            List<Supplier> sampleSuppliers,
+            Map<String, Map<Integer, String>> categoryMapByType) {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Chi tiết đề xuất (Mẫu)");
 
@@ -69,23 +110,65 @@ public class ProposalExcelSupport {
 
         int sampleCount = sampleGenerators != null ? Math.min(sampleGenerators.size(), 3) : 0;
         int[] sampleQty = {2, 5, 1};
+        long[] sampleUnitPrice = {18_000_000L, 35_000_000L, 85_000_000L};
+
         for (int i = 0; i < sampleCount; i++) {
             Generator g = sampleGenerators.get(i);
+            Supplier sup = (sampleSuppliers != null && sampleSuppliers.size() > i) ? sampleSuppliers.get(i) : null;
+
+            Map<Integer, String> brandMap = categoryMapByType.getOrDefault("brand", new LinkedHashMap<>());
+            Map<Integer, String> originMap = categoryMapByType.getOrDefault("origin", new LinkedHashMap<>());
+            Map<Integer, String> conditionMap = categoryMapByType.getOrDefault("condition", new LinkedHashMap<>());
+            Map<Integer, String> fuelMap = categoryMapByType.getOrDefault("fuel_type", new LinkedHashMap<>());
+            Map<Integer, String> phaseMap = categoryMapByType.getOrDefault("phase", new LinkedHashMap<>());
+            Map<Integer, String> genTypeMap = categoryMapByType.getOrDefault("generator_type", new LinkedHashMap<>());
+
+            String brand = pickCategoryName(g, "brand", brandMap);
+            String origin = pickCategoryName(g, "origin", originMap);
+            String condition = pickCategoryName(g, "condition", conditionMap);
+            String fuel = pickCategoryName(g, "fuel_type", fuelMap);
+            String phase = pickCategoryName(g, "phase", phaseMap);
+            String genType = pickCategoryName(g, "generator_type", genTypeMap);
+
             Row row = sheet.createRow(i + 1);
-            row.createCell(0).setCellValue(i + 1);
-            row.createCell(1).setCellValue(g.getModel() != null ? g.getModel() : "");
-            row.createCell(2).setCellValue(g.getDescription() != null ? g.getDescription() : "");
-            row.createCell(3).setCellValue(sampleQty[i]);
-            row.createCell(4).setCellValue("");
+            int col = 0;
+            row.createCell(col++).setCellValue(i + 1);
+            row.createCell(col++).setCellValue(g.getModel() != null ? g.getModel() : "");
+            row.createCell(col++).setCellValue(brand);
+            row.createCell(col++).setCellValue(origin);
+            row.createCell(col++).setCellValue(condition);
+            row.createCell(col++).setCellValue(fuel);
+            row.createCell(col++).setCellValue(phase);
+            row.createCell(col++).setCellValue(genType);
+            row.createCell(col++).setCellValue(g.getPowerRating() != null ? g.getPowerRating().toPlainString() : "");
+            row.createCell(col++).setCellValue(g.getFrequency() != null ? g.getFrequency() : "");
+            row.createCell(col++).setCellValue(g.getWeight() != null ? g.getWeight().toPlainString() : "");
+            row.createCell(col++).setCellValue(g.getDescription() != null ? g.getDescription() : "");
+            row.createCell(col++).setCellValue(sup != null && sup.getName() != null ? sup.getName() : "");
+            row.createCell(col++).setCellValue(sampleUnitPrice[i]);
+            row.createCell(col++).setCellValue(sampleQty[i]);
+            row.createCell(col++).setCellValue("");
         }
 
         if (sampleCount == 0) {
             Row row = sheet.createRow(1);
-            row.createCell(0).setCellValue(1);
-            row.createCell(1).setCellValue("EG4500CX");
-            row.createCell(2).setCellValue("Máy phát điện Honda 4.5kVA");
-            row.createCell(3).setCellValue(2);
-            row.createCell(4).setCellValue("");
+            int col = 0;
+            row.createCell(col++).setCellValue(1);
+            row.createCell(col++).setCellValue("EG4500CX");
+            row.createCell(col++).setCellValue("Honda");
+            row.createCell(col++).setCellValue("Nhật Bản");
+            row.createCell(col++).setCellValue("Mới");
+            row.createCell(col++).setCellValue("Xăng");
+            row.createCell(col++).setCellValue("1 pha");
+            row.createCell(col++).setCellValue("Dân dụng");
+            row.createCell(col++).setCellValue(4.5);
+            row.createCell(col++).setCellValue("50Hz");
+            row.createCell(col++).setCellValue(85);
+            row.createCell(col++).setCellValue("Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha");
+            row.createCell(col++).setCellValue("");
+            row.createCell(col++).setCellValue(18_000_000);
+            row.createCell(col++).setCellValue(2);
+            row.createCell(col++).setCellValue("");
         }
 
         for (int i = 0; i < headers.length; i++) {
@@ -93,6 +176,22 @@ public class ProposalExcelSupport {
         }
 
         return workbook;
+    }
+
+    private static String pickCategoryName(Generator g, String type, Map<Integer, String> map) {
+        if (g == null || g.getCategories() == null) {
+            return "";
+        }
+        for (Category c : g.getCategories()) {
+            if (type.equals(c.getType())) {
+                String n = map.get(c.getId());
+                if (n != null) {
+                    return n;
+                }
+                return c.getName() != null ? c.getName() : "";
+            }
+        }
+        return "";
     }
 
     public static List<Map<String, String>> parseFromExcel(InputStream is) throws IOException {

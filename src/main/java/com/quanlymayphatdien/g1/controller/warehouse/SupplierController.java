@@ -192,6 +192,9 @@ public class SupplierController extends HttpServlet {
         }
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("supplierTypeList", catDAO.findByType("customer_type"));
+        request.setAttribute("prefillName", request.getParameter("prefillName"));
+        request.setAttribute("returnUrl", request.getParameter("returnUrl"));
+        request.setAttribute("rowIndex", request.getParameter("rowIndex"));
         request.getRequestDispatcher("/view/supplier/supplier-create.jsp").forward(request, response);
     }
 
@@ -244,6 +247,18 @@ public class SupplierController extends HttpServlet {
                 request.getSession().setAttribute("message", "Thêm nhà cung cấp thành công!");
                 logActivity(request, "supplier", newId, name.trim(), "CREATE",
                         "Tạo nhà cung cấp: " + name.trim() + " - " + phone.trim());
+
+                String returnUrl = request.getParameter("returnUrl");
+                if (returnUrl != null && !returnUrl.isEmpty()
+                        && (returnUrl.contains("/proposal")
+                        || returnUrl.contains("importExcel")
+                        || returnUrl.contains("assignSupplier"))) {
+                    String separator = returnUrl.contains("?") ? "&" : "?";
+                    response.sendRedirect(returnUrl + separator
+                            + "newSupplierId=" + newId
+                            + "&newSupplierName=" + java.net.URLEncoder.encode(name.trim(), "UTF-8"));
+                    return;
+                }
             } else {
                 request.getSession().setAttribute("message", "Thêm nhà cung cấp thất bại!");
             }
