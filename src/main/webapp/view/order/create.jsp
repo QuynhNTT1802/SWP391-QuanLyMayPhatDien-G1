@@ -234,22 +234,20 @@
 
                                 <div class="sd" id="customerDropdown"
                                      data-endpoint="${pageContext.request.contextPath}/warehouse/customers?action=search&q=">
-                                    <button type="button" class="sd-trigger" id="sdTrigger"
-                                            aria-haspopup="listbox" aria-expanded="false">
-                                        <span class="sd-trigger-label" id="sdLabel">--Tìm kiếm khách hàng--</span>
-                                        <svg class="sd-caret" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path d="M6 9l6 6 6-6" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </button>
-                                    <div class="sd-panel" id="sdPanel" role="listbox" hidden>
-                                        <div class="sd-search-wrap">
-                                            <input type="text" class="sd-search" id="sdSearch"
-                                                   placeholder="Search for an item..."
-                                                   autocomplete="off" />
-                                        </div>
-                                        <ul class="sd-list" id="sdList">
-                                            <li class="sd-empty">&nbsp;</li>
-                                        </ul>
+                                    <div class="cust-trigger-wrap">
+                                        <button type="button" class="cust-trigger" id="custTrigger"
+                                                onclick="openCustomerPanel()" aria-haspopup="dialog">
+                                            <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
+                                            <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="cust-clear-btn" id="custClearBtn"
+                                                onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M18 6L6 18M6 6l12 12"/>
+                                            </svg>
+                                        </button>
                                     </div>
                                     <input type="hidden" name="customerId" id="sdHiddenId" />
                                 </div>
@@ -417,6 +415,31 @@
                         </form>
                     </div>
                 </main>
+            </div>
+        </div>
+
+        <!-- Side panel for customer selection -->
+        <div class="side-panel-overlay" id="custPanelOverlay" onclick="closeCustomerPanel()"></div>
+        <div class="side-panel" id="custSidePanel">
+            <div class="side-panel-head">
+                <h3 class="side-panel-title">Chọn Khách Hàng</h3>
+                <button type="button" class="side-panel-close" onclick="closeCustomerPanel()">&times;</button>
+            </div>
+            <div class="side-panel-body">
+                <div style="display:flex; gap: 8px; margin-bottom: 20px;">
+                    <input type="text" id="custSearchInput" class="serial-search-box" placeholder="Tìm nhanh theo tên, SĐT, email..."/>
+                    <select id="custSortOrder" class="serial-search-box" style="width:auto;min-width:120px;">
+                        <option value="name_asc">Tên A-Z</option>
+                        <option value="name_desc">Tên Z-A</option>
+                        <option value="newest">Mới nhất</option>
+                    </select>
+                </div>
+                <div id="custLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
+                    </svg><br>Đang tải...
+                </div>
+                <div class="cust-list-wrap" id="custList"></div>
             </div>
         </div>
 

@@ -84,6 +84,28 @@
 
         a.btn { text-decoration: none; }
 
+        .side-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s; }
+        .side-panel-overlay.show { opacity: 1; visibility: visible; }
+        .side-panel { position: fixed; top: 0; right: -420px; width: 400px; max-width: 100%; height: 100%; background: var(--bg); box-shadow: -8px 0 32px rgba(0,0,0,0.1); z-index: 1001; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }
+        .side-panel.show { right: 0; }
+        .side-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .side-panel-title { font-size: 18px; font-weight: 700; margin: 0; }
+        .side-panel-close { width: 32px; height: 32px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 22px; display: grid; place-items: center; border-radius: var(--radius-sm); }
+        .side-panel-close:hover { background: var(--surface-2); color: var(--fg); }
+        .side-panel-body { flex: 1; overflow-y: auto; padding: 24px; }
+        .serial-search-box { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--fg); font-size: 14px; font-family: var(--font-ui); box-sizing: border-box; }
+        .serial-search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .serial-list-wrap { display: flex; flex-direction: column; gap: 12px; }
+        .serial-card { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .serial-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(13,110,253,0.1); transform: translateY(-1px); }
+        .serial-card-left { display: flex; flex-direction: column; gap: 6px; }
+        .serial-number-text { font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
+        .serial-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
+        .serial-card-icon { color: var(--accent); opacity: 0; transition: 0.2s; transform: translateX(-8px); }
+        .serial-card:hover .serial-card-icon { opacity: 1; transform: translateX(0); }
+        .badge-avail { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 700; background: #d1fae5; color: #059669; text-transform: uppercase; }
+        .empty-msg { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
+
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -201,7 +223,6 @@
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát (Tồn kho)</th>
                                     <th class="col-serial">Serial</th>
-                                    <th class="col-qty" style="width:70px;">SL</th>
                                     <th style="width:130px;">Đơn giá</th>
                                     <th style="width:130px;">Thành tiền</th>
                                     <th class="col-note">Ghi chú</th>
@@ -218,8 +239,7 @@
                                         <div class="col-stock"></div>
                                         <span class="field-error" style="display:none;"></span>
                                     </td>
-                                    <td><input type="text" name="serialNumber" placeholder="S/N" required disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
-                                    <td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly disabled oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                    <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly disabled style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error" style="display:none;"></span></td>
                                     <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>
                                     <td class="col-price mono row-subtotal">0₫</td>
                                     <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
@@ -232,7 +252,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
-                                    <td colspan="5" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
+                                    <td colspan="4" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
                                     <td class="mono" id="grandTotal" style="padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">0₫</td>
                                     <td colspan="2" style="border-top:2px solid var(--border);"></td>
                                 </tr>
@@ -248,6 +268,29 @@
 
             </form>
         </main>
+    </div>
+</div>
+
+<div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSerialPanel()"></div>
+<div class="side-panel" id="sidePanel">
+    <div class="side-panel-head">
+        <h3 class="side-panel-title">Chọn Số Serial</h3>
+        <button class="side-panel-close" onclick="closeSerialPanel()">&times;</button>
+    </div>
+    <div class="side-panel-body">
+        <div style="display:flex; gap: 8px; margin-bottom: 20px;">
+            <input type="text" id="serialSearchInput" class="serial-search-box" placeholder="Tìm nhanh Serial..."/>
+            <select id="serialSortOrder" class="serial-search-box" style="width:auto;min-width:120px;">
+                <option value="desc">Mới nhất</option>
+                <option value="asc">Cũ nhất</option>
+            </select>
+        </div>
+        <div id="serialLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
+            </svg><br>Đang tải...
+        </div>
+        <div class="serial-list-wrap" id="serialList"></div>
     </div>
 </div>
 
@@ -273,9 +316,23 @@
     var generatorCache = [];
     var prefillDetails = [
         <c:forEach var="d" items="${receipt.details}" varStatus="st">
-        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, quantity: ${d.quantity}, note: '<c:out value="${d.note}"/>'}
+        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
         </c:forEach>
     ];
+    var allSerials = [
+        <c:forEach var="inv" items="${allSerials}" varStatus="st">
+        {
+            inventoryId: ${inv.inventoryId},
+            serialNumber: '<c:out value="${inv.serialNumber}"/>',
+            generatorId: ${inv.generatorId},
+            generatorModel: '<c:out value="${inv.generatorModel}"/>',
+            warehouseId: ${inv.warehouseId},
+            warehouseName: '<c:out value="${inv.warehouseName}"/>',
+            createdAt: '<c:out value="${inv.createdAt}"/>'
+        }<c:if test="${!st.last}">,</c:if>
+        </c:forEach>
+    ];
+    var currentSerialInput = null;
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -286,7 +343,7 @@
         var html = '<option value="">-- Chọn máy --</option>';
         for (var i = 0; i < generatorCache.length; i++) {
             var g = generatorCache[i];
-            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '');
+            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' (' + (g.stockQty || 0) + ')';
             var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
             html += '<option value="' + g.id + '" data-price="' + (g.unitPrice || 0) + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
         }
@@ -328,7 +385,7 @@
 
     function disableAllRows(disabled) {
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            row.querySelectorAll('select[name="generatorId"], input[name="serialNumber"], input[name="quantity"]').forEach(function (el) {
+            row.querySelectorAll('select[name="generatorId"], input[name="serialNumber"]').forEach(function (el) {
                 el.disabled = disabled;
             });
             var btn = row.querySelector('.row-del-btn');
@@ -367,33 +424,131 @@
                 stockInfo.textContent = '';
             }
         }
-        var qtyInput = row.querySelector('input[name="quantity"]');
-        if (qtyInput && sel.value) {
-            qtyInput.setAttribute('max', stock);
-        }
-        updateRowTotal(qtyInput);
+        var serialInput = row.querySelector('input[name="serialNumber"]');
+        if (serialInput) serialInput.value = '';
+        updateRowTotal(priceInput);
     }
 
     function updateRowTotal(el) {
         var row = el ? el.closest('tr') : null;
         if (!row) return;
-        var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
         var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
         var price = parseFloat(priceStr) || 0;
-        var subtotal = qty * price;
-        row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
+        row.querySelector('.row-subtotal').textContent = formatVND(price);
         updateGrandTotal();
     }
 
     function updateGrandTotal() {
         var grand = 0;
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
             var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
             var price = parseFloat(priceStr) || 0;
-            grand += qty * price;
+            grand += price;
         });
         document.getElementById('grandTotal').textContent = formatVND(grand);
+    }
+
+    function openSerialModal(inputElem) {
+        var whId = document.getElementById('warehouseSelect').value;
+        if (!whId) { toast('Vui lòng chọn Kho trước!', 'danger'); return; }
+        var tr = inputElem.closest('tr');
+        var genSelect = tr.querySelector('select[name="generatorId"]');
+        var genId = genSelect.value;
+        if (!genId) { toast('Vui lòng chọn Máy phát trước!', 'danger'); return; }
+        currentSerialInput = inputElem;
+        document.getElementById('serialSearchInput').value = '';
+        document.getElementById('serialSortOrder').value = 'desc';
+        document.getElementById('sidePanelOverlay').classList.add('show');
+        document.getElementById('sidePanel').classList.add('show');
+        document.getElementById('serialList').innerHTML = '';
+        document.getElementById('serialLoading').style.display = 'block';
+        setTimeout(function() { document.getElementById('serialSearchInput').focus(); }, 300);
+        var warehouseId = parseInt(whId, 10);
+        var gId = parseInt(genId, 10);
+        var filtered = [];
+        for (var k = 0; k < allSerials.length; k++) {
+            var s = allSerials[k];
+            if (s.warehouseId === warehouseId && s.generatorId === gId) {
+                filtered.push(s);
+            }
+        }
+        document.getElementById('serialLoading').style.display = 'none';
+        var listWrap = document.getElementById('serialList');
+        if (filtered.length === 0) {
+            listWrap.innerHTML = '<div class="empty-msg">Không có serial nào trong kho đang rảnh.</div>';
+            return;
+        }
+        var selectedSerials = Array.from(document.querySelectorAll('input[name="serialNumber"]'))
+            .map(function(inp) { return inp.value; }).filter(function(val) { return val !== ''; });
+        var count = 0;
+        for (var i = 0; i < filtered.length; i++) {
+            var sn = filtered[i];
+            if (selectedSerials.indexOf(sn.serialNumber) === -1) {
+                (function(serialNumber, createdAt) {
+                    var dateStr = 'Chưa xác định';
+                    var timestamp = 0;
+                    if (createdAt) {
+                        var d = new Date(createdAt);
+                        if (!isNaN(d.getTime())) {
+                            timestamp = d.getTime();
+                            var dd = String(d.getDate()).padStart(2, '0');
+                            var mm = String(d.getMonth() + 1).padStart(2, '0');
+                            var yyyy = d.getFullYear();
+                            dateStr = dd + '/' + mm + '/' + yyyy;
+                        }
+                    }
+                    var card = document.createElement('div');
+                    card.className = 'serial-card';
+                    card.setAttribute('data-serial', serialNumber.toLowerCase());
+                    card.setAttribute('data-date', dateStr);
+                    card.setAttribute('data-time', timestamp);
+                    card.innerHTML = '<div class="serial-card-left">'
+                        + '<div class="serial-number-text">' + escapeHtml(serialNumber) + '</div>'
+                        + '<div class="serial-meta"><span>' + dateStr + '</span><span class="badge-avail">IN STOCK</span></div>'
+                        + '</div>'
+                        + '<div class="serial-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>';
+                    card.onclick = function() {
+                        currentSerialInput.value = serialNumber;
+                        closeSerialPanel();
+                    };
+                    listWrap.appendChild(card);
+                    count++;
+                })(sn.serialNumber, sn.createdAt);
+            }
+        }
+        if (count === 0) {
+            listWrap.innerHTML = '<div class="empty-msg">Tất cả serial khả dụng đã được chọn.</div>';
+        }
+        filterAndSortSerials();
+    }
+
+    function filterAndSortSerials() {
+        var query = document.getElementById('serialSearchInput').value.toLowerCase().trim();
+        var sortOrder = document.getElementById('serialSortOrder').value;
+        var listWrap = document.getElementById('serialList');
+        var items = Array.from(listWrap.querySelectorAll('.serial-card'));
+        items.sort(function(a, b) {
+            var timeA = parseInt(a.getAttribute('data-time') || '0', 10);
+            var timeB = parseInt(b.getAttribute('data-time') || '0', 10);
+            if (sortOrder === 'desc') return timeB - timeA;
+            return timeA - timeB;
+        });
+        for (var i = 0; i < items.length; i++) {
+            var text = items[i].getAttribute('data-serial');
+            items[i].style.display = text.indexOf(query) !== -1 ? 'flex' : 'none';
+            listWrap.appendChild(items[i]);
+        }
+    }
+
+    function closeSerialPanel() {
+        document.getElementById('sidePanelOverlay').classList.remove('show');
+        document.getElementById('sidePanel').classList.remove('show');
+        currentSerialInput = null;
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function buildEmptyRow(currentId) {
@@ -401,8 +556,7 @@
         if (currentId) tr.setAttribute('data-current', currentId);
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><div class="col-stock"></div><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="serialNumber" placeholder="S/N" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="validateQty(this); updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
                 + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
@@ -433,20 +587,6 @@
         });
     }
 
-    function validateQty(input) {
-        var v = input.value.replace(/[^0-9]/g, '');
-        var n = parseInt(v);
-        var maxStock = parseInt(input.getAttribute('data-stock')) || 100000;
-        if (isNaN(n) || n < 1) {
-            input.value = 1;
-        } else if (n > maxStock) {
-            input.value = maxStock;
-        } else {
-            input.value = n;
-        }
-        validateField(input);
-    }
-
     function validateField(el) {
         var err = el.parentElement.querySelector('.field-error');
         if (err === null) return true;
@@ -454,15 +594,6 @@
             el.style.borderColor = '#dc3545';
             err.style.display = 'block';
             return false;
-        }
-        if (el.name === 'quantity') {
-            var q = parseInt(el.value);
-            if (isNaN(q) || q < 1) {
-                el.style.borderColor = '#dc3545';
-                err.textContent = 'Số lượng phải ≥ 1';
-                err.style.display = 'block';
-                return false;
-            }
         }
         el.style.borderColor = '';
         err.style.display = 'none';
@@ -503,6 +634,9 @@
         }
         updateGrandTotal();
     });
+
+    document.getElementById('serialSearchInput').addEventListener('input', filterAndSortSerials);
+    document.getElementById('serialSortOrder').addEventListener('change', filterAndSortSerials);
 </script>
 </body>
 </html>

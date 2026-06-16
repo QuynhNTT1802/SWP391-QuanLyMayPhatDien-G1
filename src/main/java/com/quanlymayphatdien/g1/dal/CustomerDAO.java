@@ -308,18 +308,25 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
 
     public List<Customer> searchByKeyword(String keyword) {
         List<Customer> list = new ArrayList<>();
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return list;
+        String sql;
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        if (hasKeyword) {
+            sql = "SELECT * FROM customer WHERE status = 'active' "
+                    + "AND (name LIKE ? OR phone LIKE ? OR email LIKE ?) "
+                    + "ORDER BY name ASC LIMIT 30";
+        } else {
+            sql = "SELECT * FROM customer WHERE status = 'active' "
+                    + "ORDER BY name ASC LIMIT 50";
         }
-        String sql = "SELECT * FROM customer WHERE status = 'active' "
-                + "AND (name LIKE ? OR phone LIKE ?) "
-                + "ORDER BY name ASC LIMIT 30";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            String p = "%" + keyword.trim() + "%";
-            statement.setString(1, p);
-            statement.setString(2, p);
+            if (hasKeyword) {
+                String p = "%" + keyword.trim() + "%";
+                statement.setString(1, p);
+                statement.setString(2, p);
+                statement.setString(3, p);
+            }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 list.add(getFromResultSet(resultSet));
