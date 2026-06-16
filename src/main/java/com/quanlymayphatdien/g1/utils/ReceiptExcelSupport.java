@@ -158,7 +158,7 @@ public class ReceiptExcelSupport {
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setBorderBottom(BorderStyle.THIN);
 
-        String[] exportHeaders = {"#", "Mã máy", "Brand", "Serial", "Số lượng", "Đơn giá", "Thành tiền", "Ghi chú"};
+        String[] exportHeaders = {"#", "Mã máy", "Brand", "Serial", "Đơn giá", "Ghi chú"};
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < exportHeaders.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -191,18 +191,12 @@ public class ReceiptExcelSupport {
             }
             row.createCell(2).setCellValue(brand);
             row.createCell(3).setCellValue(d.getSerialNumber() != null ? d.getSerialNumber() : "");
-            row.createCell(4).setCellValue(d.getQuantity());
             if (d.getUnitPrice() != null) {
-                row.createCell(5).setCellValue(d.getUnitPrice().toPlainString());
+                row.createCell(4).setCellValue(d.getUnitPrice().toPlainString());
             } else {
-                row.createCell(5).setCellValue("");
+                row.createCell(4).setCellValue("");
             }
-            if (d.getUnitPrice() != null) {
-                row.createCell(6).setCellValue(d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())).toPlainString());
-            } else {
-                row.createCell(6).setCellValue("");
-            }
-            row.createCell(7).setCellValue(d.getNote() != null ? d.getNote() : "");
+            row.createCell(5).setCellValue(d.getNote() != null ? d.getNote() : "");
             rowNum++;
         }
 

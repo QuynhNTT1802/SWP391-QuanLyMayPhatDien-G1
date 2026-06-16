@@ -226,7 +226,6 @@
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát (Tồn kho)</th>
                                     <th class="col-serial">Serial</th>
-                                    <th class="col-qty" style="width:70px;">SL</th>
                                     <th style="width:130px;">Đơn giá</th>
                                     <th style="width:130px;">Thành tiền</th>
                                     <th class="col-note">Ghi chú</th>
@@ -247,7 +246,6 @@
                                                     <span class="field-error"></span>
                                                 </td>
                                                 <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" value="<c:out value='${d.serialNumber}'/>" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error"></span></td>
-                                                <td><input type="number" name="quantity" min="1" max="1" value="${d.quantity}" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
                                                 <td><input type="text" name="unitPrice" class="price-input mono" readonly value="<fmt:formatNumber value='${d.unitPrice}' type='number' groupingUsed='false'/>" placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
                                                 <td class="col-price mono row-subtotal">0₫</td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
@@ -270,7 +268,6 @@
                                                 <span class="field-error"></span>
                                             </td>
                                             <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error"></span></td>
-                                            <td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error"></span></td>
                                             <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
                                             <td class="col-price mono row-subtotal">0₫</td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
@@ -285,7 +282,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
-                                    <td colspan="5" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
+                                    <td colspan="4" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
                                     <td class="mono" id="grandTotal" style="padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">0₫</td>
                                     <td colspan="2" style="border-top:2px solid var(--border);"></td>
                                 </tr>
@@ -414,31 +411,26 @@
             if (sel.value) stockInfo.textContent = 'Tồn kho: ' + stock + ' máy';
             else stockInfo.textContent = '';
         }
-        var qtyInput = row.querySelector('input[name="quantity"]');
-        if (qtyInput && sel.value) qtyInput.setAttribute('max', stock);
         var serialInput = row.querySelector('input[name="serialNumber"]');
         if (serialInput) serialInput.value = '';
-        updateRowTotal(qtyInput);
+        updateRowTotal(priceInput);
     }
 
     function updateRowTotal(el) {
         var row = el ? el.closest('tr') : null;
         if (!row) return;
-        var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
         var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
         var price = parseFloat(priceStr) || 0;
-        var subtotal = qty * price;
-        row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
+        row.querySelector('.row-subtotal').textContent = formatVND(price);
         updateGrandTotal();
     }
 
     function updateGrandTotal() {
         var grand = 0;
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            var qty = parseInt(row.querySelector('input[name="quantity"]').value) || 0;
             var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
             var price = parseFloat(priceStr) || 0;
-            grand += qty * price;
+            grand += price;
         });
         document.getElementById('grandTotal').textContent = formatVND(grand);
     }
@@ -551,7 +543,6 @@
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><div class="col-stock"></div><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="number" name="quantity" min="1" max="1" value="1" style="width:70px;" required readonly oninput="updateRowTotal(this);" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
                 + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
@@ -595,15 +586,6 @@
             el.style.borderColor = '#dc3545';
             err.style.display = 'block';
             return false;
-        }
-        if (el.name === 'quantity') {
-            var q = parseInt(el.value);
-            if (isNaN(q) || q < 1) {
-                el.style.borderColor = '#dc3545';
-                err.textContent = 'Số lượng phải ≥ 1';
-                err.style.display = 'block';
-                return false;
-            }
         }
         el.style.borderColor = '';
         err.style.display = 'none';

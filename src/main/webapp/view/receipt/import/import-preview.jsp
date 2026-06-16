@@ -127,7 +127,6 @@
                                             <th>Mã máy</th>
                                             <th>Thương hiệu</th>
                                             <th>Serial</th>
-                                            <th>Số lượng</th>
                                             <th>Đơn giá</th>
                                             <th>Ghi chú</th>
                                         </tr>
@@ -147,10 +146,6 @@
                                             <td class="col-serial">
                                                 <c:out value="${row.serial}"/>
                                                 <input type="hidden" name="serialNumber" value="${row.serial}"/>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="quantity" value="${row.quantity}" min="1" max="100000"
-                                                       style="width:70px;" onblur="if(this.value<1)this.value=1;"/>
                                             </td>
                                             <td>
                                                 <input type="text" name="unitPrice" value="${row.unitPrice}"
@@ -190,7 +185,6 @@
                                     <th class="col-num">#</th>
                                     <th>Mã máy</th>
                                     <th>Serial</th>
-                                    <th>Số lượng</th>
                                     <th>Đơn giá</th>
                                     <th>Ghi chú</th>
                                     <th>Lỗi</th>
@@ -202,7 +196,6 @@
                                     <td class="col-num">${row.rowNum}</td>
                                     <td><c:out value="${row.model}"/></td>
                                     <td class="col-serial"><c:out value="${row.serial}"/></td>
-                                    <td><c:out value="${row.quantity}"/></td>
                                     <td><c:out value="${row.unitPrice}"/></td>
                                     <td><c:out value="${row.note}"/></td>
                                     <td class="error-text"><c:out value="${row['_errors']}"/></td>
