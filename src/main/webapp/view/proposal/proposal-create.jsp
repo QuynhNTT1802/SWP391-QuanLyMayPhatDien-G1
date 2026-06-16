@@ -103,6 +103,15 @@
                         <c:remove var="toastMessage" scope="session"/>
                         <c:remove var="toastType" scope="session"/>
                     </c:if>
+                    <c:if test="${quarterBlocked}">
+                        <div class="alert alert-error" style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 14px 18px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                            <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div>
+                                <strong>Quý ${blockedPeriod}</strong> tại kho này đã bị CEO từ chối PO.
+                                Không thể tạo đề xuất mới cho quý này.
+                            </div>
+                        </div>
+                    </c:if>
                     <div class="page-head">
                         <div class="eyebrow">Đề xuất nhập kho · Tạo mới</div>
                         <h1 class="title">Tải lên file Excel để tạo phiếu</h1>

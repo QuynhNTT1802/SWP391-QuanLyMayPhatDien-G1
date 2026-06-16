@@ -191,10 +191,15 @@ public class PurchaseOrderController extends HttpServlet {
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
 
+        boolean quarterBlocked = warehouseId > 0
+                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId);
+
         request.setAttribute("periods", PeriodUtils.recentQuarters(4));
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
+        request.setAttribute("quarterBlocked", quarterBlocked);
+        request.setAttribute("blockedPeriod", period);
         if (warehouseId > 0) {
             request.setAttribute("aggregations",
                     new PurchaseOrderDAO().aggregatePendingProposals(period, warehouseId));
@@ -250,10 +255,18 @@ public class PurchaseOrderController extends HttpServlet {
                 return;
             }
         }
+        if (new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
+            session.setAttribute("toastMessage",
+                    "Quý " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
 
         PurchaseOrderDAO poDao = new PurchaseOrderDAO();
         List<Map<String, Object>> aggregations = poDao.aggregateByProposalIds(proposalIds, warehouseId);
         PurchaseOrder existingPo = poDao.findActivePoByPeriodWarehouse(period, warehouseId);
+        boolean quarterBlocked = poDao.hasRejectedPo(period, warehouseId);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("aggregations", aggregations);
@@ -261,6 +274,8 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("existingPo", existingPo);
+        request.setAttribute("quarterBlocked", quarterBlocked);
+        request.setAttribute("blockedPeriod", period);
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-review-create.jsp").forward(request, response);
     }
@@ -274,6 +289,15 @@ public class PurchaseOrderController extends HttpServlet {
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
+
+        if (period != null && !period.isEmpty() && warehouseId > 0
+                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
+            session.setAttribute("toastMessage",
+                    "Quý " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
@@ -365,6 +389,15 @@ public class PurchaseOrderController extends HttpServlet {
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
+
+        if (period != null && !period.isEmpty() && warehouseId > 0
+                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
+            session.setAttribute("toastMessage",
+                    "Quý " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
+            return;
+        }
 
         String[] proposalIdArr = request.getParameterValues("proposalIds");
         String[] genIds = request.getParameterValues("generatorId");

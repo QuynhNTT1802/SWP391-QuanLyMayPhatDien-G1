@@ -49,7 +49,22 @@
                         window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'info'};
                             <c:remove var="message" scope="session"/>
                         </c:if>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>'};
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
+                        </c:if>
                     </script>
+
+                    <c:if test="${quarterBlocked}">
+                        <div class="alert alert-error" style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 14px 18px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                            <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div>
+                                <strong>Quý ${blockedPeriod}</strong> tại kho này đã bị CEO từ chối PO.
+                                Không thể tạo PO mới cho quý này.
+                            </div>
+                        </div>
+                    </c:if>
 
                     <form method="get" action="${pageContext.request.contextPath}/purchase-order" id="filterForm">
                         <input type="hidden" name="action" value="create"/>
@@ -80,6 +95,12 @@
                                 </div>
                             </c:when>
                             <c:otherwise>
+                                <c:if test="${quarterBlocked}">
+                                    <div class="card" style="padding: 24px; text-align: center; color: var(--muted);">
+                                        Vui lòng chọn quý hoặc kho khác.
+                                    </div>
+                                </c:if>
+                                <c:if test="${!quarterBlocked}">
                                 <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=create">
                                     <input type="hidden" name="period" value="${selectedPeriod}"/>
                                     <input type="hidden" name="warehouseId" value="${selectedWarehouseId}"/>
@@ -130,6 +151,7 @@
                                         </div>
                                     </div>
                                 </form>
+                                </c:if>
                             </c:otherwise>
                         </c:choose>
                     </c:if>
