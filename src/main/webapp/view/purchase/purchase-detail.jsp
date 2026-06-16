@@ -78,7 +78,7 @@
 
                     <div class="card" style="padding: 20px;">
                         <div class="info-grid">
-                            <div class="row"><div class="lbl">Quý</div><div class="val">${po.period} (${po.periodStart} → ${po.periodEnd})</div></div>
+                            <div class="row"><div class="lbl">Tháng</div><div class="val">${po.period} (${po.periodStart} → ${po.periodEnd})</div></div>
                             <div class="row"><div class="lbl">Kho</div><div class="val">${po.warehouseName}</div></div>
                             <div class="row"><div class="lbl">Người tạo</div><div class="val">${po.createdByName} lúc ${po.createdAt.format(poFmt)}</div></div>
                             <div class="row"><div class="lbl">Số proposal gom</div><div class="val">${po.totalProposals}</div></div>

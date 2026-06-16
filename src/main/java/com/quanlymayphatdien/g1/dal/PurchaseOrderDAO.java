@@ -453,7 +453,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return null;
     }
 
-    public List<PurchaseOrder> findByFilters(String period, int warehouseId, String status, int page, int pageSize) {
+    public List<PurchaseOrder> findByFilters(String dateFrom, String dateTo, int warehouseId, String status, int page, int pageSize) {
         List<PurchaseOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
@@ -461,9 +461,13 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND p.period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND p.period_start >= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND p.period_start <= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND p.warehouse_id = ?");
@@ -501,12 +505,16 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
-    public int countByFilters(String period, int warehouseId, String status) {
+    public int countByFilters(String dateFrom, String dateTo, int warehouseId, String status) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM purchase_order WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND period_start >= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND period_start <= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND warehouse_id = ?");
@@ -1021,7 +1029,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
     }
 
-    public List<Map<String, Object>> findOpenQuarters(String currentPeriod, java.time.LocalDate currentPeriodEnd) {
+    public List<Map<String, Object>> findOpenMonths(String currentPeriod, java.time.LocalDate currentPeriodEnd) {
         if (currentPeriod == null || currentPeriodEnd == null) {
             return new ArrayList<>();
         }

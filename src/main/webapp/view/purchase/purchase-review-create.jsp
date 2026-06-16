@@ -74,7 +74,7 @@
 
                     <c:if test="${not empty existingPo}">
                         <div class="alert alert-warn">
-                            <strong>Đã có phiếu mua <c:out value="${existingPo.poCode}"/> (trạng thái <c:out value="${existingPo.status}"/>) cho kỳ + kho này.</strong>
+                            <strong>Đã có phiếu mua <c:out value="${existingPo.poCode}"/> (trạng thái <c:out value="${existingPo.status}"/>) cho tháng + kho này.</strong>
                             Không thể tạo phiếu mua mới. Vui lòng hủy phiếu cũ trước.
                         </div>
                     </c:if>
@@ -83,15 +83,15 @@
                         <div class="alert alert-error" style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 14px 18px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
                             <svg viewBox="0 0 24 24" style="width:20px;height:20px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                             <div>
-                                <strong>Quý ${blockedPeriod}</strong> tại kho này đã bị CEO từ chối PO.
-                                Không thể tạo PO mới cho quý này.
+                                <strong>Tháng ${blockedPeriod}</strong> tại kho này đã bị CEO từ chối PO.
+                                Không thể tạo PO mới cho tháng này.
                             </div>
                         </div>
                     </c:if>
 
                     <div class="po-info">
                         <div>
-                            <span class="lbl">Kỳ</span>
+                            <span class="lbl">Tháng</span>
                             <span class="val"><c:out value="${selectedPeriod}"/></span>
                         </div>
                         <div>

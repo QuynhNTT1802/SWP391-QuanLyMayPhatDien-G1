@@ -134,7 +134,8 @@ public class PurchaseOrderController extends HttpServlet {
         User user = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
 
-        String period = request.getParameter("period");
+        String dateFrom = request.getParameter("dateFrom");
+        String dateTo = request.getParameter("dateTo");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String status = request.getParameter("status");
 
@@ -151,20 +152,20 @@ public class PurchaseOrderController extends HttpServlet {
         }
 
         PurchaseOrderDAO dao = new PurchaseOrderDAO();
-        int total = dao.countByFilters(period, warehouseId, status);
+        int total = dao.countByFilters(dateFrom, dateTo, warehouseId, status);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<PurchaseOrder> pos = dao.findByFilters(period, warehouseId, status, page, pageSize);
+        List<PurchaseOrder> pos = dao.findByFilters(dateFrom, dateTo, warehouseId, status, page, pageSize);
 
         request.setAttribute("purchaseOrders", pos);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalPOs", total);
-        request.setAttribute("periods", PeriodUtils.recentQuarters(4));
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("period", period);
+        request.setAttribute("dateFrom", dateFrom);
+        request.setAttribute("dateTo", dateTo);
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("status", status);
         request.setAttribute("canApprove", perms != null && perms.contains("purchase_orders.approve"));
@@ -186,6 +187,7 @@ public class PurchaseOrderController extends HttpServlet {
         }
 
         String period = request.getParameter("period");
+        if (period != null) period = period.replace("-", "");
         if (period == null || period.isEmpty()) {
             period = PeriodUtils.currentPeriod();
         }
@@ -194,7 +196,6 @@ public class PurchaseOrderController extends HttpServlet {
         boolean quarterBlocked = warehouseId > 0
                 && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId);
 
-        request.setAttribute("periods", PeriodUtils.recentQuarters(4));
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
@@ -257,7 +258,7 @@ public class PurchaseOrderController extends HttpServlet {
         }
         if (new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
             session.setAttribute("toastMessage",
-                    "Quý " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
+                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
             return;
@@ -286,6 +287,7 @@ public class PurchaseOrderController extends HttpServlet {
         User user = (User) session.getAttribute("loggedUser");
 
         String period = request.getParameter("period");
+        if (period != null) period = period.replace("-", "");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
@@ -293,7 +295,7 @@ public class PurchaseOrderController extends HttpServlet {
         if (period != null && !period.isEmpty() && warehouseId > 0
                 && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
             session.setAttribute("toastMessage",
-                    "Quý " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
+                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
             return;
@@ -386,6 +388,7 @@ public class PurchaseOrderController extends HttpServlet {
         User user = (User) session.getAttribute("loggedUser");
 
         String period = request.getParameter("period");
+        if (period != null) period = period.replace("-", "");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
@@ -393,7 +396,7 @@ public class PurchaseOrderController extends HttpServlet {
         if (period != null && !period.isEmpty() && warehouseId > 0
                 && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
             session.setAttribute("toastMessage",
-                    "Quý " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
+                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
             return;

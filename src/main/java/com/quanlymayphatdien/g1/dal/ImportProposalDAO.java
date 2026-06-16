@@ -120,7 +120,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return false;
     }
 
-    public int countByStatus(String status, Integer createdBy, boolean excludeDraft, String period) {
+    public int countByStatus(String status, Integer createdBy, boolean excludeDraft, String dateFrom, String dateTo) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE status = ?");
         List<Object> params = new ArrayList<>();
         params.add(status);
@@ -132,9 +132,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND status != ?");
             params.add(GlobalUtils.STATUS_DRAFT);
         }
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND proposal_date >= ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND proposal_date < ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -293,7 +297,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String period, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String dateFrom, String dateTo, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -334,9 +338,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 params.add(poFilter);
             }
         }
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND p.period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND p.proposal_date >= ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND p.proposal_date < ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
@@ -356,7 +364,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String period) {
+    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String dateFrom, String dateTo) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -383,9 +391,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 params.add(poFilter);
             }
         }
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND p.period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND p.proposal_date >= ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND p.proposal_date < ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {

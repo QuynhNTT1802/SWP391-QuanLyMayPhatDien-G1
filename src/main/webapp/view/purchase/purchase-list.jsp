@@ -87,12 +87,10 @@
                     <form method="get" action="${pageContext.request.contextPath}/purchase-order" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                         <input type="hidden" name="action" value="list" />
 
-                        <select class="filter-select" name="period" onchange="this.form.submit()">
-                            <option value="">Quý: Tất cả</option>
-                            <c:forEach var="p" items="${periods}">
-                                <option value="${p}" <c:if test="${period == p}">selected</c:if>>${p}</option>
-                            </c:forEach>
-                        </select>
+                        <input type="date" class="filter-select" name="dateFrom" value="${dateFrom}"
+                               title="Từ ngày" onchange="this.form.submit()" />
+                        <input type="date" class="filter-select" name="dateTo" value="${dateTo}"
+                               title="Đến ngày" onchange="this.form.submit()" />
 
                         <select class="filter-select" name="warehouseId" onchange="this.form.submit()">
                             <option value="">Kho: Tất cả</option>
@@ -148,7 +146,7 @@
                             <thead>
                                 <tr>
                                     <th>Mã PO</th>
-                                    <th>Quý</th>
+                                    <th>Tháng</th>
                                     <th>Kho</th>
                                     <th>Người tạo</th>
                                     <th>Ngày tạo</th>
@@ -194,16 +192,16 @@
                             <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty period}">&period=${period}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">‹</a>
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty dateFrom}">&dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&dateTo=${dateTo}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty period}">&period=${period}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty dateFrom}">&dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&dateTo=${dateTo}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty period}">&period=${period}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">›</a>
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty dateFrom}">&dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&dateTo=${dateTo}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>
