@@ -149,12 +149,7 @@
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
-    /* ============================================================
-       v4 Picker — inline 2-col (kho ↔ cart). 1 click = move.
-       cart[generatorId] = { model, unitPrice, items: [{serial, createdAt}] }
-       warehouseStock[generatorId] = { model, unitPrice, items: [{serial, createdAt}] }
-       lockedByGen[generatorId] = [{serialNumber, liquidationCode, liquidationStatus, ...}]
-       ============================================================ */
+
     var cart = {};
     var warehouseStock = {};
     var lockedByGen = {};

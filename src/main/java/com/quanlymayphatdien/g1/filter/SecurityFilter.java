@@ -211,6 +211,7 @@ public class SecurityFilter implements Filter {
     }
 
     private static final class Rule {
+
         final String path;
         final Map<String, String> actionMap;
         final String defaultPerm;
