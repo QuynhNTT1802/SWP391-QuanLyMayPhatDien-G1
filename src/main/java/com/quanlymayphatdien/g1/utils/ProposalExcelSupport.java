@@ -41,7 +41,6 @@ public class ProposalExcelSupport {
     public static final String HEADER_POWER = "Công suất (kVA)";
     public static final String HEADER_FREQUENCY = "Tần số";
     public static final String HEADER_WEIGHT = "Trọng lượng (kg)";
-    public static final String HEADER_DESCRIPTION = "Mô tả";
     public static final String HEADER_SUPPLIER_NAME = "Tên nhà cung cấp";
     public static final String HEADER_UNIT_PRICE = "Đơn giá đề xuất (VNĐ)";
     public static final String HEADER_QUANTITY = "Số lượng";
@@ -60,7 +59,6 @@ public class ProposalExcelSupport {
             HEADER_POWER,
             HEADER_FREQUENCY,
             HEADER_WEIGHT,
-            HEADER_DESCRIPTION,
             HEADER_SUPPLIER_NAME,
             HEADER_UNIT_PRICE,
             HEADER_QUANTITY,
@@ -123,7 +121,6 @@ public class ProposalExcelSupport {
             row.createCell(col++).setCellValue(4.5);
             row.createCell(col++).setCellValue("50Hz");
             row.createCell(col++).setCellValue(85);
-            row.createCell(col++).setCellValue("Máy phát điện Honda 4.5kVA, chạy xăng, 1 pha");
             row.createCell(col++).setCellValue("Công ty Máy Phát Điện Đông Dương");
             row.createCell(col++).setCellValue(18_000_000);
             row.createCell(col++).setCellValue(2);

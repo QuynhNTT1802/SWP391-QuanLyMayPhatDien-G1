@@ -52,7 +52,7 @@
             table.data-table .row-qty:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
             table.data-table .row-note{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box}
             table.data-table .row-note:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-            table.data-table .row-unitprice{width:140px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box;text-align:right}
+            table.data-table .row-unitprice{width:110px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box;text-align:right;min-width:80px}
             .supplier-cell{font-size:12.5px;font-weight:600;color:var(--fg)}
             .supplier-cell .supplier-phone{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
             .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);color:var(--fg);padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-ui);text-decoration:none}
@@ -108,6 +108,13 @@
             .spin-svg{animation: spin 1s linear infinite; margin-bottom: 8px;}
 
             .unresolved-card-row td{background:color-mix(in srgb,var(--warn) 6%,transparent)}
+            .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0}
+            .table-scroll table.data-table{width:100%}
+            table.data-table .col-min{white-space:nowrap;width:1%}
+            table.data-table .col-supplier{white-space:nowrap}
+            table.data-table .col-price{white-space:nowrap;width:110px}
+            table.data-table .col-qty{white-space:nowrap;width:80px}
+            table.data-table .col-note{min-width:120px}
         </style>
     </head>
     <body>
@@ -206,18 +213,26 @@
                         <c:if test="${not empty validRows}">
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Dòng hợp lệ</h3><span class="sub">${fn:length(validRows)} dòng</span></div></div>
+                                <div class="table-scroll">
                                 <table class="data-table">
-                                    <thead><tr><th style="width:50px">#</th><th>Mã máy phát</th><th>Tên máy</th><th style="width:200px">Nhà cung cấp</th><th style="width:140px" class="text-right">Đơn giá (VNĐ)</th><th style="width:110px" class="text-right">Số lượng</th><th>Ghi chú dòng</th></tr></thead>
+                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${validRows}">
                                             <tr data-id="<c:out value='${row.gid}'/>" data-supplier-id="<c:out value='${row.supplierId}'/>">
                                                 <td class="mono"><c:out value="${row['stt']}"/></td>
                                                 <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
-                                                <td class="name-cell"><c:out value="${row['gname']}"/></td>
-                                                <td>
+                                                <td><c:out value="${row['Thương hiệu']}"/></td>
+                                                <td><c:out value="${row['Xuất xứ']}"/></td>
+                                                <td><c:out value="${row['Tình trạng']}"/></td>
+                                                <td><c:out value="${row['Nhiên liệu']}"/></td>
+                                                <td><c:out value="${row['Số pha']}"/></td>
+                                                <td><c:out value="${row['Loại máy phát']}"/></td>
+                                                <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
+                                                <td><c:out value="${row['Tần số']}"/></td>
+                                                <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
+                                                <td class="col-supplier">
                                                     <span class="supplier-cell">
                                                         <c:out value="${row.supplierNameResolved}"/>
-                                                        <span class="supplier-phone" data-supplier-display-phone><c:out value="${row.supplierPhone}"/></span>
                                                     </span>
                                                 </td>
                                                 <td><input type="number" class="row-unitprice" min="0" step="1000" value="<c:out value='${row.gunitPrice}'/>" /></td>
@@ -227,23 +242,32 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </c:if>
                         <c:if test="${not empty warningRows}">
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Máy chưa có trong kho</h3><span class="sub">${fn:length(warningRows)} dòng</span></div></div>
+                                <div class="table-scroll">
                                 <table class="data-table">
-                                    <thead><tr><th style="width:50px">#</th><th>Mã máy phát</th><th>Tên máy</th><th style="width:200px">Nhà cung cấp</th><th style="width:140px" class="text-right">Đơn giá (VNĐ)</th><th style="width:110px" class="text-right">Số lượng</th><th>Ghi chú dòng</th></tr></thead>
+                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${warningRows}">
                                             <tr data-id="<c:out value='${row.gid}'/>" data-supplier-id="<c:out value='${row.supplierId}'/>">
                                                 <td class="mono"><c:out value="${row['stt']}"/></td>
                                                 <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
-                                                <td class="name-cell"><c:out value="${row['gname']}"/></td>
-                                                <td>
+                                                <td><c:out value="${row['Thương hiệu']}"/></td>
+                                                <td><c:out value="${row['Xuất xứ']}"/></td>
+                                                <td><c:out value="${row['Tình trạng']}"/></td>
+                                                <td><c:out value="${row['Nhiên liệu']}"/></td>
+                                                <td><c:out value="${row['Số pha']}"/></td>
+                                                <td><c:out value="${row['Loại máy phát']}"/></td>
+                                                <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
+                                                <td><c:out value="${row['Tần số']}"/></td>
+                                                <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
+                                                <td class="col-supplier">
                                                     <span class="supplier-cell">
                                                         <c:out value="${row.supplierNameResolved}"/>
-                                                        <span class="supplier-phone"><c:out value="${row.supplierPhone}"/></span>
                                                     </span>
                                                 </td>
                                                 <td><input type="number" class="row-unitprice" min="0" step="1000" value="<c:out value='${row.gunitPrice}'/>" /></td>
@@ -253,56 +277,81 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </c:if>
                         <c:if test="${not empty unresolvedSupplierRows}">
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Cần chọn nhà cung cấp</h3><span class="sub">${fn:length(unresolvedSupplierRows)} dòng</span></div></div>
+                                <div class="table-scroll">
                                 <table class="data-table">
-                                    <thead><tr><th style="width:50px">#</th><th>Mã máy phát</th><th>Tên máy</th><th>Tên NCC đã gõ</th><th>Lý do</th><th style="width:280px" class="text-right">Hành động</th></tr></thead>
+                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th style="min-width:160px">Tên NCC đã gõ</th><th style="min-width:180px">Lý do</th><th style="width:280px" class="text-right">Hành động</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${unresolvedSupplierRows}" varStatus="st">
                                             <tr class="unresolved-card-row" data-row-index="<c:out value='${st.index}'/>" data-gid="<c:out value='${row.gid}'/>" data-gmodel="<c:out value='${row.gmodel}'/>" data-gname="<c:out value='${row.gname}'/>">
                                                 <td class="mono"><c:out value="${row['stt']}"/></td>
                                                 <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
-                                                <td class="name-cell"><c:out value="${row['gname']}"/></td>
-                                                <td><c:out value="${row['supplierQuery']}"/></td>
+                                                <td><c:out value="${row['Thương hiệu']}"/></td>
+                                                <td><c:out value="${row['Xuất xứ']}"/></td>
+                                                <td><c:out value="${row['Tình trạng']}"/></td>
+                                                <td><c:out value="${row['Nhiên liệu']}"/></td>
+                                                <td><c:out value="${row['Số pha']}"/></td>
+                                                <td><c:out value="${row['Loại máy phát']}"/></td>
+                                                <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
+                                                <td><c:out value="${row['Tần số']}"/></td>
+                                                <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
+                                                <td style="max-width:200px"><c:out value="${row['supplierQuery']}"/></td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${row['supplierMultiple'] == 'true'}">
-                                                            Có <strong>${row['supplierMultipleCount']}</strong> NCC trùng tên trong hệ thống.
+                                                            Có <strong>${row['supplierMultipleCount']}</strong> NCC trùng tên.
                                                         </c:when>
                                                         <c:otherwise>
-                                                            Không tìm thấy NCC trong hệ thống.
+                                                            Không tìm thấy NCC.
                                                         </c:otherwise>
                                                     </c:choose>
                                                 </td>
-                                                <td style="text-align:right">
+                                                <td style="text-align:right; white-space:nowrap">
                                                     <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=${java.net.URLEncoder.encode(row.supplierQuery, 'UTF-8')}&amp;returnUrl=${pageContext.request.contextPath}/proposal?action%3DimportConfirm&amp;rowIndex=${st.index}" target="_self">Tạo NCC mới</a>
-                                                    <button type="button" class="btn btn-primary" onclick="openSupplierPanel(<c:out value='${st.index}'/>, '<c:out value='${row.supplierQuery}'/>', this.closest('tr'))">Chọn lại từ DS</button>
+                                                    <button type="button" class="btn btn-primary" onclick="openSupplierPanel(<c:out value='${st.index}'/>, '<c:out value='${row.supplierQuery}'/>', this.closest('tr'))">Chọn từ DS</button>
                                                 </td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </c:if>
                         <c:if test="${not empty invalidRows}">
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Dòng lỗi - bỏ qua</h3><span class="sub">${fn:length(invalidRows)} dòng</span></div></div>
+                                <div class="table-scroll">
                                 <table class="data-table">
-                                    <thead><tr><th style="width:50px">#</th><th>Mã máy phát</th><th>Số lượng</th><th>Lỗi</th></tr></thead>
+                                    <thead><tr><th class="col-min">#</th><th>Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th>Công suất (kVA)</th><th>Tần số</th><th>Trọng lượng (kg)</th><th>Tên nhà cung cấp</th><th>Đơn giá đề xuất (VNĐ)</th><th>Số lượng</th><th>Ghi chú dòng</th><th>Lỗi</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${invalidRows}">
                                             <tr>
                                                 <td class="mono"><c:out value="${row['stt']}"/></td>
-                                                <td class="model-cell"><c:out value="${row['Mã máy phát']}"/></td>
+                                                <td><c:out value="${row['Mã máy phát']}"/></td>
+                                                <td><c:out value="${row['Thương hiệu']}"/></td>
+                                                <td><c:out value="${row['Xuất xứ']}"/></td>
+                                                <td><c:out value="${row['Tình trạng']}"/></td>
+                                                <td><c:out value="${row['Nhiên liệu']}"/></td>
+                                                <td><c:out value="${row['Số pha']}"/></td>
+                                                <td><c:out value="${row['Loại máy phát']}"/></td>
+                                                <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
+                                                <td><c:out value="${row['Tần số']}"/></td>
+                                                <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
+                                                <td><c:out value="${row['Tên nhà cung cấp']}"/></td>
+                                                <td><c:out value="${row['Đơn giá đề xuất (VNĐ)']}"/></td>
                                                 <td><c:out value="${row['Số lượng']}"/></td>
+                                                <td><c:out value="${row['Ghi chú dòng']}"/></td>
                                                 <td><div class="error-msg"><c:out value="${row['gerrors']}"/></div></td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>
                                 </table>
+                                </div>
                             </div>
                         </c:if>
                         <c:if test="${empty validRows and empty warningRows}">
@@ -552,11 +601,17 @@
             document.getElementById('supplierSearchInput').addEventListener('input', function () {
                 var q = this.value.toLowerCase().trim();
                 var cards = document.querySelectorAll('.supplier-card');
+                var words = q ? q.split(/\s+/) : [];
                 cards.forEach(function (c) {
-                    var match = (c.getAttribute('data-name') || '').indexOf(q) >= 0
-                        || (c.getAttribute('data-phone') || '').indexOf(q) >= 0
-                        || (c.getAttribute('data-email') || '').indexOf(q) >= 0;
-                    c.style.display = match ? '' : 'none';
+                    if (!q) { c.style.display = ''; return; }
+                    var haystack = (c.getAttribute('data-name') || '') + '|'
+                        + (c.getAttribute('data-phone') || '') + '|'
+                        + (c.getAttribute('data-email') || '');
+                    var all = true;
+                    for (var i = 0; i < words.length; i++) {
+                        if (haystack.indexOf(words[i]) < 0) { all = false; break; }
+                    }
+                    c.style.display = all ? '' : 'none';
                 });
             });
 
