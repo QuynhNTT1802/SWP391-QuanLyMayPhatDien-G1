@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
     java.time.format.DateTimeFormatter __poFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     request.setAttribute("poFmt", __poFmt);
@@ -23,6 +24,8 @@
             .po-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
             .po-table th, .po-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; }
             .po-table th { background: var(--surface-2); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; }
+            .po-table tfoot td { padding: 12px 10px; border-top: 2px solid var(--border); font-size: 14px; background: var(--surface-2); }
+            .mono { font-family: 'JetBrains Mono', monospace; }
             .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 24px; margin: 16px 0; }
             .info-grid .row { padding: 6px 0; }
             .info-grid .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; }
@@ -105,6 +108,8 @@
                                 <th>SL đề xuất</th>
                                 <th>Tồn kho</th>
                                 <th>SL mua cuối</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
                                 <th>Ghi chú</th>
                             </tr>
                         </thead>
@@ -117,10 +122,19 @@
                                     <td>${d.proposedQuantity}</td>
                                     <td>${d.currentStock}</td>
                                     <td><strong>${d.finalQuantity}</strong></td>
+                                    <td class="mono"><c:choose><c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                    <td class="mono"><c:choose><c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice * d.finalQuantity}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose></td>
                                     <td>${d.note}</td>
                                 </tr>
                             </c:forEach>
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7" style="text-align:right;font-weight:700;">Tổng cộng:</td>
+                                <td class="mono" style="font-weight:700;font-size:15px;"><fmt:formatNumber value="${grandTotal}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
 
                     <c:if test="${not empty sourceProposals}">

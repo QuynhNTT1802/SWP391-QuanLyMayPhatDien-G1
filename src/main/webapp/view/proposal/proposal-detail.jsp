@@ -52,6 +52,7 @@
             .pill.pending   { color: var(--warn);    border-color: color-mix(in srgb, var(--warn) 30%, transparent);    background: var(--warn-soft); }
             .pill.approved  { color: var(--accent);  border-color: color-mix(in srgb, var(--accent) 30%, transparent);  background: var(--accent-soft); }
             .pill.rejected  { color: var(--danger);  border-color: color-mix(in srgb, var(--danger) 30%, transparent);  background: var(--danger-soft); }
+            .pill.revision  { color: #7c3aed;   border-color: color-mix(in srgb, #7c3aed 30%, transparent);  background: color-mix(in srgb, #7c3aed 8%, transparent); }
             .pill.cancelled { color: var(--muted);   border-color: var(--border); background: var(--surface-2); }
 
             .action-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -169,6 +170,7 @@
                                     <input type="hidden" name="id" value="${proposal.proposalId}" />
                                     <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận duyệt phiếu đề xuất này?')">Duyệt phiếu</button>
                                 </form>
+                                <a class="btn btn-warn" href="#" onclick="showRevisionForm()">Yêu cầu chỉnh sửa</a>
                                 <a class="btn btn-danger" href="${pageContext.request.contextPath}/proposal?action=reject&id=${proposal.proposalId}">Từ chối</a>
                             </c:if>
                             <c:if test="${perms.contains('proposals.cancel')}">
@@ -177,6 +179,15 @@
                                     <button type="submit" class="btn btn-warn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">Huỷ phiếu</button>
                                 </form>
                             </c:if>
+                        </c:if>
+
+                        <c:if test="${proposal.status == 'NEEDS_REVISION' && empty proposal.purchaseOrderId && isOwner}">
+                            <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">Chỉnh sửa</a>
+                            <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
+                                <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                <input type="hidden" name="submitType" value="submit" />
+                                <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt lại?')">Gửi duyệt lại</button>
+                            </form>
                         </c:if>
 
                         <c:if test="${proposal.status == 'APPROVED' && perms.contains('proposals.cancel') && empty proposal.purchaseOrderId}">
@@ -199,6 +210,7 @@
                                 <c:when test="${proposal.status == 'PENDING_CEO'}"><span class="pill pending"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
                                 <c:when test="${proposal.status == 'APPROVED'}"><span class="pill approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                 <c:when test="${proposal.status == 'REJECTED'}"><span class="pill rejected"><span class="pdot"></span>Từ chối</span></c:when>
+                                <c:when test="${proposal.status == 'NEEDS_REVISION'}"><span class="pill revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
                                 <c:when test="${proposal.status == 'CANCELLED'}"><span class="pill cancelled"><span class="pdot"></span>Đã huỷ</span></c:when>
                                 <c:otherwise><span class="pill"><c:out value="${proposal.status}"/></span></c:otherwise>
                             </c:choose>
@@ -302,65 +314,88 @@
                             </div>
                             <span class="section-update"><c:out value="${fn:length(proposal.details)}"/> dòng</span>
                         </div>
+                        <div class="table-scroll" style="overflow-x:auto;max-width:100%;">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th style="width:50px;">#</th>
-                                    <th>Máy phát / Hãng</th>
-                                    <th style="width:200px;">Nhà cung cấp</th>
-                                    <th style="width:140px;" class="text-right">Đơn giá (VNĐ)</th>
-                                    <th style="width:100px;" class="text-right">Số lượng</th>
-                                    <th style="width:130px;" class="text-right">Tồn kho hiện tại</th>
+                                    <th style="width:40px;">#</th>
+                                    <th>Máy phát</th>
+                                    <th>Hãng</th>
+                                    <th>Xuất xứ</th>
+                                    <th>Tình trạng</th>
+                                    <th>Nhiên liệu</th>
+                                    <th>Số pha</th>
+                                    <th>Loại MP</th>
+                                    <th style="width:85px;">C.suất</th>
+                                    <th style="width:70px;">Tần số</th>
+                                    <th style="width:70px;">T.lượng</th>
+                                    <th style="width:160px;">Nhà cung cấp</th>
+                                    <th style="width:100px;" class="text-right">Đơn giá</th>
+                                    <th style="width:60px;" class="text-right">SL</th>
+                                    <th style="width:70px;" class="text-right">Tồn kho</th>
+                                    <th style="width:110px;" class="text-right">Thành tiền</th>
                                     <th>Ghi chú</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty proposal.details}">
-                                        <tr><td colspan="7" class="text-center empty-state">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                        <tr><td colspan="17" class="text-center empty-state">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="d" items="${proposal.details}" varStatus="st">
                                             <tr>
                                                 <td class="mono">${st.index + 1}</td>
-                                                <td>
-                                                    <strong><c:out value="${d.generatorName}"/></strong>
-                                                    <span style="color:var(--muted);"> · <c:out value="${d.brandName}"/></span>
-                                                </td>
+                                                <td><strong><c:out value="${d.generatorName}"/></strong></td>
+                                                <td><c:out value="${d.brandName}"/></td>
+                                                <td><c:out value="${d.originName}"/></td>
+                                                <td><c:out value="${d.conditionName}"/></td>
+                                                <td><c:out value="${d.fuelName}"/></td>
+                                                <td><c:out value="${d.phaseName}"/></td>
+                                                <td><c:out value="${d.genTypeName}"/></td>
+                                                <td class="mono"><c:out value="${d.powerRating}"/></td>
+                                                <td><c:out value="${d.frequency}"/></td>
+                                                <td class="mono"><c:out value="${d.weight}"/></td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${not empty d.supplierName}">
-                                                            <strong><c:out value="${d.supplierName}"/></strong>
+                                                            <c:out value="${d.supplierName}"/>
                                                             <c:if test="${not empty d.supplierPhone}">
-                                                                <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">
-                                                                    <c:out value="${d.supplierPhone}"/>
-                                                                </div>
+                                                                <div style="font-size:11px;color:var(--muted);"><c:out value="${d.supplierPhone}"/></div>
                                                             </c:if>
                                                         </c:when>
-                                                        <c:otherwise>
-                                                            <span style="color:var(--muted);">—</span>
-                                                        </c:otherwise>
+                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="mono text-right">
                                                     <c:choose>
-                                                        <c:when test="${not empty d.unitPrice}">
-                                                            <fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <span style="color:var(--muted);">—</span>
-                                                        </c:otherwise>
+                                                        <c:when test="${not empty d.unitPrice}"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/></c:when>
+                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="mono text-right"><fmt:formatNumber value="${d.quantity}"/></td>
                                                 <td class="mono text-right"><fmt:formatNumber value="${d.currentStock}"/></td>
+                                                <td class="mono text-right">
+                                                    <c:choose>
+                                                        <c:when test="${not empty d.unitPrice}"><fmt:formatNumber value="${d.unitPrice * d.quantity}" pattern="#,##0"/></c:when>
+                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td><c:out value="${d.note}"/></td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
                                 </c:choose>
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="15" style="text-align:right;font-weight:700;">Tổng cộng:</td>
+                                    <td class="mono text-right" style="font-weight:700;font-size:14px;"><fmt:formatNumber value="${grandTotal}" pattern="#,##0"/> ₫</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
+                        </div>
                     </section>
 
                     <%-- Section 3: Lịch sử cập nhật --%>
@@ -402,6 +437,7 @@
                                                         <c:when test="${h.action == 'UPDATE'}">update</c:when>
                                                         <c:when test="${h.action == 'APPROVE'}">approve</c:when>
                                                         <c:when test="${h.action == 'REJECT'}">reject</c:when>
+                                                        <c:when test="${h.action == 'REVISION'}">revision</c:when>
                                                         <c:when test="${h.action == 'CANCEL'}">cancel</c:when>
                                                         <c:otherwise>cancel</c:otherwise>
                                                     </c:choose>">
@@ -410,6 +446,7 @@
                                                         <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
                                                         <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
                                                         <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
+                                                        <c:when test="${h.action == 'REVISION'}">Yêu cầu chỉnh sửa</c:when>
                                                         <c:when test="${h.action == 'CANCEL'}">Huỷ</c:when>
                                                         <c:otherwise>${h.action}</c:otherwise>
                                                     </c:choose>
@@ -423,8 +460,30 @@
                             </tbody>
                         </table>
                     </section>
+                    <c:if test="${proposal.status == 'PENDING' && empty proposal.purchaseOrderId && canApprove}">
+                        <div id="revisionForm" style="display:none; margin-top: 20px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                            <h3 style="margin: 0 0 12px 0;">Yêu cầu chỉnh sửa</h3>
+                            <form method="POST" action="${pageContext.request.contextPath}/proposal?action=revision">
+                                <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                <textarea name="revisionReason" rows="4" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; font-family:inherit; font-size:14px; resize:vertical;" placeholder="Nhập lý do yêu cầu chỉnh sửa..." required></textarea>
+                                <div style="margin-top:10px; display:flex; gap:8px;">
+                                    <button type="submit" class="btn btn-primary">Gửi yêu cầu</button>
+                                    <button type="button" class="btn" onclick="hideRevisionForm()">Huỷ</button>
+                                </div>
+                            </form>
+                        </div>
+                    </c:if>
                 </main>
             </div>
         </div>
+
+        <script>
+            function showRevisionForm() {
+                document.getElementById('revisionForm').style.display = 'block';
+            }
+            function hideRevisionForm() {
+                document.getElementById('revisionForm').style.display = 'none';
+            }
+        </script>
     </body>
 </html>

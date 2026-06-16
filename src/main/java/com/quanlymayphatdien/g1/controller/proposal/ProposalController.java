@@ -133,6 +133,9 @@ public class ProposalController extends HttpServlet {
                 case "reject":
                     rejectProposal(request, response);
                     break;
+                case "revision":
+                    requestRevision(request, response);
+                    break;
                 case "cancel":
                     cancelProposal(request, response);
                     break;
@@ -148,6 +151,9 @@ public class ProposalController extends HttpServlet {
                 case "assignSupplier":
                     assignSupplierAjax(request, response);
                     return;
+                case "uploadEditExcel":
+                    uploadEditExcel(request, response);
+                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -247,7 +253,8 @@ public class ProposalController extends HttpServlet {
         boolean quarterBlocked = warehouseId > 0
                 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("generators", new GeneratorDAO().findAll());
+        request.setAttribute("generators", new GeneratorDAO().findAllActive());
+        request.setAttribute("suppliers", new SupplierDAO().findAll());
         request.setAttribute("quarterBlocked", quarterBlocked);
         request.setAttribute("blockedPeriod", currentPeriod);
         request.setAttribute("blockedWarehouseId", warehouseId);
@@ -266,7 +273,8 @@ public class ProposalController extends HttpServlet {
         }
         ImportProposal p = new ImportProposalDAO().findById(id);
         if (p == null
-                || !GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
+                || !(GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
+                     || GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus()))
                 || p.getCreatedBy() != currentUserId(request)) {
             session.setAttribute("toastMessage", "Không thể sửa phiếu này (đã gửi duyệt hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
@@ -275,7 +283,8 @@ public class ProposalController extends HttpServlet {
         }
         request.setAttribute("proposal", p);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("generators", new GeneratorDAO().findAll());
+        request.setAttribute("generators", new GeneratorDAO().findAllActive());
+        request.setAttribute("suppliers", new SupplierDAO().findAll());
         request.getRequestDispatcher("/view/proposal/proposal-edit.jsp").forward(request, response);
     }
 
@@ -323,6 +332,17 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("proposal", p);
         request.setAttribute("history", history);
         request.setAttribute("totalHistory", totalHistory);
+
+        java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
+        if (p.getDetails() != null) {
+            for (ImportProposalDetail d : p.getDetails()) {
+                if (d.getUnitPrice() != null) {
+                    grandTotal = grandTotal.add(
+                        d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
+                }
+            }
+        }
+        request.setAttribute("grandTotal", grandTotal);
         request.getRequestDispatcher("/view/proposal/proposal-detail.jsp").forward(request, response);
     }
 
@@ -417,7 +437,8 @@ public class ProposalController extends HttpServlet {
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal existing = dao.findById(id);
         if (existing == null
-                || !GlobalUtils.STATUS_DRAFT.equals(existing.getStatus())
+                || (!GlobalUtils.STATUS_DRAFT.equals(existing.getStatus())
+                    && !GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus()))
                 || existing.getCreatedBy() != currentUserId(request)) {
             session.setAttribute("toastMessage", "Không thể cập nhật phiếu này (đã gửi duyệt hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
@@ -429,7 +450,12 @@ public class ProposalController extends HttpServlet {
         ImportProposal p = new ImportProposal();
         p.setProposalId(id);
         p.setNote(request.getParameter("note"));
-        p.setStatus("draft".equals(submitType) ? GlobalUtils.STATUS_DRAFT : GlobalUtils.STATUS_PENDING);
+        boolean isRevision = GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus());
+        if ("draft".equals(submitType) && !isRevision) {
+            p.setStatus(GlobalUtils.STATUS_DRAFT);
+        } else {
+            p.setStatus(GlobalUtils.STATUS_PENDING);
+        }
         dao.update(p);
 
         dao.deleteDetails(id);
@@ -445,6 +471,97 @@ public class ProposalController extends HttpServlet {
         session.setAttribute("toastMessage", "Cập nhật phiếu đề xuất thành công");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+    }
+
+    private void uploadEditExcel(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        int id = parseId(request);
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        User user = (User) session.getAttribute("loggedUser");
+        ImportProposalDAO dao = new ImportProposalDAO();
+        ImportProposal existing = dao.findById(id);
+        if (existing == null
+                || !(GlobalUtils.STATUS_DRAFT.equals(existing.getStatus())
+                     || GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus()))
+                || existing.getCreatedBy() != user.getId()) {
+            session.setAttribute("toastMessage", "Không thể thay thế dữ liệu phiếu này.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
+
+        Part filePart = null;
+        try {
+            filePart = request.getPart("excelFile");
+        } catch (Exception ignored) {}
+        if (filePart == null || filePart.getSize() == 0) {
+            session.setAttribute("toastMessage", "Vui lòng chọn file Excel.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=edit&id=" + id);
+            return;
+        }
+
+        List<Map<String, String>> rows;
+        try (InputStream is = filePart.getInputStream()) {
+            rows = ProposalExcelSupport.parseFromExcel(is);
+        } catch (Exception e) {
+            session.setAttribute("toastMessage", "Không đọc được file Excel: " + e.getMessage());
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=edit&id=" + id);
+            return;
+        }
+
+        GeneratorDAO genDAO = new GeneratorDAO();
+        List<ImportProposalDetail> details = new ArrayList<>();
+        int errors = 0;
+        for (Map<String, String> row : rows) {
+            String model = row.get(ProposalExcelSupport.HEADER_MODEL);
+            String qtyStr = row.get(ProposalExcelSupport.HEADER_QUANTITY);
+            String lineNote = row.get(ProposalExcelSupport.HEADER_NOTE);
+            if (model == null || model.trim().isEmpty()) continue;
+            Generator g = genDAO.findByModel(model.trim());
+            if (g == null) { errors++; continue; }
+            int qty = 1;
+            try { qty = Integer.parseInt(qtyStr); if (qty < 1) qty = 1; if (qty > 9999) qty = 9999; } catch (Exception ignored) {}
+            ImportProposalDetail d = new ImportProposalDetail();
+            d.setProposalId(id);
+            d.setGeneratorId(g.getId());
+            d.setQuantity(qty);
+            d.setCurrentStock(0);
+            d.setNote(lineNote != null ? lineNote : "");
+            String priceStr = row.get(ProposalExcelSupport.HEADER_UNIT_PRICE);
+            if (priceStr != null && !priceStr.trim().isEmpty()) {
+                try { d.setUnitPrice(new BigDecimal(priceStr.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
+            }
+            details.add(d);
+        }
+
+        if (details.isEmpty()) {
+            session.setAttribute("toastMessage", "Không tìm thấy dòng máy hợp lệ nào trong file Excel.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=edit&id=" + id);
+            return;
+        }
+
+        boolean ok = dao.replaceDetails(id, details);
+        if (!ok) {
+            session.setAttribute("toastMessage", "Lỗi khi thay thế dữ liệu.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=edit&id=" + id);
+            return;
+        }
+
+        String msg = "Thay thế dữ liệu từ Excel (" + details.size() + " dòng)";
+        if (errors > 0) msg += ". Bỏ qua " + errors + " dòng không tìm thấy máy.";
+        logActivity(user.getId(), "import_proposal", "UPDATE", id, existing.getProposalCode(), msg);
+
+        session.setAttribute("toastMessage", "Đã thay thế dữ liệu từ Excel" + (errors > 0 ? " (" + errors + " dòng bỏ qua)" : ""));
+        session.setAttribute("toastType", "success");
+        response.sendRedirect(request.getContextPath() + "/proposal?action=edit&id=" + id);
     }
 
     private void deleteProposal(HttpServletRequest request, HttpServletResponse response)
@@ -542,6 +659,43 @@ public class ProposalController extends HttpServlet {
             session.setAttribute("toastType", "success");
         } else {
             session.setAttribute("toastMessage", "Không thể từ chối (phiếu không ở trạng thái chờ duyệt)");
+            session.setAttribute("toastType", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+    }
+
+    private void requestRevision(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("proposals.approve")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền yêu cầu chỉnh sửa.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        int id = parseId(request);
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        String reason = request.getParameter("revisionReason");
+        if (reason == null || reason.trim().isEmpty()) {
+            session.setAttribute("toastMessage", "Vui lòng nhập lý do yêu cầu chỉnh sửa");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
+        ImportProposalDAO dao = new ImportProposalDAO();
+        boolean ok = dao.requestRevision(id, currentUserId(request), reason.trim());
+        if (ok) {
+            ImportProposal p = dao.findById(id);
+            logActivity(currentUserId(request), "import_proposal", "REVISION", id,
+                    p != null ? p.getProposalCode() : null, "Yêu cầu chỉnh sửa: " + reason.trim());
+            session.setAttribute("toastMessage", "Đã yêu cầu chỉnh sửa phiếu đề xuất");
+            session.setAttribute("toastType", "success");
+        } else {
+            session.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa (phiếu không ở trạng thái chờ duyệt)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
@@ -1095,6 +1249,9 @@ public class ProposalController extends HttpServlet {
             dao.insertDetailsBatch(details);
         }
 
+        // Cập nhật danh mục (hãng, xuất xứ, ...) cho generator từ dữ liệu Excel
+        updateGeneratorCategoriesFromImport(session, generatorIds);
+
         session.removeAttribute("pendingImportRows");
         session.removeAttribute("pendingImportWarehouseId");
         session.removeAttribute("pendingImportNote");
@@ -1111,6 +1268,50 @@ public class ProposalController extends HttpServlet {
                         : "Tạo phiếu đề xuất từ Excel thành công (" + details.size() + " dòng)");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void updateGeneratorCategoriesFromImport(HttpSession session, String[] generatorIds) {
+        List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
+        if (pendingRows == null || pendingRows.isEmpty() || generatorIds == null) return;
+        CategoryDAO catDAO = new CategoryDAO();
+        GeneratorDAO genDAO = new GeneratorDAO();
+        for (int i = 0; i < generatorIds.length && i < pendingRows.size(); i++) {
+            int genId = parseInt(generatorIds[i]);
+            if (genId <= 0) continue;
+            Map<String, String> row = pendingRows.get(i);
+            if (row == null) continue;
+            List<Integer> catIds = new ArrayList<>();
+            resolveCategory(catDAO, row, "Thương hiệu", "brand", catIds);
+            resolveCategory(catDAO, row, "Xuất xứ", "origin", catIds);
+            resolveCategory(catDAO, row, "Tình trạng", "condition", catIds);
+            resolveCategory(catDAO, row, "Nhiên liệu", "fuel", catIds);
+            resolveCategory(catDAO, row, "Số pha", "phase", catIds);
+            resolveCategory(catDAO, row, "Loại máy phát", "type", catIds);
+            if (!catIds.isEmpty()) {
+                genDAO.deleteGeneratorCategories(genId);
+                genDAO.saveGeneratorCategories(genId, catIds);
+            }
+        }
+    }
+
+    private void resolveCategory(CategoryDAO catDAO, Map<String, String> row, String header, String type, List<Integer> catIds) {
+        String name = row.get(header);
+        if (name == null || name.trim().isEmpty()) return;
+        name = name.trim();
+        Category c = catDAO.findByNameAndType(name, type);
+        if (c == null) {
+            Category newCat = new Category();
+            newCat.setName(name);
+            newCat.setType(type);
+            newCat.setStatus("active");
+            int id = catDAO.insert(newCat);
+            if (id > 0) {
+                catIds.add(id);
+            }
+        } else {
+            catIds.add(c.getId());
+        }
     }
 
     private int currentUserId(HttpServletRequest request) {

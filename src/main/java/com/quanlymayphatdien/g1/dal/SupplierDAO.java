@@ -15,7 +15,7 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
     @Override
     public List<Supplier> findAll() {
         List<Supplier> list = new ArrayList<>();
-        String sql = "SELECT * FROM supplier ORDER BY created_at DESC";
+        String sql = "SELECT * FROM supplier WHERE status = 'active' ORDER BY created_at DESC";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);

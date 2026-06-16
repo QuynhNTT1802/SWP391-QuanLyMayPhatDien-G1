@@ -114,7 +114,7 @@
                                             Hệ thống đã gộp các đề xuất theo máy. Tick chọn và chỉnh <strong>SL mua cuối</strong> nếu cần.
                                         </p>
 
-                                        <table class="agg-table">
+                    <table class="agg-table">
                                             <thead>
                                                 <tr>
                                                     <th style="width:40px;">Chọn</th>
@@ -124,6 +124,7 @@
                                                     <th style="width:100px;">SL đề xuất</th>
                                                     <th style="width:80px;">Tồn kho</th>
                                                     <th style="width:100px;">SL mua cuối</th>
+                                                    <th style="width:120px;">Đơn giá</th>
                                                     <th>Ghi chú</th>
                                                 </tr>
                                             </thead>
@@ -137,6 +138,7 @@
                                                         <td>${agg.totalProposed}</td>
                                                         <td>${agg.currentStock}</td>
                                                         <td><input type="number" name="finalQuantity" value="${agg.totalProposed}" min="0" class="qty-input"/></td>
+                                                        <td><input type="text" name="unitPrice" class="qty-input" placeholder="VNĐ"/></td>
                                                         <td><input type="text" name="detailNote" class="note-input" placeholder="Ghi chú..."/></td>
                                                     </tr>
                                                 </c:forEach>
