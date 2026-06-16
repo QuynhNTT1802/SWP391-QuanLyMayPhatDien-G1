@@ -3,9 +3,11 @@ package com.quanlymayphatdien.g1.controller.warehouse;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
+import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Customer;
+import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
@@ -158,7 +160,11 @@ public class CustomerController extends HttpServlet {
                 }
                 request.setAttribute("activityLogs", logs);
                 request.setAttribute("logDates", logDates);
-
+                
+                SaleOrderDAO orderDAO = new SaleOrderDAO();
+                List<SaleOrder> customerOrders = orderDAO.findByCustomerId(id);
+                
+                request.setAttribute("customerOrders", customerOrders);
                 request.getRequestDispatcher("/view/customer/customer-detail.jsp").forward(request, response);
                 return;
             }

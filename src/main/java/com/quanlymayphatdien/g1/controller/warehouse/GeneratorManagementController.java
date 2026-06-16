@@ -212,7 +212,6 @@ public class GeneratorManagementController extends HttpServlet {
         try {
             String model = request.getParameter("model");
             String powerStr = request.getParameter("powerRating");
-            String priceStr = request.getParameter("unitPrice");
             String freq = request.getParameter("frequency");
             String weightStr = request.getParameter("weight");
             String desc = request.getParameter("description");
@@ -229,10 +228,10 @@ public class GeneratorManagementController extends HttpServlet {
             String phaseIdStr = request.getParameter("phaseId");
             String powerRangeIdStr = request.getParameter("powerRangeId");
 
-            Map<String, String> errors = validateGeneratorForm(model, powerStr, priceStr,
+            Map<String, String> errors = validateGeneratorForm(model, powerStr,
                     freq, weightStr, null);
             if (!errors.isEmpty()) {
-                saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc,
+                saveFormFields(request, model, powerStr, freq, weightStr, desc,
                         brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
                         fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
@@ -243,7 +242,6 @@ public class GeneratorManagementController extends HttpServlet {
             Generator g = new Generator();
             g.setModel(model.trim());
             g.setPowerRating(new BigDecimal(powerStr.trim()));
-            g.setUnitPrice(new BigDecimal(priceStr.trim()));
             g.setFrequency(freq != null ? freq.trim() : null);
             g.setWeight(weightStr != null && !weightStr.trim().isEmpty() ? new BigDecimal(weightStr.trim()) : null);
             g.setDescription(desc);
@@ -302,7 +300,6 @@ public class GeneratorManagementController extends HttpServlet {
             int id = Integer.parseInt(request.getParameter("id"));
             String model = request.getParameter("model");
             String powerStr = request.getParameter("powerRating");
-            String priceStr = request.getParameter("unitPrice");
             String freq = request.getParameter("frequency");
             String weightStr = request.getParameter("weight");
             String desc = request.getParameter("description");
@@ -316,10 +313,10 @@ public class GeneratorManagementController extends HttpServlet {
             String phaseIdStr = request.getParameter("phaseId");
             String powerRangeIdStr = request.getParameter("powerRangeId");
 
-            Map<String, String> errors = validateGeneratorForm(model, powerStr, priceStr,
+            Map<String, String> errors = validateGeneratorForm(model, powerStr,
                     freq, weightStr, id);
             if (!errors.isEmpty()) {
-                saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
+                saveFormFields(request, model, powerStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
                 response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=update&id=" + id);
                 return;
@@ -330,7 +327,6 @@ public class GeneratorManagementController extends HttpServlet {
             if (g != null) {
                 g.setModel(model.trim());
                 g.setPowerRating(new BigDecimal(powerStr.trim()));
-                g.setUnitPrice(new BigDecimal(priceStr.trim()));
                 g.setFrequency(freq != null ? freq.trim() : null);
                 g.setWeight(weightStr != null && !weightStr.trim().isEmpty()
                         ? new BigDecimal(weightStr.trim()) : null);
@@ -377,13 +373,12 @@ public class GeneratorManagementController extends HttpServlet {
     }
     
     private void saveFormFields(HttpServletRequest request, String model,
-            String powerStr, String priceStr, String freq, String weightStr,
+            String powerStr, String freq, String weightStr,
             String desc, String brandIdStr, String genTypeIdStr,
             String originIdStr, String conditionIdStr, String fuelTypeIdStr,
             String phaseIdStr, String powerRangeIdStr) {
         request.getSession().setAttribute("fieldModel", model);
         request.getSession().setAttribute("fieldPower", powerStr);
-        request.getSession().setAttribute("fieldPrice", priceStr);
         request.getSession().setAttribute("fieldFrequency", freq);
         request.getSession().setAttribute("fieldWeight", weightStr);
         request.getSession().setAttribute("fieldDesc", desc);
@@ -447,8 +442,7 @@ public class GeneratorManagementController extends HttpServlet {
     }
 
     private Map<String, String> validateGeneratorForm(String model,
-            String powerRatingStr, String unitPriceStr,
-            String frequency, String weightStr, Integer excludeId) {
+            String powerRatingStr, String frequency, String weightStr, Integer excludeId) {
         Map<String, String> errors = new HashMap<>();
 
         if (model == null || model.trim().isEmpty()) {
@@ -472,19 +466,6 @@ public class GeneratorManagementController extends HttpServlet {
                 }
             } catch (NumberFormatException e) {
                 errors.put("powerRating", "Công suất phải là số hợp lệ");
-            }
-        }
-
-        if (unitPriceStr == null || unitPriceStr.trim().isEmpty()) {
-            errors.put("unitPrice", "Đơn giá không được để trống");
-        } else {
-            try {
-                BigDecimal up = new BigDecimal(unitPriceStr.trim());
-                if (up.compareTo(BigDecimal.ZERO) <= 0) {
-                    errors.put("unitPrice", "Đơn giá phải lớn hơn 0");
-                }
-            } catch (NumberFormatException e) {
-                errors.put("unitPrice", "Đơn giá phải là số hợp lệ");
             }
         }
 

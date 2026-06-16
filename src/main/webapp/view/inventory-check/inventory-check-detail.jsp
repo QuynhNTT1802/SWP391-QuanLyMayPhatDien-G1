@@ -68,7 +68,7 @@
                             <span>Ngày tạo: ${check.createdAt}</span>
                         </div>
                         <div class="hero-pills">
-                            <span class="pill warehouse"><span class="pdot"></span><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${check.warehouseId}" style="color:inherit;text-decoration:underline;"><c:out value="${check.warehouseName}"/></a></span>
+                            <span class="pill warehouse"><span class="pdot"></span><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${check.warehouseId}"><c:out value="${check.warehouseName}"/></a></span>
                             <span class="pill status-active"><span class="pdot"></span>Người thực hiện: <c:out value="${check.createdByName}"/></span>
                         </div>
                     </div>

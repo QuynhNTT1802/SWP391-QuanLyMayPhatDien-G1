@@ -32,12 +32,8 @@
 .status-doing {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    background: #fff3cd;
     color: #856404;
 }
 .status-completed {
@@ -45,7 +41,6 @@
     align-items: center;
     gap: 6px;
     padding: 4px 10px;
-    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
     background: #d4edda;
@@ -56,7 +51,6 @@
     color: var(--warn);
 }
 [data-theme="dark"] .status-completed {
-    background: var(--accent-soft);
     color: var(--accent);
 }
 /* ===== Detail ===== */

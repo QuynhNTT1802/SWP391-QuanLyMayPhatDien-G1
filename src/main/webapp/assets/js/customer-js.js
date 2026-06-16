@@ -52,3 +52,14 @@ document.getElementById('confirmModal').addEventListener('click', e => {
     confirmCb = null;
   }
 });
+// tabs
+document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+        var key = t.getAttribute('data-tab');
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+        t.classList.add('active');
+        var panel = document.getElementById('tab-' + key);
+        if (panel) panel.classList.add('active');
+    });
+});
