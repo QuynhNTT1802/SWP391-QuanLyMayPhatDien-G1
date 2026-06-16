@@ -3,6 +3,7 @@ package com.quanlymayphatdien.g1.controller.proposal;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.ImportProposalDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Generator;
@@ -221,8 +222,15 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
+        int warehouseId = parseInt(request.getParameter("warehouseId"));
+        String currentPeriod = PeriodUtils.currentPeriod();
+        boolean quarterBlocked = warehouseId > 0
+                && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("generators", new GeneratorDAO().findAll());
+        request.setAttribute("quarterBlocked", quarterBlocked);
+        request.setAttribute("blockedPeriod", currentPeriod);
+        request.setAttribute("blockedWarehouseId", warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
 
@@ -337,8 +345,18 @@ public class ProposalController extends HttpServlet {
         User user = (User) session.getAttribute("loggedUser");
 
         String submitType = request.getParameter("submitType");
+        int warehouseId = parseInt(request.getParameter("warehouseId"));
+        String currentPeriod = PeriodUtils.currentPeriod();
+        if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
+            session.setAttribute("toastMessage",
+                    "Quý " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
+            return;
+        }
+
         ImportProposal p = new ImportProposal();
-        p.setWarehouseId(parseInt(request.getParameter("warehouseId")));
+        p.setWarehouseId(warehouseId);
         p.setNote(request.getParameter("note"));
         p.setStatus("draft".equals(submitType) ? GlobalUtils.STATUS_DRAFT : GlobalUtils.STATUS_PENDING);
         p.setCreatedBy(user.getId());
@@ -597,6 +615,14 @@ public class ProposalController extends HttpServlet {
         String warehouseIdRaw = request.getParameter("warehouseId");
         String note = request.getParameter("note");
         int warehouseId = parseInt(warehouseIdRaw);
+        String currentPeriod = PeriodUtils.currentPeriod();
+        if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
+            session.setAttribute("toastMessage",
+                    "Quý " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
+            return;
+        }
 
         Part filePart = null;
         try {
@@ -721,6 +747,15 @@ public class ProposalController extends HttpServlet {
             session.setAttribute("toastMessage", "Vui lòng chọn kho nhập");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
+        }
+
+        String currentPeriod = PeriodUtils.currentPeriod();
+        if (new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
+            session.setAttribute("toastMessage",
+                    "Quý " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
             return;
         }
 

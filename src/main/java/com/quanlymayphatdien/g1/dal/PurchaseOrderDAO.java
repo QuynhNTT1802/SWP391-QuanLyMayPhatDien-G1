@@ -1086,4 +1086,23 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
         return null;
     }
+
+    public boolean hasRejectedPo(String period, int warehouseId) {
+        if (period == null || period.isEmpty() || warehouseId <= 0) {
+            return false;
+        }
+        String sql = "SELECT 1 FROM purchase_order "
+                + "WHERE period = ? AND warehouse_id = ? AND status = 'REJECTED' "
+                + "LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, period);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
