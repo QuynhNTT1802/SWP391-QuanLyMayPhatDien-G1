@@ -5,10 +5,12 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.ImportProposalDetail;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,9 +27,15 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
                 + "g.model AS generator_name, "
                 + "(SELECT c.name FROM generator_category gc "
                 + "   JOIN category c ON c.id = gc.category_id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name "
+                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name, "
+                + "s.id AS s_id, "
+                + "s.name AS supplier_name, "
+                + "s.phone AS supplier_phone, "
+                + "s.email AS supplier_email, "
+                + "s.company_name AS supplier_company "
                 + "FROM import_proposal_detail d "
                 + "LEFT JOIN generator g ON g.id = d.generator_id "
+                + "LEFT JOIN supplier s ON s.id = d.supplier_id "
                 + "WHERE d.proposal_id = ? "
                 + "ORDER BY d.proposal_detail_id ASC";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -44,14 +52,25 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
     }
 
     public boolean insertDetail(ImportProposalDetail d) {
-        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, "
-                + "current_stock, note) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO import_proposal_detail "
+                + "(proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, d.getProposalId());
             ps.setInt(2, d.getGeneratorId());
-            ps.setInt(3, d.getQuantity());
-            ps.setInt(4, d.getCurrentStock());
-            ps.setString(5, d.getNote());
+            if (d.getSupplierId() != null) {
+                ps.setInt(3, d.getSupplierId());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setInt(4, d.getQuantity());
+            ps.setInt(5, d.getCurrentStock());
+            if (d.getUnitPrice() != null) {
+                ps.setBigDecimal(6, d.getUnitPrice());
+            } else {
+                ps.setNull(6, Types.DECIMAL);
+            }
+            ps.setString(7, d.getNote());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -60,15 +79,26 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
     }
 
     public void insertDetailsBatch(List<ImportProposalDetail> details) {
-        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, current_stock, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO import_proposal_detail "
+                + "(proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             for (ImportProposalDetail d : details) {
                 ps.setInt(1, d.getProposalId());
                 ps.setInt(2, d.getGeneratorId());
-                ps.setInt(3, d.getQuantity());
-                ps.setInt(4, d.getCurrentStock());
-                ps.setString(5, d.getNote());
+                if (d.getSupplierId() != null) {
+                    ps.setInt(3, d.getSupplierId());
+                } else {
+                    ps.setNull(3, Types.INTEGER);
+                }
+                ps.setInt(4, d.getQuantity());
+                ps.setInt(5, d.getCurrentStock());
+                if (d.getUnitPrice() != null) {
+                    ps.setBigDecimal(6, d.getUnitPrice());
+                } else {
+                    ps.setNull(6, Types.DECIMAL);
+                }
+                ps.setString(7, d.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -94,14 +124,24 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
 
     @Override
     public boolean update(ImportProposalDetail t) {
-        String sql = "UPDATE import_proposal_detail SET generator_id = ?, quantity = ?, "
-                + "current_stock = ?, note = ? WHERE proposal_detail_id = ?";
+        String sql = "UPDATE import_proposal_detail SET generator_id = ?, supplier_id = ?, quantity = ?, "
+                + "current_stock = ?, unit_price = ?, note = ? WHERE proposal_detail_id = ?";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, t.getGeneratorId());
-            ps.setInt(2, t.getQuantity());
-            ps.setInt(3, t.getCurrentStock());
-            ps.setString(4, t.getNote());
-            ps.setInt(5, t.getProposalDetailId());
+            if (t.getSupplierId() != null) {
+                ps.setInt(2, t.getSupplierId());
+            } else {
+                ps.setNull(2, Types.INTEGER);
+            }
+            ps.setInt(3, t.getQuantity());
+            ps.setInt(4, t.getCurrentStock());
+            if (t.getUnitPrice() != null) {
+                ps.setBigDecimal(5, t.getUnitPrice());
+            } else {
+                ps.setNull(5, Types.DECIMAL);
+            }
+            ps.setString(6, t.getNote());
+            ps.setInt(7, t.getProposalDetailId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -135,12 +175,24 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
         d.setProposalDetailId(rs.getInt("proposal_detail_id"));
         d.setProposalId(rs.getInt("proposal_id"));
         d.setGeneratorId(rs.getInt("generator_id"));
+        int supId = rs.getInt("supplier_id");
+        if (!rs.wasNull()) {
+            d.setSupplierId(supId);
+        }
         d.setQuantity(rs.getInt("quantity"));
         d.setCurrentStock(rs.getInt("current_stock"));
+        BigDecimal up = rs.getBigDecimal("unit_price");
+        if (up != null) {
+            d.setUnitPrice(up);
+        }
         d.setNote(rs.getString("note"));
         d.setGeneratorCode(rs.getString("generator_code"));
         d.setGeneratorName(rs.getString("generator_name"));
         d.setBrandName(rs.getString("brand_name"));
+        d.setSupplierName(rs.getString("supplier_name"));
+        d.setSupplierPhone(rs.getString("supplier_phone"));
+        d.setSupplierEmail(rs.getString("supplier_email"));
+        d.setSupplierCompany(rs.getString("supplier_company"));
         return d;
     }
 }

@@ -234,15 +234,20 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
 
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO purchase_order_detail "
-                    + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
-                    + "VALUES (?,?,?,?,?,?)")) {
+                    + "(po_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
+                    + "VALUES (?,?,?,?,?,?,?)")) {
                 for (PurchaseOrderDetail d : details) {
                     ps.setInt(1, poId);
                     ps.setInt(2, d.getGeneratorId());
                     ps.setInt(3, d.getProposedQuantity());
                     ps.setInt(4, d.getCurrentStock());
-                    ps.setInt(5, d.getFinalQuantity());
-                    ps.setString(6, d.getNote());
+                    if (d.getUnitPrice() != null) {
+                        ps.setBigDecimal(5, d.getUnitPrice());
+                    } else {
+                        ps.setNull(5, java.sql.Types.DECIMAL);
+                    }
+                    ps.setInt(6, d.getFinalQuantity());
+                    ps.setString(7, d.getNote());
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -303,16 +308,21 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
 
     public void insertDetails(int poId, List<PurchaseOrderDetail> details) {
         String sql = "INSERT INTO purchase_order_detail "
-                + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
-                + "VALUES (?,?,?,?,?,?)";
+                + "(po_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
+                + "VALUES (?,?,?,?,?,?,?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             for (PurchaseOrderDetail d : details) {
                 ps.setInt(1, poId);
                 ps.setInt(2, d.getGeneratorId());
                 ps.setInt(3, d.getProposedQuantity());
                 ps.setInt(4, d.getCurrentStock());
-                ps.setInt(5, d.getFinalQuantity());
-                ps.setString(6, d.getNote());
+                if (d.getUnitPrice() != null) {
+                    ps.setBigDecimal(5, d.getUnitPrice());
+                } else {
+                    ps.setNull(5, java.sql.Types.DECIMAL);
+                }
+                ps.setInt(6, d.getFinalQuantity());
+                ps.setString(7, d.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -413,6 +423,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 d.setProposedQuantity(rs.getInt("proposed_quantity"));
                 d.setCurrentStock(rs.getInt("current_stock"));
                 d.setFinalQuantity(rs.getInt("final_quantity"));
+                d.setUnitPrice(rs.getBigDecimal("unit_price"));
                 d.setNote(rs.getString("note"));
                 d.setGeneratorCode(rs.getString("generator_code"));
                 d.setGeneratorName(rs.getString("generator_name"));
@@ -423,6 +434,23 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             e.printStackTrace();
         }
         return list;
+    }
+
+    public java.math.BigDecimal getLatestUnitPriceByGeneratorId(int generatorId) {
+        String sql = "SELECT d.unit_price FROM purchase_order_detail d "
+                + "JOIN purchase_order p ON p.po_id = d.po_id "
+                + "WHERE d.generator_id = ? AND d.unit_price IS NOT NULL "
+                + "ORDER BY p.created_at DESC LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBigDecimal("unit_price");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public List<PurchaseOrder> findByFilters(String period, int warehouseId, String status, int page, int pageSize) {
@@ -827,15 +855,20 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
 
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO purchase_order_detail "
-                    + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
-                    + "VALUES (?,?,?,?,?,?)")) {
+                    + "(po_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
+                    + "VALUES (?,?,?,?,?,?,?)")) {
                 for (PurchaseOrderDetail d : details) {
                     ps.setInt(1, po.getPoId());
                     ps.setInt(2, d.getGeneratorId());
                     ps.setInt(3, d.getProposedQuantity());
                     ps.setInt(4, d.getCurrentStock());
-                    ps.setInt(5, d.getFinalQuantity());
-                    ps.setString(6, d.getNote());
+                    if (d.getUnitPrice() != null) {
+                        ps.setBigDecimal(5, d.getUnitPrice());
+                    } else {
+                        ps.setNull(5, java.sql.Types.DECIMAL);
+                    }
+                    ps.setInt(6, d.getFinalQuantity());
+                    ps.setString(7, d.getNote());
                     ps.addBatch();
                 }
                 ps.executeBatch();
