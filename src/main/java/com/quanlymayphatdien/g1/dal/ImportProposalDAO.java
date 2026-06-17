@@ -70,11 +70,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public ImportProposal findById(int id) {
         String sql = "SELECT p.*, "
+                + "po.po_code AS po_code, "
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
                 + "u_r.name AS rejected_by_name "
                 + "FROM import_proposal p "
+                + "LEFT JOIN purchase_order po ON po.po_id = p.purchase_order_id "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
@@ -452,19 +454,24 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             }
             if (details != null && !details.isEmpty()) {
                 try (PreparedStatement ps = conn.prepareStatement(
-                        "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, current_stock, unit_price, note) "
-                        + "VALUES (?, ?, ?, ?, ?, ?)")) {
+                        "INSERT INTO import_proposal_detail (proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
                     for (ImportProposalDetail d : details) {
                         ps.setInt(1, d.getProposalId());
                         ps.setInt(2, d.getGeneratorId());
-                        ps.setInt(3, d.getQuantity());
-                        ps.setInt(4, d.getCurrentStock());
-                        if (d.getUnitPrice() != null) {
-                            ps.setBigDecimal(5, d.getUnitPrice());
+                        if (d.getSupplierId() != null) {
+                            ps.setInt(3, d.getSupplierId());
                         } else {
-                            ps.setNull(5, java.sql.Types.DECIMAL);
+                            ps.setNull(3, java.sql.Types.INTEGER);
                         }
-                        ps.setString(6, d.getNote());
+                        ps.setInt(4, d.getQuantity());
+                        ps.setInt(5, d.getCurrentStock());
+                        if (d.getUnitPrice() != null) {
+                            ps.setBigDecimal(6, d.getUnitPrice());
+                        } else {
+                            ps.setNull(6, java.sql.Types.DECIMAL);
+                        }
+                        ps.setString(7, d.getNote());
                         ps.addBatch();
                     }
                     ps.executeBatch();
@@ -482,21 +489,61 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     public void insertDetailsBatch(List<ImportProposalDetail> details) {
-        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, current_stock, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             for (ImportProposalDetail d : details) {
                 ps.setInt(1, d.getProposalId());
                 ps.setInt(2, d.getGeneratorId());
-                ps.setInt(3, d.getQuantity());
-                ps.setInt(4, d.getCurrentStock());
-                ps.setString(5, d.getNote());
+                if (d.getSupplierId() != null) {
+                    ps.setInt(3, d.getSupplierId());
+                } else {
+                    ps.setNull(3, java.sql.Types.INTEGER);
+                }
+                ps.setInt(4, d.getQuantity());
+                ps.setInt(5, d.getCurrentStock());
+                if (d.getUnitPrice() != null) {
+                    ps.setBigDecimal(6, d.getUnitPrice());
+                } else {
+                    ps.setNull(6, java.sql.Types.DECIMAL);
+                }
+                ps.setString(7, d.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<ImportProposal> findPendingByPeriodAndWarehouse(String period, int warehouseId) {
+        List<ImportProposal> list = new ArrayList<>();
+        String sql = "SELECT p.*, "
+                + "w.name AS warehouse_name, "
+                + "u_c.name AS created_by_name "
+                + "FROM import_proposal p "
+                + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c ON u_c.id = p.created_by "
+                + "WHERE p.period = ? AND p.warehouse_id = ? "
+                + "AND p.status = 'PENDING' "
+                + "AND p.purchase_order_id IS NULL "
+                + "ORDER BY u_c.name, p.proposal_id";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, period);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ImportProposal p = getFromResultSet(rs);
+                    p.setWarehouseName(rs.getString("warehouse_name"));
+                    p.setCreatedByName(rs.getString("created_by_name"));
+                    p.setDetails(findDetailsByProposalId(p.getProposalId()));
+                    list.add(p);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public List<ImportProposal> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
@@ -617,10 +664,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
-           
+
             ImportProposal p = getFromResultSet(rs);
             p.setWarehouseName(rs.getString("warehouse_name"));
             p.setCreatedByName(rs.getString("created_by_name"));
+            p.setDetails(findDetailsByProposalId(p.getProposalId()));
             list.add(p);
         }
     } catch (SQLException e) {
