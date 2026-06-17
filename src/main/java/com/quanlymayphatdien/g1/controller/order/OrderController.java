@@ -14,6 +14,7 @@ import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -76,8 +77,8 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua bán", "OrderController.doGet", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.ORDER, "OrderController.doGet", e.getMessage(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
@@ -119,8 +120,8 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua bán", "OrderController.doPost", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.ORDER, "OrderController.doPost", e.getMessage(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             request.getSession().setAttribute("message", "Lỗi xử lý dữ liệu: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
@@ -153,7 +154,7 @@ public class OrderController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                SystemLogger.warn("Quản lý phiếu mua bán", "OrderController.listOrders", "Lỗi định dạng trang: " + e.getMessage());
+                SystemLogger.warn(LogModule.ORDER, "OrderController.listOrders", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
@@ -761,8 +762,8 @@ public class OrderController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            SystemLogger.error("Quản lý phiếu mua bán", "OrderController.updateOrder", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.ORDER, "OrderController.updateOrder", e.getMessage(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");

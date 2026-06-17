@@ -139,8 +139,14 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             po.setRejectReason(rs.getString("reject_reason"));
         } catch (SQLException ignored) {
         }
-        try { po.setCancelMode(rs.getString("cancel_mode")); } catch (SQLException ignored) {}
-        try { po.setCancelReason(rs.getString("cancel_reason")); } catch (SQLException ignored) {}
+        try {
+            po.setCancelMode(rs.getString("cancel_mode"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            po.setCancelReason(rs.getString("cancel_reason"));
+        } catch (SQLException ignored) {
+        }
         try {
             po.setTotalProposals(rs.getInt("total_proposals"));
         } catch (SQLException ignored) {
@@ -373,8 +379,14 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 int rejectedBy = rs.getInt("rejected_by");
                 po.setRejectedBy(rs.wasNull() ? null : rejectedBy);
                 po.setRejectReason(rs.getString("reject_reason"));
-                try { po.setCancelMode(rs.getString("cancel_mode")); } catch (SQLException ignored) {}
-                try { po.setCancelReason(rs.getString("cancel_reason")); } catch (SQLException ignored) {}
+                try {
+                    po.setCancelMode(rs.getString("cancel_mode"));
+                } catch (SQLException ignored) {
+                }
+                try {
+                    po.setCancelReason(rs.getString("cancel_reason"));
+                } catch (SQLException ignored) {
+                }
                 po.setTotalProposals(rs.getInt("total_proposals"));
                 po.setTotalQuantity(rs.getInt("total_quantity"));
                 po.setNote(rs.getString("note"));
@@ -679,8 +691,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "WHERE proposal_id IN (" + placeholders + ") "
                 + "AND status = 'PENDING' "
                 + "AND purchase_order_id IS NULL";
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, poId);
             for (int i = 0; i < proposalIds.size(); i++) {
                 ps.setInt(2 + i, proposalIds.get(i));
@@ -1044,8 +1055,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "      AND po.status IN ('PENDING_CEO', 'APPROVED')"
                 + "  ) "
                 + "ORDER BY w.warehouse_id";
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setDate(1, java.sql.Date.valueOf(currentPeriodEnd));
             ps.setString(2, currentPeriod);
             ResultSet rs = ps.executeQuery();
@@ -1146,4 +1156,26 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             return false;
         }
     }
+
+    public java.math.BigDecimal findApprovedUnitPriceByGenerator(int generatorId) {
+        String sql = "SELECT pod.unit_price "
+                + "FROM purchase_order_detail pod "
+                + "JOIN purchase_order po ON pod.po_id = po.po_id "
+                + "WHERE pod.generator_id = ? "
+                + "  AND po.status = 'APPROVED' "
+                + "  AND pod.unit_price IS NOT NULL "
+                + "ORDER BY po.approved_at DESC "
+                + "LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBigDecimal("unit_price");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
