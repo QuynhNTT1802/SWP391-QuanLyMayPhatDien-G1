@@ -123,7 +123,6 @@
                     </c:choose>
 
                     <div class="hero">
-                        <div class="hero-avatar" style="background: oklch(58% 0.16 250);">X</div>
                         <div class="hero-body">
                             <h2 class="hero-name">
                                 <c:out value="${receipt.receiptCode}"/>

@@ -22,7 +22,6 @@ import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.service.NotificationService;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
@@ -208,7 +207,7 @@ public class ImportReceiptController extends HttpServlet {
             if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
                 List<PurchaseOrderDetail> pods = po.getDetails();
                 Receipt prefill = new Receipt();
-                prefill.setProposalId(poId);
+                prefill.setPurchaseOrderId(poId);
                 prefill.setWarehouseId(po.getWarehouseId());
                 prefill.setReceiptType(TYPE);
                 prefill.setNote("Tạo từ phiếu purchase " + po.getPoCode());
@@ -444,7 +443,7 @@ public class ImportReceiptController extends HttpServlet {
         String pid = request.getParameter("poId");
         if (pid != null && !pid.isEmpty()) {
             try {
-                r.setProposalId(Integer.parseInt(pid));
+                r.setPurchaseOrderId(Integer.parseInt(pid));
             } catch (NumberFormatException ignored) {}
         }
         r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);

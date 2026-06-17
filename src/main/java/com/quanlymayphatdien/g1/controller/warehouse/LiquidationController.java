@@ -181,7 +181,7 @@ public class LiquidationController extends HttpServlet {
         GeneratorDAO genDAO = new GeneratorDAO();
         HashMap<Integer, java.math.BigDecimal> priceMap = new HashMap<>();
         for (Generator g : genDAO.findAll()) {
-            priceMap.put(g.getId(), g.getUnitPrice());
+//            priceMap.put(g.getId(), g.getUnitPrice());
         }
 
         JsonArray generators = new JsonArray();
@@ -745,7 +745,7 @@ public class LiquidationController extends HttpServlet {
         r.setStatus("PENDING");
         r.setNote("Phieu xuat cho don thanh ly ID: " + liquidationId);
         r.setReasonId(l.getReasonId());
-        r.setTotalAmount(total);
+//        r.setTotalAmount(total);
 
         int newReceiptId = receiptDAO.insert(r);
         if (newReceiptId <= 0) {

@@ -17,7 +17,7 @@ public class Receipt {
     private String receiptCode;
     private String receiptType;
     private Integer orderId;
-    private Integer proposalId;
+    private Integer purchaseOrderId;
     private int warehouseId;
     private int createdBy;
     private Integer approvedBy;
@@ -94,12 +94,12 @@ public class Receipt {
         this.orderId = orderId;
     }
 
-    public Integer getProposalId() {
-        return proposalId;
+    public Integer getPurchaseOrderId() {
+        return purchaseOrderId;
     }
 
-    public void setProposalId(Integer proposalId) {
-        this.proposalId = proposalId;
+    public void setPurchaseOrderId(Integer purchaseOrderId) {
+        this.purchaseOrderId = purchaseOrderId;
     }
 
     public int getWarehouseId() {
