@@ -31,10 +31,9 @@ public class ReceiptExcelSupport {
     public static final String COL_MODEL = "Mã máy";
     public static final String COL_SERIAL = "Serial";
     public static final String COL_QUANTITY = "Số lượng";
-    public static final String COL_UNIT_PRICE = "Đơn giá";
     public static final String COL_NOTE = "Ghi chú";
 
-    public static final String[] HEADERS = {COL_MODEL, COL_SERIAL, COL_QUANTITY, COL_UNIT_PRICE, COL_NOTE};
+    public static final String[] HEADERS = {COL_MODEL, COL_SERIAL, COL_QUANTITY, COL_NOTE};
 
     public static final int MAX_ROWS = 5000;
 
@@ -67,22 +66,19 @@ public class ReceiptExcelSupport {
         sample.createCell(0).setCellValue("Honda EU22i");
         sample.createCell(1).setCellValue("SN-2024-0001");
         sample.createCell(2).setCellValue(1);
-        sample.createCell(3).setCellValue(15000000);
-        sample.createCell(4).setCellValue("Hàng mới 100%");
+        sample.createCell(3).setCellValue("Hàng mới 100%");
 
         Row sample2 = sheet.createRow(2);
         sample2.createCell(0).setCellValue("Honda EU22i");
         sample2.createCell(1).setCellValue("SN-2024-0002");
         sample2.createCell(2).setCellValue(1);
-        sample2.createCell(3).setCellValue(15000000);
-        sample2.createCell(4).setCellValue("");
+        sample2.createCell(3).setCellValue("");
 
         Row sample3 = sheet.createRow(3);
         sample3.createCell(0).setCellValue("Yamaha EF3000iSEB");
         sample3.createCell(1).setCellValue("YAM-3000-001");
         sample3.createCell(2).setCellValue(1);
-        sample3.createCell(3).setCellValue(25000000);
-        sample3.createCell(4).setCellValue("");
+        sample3.createCell(3).setCellValue("");
 
         for (int i = 0; i < HEADERS.length; i++) {
             sheet.autoSizeColumn(i);
@@ -158,7 +154,7 @@ public class ReceiptExcelSupport {
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setBorderBottom(BorderStyle.THIN);
 
-        String[] exportHeaders = {"#", "Mã máy", "Brand", "Serial", "Đơn giá", "Ghi chú"};
+        String[] exportHeaders = {"#", "Mã máy", "Brand", "Serial", "Ghi chú"};
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < exportHeaders.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -191,12 +187,7 @@ public class ReceiptExcelSupport {
             }
             row.createCell(2).setCellValue(brand);
             row.createCell(3).setCellValue(d.getSerialNumber() != null ? d.getSerialNumber() : "");
-            if (d.getUnitPrice() != null) {
-                row.createCell(4).setCellValue(d.getUnitPrice().toPlainString());
-            } else {
-                row.createCell(4).setCellValue("");
-            }
-            row.createCell(5).setCellValue(d.getNote() != null ? d.getNote() : "");
+            row.createCell(4).setCellValue(d.getNote() != null ? d.getNote() : "");
             rowNum++;
         }
 

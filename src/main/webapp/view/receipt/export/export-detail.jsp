@@ -65,6 +65,7 @@
                     <h1>Chi tiết phiếu xuất</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / <span><c:out value="${receipt.receiptCode}"/></span></span>
                     <div class="top-actions">
+                        <jsp:include page="../../common/admin/bell.jsp"/>
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <c:if test="${(receipt.status == 'NEEDS_REVISION' || receipt.status == 'DRAFT') && isOwner}">
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/export-receipt?action=edit&id=${receipt.receiptId}">
@@ -382,14 +383,6 @@
                             <div class="table-card history-card" style="margin-top: 18px;">
                                 <div class="result-summary" style="display:flex;align-items:center;justify-content:space-between;">
                                     <span>Danh sách máy phát điện (<strong>${not empty receipt.details ? fn:length(receipt.details) : 0}</strong> dòng)</span>
-                                    <c:set var="grandTotal" value="0" />
-                                    <c:if test="${not empty receipt.details}">
-                                        <c:forEach var="d" items="${receipt.details}">
-                                            <c:set var="uPrice" value="${d.unitPrice != null ? d.unitPrice : 0}" />
-                                            <c:set var="grandTotal" value="${grandTotal + uPrice}" />
-                                        </c:forEach>
-                                    </c:if>
-                                    <span>Tổng giá trị: <strong style="color:var(--fg);font-family:var(--font-mono);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</strong></span>
                                 </div>
                                 <table class="product-table">
                                     <thead>
@@ -397,20 +390,16 @@
                                             <th style="width: 40px;">#</th>
                                             <th>Máy phát / Hãng</th>
                                             <th>Serial</th>
-                                            <th style="width: 140px;">Đơn giá</th>
-                                            <th style="width: 140px;">Thành tiền</th>
                                             <th>Ghi chú</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <c:choose>
                                             <c:when test="${empty receipt.details}">
-                                                <tr><td colspan="6" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                                <tr><td colspan="4" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                                    <c:set var="uPrice" value="${d.unitPrice != null ? d.unitPrice : 0}" />
-                                                    <c:set var="subtotal" value="${uPrice}" />
                                                     <tr>
                                                         <td class="mono" style="font-family:var(--font-mono);">${st.index + 1}</td>
                                                         <td>
@@ -418,23 +407,12 @@
                                                             <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span>
                                                         </td>
                                                         <td style="font-family:var(--font-mono);"><c:out value="${d.serialNumber}"/></td>
-                                                        <td style="font-family:var(--font-mono);"><fmt:formatNumber value="${uPrice}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
-                                                        <td style="font-family:var(--font-mono); font-weight: 600;"><fmt:formatNumber value="${subtotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
                                                         <td><c:out value="${d.note}"/></td>
                                                     </tr>
                                                 </c:forEach>
                                             </c:otherwise>
                                         </c:choose>
                                     </tbody>
-                                    <c:if test="${not empty receipt.details}">
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="5" style="text-align: right; padding: 12px; font-weight: 700; border-top: 2px solid var(--border);">Tổng cộng:</td>
-                                                <td style="padding: 12px; font-weight: 700; border-top: 2px solid var(--border); font-family:var(--font-mono);"><fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</td>
-                                                <td style="border-top: 2px solid var(--border);"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </c:if>
                                 </table>
                             </div>
                         </c:otherwise>

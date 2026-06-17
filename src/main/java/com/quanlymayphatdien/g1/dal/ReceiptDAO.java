@@ -495,7 +495,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 + "WHERE receipt_id = ? AND status IN (" + placeholders + ") AND created_by = ?";
         String deleteDetailSql = "DELETE FROM receipt_detail WHERE receipt_id = ?";
         String insertDetailSql = "INSERT INTO receipt_detail "
-                + "(receipt_id, inventory_id, unit_price, note) VALUES (?, ?, ?, ?)";
+                + "(receipt_id, inventory_id, note) VALUES (?, ?, ?)";
         Connection conn = null;
         try {
             conn = getConnection();
@@ -596,12 +596,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 for (ReceiptDetail d : newDetails) {
                     ps.setInt(1, r.getReceiptId());
                     ps.setInt(2, d.getInventoryId());
-                    if (d.getUnitPrice() != null) {
-                        ps.setBigDecimal(3, d.getUnitPrice());
-                    } else {
-                        ps.setNull(3, java.sql.Types.DECIMAL);
-                    }
-                    ps.setString(4, d.getNote());
+                    ps.setString(3, d.getNote());
                     ps.addBatch();
                 }
                 ps.executeBatch();

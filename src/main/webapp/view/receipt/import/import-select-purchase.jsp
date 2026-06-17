@@ -34,6 +34,7 @@
             <h1>Phiếu purchase đã duyệt</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/import-receipt">Phiếu nhập</a> / Chọn phiếu purchase</span>
             <div class="top-actions">
+                <jsp:include page="../../common/admin/bell.jsp"/>
                 <a class="btn" href="${pageContext.request.contextPath}/import-receipt">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                     Quay lại

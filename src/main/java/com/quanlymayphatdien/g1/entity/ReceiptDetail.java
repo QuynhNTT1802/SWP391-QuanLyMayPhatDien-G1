@@ -19,7 +19,6 @@ public class ReceiptDetail {
     private int receiptDetailId;
     private int receiptId;
     private int inventoryId;
-    private BigDecimal unitPrice;
     private String note;
 
     private String serialNumber;
@@ -52,14 +51,6 @@ public class ReceiptDetail {
 
     public void setInventoryId(int inventoryId) {
         this.inventoryId = inventoryId;
-    }
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
-
-    public void setUnitPrice(BigDecimal unitPrice) {
-        this.unitPrice = unitPrice;
     }
 
     public String getNote() {
