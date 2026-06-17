@@ -178,10 +178,9 @@ public class LiquidationController extends HttpServlet {
             }
         }
 
-        GeneratorDAO genDAO = new GeneratorDAO();
         HashMap<Integer, java.math.BigDecimal> priceMap = new HashMap<>();
-        for (Generator g : genDAO.findAll()) {
-            priceMap.put(g.getId(), g.getUnitPrice());
+        for (Integer genId : grouped.keySet()) {
+            priceMap.put(genId, purchaseOrderDAO.findApprovedUnitPriceByGenerator(genId));
         }
 
         JsonArray generators = new JsonArray();
@@ -596,7 +595,9 @@ public class LiquidationController extends HttpServlet {
                 d.setSerialNumber(serialNumbers[i]);
                 BigDecimal poPrice = purchaseOrderDAO.findApprovedUnitPriceByGenerator(d.getGeneratorId());
                 d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
-                detailDAO.insert(d);
+                if (detailDAO.insert(d) <= 0) {
+                    throw new Exception("Không lưu được dòng chi tiết cho serial " + serialNumbers[i]);
+                }
             }
 
             conn.commit();
@@ -656,9 +657,13 @@ public class LiquidationController extends HttpServlet {
                 return;
             }
             for (int i = 0; i < detailIds.length; i++) {
+                String priceStr = liquidationPrices[i] == null ? "" : liquidationPrices[i].trim();
+                if (priceStr.isEmpty()) {
+                    continue;
+                }
                 LiquidationDetail d = new LiquidationDetail();
                 d.setLiquidationDetailId(Integer.parseInt(detailIds[i]));
-                d.setLiquidationPrice(new BigDecimal(liquidationPrices[i]));
+                d.setLiquidationPrice(new BigDecimal(priceStr));
                 detailDAO.update(d);
             }
         }
@@ -709,6 +714,10 @@ public class LiquidationController extends HttpServlet {
     private void handleCEOApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         Liquidation l = liquidationDAO.findById(liquidationId);
+        if (l == null) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
 
         List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
         if (details.isEmpty()) {
@@ -729,14 +738,6 @@ public class LiquidationController extends HttpServlet {
             inventoryMap.put(inv.getInventoryId(), d);
         }
 
-        // Tinh tong truoc, set ngay khi insert receipt (tranh UPDATE rieng)
-        BigDecimal total = BigDecimal.ZERO;
-        for (LiquidationDetail d : details) {
-            if (d.getLiquidationPrice() != null) {
-                total = total.add(d.getLiquidationPrice());
-            }
-        }
-
         Receipt r = new Receipt();
         r.setReceiptCode("PX-LIQ-" + System.currentTimeMillis());
         r.setReceiptType("EXPORT");
@@ -745,20 +746,21 @@ public class LiquidationController extends HttpServlet {
         r.setStatus("PENDING");
         r.setNote("Phieu xuat cho don thanh ly ID: " + liquidationId);
         r.setReasonId(l.getReasonId());
-        r.setTotalAmount(total);
 
-        int newReceiptId = receiptDAO.insert(r);
-        if (newReceiptId <= 0) {
-            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
-                    + "&error=" + encode("Khong tao duoc phieu xuat", "UTF-8"));
-            return;
-        }
-
-        // Transaction: insert receipt_detail + chuyen inventory PENDING_LIQUIDATION -> RESERVED_EXPORT
+        // Transaction: tao receipt + insert receipt_detail + chuyen inventory PENDING_LIQUIDATION -> RESERVED_EXPORT
+        int newReceiptId;
         Connection conn = null;
         try {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
+
+            newReceiptId = receiptDAO.insert(conn, r);
+            if (newReceiptId <= 0) {
+                conn.rollback();
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                        + "&error=" + encode("Khong tao duoc phieu xuat", "UTF-8"));
+                return;
+            }
 
             List<ReceiptDetail> rdList = new ArrayList<>();
             for (Map.Entry<Integer, LiquidationDetail> e : inventoryMap.entrySet()) {
@@ -824,11 +826,30 @@ public class LiquidationController extends HttpServlet {
         liquidationDAO.updateCeoReject(liquidationId, user.getId(), feedbackId, isPermanent);
 
         Liquidation l = liquidationDAO.findById(liquidationId);
+        if (l == null) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
         if (isPermanent) {
-            // Hoàn lại trạng thái serial number
+            // Hoàn lại trạng thái serial number trong 1 transaction
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
+            List<String> serials = new ArrayList<>();
             for (LiquidationDetail d : details) {
-                inventoryDAO.updateStatusBySerial(d.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
+                serials.add(d.getSerialNumber());
+            }
+            if (!serials.isEmpty()) {
+                Connection conn = null;
+                try {
+                    conn = inventoryDAO.getConnection();
+                    conn.setAutoCommit(false);
+                    inventoryDAO.updateStatusBatch(conn, serials, InventoryDAO.STATUS_IN_STOCK);
+                    conn.commit();
+                } catch (Exception ex) {
+                    if (conn != null) try { conn.rollback(); } catch (Exception ignored) {}
+                    throw ex;
+                } finally {
+                    if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+                }
             }
         }
 
@@ -862,11 +883,30 @@ public class LiquidationController extends HttpServlet {
         liquidationDAO.updateManagerReject(liquidationId, user.getId(), feedbackId, isPermanent);
 
         Liquidation l = liquidationDAO.findById(liquidationId);
+        if (l == null) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
         if (isPermanent) {
-            // Hoàn lại trạng thái serial number
+            // Hoàn lại trạng thái serial number trong 1 transaction
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
+            List<String> serials = new ArrayList<>();
             for (LiquidationDetail d : details) {
-                inventoryDAO.updateStatusBySerial(d.getSerialNumber(), InventoryDAO.STATUS_IN_STOCK);
+                serials.add(d.getSerialNumber());
+            }
+            if (!serials.isEmpty()) {
+                Connection conn = null;
+                try {
+                    conn = inventoryDAO.getConnection();
+                    conn.setAutoCommit(false);
+                    inventoryDAO.updateStatusBatch(conn, serials, InventoryDAO.STATUS_IN_STOCK);
+                    conn.commit();
+                } catch (Exception ex) {
+                    if (conn != null) try { conn.rollback(); } catch (Exception ignored) {}
+                    throw ex;
+                } finally {
+                    if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+                }
             }
         }
 
@@ -907,6 +947,10 @@ public class LiquidationController extends HttpServlet {
             return;
         }
         Liquidation l = liquidationDAO.findById(id);
+        if (l == null) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
 
         if (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + id);
@@ -1027,7 +1071,9 @@ public class LiquidationController extends HttpServlet {
                 d.setSerialNumber(serialNumbers[i]);
                 BigDecimal poPrice = purchaseOrderDAO.findApprovedUnitPriceByGenerator(d.getGeneratorId());
                 d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
-                detailDAO.insert(d);
+                if (detailDAO.insert(d) <= 0) {
+                    throw new Exception("Không lưu được dòng chi tiết cho serial " + serialNumbers[i]);
+                }
             }
 
             conn.commit();

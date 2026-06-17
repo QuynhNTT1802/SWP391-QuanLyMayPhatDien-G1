@@ -454,16 +454,12 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     }
 
     public List<PurchaseOrder> findByFilters(String dateFrom, String dateTo, int warehouseId, String status, int page, int pageSize) {
-        return findByFilters(dateFrom, warehouseId, dateTo, page, pageSize);
-    }
-
-    public List<PurchaseOrder> findByFilters(String dateFrom, int warehouseId, String dateTo, int page, int pageSize) {
         List<PurchaseOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
-                        + "FROM purchase_order p "
-                        + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
-                        + "LEFT JOIN user u_c ON u_c.id = p.created_by WHERE 1=1");
+                + "FROM purchase_order p "
+                + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c ON u_c.id = p.created_by WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND p.period_start >= ?");
@@ -510,10 +506,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     }
 
     public int countByFilters(String dateFrom, String dateTo, int warehouseId, String status) {
-        return countByFilters(dateFrom, warehouseId, dateTo);
-    }
-
-    public int countByFilters(String dateFrom, int warehouseId, String dateTo) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM purchase_order WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (dateFrom != null && !dateFrom.isEmpty()) {
@@ -1153,5 +1145,30 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             e.printStackTrace();
             return false;
         }
+    }
+    /**
+     * Lookup unit_price tu purchase_order_detail cho generator chi dinh,
+     * uu tien PO da APPROVED moi nhat. Tra null neu khong co dong nao thoa.
+     */
+    public java.math.BigDecimal findApprovedUnitPriceByGenerator(int generatorId) {
+        String sql = "SELECT pod.unit_price "
+                + "FROM purchase_order_detail pod "
+                + "JOIN purchase_order po ON pod.po_id = po.po_id "
+                + "WHERE pod.generator_id = ? "
+                + "  AND po.status = 'APPROVED' "
+                + "  AND pod.unit_price IS NOT NULL "
+                + "ORDER BY po.approved_at DESC "
+                + "LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal("unit_price");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
