@@ -3,6 +3,7 @@ package com.quanlymayphatdien.g1.controller.warehouse;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.LiquidationDAO;
 import com.quanlymayphatdien.g1.dal.LiquidationDetailDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
@@ -61,6 +62,7 @@ public class LiquidationController extends HttpServlet {
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
+    private final PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -522,7 +524,6 @@ public class LiquidationController extends HttpServlet {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] serialNumbers = request.getParameterValues("serialNumber");
-        String[] originalPrices = request.getParameterValues("originalPrice");
         String customerIdStr = request.getParameter("customerId");
 
         if (generatorIds == null || serialNumbers == null || generatorIds.length == 0) {
@@ -577,7 +578,8 @@ public class LiquidationController extends HttpServlet {
                 d.setLiquidationId(insertedId);
                 d.setGeneratorId(Integer.parseInt(generatorIds[i]));
                 d.setSerialNumber(serialNumbers[i]);
-                d.setOriginalPrice(new BigDecimal(originalPrices[i]));
+                BigDecimal poPrice = purchaseOrderDAO.findApprovedUnitPriceByGenerator(d.getGeneratorId());
+                d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
                 detailDAO.insert(d);
             }
 
@@ -864,7 +866,6 @@ public class LiquidationController extends HttpServlet {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] serialNumbers = request.getParameterValues("serialNumber");
-        String[] originalPrices = request.getParameterValues("originalPrice");
 
         Liquidation l = liquidationDAO.findById(liquidationId);
         if (l == null || (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus()))) {
@@ -951,7 +952,8 @@ public class LiquidationController extends HttpServlet {
                 d.setLiquidationId(liquidationId);
                 d.setGeneratorId(Integer.parseInt(generatorIds[i]));
                 d.setSerialNumber(serialNumbers[i]);
-                d.setOriginalPrice(new java.math.BigDecimal(originalPrices[i]));
+                BigDecimal poPrice = purchaseOrderDAO.findApprovedUnitPriceByGenerator(d.getGeneratorId());
+                d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
                 detailDAO.insert(d);
             }
 
