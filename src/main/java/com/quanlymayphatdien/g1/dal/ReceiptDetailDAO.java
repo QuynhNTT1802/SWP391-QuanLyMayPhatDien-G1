@@ -4,7 +4,10 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
+import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
+import com.quanlymayphatdien.g1.utils.SystemLogger;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,7 +42,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+           SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -69,7 +72,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -120,10 +123,31 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
+    
+    public BigDecimal findPurchasePriceByPrice(String serialNumber) throws SQLException {
+          String sql = "SELECT rd.unit_price FROM receipt_detail rd "
+            + "JOIN receipt r ON rd.receipt_id = r.receipt_id "
+            + "WHERE rd.serial_number = ? AND r.receipt_type = 'IMPORT' "
+            + "ORDER BY r.created_at DESC LIMIT 1";
+          try (Connection c = getConnection();
+               PreparedStatement ps = c.prepareStatement(sql)) {
+               ps.setString(1, serialNumber);
+               try (ResultSet rs  = ps.executeQuery()) {
+                   if(rs.next()) {
+                       return rs.getBigDecimal("unit_price");
+                   }
+               } catch(Exception e) {
+                   SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null? e.getMessage() : e.getClass().getName(),e);
+               }
+          }
+          return null;
+    }
+    
+    
 
     @Override
     public ReceiptDetail getFromResultSet(ResultSet rs) throws SQLException {

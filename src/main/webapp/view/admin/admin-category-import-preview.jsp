@@ -41,7 +41,7 @@
         <main>
             <div class="preview-wrap">
 
-                <%-- Thông tin tổng quan --%>
+  
                 <div class="info-box">
                     Loại danh mục: <strong>${currentType}</strong> &nbsp;|&nbsp;
                     Module: <strong>${currentModule}</strong> &nbsp;|&nbsp;
@@ -49,7 +49,7 @@
                     Lỗi: <strong>${fn:length(invalidRows)}</strong> dòng
                 </div>
 
-                <%-- BẢNG CÁC DÒNG HỢP LỆ --%>
+             
                 <div class="section-title">
                     Dòng hợp lệ
                     <span class="badge-count badge-valid">${fn:length(validRows)}</span>
@@ -100,7 +100,7 @@
                                                 <input type="checkbox" class="row-cb" checked
                                                        name="_selected" value="${st.index}"/>
                                             </td>
-                                            <%-- hidden inputs gửi dữ liệu --%>
+                             
                                             <input type="hidden" name="name"        value="${row['Tên danh mục']}"/>
                                             <input type="hidden" name="description" value="${row['Mô tả']}"/>
                                             <input type="hidden" name="status"      value="${empty row['Trạng thái'] ? 'active' : row['Trạng thái']}"/>
@@ -124,7 +124,7 @@
                                                 </c:when>
                                             </c:choose>
 
-                                            <%-- Hiển thị dữ liệu --%>
+                                           
                                             <td><strong>${row['Tên danh mục']}</strong></td>
                                             <td style="color:var(--muted)">${row['Mô tả']}</td>
                                             <td>
@@ -172,7 +172,7 @@
                     </c:otherwise>
                 </c:choose>
 
-                <%-- BẢNG CÁC DÒNG LỖI --%>
+                
                 <c:if test="${not empty invalidRows}">
                     <div class="section-title" style="margin-top:32px;">
                         Dòng bị lỗi (sẽ không được nhập)

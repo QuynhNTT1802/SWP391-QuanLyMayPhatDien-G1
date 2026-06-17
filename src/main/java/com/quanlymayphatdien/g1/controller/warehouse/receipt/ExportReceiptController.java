@@ -26,7 +26,9 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.service.NotificationService;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import com.google.gson.Gson;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -95,7 +97,7 @@ public class ExportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý kho", "ExportReceiptController.doGet", e.getMessage(), e);
+            SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -128,7 +130,7 @@ public class ExportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý kho", "ExportReceiptController.doPost", e.getMessage(), e);
+            SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }

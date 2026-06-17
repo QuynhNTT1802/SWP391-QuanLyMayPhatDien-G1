@@ -2,6 +2,7 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Liquidation;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,9 +11,9 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
-
 
     @Override
     public Liquidation getFromResultSet(ResultSet rs) throws SQLException {
@@ -38,52 +39,33 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
         try {
             l.setCreatedByName(rs.getString("created_by_name"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setReasonName(rs.getString("reason_name"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setCeoFeedbackName(rs.getString("ceo_feedback_name"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setManagerFeedbackName(rs.getString("manager_feedback_name"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setWarehouseName(rs.getString("warehouse_name"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setCustomerName(rs.getString("customer_name"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setCustomerPhone(rs.getString("customer_phone"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setCustomerEmail(rs.getString("customer_email"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setCustomerAddress(rs.getString("customer_address"));
-        } catch (Exception e) {
-        }
-        try {
+
             int dc = rs.getInt("detail_count");
-            if (!rs.wasNull()) l.setDetailCount(dc);
-        } catch (Exception e) {
-        }
-        try {
+            if (!rs.wasNull()) {
+                l.setDetailCount(dc);
+            }
+
             l.setTotalOriginalPrice(rs.getBigDecimal("total_original_price"));
-        } catch (Exception e) {
-        }
-        try {
+
             l.setTotalLiquidationPrice(rs.getBigDecimal("total_liquidation_price"));
         } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return l;
@@ -105,7 +87,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(getFromResultSet(rs));
             }
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi lấy danh sách", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi lấy danh sách", e.getMessage(), e);
         }
         return list;
     }
@@ -131,10 +113,12 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 p.setObject(i + 1, params.get(i));
             }
             try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi countTotal", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countTotal", e.getMessage(), e);
         }
         return 0;
     }
@@ -159,7 +143,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         sql.append(" ORDER BY l.created_at DESC LIMIT ? OFFSET ?");
         params.add(limit);
         params.add(offset);
-        
+
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 p.setObject(i + 1, params.get(i));
@@ -170,13 +154,13 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi findWithPagination", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findWithPagination", e.getMessage(), e);
         }
         return list;
     }
 
-    public java.util.Map<String, Integer> getKpiCounts(Integer createdBy) {
-        java.util.Map<String, Integer> kpis = new java.util.HashMap<>();
+    public Map<String, Integer> getKpiCounts(Integer createdBy) {
+        Map<String, Integer> kpis = new java.util.HashMap<>();
         String sql = "SELECT status, COUNT(*) FROM liquidation";
         if (createdBy != null) {
             sql += " WHERE created_by = ?";
@@ -192,11 +176,10 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi getKpiCounts", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getKpiCounts", e.getMessage(), e);
         }
         return kpis;
     }
-
 
     public Liquidation findById(int id) {
         String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, "
@@ -220,12 +203,10 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi findById", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findById", e.getMessage(), e);
         }
         return null;
     }
-
-
 
     public boolean updateStatus(int liquidationId, String status, int reviewerId, String role, Integer receiptId) {
         String sql = "UPDATE liquidation SET status = ?, updated_at = ?";
@@ -259,7 +240,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             }
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi updateStatus", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateStatus", e.getMessage(), e);
         }
         return false;
     }
@@ -281,7 +262,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             p.setInt(6, liquidationId);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi updateCeoReject", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCeoReject", e.getMessage(), e);
         }
         return false;
     }
@@ -299,7 +280,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             p.setInt(6, liquidationId);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi updateManagerReject", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateManagerReject", e.getMessage(), e);
         }
         return false;
     }
@@ -312,11 +293,11 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             p.setInt(3, liquidationId);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi updateReasonAndStatus", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateReasonAndStatus", e.getMessage(), e);
         }
         return false;
     }
-    
+
     public boolean updateCustomer(int liquidationId, int customerId) {
         String sql = "UPDATE liquidation SET customer_id = ? WHERE liquidation_id = ?";
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
@@ -324,7 +305,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             p.setInt(2, liquidationId);
             return p.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi updateCustomer", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCustomer", e.getMessage(), e);
         }
         return false;
     }
@@ -364,7 +345,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("Liquidation", "Lỗi tạo đơn", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi tạo đơn", e.getMessage(), e);
         }
         return -1;
     }

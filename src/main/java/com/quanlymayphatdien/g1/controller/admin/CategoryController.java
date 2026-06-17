@@ -10,6 +10,7 @@ import com.quanlymayphatdien.g1.dal.CategoryExtensionDAO;
 import com.quanlymayphatdien.g1.entity.*;
 import com.quanlymayphatdien.g1.utils.CategoryExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -82,7 +83,7 @@ public class CategoryController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("quản lý danh mục", "CategoryController",
+            SystemLogger.error(LogModule.CATEGORY, "CategoryController",
                     "Lỗi xử lý GET " + action + ": " + e.getMessage(), e);
             throw new ServletException(e);
         }
@@ -103,7 +104,7 @@ public class CategoryController extends HttpServlet {
                 importCategoryConfirm(request, response);
             }
         } catch (Exception e) {
-            SystemLogger.error("quản lý danh mục", "CategoryController",
+            SystemLogger.error(LogModule.CATEGORY, "CategoryController",
                     "Lỗi xử lý POST " + action + ": " + e.getMessage(), e);
             throw new ServletException(e);
         }
@@ -346,7 +347,7 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
                 }
             } catch (Exception e) {
-                SystemLogger.error("Quản lý danh mục", "CategoryController.viewCategoryEdit", e.getMessage(), e);
+                SystemLogger.error(LogModule.CATEGORY, "CategoryController.viewCategoryEdit", e.getMessage(), e);
             }
         }
 
@@ -503,7 +504,7 @@ public class CategoryController extends HttpServlet {
                     logDelete(request, id, c.getName(), c.getType(), c.getStatus(), c.getModule());
                 }
             } catch (Exception e) {
-                SystemLogger.error("Quản lý danh mục", "CategoryController.deleteCategory", e.getMessage(), e);
+                SystemLogger.error(LogModule.CATEGORY, "CategoryController.deleteCategory", e.getMessage(), e);
             }
         }
 
@@ -637,7 +638,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
-            SystemLogger.error("Hệ thống", "CategoryController.logCreate", e.getMessage(), e);
+            SystemLogger.error(LogModule.SYSTEM, "CategoryController.logCreate", e.getMessage(), e);
         }
     }
 
@@ -783,7 +784,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
-            SystemLogger.error("Hệ thống", "CategoryController.logUpdate", e.getMessage(), e);
+            SystemLogger.error(LogModule.SYSTEM, "CategoryController.logUpdate", e.getMessage(), e);
         }
     }
 
@@ -807,7 +808,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, name, "DELETE", description);
         } catch (Exception e) {
-            SystemLogger.error("Hệ thống", "CategoryController.logDelete", e.getMessage(), e);
+            SystemLogger.error(LogModule.SYSTEM, "CategoryController.logDelete", e.getMessage(), e);
         }
     }
 
