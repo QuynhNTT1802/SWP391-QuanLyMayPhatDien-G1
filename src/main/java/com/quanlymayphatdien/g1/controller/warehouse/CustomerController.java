@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet(name = "CustomerController", urlPatterns = {"/warehouse/customers"})
 public class CustomerController extends HttpServlet {
@@ -94,6 +95,11 @@ public class CustomerController extends HttpServlet {
 
     private void listCustomers(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.view")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         String search = request.getParameter("search");
         String status = request.getParameter("status");
         String typeIdStr = request.getParameter("customerTypeId");
@@ -137,6 +143,11 @@ public class CustomerController extends HttpServlet {
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.view")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -180,6 +191,11 @@ public class CustomerController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.create")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("customerTypeList", catDAO.findByType("customer_type"));
         request.getRequestDispatcher("/view/customer/customer-create.jsp").forward(request, response);
@@ -187,6 +203,11 @@ public class CustomerController extends HttpServlet {
 
     private void createCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.create")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         int newId = 0;
         try {
             String name = request.getParameter("name");
@@ -250,6 +271,11 @@ public class CustomerController extends HttpServlet {
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.update")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -268,6 +294,11 @@ public class CustomerController extends HttpServlet {
 
     private void updateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.update")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         int id = 0;
         try {
             id = Integer.parseInt(request.getParameter("id"));
@@ -329,6 +360,11 @@ public class CustomerController extends HttpServlet {
 
     private void activateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.deactivate")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";
@@ -354,6 +390,11 @@ public class CustomerController extends HttpServlet {
 
     private void deactivateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
+        if (perms == null || !perms.contains("customers.deactivate")) {
+            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
+            return;
+        }
         String currentPage = request.getParameter("page");
         if (currentPage == null || currentPage.isEmpty()) {
             currentPage = "1";

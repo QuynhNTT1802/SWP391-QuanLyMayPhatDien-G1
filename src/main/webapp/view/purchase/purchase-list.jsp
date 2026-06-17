@@ -65,6 +65,11 @@
                             <h2 class="page-title">Danh sách phiếu mua</h2>
                             <div class="page-sub">${totalPOs} phiếu mua</div>
                         </div>
+                        <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                        <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
+                        <c:if test="${canCreatePo}">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/purchase-order?action=create">+ Tạo phiếu mua</a>
+                        </c:if>
                     </div>
 
                     <script>
@@ -72,17 +77,20 @@
                         window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
                             <c:remove var="message" scope="session"/>
                         </c:if>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>'};
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
+                        </c:if>
                     </script>
 
                     <form method="get" action="${pageContext.request.contextPath}/purchase-order" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                         <input type="hidden" name="action" value="list" />
 
-                        <select class="filter-select" name="period" onchange="this.form.submit()">
-                            <option value="">Quý: Tất cả</option>
-                            <c:forEach var="p" items="${periods}">
-                                <option value="${p}" <c:if test="${period == p}">selected</c:if>>${p}</option>
-                            </c:forEach>
-                        </select>
+                        <input type="date" class="filter-select" name="dateFrom" value="${dateFrom}"
+                               title="Từ ngày" onchange="this.form.submit()" />
+                        <input type="date" class="filter-select" name="dateTo" value="${dateTo}"
+                               title="Đến ngày" onchange="this.form.submit()" />
 
                         <select class="filter-select" name="warehouseId" onchange="this.form.submit()">
                             <option value="">Kho: Tất cả</option>
@@ -93,11 +101,38 @@
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
-                            <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
-                            <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                            <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
-                            <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+
+                            <%-- Sale Staff (chỉ có view): thấy trạng thái cuối, KHÔNG có Chờ CEO duyệt --%>
+                            <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
+
+                            <%-- CEO (chỉ có approve): thấy Chờ CEO, Đã duyệt, Từ chối --%>
+                            <c:if test="${perms.contains('purchase_orders.approve') and !perms.contains('purchase_orders.create')}">
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                            </c:if>
+
+                            <%-- Sale Manager (có create + view): thấy Nháp, Chờ CEO, Đã duyệt, Từ chối, Đã hủy --%>
+                            <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
+                                <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
+
+                            <%-- Có cả create + approve (admin/PM): thấy tất cả 5 status --%>
+                            <c:if test="${perms.contains('purchase_orders.approve') and perms.contains('purchase_orders.create')}">
+                                <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            </c:if>
                         </select>
 
                         <div class="spacer"></div>
@@ -111,7 +146,7 @@
                             <thead>
                                 <tr>
                                     <th>Mã PO</th>
-                                    <th>Quý</th>
+                                    <th>Tháng</th>
                                     <th>Kho</th>
                                     <th>Người tạo</th>
                                     <th>Ngày tạo</th>
@@ -157,16 +192,16 @@
                             <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty period}">&period=${period}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">‹</a>
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty dateFrom}">&dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&dateTo=${dateTo}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty period}">&period=${period}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty dateFrom}">&dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&dateTo=${dateTo}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty period}">&period=${period}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">›</a>
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty dateFrom}">&dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&dateTo=${dateTo}</c:if><c:if test="${warehouseId > 0}">&warehouseId=${warehouseId}</c:if><c:if test="${not empty status}">&status=${status}</c:if>" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>

@@ -245,7 +245,7 @@ public class GeneratorManagementController extends HttpServlet {
             Generator g = new Generator();
             g.setModel(model.trim());
             g.setPowerRating(new BigDecimal(powerStr.trim()));
-            g.setUnitPrice(new BigDecimal(priceStr.trim()));
+            
             g.setFrequency(freq != null ? freq.trim() : null);
             g.setWeight(weightStr != null && !weightStr.trim().isEmpty() ? new BigDecimal(weightStr.trim()) : null);
             g.setDescription(desc);
@@ -331,8 +331,7 @@ public class GeneratorManagementController extends HttpServlet {
             Generator g = dao.findById(id);
             if (g != null) {
                 g.setModel(model.trim());
-                g.setPowerRating(new BigDecimal(powerStr.trim()));
-                g.setUnitPrice(new BigDecimal(priceStr.trim()));
+                g.setPowerRating(new BigDecimal(powerStr.trim()));               
                 g.setFrequency(freq != null ? freq.trim() : null);
                 g.setWeight(weightStr != null && !weightStr.trim().isEmpty()
                         ? new BigDecimal(weightStr.trim()) : null);

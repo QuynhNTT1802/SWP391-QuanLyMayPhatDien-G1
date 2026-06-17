@@ -308,7 +308,7 @@
                                                             <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
-                                                                    <option value="${g.id}" data-base-price="${g.unitPrice}"
+                                                                    <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}"
                                                                             <c:if test="${g.id == d.generatorId}">selected</c:if>>
                                                                         <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                                     </option>
@@ -334,7 +334,7 @@
                                                         <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                             <option value="">-- Chọn máy --</option>
                                                             <c:forEach var="g" items="${generators}">
-                                                                <option value="${g.id}" data-base-price="${g.unitPrice}">
+                                                                <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}">
                                                                     <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                                 </option>
                                                             </c:forEach>
@@ -369,7 +369,7 @@
                                             <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
-                                                    <option value="${g.id}" data-base-price="${g.unitPrice}">
+                                                    <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}">
                                                         <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                     </option>
                                                 </c:forEach>

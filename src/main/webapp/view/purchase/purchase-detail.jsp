@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
     java.time.format.DateTimeFormatter __poFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     request.setAttribute("poFmt", __poFmt);
@@ -23,6 +24,8 @@
             .po-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
             .po-table th, .po-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; }
             .po-table th { background: var(--surface-2); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; }
+            .po-table tfoot td { padding: 12px 10px; border-top: 2px solid var(--border); font-size: 14px; background: var(--surface-2); }
+            .mono { font-family: 'JetBrains Mono', monospace; }
             .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 24px; margin: 16px 0; }
             .info-grid .row { padding: 6px 0; }
             .info-grid .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; }
@@ -69,11 +72,16 @@
                         window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
                             <c:remove var="message" scope="session"/>
                         </c:if>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>'};
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
+                        </c:if>
                     </script>
 
                     <div class="card" style="padding: 20px;">
                         <div class="info-grid">
-                            <div class="row"><div class="lbl">Quý</div><div class="val">${po.period} (${po.periodStart} → ${po.periodEnd})</div></div>
+                            <div class="row"><div class="lbl">Tháng</div><div class="val">${po.period} (${po.periodStart} → ${po.periodEnd})</div></div>
                             <div class="row"><div class="lbl">Kho</div><div class="val">${po.warehouseName}</div></div>
                             <div class="row"><div class="lbl">Người tạo</div><div class="val">${po.createdByName} lúc ${po.createdAt.format(poFmt)}</div></div>
                             <div class="row"><div class="lbl">Số proposal gom</div><div class="val">${po.totalProposals}</div></div>
@@ -100,6 +108,8 @@
                                 <th>SL đề xuất</th>
                                 <th>Tồn kho</th>
                                 <th>SL mua cuối</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
                                 <th>Ghi chú</th>
                             </tr>
                         </thead>
@@ -112,10 +122,19 @@
                                     <td>${d.proposedQuantity}</td>
                                     <td>${d.currentStock}</td>
                                     <td><strong>${d.finalQuantity}</strong></td>
+                                    <td class="mono"><c:choose><c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                    <td class="mono"><c:choose><c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice * d.finalQuantity}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose></td>
                                     <td>${d.note}</td>
                                 </tr>
                             </c:forEach>
                         </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7" style="text-align:right;font-weight:700;">Tổng cộng:</td>
+                                <td class="mono" style="font-weight:700;font-size:15px;"><fmt:formatNumber value="${grandTotal}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
 
                     <c:if test="${not empty sourceProposals}">
@@ -145,18 +164,25 @@
                     <div class="action-bar">
                         <a href="${pageContext.request.contextPath}/purchase-order?action=list" class="btn">← Quay lại</a>
 
-                        <c:if test="${po.status == 'DRAFT'}">
+                        <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                        <c:set var="canApprovePo" value="${perms.contains('purchase_orders.approve')}"/>
+                        <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
+                        <c:set var="isOwnerPo" value="${sessionScope.loggedUser.id == po.createdBy}"/>
+
+                        <c:if test="${po.status == 'DRAFT' && canCreatePo}">
                             <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo" style="display:inline;">
                                 <input type="hidden" name="id" value="${po.poId}"/>
                                 <button type="submit" class="btn btn-primary">Gửi CEO duyệt</button>
                             </form>
-                            <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=cancel" style="display:inline;" onsubmit="return confirm('Hủy phiếu mua này?');">
-                                <input type="hidden" name="id" value="${po.poId}"/>
-                                <button type="submit" class="btn btn-danger">Hủy</button>
-                            </form>
+                            <c:if test="${isOwnerPo}">
+                                <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=cancel" style="display:inline;" onsubmit="return confirm('Hủy phiếu mua này?');">
+                                    <input type="hidden" name="id" value="${po.poId}"/>
+                                    <button type="submit" class="btn btn-danger">Hủy</button>
+                                </form>
+                            </c:if>
                         </c:if>
 
-                        <c:if test="${po.status == 'PENDING_CEO'}">
+                        <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
                             <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=approve" style="display:inline;" onsubmit="return confirm('Duyệt phiếu mua này?');">
                                 <input type="hidden" name="id" value="${po.poId}"/>
                                 <button type="submit" class="btn btn-primary">Duyệt</button>
