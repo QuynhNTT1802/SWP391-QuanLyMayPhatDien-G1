@@ -129,8 +129,8 @@
                 </div>
 
             <form id="receiptForm" action="${pageContext.request.contextPath}/import-receipt?action=save" method="POST" onsubmit="return validateReceiptForm()">
-                <c:if test="${not empty receipt.proposalId}">
-                    <input type="hidden" name="poId" value="${receipt.proposalId}" />
+                <c:if test="${not empty receipt.purchaseOrderId}">
+                    <input type="hidden" name="poId" value="${receipt.purchaseOrderId}" />
                 </c:if>
                 <div class="content">
                     <section class="section">
