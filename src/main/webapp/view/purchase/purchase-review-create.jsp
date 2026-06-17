@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%
     java.time.format.DateTimeFormatter __propFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     request.setAttribute("propFmt", __propFmt);
@@ -167,7 +168,6 @@
                                                                 <th>Máy phát</th>
                                                                 <th>Hãng</th>
                                                                 <th style="width:90px;">SL đề xuất</th>
-                                                                <th style="width:70px;">Tồn kho</th>
                                                                 <th style="width:100px;">SL mua cuối</th>
                                                                 <th style="width:120px;">Đơn giá</th>
                                                                 <th>Ghi chú</th>
@@ -181,10 +181,18 @@
                                                                         <div style="font-size:11px;color:var(--muted);"><c:out value="${d.generatorCode}"/></div></td>
                                                                     <td><c:out value="${d.brandName}"/></td>
                                                                     <td><span class="mono">${d.quantity}</span></td>
-                                                                    <td>—</td>
                                                                     <td><input type="number" name="finalQuantity" value="${d.quantity}" min="0" class="qty-input" data-proposed="${d.quantity}"/></td>
-                                                                    <td><input type="text" name="unitPrice" class="qty-input" placeholder="VNĐ"
-                                                                           value="${d.unitPrice != null ? d.unitPrice : ''}"/></td>
+                                                                    <td>
+                                                                        <c:choose>
+                                                                            <c:when test="${not empty d.unitPrice}">
+                                                                                <span class="mono"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/> ₫</span>
+                                                                                <input type="hidden" name="unitPrice" value="${d.unitPrice}"/>
+                                                                            </c:when>
+                                                                            <c:otherwise>
+                                                                                <input type="number" name="unitPrice" class="qty-input price-input" min="0" step="1000" placeholder="Nhập đơn giá" style="border-color:#dc3545;"/>
+                                                                            </c:otherwise>
+                                                                        </c:choose>
+                                                                    </td>
                                                                     <td><input type="text" name="detailNote" class="note-input" placeholder="Ghi chú..."
                                                                            value="<c:out value='${d.note}'/>"/></td>
                                                                     <input type="hidden" name="generatorId" value="${d.generatorId}"/>
@@ -192,7 +200,7 @@
                                                                 </tr>
                                                             </c:forEach>
                                                             <c:if test="${empty p.details}">
-                                                                <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:16px;">Phiếu này chưa có dòng máy nào.</td></tr>
+                                                                <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:16px;">Phiếu này chưa có dòng máy nào.</td></tr>
                                                             </c:if>
                                                         </tbody>
                                                     </table>
@@ -375,7 +383,7 @@
                 detailRows.forEach(function (row) {
                     ['finalQuantity', 'unitPrice', 'detailNote'].forEach(function (n) {
                         const inp = row.querySelector('input[name="' + n + '"]');
-                        if (inp) inp.addEventListener('input', recalc);
+                        if (inp && inp.type !== 'hidden') inp.addEventListener('input', recalc);
                     });
                 });
                 recalc();
@@ -383,26 +391,42 @@
                 const reviewForm = document.querySelector('form[action*="submitReviewCreate"]');
                 if (reviewForm) {
                     reviewForm.addEventListener('submit', function (e) {
-                        let hasError = false;
+                        const missingPriceRows = [];
+                        const noNoteRows = [];
                         let firstErrorRow = null;
                         detailRows.forEach(function (row) {
                             const qtyInp = row.querySelector('input[name="finalQuantity"]');
+                            const priceInp = row.querySelector('input[name="unitPrice"]');
                             const noteInp = row.querySelector('input[name="detailNote"]');
                             if (!qtyInp) return;
                             const v = parseInt(qtyInp.value, 10) || 0;
                             const proposed = parseInt(qtyInp.getAttribute('data-proposed'), 10) || 0;
+                            const priceVal = priceInp ? priceInp.value.trim() : '';
+                            if (!priceVal || parsePrice(priceVal) <= 0) {
+                                missingPriceRows.push(row);
+                                if (!firstErrorRow) firstErrorRow = row;
+                            }
                             const needWarn = v <= 0 || (proposed > 0 && v < proposed);
                             if (needWarn && (!noteInp.value || noteInp.value.trim() === '')) {
-                                hasError = true;
+                                noNoteRows.push(row);
                                 if (!firstErrorRow) firstErrorRow = row;
                             }
                         });
-                        if (hasError) {
+                        if (missingPriceRows.length > 0) {
                             e.preventDefault();
-                            alert('Có dòng máy có SL mua cuối = 0 hoặc nhỏ hơn SL đề xuất mà chưa nhập ghi chú.\nVui lòng bổ sung ghi chú cho các dòng này.');
+                            alert('Có ' + missingPriceRows.length + ' dòng máy chưa có đơn giá (ô viền đỏ).\nVui lòng nhập đơn giá trước khi tạo phiếu mua.');
                             if (firstErrorRow) {
                                 firstErrorRow.scrollIntoView({behavior: 'smooth', block: 'center'});
                             }
+                            return;
+                        }
+                        if (noNoteRows.length > 0) {
+                            e.preventDefault();
+                            alert('Có ' + noNoteRows.length + ' dòng máy có SL mua cuối = 0 hoặc nhỏ hơn SL đề xuất mà chưa nhập ghi chú.\nVui lòng bổ sung ghi chú cho các dòng này.');
+                            if (firstErrorRow) {
+                                firstErrorRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            }
+                            return;
                         }
                     });
                 }
