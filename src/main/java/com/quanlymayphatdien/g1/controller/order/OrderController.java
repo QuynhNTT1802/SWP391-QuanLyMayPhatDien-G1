@@ -339,10 +339,10 @@ public class OrderController extends HttpServlet {
                     OrderDetail detail = new OrderDetail();
                     detail.setGeneratorId(genId);
                     detail.setQuantity(qty);
-                    detail.setUnitPrice(gen.getUnitPrice().doubleValue());
+//                    detail.setUnitPrice(gen.getUnitPrice().doubleValue());
                     detailsList.add(detail);
 
-                    totalAmount += gen.getUnitPrice().doubleValue() * qty;
+//                    totalAmount += gen.getUnitPrice().doubleValue() * qty;
                 }
             }
         }
@@ -435,9 +435,9 @@ public class OrderController extends HttpServlet {
                         detail.setOrderId(orderId);
                         detail.setGeneratorId(genId);
                         detail.setQuantity(qty);
-                        detail.setUnitPrice(gen.getUnitPrice().doubleValue());
+//                        detail.setUnitPrice(gen.getUnitPrice().doubleValue());
                         newDetails.add(detail);
-                        totalAmount += gen.getUnitPrice().doubleValue() * qty;
+//                        totalAmount += gen.getUnitPrice().doubleValue() * qty;
                     }
                 }
             }
