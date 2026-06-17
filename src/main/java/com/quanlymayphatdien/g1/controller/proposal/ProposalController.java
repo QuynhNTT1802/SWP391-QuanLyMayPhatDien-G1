@@ -1026,9 +1026,16 @@ public class ProposalController extends HttpServlet {
         @SuppressWarnings("unchecked")
         List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
         if (pendingRows == null || pendingRows.isEmpty()) {
-            session.setAttribute("toastMessage", "Phiên import đã hết hạn, vui lòng tải lại file Excel.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            request.setAttribute("validRows", new ArrayList<>());
+            request.setAttribute("warningRows", new ArrayList<>());
+            request.setAttribute("invalidRows", new ArrayList<>());
+            request.setAttribute("unresolvedSupplierRows", new ArrayList<>());
+            request.setAttribute("currentWarehouseId", 0);
+            request.setAttribute("currentNote", "");
+            request.setAttribute("warehouses", new WarehouseDAO().findAll());
+            request.setAttribute("sessionExpired", Boolean.TRUE);
+            request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
+                    .forward(request, response);
             return;
         }
 
@@ -1036,20 +1043,27 @@ public class ProposalController extends HttpServlet {
         String note = (String) session.getAttribute("pendingImportNote");
 
         String newSupplierIdStr = request.getParameter("newSupplierId");
-        String assignedRowStr = request.getParameter("assignedRow");
+        String assignedGidStr = request.getParameter("assignedGid");
+        if (assignedGidStr == null || assignedGidStr.isEmpty()) {
+            assignedGidStr = request.getParameter("gid");
+        }
 
-        // Nếu có newSupplierId + assignedRow, gán trực tiếp vào pendingImportRows
+        // Nếu có newSupplierId + assignedGid, gán trực tiếp vào pendingImportRows
         if (newSupplierIdStr != null && !newSupplierIdStr.isEmpty()
-                && assignedRowStr != null && !assignedRowStr.isEmpty()) {
+                && assignedGidStr != null && !assignedGidStr.isEmpty()) {
             try {
                 int newId = Integer.parseInt(newSupplierIdStr);
-                int rowIdx = Integer.parseInt(assignedRowStr);
+                String targetGid = assignedGidStr;
                 Supplier newSup = new SupplierDAO().findById(newId);
-                if (newSup != null && rowIdx >= 0 && rowIdx < pendingRows.size()) {
-                    Map<String, String> target = pendingRows.get(rowIdx);
-                    target.put("supplierId", String.valueOf(newId));
-                    target.put("supplierNameResolved", newSup.getName());
-                    target.put("supplierQuery", newSup.getName());
+                if (newSup != null) {
+                    for (Map<String, String> p : pendingRows) {
+                        if (targetGid.equals(p.get("gid"))) {
+                            p.put("supplierId", String.valueOf(newId));
+                            p.put("supplierNameResolved", newSup.getName());
+                            p.put("supplierQuery", newSup.getName());
+                            break;
+                        }
+                    }
                 }
             } catch (NumberFormatException ignored) {
             }
@@ -1455,21 +1469,33 @@ public class ProposalController extends HttpServlet {
             response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
             return;
         }
-        String indexStr = request.getParameter("rowIndex");
+        String gidStr = request.getParameter("gid");
+        if (gidStr == null || gidStr.isEmpty()) {
+            gidStr = request.getParameter("rowIndex");
+        }
         String supIdStr = request.getParameter("supplierId");
-        int idx = parseInt(indexStr);
         int supId = parseInt(supIdStr);
-        if (idx < 0 || supId <= 0) {
+        if (gidStr == null || gidStr.isEmpty() || supId <= 0) {
             response.getWriter().write("{\"ok\":false,\"error\":\"bad_params\"}");
             return;
         }
         List<Map<String, String>> rows =
                 (List<Map<String, String>>) session.getAttribute("pendingImportRows");
-        if (rows == null || idx >= rows.size()) {
+        if (rows == null) {
             response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
             return;
         }
-        Map<String, String> row = rows.get(idx);
+        Map<String, String> row = null;
+        for (Map<String, String> p : rows) {
+            if (gidStr.equals(p.get("gid"))) {
+                row = p;
+                break;
+            }
+        }
+        if (row == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
+            return;
+        }
         Supplier s = new SupplierDAO().findById(supId);
         if (s == null) {
             response.getWriter().write("{\"ok\":false,\"error\":\"supplier_not_found\"}");
@@ -1488,16 +1514,13 @@ public class ProposalController extends HttpServlet {
     private void redirectCreateSupplier(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String supplierQuery = request.getParameter("supplierQuery");
-        String rowIndex = request.getParameter("rowIndex");
-        String returnUrl = request.getParameter("returnUrl");
-        if (returnUrl == null || returnUrl.isEmpty()) {
-            returnUrl = request.getContextPath() + "/proposal?action=create";
-        }
+        String rowGid = request.getParameter("gid");
+        String returnUrl = request.getContextPath() + "/proposal?action=importConfirm";
         StringBuilder url = new StringBuilder(request.getContextPath())
                 .append("/warehouse/suppliers?action=create")
                 .append("&prefillName=").append(urlEncode(supplierQuery))
                 .append("&returnUrl=").append(urlEncode(returnUrl))
-                .append("&rowIndex=").append(urlEncode(rowIndex));
+                .append("&rowGid=").append(urlEncode(rowGid));
         response.sendRedirect(url.toString());
     }
 
