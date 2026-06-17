@@ -70,11 +70,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public ImportProposal findById(int id) {
         String sql = "SELECT p.*, "
+                + "po.po_code AS po_code, "
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
                 + "u_r.name AS rejected_by_name "
                 + "FROM import_proposal p "
+                + "LEFT JOIN purchase_order po ON po.po_id = p.purchase_order_id "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
@@ -120,7 +122,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return false;
     }
 
-    public int countByStatus(String status, Integer createdBy, boolean excludeDraft, String period) {
+    public int countByStatus(String status, Integer createdBy, boolean excludeDraft, String dateFrom, String dateTo) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE status = ?");
         List<Object> params = new ArrayList<>();
         params.add(status);
@@ -132,9 +134,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND status != ?");
             params.add(GlobalUtils.STATUS_DRAFT);
         }
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND proposal_date >= ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND proposal_date < ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -243,38 +249,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     }
 
     public List<ImportProposalDetail> findDetailsByProposalId(int proposalId) {
-        List<ImportProposalDetail> list = new ArrayList<>();
-        String sql = "SELECT d.*, "
-                + "g.model AS generator_code, "
-                + "g.model AS generator_name, "
-                + "(SELECT c.name FROM generator_category gc "
-                + "   JOIN category c ON c.id = gc.category_id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name "
-                + "FROM import_proposal_detail d "
-                + "LEFT JOIN generator g ON g.id = d.generator_id "
-                + "WHERE d.proposal_id = ? "
-                + "ORDER BY d.proposal_detail_id ASC";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, proposalId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ImportProposalDetail d = new ImportProposalDetail();
-                    d.setProposalDetailId(rs.getInt("proposal_detail_id"));
-                    d.setProposalId(rs.getInt("proposal_id"));
-                    d.setGeneratorId(rs.getInt("generator_id"));
-                    d.setQuantity(rs.getInt("quantity"));
-                    d.setCurrentStock(rs.getInt("current_stock"));
-                    d.setNote(rs.getString("note"));
-                    d.setGeneratorCode(rs.getString("generator_code"));
-                    d.setGeneratorName(rs.getString("generator_name"));
-                    d.setBrandName(rs.getString("brand_name"));
-                    list.add(d);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
+        return new ImportProposalDetailDAO().findByProposalId(proposalId);
     }
 
     public boolean approveProposal(int proposalId, int approverId) {
@@ -324,7 +299,24 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String period, int page, int pageSize) {
+    public boolean requestRevision(int proposalId, int userId, String reason) {
+        String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
+                + "rejected_by = ?, rejected_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            ps.setString(2, reason);
+            ps.setInt(3, userId);
+            ps.setInt(4, proposalId);
+            ps.setString(5, GlobalUtils.STATUS_PENDING);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String dateFrom, String dateTo, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -365,9 +357,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 params.add(poFilter);
             }
         }
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND p.period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND p.proposal_date >= ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND p.proposal_date < ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
@@ -387,7 +383,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String period) {
+    public int countByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String dateFrom, String dateTo) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -414,9 +410,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 params.add(poFilter);
             }
         }
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND p.period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND p.proposal_date >= ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND p.proposal_date < ?");
+            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -443,22 +443,107 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
+    public boolean replaceDetails(int proposalId, List<ImportProposalDetail> details) {
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement("DELETE FROM import_proposal_detail WHERE proposal_id = ?")) {
+                ps.setInt(1, proposalId);
+                ps.executeUpdate();
+            }
+            if (details != null && !details.isEmpty()) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO import_proposal_detail (proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?)")) {
+                    for (ImportProposalDetail d : details) {
+                        ps.setInt(1, d.getProposalId());
+                        ps.setInt(2, d.getGeneratorId());
+                        if (d.getSupplierId() != null) {
+                            ps.setInt(3, d.getSupplierId());
+                        } else {
+                            ps.setNull(3, java.sql.Types.INTEGER);
+                        }
+                        ps.setInt(4, d.getQuantity());
+                        ps.setInt(5, d.getCurrentStock());
+                        if (d.getUnitPrice() != null) {
+                            ps.setBigDecimal(6, d.getUnitPrice());
+                        } else {
+                            ps.setNull(6, java.sql.Types.DECIMAL);
+                        }
+                        ps.setString(7, d.getNote());
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
+                }
+            }
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try { if (conn != null) conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
+        } finally {
+            try { if (conn != null) { conn.setAutoCommit(true); conn.close(); } } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
+
     public void insertDetailsBatch(List<ImportProposalDetail> details) {
-        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, quantity, current_stock, note) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO import_proposal_detail (proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             for (ImportProposalDetail d : details) {
                 ps.setInt(1, d.getProposalId());
                 ps.setInt(2, d.getGeneratorId());
-                ps.setInt(3, d.getQuantity());
-                ps.setInt(4, d.getCurrentStock());
-                ps.setString(5, d.getNote());
+                if (d.getSupplierId() != null) {
+                    ps.setInt(3, d.getSupplierId());
+                } else {
+                    ps.setNull(3, java.sql.Types.INTEGER);
+                }
+                ps.setInt(4, d.getQuantity());
+                ps.setInt(5, d.getCurrentStock());
+                if (d.getUnitPrice() != null) {
+                    ps.setBigDecimal(6, d.getUnitPrice());
+                } else {
+                    ps.setNull(6, java.sql.Types.DECIMAL);
+                }
+                ps.setString(7, d.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<ImportProposal> findPendingByPeriodAndWarehouse(String period, int warehouseId) {
+        List<ImportProposal> list = new ArrayList<>();
+        String sql = "SELECT p.*, "
+                + "w.name AS warehouse_name, "
+                + "u_c.name AS created_by_name "
+                + "FROM import_proposal p "
+                + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c ON u_c.id = p.created_by "
+                + "WHERE p.period = ? AND p.warehouse_id = ? "
+                + "AND p.status = 'PENDING' "
+                + "AND p.purchase_order_id IS NULL "
+                + "ORDER BY u_c.name, p.proposal_id";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, period);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ImportProposal p = getFromResultSet(rs);
+                    p.setWarehouseName(rs.getString("warehouse_name"));
+                    p.setCreatedByName(rs.getString("created_by_name"));
+                    p.setDetails(findDetailsByProposalId(p.getProposalId()));
+                    list.add(p);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public List<ImportProposal> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
@@ -579,10 +664,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
-           
+
             ImportProposal p = getFromResultSet(rs);
             p.setWarehouseName(rs.getString("warehouse_name"));
             p.setCreatedByName(rs.getString("created_by_name"));
+            p.setDetails(findDetailsByProposalId(p.getProposalId()));
             list.add(p);
         }
     } catch (SQLException e) {
@@ -594,12 +680,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     @Override
     public boolean update(ImportProposal t) {
         String sql = "UPDATE import_proposal SET note = ?, status = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status = ?";
+                + "WHERE proposal_id = ? AND status IN (?, ?)";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, t.getNote());
             ps.setString(2, t.getStatus());
             ps.setInt(3, t.getProposalId());
-            ps.setString(4, GlobalUtils.STATUS_DRAFT);   // chỉ update khi DRAFT
+            ps.setString(4, GlobalUtils.STATUS_DRAFT);
+            ps.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

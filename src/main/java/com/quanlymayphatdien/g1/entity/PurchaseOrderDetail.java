@@ -16,6 +16,7 @@ public class PurchaseOrderDetail {
     private int proposedQuantity;
     private int currentStock;
     private int finalQuantity;
+    private java.math.BigDecimal unitPrice;
     private String note;
 
     private String generatorCode;
@@ -68,6 +69,14 @@ public class PurchaseOrderDetail {
 
     public void setFinalQuantity(int finalQuantity) {
         this.finalQuantity = finalQuantity;
+    }
+
+    public java.math.BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(java.math.BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
     }
 
     public String getNote() {

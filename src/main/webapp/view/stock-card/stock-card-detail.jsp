@@ -98,9 +98,37 @@
                         </div>
                         <div class="summary-item">
                             <div class="summary-label">Tổng giao dịch</div>
-                            <div class="summary-value" style="color:var(--fg);">${not empty stockCards ? stockCards.size() : 0}</div>
+                            <div class="summary-value" style="color:var(--fg);">${totalItems}</div>
                         </div>
                     </div>
+
+                    <form method="get" action="${pageContext.request.contextPath}/stock-card" class="filter-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+                        <input type="hidden" name="action" value="detail" />
+                        <input type="hidden" name="warehouseId" value="${warehouseId}" />
+                        <input type="hidden" name="generatorId" value="${generatorId}" />
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, serial, ghi chú" autocomplete="off" />
+                        </div>
+                        <select class="filter-select" name="type" onchange="this.form.submit()">
+                            <option value="">Loại: Tất cả</option>
+                            <option value="IMPORT" <c:if test="${typeFilter == 'IMPORT'}">selected</c:if>>Nhập</option>
+                            <option value="EXPORT" <c:if test="${typeFilter == 'EXPORT'}">selected</c:if>>Xuất</option>
+                            <option value="ADJUST" <c:if test="${typeFilter == 'ADJUST'}">selected</c:if>>Điều chỉnh</option>
+                        </select>
+                        <input type="date" class="filter-select" name="fromDate" value="<c:out value='${fromDate}'/>" title="Từ ngày" />
+                        <input type="date" class="filter-select" name="toDate" value="<c:out value='${toDate}'/>" title="Đến ngày" />
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            Tìm kiếm
+                        </button>
+                        <c:if test="${not empty search or not empty typeFilter or not empty fromDate or not empty toDate}">
+                            <a href="${pageContext.request.contextPath}/stock-card?action=detail&warehouseId=${warehouseId}&generatorId=${generatorId}" class="btn">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Xoá lọc
+                            </a>
+                        </c:if>
+                    </form>
 
                     <div class="table-card">
                         <table class="users">
@@ -120,7 +148,16 @@
                                 <c:choose>
                                     <c:when test="${empty stockCards}">
                                         <tr><td colspan="8">
-                                            <div class="empty-state"><strong>Sản phẩm này chưa có giao dịch nào trong kho này</strong></div>
+                                            <div class="empty-state">
+                                                <c:choose>
+                                                    <c:when test="${not empty search or not empty typeFilter or not empty fromDate or not empty toDate}">
+                                                        <strong>Không có giao dịch nào khớp với bộ lọc</strong>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <strong>Sản phẩm này chưa có giao dịch nào trong kho này</strong>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
                                         </td></tr>
                                     </c:when>
                                     <c:otherwise>
@@ -173,6 +210,36 @@
                                 </c:choose>
                             </tbody>
                         </table>
+                        <c:set var="filterParams" value="" />
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                        </c:if>
+                        <c:if test="${not empty typeFilter}">
+                            <c:set var="filterParams" value="${filterParams}&type=${typeFilter}" />
+                        </c:if>
+                        <c:if test="${not empty fromDate}">
+                            <c:set var="filterParams" value="${filterParams}&fromDate=${fromDate}" />
+                        </c:if>
+                        <c:if test="${not empty toDate}">
+                            <c:set var="filterParams" value="${filterParams}&toDate=${toDate}" />
+                        </c:if>
+                        <div class="pagination">
+                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> giao dịch</div>
+                            <div class="controls">
+                                <c:if test="${currentPage > 1}">
+                                    <a href="?action=detail&warehouseId=${warehouseId}&generatorId=${generatorId}&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="?action=detail&warehouseId=${warehouseId}&generatorId=${generatorId}&page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                                <c:if test="${currentPage < totalPages}">
+                                    <a href="?action=detail&warehouseId=${warehouseId}&generatorId=${generatorId}&page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                                </c:if>
+                            </div>
+                        </div>
                     </div>
                 </main>
             </div>

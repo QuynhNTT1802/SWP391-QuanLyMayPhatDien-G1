@@ -156,10 +156,6 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
         rd.setReceiptId(rs.getInt("receipt_id"));
         rd.setInventoryId(rs.getInt("inventory_id"));
         try {
-            rd.setUnitPrice(rs.getBigDecimal("unit_price"));
-        } catch (SQLException ignored) {
-        }
-        try {
             rd.setNote(rs.getString("note"));
         } catch (SQLException ignored) {
         }

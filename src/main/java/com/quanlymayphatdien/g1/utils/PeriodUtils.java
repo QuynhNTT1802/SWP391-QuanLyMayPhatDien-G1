@@ -13,28 +13,27 @@ public class PeriodUtils {
     }
 
     public static String fromDate(LocalDate date) {
-        int q = (date.getMonthValue() - 1) / 3 + 1;
-        return date.getYear() + "Q" + q;
+        return String.format("%d%02d", date.getYear(), date.getMonthValue());
     }
 
     public static LocalDate startOf(String period) {
         int y = Integer.parseInt(period.substring(0, 4));
-        int q = Integer.parseInt(period.substring(5));
-        return LocalDate.of(y, (q - 1) * 3 + 1, 1);
+        int m = Integer.parseInt(period.substring(4));
+        return LocalDate.of(y, m, 1);
     }
 
     public static LocalDate endOf(String period) {
         int y = Integer.parseInt(period.substring(0, 4));
-        int q = Integer.parseInt(period.substring(5));
-        return YearMonth.of(y, q * 3).atEndOfMonth();
+        int m = Integer.parseInt(period.substring(4));
+        return YearMonth.of(y, m).atEndOfMonth();
     }
 
-    public static List<String> recentQuarters(int n) {
+    public static List<String> recentMonths(int n) {
         List<String> list = new ArrayList<>();
         LocalDate d = LocalDate.now();
         for (int i = 0; i < n; i++) {
             list.add(fromDate(d));
-            d = d.minusMonths(3);
+            d = d.minusMonths(1);
         }
         return list;
     }
