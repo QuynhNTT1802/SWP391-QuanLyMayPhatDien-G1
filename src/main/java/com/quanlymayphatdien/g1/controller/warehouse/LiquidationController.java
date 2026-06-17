@@ -122,6 +122,15 @@ public class LiquidationController extends HttpServlet {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+            String act = request.getParameter("action");
+            boolean isAjax = "get_serials".equals(act) || "get_serials_all".equals(act) || "search_customer".equals(act);
+            if (isAjax && !response.isCommitted()) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                String msg = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName();
+                response.getWriter().write("{\"error\":\"" + msg.replace("\"", "\\\"") + "\"}");
+            }
         }
     }
 
@@ -180,7 +189,12 @@ public class LiquidationController extends HttpServlet {
 
         HashMap<Integer, java.math.BigDecimal> priceMap = new HashMap<>();
         for (Integer genId : grouped.keySet()) {
-            priceMap.put(genId, purchaseOrderDAO.findApprovedUnitPriceByGenerator(genId));
+            try {
+                priceMap.put(genId, purchaseOrderDAO.findApprovedUnitPriceByGenerator(genId));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                priceMap.put(genId, null);
+            }
         }
 
         JsonArray generators = new JsonArray();
