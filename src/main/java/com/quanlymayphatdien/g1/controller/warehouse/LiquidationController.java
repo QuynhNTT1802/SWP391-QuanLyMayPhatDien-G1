@@ -179,9 +179,10 @@ public class LiquidationController extends HttpServlet {
         }
 
         HashMap<Integer, java.math.BigDecimal> priceMap = new HashMap<>();
-        for (Integer genId : grouped.keySet()) {
-            priceMap.put(genId, purchaseOrderDAO.findApprovedUnitPriceByGenerator(genId));
-        }
+
+//        for (Generator g : genDAO.findAll()) {
+////            priceMap.put(g.getId(), g.getUnitPrice());
+//        }
 
         JsonArray generators = new JsonArray();
         for (Map.Entry<Integer, List<Inventory>> e : grouped.entrySet()) {
@@ -232,6 +233,7 @@ public class LiquidationController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(new Gson().toJson(root));
     }
+    
 
     private void searchCustomerJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String q = request.getParameter("q");
@@ -754,7 +756,7 @@ public class LiquidationController extends HttpServlet {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
 
-            newReceiptId = receiptDAO.insert(conn, r);
+            newReceiptId = receiptDAO.insert(r);
             if (newReceiptId <= 0) {
                 conn.rollback();
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
