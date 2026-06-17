@@ -264,3 +264,19 @@
         </div>
     </div>
 </aside>
+        <script>
+    (function () {
+        var badge = document.getElementById('proposalBadge');
+        if (!badge) { return; }
+        var ctx = (window.APP_CTX || '${pageContext.request.contextPath}');
+        fetch(ctx + '/proposal?action=countPending', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data && data.canApprove && data.count > 0) {
+                    badge.textContent = data.count > 99 ? '99+' : data.count;
+                    badge.style.display = 'inline-block';
+                }
+            })
+            .catch(function () {});
+    })();
+</script>

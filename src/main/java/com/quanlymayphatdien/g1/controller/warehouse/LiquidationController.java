@@ -543,27 +543,39 @@ public class LiquidationController extends HttpServlet {
         if (newReceiptId > 0) {
             BigDecimal total = BigDecimal.ZERO;
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
-            for (LiquidationDetail d : details) {
-                ReceiptDetail rd = new ReceiptDetail();
-                rd.setReceiptId(newReceiptId);
-                rd.setGeneratorId(d.getGeneratorId());
-                rd.setSerialNumber(d.getSerialNumber());
-                rd.setQuantity(1);
-                rd.setUnitPrice(d.getLiquidationPrice());
-                rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
-                receiptDetailDAO.insert(rd);
-                
-                if (d.getLiquidationPrice() != null) {
-                    total = total.add(d.getLiquidationPrice());
+            try (java.sql.Connection c = receiptDAO.getConnection()) {
+                c.setAutoCommit(false);
+                try {
+                    for (LiquidationDetail d : details) {
+                        Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber());
+                        if (inv == null) {
+                            throw new java.sql.SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại trong kho");
+                        }
+                        if (!inventoryDAO.reserveForExport(c, inv.getInventoryId())) {
+                            throw new java.sql.SQLException("Serial \"" + d.getSerialNumber() + "\" không IN_STOCK");
+                        }
+                        ReceiptDetail rd = new ReceiptDetail();
+                        rd.setReceiptId(newReceiptId);
+                        rd.setInventoryId(inv.getInventoryId());
+                        rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
+                        receiptDetailDAO.insert(rd);
+                        if (d.getLiquidationPrice() != null) {
+                            total = total.add(d.getLiquidationPrice());
+                        }
+                    }
+                    String updateReceiptTotalSql = "UPDATE receipt SET total_amount = ? WHERE receipt_id = ?";
+                    try (java.sql.PreparedStatement p = c.prepareStatement(updateReceiptTotalSql)) {
+                        p.setBigDecimal(1, total);
+                        p.setInt(2, newReceiptId);
+                        p.executeUpdate();
+                    }
+                    c.commit();
+                } catch (java.sql.SQLException ex) {
+                    c.rollback();
+                    throw ex;
                 }
-            }
-            
-            // Cập nhật tổng tiền cho Receipt
-            String updateReceiptTotalSql = "UPDATE receipt SET total_amount = ? WHERE receipt_id = ?";
-            try (java.sql.Connection c = receiptDAO.getConnection(); java.sql.PreparedStatement p = c.prepareStatement(updateReceiptTotalSql)) {
-                p.setBigDecimal(1, total);
-                p.setInt(2, newReceiptId);
-                p.executeUpdate();
+            } catch (java.sql.SQLException ex) {
+                ex.printStackTrace();
             }
             
             liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);

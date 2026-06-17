@@ -1,14 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<%@page import="com.quanlymayphatdien.g1.dal.GeneratorDAO"%>
-<%@page import="com.quanlymayphatdien.g1.entity.Generator"%>
-<%@page import="java.util.List"%>
-<%
-    GeneratorDAO gdao = new GeneratorDAO();
-    List<Generator> gens = gdao.findAllActive();
-    request.setAttribute("gens", gens);
-%>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -59,142 +51,238 @@
                 </c:forEach>
                 <div class="type-header">
                     <span class="type-badge"><span class="tdot"></span><c:out value="${selectedWhName}"/></span>
-                    <span class="type-count">${totalItems} serial</span>
+                    <span class="type-count"><c:if test="${viewMode == 'detail'}">${totalItems} serial</c:if></span>
                 </div>
             </c:if>
 
-            <h3 class="section-heading">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                Danh sách serial tồn kho
-            </h3>
+            <c:choose>
+                <%-- ===== CHE DO MODEL GROUP ===== --%>
+                <c:when test="${viewMode == 'group'}">
+                    <h3 class="section-heading">
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+                        Danh sách máy phát điện
+                    </h3>
 
-            <form method="get" action="${pageContext.request.contextPath}/inventory/list" class="filter-bar">
-                <div class="search-input">
-                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo serial hoặc model" autocomplete="off" />
-                </div>
-                <select class="filter-select" name="warehouse" onchange="this.form.submit()">
-                    <option value="">Kho: Tất cả</option>
-                    <c:forEach var="wh" items="${warehouses}">
-                        <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                    </c:forEach>
-                </select>
-                <select class="filter-select" name="generator" onchange="this.form.submit()">
-                    <option value="">Máy: Tất cả</option>
-                    <c:forEach var="g" items="${gens}">
-                        <option value="${g.id}" <c:if test="${selectedGenerator == g.id}">selected</c:if>>${g.model}</option>
-                    </c:forEach>
-                </select>
-                <select class="filter-select" name="status" onchange="this.form.submit()">
-                    <option value="">Trạng thái: Tất cả</option>
-                    <option value="IN_STOCK" <c:if test="${status == 'IN_STOCK'}">selected</c:if>>IN_STOCK</option>
-                    <option value="SOLD" <c:if test="${status == 'SOLD'}">selected</c:if>>SOLD</option>
-                    <option value="PENDING_LIQUIDATION" <c:if test="${status == 'PENDING_LIQUIDATION'}">selected</c:if>>PENDING_LIQUIDATION</option>
-                    <option value="LIQUIDATED" <c:if test="${status == 'LIQUIDATED'}">selected</c:if>>LIQUIDATED</option>
-                    <option value="IN_TRANSIT" <c:if test="${status == 'IN_TRANSIT'}">selected</c:if>>IN_TRANSIT</option>
-                </select>
-                <button type="submit" class="btn btn-primary">
-                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    Tìm kiếm
-                </button>
-                <c:if test="${not empty selectedWarehouse or not empty selectedGenerator or not empty search or not empty status}">
-                    <a href="${pageContext.request.contextPath}/inventory/list" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        Xoá lọc
-                    </a>
-                </c:if>
-            </form>
+                    <form method="get" action="${pageContext.request.contextPath}/inventory/list" class="filter-bar">
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo model" autocomplete="off" />
+                        </div>
+                        <select class="filter-select" name="warehouse" onchange="this.form.submit()">
+                            <option value="">Kho: Tất cả</option>
+                            <c:forEach var="wh" items="${warehouses}">
+                                <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
+                            </c:forEach>
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            Tìm kiếm
+                        </button>
+                        <c:if test="${not empty selectedWarehouse or not empty search}">
+                            <a href="${pageContext.request.contextPath}/inventory/list" class="btn">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Xoá lọc
+                            </a>
+                        </c:if>
+                    </form>
 
-            <div class="users-card">
-                <table class="users">
-                    <thead>
-                        <tr>
-                            <th style="width:40px;">#</th>
-                            <th>Serial</th>
-                            <th>Model</th>
-                            <th>Hãng</th>
-                            <th>Kho</th>
-                            <th style="width:150px;">Trạng thái</th>
-                            <th style="width:160px;">Ngày nhập</th>
-                            <th style="width:160px;">Cập nhật</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:choose>
-                            <c:when test="${empty serialList}">
-                                <tr><td colspan="8">
-                                    <div class="empty-state">
-                                        <div class="icon-wrap">
-                                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                        </div>
-                                        <strong>Không có serial nào trong tồn kho</strong>
-                                    </div>
-                                </td></tr>
-                            </c:when>
-                            <c:otherwise>
-                                <c:forEach var="item" items="${serialList}" varStatus="st">
-                                    <tr>
-                                        <td>${fromIndex + st.index}</td>
-                                        <td>
-                                            <strong style="font-family:var(--font-mono);font-size:12.5px;">
-                                                <c:out value="${item.serialNumber}"/>
-                                            </strong>
-                                        </td>
-                                        <td><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${item.generatorId}">${item.generatorModel}</a></td>
-                                        <td>${item.generatorBrand}</td>
-                                        <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
-                                        <td>
-                                            <span class="status-badge status-${item.status}">
-                                                <span class="sdot"></span>
-                                                <c:out value="${item.status}"/>
-                                            </span>
-                                        </td>
-                                        <td style="font-size:12px;color:var(--muted);">
-                                            <c:choose>
-                                                <c:when test="${item.createdAt != null}">
-                                                    ${item.createdAt}
-                                                </c:when>
-                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                        <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
-                                    </tr>
+                    <div class="users-card">
+                        <table class="users">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">#</th>
+                                    <th>Model</th>
+                                    <th>Hãng</th>
+                                    <th style="width:140px;text-align:center;">Số serial</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:choose>
+                                    <c:when test="${empty generatorSummaries}">
+                                        <tr><td colspan="4">
+                                            <div class="empty-state">
+                                                <div class="icon-wrap">
+                                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                                </div>
+                                                <strong>Không có máy nào trong kho</strong>
+                                            </div>
+                                        </td></tr>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="gs" items="${generatorSummaries}" varStatus="st">
+                                            <tr class="clickable-row" onclick="location.href='${pageContext.request.contextPath}/inventory/list?generator=${gs.id}<c:if test="${selectedWarehouse != null}">&warehouse=${selectedWarehouse}</c:if>'">
+                                                <td style="text-align:center;font-family:var(--font-mono);color:var(--muted);font-weight:600;">${fromIndex + st.index}</td>
+                                                <td><a href="${pageContext.request.contextPath}/inventory/list?generator=${gs.id}<c:if test="${selectedWarehouse != null}">&warehouse=${selectedWarehouse}</c:if>"><c:out value="${gs.model}"/></a></td>
+                                                <td><c:out value="${gs.brand}"/></td>
+                                                <td style="text-align:center;font-family:var(--font-mono);font-weight:700;">${gs.totalSerials}</td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
+                        </table>
+                        <c:set var="filterParams" value="" />
+                        <c:if test="${not empty selectedWarehouse}">
+                            <c:set var="filterParams" value="${filterParams}&warehouse=${selectedWarehouse}" />
+                        </c:if>
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                        </c:if>
+                        <div class="pagination">
+                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                            <div class="controls">
+                                <c:if test="${currentPage > 1}">
+                                    <a href="?page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="?page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
                                 </c:forEach>
-                            </c:otherwise>
-                        </c:choose>
-                    </tbody>
-                </table>
-                <c:set var="filterParams" value="" />
-                <c:if test="${not empty selectedWarehouse}">
-                    <c:set var="filterParams" value="${filterParams}&warehouse=${selectedWarehouse}" />
-                </c:if>
-                <c:if test="${not empty selectedGenerator}">
-                    <c:set var="filterParams" value="${filterParams}&generator=${selectedGenerator}" />
-                </c:if>
-                <c:if test="${not empty search}">
-                    <c:set var="filterParams" value="${filterParams}&search=${search}" />
-                </c:if>
-                <c:if test="${not empty status}">
-                    <c:set var="filterParams" value="${filterParams}&status=${status}" />
-                </c:if>
-                <div class="pagination">
-                    <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
-                    <div class="controls">
-                        <c:if test="${currentPage > 1}">
-                            <a href="?page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
-                        </c:if>
-                        <c:forEach begin="1" end="${totalPages}" var="p">
-                            <c:choose>
-                                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                <c:otherwise><a href="?page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
-                            </c:choose>
-                        </c:forEach>
-                        <c:if test="${currentPage < totalPages}">
-                            <a href="?page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
-                        </c:if>
+                                <c:if test="${currentPage < totalPages}">
+                                    <a href="?page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                                </c:if>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
+                </c:when>
+
+                <%-- ===== CHE DO SERIAL DETAIL ===== --%>
+                <c:when test="${viewMode == 'detail'}">
+                    <c:if test="${not empty selectedGenerator}">
+                        <c:set var="selectedGenModel" value=""/>
+                        <c:forEach var="g" items="${gens}">
+                            <c:if test="${g.id == selectedGenerator}">
+                                <c:set var="selectedGenModel" value="${g.model}"/>
+                            </c:if>
+                        </c:forEach>
+                        <div class="model-selector" style="margin-bottom:16px;">
+                            <h3 class="section-heading" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                Serial &mdash; <c:out value="${selectedGenModel}"/>
+                            </h3>
+                            <a href="${pageContext.request.contextPath}/inventory/list<c:if test="${selectedWarehouse != null}">?warehouse=${selectedWarehouse}</c:if>" class="back-link" style="margin-bottom:12px;">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách máy
+                            </a>
+                        </div>
+                    </c:if>
+
+                    <form method="get" action="${pageContext.request.contextPath}/inventory/list" class="filter-bar">
+                        <c:if test="${selectedWarehouse != null}">
+                            <input type="hidden" name="warehouse" value="${selectedWarehouse}" />
+                        </c:if>
+                        <input type="hidden" name="generator" value="${selectedGenerator}" />
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo serial" autocomplete="off" />
+                        </div>
+                        <select class="filter-select" name="status" onchange="this.form.submit()">
+                            <option value="">Trạng thái: Tất cả</option>
+                            <option value="IN_STOCK" <c:if test="${status == 'IN_STOCK'}">selected</c:if>>IN_STOCK</option>
+                            <option value="SOLD" <c:if test="${status == 'SOLD'}">selected</c:if>>SOLD</option>
+                            <option value="PENDING_LIQUIDATION" <c:if test="${status == 'PENDING_LIQUIDATION'}">selected</c:if>>PENDING_LIQUIDATION</option>
+                            <option value="LIQUIDATED" <c:if test="${status == 'LIQUIDATED'}">selected</c:if>>LIQUIDATED</option>
+                            <option value="IN_TRANSIT" <c:if test="${status == 'IN_TRANSIT'}">selected</c:if>>IN_TRANSIT</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            Tìm kiếm
+                        </button>
+                        <c:if test="${not empty search or not empty status}">
+                            <a href="${pageContext.request.contextPath}/inventory/list?generator=${selectedGenerator}<c:if test="${selectedWarehouse != null}">&warehouse=${selectedWarehouse}</c:if>" class="btn">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Xoá lọc
+                            </a>
+                        </c:if>
+                    </form>
+
+                    <div class="users-card">
+                        <table class="users">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">#</th>
+                                    <th>Serial</th>
+                                    <th>Kho</th>
+                                    <th style="width:150px;">Trạng thái</th>
+                                    <th style="width:160px;">Ngày nhập</th>
+                                    <th style="width:160px;">Cập nhật</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:choose>
+                                    <c:when test="${empty serialList}">
+                                        <tr><td colspan="6">
+                                            <div class="empty-state">
+                                                <div class="icon-wrap">
+                                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                                </div>
+                                                <strong>Không có serial nào</strong>
+                                            </div>
+                                        </td></tr>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="item" items="${serialList}" varStatus="st">
+                                            <tr>
+                                                <td>${fromIndex + st.index}</td>
+                                                <td>
+                                                    <strong style="font-family:var(--font-mono);font-size:12.5px;">
+                                                        <c:out value="${item.serialNumber}"/>
+                                                    </strong>
+                                                </td>
+                                                <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
+                                                <td>
+                                                    <span class="status-badge status-${item.status}">
+                                                        <span class="sdot"></span>
+                                                        <c:out value="${item.status}"/>
+                                                    </span>
+                                                </td>
+                                                <td style="font-size:12px;color:var(--muted);">
+                                                    <c:choose>
+                                                        <c:when test="${item.createdAt != null}">
+                                                            ${item.createdAt}
+                                                        </c:when>
+                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
+                        </table>
+                        <c:set var="filterParams" value="&generator=${selectedGenerator}" />
+                        <c:if test="${not empty selectedWarehouse}">
+                            <c:set var="filterParams" value="${filterParams}&warehouse=${selectedWarehouse}" />
+                        </c:if>
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                        </c:if>
+                        <c:if test="${not empty status}">
+                            <c:set var="filterParams" value="${filterParams}&status=${status}" />
+                        </c:if>
+                        <div class="pagination">
+                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                            <div class="controls">
+                                <c:if test="${currentPage > 1}">
+                                    <a href="?page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${totalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="?page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                                <c:if test="${currentPage < totalPages}">
+                                    <a href="?page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                                </c:if>
+                            </div>
+                        </div>
+                    </div>
+                </c:when>
+            </c:choose>
         </main>
     </div>
 </div>

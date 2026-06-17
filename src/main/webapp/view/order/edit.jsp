@@ -15,6 +15,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
         <style>
             .detail-table {
                 width: 100%;
@@ -56,10 +57,10 @@
                 width: 100px;
             }
             .col-price {
-                width: 130px;
+                width: 160px;
                 text-align: right;
                 font-size: 13px;
-                padding-top: 14px !important;
+                padding-top: 6px !important;
             }
             .col-del {
                 width: 40px;
@@ -71,6 +72,32 @@
             .row-subtotal {
                 color: var(--accent);
                 font-weight: 600;
+            }
+            .row-subtotal-cell {
+                padding-top: 14px !important;
+            }
+            .unit-price-input {
+                width: 100%;
+                padding: 7px 8px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                background: var(--bg);
+                color: var(--fg);
+                font-size: 13px;
+                box-sizing: border-box;
+                text-align: right;
+            }
+            .unit-price-input.is-invalid {
+                border-color: var(--danger);
+                background: var(--danger-soft);
+                color: var(--danger);
+            }
+            .unit-price-hint {
+                display: block;
+                font-size: 11px;
+                color: var(--muted);
+                margin-top: 4px;
+                text-align: right;
             }
             .row-del-btn {
                 width: 28px;
@@ -112,6 +139,9 @@
         </style>
     </head>
     <body>
+        <script>
+            var contextPath = '${pageContext.request.contextPath}';
+        </script>
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
@@ -159,30 +189,69 @@
                                     <div class="form-section-num">01 — THÔNG TIN KHÁCH HÀNG</div>
                                     <h3 class="form-section-title">Người nhận hàng</h3>
                                 </div>
+
+                                <div class="cust-picker" id="customerPicker">
+                                    <div class="cust-picker-head">
+                                        <div class="cust-picker-head-title">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                            Khách hàng gần đây (click để đổi)
+                                        </div>
+                                        <button type="button" class="cust-picker-search" id="btnOpenCustSearch">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            Tìm kiếm
+                                        </button>
+                                    </div>
+                                    <div class="cust-picker-list">
+                                        <c:choose>
+                                            <c:when test="${not empty top4Customers}">
+                                                <c:forEach var="c" items="${top4Customers}">
+                                                    <button type="button" class="cust-picker-item"
+                                                            data-customer='{"id":${c.id},"name":"<c:out value='${c.name}' escapeXml='false'/>","phone":"<c:out value='${c.phone}' escapeXml='false'/>","email":"<c:out value='${c.email}' escapeXml='false'/>","address":"<c:out value='${c.address}' escapeXml='false'/>","companyName":"<c:out value='${c.companyName}' escapeXml='false'/>","customerTypeId":${c.customerTypeId}}'>
+                                                        <span class="cust-picker-item-name"><c:out value="${c.name}"/></span>
+                                                        <span class="cust-picker-item-phone"><c:out value="${c.phone}"/></span>
+                                                    </button>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="cust-picker-empty">Chưa có khách hàng nào.</div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+
+                                <div class="cust-picker-hint" id="custDuplicateHint">
+                                    ⚠ Có nhiều khách hàng trùng tên này. Vui lòng nhập <strong>số điện thoại</strong> để chọn đúng người.
+                                </div>
+
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerName" value="<c:out value="${order.customer.name}"/>" required />
+                                        <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : order.customer.name}" />
+                                        <input class="input" name="customerName" id="inpCustName" value="<c:out value="${preName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <input class="input mono" name="customerPhone" value="<c:out value="${order.customer.phone}"/>" required />
+                                        <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : order.customer.phone}" />
+                                        <input class="input mono" name="customerPhone" id="inpCustPhone" value="<c:out value="${prePhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
-                                        <input class="input mono" name="customerEmail" type="email" value="<c:out value="${order.customer.email}"/>" />
+                                        <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : order.customer.email}" />
+                                        <input class="input mono" name="customerEmail" id="inpCustEmail" type="email" value="<c:out value="${preEmail}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
-                                        <input class="input" name="customerAddress" value="<c:out value="${order.customer.address}"/>" required />
+                                        <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : order.customer.address}" />
+                                        <input class="input" name="customerAddress" id="inpCustAddress" value="<c:out value="${preAddress}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
+                                        <c:set var="preTypeId" value="${(preselectCustomer != null) ? preselectCustomer.customerTypeId : order.customer.customerTypeId}" />
                                         <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
                                             <option value="">-- Chọn loại khách hàng --</option>
                                             <c:forEach var="ct" items="${customerTypes}">
                                                 <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${order.customer.customerTypeId == ct.id}">selected</c:if>>
+                                                        <c:if test="${preTypeId == ct.id}">selected</c:if>>
                                                     <c:out value="${ct.name}"/>
                                                 </option>
                                             </c:forEach>
@@ -190,7 +259,8 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${order.customer.companyName}"/>" />
+                                        <c:set var="preCompany" value="${(preselectCustomer != null) ? preselectCustomer.companyName : order.customer.companyName}" />
+                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${preCompany}"/>" />
                                     </div>
                                 </div>
                             </div>
@@ -223,7 +293,7 @@
                                             <th class="col-num">#</th>
                                             <th>Máy phát</th>
                                             <th class="col-qty">Số lượng</th>
-                                            <th class="col-price">Đơn giá</th>
+                                            <th class="col-price">Đơn giá bán</th>
                                             <th class="col-price">Thành tiền</th>
                                             <th class="col-del"></th>
                                         </tr>
@@ -238,7 +308,7 @@
                                                             <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
-                                                                    <option value="${g.id}" data-price="${g.unitPrice}"
+                                                                    <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}"
                                                                             <c:if test="${g.id == d.generatorId}">selected</c:if>>
                                                                         <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                                     </option>
@@ -246,8 +316,11 @@
                                                             </select>
                                                         </td>
                                                         <td><input type="number" name="quantity" class="qty-input" value="${d.quantity}" min="1" max="9999" oninput="updateTotal()" required /></td>
-                                                        <td class="col-price"><span class="row-unit-price mono">0₫</span></td>
-                                                        <td class="col-price"><span class="row-subtotal mono">0₫</span></td>
+                                                        <td class="col-price">
+                                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
+                                                            <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                                        </td>
+                                                        <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                         <td class="col-del">
                                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                                         </td>
@@ -261,18 +334,21 @@
                                                         <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                             <option value="">-- Chọn máy --</option>
                                                             <c:forEach var="g" items="${generators}">
-                                                                <option value="${g.id}" data-price="${g.unitPrice}">
+                                                                <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}">
                                                                     <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                                 </option>
                                                             </c:forEach>
                                                         </select>
                                                     </td>
                                                     <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" oninput="updateTotal()" required /></td>
-                                                    <td class="col-price"><span class="row-unit-price mono">0₫</span></td>
-                                                    <td class="col-price"><span class="row-subtotal mono">0₫</span></td>
+                                                    <td class="col-price">
+                                                        <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
+                                                        <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                                    </td>
+                                                    <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                     <td class="col-del">
                                                         <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                                                    </td>
+                                                        </td>
                                                 </tr>
                                             </c:otherwise>
                                         </c:choose>
@@ -293,15 +369,18 @@
                                             <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
-                                                    <option value="${g.id}" data-price="${g.unitPrice}">
+                                                    <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}">
                                                         <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                     </option>
                                                 </c:forEach>
                                             </select>
                                         </td>
                                         <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" oninput="updateTotal()" required /></td>
-                                        <td class="col-price"><span class="row-unit-price mono">0₫</span></td>
-                                        <td class="col-price"><span class="row-subtotal mono">0₫</span></td>
+                                        <td class="col-price">
+                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
+                                            <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                        </td>
+                                        <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                         <td class="col-del">
                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                         </td>
@@ -340,20 +419,40 @@
                                     function updateRowPrice(selectEl) {
                                         var row = selectEl.closest('tr');
                                         var opt = selectEl.options[selectEl.selectedIndex];
-                                        var price = parseFloat(opt.getAttribute('data-price')) || 0;
-                                        row.querySelector('.row-unit-price').textContent = formatVND(price);
+                                        var basePrice = parseFloat(opt.getAttribute('data-base-price')) || 0;
+                                        var priceInput = row.querySelector('.unit-price-input');
+                                        priceInput.value = basePrice;
+                                        priceInput.setAttribute('data-base', basePrice);
+                                        row.querySelector('.base-price-label').textContent = basePrice > 0 ? formatVND(basePrice) : '—';
+                                        validateUnitPrice(priceInput);
                                         updateTotal();
+                                    }
+                                    function validateUnitPrice(input) {
+                                        var base = parseFloat(input.getAttribute('data-base')) || 0;
+                                        var v = parseFloat(input.value);
+                                        if (isNaN(v)) {
+                                            input.classList.add('is-invalid');
+                                            input.title = base > 0 ? ('Đơn giá phải ≥ giá gốc (' + formatVND(base) + ')') : '';
+                                            return false;
+                                        }
+                                        if (base > 0 && v < base) {
+                                            input.classList.add('is-invalid');
+                                            input.title = 'Đơn giá phải ≥ giá gốc (' + formatVND(base) + ')';
+                                            return false;
+                                        }
+                                        input.classList.remove('is-invalid');
+                                        input.title = '';
+                                        return true;
                                     }
                                     function updateTotal() {
                                         var grand = 0;
                                         document.querySelectorAll('#detailBody tr').forEach(function (row) {
                                             var sel = row.querySelector('.gen-select');
                                             var qty = parseInt(row.querySelector('.qty-input').value) || 0;
-                                            var opt = sel.options[sel.selectedIndex];
-                                            var price = parseFloat(opt ? opt.getAttribute('data-price') : 0) || 0;
+                                            var priceInput = row.querySelector('.unit-price-input');
+                                            var price = parseFloat(priceInput.value) || 0;
                                             var subtotal = price * qty;
                                             row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
-                                            row.querySelector('.row-unit-price').textContent = formatVND(price);
                                             grand += subtotal;
                                         });
                                         document.getElementById('grandTotal').textContent = formatVND(grand);
@@ -394,5 +493,22 @@
                                     }
                                     document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
+
+        <div class="cust-picker-modal" id="custSearchModal">
+            <div class="cust-picker-modal-dialog">
+                <div class="cust-picker-modal-head">
+                    <h3>Tìm khách hàng</h3>
+                    <button type="button" class="cust-picker-modal-close" id="btnCloseCustSearch">×</button>
+                </div>
+                <div class="cust-picker-modal-search-wrap">
+                    <input type="text" class="cust-picker-modal-search" id="inpCustModalSearch" placeholder="Gõ tên hoặc số điện thoại..." autocomplete="off" />
+                </div>
+                <div class="cust-picker-modal-results" id="custModalResults">
+                    <div class="cust-picker-modal-empty">Gõ để bắt đầu tìm kiếm...</div>
+                </div>
+            </div>
+        </div>
+
+        <script src="${pageContext.request.contextPath}/assets/js/customer-picker.js"></script>
     </body>
 </html>

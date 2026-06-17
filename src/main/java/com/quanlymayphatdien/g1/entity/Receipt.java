@@ -4,7 +4,6 @@
  */
 package com.quanlymayphatdien.g1.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +17,7 @@ public class Receipt {
     private String receiptCode;
     private String receiptType;
     private Integer orderId;
+    private Integer proposalId;
     private int warehouseId;
     private int createdBy;
     private Integer approvedBy;
@@ -32,10 +32,11 @@ public class Receipt {
     private String approvedByName;
     private String orderCode;
     private String customerName;
+    private String proposalCode;
+    private String supplierName;
     private Integer reasonId;
     private String reasonNote;
     private String reasonName;
-    private BigDecimal totalAmount;
     private List<ReceiptDetail> details;
     
     // Additional fields for displaying references
@@ -91,6 +92,14 @@ public class Receipt {
 
     public void setOrderId(Integer orderId) {
         this.orderId = orderId;
+    }
+
+    public Integer getProposalId() {
+        return proposalId;
+    }
+
+    public void setProposalId(Integer proposalId) {
+        this.proposalId = proposalId;
     }
 
     public int getWarehouseId() {
@@ -189,12 +198,20 @@ public class Receipt {
         this.customerName = customerName;
     }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
+    public String getProposalCode() {
+        return proposalCode;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setProposalCode(String proposalCode) {
+        this.proposalCode = proposalCode;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
     }
 
     public List<ReceiptDetail> getDetails() {

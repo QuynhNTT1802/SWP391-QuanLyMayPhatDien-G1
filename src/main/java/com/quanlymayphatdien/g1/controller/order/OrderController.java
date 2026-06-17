@@ -4,6 +4,7 @@ import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Customer;
@@ -21,10 +22,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -184,9 +188,10 @@ public class OrderController extends HttpServlet {
 
         request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
     }
-    
+
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
         int id = Integer.parseInt(request.getParameter("id"));
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
@@ -209,25 +214,49 @@ public class OrderController extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
+        request.setAttribute("userPermissions", session != null ? session.getAttribute("userPermissions") : null);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+         String newCustIdStr = request.getParameter("newCustomerId");
+        if (newCustIdStr != null && !newCustIdStr.isEmpty()) {
+            try {
+                int newCustId = Integer.parseInt(newCustIdStr);
+                Customer preselect = new CustomerDAO().findById(newCustId);
+                request.setAttribute("preselectCustomer", preselect);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         GeneratorDAO generatorDao = new GeneratorDAO();
         CategoryDAO categoryDao = new CategoryDAO();
+        CustomerDAO customerDao = new CustomerDAO();
+        PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO();
 
         List<Generator> generators = generatorDao.findAll();
         List<Category> brands = categoryDao.findByType("brand");
         List<Category> fuelTypes = categoryDao.findByType("fuel_type");
         List<Category> phases = categoryDao.findByType("phase");
         List<Category> customerTypes = categoryDao.findByType("customer_type");
+        List<Customer> top4Customers = customerDao.findTop4Alphabetical();
+
+        Map<Integer, BigDecimal> basePriceMap = new HashMap<>();
+        for (Generator g : generators) {
+            BigDecimal bp = purchaseOrderDAO.getLatestUnitPriceByGeneratorId(g.getId());
+            if (bp != null) {
+                basePriceMap.put(g.getId(), bp);
+            }
+        }
 
         request.setAttribute("customerTypes", customerTypes);
         request.setAttribute("generators", generators);
         request.setAttribute("brands", brands);
         request.setAttribute("fuelTypes", fuelTypes);
         request.setAttribute("phases", phases);
+        request.setAttribute("top4Customers", top4Customers);
+        request.setAttribute("basePriceMap", basePriceMap);
 
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
     }
@@ -253,6 +282,7 @@ public class OrderController extends HttpServlet {
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
+        PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO();
 
         String orderCode = request.getParameter("orderCode");
         if (orderCode == null || orderCode.trim().isEmpty()) {
@@ -273,38 +303,54 @@ public class OrderController extends HttpServlet {
         String custTypeIdStr = request.getParameter("customerTypeId");
         String custNote = request.getParameter("customerNote");
         Customer customer = null;
-        if (custPhone != null && !custPhone.trim().isEmpty()) {
-            customer = customerDAO.findByPhone(custPhone);
+        if (custPhone == null || custPhone.trim().isEmpty()) {
+            session.setAttribute("message", "Vui lòng nhập số điện thoại khách hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=create");
+            return;
         }
+        customer = customerDAO.findByPhone(custPhone.trim());
         if (customer == null) {
+            // Quick-create KH mới ngay khi tạo đơn
             customer = new Customer();
             customer.setName(custName);
-            customer.setPhone(custPhone);
+            customer.setPhone(custPhone.trim());
             customer.setEmail(custEmail);
             customer.setAddress(custAddress);
             customer.setCompanyName(custCompany);
-
             if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
                 try {
                     customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
                 } catch (NumberFormatException ignored) {
                 }
             }
-
             customer.setStatus("active");
             customer.setCreatedBy(user.getId());
-
             int newCustId = customerDAO.insert(customer);
-            if (newCustId > 0) {
-                customer.setId(newCustId);
+            if (newCustId <= 0) {
+                request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
+                response.sendRedirect(request.getContextPath() + "/order?action=create");
+                return;
             }
+            customer.setId(newCustId);
+        } else {
+            // KH đã tồn tại theo SĐT → auto-update thông tin từ form
+            customer.setName(custName);
+            customer.setEmail(custEmail);
+            customer.setAddress(custAddress);
+            customer.setCompanyName(custCompany);
+            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                try {
+                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            customer.setUpdatedBy(user.getId());
+            customerDAO.update(customer);
         }
 
-        if (customer != null && customer.getId() > 0) {
-            order.setCustomerId(customer.getId());
-        }
-
+        order.setCustomerId(customer.getId());
         order.setCustomerNote(custNote);
+        order.setCreatedBy(user.getId());
 
         order.setStatus("PENDING");
         order.setTotalAmount(0.0);
@@ -318,8 +364,10 @@ public class OrderController extends HttpServlet {
         }
         String[] genIds = request.getParameterValues("generatorId");
         String[] qtys = request.getParameterValues("quantity");
+        String[] unitPrices = request.getParameterValues("unitPrice");
         List<OrderDetail> detailsList = new ArrayList<>();
         double totalAmount = 0;
+        boolean hasInvalidPrice = false;
 
         if (genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
@@ -333,18 +381,39 @@ public class OrderController extends HttpServlet {
                 if (qtys != null && i < qtys.length && qtys[i] != null && !qtys[i].isEmpty()) {
                     qty = Integer.parseInt(qtys[i]);
                 }
+                double inputPrice = 0;
+                if (unitPrices != null && i < unitPrices.length && unitPrices[i] != null && !unitPrices[i].isEmpty()) {
+                    try {
+                        inputPrice = Double.parseDouble(unitPrices[i]);
+                    } catch (NumberFormatException ex) {
+                        inputPrice = 0;
+                    }
+                }
 
                 Generator gen = generatorDao.findById(genId);
                 if (gen != null) {
+                    BigDecimal bp = purchaseOrderDAO.getLatestUnitPriceByGeneratorId(genId);
+                    double basePrice = bp != null ? bp.doubleValue() : 0;
+                    double salePrice = inputPrice > 0 ? inputPrice : basePrice;
+                    if (basePrice > 0 && salePrice < basePrice) {
+                        hasInvalidPrice = true;
+                        continue;
+                    }
                     OrderDetail detail = new OrderDetail();
                     detail.setGeneratorId(genId);
                     detail.setQuantity(qty);
-//                    detail.setUnitPrice(gen.getUnitPrice().doubleValue());
+                    detail.setUnitPrice(salePrice);
                     detailsList.add(detail);
 
-//                    totalAmount += gen.getUnitPrice().doubleValue() * qty;
+                    totalAmount += salePrice * qty;
                 }
             }
+        }
+
+        if (hasInvalidPrice) {
+            session.setAttribute("message", "Đơn giá bán phải ≥ giá gốc của máy phát. Vui lòng kiểm tra lại.");
+            response.sendRedirect(request.getContextPath() + "/order?action=create");
+            return;
         }
 
         order.setTotalAmount(totalAmount);
@@ -383,12 +452,39 @@ public class OrderController extends HttpServlet {
 
             List<Generator> generator = generatordao.findAll();
             CategoryDAO categoryDao = new CategoryDAO();
+            CustomerDAO customerDao = new CustomerDAO();
+            PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO();
             List<Category> customerTypes = categoryDao.findByType("customer_type");
+            List<Customer> top4Customers = customerDao.findTop4Alphabetical();
+
+            Map<Integer, BigDecimal> basePriceMap = new HashMap<>();
+            for (Generator g : generator) {
+                BigDecimal bp = purchaseOrderDAO.getLatestUnitPriceByGeneratorId(g.getId());
+                if (bp != null) {
+                    basePriceMap.put(g.getId(), bp);
+                }
+            }
+
+            // Nếu return từ customer-create → load customer mới để pre-fill form
+            String newCustIdStr = request.getParameter("newCustomerId");
+            if (newCustIdStr != null && !newCustIdStr.isEmpty()) {
+                try {
+                    int newCustId = Integer.parseInt(newCustIdStr);
+                    Customer preselect = new CustomerDAO().findById(newCustId);
+                    if (preselect != null) {
+                        order.setCustomer(preselect);
+                        order.setCustomerId(preselect.getId());
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
 
             request.setAttribute("order", order);
             request.setAttribute("existingDetails", existingDetails);
             request.setAttribute("generators", generator);
             request.setAttribute("customerTypes", customerTypes);
+            request.setAttribute("top4Customers", top4Customers);
+            request.setAttribute("basePriceMap", basePriceMap);
             request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
         } else {
             request.getSession().setAttribute("message", "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).");
@@ -408,6 +504,7 @@ public class OrderController extends HttpServlet {
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
+        PurchaseOrderDAO purchaseOrderDAO = new PurchaseOrderDAO();
 
         int orderId = Integer.parseInt(request.getParameter("orderId"));
         User user = (User) request.getSession().getAttribute("loggedUser");
@@ -415,8 +512,10 @@ public class OrderController extends HttpServlet {
 
             String[] genIds = request.getParameterValues("generatorId");
             String[] qtys = request.getParameterValues("quantity");
+            String[] unitPrices = request.getParameterValues("unitPrice");
             List<OrderDetail> newDetails = new ArrayList<>();
             double totalAmount = 0;
+            boolean hasInvalidPrice = false;
 
             if (genIds != null) {
                 for (int i = 0; i < genIds.length; i++) {
@@ -428,18 +527,39 @@ public class OrderController extends HttpServlet {
                     if (qtys != null && i < qtys.length && qtys[i] != null && !qtys[i].isEmpty()) {
                         qty = Integer.parseInt(qtys[i]);
                     }
+                    double inputPrice = 0;
+                    if (unitPrices != null && i < unitPrices.length && unitPrices[i] != null && !unitPrices[i].isEmpty()) {
+                        try {
+                            inputPrice = Double.parseDouble(unitPrices[i]);
+                        } catch (NumberFormatException ex) {
+                            inputPrice = 0;
+                        }
+                    }
 
                     Generator gen = generatorDao.findById(genId);
                     if (gen != null) {
+                        BigDecimal bp = purchaseOrderDAO.getLatestUnitPriceByGeneratorId(genId);
+                        double basePrice = bp != null ? bp.doubleValue() : 0;
+                        double salePrice = inputPrice > 0 ? inputPrice : basePrice;
+                        if (basePrice > 0 && salePrice < basePrice) {
+                            hasInvalidPrice = true;
+                            continue;
+                        }
                         OrderDetail detail = new OrderDetail();
                         detail.setOrderId(orderId);
                         detail.setGeneratorId(genId);
                         detail.setQuantity(qty);
-//                        detail.setUnitPrice(gen.getUnitPrice().doubleValue());
+                        detail.setUnitPrice(salePrice);
                         newDetails.add(detail);
-//                        totalAmount += gen.getUnitPrice().doubleValue() * qty;
+                        totalAmount += salePrice * qty;
                     }
                 }
+            }
+
+            if (hasInvalidPrice) {
+                request.getSession().setAttribute("message", "Đơn giá bán phải ≥ giá gốc của máy phát. Vui lòng kiểm tra lại.");
+                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                return;
             }
 
             SaleOrder order = saleorderdao.findById(orderId);
@@ -459,43 +579,52 @@ public class OrderController extends HttpServlet {
             String custTypeIdStr = request.getParameter("customerTypeId");
             String custNote = request.getParameter("customerNote");
 
-            Customer customer = null;
-            if (custPhone != null && !custPhone.trim().isEmpty()) {
-                customer = customerDAO.findByPhone(custPhone);
+            if (custPhone == null || custPhone.trim().isEmpty()) {
+                request.getSession().setAttribute("message", "Vui lòng nhập số điện thoại khách hàng.");
+                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                return;
             }
-
+            Customer customer = customerDAO.findByPhone(custPhone.trim());
             if (customer == null) {
+                // Quick-create KH mới khi sửa đơn (giống create)
                 customer = new Customer();
-            }
-
-            customer.setName(custName);
-            customer.setPhone(custPhone);
-            customer.setEmail(custEmail);
-            customer.setAddress(custAddress);
-            customer.setCompanyName(custCompany);
-
-            if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
-                try {
-                    customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
-                } catch (NumberFormatException ignored) {
+                customer.setName(custName);
+                customer.setPhone(custPhone.trim());
+                customer.setEmail(custEmail);
+                customer.setAddress(custAddress);
+                customer.setCompanyName(custCompany);
+                if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                    try {
+                        customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
-            }
-
-            if (customer.getId() > 0) {
-
-                customer.setUpdatedBy(user.getId());
-                customerDAO.update(customer);
-            } else {
-
                 customer.setStatus("active");
                 customer.setCreatedBy(user.getId());
                 int newCustId = customerDAO.insert(customer);
+                if (newCustId <= 0) {
+                    request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
+                    response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                    return;
+                }
                 customer.setId(newCustId);
+            } else {
+                // KH đã tồn tại theo SĐT → auto-update thông tin từ form
+                customer.setName(custName);
+                customer.setEmail(custEmail);
+                customer.setAddress(custAddress);
+                customer.setCompanyName(custCompany);
+                if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
+                    try {
+                        customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                customer.setUpdatedBy(user.getId());
+                customerDAO.update(customer);
             }
 
-            if (customer != null) {
-                order.setCustomerId(customer.getId());
-            }
+            order.setCustomerId(customer.getId());
 
             order.setCustomerNote(custNote);
 
