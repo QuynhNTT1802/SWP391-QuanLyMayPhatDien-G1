@@ -206,7 +206,7 @@ public class ImportReceiptController extends HttpServlet {
             if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
                 List<PurchaseOrderDetail> pods = po.getDetails();
                 Receipt prefill = new Receipt();
-                prefill.setProposalId(poId);
+                prefill.setPurchaseOrderId(poId);
                 prefill.setWarehouseId(po.getWarehouseId());
                 prefill.setReceiptType(TYPE);
                 prefill.setNote("Tạo từ phiếu purchase " + po.getPoCode());
@@ -442,7 +442,7 @@ public class ImportReceiptController extends HttpServlet {
         String pid = request.getParameter("poId");
         if (pid != null && !pid.isEmpty()) {
             try {
-                r.setProposalId(Integer.parseInt(pid));
+                r.setPurchaseOrderId(Integer.parseInt(pid));
             } catch (NumberFormatException ignored) {}
         }
         r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
