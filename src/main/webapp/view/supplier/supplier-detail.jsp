@@ -52,7 +52,6 @@
             </a>
 
             <div class="hero">
-                <div class="hero-avatar purple"><c:out value="${supplier.name.substring(0,2)}"/></div>
                 <div class="hero-body">
                     <h2 class="hero-name">
                         <c:out value="${supplier.name}"/>
