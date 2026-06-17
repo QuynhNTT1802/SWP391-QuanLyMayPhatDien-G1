@@ -516,6 +516,7 @@ public class ProposalController extends HttpServlet {
         }
 
         GeneratorDAO genDAO = new GeneratorDAO();
+        SupplierDAO supDAO = new SupplierDAO();
         List<ImportProposalDetail> details = new ArrayList<>();
         int errors = 0;
         for (Map<String, String> row : rows) {
@@ -533,9 +534,19 @@ public class ProposalController extends HttpServlet {
             d.setQuantity(qty);
             d.setCurrentStock(0);
             d.setNote(lineNote != null ? lineNote : "");
+            String supplierName = row.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
+            if (supplierName != null && !supplierName.trim().isEmpty()) {
+                java.util.List<Supplier> matched = supDAO.findByNameExact(supplierName.trim());
+                if (matched.size() == 1) {
+                    d.setSupplierId(matched.get(0).getId());
+                }
+            }
             String priceStr = row.get(ProposalExcelSupport.HEADER_UNIT_PRICE);
             if (priceStr != null && !priceStr.trim().isEmpty()) {
-                try { d.setUnitPrice(new BigDecimal(priceStr.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
+                String cleaned = priceStr.trim().replaceAll("[^0-9.]", "");
+                if (!cleaned.isEmpty()) {
+                    try { d.setUnitPrice(new BigDecimal(cleaned)); } catch (Exception ignored) {}
+                }
             }
             details.add(d);
         }
@@ -1285,9 +1296,9 @@ public class ProposalController extends HttpServlet {
             resolveCategory(catDAO, row, "Thương hiệu", "brand", catIds);
             resolveCategory(catDAO, row, "Xuất xứ", "origin", catIds);
             resolveCategory(catDAO, row, "Tình trạng", "condition", catIds);
-            resolveCategory(catDAO, row, "Nhiên liệu", "fuel", catIds);
+            resolveCategory(catDAO, row, "Nhiên liệu", "fuel_type", catIds);
             resolveCategory(catDAO, row, "Số pha", "phase", catIds);
-            resolveCategory(catDAO, row, "Loại máy phát", "type", catIds);
+            resolveCategory(catDAO, row, "Loại máy phát", "generator_type", catIds);
             if (!catIds.isEmpty()) {
                 genDAO.deleteGeneratorCategories(genId);
                 genDAO.saveGeneratorCategories(genId, catIds);

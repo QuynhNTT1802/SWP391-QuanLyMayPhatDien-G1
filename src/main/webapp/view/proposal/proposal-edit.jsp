@@ -133,6 +133,9 @@
                         <div class="lede">Phiếu <c:out value="${proposal.proposalCode}"/></div>
                     </div>
 
+                    <form id="uploadExcelForm" method="post" action="${pageContext.request.contextPath}/proposal?action=uploadEditExcel&id=${proposal.proposalId}" enctype="multipart/form-data" style="display:none">
+                        <input type="file" name="excelFile" id="excelUpload" accept=".xlsx,.xls" onchange="this.form.submit()" />
+                    </form>
                     <form id="editForm" method="post" action="${pageContext.request.contextPath}/proposal?action=update" onsubmit="return validateForm()">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
 
@@ -175,9 +178,6 @@
                             <div class="section-head">
                                 <div class="section-head-left"><h3>Danh sách máy phát</h3><span class="sub">${not empty proposal.details ? fn:length(proposal.details) : 0} dòng</span></div>
                                 <div>
-                                    <form id="uploadExcelForm" method="post" action="${pageContext.request.contextPath}/proposal?action=uploadEditExcel&id=${proposal.proposalId}" enctype="multipart/form-data" style="display:none">
-                                        <input type="file" name="excelFile" id="excelUpload" accept=".xlsx,.xls" onchange="this.form.submit()" />
-                                    </form>
                                     <button type="button" class="btn btn-sm" onclick="document.getElementById('excelUpload').click()">Tải Excel thay thế</button>
                                 </div>
                             </div>

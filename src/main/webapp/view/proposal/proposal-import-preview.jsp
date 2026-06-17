@@ -285,7 +285,7 @@
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Cần chọn nhà cung cấp</h3><span class="sub">${fn:length(unresolvedSupplierRows)} dòng</span></div></div>
                                 <div class="table-scroll">
                                 <table class="data-table">
-                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th style="min-width:160px">Tên NCC đã gõ</th><th style="min-width:180px">Lý do</th><th style="width:280px" class="text-right">Hành động</th></tr></thead>
+                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th style="min-width:140px">Tên NCC đã gõ</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th><th style="min-width:140px">Lý do</th><th style="width:200px" class="text-right">Hành động</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${unresolvedSupplierRows}" varStatus="st">
                                             <tr class="unresolved-card-row" data-row-index="<c:out value='${st.index}'/>" data-gid="<c:out value='${row.gid}'/>" data-gmodel="<c:out value='${row.gmodel}'/>" data-gname="<c:out value='${row.gname}'/>">
@@ -300,7 +300,10 @@
                                                 <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
                                                 <td><c:out value="${row['Tần số']}"/></td>
                                                 <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
-                                                <td style="max-width:200px"><c:out value="${row['supplierQuery']}"/></td>
+                                                <td style="max-width:160px"><c:out value="${row['supplierQuery']}"/></td>
+                                                <td class="mono text-right"><c:out value="${row['gunitPrice']}"/></td>
+                                                <td class="mono text-right"><c:out value="${row['gqty']}"/></td>
+                                                <td><c:out value="${row['gline']}"/></td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${row['supplierMultiple'] == 'true'}">
