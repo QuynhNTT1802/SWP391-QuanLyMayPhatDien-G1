@@ -28,10 +28,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     public static final String STATUS_PENDING_IMPORT = "PENDING_IMPORT";
     public static final String STATUS_RESERVED_EXPORT = "RESERVED_EXPORT";
 
-    // ============================================================
-    // MODEL SUMMARY (cho trang /inventory/list — che do model group)
-    // Tra ve danh sach generator (model) + tong so serial trong kho
-    // ============================================================
     public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
             String search, int page, int pageSize) {
         List<GeneratorSummary> list = new ArrayList<>();
@@ -110,10 +106,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
-    // ============================================================
-    // PAGINATED LIST (cho trang /inventory/list)
-    // Moi dong = 1 serial, co the loc theo (warehouse, generator, status, search)
-    // ============================================================
     public List<Inventory> findByFilters(Integer warehouseId, Integer generatorId,
             String status, String search, int page, int pageSize) {
         List<Inventory> list = new ArrayList<>();
@@ -220,9 +212,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
-    // ============================================================
-    // TIM KIEM SERIAL (cho receipt xuat / thanh ly / chuyen kho)
-    // ============================================================
+
     public List<Inventory> findInStockByWarehouseAndGenerator(int warehouseId, int generatorId) {
         List<Inventory> list = new ArrayList<>();
         String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
@@ -336,6 +326,18 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return result;
     }
 
+
+    public List<Map<String, Object>> findPendingLiquidationSerials(int warehouseId, int generatorId) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> m : findPendingLiquidationSerialsByWarehouse(warehouseId)) {
+            Object gid = m.get("generatorId");
+            if (gid instanceof Integer && ((Integer) gid) == generatorId) {
+                result.add(m);
+            }
+        }
+        return result;
+    }
+
     public Inventory findBySerialNumber(String serialNumber) {
         String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
                 + "FROM inventory i "
@@ -367,13 +369,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return null;
     }
 
-    // ============================================================
-    // MUTATIONS (insert / update status)
-    // ============================================================
-    /**
-     * Them 1 serial moi vao kho. Tra ve true neu insert thanh cong, false neu
-     * serial bi trung (UNIQUE conflict).
-     */
     public boolean insert(Connection conn, int generatorId, String serialNumber, int warehouseId, String status) throws SQLException {
         String sql = "INSERT INTO inventory (generator_id, serial_number, warehouse_id, status) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -385,10 +380,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Tao inventory row o trang thai PENDING_IMPORT (cho draft phieu nhap).
-     * Tra ve inventory_id moi tao, hoac -1 neu loi / serial trung.
-     */
+
     public int insertPendingImport(Connection conn, int generatorId,
                                     String serialNumber, int warehouseId) throws SQLException {
         String sql = "INSERT INTO inventory (generator_id, serial_number, warehouse_id, status) "
@@ -408,10 +400,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return -1;
     }
 
-    /**
-     * Reserve serial cho phieu xuat (IN_STOCK -> RESERVED_EXPORT).
-     * Tra ve true neu thanh cong, false neu serial khong o trang thai IN_STOCK.
-     */
+
     public boolean reserveForExport(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -422,9 +411,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Release reservation khi cancel phieu xuat (RESERVED_EXPORT -> IN_STOCK).
-     */
+
     public boolean releaseReservation(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -526,6 +513,76 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             }
             return total;
         }
+    }
+
+    /**
+     * Atomic claim: chi update sang newStatus nhung serial dang IN_STOCK va dung kho.
+     * Tra ve so dong update thanh cong. Goi sau do voi cung input qua findUnavailableSerials
+     * de biet serial nao bi tu choi.
+     */
+    public int claimInStockBatch(Connection conn, List<String> serialNumbers, int warehouseId, String newStatus) throws SQLException {
+        if (serialNumbers == null || serialNumbers.isEmpty()) {
+            return 0;
+        }
+        String sql = "UPDATE inventory SET status = ? "
+                   + "WHERE serial_number = ? AND warehouse_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (String sn : serialNumbers) {
+                ps.setString(1, newStatus);
+                ps.setString(2, sn);
+                ps.setInt(3, warehouseId);
+                ps.setString(4, STATUS_IN_STOCK);
+                ps.addBatch();
+            }
+            int[] rs = ps.executeBatch();
+            int total = 0;
+            for (int r : rs) {
+                if (r > 0) {
+                    total += r;
+                }
+            }
+            return total;
+        }
+    }
+
+    /**
+     * Tra ve cac serial trong input KHONG dang IN_STOCK o warehouse chi dinh
+     * (khong ton tai, sai kho, hoac sai status). Dung de bao loi cho user
+     * sau khi claimInStockBatch fail mot phan.
+     */
+    public List<String> findUnavailableSerials(Connection conn, List<String> serialNumbers, int warehouseId) throws SQLException {
+        List<String> result = new ArrayList<>();
+        if (serialNumbers == null || serialNumbers.isEmpty()) {
+            return result;
+        }
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < serialNumbers.size(); i++) {
+            if (i > 0) placeholders.append(",");
+            placeholders.append("?");
+        }
+        String sql = "SELECT serial_number FROM inventory "
+                   + "WHERE serial_number IN (" + placeholders + ") "
+                   + "  AND warehouse_id = ? AND status = ?";
+        java.util.Set<String> available = new java.util.HashSet<>();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            int idx = 1;
+            for (String sn : serialNumbers) {
+                ps.setString(idx++, sn);
+            }
+            ps.setInt(idx++, warehouseId);
+            ps.setString(idx, STATUS_IN_STOCK);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    available.add(rs.getString("serial_number"));
+                }
+            }
+        }
+        for (String sn : serialNumbers) {
+            if (!available.contains(sn)) {
+                result.add(sn);
+            }
+        }
+        return result;
     }
 
     /**
