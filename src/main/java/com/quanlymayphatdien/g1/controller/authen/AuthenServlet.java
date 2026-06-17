@@ -13,6 +13,7 @@ import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -172,8 +173,8 @@ public class AuthenServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             return true;
         } catch (Exception e) {
-            SystemLogger.error("Xác thực", "AuthenServlet.tryAutoLogin", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.AUTH, "AuthenServlet.tryAutoLogin", e.getMessage(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             return false;
         }
     }
@@ -228,8 +229,8 @@ public class AuthenServlet extends HttpServlet {
             return "redirect:/admin/dashboard";
 
         } catch (Exception e) {
-            SystemLogger.error("Xác thực", "AuthenServlet.loginDoPost", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.AUTH, "AuthenServlet.loginDoPost", e.getMessage(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
             return "view/authen/login.jsp";
         }

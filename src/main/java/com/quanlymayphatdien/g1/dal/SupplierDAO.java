@@ -315,4 +315,60 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
 
         return s;
     }
+    
+    public List<Supplier> findByNameExact(String name) {
+        List<Supplier> list = new ArrayList<>();
+        if (name == null || name.trim().isEmpty()) {
+            return list;
+        }
+        String sql = "SELECT * FROM supplier "
+                + "WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND status = 'active' "
+                + "ORDER BY id ASC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, name.trim());
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+    
+    public List<Supplier> searchByKeyword(String keyword, int limit) {
+        List<Supplier> list = new ArrayList<>();
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        String sql;
+        if (hasKeyword) {
+            sql = "SELECT * FROM supplier "
+                    + "WHERE status = 'active' AND name LIKE ? "
+                    + "ORDER BY name ASC LIMIT ?";
+        } else {
+            sql = "SELECT * FROM supplier WHERE status = 'active' ORDER BY name ASC LIMIT ?";
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            if (hasKeyword) {
+                statement.setString(1, "%" + keyword.trim() + "%");
+                statement.setInt(2, limit > 0 ? limit : 10);
+            } else {
+                statement.setInt(1, limit > 0 ? limit : 10);
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 }

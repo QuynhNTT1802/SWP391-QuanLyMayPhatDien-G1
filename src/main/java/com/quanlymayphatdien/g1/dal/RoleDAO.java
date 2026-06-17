@@ -7,6 +7,7 @@ package com.quanlymayphatdien.g1.dal;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,7 +48,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 return true;
             } catch (Exception e) {
                 c.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
             }
         }
         return false;
@@ -68,7 +69,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 roles.add(role);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return roles;
     }
@@ -82,7 +83,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
             p.setInt(2, roleId);
             return p.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -98,7 +99,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -116,7 +117,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -133,7 +134,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 list.add(getFromResultSet(rs));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -150,7 +151,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
             p.setInt(5, role.getRoleId());
             return p.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -164,7 +165,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
             p.setInt(2, role.getRoleId());
             return p.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return false;
     }
@@ -189,7 +190,7 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
                 }
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }

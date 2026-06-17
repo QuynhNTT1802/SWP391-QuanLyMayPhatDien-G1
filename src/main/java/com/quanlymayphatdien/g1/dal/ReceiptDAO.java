@@ -716,5 +716,47 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         return r;
     }
+    public int insert(Connection conn, Receipt r) throws SQLException {
+        String status = r.getStatus();
+        if (status == null || status.trim().isEmpty()) {
+            status = GlobalUtils.RECEIPT_STATUS_PENDING;
+        }
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, proposal_id, "
+                + "warehouse_id, created_by, status, note, reason_id, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, r.getReceiptCode());
+            ps.setString(2, r.getReceiptType());
+            if (r.getOrderId() != null) {
+                ps.setInt(3, r.getOrderId());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            if (r.getProposalId() != null) {
+                ps.setInt(4, r.getProposalId());
+            } else {
+                ps.setNull(4, Types.INTEGER);
+            }
+            ps.setInt(5, r.getWarehouseId());
+            ps.setInt(6, r.getCreatedBy());
+            ps.setString(7, status);
+            ps.setString(8, r.getNote());
+            if (r.getReasonId() != null) {
+                ps.setInt(9, r.getReasonId());
+            } else {
+                ps.setNull(9, Types.INTEGER);
+            }
+            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        }
+        return -1;
+    }
 
 }

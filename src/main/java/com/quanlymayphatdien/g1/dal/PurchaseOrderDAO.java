@@ -473,6 +473,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             sql.append(" AND p.warehouse_id = ?");
             params.add(warehouseId);
         }
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND p.status = ?");
+            params.add(status);
+        }
         sql.append(" ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -515,6 +519,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         if (warehouseId > 0) {
             sql.append(" AND warehouse_id = ?");
             params.add(warehouseId);
+        }
+        if (status != null && !status.isEmpty()) {
+            sql.append(" AND status = ?");
+            params.add(status);
         }
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
@@ -1137,5 +1145,30 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             e.printStackTrace();
             return false;
         }
+    }
+    /**
+     * Lookup unit_price tu purchase_order_detail cho generator chi dinh,
+     * uu tien PO da APPROVED moi nhat. Tra null neu khong co dong nao thoa.
+     */
+    public java.math.BigDecimal findApprovedUnitPriceByGenerator(int generatorId) {
+        String sql = "SELECT pod.unit_price "
+                + "FROM purchase_order_detail pod "
+                + "JOIN purchase_order po ON pod.po_id = po.po_id "
+                + "WHERE pod.generator_id = ? "
+                + "  AND po.status = 'APPROVED' "
+                + "  AND pod.unit_price IS NOT NULL "
+                + "ORDER BY po.approved_at DESC "
+                + "LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal("unit_price");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
