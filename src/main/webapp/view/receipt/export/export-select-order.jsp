@@ -23,6 +23,9 @@
         <header class="topbar">
             <h1>Đơn hàng đã duyệt</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Chọn đơn hàng</span>
+            <div class="top-actions">
+                <jsp:include page="../../common/admin/bell.jsp"/>
+            </div>
         </header>
 
         <main>

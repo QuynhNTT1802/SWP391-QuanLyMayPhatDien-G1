@@ -57,3 +57,140 @@ body {
 
 .checkbox { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg-soft); cursor: pointer; user-select: none; }
 .checkbox input { width: 15px; height: 15px; accent-color: var(--accent); margin: 0; }
+
+/* ============== Row actions (container) ============== */
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+/* ============== Dropdown (chung cho list actions) ============== */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--fg);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .12s ease;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.dropdown-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--surface);
+}
+.dropdown-btn .arrow {
+    transition: transform .2s ease;
+    margin-left: 2px;
+    font-size: 10px;
+}
+.dropdown-btn.open .arrow {
+    transform: rotate(180deg);
+}
+.dropdown-menu {
+    position: fixed;
+    z-index: 999;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12),
+                0 2px 6px rgba(15, 23, 42, 0.06);
+    padding: 4px;
+    min-width: 170px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
+    pointer-events: none;
+}
+.dropdown-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition: opacity .15s ease, transform .15s ease, visibility 0s linear 0s;
+}
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--fg);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    text-decoration: none;
+    transition: background .1s ease, color .1s ease;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+.dropdown-item:hover {
+    background: var(--surface-2);
+}
+.dropdown-item:focus-visible {
+    outline: none;
+    background: var(--surface-2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.dropdown-item svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+.dropdown-item .label {
+    flex: 1;
+}
+.dropdown-item.approve { color: #155724; }
+.dropdown-item.approve:hover { background: var(--accent-soft); }
+.dropdown-item.approve svg { stroke: #155724; }
+.dropdown-item.reject  { color: var(--danger); }
+.dropdown-item.reject:hover  { background: var(--danger-soft); }
+.dropdown-item.cancel  { color: #b45309; }
+.dropdown-item.cancel:hover  { background: var(--warn-soft); }
+.dropdown-item.convert { color: #004085; }
+.dropdown-item.convert:hover { background: color-mix(in srgb, #004085 12%, var(--surface-2)); }
+.dropdown-item.submit  { color: #1d4ed8; }
+.dropdown-item.submit:hover  { background: color-mix(in srgb, #1d4ed8 12%, var(--surface-2)); }
+.dropdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 3px 0;
+}
+
+/* ============== Dark mode tweaks ============== */
+[data-theme="dark"] .dropdown-menu {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45),
+                0 2px 6px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .dropdown-item.approve { color: #4ade80; }
+[data-theme="dark"] .dropdown-item.approve:hover { background: color-mix(in srgb, #4ade80 15%, transparent); }
+[data-theme="dark"] .dropdown-item.approve svg { stroke: #4ade80; }
+[data-theme="dark"] .dropdown-item.cancel  { color: #fbbf24; }
+[data-theme="dark"] .dropdown-item.cancel:hover  { background: color-mix(in srgb, #fbbf24 15%, transparent); }
+[data-theme="dark"] .dropdown-item.convert { color: #60a5fa; }
+[data-theme="dark"] .dropdown-item.convert:hover { background: color-mix(in srgb, #60a5fa 15%, transparent); }
+[data-theme="dark"] .dropdown-item.submit  { color: #60a5fa; }
+[data-theme="dark"] .dropdown-item.submit:hover  { background: color-mix(in srgb, #60a5fa 15%, transparent); }

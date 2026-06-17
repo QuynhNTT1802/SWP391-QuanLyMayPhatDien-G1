@@ -84,6 +84,24 @@
                 <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 Phân loại theo kho hàng
             </h3>
+
+            <form method="get" action="${pageContext.request.contextPath}/inventory" class="filter-bar">
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo tên kho hoặc địa chỉ" autocomplete="off" />
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    Tìm kiếm
+                </button>
+                <c:if test="${not empty search}">
+                    <a href="${pageContext.request.contextPath}/inventory" class="btn">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Xoá lọc
+                    </a>
+                </c:if>
+            </form>
+
             <div class="table-card">
                 <table>
                     <thead>
@@ -137,7 +155,30 @@
                         </c:choose>
                     </tbody>
                 </table>
+                <c:set var="filterParams" value="" />
+                <c:if test="${not empty search}">
+                    <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                </c:if>
+                <div class="pagination">
+                    <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                    <div class="controls">
+                        <c:if test="${currentPage > 1}">
+                            <a href="?page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${totalPages}" var="p">
+                            <c:choose>
+                                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                <c:otherwise><a href="?page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="?page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                        </c:if>
+                    </div>
+                </div>
             </div>
+
+
         </main>
     </div>
 </div>

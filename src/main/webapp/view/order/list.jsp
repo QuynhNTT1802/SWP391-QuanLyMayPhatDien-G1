@@ -78,106 +78,90 @@
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
             }
-            .dropdown {
-                position: relative;
-                display: inline-block;
-            }
-            .dropdown-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 4px 10px;
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                background: var(--surface);
-                color: var(--fg);
-                font-size: 12px;
-                font-weight: 600;
+            .user-name.customer-link {
                 cursor: pointer;
-                transition: all .12s ease;
-                font-family: inherit;
-                white-space: nowrap;
-            }
-            .dropdown-btn:hover {
-                border-color: var(--accent);
                 color: var(--accent);
+                text-decoration: none;
             }
-            .dropdown-btn .arrow {
-                transition: transform .2s ease;
-                margin-left: 2px;
-                font-size: 10px;
+            .user-name.customer-link:hover {
+                text-decoration: underline;
             }
-            .dropdown-btn.open .arrow {
-                transform: rotate(180deg);
-            }
-            .dropdown-menu {
+            .customer-modal-backdrop {
                 position: fixed;
-                z-index: 999;
+                inset: 0;
+                background: rgba(0,0,0,.45);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .customer-modal-backdrop.open {
+                display: flex;
+            }
+            .customer-modal {
                 background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                box-shadow: 0 4px 20px rgba(0,0,0,.12);
-                padding: 4px;
-                min-width: 150px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(-4px);
-                transition: all .15s ease;
-                pointer-events: none;
+                border-radius: 8px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 10px 40px rgba(0,0,0,.25);
+                overflow: hidden;
+                animation: modalPop .18s ease-out;
             }
-            .dropdown-menu.open {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-                pointer-events: auto;
+            @keyframes modalPop {
+                from { transform: scale(.96); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
             }
-            .dropdown-item {
+            .customer-modal-header {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                padding: 7px 10px;
-                border: none;
-                border-radius: 4px;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border);
+            }
+            .customer-modal-header h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            .customer-modal-close {
                 background: transparent;
-                color: var(--fg);
-                font-size: 12.5px;
-                font-weight: 500;
+                border: none;
+                font-size: 22px;
+                line-height: 1;
                 cursor: pointer;
-                width: 100%;
-                text-align: left;
-                font-family: inherit;
-                text-decoration: none;
-                transition: background .1s ease;
-                box-sizing: border-box;
-                white-space: nowrap;
+                color: var(--muted);
+                padding: 0 4px;
             }
-            .dropdown-item:hover {
-                background: var(--surface-2);
+            .customer-modal-close:hover { color: var(--fg); }
+            .customer-modal-body {
+                padding: 16px 18px;
             }
-            .dropdown-item svg {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                flex-shrink: 0;
+            .cust-info-row {
+                display: flex;
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px dashed var(--border);
+                font-size: 13.5px;
             }
-            .dropdown-item .label {
+            .cust-info-row:last-child { border-bottom: none; }
+            .cust-info-row .lbl {
+                flex: 0 0 110px;
+                color: var(--muted);
+                font-weight: 500;
+            }
+            .cust-info-row .val {
                 flex: 1;
+                color: var(--fg);
+                word-break: break-word;
             }
-            .dropdown-item.approve svg {
-                stroke: #155724;
-            }
-            .dropdown-item.reject svg {
-                stroke: #721c24;
-            }
-            .dropdown-item.cancel svg {
-                stroke: #dc3545;
-            }
-            .dropdown-divider {
-                height: 1px;
-                background: var(--border);
-                margin: 3px 0;
+            .customer-modal-footer {
+                padding: 12px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                background: var(--surface-2);
             }
         </style>
     </head>
@@ -278,7 +262,17 @@
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">
-                                                            <div class="user-name"><c:out value="${order.customer.name}"/></div>
+                                                            <a href="javascript:void(0);" class="user-name customer-link"
+                                                               onclick="showCustomerModal(this)"
+                                                               data-cust-id="<c:out value='${order.customer.id}'/>"
+                                                               data-cust-name="<c:out value='${order.customer.name}'/>"
+                                                               data-cust-phone="<c:out value='${order.customer.phone}'/>"
+                                                               data-cust-email="<c:out value='${order.customer.email}'/>"
+                                                               data-cust-address="<c:out value='${order.customer.address}'/>"
+                                                               data-cust-company="<c:out value='${order.customer.companyName}'/>"
+                                                               title="Xem thông tin khách hàng">
+                                                                <c:out value="${order.customer.name}"/>
+                                                            </a>
                                                             <div class="user-email"><c:out value="${order.customer.phone}"/></div>
                                                         </div>
                                                     </div>
@@ -303,50 +297,9 @@
                                                 </td>
                                                 <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customer.address}</span></td>
                                                 <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động
-                                                            <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-
-                                                            <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                                    <span class="label">Sửa</span>
-                                                                </a>
-                                                            </c:if>
-
-                                                            <c:if test="${canApproveOrder && order.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item approve" onclick="confirmApprove(${order.orderId})" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                    <span class="label">Duyệt</span>
-                                                                </button>
-                                                            </c:if>
-
-                                                            <c:if test="${canRejectOrder && order.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item reject" onclick="confirmReject(${order.orderId})" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    <span class="label">Từ chối</span>
-                                                                </button>
-                                                            </c:if>
-
-                                                            <c:if test="${canCancelOrder && (order.status == 'PENDING' || order.status == 'APPROVED')}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item cancel" onclick="confirmCancel(${order.orderId})" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                    <span class="label">Hủy</span>
-                                                                </button>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
+                                                    <a class="btn" href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}">
+                                                        Chi tiết
+                                                    </a>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -377,6 +330,48 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+
+        <div class="customer-modal-backdrop" id="customerModal" onclick="if (event.target === this) closeCustomerModal();">
+            <div class="customer-modal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+                <div class="customer-modal-header">
+                    <h3 id="customerModalTitle">Thông tin khách hàng</h3>
+                    <button type="button" class="customer-modal-close" onclick="closeCustomerModal()" aria-label="Đóng">&times;</button>
+                </div>
+                <div class="customer-modal-body">
+                    <div class="cust-info-row">
+                        <div class="lbl">Mã khách hàng</div>
+                        <div class="val" id="cm-id">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Họ và tên</div>
+                        <div class="val" id="cm-name">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Số điện thoại</div>
+                        <div class="val" id="cm-phone">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Email</div>
+                        <div class="val" id="cm-email">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Công ty</div>
+                        <div class="val" id="cm-company">—</div>
+                    </div>
+                    <div class="cust-info-row">
+                        <div class="lbl">Địa chỉ</div>
+                        <div class="val" id="cm-address">—</div>
+                    </div>
+                </div>
+                <div class="customer-modal-footer">
+                    <button type="button" class="btn" onclick="closeCustomerModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="cm-detail-link">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
 
     <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
     <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
@@ -447,35 +442,31 @@
                 form.submit();
             }
         }
-        function toggleDropdown(btn) {
-            var menu = btn.nextElementSibling;
-            var isOpen = menu.classList.contains('open');
-            document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                if (m !== menu) {
-                    m.classList.remove('open');
-                    m.previousElementSibling.classList.remove('open');
-                }
-            });
-            if (isOpen) {
-                menu.classList.remove('open');
-                btn.classList.remove('open');
-                return;
-            }
-            var rect = btn.getBoundingClientRect();
-            menu.style.top = (rect.bottom + 4) + 'px';
-            menu.style.left = rect.left + 'px';
-            menu.style.minWidth = Math.max(150, rect.width) + 'px';
-            menu.classList.add('open');
-            btn.classList.add('open');
+        function showCustomerModal(el) {
+            event.stopPropagation();
+            var id = el.getAttribute('data-cust-id') || '';
+            var name = el.getAttribute('data-cust-name') || '—';
+            var phone = el.getAttribute('data-cust-phone') || '—';
+            var email = el.getAttribute('data-cust-email') || '';
+            var address = el.getAttribute('data-cust-address') || '';
+            var company = el.getAttribute('data-cust-company') || '';
+
+            document.getElementById('cm-id').textContent = id || '—';
+            document.getElementById('cm-name').textContent = name;
+            document.getElementById('cm-phone').textContent = phone;
+            document.getElementById('cm-email').textContent = email || '—';
+            document.getElementById('cm-company').textContent = company || '—';
+            document.getElementById('cm-address').textContent = address || '—';
+            document.getElementById('cm-detail-link').href = window.APP_CTX + '/warehouse/customers?action=view&id=' + id;
+
+            document.getElementById('customerModal').classList.add('open');
         }
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.dropdown')) {
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    m.classList.remove('open');
-                });
-                document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                    b.classList.remove('open');
-                });
+        function closeCustomerModal() {
+            document.getElementById('customerModal').classList.remove('open');
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeCustomerModal();
             }
         });
     </script>

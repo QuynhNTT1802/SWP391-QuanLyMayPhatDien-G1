@@ -22,9 +22,10 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         List<StockCard> list = new ArrayList<>();
         String sql = "SELECT sc.*, w.name AS warehouse_name, "
                 + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name, "
-                + "(SELECT GROUP_CONCAT(rd.serial_number SEPARATOR ', ') "
+                + "(SELECT GROUP_CONCAT(i.serial_number SEPARATOR ', ') "
                 + " FROM receipt_detail rd "
-                + " WHERE rd.receipt_id = sc.receipt_id AND rd.generator_id = sc.generator_id) AS serial_list "
+                + " JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                + " WHERE rd.receipt_id = sc.receipt_id AND i.generator_id = sc.generator_id) AS serial_list "
                 + "FROM stock_card sc "
                 + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN generator g ON sc.generator_id = g.id "
@@ -46,16 +47,125 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         return list;
     }
 
-    public List<StockCard> findWithFilters(Integer warehouseId, Integer generatorId,
-            String typeFilter, String fromDate, String toDate,
+    public List<StockCard> findByWarehouseAndGeneratorPaged(int warehouseId, int generatorId,
+            String typeFilter, String search, String fromDate, String toDate,
             int page, int pageSize) {
         List<StockCard> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT sc.*, w.name AS warehouse_name, "
                 + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name, "
-                + "(SELECT GROUP_CONCAT(rd.serial_number SEPARATOR ', ') "
+                + "(SELECT GROUP_CONCAT(i.serial_number SEPARATOR ', ') "
                 + " FROM receipt_detail rd "
-                + " WHERE rd.receipt_id = sc.receipt_id AND rd.generator_id = sc.generator_id) AS serial_list "
+                + " JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                + " WHERE rd.receipt_id = sc.receipt_id AND i.generator_id = sc.generator_id) AS serial_list "
+                + "FROM stock_card sc "
+                + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN generator g ON sc.generator_id = g.id "
+                + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id "
+                + "LEFT JOIN user u ON sc.created_by = u.id "
+                + "WHERE sc.warehouse_id = ? AND sc.generator_id = ? ");
+        List<Object> params = new ArrayList<>();
+        params.add(warehouseId);
+        params.add(generatorId);
+        if (typeFilter != null && !typeFilter.isEmpty()) {
+            sql.append("AND sc.transaction_type = ? ");
+            params.add(typeFilter);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (r.receipt_code LIKE ? OR sc.reference_note LIKE ? "
+                    + "OR EXISTS (SELECT 1 FROM receipt_detail rd2 "
+                    + "JOIN inventory i2 ON rd2.inventory_id = i2.inventory_id "
+                    + "WHERE rd2.receipt_id = sc.receipt_id AND i2.generator_id = sc.generator_id "
+                    + "AND i2.serial_number LIKE ?)) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY sc.created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(getFromResultSet(rs));
+                }
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return list;
+    }
+
+    public int countByWarehouseAndGenerator(int warehouseId, int generatorId,
+            String typeFilter, String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM stock_card sc "
+                + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id "
+                + "WHERE sc.warehouse_id = ? AND sc.generator_id = ? ");
+        List<Object> params = new ArrayList<>();
+        params.add(warehouseId);
+        params.add(generatorId);
+        if (typeFilter != null && !typeFilter.isEmpty()) {
+            sql.append("AND sc.transaction_type = ? ");
+            params.add(typeFilter);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (r.receipt_code LIKE ? OR sc.reference_note LIKE ? "
+                    + "OR EXISTS (SELECT 1 FROM receipt_detail rd2 "
+                    + "JOIN inventory i2 ON rd2.inventory_id = i2.inventory_id "
+                    + "WHERE rd2.receipt_id = sc.receipt_id AND i2.generator_id = sc.generator_id "
+                    + "AND i2.serial_number LIKE ?)) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(sc.created_at) <= ? ");
+            params.add(toDate);
+        }
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return 0;
+    }
+
+    public List<StockCard> findWithFilters(Integer warehouseId, Integer generatorId,
+            String typeFilter, String search, String fromDate, String toDate,
+            int page, int pageSize) {
+        List<StockCard> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT sc.*, w.name AS warehouse_name, "
+                + "g.model AS generator_model, r.receipt_code, u.name AS created_by_name, "
+                + "(SELECT GROUP_CONCAT(i.serial_number SEPARATOR ', ') "
+                + " FROM receipt_detail rd "
+                + " JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                + " WHERE rd.receipt_id = sc.receipt_id AND i.generator_id = sc.generator_id) AS serial_list "
                 + "FROM stock_card sc "
                 + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN generator g ON sc.generator_id = g.id "
@@ -74,6 +184,17 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         if (typeFilter != null && !typeFilter.isEmpty()) {
             sql.append("AND sc.transaction_type = ? ");
             params.add(typeFilter);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (r.receipt_code LIKE ? OR sc.reference_note LIKE ? "
+                    + "OR EXISTS (SELECT 1 FROM receipt_detail rd2 "
+                    + "JOIN inventory i2 ON rd2.inventory_id = i2.inventory_id "
+                    + "WHERE rd2.receipt_id = sc.receipt_id AND i2.generator_id = sc.generator_id "
+                    + "AND i2.serial_number LIKE ?)) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
         }
         if (fromDate != null && !fromDate.isEmpty()) {
             sql.append("AND DATE(sc.created_at) >= ? ");
@@ -102,8 +223,11 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
     }
 
     public int countWithFilters(Integer warehouseId, Integer generatorId,
-            String typeFilter, String fromDate, String toDate) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM stock_card sc WHERE 1=1 ");
+            String typeFilter, String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM stock_card sc "
+                + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id "
+                + "WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND sc.warehouse_id = ? ");
@@ -116,6 +240,17 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         if (typeFilter != null && !typeFilter.isEmpty()) {
             sql.append("AND sc.transaction_type = ? ");
             params.add(typeFilter);
+        }
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (r.receipt_code LIKE ? OR sc.reference_note LIKE ? "
+                    + "OR EXISTS (SELECT 1 FROM receipt_detail rd2 "
+                    + "JOIN inventory i2 ON rd2.inventory_id = i2.inventory_id "
+                    + "WHERE rd2.receipt_id = sc.receipt_id AND i2.generator_id = sc.generator_id "
+                    + "AND i2.serial_number LIKE ?)) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
         }
         if (fromDate != null && !fromDate.isEmpty()) {
             sql.append("AND DATE(sc.created_at) >= ? ");
