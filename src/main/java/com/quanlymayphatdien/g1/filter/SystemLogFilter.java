@@ -1,6 +1,7 @@
 package com.quanlymayphatdien.g1.filter;
 
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,7 +22,7 @@ public class SystemLogFilter implements Filter {
         try {
             chain.doFilter(request, response);
         } catch (Throwable e) {
-            // Xác ??nh URI request ?? bi?t l?i x?y ra ? ?âu
+            // Xï¿½c ??nh URI request ?? bi?t l?i x?y ra ? ?ï¿½u
             String source = "Unknown";
             if (request instanceof HttpServletRequest) {
                 String uri = ((HttpServletRequest) request).getRequestURI();
@@ -30,9 +31,9 @@ public class SystemLogFilter implements Filter {
             }
 
             String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
-            SystemLogger.error("h? th?ng", source, message, e);
+            SystemLogger.error(LogModule.SYSTEM, source, message, e);
 
-            // Re-throw ?? server ti?p t?c x? lý (hi?n th? trang l?i 500)
+            // Re-throw ?? server ti?p t?c x? lï¿½ (hi?n th? trang l?i 500)
             if (e instanceof IOException) throw (IOException) e;
             if (e instanceof ServletException) throw (ServletException) e;
             if (e instanceof RuntimeException) throw (RuntimeException) e;

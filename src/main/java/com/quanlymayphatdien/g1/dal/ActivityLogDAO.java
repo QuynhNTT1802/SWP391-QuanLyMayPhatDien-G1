@@ -6,6 +6,7 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -64,7 +65,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -83,7 +84,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
     }
 
-    //OFFSET = (page - 1) × pageSize
+    //OFFSET = (page - 1) ï¿½ pageSize
     public List<ActivityLog> findByEntityType(String entityType, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         String sql = "select al.* , u.name as user_name "
@@ -103,7 +104,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -118,23 +119,23 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
 
     /**
-     * Tìm ki?m log có filter ??ng: keyword (tên ??i t??ng / tên ng??i dùng),
-     * action (CREATE/UPDATE/DELETE...) và kho?ng ngày (dateFrom - dateTo). SQL
-     * ???c ghép ??ng qua StringBuilder + List params ?? an toàn v?i SQL
+     * Tï¿½m ki?m log cï¿½ filter ??ng: keyword (tï¿½n ??i t??ng / tï¿½n ng??i dï¿½ng),
+     * action (CREATE/UPDATE/DELETE...) vï¿½ kho?ng ngï¿½y (dateFrom - dateTo). SQL
+     * ???c ghï¿½p ??ng qua StringBuilder + List params ?? an toï¿½n v?i SQL
      * injection.
      *
      * @param entityType lo?i ??i t??ng, VD "categories"
-     * @param search t? khóa tìm ki?m (entity_name ho?c username), có th?
+     * @param search t? khï¿½a tï¿½m ki?m (entity_name ho?c username), cï¿½ th?
      * null/r?ng
-     * @param action lo?i hành ??ng, có th? null/r?ng (= l?y t?t c?)
-     * @param dateFrom ngày b?t ??u d?ng "yyyy-MM-dd", có th? null/r?ng
-     * @param dateTo ngày k?t thúc d?ng "yyyy-MM-dd", có th? null/r?ng
+     * @param action lo?i hï¿½nh ??ng, cï¿½ th? null/r?ng (= l?y t?t c?)
+     * @param dateFrom ngï¿½y b?t ??u d?ng "yyyy-MM-dd", cï¿½ th? null/r?ng
+     * @param dateTo ngï¿½y k?t thï¿½c d?ng "yyyy-MM-dd", cï¿½ th? null/r?ng
      * @param page trang hi?n t?i (b?t ??u t? 1)
      * @param pageSize s? b?n ghi m?i trang
      */
@@ -148,7 +149,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         params.add(entityType);
 
         if (search != null && !search.trim().isEmpty()) {
-            // Tìm theo tên ??i t??ng HO?C tên ng??i dùng
+            // Tï¿½m theo tï¿½n ??i t??ng HO?C tï¿½n ng??i dï¿½ng
             where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
             String kw = "%" + search.trim() + "%";
             params.add(kw);
@@ -161,13 +162,13 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         }
 
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
-            // L?y t? 00:00:00 c?a ngày b?t ??u
+            // L?y t? 00:00:00 c?a ngï¿½y b?t ??u
             where.append("AND al.created_at >= ? ");
             params.add(LocalDate.parse(dateFrom).atStartOfDay());
         }
 
         if (dateTo != null && !dateTo.trim().isEmpty()) {
-            // L?y ??n 23:59:59 c?a ngày k?t thúc
+            // L?y ??n 23:59:59 c?a ngï¿½y k?t thï¿½c
             where.append("AND al.created_at <= ? ");
             params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
         }
@@ -191,7 +192,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                     p.setObject(idx++, param);
                 }
             }
-            // Bind LIMIT và OFFSET
+            // Bind LIMIT vï¿½ OFFSET
             p.setInt(idx++, pageSize);
             p.setInt(idx, (page - 1) * pageSize);
 
@@ -202,13 +203,13 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
 
     /**
-     * ??m t?ng s? b?n ghi th?a b? filter — dùng cho phân trang. Cùng logic ghép
+     * ??m t?ng s? b?n ghi th?a b? filter ï¿½ dï¿½ng cho phï¿½n trang. Cï¿½ng logic ghï¿½p
      * WHERE v?i findByFilter().
      */
     public int countByFilter(String entityType, String search, String action,
@@ -263,22 +264,22 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
 
     /**
-     * Tìm log c?a danh m?c theo module (phân trang + filter ??ng). Dùng LEFT
-     * JOIN v?i b?ng category ?? l?c theo module. V?i log DELETE (category ?ã
-     * xóa), fallback: ki?m tra details có ch?a "module:[module]". Luôn lo?i b?
-     * các log VIEW_LIST, VIEW_DETAIL kh?i k?t qu?.
+     * Tï¿½m log c?a danh m?c theo module (phï¿½n trang + filter ??ng). Dï¿½ng LEFT
+     * JOIN v?i b?ng category ?? l?c theo module. V?i log DELETE (category ?ï¿½
+     * xï¿½a), fallback: ki?m tra details cï¿½ ch?a "module:[module]". Luï¿½n lo?i b?
+     * cï¿½c log VIEW_LIST, VIEW_DETAIL kh?i k?t qu?.
      *
-     * @param module tên module, VD "qu?n lý v?t t?"
-     * @param search t? khóa tìm theo entity_name ho?c username, có th? null
-     * @param action lo?i hành ??ng (CREATE/UPDATE/DELETE), có th? null
-     * @param dateFrom ngày b?t ??u yyyy-MM-dd, có th? null
-     * @param dateTo ngày k?t thúc yyyy-MM-dd, có th? null
+     * @param module tï¿½n module, VD "qu?n lï¿½ v?t t?"
+     * @param search t? khï¿½a tï¿½m theo entity_name ho?c username, cï¿½ th? null
+     * @param action lo?i hï¿½nh ??ng (CREATE/UPDATE/DELETE), cï¿½ th? null
+     * @param dateFrom ngï¿½y b?t ??u yyyy-MM-dd, cï¿½ th? null
+     * @param dateTo ngï¿½y k?t thï¿½c yyyy-MM-dd, cï¿½ th? null
      * @param page trang hi?n t?i (b?t ??u t? 1)
      * @param pageSize s? b?n ghi m?i trang
      */
@@ -349,7 +350,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -412,14 +413,14 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
 
     /**
-     * Tìm log c?a danh m?c theo lo?i (type) và module. Dùng cho tab L?ch s? c?p
-     * 1 bên trong danh sách lo?i danh m?c.
+     * Tï¿½m log c?a danh m?c theo lo?i (type) vï¿½ module. Dï¿½ng cho tab L?ch s? c?p
+     * 1 bï¿½n trong danh sï¿½ch lo?i danh m?c.
      */
     public List<ActivityLog> findByTypeAndModuleFilter(String module, String type, String search, String action,
             String dateFrom, String dateTo,
@@ -495,13 +496,13 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
 
     /**
-     * ??m t?ng s? log theo lo?i và module — dùng cho phân trang L?ch s? c?p 1.
+     * ??m t?ng s? log theo lo?i vï¿½ module ï¿½ dï¿½ng cho phï¿½n trang L?ch s? c?p 1.
      */
     public int countByTypeAndModuleFilter(String module, String type, String search, String action,
             String dateFrom, String dateTo) {
@@ -569,20 +570,20 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
 
     /**
-     * L?y l?ch s? ho?t ??ng c?a m?t danh m?c c? th? theo entity_id. Dùng cho
+     * L?y l?ch s? ho?t ??ng c?a m?t danh m?c c? th? theo entity_id. Dï¿½ng cho
      * tab "L?ch s?" c?p 2 trong trang edit danh m?c.
      *
      * @param entityId id c?a danh m?c c? th?
-     * @param search tìm ki?m theo tên ng??i dùng
-     * @param action l?c theo hành ??ng (CREATE/UPDATE/DELETE), null = t?t c?
-     * @param dateFrom t? ngày (yyyy-MM-dd)
-     * @param dateTo ??n ngày (yyyy-MM-dd)
+     * @param search tï¿½m ki?m theo tï¿½n ng??i dï¿½ng
+     * @param action l?c theo hï¿½nh ??ng (CREATE/UPDATE/DELETE), null = t?t c?
+     * @param dateFrom t? ngï¿½y (yyyy-MM-dd)
+     * @param dateTo ??n ngï¿½y (yyyy-MM-dd)
      * @param page trang hi?n t?i (b?t ??u t? 1)
      * @param pageSize s? b?n ghi m?i trang
      */
@@ -644,13 +645,13 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
 
     /**
-     * ??m s? b?n ghi l?ch s? theo entity_id — dùng cho phân trang tab c?p 2.
+     * ??m s? b?n ghi l?ch s? theo entity_id ï¿½ dï¿½ng cho phï¿½n trang tab c?p 2.
      */
     public int countByEntityId(int entityId, String search, String action, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
@@ -702,7 +703,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -725,7 +726,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(getLogFromResultSet(rs));
             }
         } catch (Exception e) {
-            SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -768,7 +769,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("H? th?ng", "L?i ngo?i l?", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Lá»—i ngoáº¡i lá»‡", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return -1;
     }
@@ -831,7 +832,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
             }
         } catch (Exception e) {
-            SystemLogger.error("H? th?ng", "L?i ngo?i l?", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Lá»—i ngoáº¡i lá»‡", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -884,7 +885,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("H? th?ng", "L?i ngo?i l?",
+            SystemLogger.error(LogModule.SYSTEM, "Lá»—i ngoáº¡i lá»‡",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
@@ -949,7 +950,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
@@ -1005,7 +1006,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -1022,7 +1023,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return 0;
     }
@@ -1048,7 +1049,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 list.add(log);
             }
         } catch (Exception e) {
-            SystemLogger.error("ActivityLog", "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }
         return list;
     }
