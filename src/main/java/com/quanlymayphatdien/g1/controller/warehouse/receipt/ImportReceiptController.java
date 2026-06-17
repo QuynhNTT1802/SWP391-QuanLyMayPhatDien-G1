@@ -22,12 +22,12 @@ import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.service.NotificationService;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
+import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.google.gson.Gson;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -100,7 +100,7 @@ public class ImportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ImportReceiptController.doGet", e.getMessage(), e);
+            SystemLogger.error("Quản lý kho", "ImportReceiptController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -137,7 +137,7 @@ public class ImportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ImportReceiptController.doPost", e.getMessage(), e);
+            SystemLogger.error("Quản lý kho", "ImportReceiptController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -237,11 +237,19 @@ public class ImportReceiptController extends HttpServlet {
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
 
+        String dateFrom = null;
+        String dateTo = null;
+        if (period != null && !period.isEmpty()) {
+            String cleanPeriod = period.replace("-", "");
+            dateFrom = PeriodUtils.startOf(cleanPeriod).toString();
+            dateTo = PeriodUtils.endOf(cleanPeriod).toString();
+        }
+
         PurchaseOrderDAO dao = new PurchaseOrderDAO();
-        int totalItems = dao.countByFilters(period, warehouseId, "APPROVED");
+        int totalItems = dao.countByFilters(dateFrom, dateTo, warehouseId, "APPROVED");
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
         if (page > totalPages) page = totalPages;
-        List<PurchaseOrder> approvedPOs = dao.findByFilters(period, warehouseId, "APPROVED", page, pageSize);
+        List<PurchaseOrder> approvedPOs = dao.findByFilters(dateFrom, dateTo, warehouseId, "APPROVED", page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
