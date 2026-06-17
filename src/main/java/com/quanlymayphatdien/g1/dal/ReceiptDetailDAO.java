@@ -59,17 +59,12 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
 
     @Override
     public int insert(ReceiptDetail rd) {
-        String sql = "INSERT INTO receipt_detail (receipt_id, inventory_id, unit_price, note) "
-                   + "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO receipt_detail (receipt_id, inventory_id, note) "
+                   + "VALUES (?, ?, ?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, rd.getReceiptId());
             ps.setInt(2, rd.getInventoryId());
-            if (rd.getUnitPrice() != null) {
-                ps.setBigDecimal(3, rd.getUnitPrice());
-            } else {
-                ps.setNull(3, java.sql.Types.DECIMAL);
-            }
-            ps.setString(4, rd.getNote());
+            ps.setString(3, rd.getNote());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -83,18 +78,13 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     }
 
     public int batchInsert(Connection conn, List<ReceiptDetail> details) throws SQLException {
-        String sql = "INSERT INTO receipt_detail (receipt_id, inventory_id, unit_price, note) "
-                   + "VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO receipt_detail (receipt_id, inventory_id, note) "
+                   + "VALUES (?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (ReceiptDetail rd : details) {
                 ps.setInt(1, rd.getReceiptId());
                 ps.setInt(2, rd.getInventoryId());
-                if (rd.getUnitPrice() != null) {
-                    ps.setBigDecimal(3, rd.getUnitPrice());
-                } else {
-                    ps.setNull(3, java.sql.Types.DECIMAL);
-                }
-                ps.setString(4, rd.getNote());
+                ps.setString(3, rd.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();

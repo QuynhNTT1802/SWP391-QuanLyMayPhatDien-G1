@@ -310,7 +310,18 @@ public class LiquidationController extends HttpServlet {
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
+        int id;
+        try {
+            id = Integer.parseInt(idStr.trim());
+        } catch (NumberFormatException ex) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
 
         Liquidation l = liquidationDAO.findById(id);
         request.setAttribute("liquidation", l);
@@ -531,6 +542,11 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
+        if (generatorIds.length != serialNumbers.length) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Dữ liệu không hợp lệ", "UTF-8"));
+            return;
+        }
+
         // Kiểm tra trùng serial trong cùng phiếu
         Set<String> uniqueSerials = new LinkedHashSet<>();
         for (String sn : serialNumbers) {
@@ -634,6 +650,11 @@ public class LiquidationController extends HttpServlet {
         String customerIdStr = request.getParameter("customerId");
 
         if (detailIds != null) {
+            if (liquidationPrices == null || liquidationPrices.length != detailIds.length) {
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                        + "&error=" + encode("Dữ liệu giá thanh lý không hợp lệ", "UTF-8"));
+                return;
+            }
             for (int i = 0; i < detailIds.length; i++) {
                 LiquidationDetail d = new LiquidationDetail();
                 d.setLiquidationDetailId(Integer.parseInt(detailIds[i]));
@@ -689,74 +710,109 @@ public class LiquidationController extends HttpServlet {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         Liquidation l = liquidationDAO.findById(liquidationId);
 
+        List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
+        if (details.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + encode("Don thanh ly khong co dong chi tiet", "UTF-8"));
+            return;
+        }
+
+        // Resolve inventory_id cho tung serial truoc khi ghi DB (fail fast neu thieu)
+        java.util.LinkedHashMap<Integer, LiquidationDetail> inventoryMap = new java.util.LinkedHashMap<>();
+        for (LiquidationDetail d : details) {
+            Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber());
+            if (inv == null) {
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                        + "&error=" + encode("Khong tim thay serial: " + d.getSerialNumber(), "UTF-8"));
+                return;
+            }
+            inventoryMap.put(inv.getInventoryId(), d);
+        }
+
+        // Tinh tong truoc, set ngay khi insert receipt (tranh UPDATE rieng)
+        BigDecimal total = BigDecimal.ZERO;
+        for (LiquidationDetail d : details) {
+            if (d.getLiquidationPrice() != null) {
+                total = total.add(d.getLiquidationPrice());
+            }
+        }
+
         Receipt r = new Receipt();
         r.setReceiptCode("PX-LIQ-" + System.currentTimeMillis());
         r.setReceiptType("EXPORT");
-        r.setWarehouseId(l.getWarehouseId()); // Lấy kho từ đơn thanh lý
+        r.setWarehouseId(l.getWarehouseId());
         r.setCreatedBy(l.getCreatedBy());
         r.setStatus("PENDING");
-        r.setNote("Phiếu xuất cho đơn thanh lý ID: " + liquidationId);
-        r.setReasonId(l.getReasonId()); // Copy reason from liquidation
+        r.setNote("Phieu xuat cho don thanh ly ID: " + liquidationId);
+        r.setReasonId(l.getReasonId());
+        r.setTotalAmount(total);
 
         int newReceiptId = receiptDAO.insert(r);
+        if (newReceiptId <= 0) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + encode("Khong tao duoc phieu xuat", "UTF-8"));
+            return;
+        }
 
-        if (newReceiptId > 0) {
-            BigDecimal total = BigDecimal.ZERO;
-            List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
-            for (LiquidationDetail d : details) {
+        // Transaction: insert receipt_detail + chuyen inventory PENDING_LIQUIDATION -> RESERVED_EXPORT
+        Connection conn = null;
+        try {
+            conn = inventoryDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            List<ReceiptDetail> rdList = new ArrayList<>();
+            for (Map.Entry<Integer, LiquidationDetail> e : inventoryMap.entrySet()) {
+                LiquidationDetail d = e.getValue();
                 ReceiptDetail rd = new ReceiptDetail();
                 rd.setReceiptId(newReceiptId);
-                rd.setGeneratorId(d.getGeneratorId());
-                rd.setSerialNumber(d.getSerialNumber());
-                rd.setQuantity(1);
-                rd.setUnitPrice(d.getLiquidationPrice());
-                rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
-                receiptDetailDAO.insert(rd);
+                rd.setInventoryId(e.getKey());
+                rd.setNote("Thanh ly gia: " + d.getLiquidationPrice());
+                rdList.add(rd);
 
-                if (d.getLiquidationPrice() != null) {
-                    total = total.add(d.getLiquidationPrice());
-                }
+                inventoryDAO.updateStatusBySerial(conn, d.getSerialNumber(), InventoryDAO.STATUS_RESERVED_EXPORT);
             }
+            receiptDetailDAO.batchInsert(conn, rdList);
 
-            // Cập nhật tổng tiền cho Receipt
-            String updateReceiptTotalSql = "UPDATE receipt SET total_amount = ? WHERE receipt_id = ?";
-            try (Connection c = receiptDAO.getConnection(); PreparedStatement p = c.prepareStatement(updateReceiptTotalSql)) {
-                p.setBigDecimal(1, total);
-                p.setInt(2, newReceiptId);
-                p.executeUpdate();
+            conn.commit();
+        } catch (Exception ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (Exception ignored) {}
             }
-
-            liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);
-
-            // Lịch sử tự động tạo phiếu
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("receipt");
-            log.setAction("AUTO_CREATE");
-            log.setEntityId(newReceiptId);
-            log.setEntityName(r.getReceiptCode());
-            log.setDetails("Hệ thống tự động tạo phiếu xuất kho chờ duyệt sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
-            activityLogDAO.insert(log);
-
-            // Thông báo cho nhân viên
-            NotificationService.send(
-                    l.getCreatedBy(),
-                    "CEO đã duyệt đơn thanh lý",
-                    "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.",
-                    request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
-                    "liquidation",
-                    liquidationId
-            );
-
-            ActivityLog liqLog = new ActivityLog();
-            liqLog.setUserId(user.getId());
-            liqLog.setEntityType("liquidation");
-            liqLog.setAction("CEO_APPROVE");
-            liqLog.setEntityId(liquidationId);
-            liqLog.setEntityName(l.getLiquidationCode());
-            liqLog.setDetails("CEO duyệt đơn thanh lý và tự động sinh Phiếu Xuất Kho chờ duyệt: " + r.getReceiptCode());
-            activityLogDAO.insert(liqLog);
+            throw ex;
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+            }
         }
+
+        liquidationDAO.updateStatus(liquidationId, "APPROVED_BY_CEO", user.getId(), "ceo", newReceiptId);
+
+        ActivityLog log = new ActivityLog();
+        log.setUserId(user.getId());
+        log.setEntityType("receipt");
+        log.setAction("AUTO_CREATE");
+        log.setEntityId(newReceiptId);
+        log.setEntityName(r.getReceiptCode());
+        log.setDetails("He thong tu dong tao phieu xuat kho cho duyet sau khi CEO duyet don thanh ly " + l.getLiquidationCode());
+        activityLogDAO.insert(log);
+
+        NotificationService.send(
+                l.getCreatedBy(),
+                "CEO da duyet don thanh ly",
+                "Don thanh ly " + l.getLiquidationCode() + " da duoc CEO duyet va chuyen sang cho xuat kho.",
+                request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                "liquidation",
+                liquidationId
+        );
+
+        ActivityLog liqLog = new ActivityLog();
+        liqLog.setUserId(user.getId());
+        liqLog.setEntityType("liquidation");
+        liqLog.setAction("CEO_APPROVE");
+        liqLog.setEntityId(liquidationId);
+        liqLog.setEntityName(l.getLiquidationCode());
+        liqLog.setDetails("CEO duyet don thanh ly va tu dong sinh Phieu Xuat Kho cho duyet: " + r.getReceiptCode());
+        activityLogDAO.insert(liqLog);
 
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
@@ -838,7 +894,18 @@ public class LiquidationController extends HttpServlet {
     }
 
     private void showEditView(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        int id = Integer.parseInt(request.getParameter("id"));
+        String idStr = request.getParameter("id");
+        if (idStr == null || idStr.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
+        int id;
+        try {
+            id = Integer.parseInt(idStr.trim());
+        } catch (NumberFormatException ex) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
         Liquidation l = liquidationDAO.findById(id);
 
         if (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus())) {
@@ -876,6 +943,12 @@ public class LiquidationController extends HttpServlet {
         if (generatorIds == null || serialNumbers == null || generatorIds.length == 0) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
                     + "&error=" + java.net.URLEncoder.encode("Phải chọn ít nhất 1 máy", "UTF-8"));
+            return;
+        }
+
+        if (generatorIds.length != serialNumbers.length) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + java.net.URLEncoder.encode("Dữ liệu không hợp lệ", "UTF-8"));
             return;
         }
 
