@@ -47,10 +47,25 @@
                         <c:remove var="errors" scope="session"/>
                     </c:if>
 
-                    <a class="back-link" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">
-                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Quay lại danh sách
-                    </a>
+                    <c:choose>
+                        <c:when test="${not empty returnUrl}">
+                            <a class="back-link" href="<c:out value='${returnUrl}'/>">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại luồng đề xuất
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a class="back-link" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
+                    <c:if test="${not empty returnUrl}">
+                        <div style="background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:6px;padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                            Bạn đang tạo NCC từ luồng nhập đề xuất. Sau khi lưu, hệ thống sẽ tự động gán NCC mới vào dòng đang chờ.
+                        </div>
+                    </c:if>
 
                     <div class="page-head">
                         <div class="eyebrow">Quản lý nhà cung cấp · Nhà cung cấp mới</div>
@@ -59,6 +74,8 @@
 
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/suppliers?action=create">
+                            <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}'/>"/>
+                            <input type="hidden" name="rowIndex" value="<c:out value='${rowIndex}'/>"/>
 
                             <div class="form-section">
                                 <div class="form-section-head">
@@ -68,7 +85,7 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên nhà cung cấp <span class="req">*</span></label>
-                                        <input class="input" name="name" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldName}"/>" required />
+                                        <input class="input" name="name" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${not empty sessionScope.fieldName ? sessionScope.fieldName : prefillName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
@@ -115,7 +132,14 @@
                             </div>
 
                             <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
-                                <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Hủy</a>
+                                <c:choose>
+                                    <c:when test="${not empty returnUrl}">
+                                        <a class="btn" href="<c:out value='${returnUrl}'/>">Hủy</a>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Hủy</a>
+                                    </c:otherwise>
+                                </c:choose>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                                     Thêm nhà cung cấp

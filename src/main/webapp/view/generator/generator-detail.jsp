@@ -144,10 +144,6 @@
                                         <div class="info-value"><c:out value="${catCondition}"/></div>
                                     </div>
                                     <div class="info-field">
-                                        <div class="info-label">Đơn giá</div>
-                                        <div class="info-value mono"><fmt:formatNumber value="${generator.unitPrice}" pattern="#,###"/> VNĐ</div>
-                                    </div>
-                                    <div class="info-field">
                                         <div class="info-label">Trạng thái</div>
                                         <div class="info-value">
                                             <c:choose>

@@ -143,6 +143,12 @@
 <div class="toast-host" id="toastHost"></div>
 <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script>
+<c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+    <c:remove var="toastMessage" scope="session"/>
+</c:if>
+</script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 </body>

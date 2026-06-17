@@ -105,11 +105,6 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Đơn giá (VNĐ) <span class="req">*</span></label>
-                                        <c:set var="vPrice" value="${not empty sessionScope.fieldPrice ? sessionScope.fieldPrice : generator.unitPrice}"/>
-                                        <input class="input mono" name="unitPrice" type="number" step="1" min="0" value="<c:out value="${vPrice}"/>" required />
-                                    </div>
                                     <div class="field full-width">
                                         <label class="field-label">Mô tả</label>
                                         <c:set var="vDesc" value="${not empty sessionScope.fieldDesc ? sessionScope.fieldDesc : generator.description}"/>

@@ -40,6 +40,10 @@
                 background: #f8d7da;
                 color: #721c24;
             }
+            .status-revision {
+                background: #ede9fe;
+                color: #5b21b6;
+            }
             .status-cancelled {
                 background: #e2e3e5;
                 color: #383d41;
@@ -133,12 +137,10 @@
                             <input name="search" value="<c:out value="${search}"/>" placeholder="Tìm theo mã phiếu hoặc ghi chú" autocomplete="off" />
                         </div>
 
-                        <select class="filter-select" name="period" onchange="this.form.submit()">
-                            <option value="">Kỳ: Tất cả</option>
-                            <c:forEach var="p" items="${periods}">
-                                <option value="${p}" <c:if test="${p == periodFilter}">selected</c:if>>${p}</option>
-                            </c:forEach>
-                        </select>
+                        <input type="date" class="filter-select" name="dateFrom" value="${dateFrom}"
+                               title="Từ ngày" onchange="this.form.submit()" />
+                        <input type="date" class="filter-select" name="dateTo" value="${dateTo}"
+                               title="Đến ngày" onchange="this.form.submit()" />
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
@@ -149,6 +151,7 @@
                             <option value="PENDING_CEO" <c:if test="${statusFilter == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                             <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
                             <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                            <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                         </select>
 
@@ -170,7 +173,7 @@
                                     <th>Mã phiếu</th>
                                     <th>Người tạo</th>
                                     <th>Ngày tạo</th>
-                                    <th>Kỳ</th>
+                                    <th>Tháng</th>
                                     <th>Kho</th>
                                     <th>Phiếu mua</th>
                                     <th class="col-status">Trạng thái</th>
@@ -220,6 +223,7 @@
                                                         <c:when test="${p.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
+                                                        <c:when test="${p.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
                                                     </c:choose>
@@ -240,16 +244,16 @@
                             <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > totalProposals ? totalProposals : currentPage * 10}</strong> / <strong>${totalProposals}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty periodFilter}">&period=<c:out value="${periodFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">‹</a>
+                                    <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty dateFrom}">&dateFrom=<c:out value="${dateFrom}"/></c:if><c:if test="${not empty dateTo}">&dateTo=<c:out value="${dateTo}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty periodFilter}">&period=<c:out value="${periodFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty dateFrom}">&dateFrom=<c:out value="${dateFrom}"/></c:if><c:if test="${not empty dateTo}">&dateTo=<c:out value="${dateTo}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty periodFilter}">&period=<c:out value="${periodFilter}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">›</a>
+                                    <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty dateFrom}">&dateFrom=<c:out value="${dateFrom}"/></c:if><c:if test="${not empty dateTo}">&dateTo=<c:out value="${dateTo}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if><c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if>" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>
@@ -327,9 +331,9 @@
                             if (p !== firstPeriod || w !== firstWarehouse) {
                                 e.preventDefault();
                                 const lbl = ticked[i].closest('tr').querySelector('.order-code').textContent.trim();
-                                alert('Không thể gom các phiếu khác kỳ hoặc khác kho.\n\n'
-                                        + 'Phiếu gốc: ' + firstLabel + ' (kỳ ' + firstPeriod + ')\n'
-                                        + 'Phiếu khác: ' + lbl + ' (kỳ ' + p + ')');
+                                alert('Không thể gom các phiếu khác tháng hoặc khác kho.\n\n'
+                                        + 'Phiếu gốc: ' + firstLabel + ' (tháng ' + firstPeriod + ')\n'
+                                        + 'Phiếu khác: ' + lbl + ' (tháng ' + p + ')');
                                 return;
                             }
                         }
