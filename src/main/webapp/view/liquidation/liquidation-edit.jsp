@@ -392,7 +392,6 @@
                 hidden.insertAdjacentHTML('beforeend',
                     '<input type="hidden" name="generatorId" value="' + escapeHtml(gid) + '">'
                     + '<input type="hidden" name="serialNumber" value="' + escapeHtml(it.serial) + '">'
-                    + '<input type="hidden" name="originalPrice" value="' + escapeHtml(p) + '">'
                 );
             });
             body.appendChild(groupBox);

@@ -642,15 +642,15 @@ public class ProposalController extends HttpServlet {
             if (model == null || model.trim().isEmpty()) {
                 errors.add("Mã máy phát không được trống");
             } else {
-                Generator g = genDAO.findByModel(model.trim());
-                if (g == null) {
-                    errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
-                } else {
-                    enriched.put("gid", String.valueOf(g.getId()));
-                    enriched.put("gname", g.getDescription() != null ? g.getDescription() : "");
-                    enriched.put("gmodel", g.getModel());
-                    generatorResolved = true;
-                }
+//                Generator g = genDAO.findByModel(model.trim());
+//                if (g == null) {
+//                    errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
+//                } else {
+//                    enriched.put("gid", String.valueOf(g.getId()));
+//                    enriched.put("gname", g.getDescription() != null ? g.getDescription() : "");
+//                    enriched.put("gmodel", g.getModel());
+//                    generatorResolved = true;
+//                }
             }
 
             int qty = 0;
@@ -671,10 +671,10 @@ public class ProposalController extends HttpServlet {
             }
             enriched.put("gqty", String.valueOf(qty));
 
-            if (generatorResolved && warehouseId > 0
-                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)) {
-                warnings.add("Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
-            }
+//            if (generatorResolved && warehouseId > 0
+//                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)) {
+//                warnings.add("Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
+//            }
 
             if (!errors.isEmpty()) {
                 enriched.put("gerrors", String.join("; ", errors));
