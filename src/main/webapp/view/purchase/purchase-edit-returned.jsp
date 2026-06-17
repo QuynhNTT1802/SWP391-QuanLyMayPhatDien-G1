@@ -65,7 +65,7 @@
 
                     <div class="po-info">
                         <div><span class="lbl">Mã phiếu mua</span><span class="val"><c:out value="${po.poCode}"/></span></div>
-                        <div><span class="lbl">Kỳ</span><span class="val"><c:out value="${po.period}"/></span></div>
+                        <div><span class="lbl">Tháng</span><span class="val"><c:out value="${po.period}"/></span></div>
                         <div>
                             <span class="lbl">Kho</span>
                             <span class="val">
@@ -109,6 +109,7 @@
                                                 <th style="width:100px;">SL đề xuất</th>
                                                 <th style="width:80px;">Tồn kho</th>
                                                 <th style="width:100px;">SL mua cuối</th>
+                                                <th style="width:120px;">Đơn giá</th>
                                                 <th>Ghi chú</th>
                                             </tr>
                                         </thead>
@@ -121,6 +122,7 @@
                                                     <td>${d.proposedQuantity}</td>
                                                     <td>${d.currentStock}</td>
                                                     <td><input type="number" name="finalQuantity" value="${d.finalQuantity}" min="0" class="qty-input"/></td>
+                                                    <td><input type="number" name="unitPrice" value="${d.unitPrice}" min="0" step="1" class="qty-input" placeholder="VNĐ"/></td>
                                                     <td><input type="text" name="detailNote" value="<c:out value='${d.note}'/>" class="note-input" placeholder="Ghi chú..."/></td>
                                                 </tr>
                                             </c:forEach>

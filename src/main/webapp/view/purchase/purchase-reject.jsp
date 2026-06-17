@@ -54,7 +54,7 @@
 
                         <div style="margin-bottom: 16px;">
                             <label for="reason">Lý do từ chối <span style="color:var(--danger)">*</span></label>
-                            <textarea id="reason" name="rejectReason" required placeholder="Ví dụ: Chưa đủ ngân sách quý này, v.v..."></textarea>
+                            <textarea id="reason" name="rejectReason" required placeholder="Ví dụ: Chưa đủ ngân sách tháng này, v.v..."></textarea>
                         </div>
 
                         <div class="btn-group">

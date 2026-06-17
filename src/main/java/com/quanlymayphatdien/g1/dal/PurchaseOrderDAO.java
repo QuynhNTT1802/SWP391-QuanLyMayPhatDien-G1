@@ -234,15 +234,20 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
 
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO purchase_order_detail "
-                    + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
-                    + "VALUES (?,?,?,?,?,?)")) {
+                    + "(po_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
+                    + "VALUES (?,?,?,?,?,?,?)")) {
                 for (PurchaseOrderDetail d : details) {
                     ps.setInt(1, poId);
                     ps.setInt(2, d.getGeneratorId());
                     ps.setInt(3, d.getProposedQuantity());
                     ps.setInt(4, d.getCurrentStock());
-                    ps.setInt(5, d.getFinalQuantity());
-                    ps.setString(6, d.getNote());
+                    if (d.getUnitPrice() != null) {
+                        ps.setBigDecimal(5, d.getUnitPrice());
+                    } else {
+                        ps.setNull(5, java.sql.Types.DECIMAL);
+                    }
+                    ps.setInt(6, d.getFinalQuantity());
+                    ps.setString(7, d.getNote());
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -258,7 +263,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     placeholders.append("?");
                 }
                 try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE import_proposal SET purchase_order_id = ? "
+                        "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                         + "WHERE proposal_id IN (" + placeholders + ") "
                         + "  AND status = 'PENDING' "
                         + "  AND purchase_order_id IS NULL")) {
@@ -303,16 +308,21 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
 
     public void insertDetails(int poId, List<PurchaseOrderDetail> details) {
         String sql = "INSERT INTO purchase_order_detail "
-                + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
-                + "VALUES (?,?,?,?,?,?)";
+                + "(po_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
+                + "VALUES (?,?,?,?,?,?,?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             for (PurchaseOrderDetail d : details) {
                 ps.setInt(1, poId);
                 ps.setInt(2, d.getGeneratorId());
                 ps.setInt(3, d.getProposedQuantity());
                 ps.setInt(4, d.getCurrentStock());
-                ps.setInt(5, d.getFinalQuantity());
-                ps.setString(6, d.getNote());
+                if (d.getUnitPrice() != null) {
+                    ps.setBigDecimal(5, d.getUnitPrice());
+                } else {
+                    ps.setNull(5, java.sql.Types.DECIMAL);
+                }
+                ps.setInt(6, d.getFinalQuantity());
+                ps.setString(7, d.getNote());
                 ps.addBatch();
             }
             ps.executeBatch();
@@ -413,6 +423,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 d.setProposedQuantity(rs.getInt("proposed_quantity"));
                 d.setCurrentStock(rs.getInt("current_stock"));
                 d.setFinalQuantity(rs.getInt("final_quantity"));
+                d.setUnitPrice(rs.getBigDecimal("unit_price"));
                 d.setNote(rs.getString("note"));
                 d.setGeneratorCode(rs.getString("generator_code"));
                 d.setGeneratorName(rs.getString("generator_name"));
@@ -425,7 +436,24 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
-    public List<PurchaseOrder> findByFilters(String period, int warehouseId, String status, int page, int pageSize) {
+    public java.math.BigDecimal getLatestUnitPriceByGeneratorId(int generatorId) {
+        String sql = "SELECT d.unit_price FROM purchase_order_detail d "
+                + "JOIN purchase_order p ON p.po_id = d.po_id "
+                + "WHERE d.generator_id = ? AND d.unit_price IS NOT NULL "
+                + "ORDER BY p.created_at DESC LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBigDecimal("unit_price");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<PurchaseOrder> findByFilters(String dateFrom, String dateTo, int warehouseId, String status, int page, int pageSize) {
         List<PurchaseOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
@@ -433,9 +461,13 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND p.period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND p.period_start >= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND p.period_start <= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND p.warehouse_id = ?");
@@ -473,12 +505,16 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
-    public int countByFilters(String period, int warehouseId, String status) {
+    public int countByFilters(String dateFrom, String dateTo, int warehouseId, String status) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM purchase_order WHERE 1=1");
         List<Object> params = new ArrayList<>();
-        if (period != null && !period.isEmpty()) {
-            sql.append(" AND period = ?");
-            params.add(period);
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND period_start >= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND period_start <= ?");
+            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND warehouse_id = ?");
@@ -607,7 +643,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             }
             placeholders.append("?");
         }
-        String sql = "UPDATE import_proposal SET purchase_order_id = ? "
+        String sql = "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                 + "WHERE period = ? AND warehouse_id = ? AND status = 'PENDING' "
                 + "AND purchase_order_id IS NULL "
                 + "AND proposal_id IN ("
@@ -639,7 +675,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             }
             placeholders.append("?");
         }
-        String sql = "UPDATE import_proposal SET purchase_order_id = ? "
+        String sql = "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                 + "WHERE proposal_id IN (" + placeholders + ") "
                 + "AND status = 'PENDING' "
                 + "AND purchase_order_id IS NULL";
@@ -827,15 +863,20 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
 
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO purchase_order_detail "
-                    + "(po_id, generator_id, proposed_quantity, current_stock, final_quantity, note) "
-                    + "VALUES (?,?,?,?,?,?)")) {
+                    + "(po_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
+                    + "VALUES (?,?,?,?,?,?,?)")) {
                 for (PurchaseOrderDetail d : details) {
                     ps.setInt(1, po.getPoId());
                     ps.setInt(2, d.getGeneratorId());
                     ps.setInt(3, d.getProposedQuantity());
                     ps.setInt(4, d.getCurrentStock());
-                    ps.setInt(5, d.getFinalQuantity());
-                    ps.setString(6, d.getNote());
+                    if (d.getUnitPrice() != null) {
+                        ps.setBigDecimal(5, d.getUnitPrice());
+                    } else {
+                        ps.setNull(5, java.sql.Types.DECIMAL);
+                    }
+                    ps.setInt(6, d.getFinalQuantity());
+                    ps.setString(7, d.getNote());
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -988,7 +1029,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
     }
 
-    public List<Map<String, Object>> findOpenQuarters(String currentPeriod, java.time.LocalDate currentPeriodEnd) {
+    public List<Map<String, Object>> findOpenMonths(String currentPeriod, java.time.LocalDate currentPeriodEnd) {
         if (currentPeriod == null || currentPeriodEnd == null) {
             return new ArrayList<>();
         }
@@ -1085,5 +1126,24 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean hasRejectedPo(String period, int warehouseId) {
+        if (period == null || period.isEmpty() || warehouseId <= 0) {
+            return false;
+        }
+        String sql = "SELECT 1 FROM purchase_order "
+                + "WHERE period = ? AND warehouse_id = ? AND status = 'REJECTED' "
+                + "LIMIT 1";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, period);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

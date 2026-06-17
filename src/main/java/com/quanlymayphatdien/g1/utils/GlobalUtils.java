@@ -23,4 +23,5 @@ public class GlobalUtils {
     public static final String PO_STATUS_RETURNED = "RETURNED";
 
     public static final String PROPOSAL_STATUS_PENDING_CEO = "PENDING_CEO";
+    public static final String STATUS_NEEDS_REVISION = "NEEDS_REVISION";
 }
