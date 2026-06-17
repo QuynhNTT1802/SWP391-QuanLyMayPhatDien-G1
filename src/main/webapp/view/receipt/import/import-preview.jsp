@@ -73,6 +73,7 @@
             <h1>Xem trước nhập Excel</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/import-receipt">Phiếu nhập</a> / Tạo mới / Nhập Excel</span>
             <div class="top-actions">
+                <jsp:include page="../../common/admin/bell.jsp"/>
                 <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=create">← Quay lại</a>
             </div>
         </header>
@@ -127,7 +128,6 @@
                                             <th>Mã máy</th>
                                             <th>Thương hiệu</th>
                                             <th>Serial</th>
-                                            <th>Đơn giá</th>
                                             <th>Ghi chú</th>
                                         </tr>
                                     </thead>
@@ -146,10 +146,6 @@
                                             <td class="col-serial">
                                                 <c:out value="${row.serial}"/>
                                                 <input type="hidden" name="serialNumber" value="${row.serial}"/>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="unitPrice" value="${row.unitPrice}"
-                                                       style="width:120px;" placeholder="0"/>
                                             </td>
                                             <td>
                                                 <input type="text" name="detailNote" value="${row.note}"
@@ -185,7 +181,6 @@
                                     <th class="col-num">#</th>
                                     <th>Mã máy</th>
                                     <th>Serial</th>
-                                    <th>Đơn giá</th>
                                     <th>Ghi chú</th>
                                     <th>Lỗi</th>
                                 </tr>
@@ -196,7 +191,6 @@
                                     <td class="col-num">${row.rowNum}</td>
                                     <td><c:out value="${row.model}"/></td>
                                     <td class="col-serial"><c:out value="${row.serial}"/></td>
-                                    <td><c:out value="${row.unitPrice}"/></td>
                                     <td><c:out value="${row.note}"/></td>
                                     <td class="error-text"><c:out value="${row['_errors']}"/></td>
                                 </tr>

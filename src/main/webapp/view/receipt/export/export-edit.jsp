@@ -54,6 +54,10 @@
         .detail-table .col-note { min-width: 130px; }
         .detail-table .col-del { width: 40px; text-align: center; }
         .detail-table .col-stock { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
+        .detail-table tr.row-short { background: color-mix(in srgb, var(--danger) 6%, transparent); }
+        .detail-table tr.row-short select[name="generatorId"],
+        .detail-table tr.row-short input[name="serialNumber"] { border-color: var(--danger); }
+        .detail-table tr.row-short .col-stock { color: var(--danger); font-weight: 600; }
 
         .row-del-btn { width: 28px; height: 28px; border: 1px solid transparent;
             background: transparent; color: var(--danger); cursor: pointer;
@@ -68,8 +72,11 @@
             stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
         .alert .alert-body { flex: 1; line-height: 1.5; }
         .alert .alert-title { font-weight: 700; margin-bottom: 4px; }
+        .alert ul { margin: 4px 0 0 18px; padding: 0; }
         .alert pre { margin: 6px 0 0; font-family: inherit; font-size: 13px;
             white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+        .alert-error { background: var(--danger-soft); color: var(--danger);
+            border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
         .alert-warn { background: var(--warn-soft); color: var(--warn);
             border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
 
@@ -113,6 +120,7 @@
             <h1>Chỉnh sửa phiếu xuất</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / <c:out value="${receipt.receiptCode}"/> / Chỉnh sửa</span>
             <div class="top-actions">
+                <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${receipt.receiptId}">Huỷ</a>
                 <c:if test="${isDraft}">
@@ -175,6 +183,22 @@
             </c:if>
 
             <form id="receiptForm" action="${pageContext.request.contextPath}/export-receipt?action=update" method="POST" onsubmit="return validateReceiptForm()">
+                <c:if test="${not empty errors}">
+                    <div class="alert alert-error" style="margin: 16px 0;">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div class="alert-body">
+                            <div class="alert-title">Không thể cập nhật phiếu &mdash; tồn kho không đủ</div>
+                            <ul>
+                                <c:forEach var="e" items="${errors}">
+                                    <li><c:out value="${e}"/></li>
+                                </c:forEach>
+                            </ul>
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+                                Bạn có thể <strong>Lưu nháp</strong> để xử lý sau, hoặc nhập thêm máy vào kho rồi cập nhật lại phiếu.
+                            </div>
+                        </div>
+                    </div>
+                </c:if>
                 <input type="hidden" name="receiptId" value="${receipt.receiptId}" />
 
                 <div class="content">
@@ -220,14 +244,22 @@
                                 <h3 class="section-title">Danh sách máy phát điện</h3>
                             </div>
                         </div>
+                        <div id="realtimeWarn" class="alert alert-error" style="display:none; margin: 0 0 14px 0;">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div class="alert-body">
+                                <div class="alert-title">Tồn kho không đủ để xuất</div>
+                                <ul id="realtimeWarnList"></ul>
+                                <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+                                    Bạn có thể <strong>Lưu nháp</strong> để xử lý sau, hoặc nhập thêm máy vào kho rồi cập nhật lại phiếu.
+                                </div>
+                            </div>
+                        </div>
                         <table class="detail-table">
                             <thead>
                                 <tr>
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát (Tồn kho)</th>
                                     <th class="col-serial">Serial</th>
-                                    <th style="width:130px;">Đơn giá</th>
-                                    <th style="width:130px;">Thành tiền</th>
                                     <th class="col-note">Ghi chú</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -246,8 +278,6 @@
                                                     <span class="field-error"></span>
                                                 </td>
                                                 <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" value="<c:out value='${d.serialNumber}'/>" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error"></span></td>
-                                                <td><input type="text" name="unitPrice" class="price-input mono" readonly value="<fmt:formatNumber value='${d.unitPrice}' type='number' groupingUsed='false'/>" placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
-                                                <td class="col-price mono row-subtotal">0₫</td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -268,8 +298,6 @@
                                                 <span class="field-error"></span>
                                             </td>
                                             <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error"></span></td>
-                                            <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
-                                            <td class="col-price mono row-subtotal">0₫</td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -280,13 +308,6 @@
                                     </c:otherwise>
                                 </c:choose>
                             </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td colspan="4" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
-                                    <td class="mono" id="grandTotal" style="padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">0₫</td>
-                                    <td colspan="2" style="border-top:2px solid var(--border);"></td>
-                                </tr>
-                            </tfoot>
                         </table>
 
                         <button type="button" class="btn add-row-btn" onclick="addRow()">
@@ -369,7 +390,7 @@
             var g = generatorCache[i];
             var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' (' + (g.stockQty || 0) + ')';
             var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
-            html += '<option value="' + g.id + '" data-price="' + (g.unitPrice || 0) + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
+            html += '<option value="' + g.id + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
         }
         selectEl.innerHTML = html;
     }
@@ -379,6 +400,7 @@
         if (!whId) {
             generatorCache = [];
             refreshAllGeneratorSelects();
+            validateInventoryRealtime();
             return;
         }
         fetch(ctx + '/export-receipt?action=loadGenerators&warehouseId=' + encodeURIComponent(whId))
@@ -389,7 +411,7 @@
                 document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
                     if (sel.value) onGeneratorChange(sel);
                 });
-                updateGrandTotal();
+                validateInventoryRealtime();
             });
     }
 
@@ -402,10 +424,7 @@
     function onGeneratorChange(sel) {
         var row = sel.closest('tr');
         var opt = sel.options[sel.selectedIndex];
-        var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
         var stock = parseInt(opt && opt.getAttribute('data-stock')) || 0;
-        var priceInput = row.querySelector('input[name="unitPrice"]');
-        if (priceInput && price > 0) priceInput.value = price;
         var stockInfo = row.querySelector('.col-stock');
         if (stockInfo) {
             if (sel.value) stockInfo.textContent = 'Tồn kho: ' + stock + ' máy';
@@ -413,26 +432,7 @@
         }
         var serialInput = row.querySelector('input[name="serialNumber"]');
         if (serialInput) serialInput.value = '';
-        updateRowTotal(priceInput);
-    }
-
-    function updateRowTotal(el) {
-        var row = el ? el.closest('tr') : null;
-        if (!row) return;
-        var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
-        var price = parseFloat(priceStr) || 0;
-        row.querySelector('.row-subtotal').textContent = formatVND(price);
-        updateGrandTotal();
-    }
-
-    function updateGrandTotal() {
-        var grand = 0;
-        document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
-            var price = parseFloat(priceStr) || 0;
-            grand += price;
-        });
-        document.getElementById('grandTotal').textContent = formatVND(grand);
+        validateInventoryRealtime();
     }
 
     function openSerialModal(inputElem) {
@@ -543,8 +543,6 @@
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><div class="col-stock"></div><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
-                + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
         renderGeneratorOptions(tr.querySelector('select[name="generatorId"]'));
@@ -555,18 +553,87 @@
         var tbody = document.getElementById('detailBody');
         tbody.appendChild(buildEmptyRow());
         updateRowNumbers();
+        validateInventoryRealtime();
     }
     function removeRow(btn) {
         var tbody = document.getElementById('detailBody');
         if (tbody.querySelectorAll('tr').length <= 1) return;
         btn.closest('tr').remove();
         updateRowNumbers();
-        updateGrandTotal();
+        validateInventoryRealtime();
     }
     function updateRowNumbers() {
         document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
             el.textContent = i + 1;
         });
+    }
+
+    function validateInventoryRealtime() {
+        var banner = document.getElementById('realtimeWarn');
+        var list = document.getElementById('realtimeWarnList');
+        if (!banner || !list) return;
+        if (!generatorCache || generatorCache.length === 0) {
+            banner.style.display = 'none';
+            list.innerHTML = '';
+            document.querySelectorAll('#detailBody tr.row-short').forEach(function (r) { r.classList.remove('row-short'); });
+            return;
+        }
+        var stockMap = {};
+        var modelMap = {};
+        for (var i = 0; i < generatorCache.length; i++) {
+            var g = generatorCache[i];
+            stockMap[g.id] = parseInt(g.stockQty) || 0;
+            modelMap[g.id] = g.model + (g.brand ? ' (' + g.brand + ')' : '');
+        }
+        var requiredByGen = {};
+        document.querySelectorAll('#detailBody tr').forEach(function (row) {
+            var sel = row.querySelector('select[name="generatorId"]');
+            if (!sel) return;
+            var genId = parseInt(sel.value, 10);
+            if (!genId) {
+                row.classList.remove('row-short');
+                return;
+            }
+            requiredByGen[genId] = (requiredByGen[genId] || 0) + 1;
+        });
+        var shortByGen = {};
+        Object.keys(requiredByGen).forEach(function (k) {
+            var id = parseInt(k, 10);
+            var need = requiredByGen[k];
+            var onHand = stockMap[id] || 0;
+            if (need > onHand) {
+                shortByGen[id] = { need: need, onHand: onHand };
+            }
+        });
+        document.querySelectorAll('#detailBody tr').forEach(function (row) {
+            var sel = row.querySelector('select[name="generatorId"]');
+            if (!sel) return;
+            var genId = parseInt(sel.value, 10);
+            if (genId && shortByGen[genId]) {
+                row.classList.add('row-short');
+            } else {
+                row.classList.remove('row-short');
+            }
+        });
+        var keys = Object.keys(shortByGen);
+        if (keys.length === 0) {
+            banner.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        var html = '';
+        keys.forEach(function (k) {
+            var id = parseInt(k, 10);
+            var info = shortByGen[k];
+            var model = modelMap[id] || ('#' + id);
+            var shortage = info.need - info.onHand;
+            html += '<li>Máy <strong>' + escapeHtml(model)
+                + '</strong> trong kho không đủ: cần <strong>' + info.need
+                + '</strong> máy, chỉ còn <strong>' + info.onHand
+                + '</strong> máy. Vui lòng nhập thêm <strong>' + shortage + '</strong> máy.</li>';
+        });
+        list.innerHTML = html;
+        banner.style.display = 'flex';
     }
 
     function validateQty(input) {
@@ -611,6 +678,12 @@
         if (!valid) {
             toast('Vui lòng điền đầy đủ các trường bắt buộc', 'danger');
             if (firstInvalid) firstInvalid.focus();
+            return false;
+        }
+        var banner = document.getElementById('realtimeWarn');
+        if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
+            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy hoặc Lưu nháp để xử lý sau.', 'danger');
+            return false;
         }
         return valid;
     }

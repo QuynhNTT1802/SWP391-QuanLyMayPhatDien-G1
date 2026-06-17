@@ -12,6 +12,7 @@ import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
@@ -21,6 +22,7 @@ import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.service.NotificationService;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
@@ -58,6 +60,7 @@ public class ImportReceiptController extends HttpServlet {
     private final InventoryDAO inventoryDAO = new InventoryDAO();
     private final ActivityLogDAO activityLogDAO = new ActivityLogDAO();
     private final GeneratorDAO genDAO = new GeneratorDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     private static final int MAX_QUANTITY = 100000;
     private static final int MAX_SERIAL_LENGTH = 100;
@@ -361,7 +364,6 @@ public class ImportReceiptController extends HttpServlet {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("id", g.getId());
             item.put("model", g.getModel());
-            item.put("unitPrice", g.getUnitPrice());
             String brand = "";
             if (g.getCategories() != null) {
                 for (Category c : g.getCategories()) {
@@ -398,14 +400,13 @@ public class ImportReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details;
         if (isDraft) {
-            details = parseDetailsLenient(genIds, serials, unitPrices, detailNotes);
+            details = parseDetailsLenient(genIds, serials, detailNotes);
         } else {
-            details = parseDetailsStrict(genIds, serials, unitPrices, detailNotes, errors);
+            details = parseDetailsStrict(genIds, serials, detailNotes, errors);
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
                 errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
             }
@@ -435,7 +436,7 @@ public class ImportReceiptController extends HttpServlet {
                 r.setProposalId(Integer.parseInt(pid));
             } catch (NumberFormatException ignored) {}
         }
-        r.setTotalAmount(computeTotal(details));
+        r.setTotalAmount(java.math.BigDecimal.ZERO);
         r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
 
         int receiptId = receiptDAO.insert(r);
@@ -494,6 +495,22 @@ public class ImportReceiptController extends HttpServlet {
         log.setDetails(isDraft ? "Lưu nháp phiếu nhập kho" : "Tạo phiếu nhập kho");
         activityLogDAO.insert(log);
 
+        if (!isDraft) {
+            String notifLink = request.getContextPath() + "/import-receipt?action=detail&id=" + receiptId;
+            List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
+            for (User mgr : approvers) {
+                if (mgr.getId() == loggedUser.getId()) continue;
+                NotificationService.send(
+                        mgr.getId(),
+                        "Phiếu nhập kho mới chờ duyệt",
+                        "Nhân viên " + loggedUser.getName() + " đã tạo phiếu nhập " + r.getReceiptCode() + " cần bạn duyệt.",
+                        notifLink,
+                        "import_receipt",
+                        receiptId
+                );
+            }
+        }
+
         if (isDraft) {
             session.setAttribute("toastMessage", "Đã lưu nháp phiếu");
             session.setAttribute("toastType", "success");
@@ -540,14 +557,13 @@ public class ImportReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details;
         if (isSaveDraft) {
-            details = parseDetailsLenient(genIds, serials, unitPrices, detailNotes);
+            details = parseDetailsLenient(genIds, serials, detailNotes);
         } else {
-            details = parseDetailsStrict(genIds, serials, unitPrices, detailNotes, errors);
+            details = parseDetailsStrict(genIds, serials, detailNotes, errors);
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
                 errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
             }
@@ -614,7 +630,7 @@ public class ImportReceiptController extends HttpServlet {
         r.setWarehouseId(warehouseId);
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setTotalAmount(computeTotal(details));
+        r.setTotalAmount(java.math.BigDecimal.ZERO);
         String newStatus = isSaveDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING;
         boolean ok = isSaveDraft
                 ? receiptDAO.updateDraftReceipt(r, details, loggedUser.getId(), newStatus)
@@ -628,6 +644,21 @@ public class ImportReceiptController extends HttpServlet {
             log.setEntityName(existing.getReceiptCode());
             log.setDetails(isSaveDraft ? "Lưu nháp phiếu nhập kho" : (isDraft ? "Gửi phiếu nháp để duyệt" : "Cập nhật phiếu nhập kho"));
             activityLogDAO.insert(log);
+            if (!isSaveDraft) {
+                String notifLink = request.getContextPath() + "/import-receipt?action=detail&id=" + receiptId;
+                List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
+                for (User mgr : approvers) {
+                    if (mgr.getId() == loggedUser.getId()) continue;
+                    NotificationService.send(
+                            mgr.getId(),
+                            "Phiếu nhập kho được gửi lại chờ duyệt",
+                            "Nhân viên " + loggedUser.getName() + " đã cập nhật phiếu nhập " + existing.getReceiptCode() + " và gửi lại để duyệt.",
+                            notifLink,
+                            "import_receipt",
+                            receiptId
+                    );
+                }
+            }
             if (isSaveDraft) {
                 session.setAttribute("toastMessage", "Đã lưu nháp phiếu");
                 session.setAttribute("toastType", "success");
@@ -669,6 +700,16 @@ public class ImportReceiptController extends HttpServlet {
                 log.setEntityName(r.getReceiptCode());
                 log.setDetails("Duyệt phiếu nhập kho, cập nhật tồn kho");
                 activityLogDAO.insert(log);
+                if (r.getCreatedBy() != loggedUser.getId()) {
+                    NotificationService.send(
+                            r.getCreatedBy(),
+                            "Phiếu nhập kho đã được duyệt",
+                            "Phiếu nhập " + r.getReceiptCode() + " đã được " + loggedUser.getName() + " duyệt.",
+                            request.getContextPath() + "/import-receipt?action=detail&id=" + id,
+                            "import_receipt",
+                            id
+                    );
+                }
             }
             session.setAttribute("toastMessage", "Duyệt phiếu thành công");
             session.setAttribute("toastType", "success");
@@ -714,6 +755,18 @@ public class ImportReceiptController extends HttpServlet {
                 if (reasonNote != null) detail += ": " + reasonNote;
                 log.setDetails(detail);
                 activityLogDAO.insert(log);
+                if (r.getCreatedBy() != loggedUser.getId()) {
+                    String notifMsg = "Phiếu nhập " + r.getReceiptCode() + " đã bị từ chối bởi " + loggedUser.getName() + ".";
+                    if (reasonNote != null) notifMsg += " Lý do: " + reasonNote;
+                    NotificationService.send(
+                            r.getCreatedBy(),
+                            "Phiếu nhập kho bị từ chối",
+                            notifMsg,
+                            request.getContextPath() + "/import-receipt?action=detail&id=" + id,
+                            "import_receipt",
+                            id
+                    );
+                }
             }
             session.setAttribute("toastMessage", "Đã từ chối phiếu");
             session.setAttribute("toastType", "success");
@@ -757,6 +810,18 @@ public class ImportReceiptController extends HttpServlet {
                 if (reasonNote != null) detail += ": " + reasonNote;
                 log.setDetails(detail);
                 activityLogDAO.insert(log);
+                if (r.getCreatedBy() != loggedUser.getId()) {
+                    String notifMsg = "Phiếu nhập " + r.getReceiptCode() + " cần chỉnh sửa bởi " + loggedUser.getName() + ".";
+                    if (reasonNote != null) notifMsg += " Lý do: " + reasonNote;
+                    NotificationService.send(
+                            r.getCreatedBy(),
+                            "Phiếu nhập kho cần chỉnh sửa",
+                            notifMsg,
+                            request.getContextPath() + "/import-receipt?action=detail&id=" + id,
+                            "import_receipt",
+                            id
+                    );
+                }
             }
             session.setAttribute("toastMessage", "Đã gửi yêu cầu chỉnh sửa");
             session.setAttribute("toastType", "success");
@@ -859,7 +924,6 @@ public class ImportReceiptController extends HttpServlet {
             String model = raw.getOrDefault(ReceiptExcelSupport.COL_MODEL, "").trim();
             String serial = raw.getOrDefault(ReceiptExcelSupport.COL_SERIAL, "").trim();
             String qtyStr = raw.getOrDefault(ReceiptExcelSupport.COL_QUANTITY, "").trim();
-            String priceStr = raw.getOrDefault(ReceiptExcelSupport.COL_UNIT_PRICE, "").trim();
             String detailNote = raw.getOrDefault(ReceiptExcelSupport.COL_NOTE, "").trim();
 
             Map<String, Object> row = new LinkedHashMap<>();
@@ -867,7 +931,6 @@ public class ImportReceiptController extends HttpServlet {
             row.put("model", model);
             row.put("serial", serial);
             row.put("quantity", qtyStr.isEmpty() ? "1" : qtyStr);
-            row.put("unitPrice", priceStr);
             row.put("note", detailNote);
 
             List<String> errors = new ArrayList<>();
@@ -918,15 +981,6 @@ public class ImportReceiptController extends HttpServlet {
             }
             // qty chi hien thi trong preview, KHONG su dung khi insert (moi serial = 1 row)
 
-            java.math.BigDecimal price = null;
-            if (!priceStr.isEmpty()) {
-                try {
-                    price = new java.math.BigDecimal(priceStr.replace(",", ""));
-                } catch (NumberFormatException e) {
-                    errors.add("Đơn giá không hợp lệ");
-                }
-            }
-
             if (detailNote.length() > MAX_NOTE_LENGTH) {
                 errors.add("Ghi chú vượt quá " + MAX_NOTE_LENGTH + " ký tự");
             }
@@ -948,12 +1002,7 @@ public class ImportReceiptController extends HttpServlet {
                     }
                 }
                 row.put("brand", brand);
-                if (price == null && resolved.getUnitPrice() != null) {
-                    price = resolved.getUnitPrice();
-                    row.put("unitPrice", resolved.getUnitPrice().toPlainString());
-                }
             }
-            row.put("resolvedPrice", price);
 
             if (errors.isEmpty()) {
                 validRows.add(row);
@@ -1016,7 +1065,6 @@ public class ImportReceiptController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] serials = request.getParameterValues("serialNumber");
-        String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<ReceiptDetail> details = new ArrayList<>();
@@ -1034,7 +1082,6 @@ public class ImportReceiptController extends HttpServlet {
             }
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
-            String priceStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
             String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
 
             int genId = 0;
@@ -1050,13 +1097,6 @@ public class ImportReceiptController extends HttpServlet {
             if (!seen.add(serial)) {
                 continue;
             }
-            java.math.BigDecimal price = null;
-            if (priceStr != null && !priceStr.trim().isEmpty()) {
-                try {
-                    price = new java.math.BigDecimal(priceStr.trim().replace(",", ""));
-                } catch (NumberFormatException ignored) {
-                }
-            }
             if (detailNote != null && detailNote.length() > MAX_NOTE_LENGTH) {
                 detailNote = detailNote.substring(0, MAX_NOTE_LENGTH);
             }
@@ -1064,7 +1104,6 @@ public class ImportReceiptController extends HttpServlet {
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);
-            d.setUnitPrice(price);
             d.setNote(detailNote);
             details.add(d);
             importedFromFile++;
@@ -1089,7 +1128,7 @@ public class ImportReceiptController extends HttpServlet {
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setTotalAmount(computeTotal(details));
+        r.setTotalAmount(java.math.BigDecimal.ZERO);
         r.setStatus(GlobalUtils.RECEIPT_STATUS_DRAFT);
 
         int receiptId = receiptDAO.insert(r);
@@ -1186,18 +1225,8 @@ public class ImportReceiptController extends HttpServlet {
         return msg.toString();
     }
 
-    private java.math.BigDecimal computeTotal(List<ReceiptDetail> details) {
-        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
-        for (ReceiptDetail d : details) {
-            if (d.getUnitPrice() != null) {
-                total = total.add(d.getUnitPrice());
-            }
-        }
-        return total;
-    }
-
     private List<ReceiptDetail> parseDetailsStrict(String[] genIds, String[] serials,
-            String[] unitPrices, String[] detailNotes, List<String> errors) {
+            String[] detailNotes, List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) return details;
         java.util.Set<String> seenSerials = new java.util.HashSet<>();
@@ -1229,22 +1258,16 @@ public class ImportReceiptController extends HttpServlet {
             if (detailNote != null && detailNote.length() > MAX_NOTE_LENGTH) {
                 errors.add("Dòng " + rowNum + ": Ghi chú không được vượt quá " + MAX_NOTE_LENGTH + " ký tự"); continue;
             }
-            java.math.BigDecimal price = null;
-            String priceStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
-            if (priceStr != null && !priceStr.trim().isEmpty()) {
-                try { price = new java.math.BigDecimal(priceStr.trim().replace(",", "")); }
-                catch (NumberFormatException e) { errors.add("Dòng " + rowNum + ": Đơn giá không hợp lệ"); continue; }
-            }
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId); d.setSerialNumber(serial);
-            d.setUnitPrice(price); d.setNote(detailNote);
+            d.setNote(detailNote);
             details.add(d);
         }
         return details;
     }
 
     private List<ReceiptDetail> parseDetailsLenient(String[] genIds, String[] serials,
-            String[] unitPrices, String[] detailNotes) {
+            String[] detailNotes) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) return details;
         for (int i = 0; i < genIds.length; i++) {
@@ -1262,16 +1285,10 @@ public class ImportReceiptController extends HttpServlet {
                 if (serial.isEmpty()) serial = null;
                 else if (serial.length() > MAX_SERIAL_LENGTH) serial = serial.substring(0, MAX_SERIAL_LENGTH);
             }
-            java.math.BigDecimal price = null;
-            String priceStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
-            if (priceStr != null && !priceStr.trim().isEmpty()) {
-                try { price = new java.math.BigDecimal(priceStr.trim().replace(",", "")); }
-                catch (NumberFormatException e) { price = null; }
-            }
             if (detailNote != null && detailNote.length() > MAX_NOTE_LENGTH) detailNote = detailNote.substring(0, MAX_NOTE_LENGTH);
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId); d.setSerialNumber(serial);
-            d.setUnitPrice(price); d.setNote(detailNote);
+            d.setNote(detailNote);
             details.add(d);
         }
         return details;

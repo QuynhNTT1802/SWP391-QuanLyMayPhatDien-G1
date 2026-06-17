@@ -94,6 +94,7 @@
             <h1>Chỉnh sửa phiếu nhập</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/import-receipt">Phiếu nhập</a> / <c:out value="${receipt.receiptCode}"/> / Chỉnh sửa</span>
             <div class="top-actions">
+                <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}">Huỷ</a>
                 <c:if test="${isDraft}">
@@ -207,8 +208,6 @@
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát</th>
                                     <th class="col-serial">Serial</th>
-                                    <th style="width:130px;">Đơn giá</th>
-                                    <th style="width:130px;">Thành tiền</th>
                                     <th class="col-note">Ghi chú</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -227,8 +226,6 @@
                                                     <span class="field-error"></span>
                                                 </td>
                                                 <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                                <td><input type="text" name="unitPrice" class="price-input mono" readonly value="<fmt:formatNumber value='${d.unitPrice}' type='number' groupingUsed='false'/>" placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
-                                                <td class="col-price mono row-subtotal">0₫</td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -249,8 +246,6 @@
                                                 <span class="field-error"></span>
                                             </td>
                                             <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                            <td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error"></span></td>
-                                            <td class="col-price mono row-subtotal">0₫</td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -261,13 +256,6 @@
                                     </c:otherwise>
                                 </c:choose>
                             </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td colspan="4" class="text-right" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">Tổng cộng:</td>
-                                    <td class="mono" id="grandTotal" style="padding:10px 12px;font-weight:700;border-top:2px solid var(--border);">0₫</td>
-                                    <td colspan="2" style="border-top:2px solid var(--border);"></td>
-                                </tr>
-                            </tfoot>
                         </table>
 
                         <button type="button" class="btn add-row-btn" onclick="addRow()">
@@ -313,7 +301,7 @@
             var g = generatorCache[i];
             var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' — Tồn: ' + (g.stockQty || 0);
             var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
-            html += '<option value="' + g.id + '" data-price="' + (g.unitPrice || 0) + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
+            html += '<option value="' + g.id + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
         }
         selectEl.innerHTML = html;
     }
@@ -329,9 +317,7 @@
             return;
         }
         var stock = parseInt(opt.getAttribute('data-stock')) || 0;
-        var price = parseFloat(opt.getAttribute('data-price')) || 0;
-        info.innerHTML = '<span class="stock-label">Tồn kho hiện tại:</span> <span class="stock-value">' + stock + '</span> máy'
-                + (price > 0 ? ' · <span class="stock-label">Đơn giá:</span> <span class="stock-value">' + new Intl.NumberFormat('vi-VN').format(price) + '₫</span>' : '');
+        info.innerHTML = '<span class="stock-label">Tồn kho hiện tại:</span> <span class="stock-value">' + stock + '</span> máy';
     }
 
     function onWarehouseChange() {
@@ -350,7 +336,6 @@
                 document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
                     if (sel.value) onGeneratorChange(sel);
                 });
-                updateGrandTotal();
             });
     }
 
@@ -361,32 +346,7 @@
     }
 
     function onGeneratorChange(sel) {
-        var row = sel.closest('tr');
-        var opt = sel.options[sel.selectedIndex];
-        var price = parseFloat(opt && opt.getAttribute('data-price')) || 0;
-        var priceInput = row.querySelector('input[name="unitPrice"]');
-        if (priceInput && price > 0) priceInput.value = price;
         updateStockInfo(sel);
-        updateRowTotal(row.querySelector('input[name="unitPrice"]'));
-    }
-
-    function updateRowTotal(el) {
-        var row = el ? el.closest('tr') : null;
-        if (!row) return;
-        var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
-        var price = parseFloat(priceStr) || 0;
-        row.querySelector('.row-subtotal').textContent = formatVND(price);
-        updateGrandTotal();
-    }
-
-    function updateGrandTotal() {
-        var grand = 0;
-        document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            var priceStr = row.querySelector('input[name="unitPrice"]').value.replace(/[^0-9]/g, '');
-            var price = parseFloat(priceStr) || 0;
-            grand += price;
-        });
-        document.getElementById('grandTotal').textContent = formatVND(grand);
     }
 
     function buildEmptyRow() {
@@ -394,8 +354,6 @@
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="unitPrice" class="price-input mono" readonly placeholder="0₫" oninput="updateRowTotal(this)" style="width:120px;" /><span class="field-error" style="display:none;"></span></td>'
-                + '<td class="col-price mono row-subtotal">0₫</td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
         renderGeneratorOptions(tr.querySelector('select[name="generatorId"]'));
@@ -412,7 +370,6 @@
         if (tbody.querySelectorAll('tr').length <= 1) return;
         btn.closest('tr').remove();
         updateRowNumbers();
-        updateGrandTotal();
     }
     function updateRowNumbers() {
         document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
