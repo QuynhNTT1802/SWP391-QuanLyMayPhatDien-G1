@@ -242,7 +242,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (status == null || status.trim().isEmpty()) {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
-        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, proposal_id, "
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
                 + "warehouse_id, created_by, status, note, reason_id, created_at) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -253,8 +253,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 ps.setNull(3, Types.INTEGER);
             }
-            if (r.getProposalId() != null) {
-                ps.setInt(4, r.getProposalId());
+            if (r.getPurchaseOrderId() != null) {
+                ps.setInt(4, r.getPurchaseOrderId());
             } else {
                 ps.setNull(4, Types.INTEGER);
             }
