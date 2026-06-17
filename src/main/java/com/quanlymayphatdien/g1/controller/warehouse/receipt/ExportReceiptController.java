@@ -450,7 +450,6 @@ public class ExportReceiptController extends HttpServlet {
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setTotalAmount(java.math.BigDecimal.ZERO);
         String oid = request.getParameter("orderId");
         if (oid != null && !oid.isEmpty()) {
             try {
@@ -685,7 +684,6 @@ public class ExportReceiptController extends HttpServlet {
         r.setWarehouseId(warehouseId);
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setTotalAmount(java.math.BigDecimal.ZERO);
         String newStatus = isSaveDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING;
         boolean ok = isSaveDraft
                 ? receiptDAO.updateDraftReceipt(r, details, loggedUser.getId(), newStatus)

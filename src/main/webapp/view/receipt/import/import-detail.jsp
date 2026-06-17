@@ -329,10 +329,6 @@
                                         <div class="info-label">Ngày tạo</div>
                                         <div class="info-value mono">${receipt.createdAt}</div>
                                     </div>
-                                    <div class="info-field">
-                                        <div class="info-label">Tổng giá trị</div>
-                                        <div class="info-value mono"><fmt:formatNumber value="${receipt.totalAmount}" type="currency" currencySymbol="" minFractionDigits="0"/>₫</div>
-                                    </div>
                                     <c:if test="${not empty receipt.approvedByName}">
                                         <div class="info-field">
                                             <div class="info-label">Người duyệt</div>

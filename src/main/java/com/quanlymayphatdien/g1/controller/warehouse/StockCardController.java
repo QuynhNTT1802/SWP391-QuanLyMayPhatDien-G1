@@ -49,6 +49,7 @@ public class StockCardController extends HttpServlet {
         Integer warehouseId = parseIntOrNull(request.getParameter("warehouseId"));
         Integer generatorId = parseIntOrNull(request.getParameter("generatorId"));
         String typeFilter = request.getParameter("type");
+        String search = request.getParameter("search");
         String fromDate = request.getParameter("fromDate");
         String toDate = request.getParameter("toDate");
 
@@ -64,7 +65,7 @@ public class StockCardController extends HttpServlet {
             } catch (NumberFormatException ignored) {
             }
         }
-        int totalItems = scDAO.countWithFilters(warehouseId, generatorId, typeFilter, fromDate, toDate);
+        int totalItems = scDAO.countWithFilters(warehouseId, generatorId, typeFilter, search, fromDate, toDate);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -73,13 +74,14 @@ public class StockCardController extends HttpServlet {
             page = totalPages;
         }
 
-        List<StockCard> list = scDAO.findWithFilters(warehouseId, generatorId, typeFilter, fromDate, toDate, page, pageSize);
+        List<StockCard> list = scDAO.findWithFilters(warehouseId, generatorId, typeFilter, search, fromDate, toDate, page, pageSize);
         request.setAttribute("stockCards", list);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("generators", generatorDAO.findAll());
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("generatorId", generatorId);
         request.setAttribute("typeFilter", typeFilter);
+        request.setAttribute("search", search);
         request.setAttribute("fromDate", fromDate);
         request.setAttribute("toDate", toDate);
         request.setAttribute("currentPage", page);
@@ -98,26 +100,62 @@ public class StockCardController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/stock-card");
             return;
         }
-        List<StockCard> list = scDAO.findByWarehouseAndGenerator(warehouseId, generatorId);
+        String typeFilter = request.getParameter("type");
+        String search = request.getParameter("search");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+
+        int page = 1;
+        int pageSize = 10;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+                if (page < 1) page = 1;
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        // Summary tinh tren toan bo lich su (khong filter) de luon phan anh ton that
+        List<StockCard> allForSummary = scDAO.findByWarehouseAndGenerator(warehouseId, generatorId);
         int totalImport = 0;
         int totalExport = 0;
         int currentStock = 0;
-        for (StockCard sc : list) {
+        for (StockCard sc : allForSummary) {
             if ("IMPORT".equals(sc.getTransactionType())) {
                 totalImport += sc.getQuantityChange();
             } else if ("EXPORT".equals(sc.getTransactionType())) {
                 totalExport += Math.abs(sc.getQuantityChange());
             }
         }
-        if (!list.isEmpty()) {
-            currentStock = list.get(0).getQuantityAfter();
+        if (!allForSummary.isEmpty()) {
+            currentStock = allForSummary.get(0).getQuantityAfter();
         }
+
+        int totalItems = scDAO.countByWarehouseAndGenerator(warehouseId, generatorId, typeFilter, search, fromDate, toDate);
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        List<StockCard> list = scDAO.findByWarehouseAndGeneratorPaged(warehouseId, generatorId, typeFilter, search, fromDate, toDate, page, pageSize);
+        int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
+        int toIndex = Math.min(page * pageSize, totalItems);
+
         request.setAttribute("stockCards", list);
         request.setAttribute("totalImport", totalImport);
         request.setAttribute("totalExport", totalExport);
         request.setAttribute("currentStock", currentStock);
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("generatorId", generatorId);
+        request.setAttribute("typeFilter", typeFilter);
+        request.setAttribute("search", search);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
         request.getRequestDispatcher("/view/stock-card/stock-card-detail.jsp").forward(request, response);
     }
 

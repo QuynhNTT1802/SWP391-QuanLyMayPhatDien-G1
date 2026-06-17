@@ -436,7 +436,6 @@ public class ImportReceiptController extends HttpServlet {
                 r.setProposalId(Integer.parseInt(pid));
             } catch (NumberFormatException ignored) {}
         }
-        r.setTotalAmount(java.math.BigDecimal.ZERO);
         r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
 
         int receiptId = receiptDAO.insert(r);
@@ -630,7 +629,6 @@ public class ImportReceiptController extends HttpServlet {
         r.setWarehouseId(warehouseId);
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setTotalAmount(java.math.BigDecimal.ZERO);
         String newStatus = isSaveDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING;
         boolean ok = isSaveDraft
                 ? receiptDAO.updateDraftReceipt(r, details, loggedUser.getId(), newStatus)
@@ -1128,7 +1126,6 @@ public class ImportReceiptController extends HttpServlet {
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setTotalAmount(java.math.BigDecimal.ZERO);
         r.setStatus(GlobalUtils.RECEIPT_STATUS_DRAFT);
 
         int receiptId = receiptDAO.insert(r);

@@ -194,8 +194,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, proposal_id, "
-                + "warehouse_id, created_by, status, note, reason_id, total_amount, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "warehouse_id, created_by, status, note, reason_id, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -220,12 +220,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 statement.setNull(9, Types.INTEGER);
             }
-            if (r.getTotalAmount() != null) {
-                statement.setBigDecimal(10, r.getTotalAmount());
-            } else {
-                statement.setNull(10, Types.DECIMAL);
-            }
-            statement.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -490,7 +485,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             placeholders.append("?");
         }
-        String updateSql = "UPDATE receipt SET warehouse_id = ?, note = ?, total_amount = ?, "
+        String updateSql = "UPDATE receipt SET warehouse_id = ?, note = ?, "
                 + "status = ?, approved_by = NULL, reason_id = ? "
                 + "WHERE receipt_id = ? AND status IN (" + placeholders + ") AND created_by = ?";
         String deleteDetailSql = "DELETE FROM receipt_detail WHERE receipt_id = ?";
@@ -531,19 +526,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
                 ps.setInt(1, r.getWarehouseId());
                 ps.setString(2, r.getNote());
-                if (r.getTotalAmount() != null) {
-                    ps.setBigDecimal(3, r.getTotalAmount());
-                } else {
-                    ps.setNull(3, Types.DECIMAL);
-                }
-                ps.setString(4, newStatus);
+                ps.setString(3, newStatus);
                 if (r.getReasonId() != null) {
-                    ps.setInt(5, r.getReasonId());
+                    ps.setInt(4, r.getReasonId());
                 } else {
-                    ps.setNull(5, Types.INTEGER);
+                    ps.setNull(4, Types.INTEGER);
                 }
-                ps.setInt(6, r.getReceiptId());
-                int statusIdx = 7;
+                ps.setInt(5, r.getReceiptId());
+                int statusIdx = 6;
                 for (String s : allowedCurrentStatuses) {
                     ps.setString(statusIdx++, s);
                 }
@@ -679,10 +669,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         Timestamp ua = rs.getTimestamp("updated_at");
         if (ua != null) {
             r.setUpdatedAt(ua.toLocalDateTime());
-        }
-        try {
-            r.setTotalAmount(rs.getBigDecimal("total_amount"));
-        } catch (SQLException ignored) {
         }
         try {
             r.setWarehouseName(rs.getString("warehouse_name"));
