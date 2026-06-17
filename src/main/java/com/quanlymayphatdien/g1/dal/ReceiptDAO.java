@@ -236,10 +236,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return -1;
     }
 
-    /**
-     * Insert receipt tren connection co san (de chay trong transaction).
-     * Tra ve generated id, hoac -1 neu khong insert duoc.
-     */
+
     public int insert(Connection conn, Receipt r) throws SQLException {
         String status = r.getStatus();
         if (status == null || status.trim().isEmpty()) {
