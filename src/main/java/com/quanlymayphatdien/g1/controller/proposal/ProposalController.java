@@ -1056,14 +1056,13 @@ public class ProposalController extends HttpServlet {
                 String targetGid = assignedGidStr;
                 Supplier newSup = new SupplierDAO().findById(newId);
                 if (newSup != null) {
-                    for (Map<String, String> p : pendingRows) {
-                        if (targetGid.equals(p.get("gid"))) {
-                            p.put("supplierId", String.valueOf(newId));
-                            p.put("supplierNameResolved", newSup.getName());
-                            p.put("supplierQuery", newSup.getName());
-                            break;
-                        }
+                for (Map<String, String> p : pendingRows) {
+                    if (targetGid.equals(p.get("gid"))) {
+                        p.put("supplierId", String.valueOf(newId));
+                        p.put("supplierNameResolved", newSup.getName());
+                        p.put("supplierQuery", newSup.getName());
                     }
+                }
                 }
             } catch (NumberFormatException ignored) {
             }
@@ -1485,27 +1484,26 @@ public class ProposalController extends HttpServlet {
             response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
             return;
         }
-        Map<String, String> row = null;
-        for (Map<String, String> p : rows) {
-            if (gidStr.equals(p.get("gid"))) {
-                row = p;
-                break;
-            }
-        }
-        if (row == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
         Supplier s = new SupplierDAO().findById(supId);
         if (s == null) {
             response.getWriter().write("{\"ok\":false,\"error\":\"supplier_not_found\"}");
             return;
         }
-        row.put("supplierId", String.valueOf(s.getId()));
-        row.put("supplierNameResolved", s.getName());
-        row.remove("supplierQuery");
-        row.remove("supplierMultiple");
-        row.remove("supplierMultipleCount");
+        boolean found = false;
+        for (Map<String, String> p : rows) {
+            if (gidStr.equals(p.get("gid"))) {
+                p.put("supplierId", String.valueOf(s.getId()));
+                p.put("supplierNameResolved", s.getName());
+                p.remove("supplierQuery");
+                p.remove("supplierMultiple");
+                p.remove("supplierMultipleCount");
+                found = true;
+            }
+        }
+        if (!found) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
+            return;
+        }
 
         response.getWriter().write("{\"ok\":true,\"supplier\":{\"id\":" + s.getId()
                 + ",\"name\":\"" + escapeJson(s.getName()) + "\"}}");
