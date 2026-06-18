@@ -115,6 +115,9 @@ public class OrderController extends HttpServlet {
                 case "cancel":
                     cancelOrder(request, response);
                     break;
+                case "requestRevision":
+                    requestRevisionOrder(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -335,10 +338,13 @@ public class OrderController extends HttpServlet {
             request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         }
 
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
+        request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
-        request.setAttribute("userPermissions", session != null ? session.getAttribute("userPermissions") : null);
+        request.setAttribute("userPermissions", perms);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
 
@@ -856,6 +862,38 @@ public class OrderController extends HttpServlet {
             session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
             session.setAttribute("message", "Hủy thất bại: đơn không ở trạng thái PENDING hoặc APPROVED.");
+        }
+        response.sendRedirect(request.getContextPath() + "/order?action=list");
+    }
+
+    private void requestRevisionOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.approve")) {
+            session.setAttribute("message", "Bạn không có quyền yêu cầu chỉnh sửa đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        String reason = request.getParameter("reason");
+        User user = (User) session.getAttribute("loggedUser");
+        SaleOrderDAO saleorderdao = new SaleOrderDAO();
+
+        if (reason == null || reason.trim().isEmpty()) {
+            session.setAttribute("message", "Vui lòng nhập lý do yêu cầu chỉnh sửa.");
+            response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
+            return;
+        }
+
+        boolean success = saleorderdao.requestRevisionOrder(id, user.getId(), reason);
+
+        if (success) {
+            session.setAttribute("message", "Đã gửi yêu cầu chỉnh sửa đơn hàng.");
+        } else {
+            session.setAttribute("message", "Yêu cầu chỉnh sửa thất bại.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }

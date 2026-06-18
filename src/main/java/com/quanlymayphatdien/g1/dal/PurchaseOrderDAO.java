@@ -550,6 +550,102 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return 0;
     }
 
+    public List<PurchaseOrder> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
+        List<PurchaseOrder> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
+                + "FROM purchase_order p "
+                + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c ON u_c.id = p.created_by "
+                + "WHERE p.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.purchase_order_id = p.po_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND p.po_code LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY p.approved_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PurchaseOrder po = new PurchaseOrder();
+                    po.setPoId(rs.getInt("po_id"));
+                    po.setPoCode(rs.getString("po_code"));
+                    po.setPeriod(rs.getString("period"));
+                    po.setPeriodStart(rs.getDate("period_start").toLocalDate());
+                    po.setPeriodEnd(rs.getDate("period_end").toLocalDate());
+                    po.setWarehouseId(rs.getInt("warehouse_id"));
+                    po.setStatus(rs.getString("status"));
+                    po.setTotalProposals(rs.getInt("total_proposals"));
+                    po.setTotalQuantity(rs.getInt("total_quantity"));
+                    po.setWarehouseName(rs.getString("warehouse_name"));
+                    po.setCreatedByName(rs.getString("created_by_name"));
+                    po.setNote(rs.getString("note"));
+                    Timestamp ca = rs.getTimestamp("created_at");
+                    if (ca != null) po.setCreatedAt(ca.toLocalDateTime());
+                    Timestamp aa = rs.getTimestamp("approved_at");
+                    if (aa != null) po.setApprovedAt(aa.toLocalDateTime());
+                    list.add(po);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM purchase_order p "
+                + "WHERE p.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.purchase_order_id = p.po_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND p.po_code LIKE ? ");
+            params.add("%" + search.trim() + "%");
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(p.approved_at) <= ? ");
+            params.add(toDate);
+        }
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     public List<Map<String, Object>> aggregatePendingProposals(String period, int warehouseId) {
         List<Map<String, Object>> list = new ArrayList<>();
         String sql = "SELECT ipd.generator_id, g.model AS generator_code, g.description AS generator_name, "
