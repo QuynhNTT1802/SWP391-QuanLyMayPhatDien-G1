@@ -388,7 +388,7 @@
             </div>
             <div class="side-panel-body">
                 <div style="display:flex; gap:8px; margin-bottom:16px;">
-                    <input type="text" id="supplierSearchInput" class="supplier-search-box" placeholder="Tìm theo tên, SĐT, email..." autocomplete="off" style="margin-bottom:0;"/>
+                    <input type="text" id="supplierSearchInput" class="supplier-search-box" placeholder="Tìm theo tên nhà cung cấp..." autocomplete="off" style="margin-bottom:0;"/>
                 </div>
                 <div id="supplierLoading" class="loading-msg" style="display:none;">
                     <svg class="spin-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -530,7 +530,9 @@
 
             function loadSuppliers(callback) {
                 document.getElementById('supplierLoading').style.display = 'block';
-                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q=')
+                var qInput = document.getElementById('supplierSearchInput');
+                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q='
+                        + encodeURIComponent(qInput ? qInput.value : ''))
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         document.getElementById('supplierLoading').style.display = 'none';
@@ -545,8 +547,6 @@
                             var card = document.createElement('div');
                             card.className = 'supplier-card';
                             card.setAttribute('data-name', (s.name || '').toLowerCase());
-                            card.setAttribute('data-phone', (s.phone || '').toLowerCase());
-                            card.setAttribute('data-email', (s.email || '').toLowerCase());
                             var metaHtml = '';
                             if (s.phone) {
                                 metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
@@ -610,21 +610,23 @@
                     .replace(/'/g, '&#39;');
             }
 
+            var searchDebounce = null;
             document.getElementById('supplierSearchInput').addEventListener('input', function () {
                 var q = this.value.toLowerCase().trim();
                 var cards = document.querySelectorAll('.supplier-card');
                 var words = q ? q.split(/\s+/) : [];
                 cards.forEach(function (c) {
                     if (!q) { c.style.display = ''; return; }
-                    var haystack = (c.getAttribute('data-name') || '') + '|'
-                        + (c.getAttribute('data-phone') || '') + '|'
-                        + (c.getAttribute('data-email') || '');
+                    var haystack = (c.getAttribute('data-name') || '');
                     var all = true;
                     for (var i = 0; i < words.length; i++) {
                         if (haystack.indexOf(words[i]) < 0) { all = false; break; }
                     }
                     c.style.display = all ? '' : 'none';
                 });
+                if (searchDebounce) clearTimeout(searchDebounce);
+                var self = this;
+                searchDebounce = setTimeout(function () { loadSuppliers(); }, 300);
             });
 
             // ESC để đóng panel
