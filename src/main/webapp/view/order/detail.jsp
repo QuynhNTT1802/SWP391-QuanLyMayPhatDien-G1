@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -15,349 +16,34 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
         <style>
             a.btn, a.back-link { text-decoration: none; }
+            .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
+            .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+            .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
 
-            /* ============== Page head ============== */
-            .page-head { margin: 0 0 24px 0; padding-top: 4px; }
-            .page-head .eyebrow {
-                display: inline-flex; align-items: center; gap: 6px;
-                font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-                text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
-                font-family: var(--font-ui);
-            }
-            .page-head .eyebrow::before {
-                content: ''; width: 5px; height: 5px; border-radius: 50%;
-                background: var(--accent);
-            }
-            .page-head h1.title {
-                font-size: 26px; font-weight: 700; letter-spacing: -0.02em;
-                margin: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-                line-height: 1.2;
-            }
-            .page-head h1.title .ts-code {
-                font-family: var(--font-mono);
-                color: var(--fg-soft);
-                font-weight: 700;
-            }
-            .page-head .lede {
-                color: var(--muted); margin-top: 8px; font-size: 14px;
-                display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
-            }
-            .page-head .lede .sep { color: var(--muted-2); margin: 0 4px; }
-            .page-head .ts-status { display: flex; align-items: center; gap: 6px; }
-
-            /* ============== Status pill ============== */
-            .status-pill {
-                display: inline-flex; align-items: center; gap: 5px;
-                font-size: 11.5px; font-weight: 600;
-                padding: 2px 8px; border-radius: 999px; border: 1px solid;
-                font-family: var(--font-ui);
-            }
-            .status-pill .pdot {
-                width: 5px; height: 5px; border-radius: 50%;
-                background: currentColor;
-            }
-            .status-cancelled { color: var(--muted); border-color: var(--border); background: var(--surface-2); }
-            .status-pending   { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft); }
-            .status-approved  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft); }
-            .status-rejected  { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft); }
-
-            /* ============== Header bar ============== */
-            .header-bar {
-                display: flex; align-items: center; justify-content: space-between;
-                gap: 12px; width: 100%;
-                padding: 0 0 14px 0; margin: 0 0 18px 0;
-                border-bottom: 1px solid var(--border);
-            }
-            .header-bar .hb-left {
-                display: flex; align-items: center; gap: 12px; min-width: 0;
-            }
-            .header-bar .hb-left .hb-text {
-                display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap;
-            }
-            .header-bar .hb-left .hb-num {
-                font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-                color: var(--accent); letter-spacing: 0.04em;
-            }
-            .header-bar .hb-left .hb-label {
-                font-size: 10.5px; color: var(--muted);
-                text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
-            }
-            .header-bar .hb-left .hb-code {
-                font-family: var(--font-mono); font-size: 13px; font-weight: 700;
-                color: var(--fg); letter-spacing: 0.02em;
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            }
-            .header-bar .hb-right { display: flex; align-items: center; gap: 8px; }
-
-            /* ============== Action bar ============== */
-            .action-bar {
-                display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-                width: 100%; padding: 0 0 20px 0; margin: 0 0 8px 0;
-            }
-            .action-bar .ab-group {
-                display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-            }
-            .action-bar .ab-divider {
-                width: 1px; height: 22px; background: var(--border); margin: 0 4px;
-            }
-
-            /* ============== Buttons (scope override) ============== */
-            .header-bar .btn,
-            .action-bar .btn,
-            .detail-pager .btn {
-                display: inline-flex; align-items: center; gap: 6px;
-                height: auto; padding: 7px 12px;
-                font-size: 13px; font-weight: 600; line-height: 1.2;
-                border-radius: var(--radius-sm);
-                border: 1px solid var(--border);
-                background: var(--surface); color: var(--fg);
-                font-family: var(--font-ui); cursor: pointer;
-                white-space: nowrap; text-decoration: none;
-                transition: background .15s ease, border-color .15s ease, color .15s ease;
-            }
-            .header-bar .btn svg,
-            .action-bar .btn svg,
-            .detail-pager .btn svg {
-                width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8;
-            }
-            .header-bar .btn:hover,
-            .action-bar .btn:hover,
-            .detail-pager .btn:hover { background: var(--surface-2); }
-            .header-bar .btn:disabled,
-            .action-bar .btn:disabled,
-            .detail-pager .btn:disabled { opacity: .45; cursor: not-allowed; }
-            .header-bar .btn:focus-visible,
-            .action-bar .btn:focus-visible,
-            .detail-pager .btn:focus-visible {
-                outline: none; box-shadow: 0 0 0 3px var(--accent-soft);
-            }
-            .header-bar .btn-primary,
-            .action-bar .btn-primary {
-                background: var(--fg); color: var(--bg); border-color: var(--fg);
-            }
-            .header-bar .btn-primary:hover,
-            .action-bar .btn-primary:hover { background: var(--fg-soft); border-color: var(--fg-soft); }
-            .header-bar .btn-danger,
-            .action-bar .btn-danger,
-            .detail-pager .btn-danger {
-                color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent);
-            }
-            .header-bar .btn-danger:hover,
-            .action-bar .btn-danger:hover,
-            .detail-pager .btn-danger:hover { background: var(--danger-soft); }
-            .header-bar .btn-success,
-            .action-bar .btn-success,
-            .detail-pager .btn-success {
-                background: var(--accent); color: var(--bg); border-color: var(--accent);
-            }
-            .header-bar .btn-success:hover,
-            .action-bar .btn-success:hover,
-            .detail-pager .btn-success:hover { background: color-mix(in srgb, var(--accent) 85%, var(--fg)); }
-            .header-bar .btn-warn,
-            .action-bar .btn-warn,
-            .detail-pager .btn-warn {
-                color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent);
-            }
-            .header-bar .btn-warn:hover,
-            .action-bar .btn-warn:hover,
-            .detail-pager .btn-warn:hover { background: var(--warn-soft); }
-            .action-bar .back-link {
-                display: inline-flex; align-items: center; gap: 6px;
-                height: auto; padding: 7px 12px;
-                font-size: 13px; font-weight: 600;
-                color: var(--muted); background: var(--surface);
-                border: 1px solid var(--border); border-radius: var(--radius-sm);
-                margin-bottom: 0; text-decoration: none;
-                transition: color .15s ease, background .15s ease, border-color .15s ease;
-            }
-            .action-bar .back-link:hover {
-                color: var(--fg); background: var(--surface-2);
-                border-color: color-mix(in srgb, var(--fg) 18%, var(--border));
-            }
-            .action-bar .back-link svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-
-            /* ============== Note (read-only, soft) ============== */
-            .note-soft {
-                font-size: 13px; color: var(--fg-soft);
-                line-height: 1.6; white-space: pre-wrap;
-            }
-
-            /* ============== Tables ============== */
-            .product-table {
-                width: 100%; border-collapse: separate; border-spacing: 0;
-                border: 1px solid var(--border); border-radius: var(--radius);
-                overflow: hidden; font-size: 13px;
-            }
-            .product-table th, .product-table td {
-                padding: 11px 14px; text-align: left;
-                border-bottom: 1px solid var(--border);
-            }
-            .product-table th {
-                font-size: 11px; color: var(--muted);
-                text-transform: uppercase; font-weight: 700;
-                background: var(--surface-2); letter-spacing: 0.04em;
-            }
-            .product-table td {
-                font-size: 13.5px; color: var(--fg); vertical-align: middle;
-            }
+            .product-table { width: 100%; border-collapse: collapse; }
+            .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+            .product-table th { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; background: var(--surface-2); letter-spacing: 0.04em; }
+            .product-table td { font-size: 13px; }
             .product-table tbody tr:hover { background: var(--surface-2); }
-            .product-table tbody tr:last-child td { border-bottom: 0; }
-            .text-right { text-align: right; }
+            .product-table tfoot td { background: var(--surface-2); font-weight: 700; }
             .text-center { text-align: center; }
-            .product-table tfoot td {
-                font-size: 14px; font-weight: 700;
-                background: var(--surface-2);
-                color: var(--accent);
-                border-top: 1px solid var(--border);
-            }
-            .detail-pager {
-                display: flex; align-items: center; justify-content: center;
-                gap: 12px; margin-top: 16px;
-                font-size: 13px; color: var(--muted);
-            }
-            .empty-state {
-                text-align: center; padding: 40px 12px; color: var(--muted);
-            }
+            .text-right { text-align: right; }
+            .mono { font-family: var(--font-mono); }
 
-            /* ============== Generator link (mở modal info máy) ============== */
-            .gen-link {
-                color: var(--accent);
-                cursor: pointer;
-                text-decoration: none;
-                font-weight: 600;
-            }
-            .gen-link:hover {
-                text-decoration: underline;
-            }
+            .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55; padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
+            .danger-note { background: color-mix(in srgb, var(--danger-soft) 70%, transparent); color: var(--danger); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--danger); }
 
-            /* ============== Banners ============== */
-            .reject-banner {
-                display: flex; align-items: flex-start; gap: 10px;
-                padding: 12px 16px; margin-bottom: 16px;
-                border-radius: var(--radius-sm);
-                font-size: 13px; font-weight: 500;
-            }
-            .reject-banner svg {
-                width: 18px; height: 18px; stroke: currentColor; fill: none;
-                stroke-width: 2; flex-shrink: 0; margin-top: 1px;
-            }
-            .reject-banner {
-                background: var(--danger-soft); color: var(--danger);
-                border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
-            }
-            .reject-banner .info-label { color: var(--danger); margin-bottom: 4px; }
-            .info-label {
-                font-size: 11px; font-weight: 700;
-                text-transform: uppercase; letter-spacing: 0.04em;
-                margin-bottom: 6px;
-            }
+            .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+            .filter-active-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 11px; }
+            .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; gap: 8px; color: var(--muted); }
+            .empty-state .icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
+            .empty-state .icon-wrap svg { width: 22px; height: 22px; stroke: var(--muted); }
+            .empty-state strong { color: var(--fg); font-size: 14px; }
 
-            /* ============== Modal info máy phát ============== */
-            .gen-modal-backdrop {
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,.45);
-                z-index: 1000;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                padding: 20px;
-            }
-            .gen-modal-backdrop.open {
-                display: flex;
-            }
-            .gen-modal {
-                background: var(--surface);
-                border-radius: 8px;
-                width: 100%;
-                max-width: 480px;
-                box-shadow: 0 10px 40px rgba(0,0,0,.25);
-                overflow: hidden;
-                animation: modalPop .18s ease-out;
-            }
-            @keyframes modalPop {
-                from { transform: scale(.96); opacity: 0; }
-                to   { transform: scale(1); opacity: 1; }
-            }
-            .gen-modal-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 14px 18px;
-                border-bottom: 1px solid var(--border);
-            }
-            .gen-modal-header h3 {
-                margin: 0;
-                font-size: 16px;
-                font-weight: 700;
-            }
-            .gen-modal-close {
-                background: transparent;
-                border: none;
-                font-size: 22px;
-                line-height: 1;
-                cursor: pointer;
-                color: var(--muted);
-                padding: 0 4px;
-            }
-            .gen-modal-close:hover { color: var(--fg); }
-            .gen-modal-body {
-                padding: 16px 18px;
-            }
-            .gen-info-row {
-                display: flex;
-                gap: 10px;
-                padding: 8px 0;
-                border-bottom: 1px dashed var(--border);
-                font-size: 13.5px;
-            }
-            .gen-info-row:last-child { border-bottom: none; }
-            .gen-info-row .lbl {
-                flex: 0 0 120px;
-                color: var(--muted);
-                font-weight: 500;
-            }
-            .gen-info-row .val {
-                flex: 1;
-                color: var(--fg);
-                word-break: break-word;
-            }
-            .gen-modal-footer {
-                padding: 12px 18px;
-                border-top: 1px solid var(--border);
-                display: flex;
-                justify-content: flex-end;
-                gap: 8px;
-                background: var(--surface-2);
-            }
-
-            /* ============== Alert ============== */
-            .alert {
-                display: flex; align-items: center; gap: 10px;
-                padding: 12px 16px; border-radius: var(--radius-sm);
-                margin-bottom: 16px; font-size: 13px; font-weight: 500;
-            }
-            .alert svg {
-                width: 18px; height: 18px; stroke: currentColor; fill: none;
-                stroke-width: 2; flex-shrink: 0;
-            }
-            .alert-error {
-                background: var(--danger-soft); color: var(--danger);
-                border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
-            }
-
-            /* ============== In ấn ============== */
-            @media print {
-                aside, .topbar, .tabs, .toast-host,
-                .header-bar, .action-bar,
-                .gen-modal-backdrop {
-                    display: none !important;
-                }
-                .section { border: 1px solid #ddd; }
-                body, .app > div:last-child, main { background: #fff !important; }
-            }
+            .info-value .status-pill { white-space: nowrap; }
         </style>
     </head>
     <body>
@@ -381,366 +67,413 @@
                 </header>
 
                 <main>
-                    <c:if test="${not empty error}">
-                        <div class="alert alert-error">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                            <span><c:out value="${error}"/></span>
-                        </div>
-                    </c:if>
+                    <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Quay lại danh sách
+                    </a>
 
-                    <c:set var="perms" value="${userPermissions != null ? userPermissions : sessionScope.userPermissions}" />
+                    <c:choose>
+                        <c:when test="${order.status == 'PENDING'}">
+                            <c:set var="statusLabel" value="Chờ duyệt"/>
+                            <c:set var="statusBg" value="#fff3cd"/>
+                            <c:set var="statusFg" value="#856404"/>
+                        </c:when>
+                        <c:when test="${order.status == 'APPROVED'}">
+                            <c:set var="statusLabel" value="Đã duyệt"/>
+                            <c:set var="statusBg" value="#d4edda"/>
+                            <c:set var="statusFg" value="#155724"/>
+                        </c:when>
+                        <c:when test="${order.status == 'REJECTED'}">
+                            <c:set var="statusLabel" value="Từ chối"/>
+                            <c:set var="statusBg" value="#f8d7da"/>
+                            <c:set var="statusFg" value="#721c24"/>
+                        </c:when>
+                        <c:when test="${order.status == 'NEEDS_REVISION'}">
+                            <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
+                            <c:set var="statusBg" value="#ffe0b2"/>
+                            <c:set var="statusFg" value="#b15c00"/>
+                        </c:when>
+                        <c:otherwise>
+                            <c:set var="statusLabel" value="Đã hủy"/>
+                            <c:set var="statusBg" value="#e2e3e5"/>
+                            <c:set var="statusFg" value="#383d41"/>
+                        </c:otherwise>
+                    </c:choose>
 
-                    <%-- ============== 1) Header Bar ============== --%>
-                    <div class="header-bar">
-                        <div class="hb-left">
-                            <div class="hb-text">
-                                <span class="hb-num">00</span>
-                                <span class="hb-label">Đang xem đơn hàng</span>
-                                <span class="hb-code"><c:out value="${order.orderCode}"/></span>
+                    <c:set var="heroInitials">
+                        <c:choose>
+                            <c:when test="${not empty order.customer.name}">
+                                <c:set var="nameParts" value="${fn:split(order.customer.name, ' ')}"/>
+                                <c:choose>
+                                    <c:when test="${fn:length(nameParts) == 1}">${fn:toUpperCase(fn:substring(order.customer.name, 0, 2))}</c:when>
+                                    <c:otherwise>${fn:toUpperCase(fn:substring(nameParts[0], 0, 1))}${fn:toUpperCase(fn:substring(nameParts[fn:length(nameParts)-1], 0, 1))}</c:otherwise>
+                                </c:choose>
+                            </c:when>
+                            <c:otherwise>??</c:otherwise>
+                        </c:choose>
+                    </c:set>
+
+                    <div class="hero">
+                        <div class="hero-avatar" style="background: oklch(58% 0.14 250);">${heroInitials}</div>
+                        <div class="hero-body">
+                            <h2 class="hero-name">
+                                <c:out value="${order.customer.name}"/>
+                                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+                                    <span class="pdot"></span>${statusLabel}
+                                </span>
+                            </h2>
+                            <div class="hero-meta">
+                                <span class="id"><c:out value="${order.orderCode}"/></span>
+                                <span class="sep">·</span>
+                                <span>#<c:out value="${order.orderId}"/></span>
+                                <span class="sep">·</span>
+                                <span>Ngày đặt: <fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></span>
+                            </div>
+                            <div class="hero-pills">
+                                <span class="pill status-active"><span class="pdot"></span>Người tạo: <c:out value="${order.createdByName}"/></span>
+                                <c:if test="${order.approvedBy != 0}">
+                                    <span class="pill role-admin"><span class="pdot"></span>Người duyệt: <c:out value="${order.approvedByName}"/></span>
+                                </c:if>
+                                <span class="pill warehouse"><span class="pdot"></span>Tổng tiền: <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></span>
                             </div>
                         </div>
-                        <div class="hb-right">
-                            <button type="button" class="btn" onclick="window.print()" title="In đơn hàng">
-                                In đơn
+                    </div>
+
+                    <c:if test="${order.status == 'PENDING' && canApproveOrder}">
+                        <div class="action-bar-top">
+                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                Duyệt đơn
+                            </button>
+                            <button type="button" class="btn" onclick="openModal('revisionModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                Yêu cầu chỉnh sửa
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Từ chối
                             </button>
                         </div>
-                    </div>
-
-                    <%-- ============== 2) Action Bar ============== --%>
-                    <div class="action-bar">
-                        <div class="ab-group">
-                            <a class="btn back-link" href="${pageContext.request.contextPath}/order?action=list" title="Quay lại danh sách">
-                                Quay lại danh sách
-                            </a>
-                        </div>
-
-                        <c:set var="hasActions" value="false" />
-                        <c:if test="${order.status == 'PENDING'}"><c:set var="hasActions" value="true" /></c:if>
-                        <c:if test="${order.status == 'APPROVED' && perms != null && perms.contains('orders.cancel')}"><c:set var="hasActions" value="true" /></c:if>
-
-                        <c:if test="${hasActions}">
-                            <div class="ab-divider"></div>
-                            <div class="ab-group">
-                                <c:if test="${order.status == 'PENDING' && perms != null && perms.contains('orders.update')}">
-                                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                                        Chỉnh sửa
-                                    </a>
-                                </c:if>
-
-                                <c:if test="${order.status == 'PENDING' && perms != null && perms.contains('orders.approve')}">
-                                    <form method="POST" action="${pageContext.request.contextPath}/order" style="display:inline;">
-                                        <input type="hidden" name="action" value="approve" />
-                                        <input type="hidden" name="id" value="${order.orderId}" />
-                                        <button type="submit" class="btn btn-success" onclick="return confirmApproveAction()">
-                                            Duyệt đơn
-                                        </button>
-                                    </form>
-                                </c:if>
-
-                                <c:if test="${order.status == 'PENDING' && perms != null && perms.contains('orders.reject')}">
-                                    <a class="btn btn-danger" href="${pageContext.request.contextPath}/order?action=reject&id=${order.orderId}">
-                                        Từ chối
-                                    </a>
-                                </c:if>
-
-                                <c:if test="${(order.status == 'PENDING' || order.status == 'APPROVED') && perms != null && perms.contains('orders.cancel')}">
-                                    <form method="POST" action="${pageContext.request.contextPath}/order" style="display:inline;">
-                                        <input type="hidden" name="action" value="cancel" />
-                                        <input type="hidden" name="id" value="${order.orderId}" />
-                                        <button type="submit" class="btn btn-warn" onclick="return confirmCancelAction()">
-                                            Hủy đơn
-                                        </button>
-                                    </form>
-                                </c:if>
-                            </div>
-                        </c:if>
-                    </div>
-
-                    <%-- ============== 3) Page Head ============== --%>
-                    <div class="page-head">
-                        <div class="eyebrow">Đơn hàng bán</div>
-                        <h1 class="title">
-                            <span>Chi tiết đơn hàng</span>
-                            <span class="ts-code">#<c:out value="${order.orderId}"/></span>
-                            <span class="ts-status">
-                                <c:choose>
-                                    <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                                    <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
-                                    <c:when test="${order.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                                    <c:when test="${order.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
-                                    <c:otherwise><span class="status-pill"><c:out value="${order.status}"/></span></c:otherwise>
-                                </c:choose>
-                            </span>
-                        </h1>
-                        <div class="lede">
-                            <span>Ngày đặt: <c:choose><c:when test="${order.orderDate == null}"><span style="color:var(--muted);">—</span></c:when><c:otherwise><fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></span>
-                            <span class="sep">·</span>
-                            <span>Khách hàng: <c:out value="${order.customer.name}"/></span>
-                            <span class="sep">·</span>
-                            <span>Tổng tiền: <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></span>
-                        </div>
-                    </div>
-
-                    <%-- ============== Reject banner ============== --%>
-                    <c:if test="${order.status == 'REJECTED' && not empty order.rejectReason}">
-                        <div class="reject-banner">
-                            <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <div style="flex:1;">
-                                <div class="info-label">Đã bị từ chối</div>
-                                <div style="margin-top:4px;font-size:13.5px;">
-                                    <c:out value="${order.rejectReason}"/>
-                                </div>
-                            </div>
-                        </div>
                     </c:if>
 
-                    <%-- ============== Section 1: Thông tin đơn hàng + Khách hàng ============== --%>
-                    <section class="section">
-                        <div class="section-head">
-                            <div>
-                                <div class="section-num">01 — THÔNG TIN ĐƠN HÀNG &amp; KHÁCH HÀNG</div>
-                                <h3 class="section-title">Thông tin đơn hàng</h3>
-                            </div>
-                            <span class="section-update">Read-only</span>
-                        </div>
+                    <div class="tab-bar">
+                        <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
+                            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                            Thông tin & các máy
+                        </a>
+                        <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
+                            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Lịch sử cập nhật
+                        </a>
+                    </div>
 
-                        <%-- Dòng 1 (4 cột): Mã đơn · Tên đơn · Ngày đặt · Trạng thái --%>
-                        <div class="info-grid cols-4" style="margin-bottom: 16px;">
-                            <div class="info-field">
-                                <div class="info-label">Mã đơn</div>
-                                <div class="info-value mono"><c:out value="${order.orderCode}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Tên đơn</div>
-                                <div class="info-value">Đơn hàng #<c:out value="${order.orderId}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Ngày đặt</div>
-                                <div class="info-value mono"><c:choose><c:when test="${order.orderDate == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
+                    <c:choose>
+                        <c:when test="${currentTab == 'history'}">
+                            <div class="table-card history-card">
+                                <form method="get" action="${pageContext.request.contextPath}/order" class="history-filter-bar">
+                                    <input type="hidden" name="action" value="detail"/>
+                                    <input type="hidden" name="id" value="${order.orderId}"/>
+                                    <input type="hidden" name="tab" value="history"/>
+                                    <input type="hidden" name="page" value="1"/>
+
+                                    <div class="search-input hf-search">
+                                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
+                                    </div>
+                                    <select name="logAction" class="filter-select">
+                                        <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
+                                        <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo đơn hàng</option>
+                                        <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                                        <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
+                                        <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
+                                        <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy đơn</option>
+                                    </select>
+                                    <div class="date-range">
+                                        <label class="date-label">Từ</label>
+                                        <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
+                                        <label class="date-label">đến</label>
+                                        <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        Áp dụng
+                                    </button>
+                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                        <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}&amp;tab=history" class="btn">
+                                            <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                            Xóa lọc
+                                        </a>
+                                    </c:if>
+                                </form>
+
+                                <div class="result-summary">
+                                    Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                        &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                                    </c:if>
+                                </div>
+
+                                <table>
+                                    <thead><tr>
+                                        <th style="width:150px;">Thời gian</th>
+                                        <th style="width:180px;">Người thực hiện</th>
+                                        <th style="width:160px;">Hành động</th>
+                                        <th>Chi tiết thay đổi</th>
+                                    </tr></thead>
+                                    <tbody>
                                     <c:choose>
-                                        <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
-                                        <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
-                                        <c:when test="${order.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
-                                        <c:when test="${order.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
-                                        <c:otherwise><span class="status-pill"><c:out value="${order.status}"/></span></c:otherwise>
+                                        <c:when test="${empty logList}">
+                                            <tr><td colspan="4">
+                                                <div class="empty-state">
+                                                    <div class="icon-wrap">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                    </div>
+                                                    <strong>Không có bản ghi nào</strong>
+                                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                                        <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}&amp;tab=history">xóa lọc</a></span>
+                                                    </c:if>
+                                                </div>
+                                            </td></tr>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:forEach var="log" items="${logList}">
+                                                <tr>
+                                                    <td style="font-family:var(--font-mono);"><fmt:formatDate value="${log.createdAt}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                    <td>
+                                                        <div style="font-weight:600;color:var(--fg);"><c:out value="${log.user}"/></div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="action-badge action-<c:choose>
+                                                            <c:when test="${log.action == 'CREATE'}">create</c:when>
+                                                            <c:when test="${log.action == 'UPDATE'}">update</c:when>
+                                                            <c:when test="${log.action == 'APPROVE'}">approve</c:when>
+                                                            <c:when test="${log.action == 'REJECT'}">reject</c:when>
+                                                            <c:when test="${log.action == 'CANCEL'}">cancel</c:when>
+                                                            <c:otherwise>default</c:otherwise>
+                                                        </c:choose>">
+                                                        <c:out value="${log.actionLabel}"/></span>
+                                                    </td>
+                                                    <td style="max-width:380px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                                        <c:out value="${log.details}"/>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </c:otherwise>
                                     </c:choose>
-                                </div>
-                            </div>
-                        </div>
+                                    </tbody>
+                                </table>
 
-                        <%-- Dòng 2 (4 cột): Người tạo · Người duyệt · Ngày duyệt · Tổng tiền --%>
-                        <div class="info-grid cols-4" style="margin-bottom: 16px;">
-                            <div class="info-field">
-                                <div class="info-label">Người tạo</div>
-                                <div class="info-value"><c:out value="${order.createdByName}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Người duyệt</div>
-                                <div class="info-value"><c:out value="${not empty order.approvedByName ? order.approvedByName : '—'}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Ngày duyệt</div>
-                                <div class="info-value mono"><c:choose><c:when test="${order.approvedAt == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Tổng tiền</div>
-                                <div class="info-value mono" style="color: var(--accent);">
-                                    <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                <c:if test="${logTotalPages > 1}">
+                                <div class="pagination">
+                                    <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
+                                    <div class="controls">
+                                        <c:if test="${logPage > 1}">
+                                            <a href="${pageContext.request.contextPath}/order?action=detail&amp;id=${order.orderId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                                        </c:if>
+                                        <c:forEach begin="1" end="${logTotalPages}" var="p">
+                                            <c:choose>
+                                                <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
+                                                <c:otherwise><a href="${pageContext.request.contextPath}/order?action=detail&amp;id=${order.orderId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                        <c:if test="${logPage < logTotalPages}">
+                                            <a href="${pageContext.request.contextPath}/order?action=detail&amp;id=${order.orderId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                                        </c:if>
+                                    </div>
                                 </div>
+                                </c:if>
                             </div>
-                        </div>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="section" style="padding: 18px 22px;">
+                                <div class="info-grid">
+                                    <div class="info-field">
+                                        <div class="info-label">Tên khách hàng</div>
+                                        <div class="info-value"><c:out value="${order.customer.name}"/></div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Số điện thoại</div>
+                                        <div class="info-value mono"><c:out value="${order.customer.phone}"/></div>
+                                    </div>
+                                    <c:if test="${not empty order.customer.email}">
+                                        <div class="info-field">
+                                            <div class="info-label">Email</div>
+                                            <div class="info-value mono"><c:out value="${order.customer.email}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <div class="info-field">
+                                        <div class="info-label">Địa chỉ giao hàng</div>
+                                        <div class="info-value"><c:out value="${order.customer.address}"/></div>
+                                    </div>
+                                    <c:if test="${not empty customerTypeName}">
+                                        <div class="info-field">
+                                            <div class="info-label">Loại khách hàng</div>
+                                            <div class="info-value"><c:out value="${customerTypeName}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <c:if test="${not empty order.customer.companyName}">
+                                        <div class="info-field">
+                                            <div class="info-label">Công ty</div>
+                                            <div class="info-value"><c:out value="${order.customer.companyName}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <div class="info-field">
+                                        <div class="info-label">Trạng thái</div>
+                                        <div class="info-value">
+                                            <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+                                                <span class="pdot"></span>${statusLabel}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="info-field">
+                                        <div class="info-label">Ngày đặt</div>
+                                        <div class="info-value mono"><fmt:formatDate value="${order.orderDate}" pattern="dd/MM/yyyy HH:mm"/></div>
+                                    </div>
+                                    <c:if test="${not empty order.createdByName}">
+                                        <div class="info-field">
+                                            <div class="info-label">Người tạo</div>
+                                            <div class="info-value"><c:out value="${order.createdByName}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <c:if test="${order.approvedBy != 0}">
+                                        <div class="info-field">
+                                            <div class="info-label">Người duyệt</div>
+                                            <div class="info-value"><c:out value="${order.approvedByName}"/></div>
+                                        </div>
+                                    </c:if>
+                                    <div class="info-field">
+                                        <div class="info-label">Tổng tiền</div>
+                                        <div class="info-value mono"><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></div>
+                                    </div>
+                                </div>
 
-                        <c:if test="${order.status == 'REJECTED'}">
-                            <div class="info-grid cols-4" style="margin-bottom: 16px;">
-                                <div class="info-field">
-                                    <div class="info-label">Người từ chối</div>
-                                    <div class="info-value"><c:out value="${not empty order.rejectedByName ? order.rejectedByName : '—'}"/></div>
-                                </div>
-                                <div class="info-field" style="grid-column: span 3;">
-                                    <div class="info-label">Lý do từ chối</div>
-                                    <div class="info-value" style="color: var(--danger);"><c:out value="${not empty order.rejectReason ? order.rejectReason : '—'}"/></div>
-                                </div>
-                            </div>
-                        </c:if>
-
-                        <c:if test="${order.status == 'CANCELLED'}">
-                            <div class="info-grid cols-4" style="margin-bottom: 16px;">
-                                <div class="info-field">
-                                    <div class="info-label">Người hủy</div>
-                                    <div class="info-value"><c:out value="${not empty order.cancelledByName ? order.cancelledByName : '—'}"/></div>
-                                </div>
-                                <div class="info-field">
-                                    <div class="info-label">Ngày hủy</div>
-                                    <div class="info-value mono"><c:choose><c:when test="${order.cancelledAt == null}"><span class="empty">—</span></c:when><c:otherwise><fmt:formatDate value="${order.cancelledAt}" pattern="dd/MM/yyyy HH:mm"/></c:otherwise></c:choose></div>
-                                </div>
-                            </div>
-                        </c:if>
-
-                        <%-- Dòng khách hàng --%>
-                        <div class="info-grid cols-4" style="margin-top: 6px; padding-top: 16px; border-top: 1px dashed var(--border);">
-                            <div class="info-field">
-                                <div class="info-label">Tên khách hàng</div>
-                                <div class="info-value"><c:out value="${order.customer.name}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Số điện thoại</div>
-                                <div class="info-value mono"><c:out value="${order.customer.phone}"/></div>
-                            </div>
-                            <c:if test="${not empty order.customer.email}">
-                                <div class="info-field">
-                                    <div class="info-label">Email</div>
-                                    <div class="info-value mono"><c:out value="${order.customer.email}"/></div>
-                                </div>
-                            </c:if>
-                            <c:if test="${not empty order.customer.companyName}">
-                                <div class="info-field">
-                                    <div class="info-label">Công ty</div>
-                                    <div class="info-value"><c:out value="${order.customer.companyName}"/></div>
-                                </div>
-                            </c:if>
-                        </div>
-
-                        <div class="info-grid cols-2" style="margin-top: 14px;">
-                            <div class="info-field">
-                                <div class="info-label">Địa chỉ giao hàng</div>
-                                <div class="info-value"><c:out value="${order.customer.address}"/></div>
-                            </div>
-                            <c:if test="${not empty customerTypeName}">
-                                <div class="info-field">
-                                    <div class="info-label">Loại khách hàng</div>
-                                    <div class="info-value"><c:out value="${customerTypeName}"/></div>
-                                </div>
-                            </c:if>
-                        </div>
-
-                        <c:if test="${not empty order.note || not empty order.customerNote}">
-                            <div class="info-grid" style="margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border);">
+                                <c:if test="${not empty order.rejectReason}">
+                                    <div style="margin-top: 18px;">
+                                        <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
+                                        <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
+                                    </div>
+                                </c:if>
                                 <c:if test="${not empty order.note}">
-                                    <div class="info-field" style="margin-bottom: 10px;">
-                                        <div class="info-label">Ghi chú nội bộ</div>
+                                    <div style="margin-top: 18px;">
+                                        <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú nội bộ</div>
                                         <div class="note-soft"><c:out value="${order.note}"/></div>
                                     </div>
                                 </c:if>
                                 <c:if test="${not empty order.customerNote}">
-                                    <div class="info-field">
-                                        <div class="info-label">Ghi chú của khách hàng</div>
+                                    <div style="margin-top: 18px;">
+                                        <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú của khách hàng</div>
                                         <div class="note-soft"><c:out value="${order.customerNote}"/></div>
                                     </div>
                                 </c:if>
                             </div>
-                        </c:if>
-                    </section>
 
-                    <%-- ============== Section 2: Danh sách máy phát điện ============== --%>
-                    <section class="section" style="padding: 0;">
-                        <div class="section-head" style="margin: 0; padding: 18px 22px 14px 22px; border-bottom: 1px solid var(--border);">
-                            <div>
-                                <div class="section-num">02 — DANH SÁCH MÁY PHÁT ĐIỆN</div>
-                                <h3 class="section-title">Chi tiết sản phẩm</h3>
-                            </div>
-                            <span class="section-update"><c:out value="${fn:length(details)}"/> dòng hàng</span>
-                        </div>
-                        <table class="product-table" id="detailTable">
-                            <thead>
-                                <tr>
-                                    <th style="width:50px;">#</th>
-                                    <th>Sản phẩm / Mã</th>
-                                    <th style="width:80px;" class="text-center">SL</th>
-                                    <th style="width:140px;" class="text-right">Đơn giá</th>
-                                    <th style="width:160px;" class="text-right">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailBody">
-                                <c:choose>
-                                    <c:when test="${empty details}">
-                                        <tr><td colspan="5" class="text-center" style="padding:32px;color:var(--muted);">Chưa có sản phẩm nào trong đơn hàng.</td></tr>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach var="d" items="${details}" varStatus="st">
-                                            <tr class="detail-row">
-                                                <td class="mono">${st.index + 1}</td>
-                                                <td>
-                                                    <a href="javascript:void(0);" class="gen-link"
-                                                       onclick="showGenModal(this)"
-                                                       data-gen-id="<c:out value='${d.generatorId}'/>"
-                                                       data-gen-model="<c:out value='${d.generatorModel}'/>"
-                                                       data-gen-unit-price="<fmt:formatNumber value='${d.unitPrice}' type='currency' currencySymbol='₫'/>"
-                                                       data-gen-qty="<c:out value='${d.quantity}'/>"
-                                                       title="Xem thông tin máy phát">
-                                                        <c:out value="${d.generatorModel}"/>
-                                                    </a>
-                                                </td>
-                                                <td class="text-center mono"><fmt:formatNumber value="${d.quantity}"/></td>
-                                                <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
-                                                <td class="text-right mono"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tbody>
-                            <c:if test="${not empty details}">
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="4" class="text-right" style="text-transform:uppercase;font-size:11px;letter-spacing:0.04em;color:var(--muted);">Tổng cộng</td>
-                                        <td class="text-right mono"><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></td>
-                                    </tr>
-                                </tfoot>
-                            </c:if>
-                        </table>
-                        <c:if test="${not empty details && fn:length(details) > 10}">
-                            <div style="padding: 16px 20px;">
-                                <div class="detail-pager" id="detailPagination">
-                                    <button type="button" class="btn" id="prevDetailPage">‹ Trước</button>
-                                    <span id="detailPageInfo"></span>
-                                    <button type="button" class="btn" id="nextDetailPage">Sau ›</button>
+                            <div class="table-card history-card" style="margin-top: 18px;">
+                                <div class="result-summary">
+                                    <span>Danh sách máy phát điện (<strong>${not empty details ? fn:length(details) : 0}</strong> sản phẩm)</span>
+                                    <span>Tổng tiền: <strong style="color:var(--fg);font-family:var(--font-mono);"><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></strong></span>
                                 </div>
+                                <table class="product-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;">#</th>
+                                            <th>Sản phẩm</th>
+                                            <th style="width: 100px;">SL</th>
+                                            <th style="width: 160px;" class="text-right">Đơn giá</th>
+                                            <th style="width: 160px;" class="text-right">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:choose>
+                                            <c:when test="${empty details}">
+                                                <tr><td colspan="5">
+                                                    <div class="empty-state">
+                                                        <div class="icon-wrap">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                        </div>
+                                                        <strong>Chưa có sản phẩm nào trong đơn hàng</strong>
+                                                    </div>
+                                                </td></tr>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="d" items="${details}" varStatus="st">
+                                                    <tr>
+                                                        <td class="mono">${st.index + 1}</td>
+                                                        <td>
+                                                            <strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong>
+                                                        </td>
+                                                        <td class="mono"><fmt:formatNumber value="${d.quantity}"/></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
+                                                        <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </tbody>
+                                    <c:if test="${not empty details}">
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="4" class="text-right" style="padding: 12px; font-weight: 700; border-top: 2px solid var(--border);">Tổng cộng:</td>
+                                                <td class="text-right mono" style="padding: 12px; font-weight: 700; border-top: 2px solid var(--border); color: var(--accent);"><fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></td>
+                                            </tr>
+                                        </tfoot>
+                                    </c:if>
+                                </table>
                             </div>
-                        </c:if>
-                    </div>
+                        </c:otherwise>
+                    </c:choose>
                 </main>
             </div>
         </div>
 
-        <div class="toast-host" id="toastHost"></div>
-
-        <%-- ============== Modal thông tin máy phát ============== --%>
-        <div class="gen-modal-backdrop" id="genModal" onclick="if (event.target === this) closeGenModal();">
-            <div class="gen-modal" role="dialog" aria-modal="true" aria-labelledby="genModalTitle">
-                <div class="gen-modal-header">
-                    <h3 id="genModalTitle">Thông tin máy phát</h3>
-                    <button type="button" class="gen-modal-close" onclick="closeGenModal()" aria-label="Đóng">&times;</button>
-                </div>
-                <div class="gen-modal-body">
-                    <div class="gen-info-row">
-                        <div class="lbl">Mã máy phát</div>
-                        <div class="val" id="gm-id">—</div>
-                    </div>
-                    <div class="gen-info-row">
-                        <div class="lbl">Tên model</div>
-                        <div class="val" id="gm-model">—</div>
-                    </div>
-                    <div class="gen-info-row">
-                        <div class="lbl">Số lượng đặt</div>
-                        <div class="val" id="gm-qty">—</div>
-                    </div>
-                    <div class="gen-info-row">
-                        <div class="lbl">Đơn giá</div>
-                        <div class="val" id="gm-unit-price">—</div>
-                    </div>
-                </div>
-                <div class="gen-modal-footer">
-                    <button type="button" class="btn" onclick="closeGenModal()">Đóng</button>
-                    <a href="#" class="btn btn-primary" id="gm-detail-link">
-                        <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        Xem chi tiết
-                    </a>
+        <c:if test="${order.status == 'PENDING' && canApproveOrder}">
+            <div class="modal-host" id="approveModal">
+                <div class="modal-card">
+                    <h3>Duyệt đơn hàng</h3>
+                    <div class="modal-sub">Xác nhận duyệt đơn hàng <strong><c:out value="${order.orderCode}"/></strong>?</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
+
+            <div class="modal-host" id="rejectModal">
+                <div class="modal-card">
+                    <h3>Từ chối đơn hàng</h3>
+                    <div class="modal-sub">Đơn hàng sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=reject">
+                        <input type="hidden" name="orderId" value="${order.orderId}" />
+                        <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
+                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, thông tin chưa hợp lệ..." style="margin-top:8px;"></textarea>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="revisionModal">
+                <div class="modal-card">
+                    <h3>Yêu cầu chỉnh sửa</h3>
+                    <div class="modal-sub">Gửi đơn hàng lại cho nhân viên tạo đơn kèm lý do để chỉnh sửa và gửi lại.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=requestRevision" id="revisionForm">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
+                        <textarea name="reason" id="revisionReason" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <div class="toast-host" id="toastHost"></div>
 
         <script>
             <c:if test="${not empty sessionScope.message}">
@@ -803,8 +536,20 @@
                 return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
             }
 
+            function confirmApproveAction() {
+                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
+            }
+
+            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
+            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
+            document.querySelectorAll('.modal-host').forEach(function (m) {
+                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+            });
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeGenModal();
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    closeGenModal();
+                }
             });
         </script>
     </body>

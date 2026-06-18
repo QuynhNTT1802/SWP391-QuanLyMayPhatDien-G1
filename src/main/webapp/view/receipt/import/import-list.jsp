@@ -140,10 +140,14 @@
                     <h1>Phiếu nhập kho</h1>
                     <span class="crumb">/ Kho / Phiếu nhập</span>
                     <div class="top-actions">
+                        <jsp:include page="../../common/admin/bell.jsp"/>
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
+                        <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=selectPurchase">
+                            Tạo từ phiếu purchase
+                        </a>
                         <a class="btn btn-primary" href="${pageContext.request.contextPath}/import-receipt?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Tạo phiếu nhập
@@ -178,7 +182,7 @@
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, người tạo" autocomplete="off" />
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu nhập, mã phiếu mua, người tạo" autocomplete="off" />
                         </div>
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
@@ -210,9 +214,9 @@
                                 <tr>
                                     <th>Mã phiếu</th>
                                     <th>Kho</th>
+                                    <th>Phiếu mua</th>
                                     <th class="col-reason">Lý do</th>
                                     <th class="col-creator">Người tạo</th>
-                                    <th>Tổng tiền</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-date">Ngày tạo</th>
                                     <th class="col-actions">Hành động</th>
@@ -228,6 +232,14 @@
                                             <tr data-id="${r.receiptId}">
                                                 <td><span class="receipt-code"><c:out value="${r.receiptCode}"/></span></td>
                                                 <td>${r.warehouseName}</td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty r.purchaseOrderCode}">
+                                                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="po-code" style="font-family:monospace;font-size:12px;"><c:out value="${r.purchaseOrderCode}"/></a>
+                                                        </c:when>
+                                                        <c:otherwise><span class="muted">—</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
@@ -237,14 +249,6 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-creator"><c:out value="${r.createdByName}"/></td>
-                                                <td class="amount-cell">
-                                                    <c:choose>
-                                                        <c:when test="${not empty r.totalAmount}">
-                                                            <fmt:formatNumber value="${r.totalAmount}" type="currency" currencySymbol="₫"/>
-                                                        </c:when>
-                                                        <c:otherwise><span class="muted">—</span></c:otherwise>
-                                                    </c:choose>
-                                                </td>
                                                 <td class="col-status">
                                                     <c:choose>
                                                         <c:when test="${r.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Bản nháp</span></c:when>
@@ -280,7 +284,7 @@
                                                                     <span class="label">Duyệt</span>
                                                                 </button>
                                                             </c:if>
-                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
+                                                            <c:if test="${canRejectReceipt && r.status == 'PENDING'}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <button class="dropdown-item reject" onclick="openRejectModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

@@ -17,6 +17,10 @@
   --info:    oklch(60% 0.14 250);
   --info-soft: oklch(96% 0.025 250);
 
+  --purple:      oklch(60% 0.16 295);
+  --purple-soft: oklch(94% 0.04 295);
+  --shadow-md:   0 4px 12px oklch(20% 0.02 240 / 0.08);
+
   --font-ui: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
 
@@ -44,4 +48,7 @@
   --info:    oklch(70% 0.15 250);
   --info-soft: oklch(28% 0.05 250);
   --shadow-sm: 0 1px 2px oklch(0% 0 0 / 0.3);
+  --purple:      oklch(72% 0.16 295);
+  --purple-soft: oklch(28% 0.06 295);
+  --shadow-md:   0 4px 12px oklch(0% 0 0 / 0.32);
 }

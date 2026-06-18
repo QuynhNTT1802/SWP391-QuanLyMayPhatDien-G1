@@ -149,6 +149,7 @@
                     <h1>Phiếu xuất kho</h1>
                     <span class="crumb">/ Kho / Phiếu xuất</span>
                     <div class="top-actions">
+                        <jsp:include page="../../common/admin/bell.jsp"/>
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -225,7 +226,6 @@
                                     <th class="col-order">Đơn liên quan</th>
                                     <th class="col-reason">Lý do</th>
                                     <th class="col-creator">Người tạo</th>
-                                    <th>Tổng tiền</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-date">Ngày tạo</th>
                                     <th class="col-actions">Hành động</th>
@@ -234,7 +234,7 @@
                             <tbody id="receiptsBody">
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="9" style="text-align:center; padding:20px; color:var(--muted);">Không có phiếu nào.</td></tr>
+                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có phiếu nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="r" items="${receiptList}">
@@ -265,14 +265,6 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-creator"><c:out value="${r.createdByName}"/></td>
-                                                <td class="amount-cell">
-                                                    <c:choose>
-                                                        <c:when test="${not empty r.totalAmount}">
-                                                            <fmt:formatNumber value="${r.totalAmount}" type="currency" currencySymbol="₫"/>
-                                                        </c:when>
-                                                        <c:otherwise><span class="muted">—</span></c:otherwise>
-                                                    </c:choose>
-                                                </td>
                                                 <td class="col-status">
                                                     <c:choose>
                                                         <c:when test="${r.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Bản nháp</span></c:when>
@@ -308,7 +300,7 @@
                                                                     <span class="label">Duyệt</span>
                                                                 </button>
                                                             </c:if>
-                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
+                                                            <c:if test="${canRejectReceipt && r.status == 'PENDING'}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <button class="dropdown-item reject" onclick="openRejectModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>

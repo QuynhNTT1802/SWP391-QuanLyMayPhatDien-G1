@@ -204,15 +204,13 @@
                             <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>INFO</option>
                         </select>
 
-                        <%-- Dropdown module --%>
+                        <%-- Dropdown module (load động từ DB) --%>
                         <select id="moduleFilter" name="module" class="filter-select"
                                 onchange="document.getElementById('syslogFilterForm').submit()">
                             <option value="" ${empty module ? 'selected' : ''}>Tất cả module</option>
-                            <option value="quản lý danh mục"   ${module == 'quản lý danh mục'   ? 'selected' : ''}>Quản lý danh mục</option>
-                            <option value="quản lý người dùng" ${module == 'quản lý người dùng' ? 'selected' : ''}>Quản lý người dùng</option>
-                            <option value="quản lý phân quyền" ${module == 'quản lý phân quyền' ? 'selected' : ''}>Quản lý phân quyền</option>
-                            <option value="quản lý mật khẩu"   ${module == 'quản lý mật khẩu'   ? 'selected' : ''}>Quản lý mật khẩu</option>
-                            <option value="hệ thống"            ${module == 'hệ thống'            ? 'selected' : ''}>Hệ thống</option>
+                            <c:forEach var="m" items="${moduleOptions}">
+                                <option value="<c:out value='${m}'/>" ${module == m ? 'selected' : ''}><c:out value='${m}'/></option>
+                            </c:forEach>
                         </select>
 
                         <%-- Tìm kiếm nội dung --%>

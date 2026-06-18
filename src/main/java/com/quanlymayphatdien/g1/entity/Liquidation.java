@@ -5,6 +5,7 @@
 package com.quanlymayphatdien.g1.entity;
 
 import java.sql.Timestamp;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -44,7 +45,12 @@ public class Liquidation {
     private String customerAddress;
 
     private List<LiquidationDetail> details;
-    
+
+    // Aggregated summary fields (populated by listing query)
+    private Integer detailCount;
+    private BigDecimal totalOriginalPrice;
+    private BigDecimal totalLiquidationPrice;
+
     public Liquidation() {
     }
 
@@ -285,5 +291,29 @@ public class Liquidation {
 
     public void setCustomerEmail(String customerEmail) {
         this.customerEmail = customerEmail;
+    }
+
+    public Integer getDetailCount() {
+        return detailCount;
+    }
+
+    public void setDetailCount(Integer detailCount) {
+        this.detailCount = detailCount;
+    }
+
+    public BigDecimal getTotalOriginalPrice() {
+        return totalOriginalPrice;
+    }
+
+    public void setTotalOriginalPrice(BigDecimal totalOriginalPrice) {
+        this.totalOriginalPrice = totalOriginalPrice;
+    }
+
+    public BigDecimal getTotalLiquidationPrice() {
+        return totalLiquidationPrice;
+    }
+
+    public void setTotalLiquidationPrice(BigDecimal totalLiquidationPrice) {
+        this.totalLiquidationPrice = totalLiquidationPrice;
     }
 }

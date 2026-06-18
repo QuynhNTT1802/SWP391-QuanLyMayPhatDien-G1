@@ -362,6 +362,24 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
+    public boolean requestRevisionOrder(int orderId, int userId, String reason) {
+        String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, updated_by = ?, updated_at = NOW(), "
+                + "approved_by = NULL, approved_at = NULL "
+                + "WHERE order_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            ps.setString(2, reason);
+            ps.setInt(3, userId);
+            ps.setInt(4, orderId);
+            ps.setString(5, GlobalUtils.STATUS_PENDING);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public SaleOrder findById(int id) {
         String sql = "SELECT so.*, "
                 + "u_created.name AS created_by_name, "

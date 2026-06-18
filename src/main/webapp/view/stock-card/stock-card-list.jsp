@@ -46,6 +46,10 @@
 
                     <form method="get" action="${pageContext.request.contextPath}/stock-card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                         <input type="hidden" name="action" value="list" />
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, serial, ghi chú" autocomplete="off" />
+                        </div>
                         <select class="filter-select" name="warehouseId" onchange="this.form.submit()">
                             <option value="">Kho: Tất cả</option>
                             <c:forEach var="w" items="${warehouses}">
@@ -72,7 +76,7 @@
                             <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             Tìm kiếm
                         </button>
-                        <c:if test="${not empty warehouseId or not empty generatorId or not empty typeFilter or not empty fromDate or not empty toDate}">
+                        <c:if test="${not empty search or not empty warehouseId or not empty generatorId or not empty typeFilter or not empty fromDate or not empty toDate}">
                             <a href="${pageContext.request.contextPath}/stock-card" class="btn">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 Xoá lọc
@@ -167,6 +171,9 @@
                             </tbody>
                         </table>
                         <c:set var="filterParams" value="" />
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                        </c:if>
                         <c:if test="${not empty warehouseId}">
                             <c:set var="filterParams" value="${filterParams}&warehouseId=${warehouseId}" />
                         </c:if>
