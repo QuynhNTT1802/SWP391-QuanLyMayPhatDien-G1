@@ -194,7 +194,7 @@ public class SupplierController extends HttpServlet {
         request.setAttribute("supplierTypeList", catDAO.findByType("customer_type"));
         request.setAttribute("prefillName", request.getParameter("prefillName"));
         request.setAttribute("returnUrl", request.getParameter("returnUrl"));
-        request.setAttribute("rowIndex", request.getParameter("rowIndex"));
+        request.setAttribute("rowGid", request.getParameter("rowGid"));
         request.getRequestDispatcher("/view/supplier/supplier-create.jsp").forward(request, response);
     }
 
@@ -249,16 +249,20 @@ public class SupplierController extends HttpServlet {
                         "Tạo nhà cung cấp: " + name.trim() + " - " + phone.trim());
 
                 String returnUrl = request.getParameter("returnUrl");
+                request.getSession().setAttribute("toastMessage", "DEBUG returnUrl='" + returnUrl + "'");
+                request.getSession().setAttribute("toastType", "info");
                 if (returnUrl != null && !returnUrl.isEmpty()
                         && (returnUrl.contains("/proposal")
                         || returnUrl.contains("importExcel")
                         || returnUrl.contains("assignSupplier"))) {
-                    String separator = returnUrl.contains("?") ? "&" : "?";
-                    String rowIdx = request.getParameter("rowIndex");
+                    String separator = (returnUrl.contains("?")
+                            || returnUrl.contains("%3F")
+                            || returnUrl.contains("%3f")) ? "&" : "?";
+                    String rowGid = request.getParameter("rowGid");
                     response.sendRedirect(returnUrl + separator
                             + "newSupplierId=" + newId
                             + "&newSupplierName=" + java.net.URLEncoder.encode(name.trim(), "UTF-8")
-                            + (rowIdx != null && !rowIdx.isEmpty() ? "&assignedRow=" + rowIdx : ""));
+                            + (rowGid != null && !rowGid.isEmpty() ? "&assignedGid=" + java.net.URLEncoder.encode(rowGid, "UTF-8") : ""));
                     return;
                 }
             } else {

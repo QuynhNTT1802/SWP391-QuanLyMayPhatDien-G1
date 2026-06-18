@@ -198,6 +198,14 @@
                         <input type="hidden" name="warehouseId" value="<c:out value='${currentWarehouseId}'/>"/>
                         <input type="hidden" name="note" value="<c:out value='${currentNote}'/>"/>
                         <input type="hidden" name="submitType" id="submitType" value="pending"/>
+                        <c:if test="${sessionExpired}">
+                            <div class="alert alert-error" style="background:#f8d7da;border:1px solid #f5c6cb;color:#721c24;padding:14px 18px;border-radius:6px;margin-bottom:16px;">
+                                <strong>Phiên import đã hết hạn hoặc chưa có dữ liệu.</strong>
+                                Vui lòng quay lại
+                                <a href="${pageContext.request.contextPath}/proposal?action=create" style="color:#721c24;text-decoration:underline;font-weight:700;">trang tạo đề xuất</a>
+                                để tải lại file Excel.
+                            </div>
+                        </c:if>
                         <c:if test="${not empty warningRows}">
                             <div class="alert alert-warn" style="margin-bottom:12px">
                                 <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -315,8 +323,9 @@
                                                     </c:choose>
                                                 </td>
                                                 <td style="text-align:right; white-space:nowrap">
-                                                    <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=${java.net.URLEncoder.encode(row.supplierQuery, 'UTF-8')}&amp;returnUrl=${pageContext.request.contextPath}/proposal?action%3DimportConfirm&amp;rowIndex=${st.index}" target="_self">Tạo NCC mới</a>
-                                                    <button type="button" class="btn btn-primary" onclick="openSupplierPanel(<c:out value='${st.index}'/>, '<c:out value='${row.supplierQuery}'/>', this.closest('tr'))">Chọn từ DS</button>
+                                                    <c:set var="_returnUrl" value="${pageContext.request.contextPath}/proposal?action=importConfirm" />
+                                                    <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=${java.net.URLEncoder.encode(row.supplierQuery, 'UTF-8')}&amp;returnUrl=${java.net.URLEncoder.encode(_returnUrl, 'UTF-8')}&amp;gid=${row.gid}" target="_self">Tạo NCC mới</a>
+                                                    <button type="button" class="btn btn-primary" onclick="openSupplierPanel('<c:out value='${row.gid}'/>', '<c:out value='${row.supplierQuery}'/>', this.closest('tr'))">Chọn từ DS</button>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -379,7 +388,7 @@
             </div>
             <div class="side-panel-body">
                 <div style="display:flex; gap:8px; margin-bottom:16px;">
-                    <input type="text" id="supplierSearchInput" class="supplier-search-box" placeholder="Tìm theo tên, SĐT, email..." autocomplete="off" style="margin-bottom:0;"/>
+                    <input type="text" id="supplierSearchInput" class="supplier-search-box" placeholder="Tìm theo tên nhà cung cấp..." autocomplete="off" style="margin-bottom:0;"/>
                 </div>
                 <div id="supplierLoading" class="loading-msg" style="display:none;">
                     <svg class="spin-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -473,22 +482,22 @@
                 var newSupplierId = new URLSearchParams(window.location.search).get('newSupplierId');
                 var newSupplierName = new URLSearchParams(window.location.search).get('newSupplierName');
                 if (newSupplierId && newSupplierName) {
-                    var idxStr = new URLSearchParams(window.location.search).get('rowIndex');
-                    if (idxStr != null) {
-                        var idx = parseInt(idxStr);
-                        if (!isNaN(idx) && idx >= 0) {
-                            fetch('${pageContext.request.contextPath}/proposal?action=assignSupplier', {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                                body: 'rowIndex=' + encodeURIComponent(idx) + '&supplierId=' + encodeURIComponent(newSupplierId)
-                            }).then(function (r) { return r.json(); }).then(function (data) {
-                                if (data && data.ok) {
-                                    window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                                }
-                            }).catch(function () {
+                    var gidStr = new URLSearchParams(window.location.search).get('assignedGid');
+                    if (gidStr == null) {
+                        gidStr = new URLSearchParams(window.location.search).get('gid');
+                    }
+                    if (gidStr != null && gidStr !== '') {
+                        fetch('${pageContext.request.contextPath}/proposal?action=assignSupplier', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                            body: 'gid=' + encodeURIComponent(gidStr) + '&supplierId=' + encodeURIComponent(newSupplierId)
+                        }).then(function (r) { return r.json(); }).then(function (data) {
+                            if (data && data.ok) {
                                 window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                            });
-                        }
+                            }
+                        }).catch(function () {
+                            window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
+                        });
                     }
                 }
             })();
@@ -521,7 +530,9 @@
 
             function loadSuppliers(callback) {
                 document.getElementById('supplierLoading').style.display = 'block';
-                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q=')
+                var qInput = document.getElementById('supplierSearchInput');
+                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q='
+                        + encodeURIComponent(qInput ? qInput.value : ''))
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         document.getElementById('supplierLoading').style.display = 'none';
@@ -536,8 +547,6 @@
                             var card = document.createElement('div');
                             card.className = 'supplier-card';
                             card.setAttribute('data-name', (s.name || '').toLowerCase());
-                            card.setAttribute('data-phone', (s.phone || '').toLowerCase());
-                            card.setAttribute('data-email', (s.email || '').toLowerCase());
                             var metaHtml = '';
                             if (s.phone) {
                                 metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
@@ -576,7 +585,7 @@
                 fetch('${pageContext.request.contextPath}/proposal?action=assignSupplier', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'rowIndex=' + encodeURIComponent(currentRowIndex) + '&supplierId=' + encodeURIComponent(supplier.id)
+                    body: 'gid=' + encodeURIComponent(currentRowIndex) + '&supplierId=' + encodeURIComponent(supplier.id)
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
@@ -601,21 +610,23 @@
                     .replace(/'/g, '&#39;');
             }
 
+            var searchDebounce = null;
             document.getElementById('supplierSearchInput').addEventListener('input', function () {
                 var q = this.value.toLowerCase().trim();
                 var cards = document.querySelectorAll('.supplier-card');
                 var words = q ? q.split(/\s+/) : [];
                 cards.forEach(function (c) {
                     if (!q) { c.style.display = ''; return; }
-                    var haystack = (c.getAttribute('data-name') || '') + '|'
-                        + (c.getAttribute('data-phone') || '') + '|'
-                        + (c.getAttribute('data-email') || '');
+                    var haystack = (c.getAttribute('data-name') || '');
                     var all = true;
                     for (var i = 0; i < words.length; i++) {
                         if (haystack.indexOf(words[i]) < 0) { all = false; break; }
                     }
                     c.style.display = all ? '' : 'none';
                 });
+                if (searchDebounce) clearTimeout(searchDebounce);
+                var self = this;
+                searchDebounce = setTimeout(function () { loadSuppliers(); }, 300);
             });
 
             // ESC để đóng panel

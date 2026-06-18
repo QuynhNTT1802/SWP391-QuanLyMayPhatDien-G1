@@ -75,7 +75,7 @@
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/suppliers?action=create">
                             <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}'/>"/>
-                            <input type="hidden" name="rowIndex" value="<c:out value='${rowIndex}'/>"/>
+                            <input type="hidden" name="rowGid" value="<c:out value='${rowGid}'/>"/>
 
                             <div class="form-section">
                                 <div class="form-section-head">
