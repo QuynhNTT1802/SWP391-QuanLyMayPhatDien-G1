@@ -124,11 +124,11 @@
                                             </td>
                                             <td><c:out value="${c.createdByName}"/></td>
                                             <td><c:out value="${c.warehouseName}"/></td>
-                                            <td style="font-size:12px;color:var(--muted);">${c.startedAt}</td>
-                                            <td style="font-size:12px;color:var(--muted);">
+                                            <td>${c.startedAt}</td>
+                                            <td>
                                                 <c:choose>
                                                     <c:when test="${not empty c.completedAt}">${c.completedAt}</c:when>
-                                                    <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                    <c:otherwise><span>—</span></c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td class="col-actions">

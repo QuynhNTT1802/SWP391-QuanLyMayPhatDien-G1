@@ -156,28 +156,48 @@ public class InventoryCheckController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String whParam = request.getParameter("warehouseId");
-        Integer warehouseId = (whParam != null && !whParam.isEmpty()) ? Integer.parseInt(whParam) : null;
+        String warehouseIdParam = request.getParameter("warehouseId");
+        Integer warehouseId = null;
+        if (warehouseIdParam != null && !warehouseIdParam.isEmpty()) {
+            warehouseId = Integer.parseInt(warehouseIdParam);
+        }
 
         request.setAttribute("warehouses", warehouseDAO.findAll());
+
         if (warehouseId != null) {
             request.setAttribute("selectedWarehouse", warehouseId);
-            List<Inventory> rawList = inventoryDAO.findByWarehouseId(warehouseId);
-            Map<Integer, List<Inventory>> grouped = rawList.stream()
-                    .collect(Collectors.groupingBy(Inventory::getGeneratorId));
-            List<Inventory> aggregated = new ArrayList<>();
-            Map<Integer, Integer> countMap = new HashMap<>();
-            for (Map.Entry<Integer, List<Inventory>> entry : grouped.entrySet()) {
-                aggregated.add(entry.getValue().get(0));
-                countMap.put(entry.getKey(), entry.getValue().size());
+
+            List<Inventory> listSerials = inventoryDAO.findByWarehouseId(warehouseId);
+
+            Map<Integer, List<Inventory>> groupedByGenerator = new HashMap<>();
+            for (Inventory serial : listSerials) {
+                int generatorId = serial.getGeneratorId();
+                List<Inventory> serialList = groupedByGenerator.get(generatorId);
+                if (serialList == null) {
+                    serialList = new ArrayList<>();
+                    groupedByGenerator.put(generatorId, serialList);
+                }
+                serialList.add(serial);
             }
-            request.setAttribute("inventoryList", aggregated);
-            request.setAttribute("generatorCountMap", countMap);
+
+            List<Inventory> inventoryList = new ArrayList<>();
+            Map<Integer, Integer> generatorCountMap = new HashMap<>();
+
+            for (Map.Entry<Integer, List<Inventory>> entry : groupedByGenerator.entrySet()) {
+                int generatorId = entry.getKey();
+                List<Inventory> serialsOfThisGenerator = entry.getValue();
+
+                inventoryList.add(serialsOfThisGenerator.get(0));
+                generatorCountMap.put(generatorId, serialsOfThisGenerator.size());
+            }
+
+            request.setAttribute("inventoryList", inventoryList);
+            request.setAttribute("generatorCountMap", generatorCountMap);
         }
 
         request.getRequestDispatcher("/view/inventory-check/inventory-check-create.jsp").forward(request, response);
     }
-
+    
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String idStr = request.getParameter("id");
@@ -199,7 +219,13 @@ public class InventoryCheckController extends HttpServlet {
         List<InventoryCheckSerial> serials = checkDAO.findSerialsByCheckId(id);
         Map<Integer, List<InventoryCheckSerial>> serialsByDetail = new HashMap<>();
         for (InventoryCheckSerial s : serials) {
-            serialsByDetail.computeIfAbsent(s.getCheckDetailId(), k -> new ArrayList<>()).add(s);
+            Integer detailId = s.getCheckDetailId();
+            List<InventoryCheckSerial> list = serialsByDetail.get(detailId);
+            if (list == null) {
+                list = new ArrayList<>();
+                serialsByDetail.put(detailId, list);
+            }
+            list.add(s);
         }
 
         request.setAttribute("check", check);
@@ -282,20 +308,7 @@ public class InventoryCheckController extends HttpServlet {
         if (!errors.isEmpty()) {
             request.setAttribute("toastType", "danger");
             request.setAttribute("toastMessage", "Tạo phiếu thất bại: " + String.join(", ", errors));
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("selectedWarehouse", warehouseId);
-            List<Inventory> rawList = inventoryDAO.findByWarehouseId(warehouseId);
-            Map<Integer, List<Inventory>> grouped = rawList.stream()
-                    .collect(Collectors.groupingBy(Inventory::getGeneratorId));
-            List<Inventory> aggregated = new ArrayList<>();
-            Map<Integer, Integer> countMap = new HashMap<>();
-            for (Map.Entry<Integer, List<Inventory>> entry : grouped.entrySet()) {
-                aggregated.add(entry.getValue().get(0));
-                countMap.put(entry.getKey(), entry.getValue().size());
-            }
-            request.setAttribute("inventoryList", aggregated);
-            request.setAttribute("generatorCountMap", countMap);
-            request.getRequestDispatcher("/view/inventory-check/inventory-check-create.jsp").forward(request, response);
+            showCreateForm(request, response);
             return;
         }
 
@@ -421,6 +434,20 @@ public class InventoryCheckController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/inventory-check");
             return;
         }
+        List<InventoryCheckDetail> details = checkDAO.findDetailsByCheckId(checkId);
+        boolean missingQuantity = false;
+        for (InventoryCheckDetail d : details) {
+            if (d.getActualQuantity() == null) {
+                missingQuantity = true;
+                break;
+            }
+        }
+        if (missingQuantity) {
+            session.setAttribute("error",
+                    "Không thể hoàn thành: phiếu còn máy chưa nhập số lượng thực tế");
+            response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+            return;
+        }
 
         boolean ok = checkDAO.complete(checkId);
         if (ok) {
@@ -433,7 +460,6 @@ public class InventoryCheckController extends HttpServlet {
             log.setDetails("Hoàn thành kiểm kê");
             activityLogDAO.insert(log);
 
-            List<InventoryCheckDetail> details = checkDAO.findDetailsByCheckId(checkId);
             for (InventoryCheckDetail d : details) {
                 int diff = d.getSystemQuantity() - (d.getActualQuantity() != null ? d.getActualQuantity() : 0);
                 if (diff != 0) {
@@ -509,7 +535,7 @@ public class InventoryCheckController extends HttpServlet {
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
-                "attachment; filename=BC_KiemKe_" + detail.getGeneratorModel() + ".xlsx");
+                "attachment; filename=BaoCaoKiemKe_" + detail.getGeneratorModel() + ".xlsx");
         try (OutputStream out = response.getOutputStream()) {
             workbook.write(out);
         }
