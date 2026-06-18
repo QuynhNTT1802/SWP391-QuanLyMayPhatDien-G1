@@ -305,23 +305,35 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
 
     public List<Supplier> searchByKeyword(String keyword, int limit) {
         List<Supplier> list = new ArrayList<>();
-        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
-        String sql;
-        if (hasKeyword) {
-            sql = "SELECT * FROM supplier "
-                    + "WHERE status = 'active' AND name LIKE ? "
-                    + "ORDER BY name ASC LIMIT ?";
-        } else {
-            sql = "SELECT * FROM supplier WHERE status = 'active' ORDER BY name ASC LIMIT ?";
+        StringBuilder sql = new StringBuilder("SELECT * FROM supplier WHERE status = 'active' ");
+        List<Object> params = new ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String[] tokens = keyword.trim().split("\\s+");
+            if (tokens.length > 0) {
+                sql.append("AND (");
+                for (int t = 0; t < tokens.length; t++) {
+                    if (t > 0) sql.append(" AND ");
+                    String p = "%" + escapeLike(tokens[t]) + "%";
+                    sql.append("name LIKE ? ESCAPE '\\\\'");
+                    params.add(p);
+                }
+                sql.append(") ");
+            }
         }
+        sql.append("ORDER BY name ASC LIMIT ?");
+        params.add(limit > 0 ? limit : 10);
+
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            if (hasKeyword) {
-                statement.setString(1, "%" + keyword.trim() + "%");
-                statement.setInt(2, limit > 0 ? limit : 10);
-            } else {
-                statement.setInt(1, limit > 0 ? limit : 10);
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                Object val = params.get(i);
+                if (val instanceof String) {
+                    statement.setString(i + 1, (String) val);
+                } else if (val instanceof Integer) {
+                    statement.setInt(i + 1, (Integer) val);
+                }
             }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
