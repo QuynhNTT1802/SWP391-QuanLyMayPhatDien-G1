@@ -7,6 +7,7 @@ import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -340,7 +341,7 @@ public class WarehouseController extends HttpServlet {
 
             insertLog(user, entityId, newName, "UPDATE", desc.toString());
         } catch (Exception e) {
-            SystemLogger.error("quản lý kho", "WarehouseController.logUpdate", e.getMessage(), e);
+            SystemLogger.error(LogModule.WAREHOUSE, "WarehouseController.logUpdate", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -355,7 +356,7 @@ public class WarehouseController extends HttpServlet {
             String description = username + " đã khóa kho '" + name + "' — Trạng thái: " + statusLabel(oldStatus) + " -> " + statusLabel("locked");
             insertLog(user, entityId, name, "LOCK", description);
         } catch (Exception e) {
-            SystemLogger.error("quản lý kho", "WarehouseController.logLock", e.getMessage(), e);
+            SystemLogger.error(LogModule.WAREHOUSE, "WarehouseController.logLock", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -370,7 +371,7 @@ public class WarehouseController extends HttpServlet {
             String description = username + " đã mở khóa kho '" + name + "' — Trạng thái: " + statusLabel(oldStatus) + " -> " + statusLabel("active");
             insertLog(user, entityId, name, "UNLOCK", description);
         } catch (Exception e) {
-            SystemLogger.error("quản lý kho", "WarehouseController.logUnlock", e.getMessage(), e);
+            SystemLogger.error(LogModule.WAREHOUSE, "WarehouseController.logUnlock", e.getMessage(), e);
             e.printStackTrace();
         }
     }

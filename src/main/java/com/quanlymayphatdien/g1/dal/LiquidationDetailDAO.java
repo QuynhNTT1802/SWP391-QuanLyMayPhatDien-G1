@@ -6,6 +6,7 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -34,7 +35,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
              p.setInt(2, t.getLiquidationDetailId());
              return p.executeUpdate() > 0;
          } catch (Exception e) {
-             SystemLogger.error("Thanh lý", "Lỗi update detail liquidation", e.getMessage(), e);
+             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi update detail liquidation", e.getMessage(), e);
          }
          return false;
     }
@@ -64,7 +65,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
 
             return p.executeUpdate() > 0 ? 1 : 0;
         } catch (Exception e) {
-            SystemLogger.error("Thanh lý", "Lỗi khi thêm detail cho liquidation", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi khi thêm detail cho liquidation", e.getMessage(), e);
         }
         return -1;
 
@@ -82,7 +83,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
         try {
             d.setGeneratorModelName(rs.getString("generator_model_name"));
         } catch (SQLException e) {
-            SystemLogger.error("Thanh lý", "Lỗi lấy thông tin của liquidation detail", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi lấy thông tin của liquidation detail", e.getMessage(), e);
 
         }
         return d;
@@ -103,7 +104,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error("Thanh lý", "Lỗi findByLiquidationId", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findByLiquidationId", e.getMessage(), e);
         }
         return list;
     }
@@ -115,7 +116,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
             p.setInt(1, liquidationId);
             return p.executeUpdate() >= 0;
         } catch (Exception e) {
-            SystemLogger.error("Thanh lý", "Lỗi deleteByLiquidationId", e.getMessage(), e);
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi deleteByLiquidationId", e.getMessage(), e);
         }
         return false;
     }

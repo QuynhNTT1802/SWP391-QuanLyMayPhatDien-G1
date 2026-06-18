@@ -1,6 +1,7 @@
 package com.quanlymayphatdien.g1.filter;
 
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -30,7 +31,7 @@ public class SystemLogFilter implements Filter {
             }
 
             String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
-            SystemLogger.error("hệ thống", source, message, e);
+            SystemLogger.error(LogModule.SYSTEM, source, message, e);
 
             // Re-throw để server tiếp tục xử lý (hiển thị trang lỗi 500)
             if (e instanceof IOException) throw (IOException) e;

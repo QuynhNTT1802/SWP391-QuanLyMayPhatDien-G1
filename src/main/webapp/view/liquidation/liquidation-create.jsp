@@ -6,134 +6,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tạo đơn thanh lý mới — Warehouse OS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
-    <style>
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-        }
-        .detail-table th {
-            text-align: left;
-            padding: 8px 10px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--muted);
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .detail-table td {
-            padding: 8px 6px;
-            vertical-align: top;
-        }
-        .detail-table select, .detail-table input {
-            width: 100%;
-            padding: 7px 8px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--bg);
-            color: var(--fg);
-            font-size: 13px;
-            box-sizing: border-box;
-        }
-        .col-num {
-            width: 36px;
-            text-align: center;
-            color: var(--muted);
-            font-weight: 600;
-            padding-top: 14px;
-        }
-        .col-del {
-            width: 40px;
-            text-align: center;
-        }
-        .row-del-btn {
-            width: 28px;
-            height: 28px;
-            border: none;
-            background: none;
-            color: var(--danger);
-            cursor: pointer;
-            border-radius: var(--radius-sm);
-            margin-top: 4px;
-        }
-        .row-del-btn:hover {
-            background: var(--danger-soft);
-        }
-        .add-row-btn {
-            margin-top: 8px;
-            font-size: 13px;
-        }
-
-
-        /* Side Panel UI for Serial Selection */
-        .side-panel-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
-            opacity: 0; visibility: hidden; transition: opacity 0.3s;
-        }
-        .side-panel-overlay.show { opacity: 1; visibility: visible; }
-        
-        .side-panel {
-            position: fixed; top: 0; right: -420px; width: 400px; max-width: 100%; height: 100%;
-            background: var(--bg); box-shadow: -8px 0 32px rgba(0,0,0,0.1); z-index: 1001;
-            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex; flex-direction: column;
-        }
-        .side-panel.show { right: 0; }
-        
-        .side-panel-head {
-            padding: 24px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .side-panel-title { font-size: 18px; font-weight: 700; color: var(--fg); margin: 0; }
-        .side-panel-close {
-            background: var(--surface-2); border: none; width: 32px; height: 32px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: var(--muted); transition: 0.2s; font-size: 20px;
-        }
-        .side-panel-close:hover { background: var(--danger-soft); color: var(--danger); }
-        
-        .side-panel-body { flex: 1; overflow-y: auto; padding: 24px; }
-        
-        .serial-search-box {
-            width: 100%; padding: 12px 16px; margin-bottom: 20px;
-            border: 1px solid var(--border); border-radius: var(--radius);
-            background: var(--bg); color: var(--fg); font-size: 14px; font-family: var(--font-ui);
-            box-sizing: border-box; transition: border-color 0.2s;
-        }
-        .serial-search-box:focus { outline: none; border-color: var(--accent); }
-
-        .serial-list-wrap { display: flex; flex-direction: column; gap: 12px; }
-        
-        .serial-card {
-            padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md);
-            background: var(--surface); cursor: pointer; transition: all 0.2s;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .serial-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1); transform: translateY(-1px); }
-        [data-theme="dark"] .serial-card:hover { box-shadow: 0 4px 12px rgba(96, 165, 250, 0.1); }
-        
-        .serial-card-left { display: flex; flex-direction: column; gap: 6px; }
-        .serial-number-text { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--fg); }
-        .serial-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
-        
-        .serial-card-icon { color: var(--accent); opacity: 0; transition: 0.2s; transform: translateX(-8px); }
-        .serial-card:hover .serial-card-icon { opacity: 1; transform: translateX(0); }
-        
-        .empty-msg { padding: 40px 20px; color: var(--muted); text-align: center; font-size: 14px; }
-        
-        .badge-avail {
-            display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
-            border-radius: 12px; font-size: 10px; font-weight: 700;
-            background: #d1fae5; color: #059669; text-transform: uppercase;
-        }
-        [data-theme="dark"] .badge-avail { background: var(--accent-soft); color: var(--accent); }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
 </head>
 <body>
 <div class="app">
@@ -165,10 +43,8 @@
                             <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
                             <h3 class="form-section-title">Kho hàng và Lý do thanh lý</h3>
                         </div>
-                        
-                        <div class="form-grid">
 
-                            <!-- Kho hàng -->
+                        <div class="form-grid">
                             <div class="field">
                                 <label class="field-label">Kho hàng <span class="req">*</span></label>
                                 <select class="input" name="warehouseId" id="warehouseId" required>
@@ -178,8 +54,7 @@
                                     </c:forEach>
                                 </select>
                             </div>
-                            
-                            <!-- Lý do thanh lý -->
+
                             <div class="field">
                                 <label class="field-label">Lý do thanh lý <span class="req">*</span></label>
                                 <select class="input" name="reasonId" required>
@@ -192,71 +67,72 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 02: CHI TIẾT MÁY -->
+                    <!-- SECTION 02: CHỌN MÁY (Inline 2-col picker) -->
                     <div class="form-section">
                         <div class="form-section-head">
-                            <div class="form-section-num">02 — CHI TIẾT MÁY</div>
-                            <h3 class="form-section-title">Danh sách máy phát điện</h3>
+                            <div class="form-section-num">02 — CHỌN MÁY</div>
+                            <h3 class="form-section-title">Chọn máy phát điện thanh lý</h3>
                         </div>
-                        <table class="detail-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-num">#</th>
-                                    <th>Mã dòng máy (Model)</th>
-                                    <th>Số Serial</th>
-                                    <th>Giá gốc (VNĐ)</th>
-                                    <th class="col-del"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailBody">
-                                <tr>
-                                    <td class="col-num"><span class="row-num">1</span></td>
-                                    <td>
-                                        <select name="generatorId" onchange="updatePrice(this)" required>
-                                            <option value="" data-price="">-- Chọn máy phát --</option>
-                                            <c:forEach var="gen" items="${generators}">
-                                                <option value="${gen.id}" data-price="${gen.unitPrice}">${gen.model}</option>
-                                            </c:forEach>
+
+                        <div class="liq-picker-shell">
+                            <div class="liq-picker-mobile-tabs">
+                                <button type="button" class="is-active" data-mobile-pane="left">Kho hàng <span class="badge" id="warehouseAvailBadge">0</span></button>
+                                <button type="button" data-mobile-pane="right">Đã chọn <span class="badge" id="cartCountBadge">0</span></button>
+                            </div>
+
+                            <div class="liq-picker-grid">
+                                <!-- LEFT: KHO HÀNG -->
+                                <div class="liq-picker-pane" id="leftPane">
+                                    <div class="liq-pane-head">
+                                        <span class="pane-title">Kho hàng</span>
+                                        <span class="pane-meta" id="leftPaneMeta">Chọn kho ở mục 01</span>
+                                    </div>
+                                    <div class="liq-pane-tools">
+                                        <input type="text" id="serialSearchInput" class="serial-search-box" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                                        <select id="serialSortOrder" class="serial-sort-select" title="Sắp xếp">
+                                            <option value="asc">Cũ nhất</option>
+                                            <option value="desc">Mới nhất</option>
                                         </select>
-                                    </td>
-                                    <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor: pointer; background: var(--surface-2);" onclick="openSerialModal(this)"/></td>
-                                    <td><input type="number" name="originalPrice" placeholder="Giá gốc" readonly style="background: var(--surface-2); color: var(--muted); cursor: not-allowed;" required/></td>
-                                    <td class="col-del">
-                                        <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                    </div>
+                                    <div class="liq-pane-filters summary-chips" id="warehouseFilters" style="display:none;">
+                                        <button type="button" class="filter-chip filter-all is-active" data-filter="all">
+                                            <span class="dot"></span><span class="lbl">Tất cả</span><span class="num" id="cntAll">0</span>
                                         </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                        <button type="button" class="filter-chip filter-old" data-filter="old">
+                                            <span class="dot"></span><span class="lbl">≥ 12th</span><span class="num" id="cntOld">0</span>
+                                        </button>
+                                        <button type="button" class="filter-chip filter-mid" data-filter="mid">
+                                            <span class="dot"></span><span class="lbl">6-12th</span><span class="num" id="cntMid">0</span>
+                                        </button>
+                                        <button type="button" class="filter-chip filter-fresh" data-filter="fresh">
+                                            <span class="dot"></span><span class="lbl">&lt;6th</span><span class="num" id="cntFresh">0</span>
+                                        </button>
+                                    </div>
+                                    <div class="liq-pane-body" id="warehousePaneBody">
+                                        <div class="pane-empty" id="warehouseEmpty">Chọn Kho hàng ở mục 01 để xem máy có sẵn.</div>
+                                    </div>
+                                </div>
 
-                        <template id="rowTemplate">
-                            <tr>
-                                <td class="col-num"><span class="row-num"></span></td>
-                                <td>
-                                    <select name="generatorId" onchange="updatePrice(this)" required>
-                                        <option value="" data-price="">-- Chọn máy phát --</option>
-                                        <c:forEach var="gen" items="${generators}">
-                                            <option value="${gen.id}" data-price="${gen.unitPrice}">${gen.model}</option>
-                                        </c:forEach>
-                                    </select>
-                                </td>
-                                <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor: pointer; background: var(--surface-2);" onclick="openSerialModal(this)"/></td>
-                                <td><input type="number" name="originalPrice" placeholder="Giá gốc" readonly style="background: var(--surface-2); color: var(--muted); cursor: not-allowed;" required/></td>
-                                <td class="col-del">
-                                    <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                    </button>
-                                </td>
-                            </tr>
-                        </template>
+                                <!-- RIGHT: CART -->
+                                <div class="liq-picker-pane is-hidden-mobile" id="rightPane">
+                                    <div class="liq-pane-head">
+                                        <span class="pane-title">Đã chọn</span>
+                                        <span class="pane-meta" id="rightPaneMeta">0 máy</span>
+                                    </div>
+                                    <div class="liq-pane-body" id="cartPaneBody">
+                                        <div class="pane-empty" id="cartEmpty">Click vào máy bên trái để thêm vào phiếu.</div>
+                                    </div>
+                                    <div class="liq-pane-foot">
+                                        <span>Tổng giá gốc</span>
+                                        <span class="total-val" id="formTotalVal">0 đ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                        <button type="button" class="btn add-row-btn" onclick="addRow()">
-                            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                            Thêm dòng
-                        </button>
+                        <div id="hiddenInputs"></div>
                     </div>
-                    
+
                     <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
                         <a class="btn" href="${pageContext.request.contextPath}/liquidations">Huỷ bỏ</a>
                         <button type="submit" form="liquidationForm" class="btn btn-primary">
@@ -270,213 +146,345 @@
     </div>
 </div>
 
-<!-- Side Panel cho Serial -->
-<div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSerialPanel()"></div>
-<div class="side-panel" id="sidePanel">
-    <div class="side-panel-head">
-        <h3 class="side-panel-title">Chọn Số Serial</h3>
-        <button class="side-panel-close" onclick="closeSerialPanel()">×</button>
-    </div>
-    <div class="side-panel-body">
-        <div style="display:flex; gap: 8px; margin-bottom: 20px;">
-            <input type="text" id="serialSearchInput" class="serial-search-box" style="margin-bottom:0;" placeholder="Tìm nhanh Serial..." autocomplete="off"/>
-            <select id="serialSortOrder" class="serial-search-box" style="margin-bottom:0; width: 130px; padding: 0 8px; cursor: pointer;" title="Sắp xếp theo ngày nhập">
-                <option value="desc">Mới nhất</option>
-                <option value="asc">Cũ nhất</option>
-            </select>
-        </div>
-        
-        <div id="serialLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
-            <svg style="animation: spin 1s linear infinite; margin-bottom: 10px;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            <br/>Đang tải dữ liệu...
-            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
-        </div>
-        
-        <div class="serial-list-wrap" id="serialList"></div>
-    </div>
-</div>
-
-
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
-    function addRow() {
-        var tpl = document.getElementById('rowTemplate');
-        var clone = tpl.content.cloneNode(true);
-        document.getElementById('detailBody').appendChild(clone);
-        updateRowNumbers();
-    }
-    function removeRow(btn) {
-        var tbody = document.getElementById('detailBody');
-        if (tbody.querySelectorAll('tr').length <= 1) return;
-        btn.closest('tr').remove();
-        updateRowNumbers();
-    }
-    function updateRowNumbers() {
-        document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
-            el.textContent = i + 1;
+
+    var cart = {};
+    var warehouseStock = {};
+    var lockedByGen = {};
+    var currentAgeFilter = 'all';
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, function(c) {
+            return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
         });
     }
-
-    function updatePrice(selectElem) {
-        var priceInput = selectElem.closest('tr').querySelector('input[name="originalPrice"]');
-        var serialInput = selectElem.closest('tr').querySelector('input[name="serialNumber"]');
-        var selectedOption = selectElem.options[selectElem.selectedIndex];
-        if (selectedOption && selectedOption.getAttribute('data-price')) {
-            priceInput.value = selectedOption.getAttribute('data-price');
-        } else {
-            priceInput.value = "";
+    function fmt(n) { return Number(n || 0).toLocaleString('vi-VN'); }
+    function ageOf(ts) {
+        if (!ts) return { cls: 'age-fresh', text: 'Chưa rõ' };
+        var months = Math.floor((Date.now() - ts) / (1000 * 60 * 60 * 24 * 30));
+        var cls = months >= 12 ? 'age-old' : (months >= 6 ? 'age-mid' : 'age-fresh');
+        return { cls: cls, text: months + ' tháng' };
+    }
+    function tsOf(s) {
+        if (!s) return 0;
+        var d = new Date(s);
+        return isNaN(d.getTime()) ? 0 : d.getTime();
+    }
+    function dateStrOf(s) {
+        if (!s) return '';
+        var d = new Date(s);
+        if (isNaN(d.getTime())) return '';
+        return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+    }
+    function lockedStatusLabel(s) {
+        switch (s) {
+            case 'PENDING_MANAGER': return 'Chờ Quản lý duyệt';
+            case 'PENDING_CEO': return 'Chờ CEO duyệt';
+            case 'MANAGER_REQUEST_EDIT': return 'Quản lý yêu cầu sửa';
+            case 'CEO_REQUEST_EDIT': return 'CEO yêu cầu sửa';
+            default: return 'Đang xử lý';
         }
-        serialInput.value = ""; // Clear serial when changing generator
     }
 
-    var currentSerialInput = null;
+    /* ============================================================
+       LEFT pane render (kho)
+       ============================================================ */
+    function renderWarehousePane() {
+        var body = document.getElementById('warehousePaneBody');
+        var empty = document.getElementById('warehouseEmpty');
+        body.innerHTML = '';
 
-    function openSerialModal(inputElem) {
-        var warehouseId = document.getElementById('warehouseId').value;
-        if (!warehouseId) {
-            alert('Vui lòng chọn Kho hàng trước!');
-            return;
-        }
-        
-        var tr = inputElem.closest('tr');
-        var generatorSelect = tr.querySelector('select[name="generatorId"]');
-        var generatorId = generatorSelect.value;
-        if (!generatorId) {
-            alert('Vui lòng chọn Mã dòng máy trước!');
-            return;
-        }
+        var keys = Object.keys(warehouseStock);
+        // Build map serial-in-cart để loại
+        var inCart = {};
+        Object.keys(cart).forEach(function(gid) {
+            inCart[gid] = inCart[gid] || {};
+            cart[gid].items.forEach(function(it) { inCart[gid][it.serial] = true; });
+        });
 
-        currentSerialInput = inputElem;
-        var searchInput = document.getElementById('serialSearchInput');
-        var sortSelect = document.getElementById('serialSortOrder');
-        searchInput.value = '';
-        sortSelect.value = 'desc';
-        
-        document.getElementById('sidePanelOverlay').classList.add('show');
-        document.getElementById('sidePanel').classList.add('show');
-        
-        document.getElementById('serialList').innerHTML = '';
-        document.getElementById('serialLoading').style.display = 'block';
-        
-        // Wait for CSS transition
-        setTimeout(function() { searchInput.focus(); }, 300);
+        var totalAvail = 0, cOld = 0, cMid = 0, cFresh = 0;
+        var anyRendered = false;
+        var query = (document.getElementById('serialSearchInput').value || '').toLowerCase().trim();
+        var sortOrder = document.getElementById('serialSortOrder').value;
 
-        fetch('${pageContext.request.contextPath}/liquidations?action=get_serials&warehouseId=' + warehouseId + '&generatorId=' + generatorId)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('serialLoading').style.display = 'none';
-                var listWrap = document.getElementById('serialList');
-                
-                if (data.length === 0) {
-                    listWrap.innerHTML = '<div class="empty-msg">Không có máy nào trong kho đang rảnh.</div>';
-                    return;
-                }
-                
-                // Get all already selected serials to exclude them
-                var selectedSerials = Array.from(document.querySelectorAll('input[name="serialNumber"]'))
-                    .map(inp => inp.value)
-                    .filter(val => val !== '');
+        keys.forEach(function(gid) {
+            var grp = warehouseStock[gid];
+            var available = (grp.items || []).filter(function(it) {
+                return !(inCart[gid] && inCart[gid][it.serial]);
+            });
+            var lockedHere = lockedByGen[gid] || [];
+            if (available.length === 0 && lockedHere.length === 0) return;
 
-                var count = 0;
-                data.forEach(sn => {
-                    if (!selectedSerials.includes(sn.serialNumber)) {
-                        // Format date
-                        var dateStr = 'Chưa xác định';
-                        var timestamp = 0;
-                        if (sn.createdAt) {
-                            var d = new Date(sn.createdAt);
-                            if (!isNaN(d.getTime())) {
-                                timestamp = d.getTime();
-                                var dd = String(d.getDate()).padStart(2, '0');
-                                var mm = String(d.getMonth() + 1).padStart(2, '0');
-                                var yyyy = d.getFullYear();
-                                dateStr = dd + '/' + mm + '/' + yyyy;
-                            }
-                        }
+            // Filter by query
+            var modelMatch = (grp.model || '').toLowerCase().indexOf(query) > -1;
+            var filtered = available.filter(function(it) {
+                if (modelMatch) return true;
+                if (!query) return true;
+                return (it.serial || '').toLowerCase().indexOf(query) > -1;
+            }).filter(function(it) {
+                if (currentAgeFilter === 'all') return true;
+                var age = ageOf(tsOf(it.createdAt)).cls;
+                return (currentAgeFilter === 'old' && age === 'age-old')
+                    || (currentAgeFilter === 'mid' && age === 'age-mid')
+                    || (currentAgeFilter === 'fresh' && age === 'age-fresh');
+            });
+            // Sort
+            filtered.sort(function(a, b) {
+                var ta = tsOf(a.createdAt), tb = tsOf(b.createdAt);
+                return sortOrder === 'desc' ? tb - ta : ta - tb;
+            });
 
-                        var card = document.createElement('div');
-                        card.className = 'serial-card';
-                        card.setAttribute('data-serial', sn.serialNumber.toLowerCase());
-                        card.setAttribute('data-date', dateStr);
-                        card.setAttribute('data-time', timestamp);
+            if (filtered.length === 0 && lockedHere.length === 0) return;
+            anyRendered = true;
 
-                        card.innerHTML = `
-                            <div class="serial-card-left">
-                                <div class="serial-number-text">` + sn.serialNumber + `</div>
-                                <div class="serial-meta">
-                                    <span class="badge-avail"><span style="width:5px;height:5px;border-radius:50%;background:currentColor;"></span> IN STOCK</span>
-                                    ` + (sn.generatorName ? `<span style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>` + sn.generatorName + `</span>` : '') + `
-                                    <span style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>` + dateStr + `</span>
-                                </div>
-                            </div>
-                            <div class="serial-card-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                            </div>
-                        `;
-                        
-                        card.onclick = function() {
-                            currentSerialInput.value = sn.serialNumber;
-                            closeSerialPanel();
-                        };
-                        listWrap.appendChild(card);
-                        count++;
-                    }
+            // Group label
+            var label = document.createElement('div');
+            label.className = 'pane-group-label';
+            label.innerHTML =
+                '<span class="lbl">' + escapeHtml(grp.model) + '</span>'
+                + '<span class="count">' + filtered.length + '</span>'
+                + (filtered.length > 1 ? '<button type="button" class="move-all" data-gen-id="' + gid + '">Chọn tất cả</button>' : '');
+            var moveAllBtn = label.querySelector('.move-all');
+            if (moveAllBtn) {
+                moveAllBtn.addEventListener('click', function() {
+                    filtered.forEach(function(it) { addToCart(gid, grp, it); });
+                    refreshAll();
                 });
-                
-                if (count === 0) {
-                    listWrap.innerHTML = '<div class="empty-msg">Tất cả máy khả dụng đã được chọn.</div>';
-                }
-                // Initially sort desc
-                filterAndSortSerials();
+            }
+            body.appendChild(label);
+
+            // Rows
+            filtered.forEach(function(it) {
+                totalAvail++;
+                var ts = tsOf(it.createdAt);
+                var age = ageOf(ts);
+                if (age.cls === 'age-old') cOld++;
+                else if (age.cls === 'age-mid') cMid++;
+                else cFresh++;
+
+                var row = document.createElement('div');
+                row.className = 'move-row ' + age.cls;
+                row.title = 'Click để thêm vào phiếu';
+                row.innerHTML =
+                    '<span class="age-dot"></span>'
+                    + '<span class="row-serial">' + escapeHtml(it.serial) + '</span>'
+                    + '<span class="row-meta">' + age.text + '</span>'
+                    + '<span class="row-meta">' + dateStrOf(it.createdAt) + '</span>'
+                    + '<svg class="row-action-icon" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
+                row.addEventListener('click', function() {
+                    addToCart(gid, grp, it);
+                    refreshAll();
+                });
+                body.appendChild(row);
+            });
+
+            // Locked entries
+            if (lockedHere.length > 0) {
+                var locked = document.createElement('div');
+                locked.className = 'pane-locked-block';
+                locked.innerHTML = '<div>' + lockedHere.length + ' máy đang khoá ở phiếu khác</div>';
+                lockedHere.forEach(function(l) {
+                    var rl = document.createElement('div');
+                    rl.className = 'row-locked';
+                    rl.innerHTML =
+                        '<span>' + escapeHtml(l.serialNumber) + '</span>'
+                        + '<span>·</span>'
+                        + '<span>' + lockedStatusLabel(l.liquidationStatus) + '</span>'
+                        + '<a class="mono" href="${pageContext.request.contextPath}/liquidations?action=detail&id=' + encodeURIComponent(l.liquidationId) + '" target="_blank">'
+                        + escapeHtml(l.liquidationCode) + '</a>';
+                    locked.appendChild(rl);
+                });
+                body.appendChild(locked);
+            }
+        });
+
+        if (!anyRendered) {
+            body.innerHTML = '<div class="pane-empty">' + (query ? 'Không có kết quả phù hợp' : 'Không có máy khả dụng') + '</div>';
+        }
+
+        document.getElementById('cntAll').textContent = totalAvail;
+        document.getElementById('cntOld').textContent = cOld;
+        document.getElementById('cntMid').textContent = cMid;
+        document.getElementById('cntFresh').textContent = cFresh;
+        document.getElementById('warehouseAvailBadge').textContent = totalAvail;
+        document.getElementById('leftPaneMeta').textContent = totalAvail + ' máy khả dụng';
+    }
+
+    /* ============================================================
+       RIGHT pane render (cart) + hidden inputs
+       ============================================================ */
+    function renderCart() {
+        var body = document.getElementById('cartPaneBody');
+        var hidden = document.getElementById('hiddenInputs');
+        body.innerHTML = '';
+        hidden.innerHTML = '';
+
+        var totalItems = 0, totalPrice = 0;
+        var keys = Object.keys(cart);
+
+        if (keys.length === 0) {
+            body.innerHTML = '<div class="pane-empty">Click vào máy bên trái để thêm vào phiếu.</div>';
+            document.getElementById('rightPaneMeta').textContent = '0 máy';
+            document.getElementById('formTotalVal').textContent = '0 đ';
+            document.getElementById('cartCountBadge').textContent = '0';
+            return;
+        }
+
+        keys.forEach(function(gid) {
+            var grp = cart[gid];
+            if (!grp.items.length) return;
+            var price = parseFloat(grp.unitPrice || 0) || 0;
+            var subTotal = price * grp.items.length;
+            totalItems += grp.items.length;
+            totalPrice += subTotal;
+
+            var groupBox = document.createElement('div');
+            groupBox.className = 'cart-pane-group';
+
+            var head = document.createElement('div');
+            head.className = 'cart-pane-group-head';
+            head.innerHTML =
+                '<span class="model">' + escapeHtml(grp.model) + '</span>'
+                + '<span class="count">' + grp.items.length + '</span>'
+                + '<span class="price">' + fmt(subTotal) + ' đ</span>';
+            groupBox.appendChild(head);
+
+            grp.items.forEach(function(it) {
+                var ts = tsOf(it.createdAt);
+                var age = ageOf(ts);
+                var row = document.createElement('div');
+                row.className = 'move-row ' + age.cls;
+                row.title = 'Click để bỏ khỏi phiếu';
+                row.innerHTML =
+                    '<span class="age-dot"></span>'
+                    + '<span class="row-serial">' + escapeHtml(it.serial) + '</span>'
+                    + '<span class="row-meta">' + age.text + '</span>'
+                    + '<span class="row-meta">' + fmt(price) + ' đ</span>'
+                    + '<svg class="row-action-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+                row.addEventListener('click', function() {
+                    removeFromCart(gid, it.serial);
+                    refreshAll();
+                });
+                groupBox.appendChild(row);
+
+                hidden.insertAdjacentHTML('beforeend',
+                    '<input type="hidden" name="generatorId" value="' + escapeHtml(gid) + '">'
+                    + '<input type="hidden" name="serialNumber" value="' + escapeHtml(it.serial) + '">'
+                );
+            });
+            body.appendChild(groupBox);
+        });
+
+        document.getElementById('rightPaneMeta').textContent = totalItems + ' máy · ' + Object.keys(cart).filter(function(k) { return cart[k].items.length > 0; }).length + ' model';
+        document.getElementById('formTotalVal').textContent = fmt(totalPrice) + ' đ';
+        document.getElementById('cartCountBadge').textContent = totalItems;
+    }
+
+    function addToCart(gid, grp, item) {
+        if (!cart[gid]) {
+            cart[gid] = { model: grp.model, unitPrice: grp.unitPrice, items: [] };
+        }
+        if (cart[gid].items.find(function(x) { return x.serial === item.serial; })) return;
+        cart[gid].items.push({ serial: item.serial, createdAt: item.createdAt });
+    }
+    function removeFromCart(gid, serial) {
+        if (!cart[gid]) return;
+        cart[gid].items = cart[gid].items.filter(function(x) { return x.serial !== serial; });
+        if (!cart[gid].items.length) delete cart[gid];
+    }
+    function refreshAll() {
+        renderWarehousePane();
+        renderCart();
+    }
+
+    /* ============================================================
+       Load warehouse stock
+       ============================================================ */
+    function loadWarehouseStock() {
+        var warehouseId = document.getElementById('warehouseId').value;
+        var body = document.getElementById('warehousePaneBody');
+        if (!warehouseId) {
+            warehouseStock = {};
+            lockedByGen = {};
+            body.innerHTML = '<div class="pane-empty">Chọn Kho hàng ở mục 01 để xem máy có sẵn.</div>';
+            document.getElementById('warehouseFilters').style.display = 'none';
+            document.getElementById('leftPaneMeta').textContent = 'Chọn kho ở mục 01';
+            renderCart();
+            return;
+        }
+
+        body.innerHTML = '<div class="pane-empty">Đang tải...</div>';
+
+        fetch('${pageContext.request.contextPath}/liquidations?action=get_serials_all&warehouseId=' + encodeURIComponent(warehouseId))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                warehouseStock = {};
+                lockedByGen = {};
+                (data.generators || []).forEach(function(g) {
+                    warehouseStock[g.generatorId] = {
+                        model: g.model,
+                        unitPrice: g.unitPrice,
+                        items: (g.serials || []).map(function(s) {
+                            return { serial: s.serialNumber, createdAt: s.createdAt };
+                        })
+                    };
+                });
+                (data.locked || []).forEach(function(l) {
+                    if (!lockedByGen[l.generatorId]) lockedByGen[l.generatorId] = [];
+                    lockedByGen[l.generatorId].push(l);
+                });
+                document.getElementById('warehouseFilters').style.display = 'flex';
+                refreshAll();
             })
-            .catch(error => {
-                document.getElementById('serialLoading').style.display = 'none';
-                document.getElementById('serialList').innerHTML = '<div class="empty-msg" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
+            .catch(function() {
+                body.innerHTML = '<div class="pane-empty" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
             });
     }
 
-    function filterAndSortSerials() {
-        var query = document.getElementById('serialSearchInput').value.toLowerCase().trim();
-        var sortOrder = document.getElementById('serialSortOrder').value;
-        
-        var listWrap = document.getElementById('serialList');
-        var items = Array.from(listWrap.querySelectorAll('.serial-card'));
-
-        // Sắp xếp
-        items.sort(function(a, b) {
-            var timeA = parseInt(a.getAttribute('data-time') || '0', 10);
-            var timeB = parseInt(b.getAttribute('data-time') || '0', 10);
-            if (sortOrder === 'desc') {
-                return timeB - timeA;
-            } else {
-                return timeA - timeB;
-            }
+    /* ============================================================
+       Wire events
+       ============================================================ */
+    document.querySelectorAll('.filter-chip').forEach(function(chip) {
+        chip.addEventListener('click', function() {
+            currentAgeFilter = chip.getAttribute('data-filter');
+            document.querySelectorAll('.filter-chip').forEach(function(c) {
+                c.classList.toggle('is-active', c === chip);
+            });
+            renderWarehousePane();
         });
+    });
+    document.getElementById('serialSearchInput').addEventListener('input', renderWarehousePane);
+    document.getElementById('serialSortOrder').addEventListener('change', renderWarehousePane);
 
-        // Gắn lại vào DOM và áp dụng Filter
-        items.forEach(function(item) {
-            var text = item.getAttribute('data-serial');
-            var matchText = text.includes(query);
-            
-            if (matchText) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
+    document.getElementById('warehouseId').addEventListener('change', function() {
+        if (Object.keys(cart).length > 0) {
+            if (!confirm('Đổi kho sẽ xoá danh sách máy đã chọn. Tiếp tục?')) {
+                this.value = this.getAttribute('data-prev-value') || '';
+                return;
             }
-            listWrap.appendChild(item); // Appending an existing child moves it
+            cart = {};
+        }
+        this.setAttribute('data-prev-value', this.value);
+        loadWarehouseStock();
+    });
+
+    document.querySelectorAll('.liq-picker-mobile-tabs button[data-mobile-pane]').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var which = tab.getAttribute('data-mobile-pane');
+            document.querySelectorAll('.liq-picker-mobile-tabs button').forEach(function(b) {
+                b.classList.toggle('is-active', b === tab);
+            });
+            document.getElementById('leftPane').classList.toggle('is-hidden-mobile', which !== 'left');
+            document.getElementById('rightPane').classList.toggle('is-hidden-mobile', which !== 'right');
         });
-    }
+    });
 
-    document.getElementById('serialSearchInput').addEventListener('input', filterAndSortSerials);
-    document.getElementById('serialSortOrder').addEventListener('change', filterAndSortSerials);
-
-    function closeSerialPanel() {
-        document.getElementById('sidePanelOverlay').classList.remove('show');
-        document.getElementById('sidePanel').classList.remove('show');
-        currentSerialInput = null;
-    }
-
+    /* Init */
+    document.getElementById('warehouseId').setAttribute('data-prev-value', document.getElementById('warehouseId').value);
+    renderCart();
 </script>
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">

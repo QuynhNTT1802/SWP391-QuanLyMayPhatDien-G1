@@ -1,4 +1,4 @@
-package com.quanlymayphatdien.g1.service;
+package com.quanlymayphatdien.g1.utils;
 
 import com.quanlymayphatdien.g1.dal.NotificationDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;

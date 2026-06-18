@@ -4,19 +4,25 @@
  */
 package com.quanlymayphatdien.g1.entity;
 
+import java.math.BigDecimal;
+
 /**
  *
  * @author FPTShop
+ *
+ * Moi dong = 1 serial cu the.
+ * Serial khong con luu text o day - thay bang inventory_id (FK).
+ * generator_id, serialNumber chi la transient field load qua JOIN
+ * de phuc vu hien thi (JSP, Excel), KHONG su dung de ghi DB.
  */
 public class ReceiptDetail {
     private int receiptDetailId;
     private int receiptId;
-    private int generatorId;
-    private String serialNumber;
-    private int quantity;
-    private java.math.BigDecimal unitPrice;
+    private int inventoryId;
     private String note;
-    
+
+    private String serialNumber;
+    private int generatorId;
     private String generatorModel;
     private String generatorBrand;
 
@@ -26,7 +32,7 @@ public class ReceiptDetail {
     public int getReceiptDetailId() {
         return receiptDetailId;
     }
-    
+
     public void setReceiptDetailId(int receiptDetailId) {
         this.receiptDetailId = receiptDetailId;
     }
@@ -39,12 +45,20 @@ public class ReceiptDetail {
         this.receiptId = receiptId;
     }
 
-    public int getGeneratorId() {
-        return generatorId;
+    public int getInventoryId() {
+        return inventoryId;
     }
 
-    public void setGeneratorId(int generatorId) {
-        this.generatorId = generatorId;
+    public void setInventoryId(int inventoryId) {
+        this.inventoryId = inventoryId;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 
     public String getSerialNumber() {
@@ -55,28 +69,12 @@ public class ReceiptDetail {
         this.serialNumber = serialNumber;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public int getGeneratorId() {
+        return generatorId;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public java.math.BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
-
-    public void setUnitPrice(java.math.BigDecimal unitPrice) {
-        this.unitPrice = unitPrice;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
+    public void setGeneratorId(int generatorId) {
+        this.generatorId = generatorId;
     }
 
     public String getGeneratorModel() {
@@ -94,5 +92,4 @@ public class ReceiptDetail {
     public void setGeneratorBrand(String generatorBrand) {
         this.generatorBrand = generatorBrand;
     }
-    
 }
