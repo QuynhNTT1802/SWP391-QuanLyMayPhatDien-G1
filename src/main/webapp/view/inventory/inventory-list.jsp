@@ -198,6 +198,10 @@
                         </c:if>
                     </form>
 
+                    <div class="result-summary">
+                        <strong>${totalItems}</strong> serial tồn kho
+                    </div>
+
                     <div class="users-card">
                         <table class="users">
                             <thead>

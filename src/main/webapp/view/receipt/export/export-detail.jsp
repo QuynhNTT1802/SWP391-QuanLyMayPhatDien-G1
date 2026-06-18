@@ -344,6 +344,16 @@
                                             <div class="info-value"><c:out value="${receipt.customerName}"/></div>
                                         </div>
                                     </c:if>
+                                    <c:if test="${not empty receipt.purchaseOrderCode}">
+                                        <div class="info-field">
+                                            <div class="info-label">Phiếu mua nguồn</div>
+                                            <div class="info-value mono">
+                                                <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${receipt.purchaseOrderId}">
+                                                    <c:out value="${receipt.purchaseOrderCode}"/>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </c:if>
                                     <c:if test="${not empty receipt.approvedByName}">
                                         <div class="info-field">
                                             <div class="info-label">Người duyệt</div>
