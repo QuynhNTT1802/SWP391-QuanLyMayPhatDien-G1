@@ -143,7 +143,7 @@
                             </div>
                             <div class="info-field">
                                 <div class="info-label">Tổng mặt hàng</div>
-                                <div class="info-value">${fn:length(details)} máy</div>
+                                <div class="info-value">${detail.size()} máy</div>
                             </div>
                         </div>
                         <c:if test="${not empty check.notes}">
@@ -370,7 +370,7 @@
                     <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><c:out value="${d.generatorModel}"/></div>
                     <div style="display:flex;gap:8px;align-items:center;">
                         <input type="date" name="fromDate" class="edit-input" style="flex:1;" required max="${today}" />
-                        <span style="color:var(--muted);font-size:12px;">→</span>
+                        <span>→</span>
                         <input type="date" name="toDate" class="edit-input" style="flex:1;" required max="${today}" />
                         <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>

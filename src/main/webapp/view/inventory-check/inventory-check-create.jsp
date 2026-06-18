@@ -26,7 +26,6 @@
                 <h1>Tạo phiếu kiểm kê</h1>
                 <span class="crumb">/ <a href="${pageContext.request.contextPath}/inventory-check">Kiểm kê</a> / Tạo mới</span>
                 <div class="top-actions">
-                    <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                     </button>
@@ -39,7 +38,7 @@
                     <div class="left">
                         <div class="eyebrow">Kiểm kê</div>
                         <h2 class="page-title">Tạo phiếu kiểm kê mới</h2>
-                        <div class="page-sub">Chọn kho và các máy cần kiểm kê</div>
+                        <div class="page-sub">Chọn kho cần kiểm kê</div>
                     </div>
                 </div>
 
@@ -51,8 +50,8 @@
 
                 <form method="get" action="${pageContext.request.contextPath}/inventory-check" id="warehouseForm" style="margin-bottom: 16px;">
                     <input type="hidden" name="action" value="create" />
+                    <br>
                     <div class="form-field" style="max-width: 400px;">
-                        <label>Chọn kho kiểm kê</label>
                         <select name="warehouseId" onchange="this.form.submit()" <c:if test="${not empty inventoryList}">style="border-color: var(--accent);"</c:if>>
                             <option value="">-- Chọn kho --</option>
                             <c:forEach var="wh" items="${warehouses}">
@@ -84,7 +83,7 @@
                                     <div class="select-all-row">
                                         <input type="checkbox" id="selectAll" />
                                         <label for="selectAll" style="cursor:pointer;">Chọn tất cả</label>
-                                        <span style="color:var(--muted);font-weight:400;font-size:12px;">(${fn:length(inventoryList)} máy)</span>
+                                        <span style="color:var(--muted);font-weight:400;font-size:12px;">(${inventoryList.size()} máy)</span>
                                     </div>
 
                                     <table class="detail-table" style="margin-top: 4px;">
@@ -92,9 +91,8 @@
                                             <tr>
                                                 <th style="width: 40px;">Chọn</th>
                                                 <th style="width: 40px;">#</th>
-                                                <th>Mã máy</th>
-                                                <th>Thương hiệu</th>
-                                                <th>SL sổ sách</th>
+                                                <th>Mã máy</th>                                                
+                                                <th>SL trên hệ thống</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -105,7 +103,6 @@
                                                     </td>
                                                     <td class="col-num">${st.index + 1}</td>
                                                     <td><strong><c:out value="${inv.generatorModel}"/></strong></td>
-                                                    <td><c:out value="${not empty inv.generatorBrand ? inv.generatorBrand : '—'}"/></td>
                                                     <td class="qty-sys">${generatorCountMap[inv.generatorId]}</td>
                                                 </tr>
                                             </c:forEach>
