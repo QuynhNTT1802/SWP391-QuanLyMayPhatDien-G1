@@ -303,7 +303,7 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
-        // Chặn sale manager mở phiếu DRAFT (chỉ chính chủ mới xem được nháp của mình)
+       
         HttpSession session = request.getSession();
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         User loggedUser = (User) session.getAttribute("loggedUser");
@@ -316,7 +316,7 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
-        // Chặn sale staff mở DRAFT của người khác
+       
         if (GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
                 && !canApprove
                 && p.getCreatedBy() != loggedUser.getId()) {
@@ -890,15 +890,6 @@ public class ProposalController extends HttpServlet {
             if (model == null || model.trim().isEmpty()) {
                 errors.add("Mã máy phát không được trống");
             } else {
-//                Generator g = genDAO.findByModel(model.trim());
-//                if (g == null) {
-//                    errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
-//                } else {
-//                    enriched.put("gid", String.valueOf(g.getId()));
-//                    enriched.put("gname", g.getDescription() != null ? g.getDescription() : "");
-//                    enriched.put("gmodel", g.getModel());
-//                    generatorResolved = true;
-//                }
             }
 
             int qty = 0;
