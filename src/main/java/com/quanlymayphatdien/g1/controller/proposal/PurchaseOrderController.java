@@ -480,21 +480,22 @@ public class PurchaseOrderController extends HttpServlet {
             return;
         }
 
-        String[] proposalIdArr = request.getParameterValues("proposalIds");
         String[] genIds = request.getParameterValues("generatorId");
+        String[] proposalIdArr = request.getParameterValues("proposalId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
 
-        List<Integer> proposalIds = new ArrayList<>();
+        java.util.Set<Integer> uniqueProposalIds = new java.util.LinkedHashSet<>();
         if (proposalIdArr != null) {
             for (String s : proposalIdArr) {
                 int id = parseInt(s);
                 if (id > 0) {
-                    proposalIds.add(id);
+                    uniqueProposalIds.add(id);
                 }
             }
         }
+        List<Integer> proposalIds = new ArrayList<>(uniqueProposalIds);
 
         if (genIds == null || genIds.length == 0 || proposalIds.isEmpty()) {
             session.setAttribute("toastMessage", "Thiếu dữ liệu đầu vào");
