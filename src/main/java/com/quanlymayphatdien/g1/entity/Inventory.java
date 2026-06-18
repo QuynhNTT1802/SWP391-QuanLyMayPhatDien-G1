@@ -27,6 +27,8 @@ public class Inventory {
     private String generatorModel;
     private String generatorBrand;
     private String warehouseName;
+    private Integer importReceiptId;
+    private String importReceiptCode;
 
     public Inventory() {
     }
@@ -109,6 +111,22 @@ public class Inventory {
 
     public void setWarehouseName(String warehouseName) {
         this.warehouseName = warehouseName;
+    }
+
+    public Integer getImportReceiptId() {
+        return importReceiptId;
+    }
+
+    public void setImportReceiptId(Integer importReceiptId) {
+        this.importReceiptId = importReceiptId;
+    }
+
+    public String getImportReceiptCode() {
+        return importReceiptCode;
+    }
+
+    public void setImportReceiptCode(String importReceiptCode) {
+        this.importReceiptCode = importReceiptCode;
     }
 
     /**
