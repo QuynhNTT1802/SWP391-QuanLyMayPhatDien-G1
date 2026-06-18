@@ -27,7 +27,6 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
@@ -102,7 +101,7 @@ public class ImportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ImportReceiptController.doGet", e.getMessage(), e);
+            SystemLogger.error("Quản lý kho", "ImportReceiptController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -139,7 +138,7 @@ public class ImportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ImportReceiptController.doPost", e.getMessage(), e);
+            SystemLogger.error("Quản lý kho", "ImportReceiptController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }

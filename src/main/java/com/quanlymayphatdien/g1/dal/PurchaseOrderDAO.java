@@ -1156,7 +1156,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             return false;
         }
     }
-
+    /**
+     * Lookup unit_price tu purchase_order_detail cho generator chi dinh,
+     * uu tien PO da APPROVED moi nhat. Tra null neu khong co dong nao thoa.
+     */
     public java.math.BigDecimal findApprovedUnitPriceByGenerator(int generatorId) {
         String sql = "SELECT pod.unit_price "
                 + "FROM purchase_order_detail pod "
@@ -1168,10 +1171,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LIMIT 1";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, generatorId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getBigDecimal("unit_price");
-
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBigDecimal("unit_price");
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

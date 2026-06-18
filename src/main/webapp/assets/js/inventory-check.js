@@ -62,3 +62,34 @@ document.querySelectorAll('.gen-checkbox').forEach(function (cb) {
         }
     });
 });
+
+// Toggle serial rows
+document.querySelectorAll('.toggle-serials').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var detailId = btn.getAttribute('data-detail-id');
+        var serialRows = document.querySelectorAll('.serial-row[data-detail-id="' + detailId + '"]');
+        serialRows.forEach(function (row) {
+            row.classList.toggle('show');
+        });
+    });
+});
+
+// Radio inline visual toggle
+document.querySelectorAll('.radio-inline').forEach(function (group) {
+    group.addEventListener('change', function (e) {
+        if (e.target.type === 'radio') {
+            var labels = group.querySelectorAll('.radio-label');
+            labels.forEach(function (lbl) {
+                lbl.classList.remove('radio-active', 'active-good', 'active-poor', 'active-damaged');
+            });
+            var checked = group.querySelector('input[type="radio"]:checked');
+            if (checked) {
+                var parent = checked.closest('.radio-label');
+                if (parent) {
+                    var val = checked.value.toLowerCase();
+                    parent.classList.add('radio-active', 'active-' + val);
+                }
+            }
+        }
+    });
+});

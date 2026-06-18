@@ -7,7 +7,6 @@ public class InventoryCheckDetail {
     private int generatorId;
     private int systemQuantity;
     private Integer actualQuantity;
-    private int damagedQuantity;
     private String notes;
 
     private String generatorModel;
@@ -58,14 +57,6 @@ public class InventoryCheckDetail {
         this.actualQuantity = actualQuantity;
     }
 
-    public int getDamagedQuantity() {
-        return damagedQuantity;
-    }
-
-    public void setDamagedQuantity(int damagedQuantity) {
-        this.damagedQuantity = damagedQuantity;
-    }
-
     public String getNotes() {
         return notes;
     }
@@ -97,6 +88,7 @@ public class InventoryCheckDetail {
     public void setPowerRating(String powerRating) {
         this.powerRating = powerRating;
     }
+
     public int getDiscrepancyCount() {
         return discrepancyCount;
     }
