@@ -326,13 +326,40 @@ public class ProposalController extends HttpServlet {
             return;
         }
 
+        String tab = request.getParameter("tab");
+        String currentTab = "history".equals(tab) ? "history" : "info";
+        request.setAttribute("currentTab", currentTab);
+
         ActivityLogDAO logDAO = new ActivityLogDAO();
-        List<ActivityLog> history = logDAO.findByEntityTypeAndId("import_proposal", id, 1, 100);
-        int totalHistory = logDAO.countByEntityTypeAndId("import_proposal", id);
+        if ("history".equals(currentTab)) {
+            String logSearch = request.getParameter("logSearch");
+            String logAction = request.getParameter("logAction");
+            String dateFrom = request.getParameter("dateFrom");
+            String dateTo = request.getParameter("dateTo");
+            int page = 1;
+            int pageSize = 20;
+            String pageStr = request.getParameter("page");
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try { page = Math.max(1, Integer.parseInt(pageStr)); }
+                catch (NumberFormatException ignored) { page = 1; }
+            }
+            List<ActivityLog> logs = logDAO.findByEntityTypeAndId2("import_proposal", id, logSearch, logAction,
+                    dateFrom, dateTo, page, pageSize);
+            int totalLogs = logDAO.countByEntityTypeAndId2("import_proposal", id, logSearch, logAction,
+                    dateFrom, dateTo);
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+            if (page > totalPages) page = totalPages;
+            request.setAttribute("logList", logs);
+            request.setAttribute("logPage", page);
+            request.setAttribute("logTotalPages", totalPages);
+            request.setAttribute("totalLogs", totalLogs);
+            request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+            request.setAttribute("logAction", logAction != null ? logAction : "");
+            request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+            request.setAttribute("dateTo", dateTo != null ? dateTo : "");
+        }
 
         request.setAttribute("proposal", p);
-        request.setAttribute("history", history);
-        request.setAttribute("totalHistory", totalHistory);
 
         java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
         if (p.getDetails() != null) {
@@ -344,6 +371,10 @@ public class ProposalController extends HttpServlet {
             }
         }
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
+        request.setAttribute("canApprove", canApprove);
+        request.setAttribute("perms", perms);
+        request.setAttribute("activePage", "proposal-detail");
         request.getRequestDispatcher("/view/proposal/proposal-detail.jsp").forward(request, response);
     }
 
@@ -890,15 +921,6 @@ public class ProposalController extends HttpServlet {
             if (model == null || model.trim().isEmpty()) {
                 errors.add("Mã máy phát không được trống");
             } else {
-//                Generator g = genDAO.findByModel(model.trim());
-//                if (g == null) {
-//                    errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
-//                } else {
-//                    enriched.put("gid", String.valueOf(g.getId()));
-//                    enriched.put("gname", g.getDescription() != null ? g.getDescription() : "");
-//                    enriched.put("gmodel", g.getModel());
-//                    generatorResolved = true;
-//                }
             }
 
             int qty = 0;
