@@ -302,7 +302,15 @@
         });
 
         if (!anyRendered) {
-            body.innerHTML = '<div class="pane-empty">' + (query ? 'Không có kết quả phù hợp' : 'Không có máy khả dụng') + '</div>';
+            var msg;
+            if (query) {
+                msg = 'Không có kết quả phù hợp';
+            } else if (Object.keys(warehouseStock).length === 0) {
+                msg = 'Kho này chưa có máy phát điện đang IN_STOCK';
+            } else {
+                msg = 'Không có máy khả dụng';
+            }
+            body.innerHTML = '<div class="pane-empty">' + msg + '</div>';
         }
 
         document.getElementById('cntAll').textContent = totalAvail;

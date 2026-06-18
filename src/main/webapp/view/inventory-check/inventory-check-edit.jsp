@@ -85,26 +85,24 @@
                                 <div style="padding: 24px; text-align: center; color: var(--muted);">Không có dữ liệu.</div>
                             </c:when>
                             <c:otherwise>
-                                <table class="detail-table">
+                                <table class="detail-table" id="editTable">
                                     <thead>
                                         <tr>
                                             <th style="width: 40px;">#</th>
                                             <th>Mã máy</th>
                                             <th>Thương hiệu</th>
-                                            <th>Công suất</th>
                                             <th>SL sổ sách</th>
                                             <th>SL thực tế</th>
-                                            <th>SL hư hỏng</th>
                                             <th>Ghi chú</th>
+                                            <th style="width: 50px;"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <c:forEach var="d" items="${details}" varStatus="st">
-                                            <tr>
+                                            <tr class="detail-row" data-detail-id="${d.id}">
                                                 <td class="col-num">${st.index + 1}</td>
                                                 <td><strong><c:out value="${d.generatorModel}"/></strong></td>
                                                 <td><c:out value="${not empty d.generatorBrand ? d.generatorBrand : '—'}"/></td>
-                                                <td><span class="mono"><c:out value="${d.powerRating}"/> kVA</span></td>
                                                 <td class="qty-sys">${d.systemQuantity}</td>
                                                 <td>
                                                     <input type="hidden" name="detailId" value="${d.id}" />
@@ -113,12 +111,70 @@
                                                            placeholder="—" />
                                                 </td>
                                                 <td>
-                                                    <input type="number" name="damagedQuantity" class="edit-input"
-                                                           value="${d.damagedQuantity}" min="0" />
-                                                </td>
-                                                <td>
                                                     <input type="text" name="detailNote" class="edit-input-note"
                                                            value="<c:out value='${d.notes}'/>" placeholder="Ghi chú..." />
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="icon-btn toggle-serials"
+                                                            data-detail-id="${d.id}"
+                                                            title="Xem serials">
+                                                        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="6 9 12 15 18 9"/></svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr class="serial-row" data-detail-id="${d.id}">
+                                                <td colspan="7" style="padding: 0;">
+                                                    <div class="serial-container">
+                                                        <c:choose>
+                                                            <c:when test="${empty serialsByDetail[d.id]}">
+                                                                <div class="serial-empty">Không có serial nào.</div>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <table class="serial-table">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th style="width: 30px;">#</th>
+                                                                            <th>Serial</th>
+                                                                            <th>Trạng thái</th>
+                                                                            <th>Ghi chú</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        <c:forEach var="s" items="${serialsByDetail[d.id]}" varStatus="sSt">
+                                                                            <tr>
+                                                                                <td class="col-num">${sSt.index + 1}</td>
+                                                                                <td><span class="mono"><c:out value="${s.serialNumber}"/></span></td>
+                                                                                <td>
+                                                                                    <input type="hidden" name="serialId" value="${s.id}" />
+                                                                                    <div class="radio-inline">
+                                                                                        <label class="radio-label <c:if test="${s.status == 'GOOD'}">radio-active active-good</c:if>">
+                                                                                            <input type="radio" name="serialStatus_${s.id}" value="GOOD"
+                                                                                            <c:if test="${s.status == 'GOOD'}">checked</c:if> />
+                                                                                            <span class="radio-text">Tốt</span>
+                                                                                        </label>
+                                                                                        <label class="radio-label <c:if test="${s.status == 'POOR'}">radio-active active-poor</c:if>">
+                                                                                            <input type="radio" name="serialStatus_${s.id}" value="POOR"
+                                                                                            <c:if test="${s.status == 'POOR'}">checked</c:if> />
+                                                                                            <span class="radio-text">Kém</span>
+                                                                                        </label>
+                                                                                        <label class="radio-label <c:if test="${s.status == 'DAMAGED'}">radio-active active-damaged</c:if>">
+                                                                                            <input type="radio" name="serialStatus_${s.id}" value="DAMAGED"
+                                                                                            <c:if test="${s.status == 'DAMAGED'}">checked</c:if> />
+                                                                                            <span class="radio-text">Hỏng</span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <input type="text" name="serialNote_${s.id}" class="edit-input-note"
+                                                                                           value="<c:out value='${s.notes}'/>" placeholder="Ghi chú serial..." />
+                                                                                </td>
+                                                                            </tr>
+                                                                        </c:forEach>
+                                                                    </tbody>
+                                                                </table>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </c:forEach>

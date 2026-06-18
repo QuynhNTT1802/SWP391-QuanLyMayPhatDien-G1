@@ -87,6 +87,15 @@
                     </div>
                 </c:if>
 
+                <c:if test="${check.status == 'completed'}">
+                    <div class="action-bar-top">
+                        <button type="button" class="btn btn-primary" onclick="openModal('exportModal')">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            Trích xuất báo cáo
+                        </button>
+                    </div>
+                </c:if>
+
                 <div class="section" style="padding: 18px 22px;">
                     <div class="tabs">
                         <button type="button" class="tab active" data-tab="info">Thông tin chung</button>
@@ -146,26 +155,65 @@
                     </div>
 
                     <div class="tab-panel" id="tab-products">
-                        <c:if test="${empty details}">
-                            <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Chưa có dữ liệu kiểm kê.</div>
-                        </c:if>
-                        <c:if test="${not empty details}">
-                            <table class="detail-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width:40px;">#</th>
-                                        <th>Mã máy</th>
-                                        <th>Thương hiệu</th>
-                                        <th>Công suất</th>
-                                        <th>SL sổ sách</th>
-                                        <th>SL thực tế</th>
-                                        <th>SL hư hỏng</th>
-                                        <th>Ghi chú</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <c:forEach var="d" items="${details}" varStatus="st">
-                                        <tr>
+                    <c:if test="${empty details}">
+                        <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Chưa có dữ liệu kiểm kê.</div>
+                    </c:if>
+                    <c:if test="${not empty details}">
+                        <c:set var="totalSys" value="0"/>
+                        <c:set var="totalActual" value="0"/>
+                        <c:set var="totalGood" value="0"/>
+                        <c:set var="totalPoor" value="0"/>
+                        <c:set var="totalDamaged" value="0"/>
+                        <c:forEach var="d" items="${details}">
+                            <c:set var="totalSys" value="${totalSys + d.systemQuantity}"/>
+                            <c:set var="totalActual" value="${totalActual + (not empty d.actualQuantity ? d.actualQuantity : 0)}"/>
+                            <c:forEach var="s" items="${serialsByDetail[d.id]}">
+                                <c:if test="${s.status == 'GOOD'}"><c:set var="totalGood" value="${totalGood + 1}"/></c:if>
+                                <c:if test="${s.status == 'POOR'}"><c:set var="totalPoor" value="${totalPoor + 1}"/></c:if>
+                                <c:if test="${s.status == 'DAMAGED'}"><c:set var="totalDamaged" value="${totalDamaged + 1}"/></c:if>
+                            </c:forEach>
+                        </c:forEach>
+
+                        <div class="summary-row">
+                            <div class="summary-card">
+                                <div class="summary-lbl">Tổng sổ sách</div>
+                                <div class="summary-val">${totalSys}</div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="summary-lbl">SL thực tế</div>
+                                <div class="summary-val">${totalActual}</div>
+                            </div>
+                            <div class="summary-card sum-good">
+                                <div class="summary-lbl">Tốt</div>
+                                <div class="summary-val">${totalGood}</div>
+                            </div>
+                            <div class="summary-card sum-poor">
+                                <div class="summary-lbl">Kém</div>
+                                <div class="summary-val">${totalPoor}</div>
+                            </div>
+                            <div class="summary-card sum-damaged">
+                                <div class="summary-lbl">Hỏng</div>
+                                <div class="summary-val">${totalDamaged}</div>
+                            </div>
+                        </div>
+
+                        <table class="detail-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">#</th>
+                                    <th>Mã máy</th>
+                                    <th>Thương hiệu</th>
+                                    <th>SL sổ sách</th>
+                                    <th>SL thực tế</th>
+                                    <th>Chênh lệch</th>
+                                    <th>Ghi chú</th>
+                                    <th style="width:50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="d" items="${details}" varStatus="st">
+                                    <c:set var="diff" value="${d.systemQuantity - (not empty d.actualQuantity ? d.actualQuantity : 0)}"/>
+                                        <tr class="detail-row" data-detail-id="${d.id}">
                                             <td>${st.index + 1}</td>
                                             <td>
                                                 <strong>
@@ -175,7 +223,6 @@
                                                 </strong>
                                             </td>
                                             <td><c:out value="${not empty d.generatorBrand ? d.generatorBrand : '—'}"/></td>
-                                            <td><span class="mono"><c:out value="${d.powerRating}"/> kVA</span></td>
                                             <td class="qty-sys">${d.systemQuantity}</td>
                                             <td class="qty-actual">
                                                 <c:choose>
@@ -183,8 +230,64 @@
                                                     <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                 </c:choose>
                                             </td>
-                                            <td class="qty-damaged">${d.damagedQuantity}</td>
+                                            <td class="col-diff">
+                                                <c:if test="${not empty d.actualQuantity}">
+                                                    <c:choose>
+                                                        <c:when test="${diff == 0}"><span class="diff-zero">0</span></c:when>
+                                                        <c:when test="${diff > 0}"><span class="diff-neg">-${diff}</span></c:when>
+                                                        <c:otherwise><span class="diff-pos">+${-diff}</span></c:otherwise>
+                                                    </c:choose>
+                                                </c:if>
+                                                <c:if test="${empty d.actualQuantity}"><span style="color:var(--muted);">—</span></c:if>
+                                            </td>
                                             <td><c:out value="${not empty d.notes ? d.notes : '—'}"/></td>
+                                            <td>
+                                                <button type="button" class="icon-btn toggle-serials"
+                                                        data-detail-id="${d.id}"
+                                                        title="Xem serials">
+                                                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="6 9 12 15 18 9"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="serial-row" data-detail-id="${d.id}">
+                                            <td colspan="8" style="padding: 0;">
+                                                <div class="serial-container">
+                                                    <c:choose>
+                                                        <c:when test="${empty serialsByDetail[d.id]}">
+                                                            <div class="serial-empty">Không có serial nào.</div>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <table class="serial-table">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width:30px;">#</th>
+                                                                        <th>Serial</th>
+                                                                        <th>Trạng thái</th>
+                                                                        <th>Ghi chú</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <c:forEach var="s" items="${serialsByDetail[d.id]}" varStatus="sSt">
+                                                                        <tr>
+                                                                            <td class="col-num">${sSt.index + 1}</td>
+                                                                            <td><span class="mono"><c:out value="${s.serialNumber}"/></span></td>
+                                                                            <td>
+                                                                                <c:choose>
+                                                                                    <c:when test="${s.status == 'GOOD'}"><span class="status-good">Tốt</span></c:when>
+                                                                                    <c:when test="${s.status == 'POOR'}"><span class="status-poor">Kém</span></c:when>
+                                                                                    <c:when test="${s.status == 'DAMAGED'}"><span class="status-damaged">Hỏng</span></c:when>
+                                                                                    <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                                                </c:choose>
+                                                                            </td>
+                                                                            <td><c:out value="${not empty s.notes ? s.notes : '—'}"/></td>
+                                                                        </tr>
+                                                                    </c:forEach>
+                                                                </tbody>
+                                                            </table>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </div>
+                                            </td>
                                         </tr>
                                     </c:forEach>
                                 </tbody>
@@ -249,6 +352,36 @@
                     <button type="submit" class="btn btn-success">Xác nhận hoàn thành</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="modal-host" id="exportModal">
+        <div class="modal-card">
+            <h3>Trích xuất báo cáo</h3>
+            <div class="modal-sub">Chọn khoảng thời gian để xuất báo cáo stock card cho từng máy trong phiếu kiểm kê.</div>
+            <c:forEach var="d" items="${details}" varStatus="st">
+                <form method="GET" action="${pageContext.request.contextPath}/inventory-check?action=exportReport"
+                      class="export-form" style="margin-bottom: ${st.last ? '0' : '12px'}; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm);">
+                    <input type="hidden" name="action" value="exportReport" />
+                    <input type="hidden" name="checkId" value="${check.id}" />
+                    <input type="hidden" name="detailId" value="${d.id}" />
+                    <input type="hidden" name="warehouseId" value="${check.warehouseId}" />
+                    <input type="hidden" name="warehouseName" value="<c:out value="${check.warehouseName}"/>" />
+                    <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><c:out value="${d.generatorModel}"/></div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="date" name="fromDate" class="edit-input" style="flex:1;" required max="${today}" />
+                        <span style="color:var(--muted);font-size:12px;">→</span>
+                        <input type="date" name="toDate" class="edit-input" style="flex:1;" required max="${today}" />
+                        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            Xuất Excel
+                        </button>
+                    </div>
+                </form>
+            </c:forEach>
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeModal('exportModal')">Đóng</button>
+            </div>
         </div>
     </div>
 

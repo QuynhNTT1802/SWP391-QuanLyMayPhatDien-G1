@@ -94,7 +94,6 @@
                                                 <th style="width: 40px;">#</th>
                                                 <th>Mã máy</th>
                                                 <th>Thương hiệu</th>
-                                                <th>Công suất</th>
                                                 <th>SL sổ sách</th>
                                             </tr>
                                         </thead>
@@ -107,8 +106,7 @@
                                                     <td class="col-num">${st.index + 1}</td>
                                                     <td><strong><c:out value="${inv.generatorModel}"/></strong></td>
                                                     <td><c:out value="${not empty inv.generatorBrand ? inv.generatorBrand : '—'}"/></td>
-                                                    <td><span class="mono"><c:out value="${inv.generatorModel}"/> kVA</span></td>
-                                                    <td class="qty-sys">${inv.quantity}</td>
+                                                    <td class="qty-sys">${generatorCountMap[inv.generatorId]}</td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
