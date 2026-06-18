@@ -170,16 +170,26 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             params.add(status);
         }
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (name LIKE ? OR phone LIKE ?) ");
-            String p = "%" + search.trim() + "%";
-            params.add(p);
-            params.add(p);
+            String[] tokens = search.trim().split("\\s+");
+            if (tokens.length > 0) {
+                sql.append("AND (");
+                for (int t = 0; t < tokens.length; t++) {
+                    if (t > 0) sql.append(" OR ");
+                    String p = "%" + escapeLike(tokens[t]) + "%";
+                    sql.append("(name LIKE ? ESCAPE '\\\\' OR phone LIKE ? ESCAPE '\\\\')");
+                    params.add(p);
+                    params.add(p);
+                }
+                sql.append(") ");
+            }
         }
         if (supplierTypeId != null) {
             sql.append("AND supplier_type_id = ? ");
             params.add(supplierTypeId);
         }
-        sql.append("ORDER BY created_at DESC");
+        sql.append("ORDER BY created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
 
         try {
             connection = getConnection();
@@ -196,17 +206,12 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             while (resultSet.next()) {
                 all.add(getFromResultSet(resultSet));
             }
-
-            if (all.isEmpty()) return all;
-
-            int start = (page - 1) * pageSize;
-            int end = Math.min(start + pageSize, all.size());
-            if (start > all.size()) return new ArrayList<>();
-            return new ArrayList<>(all.subList(start, end));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
-        return new ArrayList<>();
+        return all;
     }
 
     public int getTotalFiltered(String search, String status, Integer supplierTypeId) {
@@ -218,10 +223,18 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             params.add(status);
         }
         if (search != null && !search.trim().isEmpty()) {
-            sql.append("AND (name LIKE ? OR phone LIKE ?) ");
-            String p = "%" + search.trim() + "%";
-            params.add(p);
-            params.add(p);
+            String[] tokens = search.trim().split("\\s+");
+            if (tokens.length > 0) {
+                sql.append("AND (");
+                for (int t = 0; t < tokens.length; t++) {
+                    if (t > 0) sql.append(" OR ");
+                    String p = "%" + escapeLike(tokens[t]) + "%";
+                    sql.append("(name LIKE ? ESCAPE '\\\\' OR phone LIKE ? ESCAPE '\\\\')");
+                    params.add(p);
+                    params.add(p);
+                }
+                sql.append(") ");
+            }
         }
         if (supplierTypeId != null) {
             sql.append("AND supplier_type_id = ? ");
@@ -244,6 +257,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -370,5 +385,12 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
         if (!rs.wasNull()) s.setUpdatedBy(ub);
 
         return s;
+    }
+
+    private String escapeLike(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 }

@@ -67,9 +67,7 @@
                         </div>
                         <c:set var="perms" value="${sessionScope.userPermissions}"/>
                         <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
-                        <c:if test="${canCreatePo}">
-                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/purchase-order?action=create">+ Tạo phiếu mua</a>
-                        </c:if>
+                        
                     </div>
 
                     <script>
