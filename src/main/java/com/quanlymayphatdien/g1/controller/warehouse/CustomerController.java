@@ -54,6 +54,9 @@ public class CustomerController extends HttpServlet {
             case "deactivate":
                 deactivateCustomer(request, response);
                 break;
+            case "search":
+                searchCustomersJson(request, response);
+                break;
             default:
                 listCustomers(request, response);
                 break;
@@ -399,5 +402,60 @@ public class CustomerController extends HttpServlet {
         log.setDetails(details);
         log.setCreatedAt(LocalDateTime.now());
         new ActivityLogDAO().insertLog(log);
+    }
+
+    private void searchCustomersJson(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String keyword = request.getParameter("q");
+        CustomerDAO dao = new CustomerDAO();
+        List<Customer> list = dao.searchByKeyword(keyword);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (int i = 0; i < list.size(); i++) {
+            Customer c = list.get(i);
+            if (i > 0) sb.append(',');
+            sb.append('{')
+              .append("\"id\":").append(c.getId()).append(',')
+              .append("\"name\":").append(jsonStr(c.getName())).append(',')
+              .append("\"phone\":").append(jsonStr(c.getPhone())).append(',')
+              .append("\"email\":").append(jsonStr(c.getEmail())).append(',')
+              .append("\"address\":").append(jsonStr(c.getAddress())).append(',')
+              .append("\"companyName\":").append(jsonStr(c.getCompanyName())).append(',')
+              .append("\"customerTypeId\":").append(c.getCustomerTypeId()).append(',')
+              .append("\"status\":").append(jsonStr(c.getStatus()))
+              .append('}');
+        }
+        sb.append(']');
+
+        response.getWriter().write(sb.toString());
+    }
+
+    private String jsonStr(String s) {
+        if (s == null) return "null";
+        StringBuilder sb = new StringBuilder("\"");
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            switch (ch) {
+                case '\\': sb.append("\\\\"); break;
+                case '\"': sb.append("\\\""); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (ch < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) ch));
+                    } else {
+                        sb.append(ch);
+                    }
+            }
+        }
+        sb.append('"');
+        return sb.toString();
     }
 }

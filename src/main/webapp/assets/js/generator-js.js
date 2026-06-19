@@ -17,14 +17,14 @@
 
   // confirm deactivate
   function confirmDeactivateGenerator(id, page) {
-    confirmAction('Khóa máy phát điện', 'Mẫu máy này sẽ không khả dụng cho đơn hàng. Tiếp tục?', () => {
+    confirmAction('Kh\u00f3a m\u00e1y ph\u00e1t \u0111i\u1ec7n', 'M\u1eabu m\u00e1y n\u00e0y s\u1ebd kh\u00f4ng kh\u1ea3 d\u1ee5ng cho \u0111\u01a1n h\u00e0ng. Ti\u1ebfp t\u1ee5c?', () => {
       window.location.href = APP_CTX + '/warehouse/generators?action=deactivate&id=' + id + '&page=' + page;
     });
   }
 
   // confirm activate
   function confirmActivateGenerator(id, page) {
-    confirmAction('Kích hoạt máy phát điện', 'Mẫu máy này sẽ khả dụng trở lại. Tiếp tục?', () => {
+    confirmAction('K\u00edch ho\u1ea1t m\u00e1y ph\u00e1t \u0111i\u1ec7n', 'M\u1eabu m\u00e1y n\u00e0y s\u1ebd kh\u1ea3 d\u1ee5ng tr\u1edf l\u1ea1i. Ti\u1ebfp t\u1ee5c?', () => {
       window.location.href = APP_CTX + '/warehouse/generators?action=activate&id=' + id + '&page=' + page;
     });
   }

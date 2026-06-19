@@ -14,13 +14,13 @@ document.getElementById('clearFilters').addEventListener('click', () => {
 });
 
 function confirmDeactivateSupplier(id, page) {
-  confirmAction('Khóa nhà cung cấp', 'Nhà cung cấp này sẽ không khả dụng. Tiếp tục?', () => {
+  confirmAction('Kh\u00f3a nh\u00e0 cung c\u1ea5p', 'Nh\u00e0 cung c\u1ea5p n\u00e0y s\u1ebd kh\u00f4ng kh\u1ea3 d\u1ee5ng. Ti\u1ebfp t\u1ee5c?', () => {
     window.location.href = APP_CTX + '/warehouse/suppliers?action=deactivate&id=' + id + '&page=' + page;
   });
 }
 
 function confirmActivateSupplier(id, page) {
-  confirmAction('Kích hoạt nhà cung cấp', 'Nhà cung cấp này sẽ khả dụng trở lại. Tiếp tục?', () => {
+  confirmAction('K\u00edch ho\u1ea1t nh\u00e0 cung c\u1ea5p', 'Nh\u00e0 cung c\u1ea5p n\u00e0y s\u1ebd kh\u1ea3 d\u1ee5ng tr\u1edf l\u1ea1i. Ti\u1ebfp t\u1ee5c?', () => {
     window.location.href = APP_CTX + '/warehouse/suppliers?action=activate&id=' + id + '&page=' + page;
   });
 }
