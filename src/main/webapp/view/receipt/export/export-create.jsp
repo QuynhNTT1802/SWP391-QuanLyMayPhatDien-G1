@@ -225,6 +225,22 @@
                                 <h3 class="section-title">Danh sách máy phát điện</h3>
                             </div>
                         </div>
+                        <c:if test="${not empty stockWarnings}">
+                            <div id="stockWarnBanner" class="alert alert-warn" style="margin: 0 0 14px 0;">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                <div class="alert-body">
+                                    <div class="alert-title">Đơn hàng này hiện đang thiếu máy trong kho</div>
+                                    <ul>
+                                        <c:forEach var="w" items="${stockWarnings}">
+                                            <li><strong>Thiếu:</strong> ${w}</li>
+                                        </c:forEach>
+                                    </ul>
+                                    <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+                                        Vui lòng nhập thêm máy vào kho hoặc chọn kho có đủ máy để tạo phiếu.
+                                    </div>
+                                </div>
+                            </div>
+                        </c:if>
                         <div id="warehouseWarn" class="alert alert-info" style="display:none;">
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <div class="alert-body">
@@ -333,6 +349,11 @@
         <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
         </c:forEach>
     ];
+    var stockWarningGenIds = [
+        <c:forEach var="genId" items="${stockWarningGenIds}" varStatus="st">
+        ${genId}<c:if test="${!st.last}">,</c:if>
+        </c:forEach>
+    ];
     var allSerials = [
         <c:forEach var="inv" items="${allSerials}" varStatus="st">
         {
@@ -424,6 +445,21 @@
         });
         updateRowNumbers();
         validateInventoryRealtime();
+        if (!generatorCache || generatorCache.length === 0) {
+            highlightShortRows();
+        }
+    }
+
+    function highlightShortRows() {
+        if (!stockWarningGenIds || stockWarningGenIds.length === 0) return;
+        document.querySelectorAll('#detailBody tr').forEach(function (row) {
+            var sel = row.querySelector('select[name="generatorId"]');
+            if (!sel) return;
+            var genId = parseInt(sel.value, 10);
+            if (genId && stockWarningGenIds.indexOf(genId) !== -1) {
+                row.classList.add('row-short');
+            }
+        });
     }
 
     function onGeneratorChange(sel) {

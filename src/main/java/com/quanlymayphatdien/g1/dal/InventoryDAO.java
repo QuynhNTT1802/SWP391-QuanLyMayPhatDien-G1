@@ -266,6 +266,25 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     /**
+     * Đếm tổng số IN_STOCK của một generator trên tất cả kho.
+     */
+    public int countTotalInStockByGenerator(int generatorId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND status = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ps.setString(2, STATUS_IN_STOCK);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
      * Lay tat ca serial IN_STOCK cua mot warehouse, group theo generator. Dung
      * cho serial-picker mới: 1 lan goi de hien tat ca model trong kho.
      */
