@@ -24,7 +24,6 @@ import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.google.gson.Gson;
@@ -92,7 +91,7 @@ public class ImportReceiptController extends HttpServlet {
                     loadGeneratorsJson(request, response);
                     break;
                 case "selectPurchase":
-                    showSelectPurchaseOrder(request, response);
+                    selectPurchase(request, response);
                     break;
                 case "template":
                     downloadTemplate(request, response);
@@ -232,37 +231,32 @@ public class ImportReceiptController extends HttpServlet {
         request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
     }
 
-    private void showSelectPurchaseOrder(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String period = request.getParameter("period");
-        int warehouseId = parseId(request.getParameter("warehouseId"));
+    private void selectPurchase(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String search = request.getParameter("search");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
 
-        String dateFrom = null;
-        String dateTo = null;
-        if (period != null && !period.isEmpty()) {
-            String cleanPeriod = period.replace("-", "");
-            dateFrom = PeriodUtils.startOf(cleanPeriod).toString();
-            dateTo = PeriodUtils.endOf(cleanPeriod).toString();
-        }
-
         PurchaseOrderDAO dao = new PurchaseOrderDAO();
-        int totalItems = dao.countByFilters(dateFrom, dateTo, warehouseId, "APPROVED");
+        int totalItems = dao.countApprovedAvailableFiltered(search, fromDate, toDate);
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
         if (page > totalPages) page = totalPages;
-        List<PurchaseOrder> approvedPOs = dao.findByFilters(dateFrom, dateTo, warehouseId, "APPROVED", page, pageSize);
+        List<PurchaseOrder> approvedPOs = dao.findApprovedAvailableFiltered(search, fromDate, toDate, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("approvedPOs", approvedPOs);
-        request.setAttribute("period", period);
-        request.setAttribute("warehouseId", warehouseId);
+        request.setAttribute("search", search);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("fromIndex", fromIndex);
         request.setAttribute("toIndex", toIndex);
+        request.setAttribute("activePage", "import-select-purchase");
         request.getRequestDispatcher("/view/receipt/import/import-select-purchase.jsp").forward(request, response);
     }
 
@@ -843,7 +837,18 @@ public class ImportReceiptController extends HttpServlet {
 
     private void downloadTemplate(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook();
+        String poIdStr = request.getParameter("poId");
+        List<PurchaseOrderDetail> poDetails = null;
+        if (poIdStr != null && !poIdStr.isEmpty()) {
+            int poId = parseId(poIdStr);
+            if (poId > 0) {
+                PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
+                if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
+                    poDetails = po.getDetails();
+                }
+            }
+        }
+        XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(poDetails);
         String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");

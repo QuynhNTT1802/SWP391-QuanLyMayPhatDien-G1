@@ -88,6 +88,11 @@
                             <c:set var="statusBg" value="#f8d7da"/>
                             <c:set var="statusFg" value="#721c24"/>
                         </c:when>
+                        <c:when test="${order.status == 'NEEDS_REVISION'}">
+                            <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
+                            <c:set var="statusBg" value="#ffe0b2"/>
+                            <c:set var="statusFg" value="#b15c00"/>
+                        </c:when>
                         <c:otherwise>
                             <c:set var="statusLabel" value="Đã hủy"/>
                             <c:set var="statusBg" value="#e2e3e5"/>
@@ -133,6 +138,23 @@
                             </div>
                         </div>
                     </div>
+
+                    <c:if test="${order.status == 'PENDING' && canApproveOrder}">
+                        <div class="action-bar-top">
+                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                Duyệt đơn
+                            </button>
+                            <button type="button" class="btn" onclick="openModal('revisionModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                Yêu cầu chỉnh sửa
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Từ chối
+                            </button>
+                        </div>
+                    </c:if>
 
                     <div class="tab-bar">
                         <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
@@ -403,6 +425,54 @@
             </div>
         </div>
 
+        <c:if test="${order.status == 'PENDING' && canApproveOrder}">
+            <div class="modal-host" id="approveModal">
+                <div class="modal-card">
+                    <h3>Duyệt đơn hàng</h3>
+                    <div class="modal-sub">Xác nhận duyệt đơn hàng <strong><c:out value="${order.orderCode}"/></strong>?</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="rejectModal">
+                <div class="modal-card">
+                    <h3>Từ chối đơn hàng</h3>
+                    <div class="modal-sub">Đơn hàng sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=reject">
+                        <input type="hidden" name="orderId" value="${order.orderId}" />
+                        <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
+                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, thông tin chưa hợp lệ..." style="margin-top:8px;"></textarea>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="revisionModal">
+                <div class="modal-card">
+                    <h3>Yêu cầu chỉnh sửa</h3>
+                    <div class="modal-sub">Gửi đơn hàng lại cho nhân viên tạo đơn kèm lý do để chỉnh sửa và gửi lại.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=requestRevision" id="revisionForm">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
+                        <textarea name="reason" id="revisionReason" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
         <div class="toast-host" id="toastHost"></div>
 
         <script>
@@ -466,8 +536,20 @@
                 return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
             }
 
+            function confirmApproveAction() {
+                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
+            }
+
+            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
+            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
+            document.querySelectorAll('.modal-host').forEach(function (m) {
+                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+            });
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeGenModal();
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    closeGenModal();
+                }
             });
         </script>
     </body>

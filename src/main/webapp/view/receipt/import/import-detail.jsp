@@ -320,6 +320,16 @@
                                         <div class="info-label">Kho nhập</div>
                                         <div class="info-value"><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></div>
                                     </div>
+                                    <c:if test="${not empty receipt.purchaseOrderCode}">
+                                        <div class="info-field">
+                                            <div class="info-label">Phiếu mua nguồn</div>
+                                            <div class="info-value mono">
+                                                <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${receipt.purchaseOrderId}">
+                                                    <c:out value="${receipt.purchaseOrderCode}"/>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </c:if>
                                     <div class="info-field">
                                         <div class="info-label">Người tạo</div>
                                         <div class="info-value"><c:out value="${receipt.createdByName}"/></div>
