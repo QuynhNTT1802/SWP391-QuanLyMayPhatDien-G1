@@ -6,15 +6,7 @@ package com.quanlymayphatdien.g1.entity;
 
 import java.math.BigDecimal;
 
-/**
- *
- * @author FPTShop
- *
- * Moi dong = 1 serial cu the.
- * Serial khong con luu text o day - thay bang inventory_id (FK).
- * generator_id, serialNumber chi la transient field load qua JOIN
- * de phuc vu hien thi (JSP, Excel), KHONG su dung de ghi DB.
- */
+
 public class ReceiptDetail {
     private int receiptDetailId;
     private int receiptId;

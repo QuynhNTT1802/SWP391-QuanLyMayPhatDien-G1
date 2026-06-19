@@ -374,9 +374,6 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         return d;
     }
 
-    // ============================================================
-    // SERIAL METHODS
-    // ============================================================
 
     public List<InventoryCheckSerial> findSerialsByCheckId(int checkId) {
         List<InventoryCheckSerial> list = new ArrayList<>();

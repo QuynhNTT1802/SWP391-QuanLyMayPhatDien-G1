@@ -143,7 +143,7 @@
                             </div>
                             <div class="info-field">
                                 <div class="info-label">Tổng mặt hàng</div>
-                                <div class="info-value">${detail.size()} máy</div>
+                                <div class="info-value">${details.size()} máy</div>
                             </div>
                         </div>
                         <c:if test="${not empty check.notes}">

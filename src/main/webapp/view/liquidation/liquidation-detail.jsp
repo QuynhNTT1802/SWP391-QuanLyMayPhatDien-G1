@@ -579,7 +579,6 @@
         if (tabId === 'history') applyHistoryFilter();
     }
 
-    /* ============ HISTORY: search + filter + pagination ============ */
     var HISTORY_PAGE_SIZE = 8;
     var historyState = { page: 1 };
 
@@ -606,7 +605,6 @@
             if (ok) matched.push(tr);
         });
 
-        // paginate matched rows
         var totalPages = Math.max(1, Math.ceil(matched.length / HISTORY_PAGE_SIZE));
         if (historyState.page > totalPages) historyState.page = totalPages;
         if (historyState.page < 1) historyState.page = 1;
@@ -681,7 +679,6 @@
         }
     });
 
-    /* ============ CUSTOMER SEARCH ============ */
     var custSearchInput = document.getElementById('custSearchInput');
     if (custSearchInput) {
         var custSearchTimer = null;
@@ -772,7 +769,6 @@
         document.getElementById('addNewCustBtn').style.display = 'inline-flex';
     }
 
-    /* ============ NEW CUSTOMER MODAL ============ */
     function openNewCustomerModal() {
         document.getElementById('ncName').value = '';
         document.getElementById('ncPhone').value = document.getElementById('custSearchInput').value;

@@ -5,10 +5,7 @@ import com.quanlymayphatdien.g1.entity.SystemLog;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-/**
- * Helper ghi log hệ thống. Module nên dùng hằng số từ {@link LogModule}
- * để dữ liệu nhất quán cho UI filter.
- */
+
 public class SystemLogger {
 
     private static final SystemLogDAO dao = new SystemLogDAO();
@@ -43,10 +40,7 @@ public class SystemLogger {
         }
     }
 
-    /**
-     * Trim + default về {@link LogModule#SYSTEM} nếu null/blank.
-     * Không ép case để giữ nguyên tiếng Việt có dấu.
-     */
+
     private static String normalizeModule(String module) {
         if (module == null) return LogModule.SYSTEM;
         String trimmed = module.trim();
