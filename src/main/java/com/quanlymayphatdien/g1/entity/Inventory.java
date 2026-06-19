@@ -27,6 +27,8 @@ public class Inventory {
     private String generatorModel;
     private String generatorBrand;
     private String warehouseName;
+    private Integer importReceiptId;
+    private String importReceiptCode;
 
     public Inventory() {
     }
@@ -111,6 +113,27 @@ public class Inventory {
         this.warehouseName = warehouseName;
     }
 
+    public Integer getImportReceiptId() {
+        return importReceiptId;
+    }
+
+    public void setImportReceiptId(Integer importReceiptId) {
+        this.importReceiptId = importReceiptId;
+    }
+
+    public String getImportReceiptCode() {
+        return importReceiptCode;
+    }
+
+    public void setImportReceiptCode(String importReceiptCode) {
+        this.importReceiptCode = importReceiptCode;
+    }
+
+    /**
+     * Tinh so serial IN_STOCK theo (warehouse, generator).
+     * Su dung khi can hien thi tong ton o trang overview/aggregate.
+     * @return 1 vi moi dong = 1 serial
+     */
     public int getQuantity() {
         return 1;
     }

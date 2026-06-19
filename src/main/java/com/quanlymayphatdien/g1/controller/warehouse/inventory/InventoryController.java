@@ -199,6 +199,9 @@ public class InventoryController extends HttpServlet {
         }
 
         String status = request.getParameter("status");
+        if (status == null) {
+            status = "IN_STOCK";
+        }
         String search = request.getParameter("search");
 
         int page = 1;
