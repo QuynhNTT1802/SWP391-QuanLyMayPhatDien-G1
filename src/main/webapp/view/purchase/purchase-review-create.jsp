@@ -133,6 +133,9 @@
                     </div>
 
                     <div class="section-title">Danh sách đề xuất đã chọn</div>
+                    <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=submitReviewCreate">
+                        <input type="hidden" name="period" value="${selectedPeriod}"/>
+                        <input type="hidden" name="warehouseId" value="${selectedWarehouseId}"/>
                     <c:choose>
                         <c:when test="${empty creatorGroups}">
                             <div class="card" style="padding: 24px; text-align: center; color: var(--muted);">
@@ -212,10 +215,6 @@
                             </c:forEach>
                         </c:otherwise>
                     </c:choose>
-
-                    <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=submitReviewCreate">
-                        <input type="hidden" name="period" value="${selectedPeriod}"/>
-                        <input type="hidden" name="warehouseId" value="${selectedWarehouseId}"/>
 
                         <div class="section-title">Bảng tổng hợp theo máy</div>
                         <div class="card" style="padding: 16px;">

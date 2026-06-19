@@ -173,8 +173,7 @@ public class ProposalController extends HttpServlet {
         User loggedUser = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
-        // Sale manager (có quyền approve) xem tất cả phiếu TRỪ DRAFT.
-        // Sale staff (không có quyền approve) chỉ xem phiếu của mình, bao gồm DRAFT.
+     
         Integer createdByFilter = canApprove ? null : loggedUser.getId();
         boolean excludeDraft = canApprove;
 
