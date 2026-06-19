@@ -182,7 +182,7 @@
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, người tạo" autocomplete="off" />
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu nhập, mã phiếu mua, người tạo" autocomplete="off" />
                         </div>
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
@@ -214,6 +214,7 @@
                                 <tr>
                                     <th>Mã phiếu</th>
                                     <th>Kho</th>
+                                    <th>Phiếu mua</th>
                                     <th class="col-reason">Lý do</th>
                                     <th class="col-creator">Người tạo</th>
                                     <th class="col-status">Trạng thái</th>
@@ -224,13 +225,21 @@
                             <tbody id="receiptsBody">
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Không có phiếu nào.</td></tr>
+                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có phiếu nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="r" items="${receiptList}">
                                             <tr data-id="${r.receiptId}">
                                                 <td><span class="receipt-code"><c:out value="${r.receiptCode}"/></span></td>
                                                 <td>${r.warehouseName}</td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty r.purchaseOrderCode}">
+                                                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="po-code" style="font-family:monospace;font-size:12px;"><c:out value="${r.purchaseOrderCode}"/></a>
+                                                        </c:when>
+                                                        <c:otherwise><span class="muted">—</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
