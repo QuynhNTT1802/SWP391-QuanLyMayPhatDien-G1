@@ -26,6 +26,7 @@
     </style>
 </head>
 <body>
+<c:set var="currentAction" value="${not empty param.action ? param.action : 'selectPurchase'}" />
 <div class="app">
     <jsp:include page="../../common/admin/aside.jsp"></jsp:include>
 
@@ -52,23 +53,22 @@
             </div>
 
             <form method="get" action="${pageContext.request.contextPath}/import-receipt" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
-                <input type="hidden" name="action" value="selectPurchase" />
+                <input type="hidden" name="action" value="${currentAction}" />
                 <input type="hidden" name="page" value="1" />
-                <label style="font-size:13px;color:var(--muted);">Kỳ:</label>
-                <input name="period" class="filter-select" value="<c:out value='${period}'/>" placeholder="VD: 2026-Q2" style="width:120px;" />
-                <label style="font-size:13px;color:var(--muted);">Kho:</label>
-                <select name="warehouseId" class="filter-select" style="width:160px;">
-                    <option value="">Tất cả</option>
-                    <c:forEach var="wh" items="${warehouses}">
-                        <option value="${wh.warehouseId}" ${wh.warehouseId == warehouseId ? 'selected' : ''}>${wh.name}</option>
-                    </c:forEach>
-                </select>
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu purchase" autocomplete="off" />
+                </div>
+                <label style="font-size:13px;color:var(--muted);">Từ:</label>
+                <input type="date" name="fromDate" class="filter-select" value="<c:out value='${fromDate}'/>" title="Từ ngày duyệt" />
+                <label style="font-size:13px;color:var(--muted);">Đến:</label>
+                <input type="date" name="toDate" class="filter-select" value="<c:out value='${toDate}'/>" title="Đến ngày duyệt" />
                 <button type="submit" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                     Tìm kiếm
                 </button>
                 <div class="spacer"></div>
-                <button type="button" class="btn" onclick="location.href='${pageContext.request.contextPath}/import-receipt?action=selectPurchase'">
+                <button type="button" class="btn" onclick="location.href='${pageContext.request.contextPath}/import-receipt?action=${currentAction}'">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     Xóa lọc
                 </button>
@@ -108,26 +108,29 @@
                         </table>
 
                         <c:set var="filterParams" value="" />
-                        <c:if test="${not empty period}">
-                            <c:set var="filterParams" value="${filterParams}&period=${period}" />
+                        <c:if test="${not empty search}">
+                            <c:set var="filterParams" value="${filterParams}&search=${search}" />
                         </c:if>
-                        <c:if test="${warehouseId > 0}">
-                            <c:set var="filterParams" value="${filterParams}&warehouseId=${warehouseId}" />
+                        <c:if test="${not empty fromDate}">
+                            <c:set var="filterParams" value="${filterParams}&fromDate=${fromDate}" />
+                        </c:if>
+                        <c:if test="${not empty toDate}">
+                            <c:set var="filterParams" value="${filterParams}&toDate=${toDate}" />
                         </c:if>
                         <div class="pagination">
                             <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=selectPurchase&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                                    <a href="?action=${currentAction}&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="pg">
                                     <c:choose>
                                         <c:when test="${pg == currentPage}"><span class="page-btn active">${pg}</span></c:when>
-                                        <c:otherwise><a href="?action=selectPurchase&page=${pg}${filterParams}" class="page-btn">${pg}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=${currentAction}&page=${pg}${filterParams}" class="page-btn">${pg}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=selectPurchase&page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                                    <a href="?action=${currentAction}&page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>

@@ -113,6 +113,9 @@ public class OrderController extends HttpServlet {
                 case "cancel":
                     cancelOrder(request, response);
                     break;
+                case "requestRevision":
+                    requestRevisionOrder(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -212,10 +215,134 @@ public class OrderController extends HttpServlet {
             }
         }
 
+        String tab = request.getParameter("tab");
+        String currentTab = "history".equals(tab) ? "history" : "info";
+        request.setAttribute("currentTab", currentTab);
+
+        if ("history".equals(currentTab)) {
+            String logSearch = request.getParameter("logSearch");
+            String logAction = request.getParameter("logAction");
+            String dateFrom = request.getParameter("dateFrom");
+            String dateTo = request.getParameter("dateTo");
+
+            List<Map<String, Object>> logList = new ArrayList<>();
+            if (order.getCreatedAt() != null) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("createdAt", order.getCreatedAt());
+                m.put("user", order.getCreatedByName() != null ? order.getCreatedByName() : "—");
+                m.put("action", "CREATE");
+                m.put("actionLabel", "Tạo đơn hàng");
+                m.put("details", "Tạo đơn hàng " + order.getOrderCode());
+                logList.add(m);
+            }
+            if (order.getUpdatedAt() != null && (order.getCreatedAt() == null || order.getUpdatedAt().after(order.getCreatedAt()))) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("createdAt", order.getUpdatedAt());
+                m.put("user", order.getCreatedByName() != null ? order.getCreatedByName() : "—");
+                m.put("action", "UPDATE");
+                m.put("actionLabel", "Cập nhật");
+                m.put("details", "Cập nhật nội dung đơn hàng");
+                logList.add(m);
+            }
+            if ("APPROVED".equals(order.getStatus()) && order.getApprovedAt() != null) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("createdAt", order.getApprovedAt());
+                m.put("user", order.getApprovedByName() != null ? order.getApprovedByName() : "—");
+                m.put("action", "APPROVE");
+                m.put("actionLabel", "Duyệt đơn");
+                m.put("details", "Duyệt đơn hàng " + order.getOrderCode());
+                logList.add(m);
+            }
+            if ("REJECTED".equals(order.getStatus())) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("createdAt", order.getUpdatedAt() != null ? order.getUpdatedAt() : new Date());
+                m.put("user", order.getRejectedByName() != null ? order.getRejectedByName() : "—");
+                m.put("action", "REJECT");
+                m.put("actionLabel", "Từ chối");
+                m.put("details", "Từ chối đơn hàng" + (order.getRejectReason() != null ? ": " + order.getRejectReason() : ""));
+                logList.add(m);
+            }
+            if ("CANCELLED".equals(order.getStatus()) && order.getCancelledAt() != null) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("createdAt", order.getCancelledAt());
+                m.put("user", order.getCancelledByName() != null ? order.getCancelledByName() : "—");
+                m.put("action", "CANCEL");
+                m.put("actionLabel", "Hủy đơn");
+                m.put("details", "Hủy đơn hàng " + order.getOrderCode());
+                logList.add(m);
+            }
+
+            List<Map<String, Object>> filtered = new ArrayList<>();
+            for (Map<String, Object> m : logList) {
+                if (logAction != null && !logAction.trim().isEmpty() && !logAction.equalsIgnoreCase((String) m.get("action"))) {
+                    continue;
+                }
+                if (logSearch != null && !logSearch.trim().isEmpty()) {
+                    String s = logSearch.trim().toLowerCase();
+                    boolean match = ((String) m.get("user")).toLowerCase().contains(s)
+                            || ((String) m.get("actionLabel")).toLowerCase().contains(s)
+                            || ((String) m.get("details")).toLowerCase().contains(s);
+                    if (!match) continue;
+                }
+                if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+                    try {
+                        Date from = new SimpleDateFormat("yyyy-MM-dd").parse(dateFrom);
+                        Date created = (Date) m.get("createdAt");
+                        if (created.before(from)) continue;
+                    } catch (Exception ignored) {}
+                }
+                if (dateTo != null && !dateTo.trim().isEmpty()) {
+                    try {
+                        Date to = new SimpleDateFormat("yyyy-MM-dd").parse(dateTo);
+                        Date endOfDay = new Date(to.getTime() + 24L * 60 * 60 * 1000 - 1);
+                        Date created = (Date) m.get("createdAt");
+                        if (created.after(endOfDay)) continue;
+                    } catch (Exception ignored) {}
+                }
+                filtered.add(m);
+            }
+            logList.sort((a, b) -> {
+                Date da = (Date) a.get("createdAt");
+                Date db = (Date) b.get("createdAt");
+                if (da == null && db == null) return 0;
+                if (da == null) return 1;
+                if (db == null) return -1;
+                return db.compareTo(da);
+            });
+
+            int pageSize = 20;
+            int page = 1;
+            String pageStr = request.getParameter("page");
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try { page = Math.max(1, Integer.parseInt(pageStr)); }
+                catch (NumberFormatException ignored) { page = 1; }
+            }
+            int totalLogs = filtered.size();
+            int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+            if (page > totalPages) page = totalPages;
+            int fromIdx = (page - 1) * pageSize;
+            int toIdx = Math.min(page * pageSize, totalLogs);
+            List<Map<String, Object>> pageList = fromIdx < totalLogs
+                    ? filtered.subList(fromIdx, toIdx)
+                    : new ArrayList<>();
+
+            request.setAttribute("logList", pageList);
+            request.setAttribute("logPage", page);
+            request.setAttribute("logTotalPages", totalPages);
+            request.setAttribute("totalLogs", totalLogs);
+            request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+            request.setAttribute("logAction", logAction != null ? logAction : "");
+            request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+            request.setAttribute("dateTo", dateTo != null ? dateTo : "");
+        }
+
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
+        request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
-        request.setAttribute("userPermissions", session != null ? session.getAttribute("userPermissions") : null);
+        request.setAttribute("userPermissions", perms);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
 
@@ -733,6 +860,38 @@ public class OrderController extends HttpServlet {
             session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
             session.setAttribute("message", "Hủy thất bại: đơn không ở trạng thái PENDING hoặc APPROVED.");
+        }
+        response.sendRedirect(request.getContextPath() + "/order?action=list");
+    }
+
+    private void requestRevisionOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("orders.approve")) {
+            session.setAttribute("message", "Bạn không có quyền yêu cầu chỉnh sửa đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        String reason = request.getParameter("reason");
+        User user = (User) session.getAttribute("loggedUser");
+        SaleOrderDAO saleorderdao = new SaleOrderDAO();
+
+        if (reason == null || reason.trim().isEmpty()) {
+            session.setAttribute("message", "Vui lòng nhập lý do yêu cầu chỉnh sửa.");
+            response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
+            return;
+        }
+
+        boolean success = saleorderdao.requestRevisionOrder(id, user.getId(), reason);
+
+        if (success) {
+            session.setAttribute("message", "Đã gửi yêu cầu chỉnh sửa đơn hàng.");
+        } else {
+            session.setAttribute("message", "Yêu cầu chỉnh sửa thất bại.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }

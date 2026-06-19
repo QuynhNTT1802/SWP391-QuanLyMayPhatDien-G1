@@ -183,7 +183,7 @@
                                 <h3 class="section-title">Danh sách máy phát điện</h3>
                             </div>
                             <div class="section-actions" style="display:flex; gap:8px;">
-                                <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=template" title="Tải file mẫu Excel">
+                                <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=template<c:if test="${not empty receipt.purchaseOrderId}">&poId=${receipt.purchaseOrderId}</c:if>" title="Tải file mẫu Excel">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                                     Tải mẫu Excel
                                 </a>

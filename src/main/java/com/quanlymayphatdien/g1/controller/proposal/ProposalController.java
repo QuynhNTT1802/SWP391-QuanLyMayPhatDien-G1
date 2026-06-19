@@ -227,6 +227,9 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
         request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
         request.setAttribute("canApproveProposal", canApprove);
+        request.setAttribute("canRejectProposal", perms != null && perms.contains("proposals.reject"));
+        request.setAttribute("canCancelProposal", perms != null && perms.contains("proposals.cancel"));
+        request.setAttribute("currentUserId", loggedUser.getId());
         request.setAttribute("userPermissions", perms);
 
         request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft, dateFrom, dateTo));
@@ -302,7 +305,7 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
-        // Chặn sale manager mở phiếu DRAFT (chỉ chính chủ mới xem được nháp của mình)
+
         HttpSession session = request.getSession();
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         User loggedUser = (User) session.getAttribute("loggedUser");
@@ -315,7 +318,7 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
-        // Chặn sale staff mở DRAFT của người khác
+
         if (GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
                 && !canApprove
                 && p.getCreatedBy() != loggedUser.getId()) {
@@ -325,13 +328,44 @@ public class ProposalController extends HttpServlet {
             return;
         }
 
+        String tab = request.getParameter("tab");
+        String currentTab = "history".equals(tab) ? "history" : "info";
+        request.setAttribute("currentTab", currentTab);
+
         ActivityLogDAO logDAO = new ActivityLogDAO();
-        List<ActivityLog> history = logDAO.findByEntityTypeAndId("import_proposal", id, 1, 100);
-        int totalHistory = logDAO.countByEntityTypeAndId("import_proposal", id);
+        if ("history".equals(currentTab)) {
+            String logSearch = request.getParameter("logSearch");
+            String logAction = request.getParameter("logAction");
+            String dateFrom = request.getParameter("dateFrom");
+            String dateTo = request.getParameter("dateTo");
+
+            int pageSize = 20;
+            int logPage = 1;
+            String pageStr = request.getParameter("page");
+            if (pageStr != null && !pageStr.isEmpty()) {
+                try { logPage = Math.max(1, Integer.parseInt(pageStr)); }
+                catch (NumberFormatException ignored) { logPage = 1; }
+            }
+
+            int totalLogs = logDAO.countByEntityTypeAndId2("import_proposal", id, logSearch, logAction, dateFrom, dateTo);
+            int logTotalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+            if (logPage > logTotalPages) logPage = logTotalPages;
+            List<ActivityLog> logList = logDAO.findByEntityTypeAndId2("import_proposal", id, logSearch, logAction, dateFrom, dateTo, logPage, pageSize);
+
+            request.setAttribute("logList", logList);
+            request.setAttribute("logPage", logPage);
+            request.setAttribute("logTotalPages", logTotalPages);
+            request.setAttribute("totalLogs", totalLogs);
+            request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+            request.setAttribute("logAction", logAction != null ? logAction : "");
+            request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+            request.setAttribute("dateTo", dateTo != null ? dateTo : "");
+        } else {
+            int totalHistory = logDAO.countByEntityTypeAndId("import_proposal", id);
+            request.setAttribute("totalHistory", totalHistory);
+        }
 
         request.setAttribute("proposal", p);
-        request.setAttribute("history", history);
-        request.setAttribute("totalHistory", totalHistory);
 
         java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
         if (p.getDetails() != null) {
@@ -343,6 +377,10 @@ public class ProposalController extends HttpServlet {
             }
         }
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
+        request.setAttribute("canApprove", canApprove);
+        request.setAttribute("perms", perms);
+        request.setAttribute("activePage", "proposal-detail");
         request.getRequestDispatcher("/view/proposal/proposal-detail.jsp").forward(request, response);
     }
 
@@ -889,14 +927,14 @@ public class ProposalController extends HttpServlet {
             if (model == null || model.trim().isEmpty()) {
                 errors.add("Mã máy phát không được trống");
             } else {
+                enriched.put("gmodel", model.trim());
                 Generator g = genDAO.findByModel(model.trim());
-                if (g == null) {
-                    errors.add("Mã máy \"" + model.trim() + "\" không tồn tại trong hệ thống");
-                } else {
-                    enriched.put("gid", String.valueOf(g.getId()));
-                    enriched.put("gname", g.getDescription() != null ? g.getDescription() : "");
-                    enriched.put("gmodel", g.getModel());
+                if (g != null) {
                     generatorResolved = true;
+                    enriched.put("gid", String.valueOf(g.getId()));
+                    enriched.put("gname", g.getModel());
+                } else {
+                    errors.add("Không tìm thấy máy phát với mã: " + model.trim());
                 }
             }
 

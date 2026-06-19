@@ -32,6 +32,7 @@ public class Receipt {
     private String approvedByName;
     private String orderCode;
     private String customerName;
+    private String purchaseOrderCode;
     private String proposalCode;
     private String supplierName;
     private Integer reasonId;
@@ -196,6 +197,14 @@ public class Receipt {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public String getPurchaseOrderCode() {
+        return purchaseOrderCode;
+    }
+
+    public void setPurchaseOrderCode(String purchaseOrderCode) {
+        this.purchaseOrderCode = purchaseOrderCode;
     }
 
     public String getProposalCode() {

@@ -5,6 +5,7 @@
 package com.quanlymayphatdien.g1.utils;
 
 import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,11 +34,15 @@ public class ReceiptExcelSupport {
     public static final String COL_QUANTITY = "Số lượng";
     public static final String COL_NOTE = "Ghi chú";
 
-    public static final String[] HEADERS = {COL_MODEL, COL_SERIAL, COL_QUANTITY, COL_NOTE};
+    public static final String[] HEADERS = {COL_MODEL, COL_SERIAL, COL_NOTE};
 
     public static final int MAX_ROWS = 5000;
 
     public static XSSFWorkbook createTemplateWorkbook() {
+        return createTemplateWorkbook(null);
+    }
+
+    public static XSSFWorkbook createTemplateWorkbook(List<PurchaseOrderDetail> poDetails) {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Phiếu nhập (Mẫu)");
 
@@ -62,23 +67,19 @@ public class ReceiptExcelSupport {
             cell.setCellStyle(headerStyle);
         }
 
-        Row sample = sheet.createRow(1);
-        sample.createCell(0).setCellValue("Honda EU22i");
-        sample.createCell(1).setCellValue("SN-2024-0001");
-        sample.createCell(2).setCellValue(1);
-        sample.createCell(3).setCellValue("Hàng mới 100%");
-
-        Row sample2 = sheet.createRow(2);
-        sample2.createCell(0).setCellValue("Honda EU22i");
-        sample2.createCell(1).setCellValue("SN-2024-0002");
-        sample2.createCell(2).setCellValue(1);
-        sample2.createCell(3).setCellValue("");
-
-        Row sample3 = sheet.createRow(3);
-        sample3.createCell(0).setCellValue("Yamaha EF3000iSEB");
-        sample3.createCell(1).setCellValue("YAM-3000-001");
-        sample3.createCell(2).setCellValue(1);
-        sample3.createCell(3).setCellValue("");
+        int rowIndex = 1;
+        if (poDetails != null) {
+            for (PurchaseOrderDetail pod : poDetails) {
+                int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
+                        : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                for (int k = 0; k < qty && rowIndex <= MAX_ROWS; k++) {
+                    Row row = sheet.createRow(rowIndex++);
+                    row.createCell(0).setCellValue(pod.getGeneratorCode() != null ? pod.getGeneratorCode() : "");
+                    row.createCell(1).setCellValue("");
+                    row.createCell(2).setCellValue("");
+                }
+            }
+        }
 
         for (int i = 0; i < HEADERS.length; i++) {
             sheet.autoSizeColumn(i);

@@ -198,61 +198,77 @@
                         </c:if>
                     </form>
 
+                    <div class="result-summary">
+                        <strong>${totalItems}</strong> serial tồn kho
+                    </div>
+
                     <div class="users-card">
-                        <table class="users">
-                            <thead>
-                                <tr>
-                                    <th style="width:40px;">#</th>
-                                    <th>Serial</th>
-                                    <th>Kho</th>
-                                    <th style="width:150px;">Trạng thái</th>
-                                    <th style="width:160px;">Ngày nhập</th>
-                                    <th style="width:160px;">Cập nhật</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <c:choose>
-                                    <c:when test="${empty serialList}">
-                                        <tr><td colspan="6">
-                                            <div class="empty-state">
-                                                <div class="icon-wrap">
-                                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                                </div>
-                                                <strong>Không có serial nào</strong>
-                                            </div>
-                                        </td></tr>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach var="item" items="${serialList}" varStatus="st">
-                                            <tr>
-                                                <td>${fromIndex + st.index}</td>
-                                                <td>
-                                                    <strong style="font-family:var(--font-mono);font-size:12.5px;">
-                                                        <c:out value="${item.serialNumber}"/>
-                                                    </strong>
-                                                </td>
-                                                <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
-                                                <td>
-                                                    <span class="status-badge status-${item.status}">
-                                                        <span class="sdot"></span>
-                                                        <c:out value="${item.status}"/>
-                                                    </span>
-                                                </td>
-                                                <td style="font-size:12px;color:var(--muted);">
-                                                    <c:choose>
-                                                        <c:when test="${item.createdAt != null}">
-                                                            ${item.createdAt}
-                                                        </c:when>
-                                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
-                                            </tr>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </tbody>
-                        </table>
+                                <table class="users">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40px;">#</th>
+                                            <th>Serial</th>
+                                            <th>Kho</th>
+                                            <th style="width:150px;">Trạng thái</th>
+                                            <th style="width:160px;">Phiếu nhập</th>
+                                            <th style="width:160px;">Ngày nhập</th>
+                                            <th style="width:160px;">Cập nhật</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:choose>
+                                            <c:when test="${empty serialList}">
+                                                <tr><td colspan="7">
+                                                    <div class="empty-state">
+                                                        <div class="icon-wrap">
+                                                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                                        </div>
+                                                        <strong>Không có serial nào</strong>
+                                                    </div>
+                                                </td></tr>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="item" items="${serialList}" varStatus="st">
+                                                    <tr>
+                                                        <td>${fromIndex + st.index}</td>
+                                                        <td>
+                                                            <strong style="font-family:var(--font-mono);font-size:12.5px;">
+                                                                <c:out value="${item.serialNumber}"/>
+                                                            </strong>
+                                                        </td>
+                                                        <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
+                                                        <td>
+                                                            <span class="status-badge status-${item.status}">
+                                                                <span class="sdot"></span>
+                                                                <c:out value="${item.status}"/>
+                                                            </span>
+                                                        </td>
+                                                        <td style="font-family:var(--font-mono);font-size:12.5px;">
+                                                            <c:choose>
+                                                                <c:when test="${not empty item.importReceiptId}">
+                                                                    <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${item.importReceiptId}" style="color:var(--accent);text-decoration:none;font-weight:600;">
+                                                                        <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-2px;margin-right:3px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                                                        <c:out value="${item.importReceiptCode}"/>
+                                                                    </a>
+                                                                </c:when>
+                                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td style="font-size:12px;color:var(--muted);">
+                                                            <c:choose>
+                                                                <c:when test="${item.createdAt != null}">
+                                                                    ${item.createdAt}
+                                                                </c:when>
+                                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td style="font-size:12px;color:var(--muted);">${item.updatedAt}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </tbody>
+                                </table>
                         <c:set var="filterParams" value="&generator=${selectedGenerator}" />
                         <c:if test="${not empty selectedWarehouse}">
                             <c:set var="filterParams" value="${filterParams}&warehouse=${selectedWarehouse}" />
