@@ -196,7 +196,6 @@
         body.innerHTML = '';
 
         var keys = Object.keys(warehouseStock);
-        // Build map serial-in-cart để loại
         var inCart = {};
         Object.keys(cart).forEach(function(gid) {
             inCart[gid] = inCart[gid] || {};
@@ -216,7 +215,6 @@
             var lockedHere = lockedByGen[gid] || [];
             if (available.length === 0 && lockedHere.length === 0) return;
 
-            // Filter by query
             var modelMatch = (grp.model || '').toLowerCase().indexOf(query) > -1;
             var filtered = available.filter(function(it) {
                 if (modelMatch) return true;
@@ -229,7 +227,6 @@
                     || (currentAgeFilter === 'mid' && age === 'age-mid')
                     || (currentAgeFilter === 'fresh' && age === 'age-fresh');
             });
-            // Sort
             filtered.sort(function(a, b) {
                 var ta = tsOf(a.createdAt), tb = tsOf(b.createdAt);
                 return sortOrder === 'desc' ? tb - ta : ta - tb;
@@ -238,7 +235,6 @@
             if (filtered.length === 0 && lockedHere.length === 0) return;
             anyRendered = true;
 
-            // Group label
             var label = document.createElement('div');
             label.className = 'pane-group-label';
             label.innerHTML =
@@ -254,7 +250,6 @@
             }
             body.appendChild(label);
 
-            // Rows
             filtered.forEach(function(it) {
                 totalAvail++;
                 var ts = tsOf(it.createdAt);
@@ -279,7 +274,6 @@
                 body.appendChild(row);
             });
 
-            // Locked entries
             if (lockedHere.length > 0) {
                 var locked = document.createElement('div');
                 locked.className = 'pane-locked-block';
@@ -482,7 +476,6 @@
         });
     });
 
-    /* Init */
     document.getElementById('warehouseId').setAttribute('data-prev-value', document.getElementById('warehouseId').value);
     renderCart();
 </script>

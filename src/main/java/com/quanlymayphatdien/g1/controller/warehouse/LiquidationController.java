@@ -561,7 +561,6 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
-        // Kiểm tra trùng serial trong cùng phiếu
         Set<String> uniqueSerials = new LinkedHashSet<>();
         for (String sn : serialNumbers) {
             uniqueSerials.add(sn);
@@ -617,7 +616,6 @@ public class LiquidationController extends HttpServlet {
 
             conn.commit();
 
-            // Gửi thông báo cho mọi user có quyền duyệt của Quản lý kho ( được grant)
             List<User> managers = userDAO.findUsersByPermission("liquidations", "approve_manager");
             for (User mgr : managers) {
                 NotificationService.send(
@@ -692,7 +690,6 @@ public class LiquidationController extends HttpServlet {
 
         Liquidation l = liquidationDAO.findById(liquidationId);
 
-        // Thông báo cho nhân viên
         NotificationService.send(
                 l.getCreatedBy(),
                 "Quản lý đã duyệt đơn thanh lý",
@@ -702,7 +699,6 @@ public class LiquidationController extends HttpServlet {
                 liquidationId
         );
 
-        // Thông báo cho mọi user có quyền duyệt của CEO (kể cả admin được grant)
         List<User> ceos = userDAO.findUsersByPermission("liquidations", "approve_ceo");
         for (User ceo : ceos) {
             NotificationService.send(
@@ -845,7 +841,6 @@ public class LiquidationController extends HttpServlet {
             return;
         }
         if (isPermanent) {
-            // Hoàn lại trạng thái serial number trong 1 transaction
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
             List<String> serials = new ArrayList<>();
             for (LiquidationDetail d : details) {
@@ -867,7 +862,6 @@ public class LiquidationController extends HttpServlet {
             }
         }
 
-        // Thông báo
         NotificationService.send(
                 l.getCreatedBy(),
                 isPermanent ? "CEO từ chối đơn thanh lý" : "CEO yêu cầu sửa đơn thanh lý",
@@ -902,7 +896,6 @@ public class LiquidationController extends HttpServlet {
             return;
         }
         if (isPermanent) {
-            // Hoàn lại trạng thái serial number trong 1 transaction
             List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
             List<String> serials = new ArrayList<>();
             for (LiquidationDetail d : details) {
@@ -924,7 +917,6 @@ public class LiquidationController extends HttpServlet {
             }
         }
 
-        // Thông báo
         NotificationService.send(
                 l.getCreatedBy(),
                 isPermanent ? "Quản lý từ chối đơn thanh lý" : "Quản lý yêu cầu sửa đơn thanh lý",
@@ -1036,7 +1028,6 @@ public class LiquidationController extends HttpServlet {
                 inventoryDAO.updateStatusBatch(conn, oldSerials, InventoryDAO.STATUS_IN_STOCK);
             }
 
-            // Atomic claim cho serials mới
             int affected = inventoryDAO.claimInStockBatch(conn, newSerialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
             if (affected != newSerialList.size()) {
                 List<String> bad = inventoryDAO.findUnavailableSerials(conn, newSerialList, warehouseId);
@@ -1048,7 +1039,6 @@ public class LiquidationController extends HttpServlet {
                 return;
             }
 
-            // Cập nhật reason -> PENDING_MANAGER
             boolean updated = liquidationDAO.updateReasonAndStatus(liquidationId, reasonId);
             if (!updated) {
                 conn.rollback();
@@ -1076,7 +1066,6 @@ public class LiquidationController extends HttpServlet {
                 p.executeUpdate();
             }
 
-            // Xóa hết details cũ + thêm lại details mới
             detailDAO.deleteByLiquidationId(liquidationId);
             for (int i = 0; i < generatorIds.length; i++) {
                 LiquidationDetail d = new LiquidationDetail();
@@ -1092,7 +1081,6 @@ public class LiquidationController extends HttpServlet {
 
             conn.commit();
 
-            // Bắn lại thông báo
             boolean wasCeoEdit = "CEO_REQUEST_EDIT".equals(l.getStatus());
             String targetAction = wasCeoEdit ? "approve_ceo" : "approve_manager";
             String notifTitle = wasCeoEdit

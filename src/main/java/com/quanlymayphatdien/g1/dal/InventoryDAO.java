@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.GeneratorSummary;
@@ -13,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
- * @author FPTShop
- *
  * Moi serial = 1 dong trong bang inventory. Quan ly ton kho = quan ly serial.
  */
 public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
@@ -265,9 +258,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    /**
-     * Đếm tổng số IN_STOCK của một generator trên tất cả kho.
-     */
     public int countTotalInStockByGenerator(int generatorId) {
         String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND status = ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
@@ -322,10 +312,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    /**
-     * Lay danh sach serial dang bi khoa (PENDING_LIQUIDATION) cho ca mot
-     * warehouse, khong filter generator. Dung cho serial-picker moi.
-     */
+
     public List<Map<String, Object>> findPendingLiquidationSerialsByWarehouse(int warehouseId) {
         List<Map<String, Object>> result = new ArrayList<>();
         String sql = "SELECT i.serial_number, i.generator_id, i.created_at, g.model AS generator_model, "
@@ -458,9 +445,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Hoan tat nhap (PENDING_IMPORT -> IN_STOCK).
-     */
+
     public boolean completeImport(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -471,9 +456,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Hoan tat xuat (RESERVED_EXPORT -> SOLD hoac LIQUIDATED).
-     */
     public boolean completeExport(Connection conn, int inventoryId, String targetStatus) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -484,10 +466,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Xoa inventory rows PENDING_IMPORT (dung khi cancel draft phieu nhap).
-     * Tra ve so row bi xoa.
-     */
+
     public int deletePendingImport(Connection conn, List<Integer> inventoryIds) throws SQLException {
         if (inventoryIds == null || inventoryIds.isEmpty()) {
             return 0;
@@ -503,10 +482,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Cap nhat trang thai cua 1 serial.
-     * Tra ve so dong bi anh huong.
-     */
     public int updateStatusBySerial(Connection conn, String serialNumber, String newStatus) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE serial_number = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -528,9 +503,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    /**
-     * Cap nhat trang thai nhieu serial cung luc.
-     */
     public int updateStatusBatch(Connection conn, List<String> serialNumbers, String newStatus) throws SQLException {
         if (serialNumbers == null || serialNumbers.isEmpty()) {
             return 0;
@@ -703,9 +675,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
     }
 
-    // ============================================================
-    // AGGREGATE / KPI (tinh tu serial table)
-    // ============================================================
     /**
      * Dem tong so serial IN_STOCK theo kho.
      */
@@ -820,9 +789,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
-    // ============================================================
-    // I_DAO contract (giu lai de khong break code khac)
-    // ============================================================
+
     @Override
     public List<Inventory> findAll() {
         List<Inventory> list = new ArrayList<>();

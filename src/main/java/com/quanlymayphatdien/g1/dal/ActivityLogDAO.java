@@ -84,7 +84,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
     }
 
-    //OFFSET = (page - 1) � pageSize
+  
     public List<ActivityLog> findByEntityType(String entityType, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         String sql = "select al.* , u.name as user_name "
@@ -124,21 +124,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return 0;
     }
 
-    /**
-     * T�m ki?m log c� filter ??ng: keyword (t�n ??i t??ng / t�n ng??i d�ng),
-     * action (CREATE/UPDATE/DELETE...) v� kho?ng ng�y (dateFrom - dateTo). SQL
-     * ???c gh�p ??ng qua StringBuilder + List params ?? an to�n v?i SQL
-     * injection.
-     *
-     * @param entityType lo?i ??i t??ng, VD "categories"
-     * @param search t? kh�a t�m ki?m (entity_name ho?c username), c� th?
-     * null/r?ng
-     * @param action lo?i h�nh ??ng, c� th? null/r?ng (= l?y t?t c?)
-     * @param dateFrom ng�y b?t ??u d?ng "yyyy-MM-dd", c� th? null/r?ng
-     * @param dateTo ng�y k?t th�c d?ng "yyyy-MM-dd", c� th? null/r?ng
-     * @param page trang hi?n t?i (b?t ??u t? 1)
-     * @param pageSize s? b?n ghi m?i trang
-     */
+ 
     public List<ActivityLog> findByFilter(String entityType, String search, String action,
             String dateFrom, String dateTo,
             int page, int pageSize) {
@@ -149,7 +135,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         params.add(entityType);
 
         if (search != null && !search.trim().isEmpty()) {
-            // T�m theo t�n ??i t??ng HO?C t�n ng??i d�ng
+
             where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
             String kw = "%" + search.trim() + "%";
             params.add(kw);
@@ -162,13 +148,13 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         }
 
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
-            // L?y t? 00:00:00 c?a ng�y b?t ??u
+
             where.append("AND al.created_at >= ? ");
             params.add(LocalDate.parse(dateFrom).atStartOfDay());
         }
 
         if (dateTo != null && !dateTo.trim().isEmpty()) {
-            // L?y ??n 23:59:59 c?a ng�y k?t th�c
+
             where.append("AND al.created_at <= ? ");
             params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
         }
@@ -181,7 +167,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
 
-            // Bind t?t c? params WHERE
+
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
@@ -192,7 +178,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                     p.setObject(idx++, param);
                 }
             }
-            // Bind LIMIT v� OFFSET
+
             p.setInt(idx++, pageSize);
             p.setInt(idx, (page - 1) * pageSize);
 
@@ -208,10 +194,6 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return list;
     }
 
-    /**
-     * ??m t?ng s? b?n ghi th?a b? filter � d�ng cho ph�n trang. C�ng logic gh�p
-     * WHERE v?i findByFilter().
-     */
     public int countByFilter(String entityType, String search, String action,
             String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
@@ -241,7 +223,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
             params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
         }
 
-        // JOIN v?i b?ng user ?? filter theo username
+
         String sql = "SELECT COUNT(*) "
                 + "FROM activity_log al JOIN user u ON al.user_id = u.id "
                 + where;
@@ -269,27 +251,14 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return 0;
     }
 
-    /**
-     * T�m log c?a danh m?c theo module (ph�n trang + filter ??ng). D�ng LEFT
-     * JOIN v?i b?ng category ?? l?c theo module. V?i log DELETE (category ?�
-     * x�a), fallback: ki?m tra details c� ch?a "module:[module]". Lu�n lo?i b?
-     * c�c log VIEW_LIST, VIEW_DETAIL kh?i k?t qu?.
-     *
-     * @param module t�n module, VD "qu?n l� v?t t?"
-     * @param search t? kh�a t�m theo entity_name ho?c username, c� th? null
-     * @param action lo?i h�nh ??ng (CREATE/UPDATE/DELETE), c� th? null
-     * @param dateFrom ng�y b?t ??u yyyy-MM-dd, c� th? null
-     * @param dateTo ng�y k?t th�c yyyy-MM-dd, c� th? null
-     * @param page trang hi?n t?i (b?t ??u t? 1)
-     * @param pageSize s? b?n ghi m?i trang
-     */
+
     public List<ActivityLog> findByModuleFilter(String module, String search, String action,
             String dateFrom, String dateTo,
             int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
-        // WHERE c? b?n: entity_type + l?c module qua JOIN ho?c fallback trong details
+
         StringBuilder where = new StringBuilder(
                 "WHERE al.entity_type = 'categories' "
                 + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
@@ -418,10 +387,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return 0;
     }
 
-    /**
-     * T�m log c?a danh m?c theo lo?i (type) v� module. D�ng cho tab L?ch s? c?p
-     * 1 b�n trong danh s�ch lo?i danh m?c.
-     */
+
     public List<ActivityLog> findByTypeAndModuleFilter(String module, String type, String search, String action,
             String dateFrom, String dateTo,
             int page, int pageSize) {
@@ -501,9 +467,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return list;
     }
 
-    /**
-     * ??m t?ng s? log theo lo?i v� module � d�ng cho ph�n trang L?ch s? c?p 1.
-     */
+
     public int countByTypeAndModuleFilter(String module, String type, String search, String action,
             String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
@@ -575,18 +539,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return 0;
     }
 
-    /**
-     * L?y l?ch s? ho?t ??ng c?a m?t danh m?c c? th? theo entity_id. D�ng cho
-     * tab "L?ch s?" c?p 2 trong trang edit danh m?c.
-     *
-     * @param entityId id c?a danh m?c c? th?
-     * @param search t�m ki?m theo t�n ng??i d�ng
-     * @param action l?c theo h�nh ??ng (CREATE/UPDATE/DELETE), null = t?t c?
-     * @param dateFrom t? ng�y (yyyy-MM-dd)
-     * @param dateTo ??n ng�y (yyyy-MM-dd)
-     * @param page trang hi?n t?i (b?t ??u t? 1)
-     * @param pageSize s? b?n ghi m?i trang
-     */
+
     public List<ActivityLog> findByEntityId(int entityId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -650,9 +603,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         return list;
     }
 
-    /**
-     * ??m s? b?n ghi l?ch s? theo entity_id � d�ng cho ph�n trang tab c?p 2.
-     */
+
     public int countByEntityId(int entityId, String search, String action, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
 
