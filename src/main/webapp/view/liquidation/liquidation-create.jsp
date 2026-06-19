@@ -189,9 +189,7 @@
         }
     }
 
-    /* ============================================================
-       LEFT pane render (kho)
-       ============================================================ */
+ 
     function renderWarehousePane() {
         var body = document.getElementById('warehousePaneBody');
         var empty = document.getElementById('warehouseEmpty');
@@ -321,9 +319,7 @@
         document.getElementById('leftPaneMeta').textContent = totalAvail + ' máy khả dụng';
     }
 
-    /* ============================================================
-       RIGHT pane render (cart) + hidden inputs
-       ============================================================ */
+
     function renderCart() {
         var body = document.getElementById('cartPaneBody');
         var hidden = document.getElementById('hiddenInputs');
@@ -408,9 +404,7 @@
         renderCart();
     }
 
-    /* ============================================================
-       Load warehouse stock
-       ============================================================ */
+ 
     function loadWarehouseStock() {
         var warehouseId = document.getElementById('warehouseId').value;
         var body = document.getElementById('warehousePaneBody');
@@ -452,9 +446,7 @@
             });
     }
 
-    /* ============================================================
-       Wire events
-       ============================================================ */
+
     document.querySelectorAll('.filter-chip').forEach(function(chip) {
         chip.addEventListener('click', function() {
             currentAgeFilter = chip.getAttribute('data-filter');
