@@ -1,6 +1,6 @@
 package com.quanlymayphatdien.g1.controller.admin;
 
-import com.quanlymayphatdien.g1.config.GlobalConfig;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
@@ -473,7 +473,7 @@ public class UserManagementController extends HttpServlet {
         if (username != null && !username.isEmpty()) {
             if (username.length() < 3 || username.length() > 50) {
                 errors.put("username", "Tên đăng nhập phải có độ dài từ 3 đến 50 ký tự");
-            } else if (!username.matches(GlobalConfig.REGEX_USERNAME)) {
+            } else if (!username.matches(GlobalUtils.REGEX_USERNAME)) {
                 errors.put("username", "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới");
             } else if (userDAO.isUsernameExists(username)) {
                 errors.put("username", "Tên đăng nhập đã tồn tại");
@@ -485,7 +485,7 @@ public class UserManagementController extends HttpServlet {
         if (password != null && !password.isEmpty()) {
             if (password.length() < 6) {
                 errors.put("password", "Mật khẩu phải có ít nhất 6 ký tự");
-            } else if (!password.matches(GlobalConfig.REGEX_PASSWORD)) {
+            } else if (!password.matches(GlobalUtils.REGEX_PASSWORD)) {
                 errors.put("password", "Mật khẩu phải chứa ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số");
             }
         } else if (userId == null) {
@@ -493,7 +493,7 @@ public class UserManagementController extends HttpServlet {
         }
 
         if (email != null && !email.isEmpty()) {
-            if (!email.matches(GlobalConfig.REGEX_EMAIL)) {
+            if (!email.matches(GlobalUtils.REGEX_EMAIL)) {
                 errors.put("email", "Định dạng email không hợp lệ");
             } else if (userDAO.isEmailExists(email, userId)) {
                 errors.put("email", "Email đã được sử dụng");
@@ -503,7 +503,7 @@ public class UserManagementController extends HttpServlet {
         }
 
         if (phone != null && !phone.isEmpty()) {
-            if (!phone.matches(GlobalConfig.REGEX_PHONE)) {
+            if (!phone.matches(GlobalUtils.REGEX_PHONE)) {
                 errors.put("phone", "Số điện thoại phải bắt đầu bằng số 0 và có 10 chữ số");
             } else if (userDAO.isPhoneExists(phone, userId)) {
                 errors.put("phone", "Số điện thoại này đã được sử dụng");

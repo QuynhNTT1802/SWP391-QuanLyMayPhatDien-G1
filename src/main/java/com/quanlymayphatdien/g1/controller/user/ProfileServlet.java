@@ -1,5 +1,5 @@
 package com.quanlymayphatdien.g1.controller.user;
-import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PHONE;
+import static com.quanlymayphatdien.g1.utils.GlobalUtils.REGEX_PHONE;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;

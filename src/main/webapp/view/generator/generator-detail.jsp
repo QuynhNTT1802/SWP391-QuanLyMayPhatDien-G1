@@ -20,12 +20,12 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/generator.css">
     </head>
     <body>
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-            <%-- Extract categories by type for easy access --%>
             <c:set var="catBrand" value=""/>
             <c:set var="catType" value=""/>
             <c:set var="catOrigin" value=""/>
@@ -75,7 +75,6 @@
                     </a>
 
                     <div class="hero">
-                        <div class="hero-avatar purple"><c:out value="${generator.model.substring(0,2)}"/></div>
                         <div class="hero-body">
                             <h2 class="hero-name">
                                 <c:out value="${generator.model}"/>
@@ -91,12 +90,8 @@
                                 <span>Tạo ngày <c:out value="${createdDate}"/></span>
                             </div>
                             <div class="hero-pills">
-                                <span class="pill role-admin"><span class="pdot"></span><c:out value="${generator.powerRating}"/> kVA</span>
-                                <c:if test="${not empty catFuel}"><span class="pill role-admin"><span class="pdot"></span><c:out value="${catFuel}"/></span></c:if>
-                                    <c:choose>
-                                        <c:when test="${generator.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                    <c:when test="${generator.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
-                                </c:choose>
+                                <span class="power-rating"><span class="pdot"></span><c:out value="${generator.powerRating}"/> kVA</span>
+                                <c:if test="${not empty catFuel}"><span class="fuel-type"><span class="pdot"></span><c:out value="${catFuel}"/></span></c:if>                              
                             </div>
                         </div>
                     </div>

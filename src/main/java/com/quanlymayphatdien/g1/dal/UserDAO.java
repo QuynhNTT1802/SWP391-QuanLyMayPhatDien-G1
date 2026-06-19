@@ -455,29 +455,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         }
     }
-
-    public List<Integer> getUserIdsByRoleId(int roleId) {
-        List<Integer> list = new ArrayList<>();
-        String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
-        try {
-            Connection c = getConnection();
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, roleId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(rs.getInt("user_id"));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
-
-    /**
-     * Tìm tất cả user đang nắm quyền (resource, action) — gộp cả RBAC (qua role)
-     * và ABAC override (bảng user_permission, type GRANT/DENY).
-     * Admin được grant lẻ một quyền vẫn xuất hiện ở đây.
-     */
     public List<User> findUsersByPermission(String resource, String action) {
         List<User> list = new ArrayList<>();
         String sql =
@@ -519,5 +496,22 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
         return list;
     }
+    public List<Integer> getUserIdsByRoleId(int roleId) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
+        try {
+            Connection c = getConnection();
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("user_id"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+
 
 }

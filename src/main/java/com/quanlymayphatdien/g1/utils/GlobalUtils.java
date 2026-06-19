@@ -1,8 +1,25 @@
 package com.quanlymayphatdien.g1.utils;
 
 public class GlobalUtils {
+    public static final String REGEX_USERNAME = "^[a-zA-Z0-9_]+$";
+
+    public static final String REGEX_PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+
+    public static final String REGEX_EMAIL
+            = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    public static final String REGEX_PHONE = "^0[0-9]{9,10}$";
+
+    public static final String PHONE_REGEX = "^0[0-9]{9,10}$";
+    public static final String PHONE_ERROR_MSG = "S?T kh�ng h?p l? (10-11 s?, b?t ??u l� 0).";
+
+    public static final String PASSWORD_MIN_LENGTH_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
+    public static final String PASSWORD_ERROR_MSG = "M?t kh?u ph?i c� �t nh?t 1 ch? hoa, 1 ch? th??ng v� 1 s?.";
+
+    public static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    public static final String EMAIL_ERROR_MSG = "Email kh�ng h?p l?.";
 
     public static final String STATUS_DRAFT = "DRAFT";
+
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_APPROVED = "APPROVED";
     public static final String STATUS_REJECTED = "REJECTED";
@@ -14,6 +31,7 @@ public class GlobalUtils {
     public static final String RECEIPT_STATUS_COMPLETED = "COMPLETED";
     public static final String RECEIPT_STATUS_CANCELLED = "CANCELLED";
     public static final String RECEIPT_STATUS_DRAFT = "DRAFT";
+
 
     public static final String PO_STATUS_DRAFT = "DRAFT";
     public static final String PO_STATUS_PENDING_CEO = "PENDING_CEO";
