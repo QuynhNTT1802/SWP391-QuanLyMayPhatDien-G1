@@ -438,8 +438,7 @@ public class OrderController extends HttpServlet {
             return;
         }
         customer = customerDAO.findByPhone(custPhone.trim());
-        if (customer == null) {
-            // Quick-create KH mới ngay khi tạo đơn
+        if (customer == null) {           
             customer = new Customer();
             customer.setName(custName);
             customer.setPhone(custPhone.trim());
@@ -461,8 +460,7 @@ public class OrderController extends HttpServlet {
                 return;
             }
             customer.setId(newCustId);
-        } else {
-            // KH đã tồn tại theo SĐT → auto-update thông tin từ form
+        } else {         
             customer.setName(custName);
             customer.setEmail(custEmail);
             customer.setAddress(custAddress);
@@ -594,7 +592,7 @@ public class OrderController extends HttpServlet {
                 }
             }
 
-            // Nếu return từ customer-create → load customer mới để pre-fill form
+            
             String newCustIdStr = request.getParameter("newCustomerId");
             if (newCustIdStr != null && !newCustIdStr.isEmpty()) {
                 try {
@@ -715,7 +713,7 @@ public class OrderController extends HttpServlet {
             }
             Customer customer = customerDAO.findByPhone(custPhone.trim());
             if (customer == null) {
-                // Quick-create KH mới khi sửa đơn (giống create)
+               
                 customer = new Customer();
                 customer.setName(custName);
                 customer.setPhone(custPhone.trim());
@@ -738,7 +736,7 @@ public class OrderController extends HttpServlet {
                 }
                 customer.setId(newCustId);
             } else {
-                // KH đã tồn tại theo SĐT → auto-update thông tin từ form
+               
                 customer.setName(custName);
                 customer.setEmail(custEmail);
                 customer.setAddress(custAddress);
