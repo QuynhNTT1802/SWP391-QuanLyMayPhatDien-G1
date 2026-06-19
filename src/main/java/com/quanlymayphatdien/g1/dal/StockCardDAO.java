@@ -344,7 +344,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
     @Override
     public int insert(StockCard sc) {
         try (Connection c = getConnection()) {
-            return insert(c, sc);   // gá»i method bÃªn trÃªn
+            return insert(c, sc);   // g?i method bên trên
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
         }

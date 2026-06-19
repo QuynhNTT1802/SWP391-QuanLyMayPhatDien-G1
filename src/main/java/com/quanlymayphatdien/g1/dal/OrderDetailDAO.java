@@ -93,7 +93,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
     public int insert(OrderDetail d) {
         String sql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection(); // Sử dụng RETURN_GENERATED_KEYS để lấy lại ID vừa tạo
+        try (Connection conn = getConnection(); // S? d?ng RETURN_GENERATED_KEYS ?? l?y l?i ID v?a t?o
                  PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, d.getOrderId());
             ps.setInt(2, d.getGeneratorId());

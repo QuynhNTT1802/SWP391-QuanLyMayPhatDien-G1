@@ -178,3 +178,4 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
         return rd;
     }
 }
+

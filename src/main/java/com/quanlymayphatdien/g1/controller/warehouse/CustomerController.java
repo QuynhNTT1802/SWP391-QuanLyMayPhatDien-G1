@@ -3,9 +3,11 @@ package com.quanlymayphatdien.g1.controller.warehouse;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
+import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Customer;
+import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
@@ -21,9 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-@WebServlet(name = "CustomerController", urlPatterns = {"/warehouse/customers"})
+@WebServlet(name="CustomerController", urlPatterns={"/warehouse/customers"})
 public class CustomerController extends HttpServlet {
 
     @Override
@@ -35,9 +36,7 @@ public class CustomerController extends HttpServlet {
             return;
         }
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "list";
-        }
+        if (action == null) action = "list";
 
         switch (action) {
             case "view":
@@ -55,12 +54,6 @@ public class CustomerController extends HttpServlet {
             case "deactivate":
                 deactivateCustomer(request, response);
                 break;
-            case "search":
-                searchCustomerAjax(request, response);
-                break;
-            case "countByName":
-                countByNameAjax(request, response);
-                break;
             default:
                 listCustomers(request, response);
                 break;
@@ -76,9 +69,7 @@ public class CustomerController extends HttpServlet {
             return;
         }
         String action = request.getParameter("action");
-        if (action == null) {
-            action = "list";
-        }
+        if (action == null) action = "list";
 
         switch (action) {
             case "create":
@@ -95,11 +86,6 @@ public class CustomerController extends HttpServlet {
 
     private void listCustomers(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.view")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
         String search = request.getParameter("search");
         String status = request.getParameter("status");
         String typeIdStr = request.getParameter("customerTypeId");
@@ -112,9 +98,7 @@ public class CustomerController extends HttpServlet {
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
-                if (page < 1) {
-                    page = 1;
-                }
+                if (page < 1) page = 1;
             } catch (NumberFormatException e) {
                 page = 1;
             }
@@ -143,11 +127,6 @@ public class CustomerController extends HttpServlet {
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.view")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -181,7 +160,11 @@ public class CustomerController extends HttpServlet {
                 }
                 request.setAttribute("activityLogs", logs);
                 request.setAttribute("logDates", logDates);
-
+                
+                SaleOrderDAO orderDAO = new SaleOrderDAO();
+                List<SaleOrder> customerOrders = orderDAO.findByCustomerId(id);
+                
+                request.setAttribute("customerOrders", customerOrders);
                 request.getRequestDispatcher("/view/customer/customer-detail.jsp").forward(request, response);
                 return;
             }
@@ -191,11 +174,6 @@ public class CustomerController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.create")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("customerTypeList", catDAO.findByType("customer_type"));
         request.getRequestDispatcher("/view/customer/customer-create.jsp").forward(request, response);
@@ -203,12 +181,6 @@ public class CustomerController extends HttpServlet {
 
     private void createCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.create")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
-        int newId = 0;
         try {
             String name = request.getParameter("name");
             String phone = request.getParameter("phone");
@@ -218,9 +190,7 @@ public class CustomerController extends HttpServlet {
             String typeIdStr = request.getParameter("customerTypeId");
             String status = request.getParameter("status");
             String note = request.getParameter("note");
-            if (status == null || status.isEmpty()) {
-                status = "active";
-            }
+            if (status == null || status.isEmpty()) status = "active";
 
             Map<String, String> errors = validateCustomerForm(name, phone, email, null);
             if (!errors.isEmpty()) {
@@ -246,7 +216,7 @@ public class CustomerController extends HttpServlet {
             c.setCreatedBy(user != null ? user.getId() : null);
 
             CustomerDAO dao = new CustomerDAO();
-            newId = dao.insert(c);
+            int newId = dao.insert(c);
             if (newId > 0) {
                 request.getSession().setAttribute("message", "Thêm khách hàng thành công!");
                 logActivity(request, "customer", newId, name.trim(), "CREATE",
@@ -257,25 +227,11 @@ public class CustomerController extends HttpServlet {
         } catch (Exception e) {
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        String returnTo = request.getParameter("returnTo");
-        if ("order-create".equals(returnTo) && newId > 0) {
-            response.sendRedirect(request.getContextPath() + "/order?action=create&newCustomerId=" + newId);
-        } else if ("order-edit".equals(returnTo) && newId > 0) {
-            String orderIdParam = request.getParameter("orderId");
-            response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderIdParam + "&newCustomerId=" + newId);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-        }
-
+        response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.update")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -294,14 +250,8 @@ public class CustomerController extends HttpServlet {
 
     private void updateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.update")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
-        int id = 0;
         try {
-            id = Integer.parseInt(request.getParameter("id"));
+            int id = Integer.parseInt(request.getParameter("id"));
             String name = request.getParameter("name");
             String phone = request.getParameter("phone");
             String email = request.getParameter("email");
@@ -348,27 +298,13 @@ public class CustomerController extends HttpServlet {
         } catch (Exception e) {
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        String returnTo = request.getParameter("returnTo");
-        if ("order-edit".equals(returnTo)) {
-            String orderIdParam = request.getParameter("orderId");
-            response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderIdParam);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-        }
-
+        response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
     }
 
     private void activateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.deactivate")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
         String currentPage = request.getParameter("page");
-        if (currentPage == null || currentPage.isEmpty()) {
-            currentPage = "1";
-        }
+        if (currentPage == null || currentPage.isEmpty()) currentPage = "1";
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -390,15 +326,8 @@ public class CustomerController extends HttpServlet {
 
     private void deactivateCustomer(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (perms == null || !perms.contains("customers.deactivate")) {
-            response.sendRedirect(request.getContextPath() + "/warehouse/customers?action=list");
-            return;
-        }
         String currentPage = request.getParameter("page");
-        if (currentPage == null || currentPage.isEmpty()) {
-            currentPage = "1";
-        }
+        if (currentPage == null || currentPage.isEmpty()) currentPage = "1";
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
             int id = Integer.parseInt(idStr);
@@ -470,62 +399,5 @@ public class CustomerController extends HttpServlet {
         log.setDetails(details);
         log.setCreatedAt(LocalDateTime.now());
         new ActivityLogDAO().insertLog(log);
-    }
-
-    private void searchCustomerAjax(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String keyword = request.getParameter("q");
-        if (keyword == null) {
-            keyword = "";
-        }
-        CustomerDAO dao = new CustomerDAO();
-        List<Customer> list = dao.searchByKeyword(keyword.trim());
-
-        response.setContentType("application/json;charset=UTF-8");
-        response.setHeader("Cache-Control", "no-cache");
-
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < list.size(); i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
-            Customer c = list.get(i);
-            sb.append("{")
-                    .append("\"id\":").append(c.getId()).append(",")
-                    .append("\"name\":\"").append(esc(c.getName())).append("\",")
-                    .append("\"phone\":\"").append(esc(c.getPhone())).append("\",")
-                    .append("\"email\":\"").append(esc(c.getEmail())).append("\",")
-                    .append("\"address\":\"").append(esc(c.getAddress())).append("\",")
-                    .append("\"companyName\":\"").append(esc(c.getCompanyName())).append("\",")
-                    .append("\"customerTypeId\":").append(c.getCustomerTypeId())
-                    .append("}");
-        }
-        sb.append("]");
-        response.getWriter().write(sb.toString());
-    }
-
-    private void countByNameAjax(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String name = request.getParameter("name");
-        if (name == null) {
-            name = "";
-        }
-        CustomerDAO dao = new CustomerDAO();
-        int count = dao.countByName(name);
-
-        response.setContentType("text/plain;charset=UTF-8");
-        response.setHeader("Cache-Control", "no-cache");
-        response.getWriter().write(String.valueOf(count));
-    }
-
-    private String esc(String s) {
-        if (s == null) {
-            return "";
-        }
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
     }
 }

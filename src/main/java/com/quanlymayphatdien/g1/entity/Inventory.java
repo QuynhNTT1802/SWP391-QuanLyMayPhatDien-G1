@@ -111,11 +111,6 @@ public class Inventory {
         this.warehouseName = warehouseName;
     }
 
-    /**
-     * Tinh so serial IN_STOCK theo (warehouse, generator).
-     * Su dung khi can hien thi tong ton o trang overview/aggregate.
-     * @return 1 vi moi dong = 1 serial
-     */
     public int getQuantity() {
         return 1;
     }

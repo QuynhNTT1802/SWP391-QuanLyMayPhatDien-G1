@@ -182,14 +182,12 @@
                         </div>
                     </div>
                 </section>
-            </div><%-- end tab-info --%>
+            </div>
 
-            <%-- ===== TAB: LỊCH SỬ ===== --%>
             <div id="tab-history" class="tab-content ${activeTab == 'history' ? '' : 'tab-hidden'}">
 
                 <div class="table-card history-card">
 
-                    <%-- Filter theo hành động --%>
                     <form method="get" action="${pageContext.request.contextPath}/admin/users" class="history-filter-bar">
                         <input type="hidden" name="action" value="view"/>
                         <input type="hidden" name="id" value="${user.id}"/>
@@ -311,8 +309,8 @@
                     </div>
                     </c:if>
 
-                </div><%-- end table-card --%>
-            </div><%-- end tab-history --%>
+                </div>
+            </div>
         </main>
     </div>
 </div>

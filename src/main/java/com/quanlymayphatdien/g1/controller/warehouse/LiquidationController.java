@@ -246,6 +246,7 @@ public class LiquidationController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(new Gson().toJson(root));
     }
+    
 
     private void searchCustomerJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String q = request.getParameter("q");
@@ -767,7 +768,6 @@ public class LiquidationController extends HttpServlet {
         try {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
-
             newReceiptId = receiptDAO.insert(conn, r);
             if (newReceiptId <= 0) {
                 conn.rollback();

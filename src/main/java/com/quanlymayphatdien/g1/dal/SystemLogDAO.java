@@ -139,8 +139,7 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         log.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
         return log;
     }
-
-   
+    
     public int countByFilter(String level, String module, String search, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
         StringBuilder where = new StringBuilder("WHERE 1=1 ");
@@ -179,7 +178,6 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         }
         return 0;
     }
-
 
     public List<String> findDistinctModules() {
         List<String> result = new ArrayList<>();

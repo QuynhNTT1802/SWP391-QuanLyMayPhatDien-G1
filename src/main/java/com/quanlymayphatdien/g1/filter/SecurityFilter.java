@@ -113,7 +113,16 @@ public class SecurityFilter implements Filter {
                             "reject_manager", "liquidations.approve_manager",
                             "approve_ceo", "liquidations.approve_ceo",
                             "reject_ceo", "liquidations.approve_ceo"),
-                    "liquidations.view")
+                    "liquidations.view"),
+            Rule.action("/inventory-check",
+                    Map.of(
+                            "create", "inventory_check.create",
+                            "save", "inventory_check.create",
+                            "edit", "inventory_check.update",
+                            "update", "inventory_check.update",
+                            "complete", "inventory_check.complete",
+                            "exportReport", "inventory_check.view"),
+                    "inventory_check.view")
     );
 
     @Override

@@ -187,7 +187,6 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
         return types;
     }
 
-
     public Map<String, Integer> getMinIdByType(String module) {
         Map<String, Integer> result = new HashMap<>();
         String sql = "SELECT type, MIN(id) AS min_id FROM category WHERE module = ? GROUP BY type";

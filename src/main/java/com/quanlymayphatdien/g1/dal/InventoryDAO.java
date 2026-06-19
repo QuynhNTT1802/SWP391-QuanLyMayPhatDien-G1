@@ -909,4 +909,39 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
         return inv;
     }
+    public List<Inventory> findByWarehouseId(int warehouseId) {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model "
+                + "FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "WHERE i.warehouse_id = ? AND g.status = 'active'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return list;
+    }
+    public Inventory findByWarehouseAndGenerator(int warehouseId, int generatorId) {
+        String sql = "SELECT * FROM inventory WHERE warehouse_id = ? AND generator_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setInt(2, generatorId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
 }

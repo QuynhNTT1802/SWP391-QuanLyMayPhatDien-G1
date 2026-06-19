@@ -166,6 +166,7 @@ public class CategoryExtensionDAO extends DBContext {
     }
 
     public void insertEmptyExtension(String tableName, int categoryId) {
+
         delete(tableName, categoryId);
         String sql = "INSERT INTO " + tableName + " (category_id) VALUES (?)";
         try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {

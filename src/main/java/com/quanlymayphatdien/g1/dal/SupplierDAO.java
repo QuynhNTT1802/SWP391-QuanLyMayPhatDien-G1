@@ -15,7 +15,7 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
     @Override
     public List<Supplier> findAll() {
         List<Supplier> list = new ArrayList<>();
-        String sql = "SELECT * FROM supplier WHERE status = 'active' ORDER BY created_at DESC";
+        String sql = "SELECT * FROM supplier ORDER BY created_at DESC";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -279,6 +279,7 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
         return 0;
     }
 
+
     public List<Supplier> findByNameExact(String name) {
         List<Supplier> list = new ArrayList<>();
         if (name == null || name.trim().isEmpty()) {
@@ -347,6 +348,7 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
         return list;
     }
 
+
     public boolean isPhoneExists(String phone, Integer excludeId) {
         String sql = "SELECT COUNT(*) FROM supplier WHERE phone = ?";
         if (excludeId != null) {
@@ -399,10 +401,12 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
         return s;
     }
 
+
     private String escapeLike(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\")
                 .replace("%", "\\%")
                 .replace("_", "\\_");
-    }
+
+   }
 }
