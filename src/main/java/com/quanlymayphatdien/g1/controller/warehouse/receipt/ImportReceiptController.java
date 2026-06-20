@@ -204,27 +204,7 @@ public class ImportReceiptController extends HttpServlet {
             int poId = parseId(poIdStr);
             PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
             if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
-                List<PurchaseOrderDetail> pods = po.getDetails();
-                Receipt prefill = new Receipt();
-                prefill.setPurchaseOrderId(poId);
-                prefill.setWarehouseId(po.getWarehouseId());
-                prefill.setReceiptType(TYPE);
-                prefill.setNote("Tạo từ phiếu purchase " + po.getPoCode());
-                List<ReceiptDetail> ds = new ArrayList<>();
-                if (pods != null) {
-                    for (PurchaseOrderDetail pod : pods) {
-                        int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity() : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
-                        for (int k = 0; k < qty; k++) {
-                            ReceiptDetail rd = new ReceiptDetail();
-                            rd.setGeneratorId(pod.getGeneratorId());
-                            rd.setNote(pod.getNote());
-                            ds.add(rd);
-                        }
-                    }
-                }
-                prefill.setDetails(ds);
-                request.setAttribute("receipt", prefill);
-                request.setAttribute("purchaseOrder", po);
+                applyPoPrefillToRequest(request, po, "Tạo từ phiếu purchase " + po.getPoCode());
             }
         }
 
@@ -258,6 +238,32 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("toIndex", toIndex);
         request.setAttribute("activePage", "import-select-purchase");
         request.getRequestDispatcher("/view/receipt/import/import-select-purchase.jsp").forward(request, response);
+    }
+
+    private void applyPoPrefillToRequest(HttpServletRequest request, PurchaseOrder po, String note) {
+        if (po == null) return;
+        request.setAttribute("purchaseOrder", po);
+        Receipt prefill = new Receipt();
+        prefill.setPurchaseOrderId(po.getPoId());
+        prefill.setWarehouseId(po.getWarehouseId());
+        prefill.setReceiptType(TYPE);
+        prefill.setNote(note);
+        List<PurchaseOrderDetail> pods = po.getDetails();
+        List<ReceiptDetail> ds = new ArrayList<>();
+        if (pods != null) {
+            for (PurchaseOrderDetail pod : pods) {
+                int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
+                         : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                for (int k = 0; k < qty; k++) {
+                    ReceiptDetail rd = new ReceiptDetail();
+                    rd.setGeneratorId(pod.getGeneratorId());
+                    rd.setNote(pod.getNote());
+                    ds.add(rd);
+                }
+            }
+        }
+        prefill.setDetails(ds);
+        request.setAttribute("receipt", prefill);
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
@@ -423,6 +429,22 @@ public class ImportReceiptController extends HttpServlet {
             request.setAttribute("warehouses", warehouseDAO.findAll());
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+
+            String poIdErr = request.getParameter("poId");
+            if (poIdErr != null && !poIdErr.isEmpty()) {
+                int poIdErrInt = parseId(poIdErr);
+                PurchaseOrder poErr = new PurchaseOrderDAO().findById(poIdErrInt);
+                if (poErr != null) {
+                    applyPoPrefillToRequest(request, poErr, "Tạo từ phiếu purchase " + poErr.getPoCode());
+                    Receipt receiptAttr = (Receipt) request.getAttribute("receipt");
+                    if (receiptAttr != null) {
+                        if (warehouseId > 0) receiptAttr.setWarehouseId(warehouseId);
+                        if (note != null) receiptAttr.setNote(note);
+                        if (reasonId != null) receiptAttr.setReasonId(reasonId);
+                    }
+                }
+            }
+
             request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
             return;
         }
