@@ -271,7 +271,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 try (PreparedStatement ps = c.prepareStatement(
                         "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                         + "WHERE proposal_id IN (" + placeholders + ") "
-                        + "  AND status = 'PENDING' "
+                        + "  AND status = 'APPROVED' "
                         + "  AND purchase_order_id IS NULL")) {
                     ps.setInt(1, poId);
                     for (int i = 0; i < proposalIds.size(); i++) {
@@ -659,7 +659,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "FROM import_proposal ip "
                 + "JOIN import_proposal_detail ipd ON ipd.proposal_id = ip.proposal_id "
                 + "JOIN generator g ON g.id = ipd.generator_id "
-                + "WHERE ip.period = ? AND ip.warehouse_id = ? AND ip.status = 'PENDING' AND ip.purchase_order_id IS NULL "
+                + "WHERE ip.period = ? AND ip.warehouse_id = ? AND ip.status = 'APPROVED' AND ip.purchase_order_id IS NULL "
                 + "GROUP BY ipd.generator_id, g.model, g.description "
                 + "ORDER BY g.description";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
@@ -709,7 +709,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "JOIN import_proposal_detail ipd ON ipd.proposal_id = ip.proposal_id "
                 + "JOIN generator g ON g.id = ipd.generator_id "
                 + "WHERE ip.proposal_id IN (" + placeholders + ") "
-                + "  AND ip.status = 'PENDING' "
+                + "  AND ip.status = 'APPROVED' "
                 + "  AND ip.purchase_order_id IS NULL "
                 + "  AND ip.warehouse_id = ? "
                 + "GROUP BY ipd.generator_id, g.model, g.description "
@@ -752,7 +752,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             placeholders.append("?");
         }
         String sql = "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
-                + "WHERE period = ? AND warehouse_id = ? AND status = 'PENDING' "
+                + "WHERE period = ? AND warehouse_id = ? AND status = 'APPROVED' "
                 + "AND purchase_order_id IS NULL "
                 + "AND proposal_id IN ("
                 + "  SELECT DISTINCT ipd.proposal_id FROM import_proposal_detail ipd "
@@ -785,7 +785,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
         String sql = "UPDATE import_proposal SET purchase_order_id = ?, status = 'PENDING_CEO' "
                 + "WHERE proposal_id IN (" + placeholders + ") "
-                + "AND status = 'PENDING' "
+                + "AND status = 'APPROVED' "
                 + "AND purchase_order_id IS NULL";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, poId);
@@ -830,7 +830,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     + "WHERE purchase_order_id = ? AND status = ?")) {
                 ps2.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
                 ps2.setInt(2, poId);
-                ps2.setString(3, GlobalUtils.STATUS_PENDING);
+                ps2.setString(3, GlobalUtils.STATUS_APPROVED);
                 ps2.executeUpdate();
             }
             c.commit();
@@ -926,7 +926,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             try (PreparedStatement ps2 = c.prepareStatement(
                     "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
                     + "WHERE purchase_order_id = ?")) {
-                ps2.setString(1, GlobalUtils.STATUS_PENDING);
+                ps2.setString(1, GlobalUtils.STATUS_APPROVED);
                 ps2.setInt(2, poId);
                 ps2.executeUpdate();
             }
@@ -1014,7 +1014,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     for (int i = 0; i < proposalIds.size(); i++) {
                         ps.setInt(2 + i, proposalIds.get(i));
                     }
-                    ps.setString(2 + proposalIds.size(), GlobalUtils.STATUS_PENDING);
+                    ps.setString(2 + proposalIds.size(), GlobalUtils.STATUS_APPROVED);
                     linked = ps.executeUpdate();
                 }
             }
@@ -1083,7 +1083,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 try (PreparedStatement ps2 = c.prepareStatement(
                         "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
                         + "WHERE purchase_order_id = ?")) {
-                    ps2.setString(1, GlobalUtils.STATUS_PENDING);
+                    ps2.setString(1, GlobalUtils.STATUS_APPROVED);
                     ps2.setInt(2, poId);
                     ps2.executeUpdate();
                 }
@@ -1114,7 +1114,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     "UPDATE import_proposal SET purchase_order_id = NULL "
                     + "WHERE purchase_order_id = ? AND status = ?")) {
                 ps0.setInt(1, poId);
-                ps0.setString(2, GlobalUtils.STATUS_PENDING);
+                ps0.setString(2, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
                 ps0.executeUpdate();
             }
             try (PreparedStatement ps1 = c.prepareStatement(

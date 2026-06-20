@@ -205,6 +205,7 @@
                     <c:set var="isOwner" value="${sessionScope.loggedUser.id == proposal.createdBy}" />
                     <c:set var="perms" value="${sessionScope.userPermissions}" />
                     <c:set var="canApprove" value="${perms.contains('proposals.approve')}" />
+                    <c:set var="canReject" value="${perms.contains('proposals.reject')}" />
                     <c:set var="canCancelProp" value="${perms.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
 
@@ -261,6 +262,9 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                     Yêu cầu chỉnh sửa
                                 </button>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canReject}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
@@ -604,22 +608,6 @@
                 </div>
             </div>
 
-            <div class="modal-host" id="rejectModal">
-                <div class="modal-card">
-                    <h3>Từ chối phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <label for="rejectReason">Lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa</h3>
@@ -631,6 +619,24 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
                             <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canReject}">
+            <div class="modal-host" id="rejectModal">
+                <div class="modal-card">
+                    <h3>Từ chối phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <label for="rejectReason">Lý do từ chối <span style="color:var(--danger)">*</span></label>
+                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
                         </div>
                     </form>
                 </div>
