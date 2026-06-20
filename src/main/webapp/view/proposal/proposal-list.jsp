@@ -389,14 +389,17 @@
                                                                         <span class="label">Duyệt</span>
                                                                     </button>
                                                                     <div class="dropdown-divider"></div>
-                                                                    <button class="dropdown-item reject" onclick="openRejectModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
-                                                                        <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                        <span class="label">Từ chối</span>
-                                                                    </button>
-                                                                    <div class="dropdown-divider"></div>
                                                                     <button class="dropdown-item revision" onclick="openRevisionModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
                                                                         <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                                         <span class="label">Yêu cầu chỉnh sửa</span>
+                                                                    </button>
+                                                                </c:if>
+
+                                                                <c:if test="${p.status == 'PENDING' && canRejectProposal}">
+                                                                    <div class="dropdown-divider"></div>
+                                                                    <button class="dropdown-item reject" onclick="openRejectModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
+                                                                        <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                                        <span class="label">Từ chối</span>
                                                                     </button>
                                                                 </c:if>
 
@@ -456,7 +459,7 @@
 
         <div class="toast-host" id="toastHost"></div>
 
-        <c:if test="${canApproveProposal}">
+        <c:if test="${canApproveProposal || canRejectProposal}">
             <div class="modal-host" id="approveModalList">
                 <div class="modal-card">
                     <h3>Duyệt phiếu đề xuất</h3>
@@ -470,7 +473,9 @@
                     </form>
                 </div>
             </div>
+        </c:if>
 
+        <c:if test="${canRejectProposal}">
             <div class="modal-host" id="rejectModalList">
                 <div class="modal-card">
                     <h3>Từ chối phiếu đề xuất</h3>
@@ -486,7 +491,9 @@
                     </form>
                 </div>
             </div>
+        </c:if>
 
+        <c:if test="${canApproveProposal}">
             <div class="modal-host" id="revisionModalList">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa</h3>

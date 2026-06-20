@@ -525,7 +525,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by "
                 + "WHERE p.period = ? AND p.warehouse_id = ? "
-                + "AND p.status = 'PENDING' "
+                + "AND p.status = 'APPROVED' "
                 + "AND p.purchase_order_id IS NULL "
                 + "ORDER BY u_c.name, p.proposal_id";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -653,7 +653,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                + "LEFT JOIN user u_a ON u_a.id = ip.approved_by "
                + "LEFT JOIN user u_r ON u_r.id = ip.rejected_by "
                + "WHERE ip.proposal_id IN (" + placeholders + ") "
-               + "  AND ip.status = 'PENDING' "
+               + "  AND ip.status = 'APPROVED' "
                + "  AND ip.purchase_order_id IS NULL "
                + "ORDER BY ip.proposal_id ASC";
     
