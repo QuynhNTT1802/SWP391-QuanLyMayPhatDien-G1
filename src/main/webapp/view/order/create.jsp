@@ -300,7 +300,12 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Ngày đặt hàng</label>
-                                        <input class="input" type="date" name="orderDate" value="<c:out value="${param.orderDate}"/>" />
+                                        <%
+                                            java.text.SimpleDateFormat __ordDateFmt = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                                            java.util.Date __now = new java.util.Date();
+                                        %>
+                                        <input class="input mono" type="text" value="<%= __ordDateFmt.format(__now) %>" readonly />
+                                        <small style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">Ngày đặt hàng tự động lấy ngày hiện tại, không thể chỉnh sửa.</small>
                                     </div>
                                     <div class="field" style="grid-column: span 2;">
                                         <label class="field-label">Ghi chú của khách hàng</label>

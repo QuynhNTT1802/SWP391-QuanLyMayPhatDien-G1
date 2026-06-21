@@ -469,13 +469,8 @@ public class OrderController extends HttpServlet {
         order.setStatus("PENDING");
         order.setTotalAmount(0.0);
 
-        String dateStr = request.getParameter("orderDate");
-        if (dateStr != null && !dateStr.isEmpty()) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            order.setOrderDate(sdf.parse(dateStr));
-        } else {
-            order.setOrderDate(new Date());
-        }
+        order.setOrderDate(new Date());
+
         String[] genIds = request.getParameterValues("generatorId");
         String[] qtys = request.getParameterValues("quantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
@@ -503,6 +498,12 @@ public class OrderController extends HttpServlet {
                     }
                 }
 
+                if (inputPrice <= 0) {
+                    session.setAttribute("message", "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
+                    response.sendRedirect(request.getContextPath() + "/order?action=create");
+                    return;
+                }
+
                 Generator gen = generatorDao.findById(genId);
                 if (gen != null) {
                     double salePrice = inputPrice;
@@ -515,6 +516,12 @@ public class OrderController extends HttpServlet {
                     totalAmount += salePrice * qty;
                 }
             }
+        }
+
+        if (detailsList.isEmpty()) {
+            session.setAttribute("message", "Vui lòng chọn ít nhất 1 máy cho đơn hàng.");
+            response.sendRedirect(request.getContextPath() + "/order?action=create");
+            return;
         }
 
         order.setTotalAmount(totalAmount);
@@ -625,6 +632,12 @@ public class OrderController extends HttpServlet {
                         }
                     }
 
+                    if (inputPrice <= 0) {
+                        request.getSession().setAttribute("message", "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
+                        response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                        return;
+                    }
+
                     Generator gen = generatorDao.findById(genId);
                     if (gen != null) {
                         double salePrice = inputPrice;
@@ -637,6 +650,12 @@ public class OrderController extends HttpServlet {
                         totalAmount += salePrice * qty;
                     }
                 }
+            }
+
+            if (newDetails.isEmpty()) {
+                request.getSession().setAttribute("message", "Vui lòng chọn ít nhất 1 máy cho đơn hàng.");
+                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
+                return;
             }
 
             SaleOrder order = saleorderdao.findById(orderId);
