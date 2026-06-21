@@ -293,7 +293,7 @@
                                             <tr data-id="${p.proposalId}">
                                                 <c:if test="${canCreatePo}">
                                                     <td class="col-check">
-                                                        <c:set var="canTick" value="${p.status == 'PENDING' && empty p.poCode}"/>
+                                                        <c:set var="canTick" value="${p.status == 'APPROVED' && empty p.poCode}"/>
                                                         <input type="checkbox" class="checkbox row-check" name="proposalIds" value="${p.proposalId}" data-period="${p.period}" data-warehouse="${p.warehouseId}" <c:if test="${!canTick}">disabled</c:if>/>
                                                     </td>
                                                 </c:if>

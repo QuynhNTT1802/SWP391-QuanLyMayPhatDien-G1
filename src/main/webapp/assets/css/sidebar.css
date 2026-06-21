@@ -78,6 +78,25 @@ main { padding: 20px 24px 40px; overflow-x: hidden; }
 .nav-children.open { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
 .nav-children a { padding-left: 36px !important; }
 
+.nav-with-badge { gap: 10px; }
+.nav-badge {
+    margin-left: auto;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 9px;
+    background: var(--muted, #64748b);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.nav-badge.warn { background: #f59e0b; }
+.nav a.active .nav-badge { background: var(--accent, #2563eb); }
+
 /* Notification bell */
 .bell-wrap { position: relative; }
 .bell-btn { position: relative; }

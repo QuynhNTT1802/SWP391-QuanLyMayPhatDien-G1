@@ -3,10 +3,12 @@ package com.quanlymayphatdien.g1.controller.warehouse;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.AuthUtil;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.RequestDispatcher;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @WebServlet(name = "GeneratorManagementServlet", urlPatterns = {"/warehouse/generators"})
@@ -139,7 +142,13 @@ public class GeneratorManagementController extends HttpServlet {
         CategoryDAO catDAO = new CategoryDAO();
         request.setAttribute("brandList", catDAO.findByType("brand"));
         request.setAttribute("genTypeList", catDAO.findByType("generator_type"));
-        
+
+        if (AuthUtil.has(request, "generators.create")) {
+            PurchaseOrderDAO poDao = new PurchaseOrderDAO();
+            request.setAttribute("pendingNewGenerators", poDao.findPendingNewGeneratorDetails());
+            refreshPendingNewGeneratorCount(request.getSession(false));
+        }
+
         request.getRequestDispatcher("/view/generator/generator-list.jsp").forward(request, response);
     }
 
@@ -206,6 +215,14 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("phases", catDAO.findByType("phase"));
         request.setAttribute("conditions", catDAO.findByType("condition"));
         request.setAttribute("origins", catDAO.findByType("origin"));
+
+        String fromPo = request.getParameter("fromPo");
+        String fromGen = request.getParameter("fromGen");
+        if (fromPo != null && !fromPo.isEmpty()) {
+            request.setAttribute("fromPo", fromPo);
+            request.setAttribute("fromGen", fromGen);
+        }
+
         request.getRequestDispatcher("/view/generator/generator-create.jsp").forward(request, response);
     }
 
@@ -231,21 +248,34 @@ public class GeneratorManagementController extends HttpServlet {
             String phaseIdStr = request.getParameter("phaseId");
             String powerRangeIdStr = request.getParameter("powerRangeId");
 
+            String fromPo = request.getParameter("fromPo");
+            String fromGen = request.getParameter("fromGen");
+
             Map<String, String> errors = validateGeneratorForm(model, powerStr, priceStr,
                     freq, weightStr, null);
             if (!errors.isEmpty()) {
                 saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc,
                         brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
-                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
+                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr);
+                if (fromPo != null && !fromPo.isEmpty()) {
+                    request.getSession().setAttribute("formFromPo", fromPo);
+                    if (fromGen != null) request.getSession().setAttribute("formFromGen", fromGen);
+                }
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath() + "/generator/generators?action=create");
+                StringBuilder redirect = new StringBuilder(request.getContextPath())
+                        .append("/warehouse/generators?action=create");
+                if (fromPo != null && !fromPo.isEmpty()) {
+                    redirect.append("&fromPo=").append(fromPo);
+                    if (fromGen != null) redirect.append("&fromGen=").append(fromGen);
+                }
+                response.sendRedirect(redirect.toString());
                 return;
             }
 
             Generator g = new Generator();
             g.setModel(model.trim());
             g.setPowerRating(new BigDecimal(powerStr.trim()));
-            
+
             g.setFrequency(freq != null ? freq.trim() : null);
             g.setWeight(weightStr != null && !weightStr.trim().isEmpty() ? new BigDecimal(weightStr.trim()) : null);
             g.setDescription(desc);
@@ -258,8 +288,14 @@ public class GeneratorManagementController extends HttpServlet {
             if (newId > 0) {
                 saveGeneratorCategories(request, dao, newId);
                 request.getSession().setAttribute("message", "Thêm máy phát điện thành công!");
-                logActivity(request, "generator", newId, model.trim(), "CREATE",
-                        "Tạo máy phát điện: " + model.trim() + ", Công suất: " + powerStr + "kVA");
+
+                String details = "Tạo máy phát điện: " + model.trim() + ", Công suất: " + powerStr + "kVA";
+                if (fromPo != null && !fromPo.isEmpty()) {
+                    details += " [Từ PO #" + fromPo + (fromGen != null ? ", generator_id=" + fromGen : "") + "]";
+                }
+                logActivity(request, "generator", newId, model.trim(), "CREATE", details);
+
+                refreshPendingNewGeneratorCount(request.getSession(false));
             } else {
                 request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
             }
@@ -267,7 +303,7 @@ public class GeneratorManagementController extends HttpServlet {
             SystemLogger.error(LogModule.GENERATOR, "GeneratorManagementController.createGenerator", e.getMessage(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
     private void showUpdateForm(HttpServletRequest request, HttpServletResponse response)
@@ -291,6 +327,12 @@ public class GeneratorManagementController extends HttpServlet {
                 List<Integer> selectedIds = selectedCats.stream()
                         .map(Category::getId).collect(Collectors.toList());
                 request.setAttribute("selectedCatIds", selectedIds);
+
+                String fromPo = request.getParameter("fromPo");
+                if (fromPo != null && !fromPo.isEmpty()) {
+                    request.setAttribute("fromPo", fromPo);
+                }
+
                 request.getRequestDispatcher("/view/generator/generator-edit.jsp").forward(request, response);
                 return;
             }
@@ -318,12 +360,22 @@ public class GeneratorManagementController extends HttpServlet {
             String phaseIdStr = request.getParameter("phaseId");
             String powerRangeIdStr = request.getParameter("powerRangeId");
 
+            String fromPo = request.getParameter("fromPo");
+
             Map<String, String> errors = validateGeneratorForm(model, powerStr, priceStr,
                     freq, weightStr, id);
             if (!errors.isEmpty()) {
-                saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
+                saveFormFields(request, model, powerStr, priceStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr);
+                if (fromPo != null && !fromPo.isEmpty()) {
+                    request.getSession().setAttribute("formFromPo", fromPo);
+                }
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath() + "/generator/generators?action=update&id=" + id);
+                StringBuilder redirect = new StringBuilder(request.getContextPath())
+                        .append("/warehouse/generators?action=update&id=").append(id);
+                if (fromPo != null && !fromPo.isEmpty()) {
+                    redirect.append("&fromPo=").append(fromPo);
+                }
+                response.sendRedirect(redirect.toString());
                 return;
             }
 
@@ -331,7 +383,7 @@ public class GeneratorManagementController extends HttpServlet {
             Generator g = dao.findById(id);
             if (g != null) {
                 g.setModel(model.trim());
-                g.setPowerRating(new BigDecimal(powerStr.trim()));               
+                g.setPowerRating(new BigDecimal(powerStr.trim()));
                 g.setFrequency(freq != null ? freq.trim() : null);
                 g.setWeight(weightStr != null && !weightStr.trim().isEmpty()
                         ? new BigDecimal(weightStr.trim()) : null);
@@ -345,8 +397,14 @@ public class GeneratorManagementController extends HttpServlet {
                     dao.deleteGeneratorCategories(id);
                     saveGeneratorCategories(request, dao, id);
                     request.getSession().setAttribute("message", "Cập nhật thành công!");
-                    logActivity(request, "generator", id, model.trim(), "UPDATE",
-                            "Cập nhật thông tin máy phát điện: " + model.trim());
+
+                    String details = "Cập nhật thông tin máy phát điện: " + model.trim();
+                    if (fromPo != null && !fromPo.isEmpty()) {
+                        details += " [Từ PO #" + fromPo + "]";
+                    }
+                    logActivity(request, "generator", id, model.trim(), "UPDATE", details);
+
+                    refreshPendingNewGeneratorCount(request.getSession(false));
                 } else {
                     request.getSession().setAttribute("message", "Cập nhật thất bại!");
                 }
@@ -357,7 +415,7 @@ public class GeneratorManagementController extends HttpServlet {
             SystemLogger.error(LogModule.GENERATOR, "GeneratorManagementController.updateGenerator", e.getMessage(), e);
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
-        response.sendRedirect(request.getContextPath() + "/generator/generators?action=list");
+        response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
     }
 
     private void saveGeneratorCategories(HttpServletRequest request, GeneratorDAO dao, int generatorId) {
@@ -522,5 +580,27 @@ public class GeneratorManagementController extends HttpServlet {
         log.setDetails(details);
         log.setCreatedAt(LocalDateTime.now());
         new ActivityLogDAO().insertLog(log);
+    }
+
+    /**
+     * Tính lại số PO APPROVED có máy chưa có trong kho và lưu vào session.
+     * Gọi sau khi sale staff tạo/cập nhật generator để badge trên sidebar
+     * được cập nhật ngay.
+     */
+    private void refreshPendingNewGeneratorCount(HttpSession session) {
+        if (session == null) return;
+        Set<String> perms = AuthUtil.permissions(session);
+        if (perms == null || !perms.contains("generators.create")) {
+            session.removeAttribute("pendingNewGeneratorCount");
+            return;
+        }
+        try {
+            int count = new PurchaseOrderDAO().countPendingNewGeneratorPOs();
+            session.setAttribute("pendingNewGeneratorCount", count);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.GENERATOR,
+                    "GeneratorManagementController.refreshPendingNewGeneratorCount",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
     }
 }
