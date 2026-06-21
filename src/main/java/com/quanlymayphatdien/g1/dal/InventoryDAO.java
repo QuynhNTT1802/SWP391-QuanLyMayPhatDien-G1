@@ -668,6 +668,35 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     /**
+     * Kiem tra serial co dang bi "khoa" khong the tai su dung.
+     * Tra ve true neu serial dang duoc su dung boi 1 receipt con hieu luc
+     * (DRAFT, PENDING, hoac co status khac PENDING_IMPORT nhu IN_STOCK, SOLD...).
+     * Tra ve false neu serial chi ton tai tren receipt DA Huy (CANCELLED)
+     * hoac khong ton tai trong he thong.
+     */
+    public boolean isSerialBlocked(String serialNumber) {
+        String sql = "SELECT COUNT(*) FROM inventory i "
+                   + "LEFT JOIN receipt_detail rd ON i.inventory_id = rd.inventory_id "
+                   + "LEFT JOIN receipt r ON rd.receipt_id = r.receipt_id "
+                   + "WHERE i.serial_number = ? "
+                   + "AND (i.status <> ? "
+                   + "     OR (r.status IS NOT NULL AND r.status <> ?))";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            ps.setString(2, STATUS_PENDING_IMPORT);
+            ps.setString(3, "CANCELLED");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
+    /**
      * Lay danh sach serial IN_STOCK theo (warehouse, generator) - DUNG CHO
      * CHUYEN KHO. Co gioi han (limit) de tranh query qua lon.
      */

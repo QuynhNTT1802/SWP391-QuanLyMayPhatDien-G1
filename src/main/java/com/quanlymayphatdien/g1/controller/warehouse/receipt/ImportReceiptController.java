@@ -16,7 +16,6 @@ import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
-import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
@@ -449,6 +448,24 @@ public class ImportReceiptController extends HttpServlet {
             return;
         }
 
+        for (ReceiptDetail d : details) {
+            if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                if (inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
+                    errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", buildErrorMessage(isDraft ? "Lưu nháp thất bại:" : "Lưu phiếu thất bại:", errors));
+            request.setAttribute("errors", errors);
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", genDAO.findAllActive());
+            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
+            return;
+        }
+
         Receipt r = new Receipt();
         r.setReceiptCode(receiptDAO.generateReceiptCode(TYPE));
         r.setReceiptType(TYPE);
@@ -598,6 +615,27 @@ public class ImportReceiptController extends HttpServlet {
             request.setAttribute("toastType", "danger");
             request.setAttribute("toastMessage", buildErrorMessage(isSaveDraft ? "Lưu nháp thất bại:" : "Cập nhật phiếu thất bại:", errors));
             request.setAttribute("errors", errors);
+            request.setAttribute("activePage", "import-edit");
+            request.setAttribute("isDraft", isDraft);
+            request.setAttribute("receipt", existing);
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", genDAO.findAllActive());
+            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
+            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.getRequestDispatcher("/view/receipt/import/import-edit.jsp").forward(request, response);
+            return;
+        }
+
+        for (ReceiptDetail d : details) {
+            if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                if (inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
+                    errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", buildErrorMessage("Cập nhật phiếu thất bại:", errors));
             request.setAttribute("activePage", "import-edit");
             request.setAttribute("isDraft", isDraft);
             request.setAttribute("receipt", existing);
@@ -1147,6 +1185,25 @@ public class ImportReceiptController extends HttpServlet {
         if (details.isEmpty()) {
             request.setAttribute("toastType", "danger");
             request.setAttribute("toastMessage", "Không có dòng hợp lệ nào được chọn");
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("generators", genDAO.findAllActive());
+            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
+            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+            request.setAttribute("activePage", "import-create");
+            request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
+            return;
+        }
+
+        for (ReceiptDetail d : details) {
+            if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                if (inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
+                    errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
+                }
+            }
+        }
+        if (!errors.isEmpty()) {
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", "Không thể tạo phiếu: " + String.join("; ", errors));
             request.setAttribute("warehouses", warehouseDAO.findAll());
             request.setAttribute("generators", genDAO.findAllActive());
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
