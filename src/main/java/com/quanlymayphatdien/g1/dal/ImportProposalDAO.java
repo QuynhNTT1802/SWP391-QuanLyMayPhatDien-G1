@@ -316,6 +316,23 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
+    public boolean revertApprovedToPending(int proposalId, int userId, String reason) {
+        String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
+                + "rejected_by = ?, rejected_at = NOW() "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_PENDING);
+            ps.setString(2, reason);
+            ps.setInt(3, userId);
+            ps.setInt(4, proposalId);
+            ps.setString(5, GlobalUtils.STATUS_APPROVED);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, boolean excludeDraft, Integer poFilter, String dateFrom, String dateTo, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(

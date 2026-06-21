@@ -827,7 +827,7 @@ public class OrderController extends HttpServlet {
         } else if (result == -1) {
             session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
-            session.setAttribute("message", "Hủy thất bại: đơn không ở trạng thái PENDING hoặc APPROVED.");
+            session.setAttribute("message", "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
