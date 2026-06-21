@@ -5,6 +5,7 @@
 package com.quanlymayphatdien.g1.controller.authen;
 
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.PasswordResetRequestDAO;
@@ -143,6 +144,27 @@ public class AuthenServlet extends HttpServlet {
         return stored.equals(plain);
     }
 
+    /**
+     * Tính số phiếu mua đã CEO duyệt còn chứa máy chưa có trong kho và lưu vào
+     * session. Chỉ áp dụng khi user có quyền generators.create để tránh query
+     * thừa cho những role không liên quan.
+     */
+    private void refreshPendingNewGeneratorCount(HttpSession session, Set<String> perms) {
+        if (session == null) return;
+        if (perms == null || !perms.contains("generators.create")) {
+            session.removeAttribute("pendingNewGeneratorCount");
+            return;
+        }
+        try {
+            int count = new PurchaseOrderDAO().countPendingNewGeneratorPOs();
+            session.setAttribute("pendingNewGeneratorCount", count);
+        } catch (Exception e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM,
+                    "AuthenServlet.refreshPendingNewGeneratorCount",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+    }
+
     private boolean tryAutoLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return false;
@@ -169,6 +191,8 @@ public class AuthenServlet extends HttpServlet {
             PermissionDAO perDAO = new PermissionDAO();
             Set<String> perms = perDAO.getEffectPermissions(user.getId());
             session.setAttribute("userPermissions", perms);
+
+            refreshPendingNewGeneratorCount(session, perms);
 
             response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             return true;
@@ -216,6 +240,8 @@ public class AuthenServlet extends HttpServlet {
             PermissionDAO perDAO = new PermissionDAO();
             Set<String> perms = perDAO.getEffectPermissions(user.getId());
             session.setAttribute("userPermissions", perms);
+
+            refreshPendingNewGeneratorCount(session, perms);
 
             if (remember != null) {
                 String token = username + ":" + BCryptUtils.hash(username + System.currentTimeMillis());

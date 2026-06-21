@@ -639,6 +639,7 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("sourceProposals", sourceProposals);
         request.setAttribute("canApprovePo", perms.contains("purchase_orders.approve"));
         request.setAttribute("canCreatePo", perms.contains("purchase_orders.create"));
+        request.setAttribute("poHasNewGenerator", dao.poHasNewGenerator(id));
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-detail.jsp").forward(request, response);
     }
@@ -697,6 +698,13 @@ public class PurchaseOrderController extends HttpServlet {
         if (ok) {
             session.setAttribute("toastMessage", "Đã duyệt phiếu mua");
             session.setAttribute("toastType", "success");
+            if (perms.contains("generators.create")) {
+                try {
+                    int count = new PurchaseOrderDAO().countPendingNewGeneratorPOs();
+                    session.setAttribute("pendingNewGeneratorCount", count);
+                } catch (Exception ignore) {
+                }
+            }
         } else {
             session.setAttribute("toastMessage", "Không thể duyệt");
             session.setAttribute("toastType", "danger");

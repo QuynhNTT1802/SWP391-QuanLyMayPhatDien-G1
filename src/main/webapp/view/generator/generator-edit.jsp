@@ -44,6 +44,16 @@
                         <c:remove var="errors" scope="session"/>
                     </c:if>
 
+                    <c:set var="ctxFromPo" value="${not empty fromPo ? fromPo : sessionScope.formFromPo}"/>
+                    <c:if test="${not empty ctxFromPo}">
+                        <div style="background:var(--warn-soft, #fff8e1);color:var(--warn, #b45309);border:1px solid color-mix(in srgb, var(--warn, #b45309) 30%, transparent);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;font-size:13px;">
+                            <strong>Ngữ cảnh:</strong> Bạn đang cập nhật máy phát điện này để phục vụ
+                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${ctxFromPo}" style="color:var(--warn); font-weight:600;">phiếu mua #${ctxFromPo}</a>.
+                            Bổ sung brand, xuất xứ, nhiên liệu, pha… để hoàn tất quy trình nhập kho.
+                        </div>
+                        <c:remove var="formFromPo" scope="session"/>
+                    </c:if>
+
                     <a class="back-link" href="${pageContext.request.contextPath}/warehouse/generators?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại danh sách

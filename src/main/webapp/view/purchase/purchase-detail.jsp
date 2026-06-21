@@ -38,6 +38,9 @@
             .status-cancelled { background: #e2e3e5; color: #383d41; }
             .po-code { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent); }
             .action-bar { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+            .alert { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid; align-items: flex-start; }
+            .alert svg { width: 22px; height: 22px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; }
+            .alert-warn { background: var(--warn-soft, #fff8e1); color: var(--warn, #b45309); border-color: color-mix(in srgb, var(--warn, #b45309) 30%, transparent); }
         </style>
     </head>
     <body>
@@ -97,6 +100,23 @@
                             </c:if>
                         </div>
                     </div>
+
+                    <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                    <c:if test="${poHasNewGenerator and po.status == 'APPROVED'}">
+                        <div class="alert alert-warn" style="margin-top:16px;">
+                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div style="flex:1;">
+                                <strong>Phiếu mua này có chứa máy phát điện chưa có trong kho ${po.warehouseName}.</strong>
+                                <div style="margin-top:4px; font-size:13px;">Sale staff cần cập nhật thông tin máy trong danh mục trước khi tạo phiếu nhập.</div>
+                                <c:if test="${perms.contains('generators.create')}">
+                                    <a class="btn btn-primary" style="margin-top:8px;"
+                                       href="${pageContext.request.contextPath}/warehouse/generators?fromPo=${po.poId}">
+                                        + Đi đến trang Máy phát điện để cập nhật
+                                    </a>
+                                </c:if>
+                            </div>
+                        </div>
+                    </c:if>
 
                     <h3 style="margin-top: 20px;">Chi tiết các dòng máy (${fn:length(po.details)} dòng)</h3>
                     <table class="po-table">
