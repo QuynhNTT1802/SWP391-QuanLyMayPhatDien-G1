@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory-check.css">
 </head>
 <body>
 <div class="app">
@@ -32,14 +33,10 @@
                 </a>
                 <c:choose>
                     <c:when test="${supplier.status == 'active'}">
-                        <a class="btn btn-danger" href="${pageContext.request.contextPath}/warehouse/suppliers?action=deactivate&id=${supplier.id}">
-                            Khóa
-                        </a>
+                        <a class="btn btn-danger" href="${pageContext.request.contextPath}/warehouse/suppliers?action=deactivate&id=${supplier.id}">Khóa</a>
                     </c:when>
                     <c:otherwise>
-                        <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=activate&id=${supplier.id}">
-                            Kích hoạt
-                        </a>
+                        <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=activate&id=${supplier.id}">Kích hoạt</a>
                     </c:otherwise>
                 </c:choose>
             </div>
@@ -75,104 +72,119 @@
                 </div>
             </div>
 
-            <div class="layout">
-                <div class="toc">
-                    <a class="toc-item active" data-toc="basic"><span class="toc-num">01</span><span>Thông tin cơ bản</span></a>
-                    <a class="toc-item" data-toc="logs"><span class="toc-num">02</span><span>Nhật ký hoạt động</span></a>
-                    <div class="toc-meta">
-                        <strong>#<c:out value="${supplier.id}"/></strong><br>
-                        Tạo: <c:out value="${createdDate}"/><br>
-                        Cập nhật: <c:out value="${updatedDate}"/>
+            <div class="section" style="padding: 18px 22px;">
+                <div class="tabs">
+                    <button type="button" class="tab active" data-tab="info">Thông tin cơ bản</button>
+                    <button type="button" class="tab" data-tab="orders">Đơn hàng</button>
+                    <button type="button" class="tab" data-tab="history">Nhật ký hoạt động</button>
+                </div>
+
+                <div class="tab-panel active" id="tab-info">
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <div class="info-label">Tên nhà cung cấp</div>
+                            <div class="info-value"><c:out value="${supplier.name}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Số điện thoại</div>
+                            <div class="info-value mono"><c:out value="${supplier.phone}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Email</div>
+                            <div class="info-value"><c:out value="${not empty supplier.email ? supplier.email : '—'}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Địa chỉ</div>
+                            <div class="info-value"><c:out value="${not empty supplier.address ? supplier.address : '—'}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Loại nhà cung cấp</div>
+                            <div class="info-value"><c:out value="${supplierTypeName}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Tên công ty</div>
+                            <div class="info-value"><c:out value="${not empty supplier.companyName ? supplier.companyName : '—'}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Trạng thái</div>
+                            <div class="info-value">
+                                <c:choose>
+                                    <c:when test="${supplier.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
+                                    <c:when test="${supplier.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
+                                </c:choose>
+                            </div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Ngày tạo</div>
+                            <div class="info-value mono"><c:out value="${createdDate}"/></div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Cập nhật cuối</div>
+                            <div class="info-value mono"><c:out value="${updatedDate}"/></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="content">
-                    <section class="section" id="basic">
-                        <div class="section-head">
-                            <div>
-                                <div class="section-num">01 — THÔNG TIN CƠ BẢN</div>
-                                <h3 class="section-title">Thông tin liên hệ & phân loại</h3>
-                            </div>
-                            <div class="section-update">Cập nhật <c:out value="${updatedDate}"/></div>
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-field">
-                                <div class="info-label">Tên nhà cung cấp</div>
-                                <div class="info-value"><c:out value="${supplier.name}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Số điện thoại</div>
-                                <div class="info-value mono"><c:out value="${supplier.phone}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Email</div>
-                                <div class="info-value"><c:out value="${not empty supplier.email ? supplier.email : '—'}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Địa chỉ</div>
-                                <div class="info-value"><c:out value="${not empty supplier.address ? supplier.address : '—'}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Loại nhà cung cấp</div>
-                                <div class="info-value"><c:out value="${supplierTypeName}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Tên công ty</div>
-                                <div class="info-value"><c:out value="${not empty supplier.companyName ? supplier.companyName : '—'}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
-                                    <c:choose>
-                                        <c:when test="${supplier.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                        <c:when test="${supplier.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Ngày tạo</div>
-                                <div class="info-value mono"><c:out value="${createdDate}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Cập nhật cuối</div>
-                                <div class="info-value mono"><c:out value="${updatedDate}"/></div>
-                            </div>
-                        </div>
-                    </section>
+                <div class="tab-panel" id="tab-orders">
+                    <c:if test="${empty purchaseOrders}">
+                        <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Nhà cung cấp chưa có đơn hàng nào.</div>
+                    </c:if>
+                    <c:if test="${not empty purchaseOrders}">
+                        <table class="detail-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;">#</th>
+                                    <th>Mã đơn</th>
+                                    <th>Kỳ</th>
+                                    <th>Trạng thái</th>
+                                    <th>Kho</th>
+                                    <th>Người tạo</th>
+                                    <th>Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="po" items="${purchaseOrders}" varStatus="st">
+                                    <tr>
+                                        <td>${st.index + 1}</td>
+                                        <td><strong><a href="${pageContext.request.contextPath}/purchase-order?action=view&poId=${po.poId}" style="color:var(--accent);text-decoration:none;">${po.poCode}</a></strong></td>
+                                        <td>${po.period}</td>
+                                        <td>${po.status}</td>
+                                        <td>${po.warehouseName}</td>
+                                        <td>${po.createdByName}</td>
+                                        <td class="mono"><fmt:formatDate value="${po.createdAt}" pattern="dd/MM/yyyy"/></td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </c:if>
+                </div>
 
-                    <section class="section" id="logs">
-                        <div class="section-head">
-                            <div>
-                                <div class="section-num">02 — NHẬT KÝ HOẠT ĐỘNG</div>
-                                <h3 class="section-title">Lịch sử thao tác</h3>
-                            </div>
-                        </div>
-                        <c:choose>
-                            <c:when test="${empty activityLogs}">
-                                <div class="actlog-empty">Chưa có hoạt động nào.</div>
-                            </c:when>
-                            <c:otherwise>
-                                <table class="actlog-table">
-                                    <thead>
+                <div class="tab-panel" id="tab-history">
+                    <c:choose>
+                        <c:when test="${empty activityLogs}">
+                            <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Chưa có hoạt động nào.</div>
+                        </c:when>
+                        <c:otherwise>
+                            <table class="actlog-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-user">Người thực hiện</th>
+                                        <th>Hành động</th>
+                                        <th class="col-time">Thời gian</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <c:forEach var="log" items="${activityLogs}" varStatus="st">
                                         <tr>
-                                            <th class="col-user">Người thực hiện</th>
-                                            <th>Hành động</th>
-                                            <th class="col-time">Thời gian</th>
+                                            <td class="col-user"><c:out value="${log.username}"/></td>
+                                            <td><c:out value="${log.details}"/></td>
+                                            <td class="col-time"><c:out value="${logDates[st.index]}"/></td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="log" items="${activityLogs}" varStatus="st">
-                                            <tr>
-                                                <td class="col-user"><c:out value="${log.username}"/></td>
-                                                <td><c:out value="${log.details}"/></td>
-                                                <td class="col-time"><c:out value="${logDates[st.index]}"/></td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </c:otherwise>
-                        </c:choose>
-                    </section>
+                                    </c:forEach>
+                                </tbody>
+                            </table>
+                        </c:otherwise>
+                    </c:choose>
                 </div>
             </div>
         </main>
@@ -181,5 +193,6 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/supplier-js.js"></script>
 </body>
 </html>
