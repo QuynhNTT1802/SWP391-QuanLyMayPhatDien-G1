@@ -84,13 +84,6 @@
             background: var(--danger-soft);
             color: var(--danger);
         }
-        .unit-price-hint {
-            display: block;
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 4px;
-            text-align: right;
-        }
         .row-subtotal-cell {
             padding-top: 14px !important;
         }
@@ -307,7 +300,12 @@
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Ngày đặt hàng</label>
-                                        <input class="input" type="date" name="orderDate" value="<c:out value="${param.orderDate}"/>" />
+                                        <%
+                                            java.text.SimpleDateFormat __ordDateFmt = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                                            java.util.Date __now = new java.util.Date();
+                                        %>
+                                        <input class="input mono" type="text" value="<%= __ordDateFmt.format(__now) %>" readonly />
+                                        <small style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">Ngày đặt hàng tự động lấy ngày hiện tại, không thể chỉnh sửa.</small>
                                     </div>
                                     <div class="field" style="grid-column: span 2;">
                                         <label class="field-label">Ghi chú của khách hàng</label>
@@ -342,10 +340,10 @@
                                         <tr>
                                             <td class="col-num"><span class="row-num">1</span></td>
                                             <td>
-                                                <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
+                                                <select name="generatorId" class="gen-select" required>
                                                     <option value="">-- Chọn máy --</option>
                                                     <c:forEach var="g" items="${generators}">
-                                                        <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}">
+                                                        <option value="${g.id}">
                                                             <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                         </option>
                                                     </c:forEach>
@@ -353,8 +351,7 @@
                                             </td>
                                             <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
                                             <td class="col-price">
-                                                <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
-                                                <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                                <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
                                             </td>
                                             <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                             <td class="col-del">
@@ -375,10 +372,10 @@
                                     <tr>
                                         <td class="col-num"><span class="row-num"></span></td>
                                         <td>
-                                            <select name="generatorId" class="gen-select" onchange="updateRowPrice(this)" required>
+                                            <select name="generatorId" class="gen-select" required>
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
-                                                    <option value="${g.id}" data-base-price="${empty basePriceMap[g.id] ? 0 : basePriceMap[g.id]}">
+                                                    <option value="${g.id}">
                                                         <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
                                                     </option>
                                                 </c:forEach>
@@ -386,8 +383,7 @@
                                         </td>
                                         <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
                                         <td class="col-price">
-                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" data-base="0" oninput="validateUnitPrice(this); updateTotal()" required />
-                                            <span class="unit-price-hint">Giá gốc: <span class="base-price-label mono">—</span></span>
+                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
                                         </td>
                                         <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                         <td class="col-del">
@@ -460,34 +456,6 @@
                     input.value = n;
                 }
             }
-            function updateRowPrice(selectEl) {
-                var row = selectEl.closest('tr');
-                var opt = selectEl.options[selectEl.selectedIndex];
-                var basePrice = parseFloat(opt.getAttribute('data-base-price')) || 0;
-                var priceInput = row.querySelector('.unit-price-input');
-                priceInput.value = basePrice;
-                priceInput.setAttribute('data-base', basePrice);
-                row.querySelector('.base-price-label').textContent = basePrice > 0 ? formatVND(basePrice) : '—';
-                validateUnitPrice(priceInput);
-                updateTotal();
-            }
-            function validateUnitPrice(input) {
-                var base = parseFloat(input.getAttribute('data-base')) || 0;
-                var v = parseFloat(input.value);
-                if (isNaN(v)) {
-                    input.classList.add('is-invalid');
-                    input.title = base > 0 ? ('Đơn giá phải ≥ giá gốc (' + formatVND(base) + ')') : '';
-                    return false;
-                }
-                if (base > 0 && v < base) {
-                    input.classList.add('is-invalid');
-                    input.title = 'Đơn giá phải ≥ giá gốc (' + formatVND(base) + ')';
-                    return false;
-                }
-                input.classList.remove('is-invalid');
-                input.title = '';
-                return true;
-            }
             function updateTotal() {
                 var grand = 0;
                 document.querySelectorAll('#detailBody tr').forEach(function (row) {
@@ -528,18 +496,11 @@
                 for (var i = 0; i < rows.length; i++) {
                     var sel = rows[i].querySelector('.gen-select');
                     var qtyInput = rows[i].querySelector('.qty-input');
-                    var priceInput = rows[i].querySelector('.unit-price-input');
                     var qty = parseInt(qtyInput.value);
                     if (sel.value && (isNaN(qty) || qty < 1)) {
                         e.preventDefault();
                         alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
                         qtyInput.focus();
-                        return false;
-                    }
-                    if (sel.value && !validateUnitPrice(priceInput)) {
-                        e.preventDefault();
-                        alert('Đơn giá ở dòng ' + (i + 1) + ' phải ≥ giá gốc của máy.');
-                        priceInput.focus();
                         return false;
                     }
                     if (sel.value)
