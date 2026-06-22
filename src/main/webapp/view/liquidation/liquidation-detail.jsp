@@ -45,6 +45,7 @@
                         <c:when test="${liquidation.status == 'COMPLETED'}"><span class="pill liq-approved"><span class="pdot"></span>Đã xuất kho</span></c:when>
                         <c:when test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT'}"><span class="pill liq-edit"><span class="pdot"></span>Bị yêu cầu sửa</span></c:when>
                         <c:when test="${liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'REJECTED_BY_CEO'}"><span class="pill liq-rejected"><span class="pdot"></span>Đã hủy</span></c:when>
+                        <c:when test="${liquidation.status == 'CANCELLED'}"><span class="pill liq-rejected"><span class="pdot"></span>Đã huỷ đơn</span></c:when>
                     </c:choose>
                     <span class="liq-head-sep"></span>
                     <span class="liq-head-meta">${liquidation.createdByName} · <span class="mono">${liquidation.createdAt}</span></span>
@@ -61,7 +62,7 @@
             </div>
 
             <c:set var="st" value="${liquidation.status}"/>
-            <c:set var="isCancelled" value="${st == 'REJECTED_BY_MANAGER' or st == 'REJECTED_BY_CEO'}"/>
+            <c:set var="isCancelled" value="${st == 'REJECTED_BY_MANAGER' or st == 'REJECTED_BY_CEO' or st == 'CANCELLED'}"/>
             <c:set var="isMgrEdit" value="${st == 'MANAGER_REQUEST_EDIT'}"/>
             <c:set var="isCeoEdit" value="${st == 'CEO_REQUEST_EDIT'}"/>
             <c:set var="isApproved" value="${st == 'APPROVED_BY_CEO'}"/>
@@ -100,6 +101,9 @@
                     <c:set var="step3Cls" value="is-current"/>
                 </c:when>
                 <c:when test="${st == 'REJECTED_BY_MANAGER'}">
+                    <c:set var="step2Cls" value="is-rejected"/>
+                </c:when>
+                <c:when test="${st == 'CANCELLED'}">
                     <c:set var="step2Cls" value="is-rejected"/>
                 </c:when>
                 <c:when test="${isMgrEdit}">
@@ -166,7 +170,7 @@
                 </div>
             </div>
 
-            <c:if test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'REJECTED_BY_CEO'}">
+            <c:if test="${liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'REJECTED_BY_CEO' or liquidation.status == 'CANCELLED'}">
                 <c:if test="${not empty liquidation.ceoFeedbackName}">
                     <div class="feedback-banner feedback-banner--from-ceo">
                         <div class="body">
@@ -176,7 +180,7 @@
                     </div>
                 </c:if>
             </c:if>
-            <c:if test="${liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'REJECTED_BY_MANAGER'}">
+            <c:if test="${liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'REJECTED_BY_MANAGER' or liquidation.status == 'CANCELLED'}">
                 <c:if test="${not empty liquidation.managerFeedbackName}">
                     <div class="feedback-banner feedback-banner--from-mgr">
                         <div class="body">
@@ -339,7 +343,8 @@
                         </table>
                     </div>
 
-                    <c:if test="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO') or (isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT')}">
+                    <c:set var="canCancel" value="${sessionScope.userPermissions.contains('liquidations.cancel') and sessionScope.loggedUser.id == liquidation.createdBy and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'PENDING_CEO' or liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'CEO_REQUEST_EDIT')}"/>
+                    <c:if test="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO') or (isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT') or canCancel}">
                         <div class="liq-action-bar">
                             <div class="hint">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở phía trên trước khi ra quyết định.</div>
                             <c:if test="${isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT'}">
@@ -348,13 +353,17 @@
                             <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')}">
                                 <button type="submit" name="action" value="approve_manager" class="btn btn-primary">Lưu giá &amp; Gửi sếp duyệt</button>
                                 <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_manager', 'Quản lý yêu cầu sửa', 'managerFeedbackId', 'btn-warn', 'select_manager_edit')">Yêu cầu sửa</button>
-                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger-solid', 'select_manager_reject')">Từ chối (Hủy đơn)</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger-solid', 'select_manager_reject')">Từ chối đơn</button>
                             </c:if>
                             <c:if test="${isCeo and liquidation.status == 'PENDING_CEO'}">
                                 <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>
                                 <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">Yêu cầu sửa</button>
-                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger-solid', 'select_ceo_reject')">Từ chối (Hủy đơn)</button>
+                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger-solid', 'select_ceo_reject')">Từ chối đơn</button>
                                 <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
+                            </c:if>
+                            <c:set var="showReviewReject" value="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO')}"/>
+                            <c:if test="${canCancel and not showReviewReject}">
+                                <button type="button" class="btn btn-outline-danger" onclick="openModal('confirmCancelModal')">Thu hồi đơn</button>
                             </c:if>
                         </div>
                     </c:if>
@@ -383,6 +392,7 @@
                                 <option value="CEO_APPROVE">Sếp duyệt</option>
                                 <option value="CEO_REQUEST_EDIT">Sếp yêu cầu sửa</option>
                                 <option value="REJECTED_BY_CEO">Sếp từ chối</option>
+                                <option value="CANCELLED">Đã huỷ đơn</option>
                                 <option value="EXPORT_APPROVE">Đã xuất kho</option>
                                 <option value="AUTO_CREATE">Tự động tạo</option>
                             </select>
@@ -408,6 +418,7 @@
                                             <c:when test="${log.action == 'CEO_REQUEST_EDIT'}">request_edit_ceo</c:when>
                                             <c:when test="${log.action == 'REJECTED_BY_MANAGER'}">reject_manager</c:when>
                                             <c:when test="${log.action == 'REJECTED_BY_CEO'}">reject_ceo</c:when>
+                                            <c:when test="${log.action == 'CANCELLED'}">reject_manager</c:when>
                                             <c:when test="${log.action == 'EDIT_SUBMIT'}">edit_submit</c:when>
                                             <c:when test="${log.action == 'CREATE' or log.action == 'AUTO_CREATE'}">create</c:when>
                                             <c:otherwise>muted</c:otherwise>
@@ -426,6 +437,7 @@
                                                     <c:when test="${log.action == 'CEO_APPROVE'}">Sếp duyệt</c:when>
                                                     <c:when test="${log.action == 'CEO_REQUEST_EDIT'}">Sếp yêu cầu sửa</c:when>
                                                     <c:when test="${log.action == 'REJECTED_BY_CEO'}">Sếp từ chối</c:when>
+                                                    <c:when test="${log.action == 'CANCELLED'}">Đã huỷ đơn</c:when>
                                                     <c:when test="${log.action == 'EDIT_SUBMIT'}">Đã sửa &amp; gửi lại</c:when>
                                                     <c:when test="${log.action == 'EXPORT_APPROVE'}">Đã xuất kho</c:when>
                                                     <c:otherwise>${log.action}</c:otherwise>
@@ -460,6 +472,21 @@
             <button type="button" class="btn" onclick="closeModal('confirmApproveModal')">Huỷ</button>
             <button type="button" class="btn btn-success-solid" onclick="document.getElementById('hiddenApproveCeoBtn').click();">Xác nhận duyệt &amp; xuất</button>
         </div>
+    </div>
+</div>
+
+<div class="modal-host" id="confirmCancelModal">
+    <div class="modal">
+        <h3>Xác nhận huỷ đơn</h3>
+        <p>Bạn có chắc chắn muốn <strong>huỷ</strong> đơn thanh lý này? Các máy đã chọn sẽ được trả lại kho và đơn sẽ bị đóng. Hành động này không thể hoàn tác.</p>
+        <form method="POST" action="${pageContext.request.contextPath}/liquidations">
+            <input type="hidden" name="action" value="cancel" />
+            <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
+            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+                <button type="button" class="btn" onclick="closeModal('confirmCancelModal')">Đóng</button>
+                <button type="submit" class="btn btn-danger-solid">Xác nhận huỷ đơn</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -579,7 +606,6 @@
         if (tabId === 'history') applyHistoryFilter();
     }
 
-    /* ============ HISTORY: search + filter + pagination ============ */
     var HISTORY_PAGE_SIZE = 8;
     var historyState = { page: 1 };
 
@@ -606,7 +632,6 @@
             if (ok) matched.push(tr);
         });
 
-        // paginate matched rows
         var totalPages = Math.max(1, Math.ceil(matched.length / HISTORY_PAGE_SIZE));
         if (historyState.page > totalPages) historyState.page = totalPages;
         if (historyState.page < 1) historyState.page = 1;
@@ -681,7 +706,6 @@
         }
     });
 
-    /* ============ CUSTOMER SEARCH ============ */
     var custSearchInput = document.getElementById('custSearchInput');
     if (custSearchInput) {
         var custSearchTimer = null;
@@ -772,7 +796,6 @@
         document.getElementById('addNewCustBtn').style.display = 'inline-flex';
     }
 
-    /* ============ NEW CUSTOMER MODAL ============ */
     function openNewCustomerModal() {
         document.getElementById('ncName').value = '';
         document.getElementById('ncPhone').value = document.getElementById('custSearchInput').value;

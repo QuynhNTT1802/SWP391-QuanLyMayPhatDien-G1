@@ -38,6 +38,8 @@ public class PurchaseOrder {
 
     private String warehouseName;
     private String createdByName;
+    private String approvedByName;
+    private String rejectedByName;
     private List<PurchaseOrderDetail> details;
 
     public int getPoId() {
@@ -222,6 +224,22 @@ public class PurchaseOrder {
 
     public void setCreatedByName(String createdByName) {
         this.createdByName = createdByName;
+    }
+
+    public String getApprovedByName() {
+        return approvedByName;
+    }
+
+    public void setApprovedByName(String approvedByName) {
+        this.approvedByName = approvedByName;
+    }
+
+    public String getRejectedByName() {
+        return rejectedByName;
+    }
+
+    public void setRejectedByName(String rejectedByName) {
+        this.rejectedByName = rejectedByName;
     }
 
     public List<PurchaseOrderDetail> getDetails() {

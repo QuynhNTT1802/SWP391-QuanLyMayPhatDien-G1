@@ -474,7 +474,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             closeResources();
         }
         return list;
-    } 
+    }
 
     public List<Generator> findInStockByWarehouse(int warehouseId) {
         List<Generator> list = new ArrayList<>();

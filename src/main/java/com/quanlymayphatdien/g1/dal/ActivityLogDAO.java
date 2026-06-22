@@ -41,33 +41,36 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
     @Override
     public int insert(ActivityLog t) {
+        int result = -1;
         String sql = "insert into activity_log(user_id, entity_type, action, entity_id, entity_name, details, created_at) "
                 + "values(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setInt(1, t.getUserId());
-            p.setString(2, t.getEntityType());
-            p.setString(3, t.getAction());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, t.getUserId());
+            statement.setString(2, t.getEntityType());
+            statement.setString(3, t.getAction());
             if (t.getEntityId() != null) {
-                p.setInt(4, t.getEntityId());
+                statement.setInt(4, t.getEntityId());
             } else {
-                p.setNull(4, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
-            p.setString(5, t.getEntityName());
-            p.setString(6, t.getDetails());
-            p.setObject(7, LocalDateTime.now());
+            statement.setString(5, t.getEntityName());
+            statement.setString(6, t.getDetails());
+            statement.setObject(7, LocalDateTime.now());
 
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    result = resultSet.getInt(1);
                 }
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return -1;
+        return result;
     }
 
     @Override
@@ -84,7 +87,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
     }
 
-    //OFFSET = (page - 1) � pageSize
+  
     public List<ActivityLog> findByEntityType(String entityType, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         String sql = "select al.* , u.name as user_name "
@@ -92,53 +95,46 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "where al.entity_type = ? "
                 + "order by al.created_at desc "
                 + "limit ? offset ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, pageSize);
-            p.setInt(3, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, pageSize);
+            statement.setInt(3, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
     public int countByEntityType(String entityType) {
+        int result = 0;
         String sql = "SELECT COUNT(*) FROM activity_log WHERE entity_type = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                result = resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return 0;
+        return result;
     }
 
-    /**
-     * T�m ki?m log c� filter ??ng: keyword (t�n ??i t??ng / t�n ng??i d�ng),
-     * action (CREATE/UPDATE/DELETE...) v� kho?ng ng�y (dateFrom - dateTo). SQL
-     * ???c gh�p ??ng qua StringBuilder + List params ?? an to�n v?i SQL
-     * injection.
-     *
-     * @param entityType lo?i ??i t??ng, VD "categories"
-     * @param search t? kh�a t�m ki?m (entity_name ho?c username), c� th?
-     * null/r?ng
-     * @param action lo?i h�nh ??ng, c� th? null/r?ng (= l?y t?t c?)
-     * @param dateFrom ng�y b?t ??u d?ng "yyyy-MM-dd", c� th? null/r?ng
-     * @param dateTo ng�y k?t th�c d?ng "yyyy-MM-dd", c� th? null/r?ng
-     * @param page trang hi?n t?i (b?t ??u t? 1)
-     * @param pageSize s? b?n ghi m?i trang
-     */
+ 
     public List<ActivityLog> findByFilter(String entityType, String search, String action,
             String dateFrom, String dateTo,
             int page, int pageSize) {
@@ -149,7 +145,7 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         params.add(entityType);
 
         if (search != null && !search.trim().isEmpty()) {
-            // T�m theo t�n ??i t??ng HO?C t�n ng??i d�ng
+
             where.append("AND (al.entity_name LIKE ? OR u.name LIKE ?) ");
             String kw = "%" + search.trim() + "%";
             params.add(kw);
@@ -162,13 +158,13 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         }
 
         if (dateFrom != null && !dateFrom.trim().isEmpty()) {
-            // L?y t? 00:00:00 c?a ng�y b?t ??u
+
             where.append("AND al.created_at >= ? ");
             params.add(LocalDate.parse(dateFrom).atStartOfDay());
         }
 
         if (dateTo != null && !dateTo.trim().isEmpty()) {
-            // L?y ??n 23:59:59 c?a ng�y k?t th�c
+
             where.append("AND al.created_at <= ? ");
             params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
         }
@@ -179,39 +175,38 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
-            // Bind t?t c? params WHERE
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            // Bind LIMIT v� OFFSET
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
+
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
-    /**
-     * ??m t?ng s? b?n ghi th?a b? filter � d�ng cho ph�n trang. C�ng logic gh�p
-     * WHERE v?i findByFilter().
-     */
     public int countByFilter(String entityType, String search, String action,
             String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
@@ -241,55 +236,46 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
             params.add(LocalDate.parse(dateTo).atTime(23, 59, 59));
         }
 
-        // JOIN v?i b?ng user ?? filter theo username
+
         String sql = "SELECT COUNT(*) "
                 + "FROM activity_log al JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
-    /**
-     * T�m log c?a danh m?c theo module (ph�n trang + filter ??ng). D�ng LEFT
-     * JOIN v?i b?ng category ?? l?c theo module. V?i log DELETE (category ?�
-     * x�a), fallback: ki?m tra details c� ch?a "module:[module]". Lu�n lo?i b?
-     * c�c log VIEW_LIST, VIEW_DETAIL kh?i k?t qu?.
-     *
-     * @param module t�n module, VD "qu?n l� v?t t?"
-     * @param search t? kh�a t�m theo entity_name ho?c username, c� th? null
-     * @param action lo?i h�nh ??ng (CREATE/UPDATE/DELETE), c� th? null
-     * @param dateFrom ng�y b?t ??u yyyy-MM-dd, c� th? null
-     * @param dateTo ng�y k?t th�c yyyy-MM-dd, c� th? null
-     * @param page trang hi?n t?i (b?t ??u t? 1)
-     * @param pageSize s? b?n ghi m?i trang
-     */
+
     public List<ActivityLog> findByModuleFilter(String module, String search, String action,
             String dateFrom, String dateTo,
             int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
 
-        // WHERE c? b?n: entity_type + l?c module qua JOIN ho?c fallback trong details
+
         StringBuilder where = new StringBuilder(
                 "WHERE al.entity_type = 'categories' "
                 + "AND al.action NOT IN ('VIEW_LIST', 'VIEW_DETAIL') "
@@ -328,29 +314,33 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -395,33 +385,34 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "LEFT JOIN category c ON al.entity_id = c.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
-    /**
-     * T�m log c?a danh m?c theo lo?i (type) v� module. D�ng cho tab L?ch s? c?p
-     * 1 b�n trong danh s�ch lo?i danh m?c.
-     */
+
     public List<ActivityLog> findByTypeAndModuleFilter(String module, String type, String search, String action,
             String dateFrom, String dateTo,
             int page, int pageSize) {
@@ -474,36 +465,38 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
-    /**
-     * ??m t?ng s? log theo lo?i v� module � d�ng cho ph�n trang L?ch s? c?p 1.
-     */
+
     public int countByTypeAndModuleFilter(String module, String type, String search, String action,
             String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
@@ -552,41 +545,34 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "LEFT JOIN category c ON al.entity_id = c.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
-    /**
-     * L?y l?ch s? ho?t ??ng c?a m?t danh m?c c? th? theo entity_id. D�ng cho
-     * tab "L?ch s?" c?p 2 trong trang edit danh m?c.
-     *
-     * @param entityId id c?a danh m?c c? th?
-     * @param search t�m ki?m theo t�n ng??i d�ng
-     * @param action l?c theo h�nh ??ng (CREATE/UPDATE/DELETE), null = t?t c?
-     * @param dateFrom t? ng�y (yyyy-MM-dd)
-     * @param dateTo ??n ng�y (yyyy-MM-dd)
-     * @param page trang hi?n t?i (b?t ??u t? 1)
-     * @param pageSize s? b?n ghi m?i trang
-     */
+
     public List<ActivityLog> findByEntityId(int entityId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
         List<ActivityLog> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
@@ -624,35 +610,37 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
-    /**
-     * ??m s? b?n ghi l?ch s? theo entity_id � d�ng cho ph�n trang tab c?p 2.
-     */
+
     public int countByEntityId(int entityId, String search, String action, String dateFrom, String dateTo) {
         List<Object> params = new ArrayList<>();
 
@@ -687,23 +675,27 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -715,18 +707,21 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "where entity_type = ? and entity_id = ? "
                 + "order by created_at desc "
                 + "limit ? offset ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, entityId);
-            p.setInt(3, pageSize);
-            p.setInt(4, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getLogFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, entityId);
+            statement.setInt(3, pageSize);
+            statement.setInt(4, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getLogFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -745,33 +740,36 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
     }
 
     public int insertLog(ActivityLog t) {
+        int result = -1;
         String sql = "insert into activity_log(user_id, action, entity_type, entity_id, entity_name, details, created_at) "
                 + "values(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setInt(1, t.getUserId());
-            p.setString(2, t.getAction());
-            p.setString(3, t.getEntityType());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, t.getUserId());
+            statement.setString(2, t.getAction());
+            statement.setString(3, t.getEntityType());
             if (t.getEntityId() != null) {
-                p.setInt(4, t.getEntityId());
+                statement.setInt(4, t.getEntityId());
             } else {
-                p.setNull(4, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
-            p.setString(5, t.getEntityName());
-            p.setString(6, t.getDetails());
-            p.setObject(7, LocalDateTime.now());
+            statement.setString(5, t.getEntityName());
+            statement.setString(6, t.getDetails());
+            statement.setObject(7, LocalDateTime.now());
 
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    result = resultSet.getInt(1);
                 }
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return -1;
+        return result;
     }
 
     public List<ActivityLog> getLogsByRoleId(int roleId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
@@ -809,30 +807,33 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
 
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -868,25 +869,28 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         String sql = "SELECT COUNT(*) FROM activity_log al JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -929,28 +933,32 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -990,42 +998,50 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public int countByEntityTypeAndId(String entityType, int entityId) {
+        int result = 0;
         String sql = "SELECT COUNT(*) FROM activity_log "
                 + "WHERE entity_type = ? AND entity_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, entityId);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, entityId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                result = resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return 0;
+        return result;
     }
 
     public List<ActivityLog> findByEntityTypeAndId(String entityType, int entityId,
@@ -1036,20 +1052,23 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "where al.entity_type = ? and al.entity_id = ? "
                 + "order by al.created_at desc "
                 + "limit ? offset ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, entityId);
-            p.setInt(3, pageSize);
-            p.setInt(4, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, entityId);
+            statement.setInt(3, pageSize);
+            statement.setInt(4, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }

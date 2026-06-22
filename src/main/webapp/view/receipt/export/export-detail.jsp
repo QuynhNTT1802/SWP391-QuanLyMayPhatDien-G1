@@ -506,6 +506,12 @@
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
                 }
             });
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                    toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+                    window.SESSION_DATA = null;
+                }
+            });
         </script>
     </body>
 </html>
