@@ -249,8 +249,6 @@ public class SupplierController extends HttpServlet {
                         "Tạo nhà cung cấp: " + name.trim() + " - " + phone.trim());
 
                 String returnUrl = request.getParameter("returnUrl");
-                request.getSession().setAttribute("toastMessage", "DEBUG returnUrl='" + returnUrl + "'");
-                request.getSession().setAttribute("toastType", "info");
                 if (returnUrl != null && !returnUrl.isEmpty()
                         && (returnUrl.contains("/proposal")
                         || returnUrl.contains("importExcel")

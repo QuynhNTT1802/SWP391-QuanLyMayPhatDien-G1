@@ -136,6 +136,9 @@ public class ProposalController extends HttpServlet {
                 case "revision":
                     requestRevision(request, response);
                     break;
+                case "revertReview":
+                    revertReviewProposal(request, response);
+                    break;
                 case "cancel":
                     cancelProposal(request, response);
                     break;
@@ -150,6 +153,9 @@ public class ProposalController extends HttpServlet {
                     break;
                 case "assignSupplier":
                     assignSupplierAjax(request, response);
+                    return;
+                case "revalidateImport":
+                    revalidateImport(request, response);
                     return;
                 case "uploadEditExcel":
                     uploadEditExcel(request, response);
@@ -251,14 +257,9 @@ public class ProposalController extends HttpServlet {
             return;
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String currentPeriod = PeriodUtils.currentPeriod();
-        boolean quarterBlocked = warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("generators", new GeneratorDAO().findAllActive());
         request.setAttribute("suppliers", new SupplierDAO().findAll());
-        request.setAttribute("quarterBlocked", quarterBlocked);
-        request.setAttribute("blockedPeriod", currentPeriod);
         request.setAttribute("blockedWarehouseId", warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
@@ -423,14 +424,6 @@ public class ProposalController extends HttpServlet {
 
         String submitType = request.getParameter("submitType");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String currentPeriod = PeriodUtils.currentPeriod();
-        if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
-            return;
-        }
 
         ImportProposal p = new ImportProposal();
         p.setWarehouseId(warehouseId);
@@ -749,6 +742,43 @@ public class ProposalController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
     }
 
+    private void revertReviewProposal(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
+        if (permissions == null || !permissions.contains("proposals.approve")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền yêu cầu chỉnh sửa.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        int id = parseId(request);
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        String reason = request.getParameter("revertReason");
+        if (reason == null || reason.trim().isEmpty()) {
+            session.setAttribute("toastMessage", "Vui lòng nhập lý do yêu cầu chỉnh sửa");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+        ImportProposalDAO dao = new ImportProposalDAO();
+        boolean ok = dao.revertApprovedToPending(id, currentUserId(request), reason.trim());
+        if (ok) {
+            ImportProposal p = dao.findById(id);
+            logActivity(currentUserId(request), "import_proposal", "REVERT_REVIEW", id,
+                    p != null ? p.getProposalCode() : null, "Yêu cầu chỉnh sửa từ gom đơn: " + reason.trim());
+            session.setAttribute("toastMessage", "Đã yêu cầu chỉnh sửa phiếu đề xuất");
+            session.setAttribute("toastType", "success");
+        } else {
+            session.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa (phiếu không ở trạng thái APPROVED)");
+            session.setAttribute("toastType", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+    }
+
     private void cancelProposal(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
@@ -865,14 +895,6 @@ public class ProposalController extends HttpServlet {
         String warehouseIdRaw = request.getParameter("warehouseId");
         String note = request.getParameter("note");
         int warehouseId = parseInt(warehouseIdRaw);
-        String currentPeriod = PeriodUtils.currentPeriod();
-        if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
-            return;
-        }
 
         Part filePart = null;
         try {
@@ -903,6 +925,7 @@ public class ProposalController extends HttpServlet {
         List<Map<String, String>> invalidRows = new ArrayList<>();
         List<Map<String, String>> unresolvedSupplierRows = new ArrayList<>();
         List<Map<String, String>> sessionDetailRows = new ArrayList<>();
+        List<Map<String, String>> allRows = new ArrayList<>();
         int stt = 1;
         for (Map<String, String> row : rows) {
             String model = row.get(ProposalExcelSupport.HEADER_MODEL);
@@ -933,7 +956,8 @@ public class ProposalController extends HttpServlet {
                     enriched.put("gid", String.valueOf(g.getId()));
                     enriched.put("gname", g.getModel());
                 } else {
-                    errors.add("Không tìm thấy máy phát với mã: " + model.trim());
+                    enriched.put("gname", model.trim());
+                    warnings.add("Máy phát mới chưa có trong hệ thống: " + model.trim() + ".");
                 }
             }
 
@@ -993,15 +1017,13 @@ public class ProposalController extends HttpServlet {
                 }
             }
 
-            if (generatorResolved && warehouseId > 0
-                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)) {
-                warnings.add("Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
-            }
-
             if (!errors.isEmpty()) {
                 enriched.put("gerrors", String.join("; ", errors));
                 invalidRows.add(enriched);
             } else if (!supplierResolved) {
+                if (!warnings.isEmpty()) {
+                    enriched.put("gwarnings", String.join("; ", warnings));
+                }
                 unresolvedSupplierRows.add(enriched);
             } else if (!warnings.isEmpty()) {
                 enriched.put("gwarnings", String.join("; ", warnings));
@@ -1009,6 +1031,7 @@ public class ProposalController extends HttpServlet {
             } else {
                 validRows.add(enriched);
             }
+            allRows.add(enriched);
 
             if (errors.isEmpty()) {
                 ImportProposalDetail d = new ImportProposalDetail();
@@ -1038,6 +1061,7 @@ public class ProposalController extends HttpServlet {
             pendingRows.add(r);
         }
         sessionRef.setAttribute("pendingImportRows", pendingRows);
+        sessionRef.setAttribute("pendingImportAllRows", allRows);
         sessionRef.setAttribute("pendingImportWarehouseId", warehouseId);
         sessionRef.setAttribute("pendingImportNote", note);
 
@@ -1063,14 +1087,26 @@ public class ProposalController extends HttpServlet {
         @SuppressWarnings("unchecked")
         List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
         if (pendingRows == null || pendingRows.isEmpty()) {
+            // Vẫn có thể có invalid rows trong pendingImportAllRows
+            List<Map<String, String>> emptyInvalid = new ArrayList<>();
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+            if (allRows != null) {
+                for (Map<String, String> r : allRows) {
+                    String errs = r.get("gerrors");
+                    if (errs != null && !errs.isEmpty()) {
+                        emptyInvalid.add(r);
+                    }
+                }
+            }
             request.setAttribute("validRows", new ArrayList<>());
             request.setAttribute("warningRows", new ArrayList<>());
-            request.setAttribute("invalidRows", new ArrayList<>());
+            request.setAttribute("invalidRows", emptyInvalid);
             request.setAttribute("unresolvedSupplierRows", new ArrayList<>());
             request.setAttribute("currentWarehouseId", 0);
             request.setAttribute("currentNote", "");
             request.setAttribute("warehouses", new WarehouseDAO().findAll());
-            request.setAttribute("sessionExpired", Boolean.TRUE);
+            request.setAttribute("sessionExpired", emptyInvalid.isEmpty() ? Boolean.TRUE : Boolean.FALSE);
             request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
                     .forward(request, response);
             return;
@@ -1163,6 +1199,18 @@ public class ProposalController extends HttpServlet {
             }
         }
 
+        // Merge invalid rows từ pendingImportAllRows (giữ lại dòng lỗi như qty=-1)
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+        if (allRows != null) {
+            for (Map<String, String> r : allRows) {
+                String errs = r.get("gerrors");
+                if (errs != null && !errs.isEmpty()) {
+                    invalidRows.add(r);
+                }
+            }
+        }
+
         request.setAttribute("validRows", validRows);
         request.setAttribute("warningRows", warningRows);
         request.setAttribute("invalidRows", invalidRows);
@@ -1198,15 +1246,6 @@ public class ProposalController extends HttpServlet {
             session.setAttribute("toastMessage", "Vui lòng chọn kho nhập");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=create");
-            return;
-        }
-
-        String currentPeriod = PeriodUtils.currentPeriod();
-        if (new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
             return;
         }
 
@@ -1269,13 +1308,17 @@ public class ProposalController extends HttpServlet {
             if (genId <= 0) {
                 continue;
             }
-            int qty = 1;
-            if (quantities != null && i < quantities.length && quantities[i] != null
-                    && !quantities[i].trim().isEmpty()) {
-                qty = parseInt(quantities[i]);
-                if (qty <= 0) {
-                    qty = 1;
-                }
+            String qtyStr = (quantities != null && i < quantities.length) ? quantities[i] : null;
+            int qty = 0;
+            if (qtyStr == null || qtyStr.trim().isEmpty()) {
+                continue;
+            }
+            qty = parseInt(qtyStr);
+            if (qty <= 0) {
+                continue;
+            }
+            if (qty > 9999) {
+                continue;
             }
             String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
             Integer supId = null;
@@ -1286,15 +1329,19 @@ public class ProposalController extends HttpServlet {
                     supId = null;
                 }
             }
-            BigDecimal up = null;
-            if (unitPrices != null && i < unitPrices.length
-                    && unitPrices[i] != null && !unitPrices[i].trim().isEmpty()) {
-                try {
-                    String cleaned = unitPrices[i].trim().replace(",", "").replace(".", "");
-                    up = new BigDecimal(cleaned);
-                } catch (NumberFormatException ex) {
-                    up = null;
+            String upStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
+            if (upStr == null || upStr.trim().isEmpty()) {
+                continue;
+            }
+            BigDecimal up;
+            try {
+                String cleaned = upStr.trim().replace(",", "").replace(".", "");
+                up = new BigDecimal(cleaned);
+                if (up.compareTo(BigDecimal.ZERO) <= 0) {
+                    continue;
                 }
+            } catch (NumberFormatException ex) {
+                continue;
             }
             ImportProposalDetail d = new ImportProposalDetail();
             d.setProposalId(newId);
@@ -1306,14 +1353,19 @@ public class ProposalController extends HttpServlet {
             d.setNote(dNote);
             details.add(d);
         }
-        if (!details.isEmpty()) {
-            dao.insertDetailsBatch(details);
+        if (details.isEmpty()) {
+            session.setAttribute("toastMessage", "Không có dòng hợp lệ nào sau kiểm tra dữ liệu. Vui lòng kiểm tra lại số lượng > 0 và đơn giá > 0.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create");
+            return;
         }
+        dao.insertDetailsBatch(details);
 
         // Cập nhật danh mục (hãng, xuất xứ, ...) cho generator từ dữ liệu Excel
         updateGeneratorCategoriesFromImport(session, generatorIds);
 
         session.removeAttribute("pendingImportRows");
+        session.removeAttribute("pendingImportAllRows");
         session.removeAttribute("pendingImportWarehouseId");
         session.removeAttribute("pendingImportNote");
 
@@ -1506,8 +1558,9 @@ public class ProposalController extends HttpServlet {
             return;
         }
         String gidStr = request.getParameter("gid");
-        if (gidStr == null || gidStr.isEmpty()) {
-            gidStr = request.getParameter("rowIndex");
+        String rowIdxStr = request.getParameter("rowIndex");
+        if ((gidStr == null || gidStr.isEmpty()) && (rowIdxStr != null && !rowIdxStr.isEmpty())) {
+            gidStr = rowIdxStr;
         }
         String supIdStr = request.getParameter("supplierId");
         int supId = parseInt(supIdStr);
@@ -1527,8 +1580,11 @@ public class ProposalController extends HttpServlet {
             return;
         }
         boolean found = false;
-        for (Map<String, String> p : rows) {
-            if (gidStr.equals(p.get("gid"))) {
+        boolean useRowIndex = rowIdxStr != null && !rowIdxStr.isEmpty();
+        int rowIdx = useRowIndex ? parseInt(rowIdxStr) : -1;
+        for (int i = 0; i < rows.size(); i++) {
+            Map<String, String> p = rows.get(i);
+            if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
                 p.put("supplierId", String.valueOf(s.getId()));
                 p.put("supplierNameResolved", s.getName());
                 p.remove("supplierQuery");
@@ -1541,9 +1597,216 @@ public class ProposalController extends HttpServlet {
             response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
             return;
         }
+        // Also update pendingImportAllRows for consistency
+        List<Map<String, String>> allRows =
+                (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+        if (allRows != null) {
+            for (int i = 0; i < allRows.size(); i++) {
+                Map<String, String> p = allRows.get(i);
+                if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
+                    p.put("supplierId", String.valueOf(s.getId()));
+                    p.put("supplierNameResolved", s.getName());
+                    p.remove("supplierQuery");
+                    p.remove("supplierMultiple");
+                    p.remove("supplierMultipleCount");
+                }
+            }
+        }
 
         response.getWriter().write("{\"ok\":true,\"supplier\":{\"id\":" + s.getId()
                 + ",\"name\":\"" + escapeJson(s.getName()) + "\"}}");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void revalidateImport(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
+            return;
+        }
+
+        List<Map<String, String>> allRows =
+                (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+        if (allRows == null || allRows.isEmpty()) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"no_data\"}");
+            return;
+        }
+
+        String[] sttArr = request.getParameterValues("stt");
+        String[] modelArr = request.getParameterValues("model");
+        String[] qtyArr = request.getParameterValues("qty");
+        String[] upArr = request.getParameterValues("unitPrice");
+        String[] supArr = request.getParameterValues("supplier");
+
+        if (sttArr == null || sttArr.length == 0) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"no_edits\"}");
+            return;
+        }
+
+        GeneratorDAO genDAO = new GeneratorDAO();
+        SupplierDAO supDAO = new SupplierDAO();
+
+        Map<String, String> failedMap = new java.util.LinkedHashMap<>();
+        List<Integer> fixedList = new ArrayList<>();
+
+        for (int i = 0; i < sttArr.length; i++) {
+            String sttStr = sttArr[i];
+            int stt = parseInt(sttStr);
+            if (stt <= 0) continue;
+
+            // Find the row in allRows by STT
+            Map<String, String> targetRow = null;
+            for (Map<String, String> r : allRows) {
+                if (sttStr.equals(r.get("stt"))) {
+                    targetRow = r;
+                    break;
+                }
+            }
+            if (targetRow == null) {
+                failedMap.put(sttStr, "Không tìm thấy dòng " + sttStr);
+                continue;
+            }
+
+            // Overlay edited values onto the raw Excel data
+            String newModel = (modelArr != null && i < modelArr.length) ? modelArr[i] : "";
+            String newQty = (qtyArr != null && i < qtyArr.length) ? qtyArr[i] : "";
+            String newUp = (upArr != null && i < upArr.length) ? upArr[i] : "";
+            String newSup = (supArr != null && i < supArr.length) ? supArr[i] : "";
+
+            targetRow.put(ProposalExcelSupport.HEADER_MODEL, newModel);
+            targetRow.put(ProposalExcelSupport.HEADER_QUANTITY, newQty);
+            targetRow.put(ProposalExcelSupport.HEADER_UNIT_PRICE, newUp);
+            targetRow.put(ProposalExcelSupport.HEADER_SUPPLIER_NAME, newSup);
+
+            // Re-validate (mirrors the logic in importProposalPreview)
+            List<String> errors = new ArrayList<>();
+            boolean generatorResolved = false;
+            boolean supplierResolved = false;
+
+            // Model
+            if (newModel == null || newModel.trim().isEmpty()) {
+                errors.add("Mã máy phát không được trống");
+            } else {
+                targetRow.put("gmodel", newModel.trim());
+                Generator g = genDAO.findByModel(newModel.trim());
+                if (g != null) {
+                    generatorResolved = true;
+                    targetRow.put("gid", String.valueOf(g.getId()));
+                    targetRow.put("gname", g.getModel());
+                } else {
+                    targetRow.put("gname", newModel.trim());
+                    targetRow.put("gwarnings", "Máy phát mới chưa có trong hệ thống: " + newModel.trim() + ".");
+                }
+            }
+
+            // Quantity
+            if (newQty == null || newQty.trim().isEmpty()) {
+                errors.add("Số lượng không được trống");
+            } else {
+                try {
+                    int qty = Integer.parseInt(newQty.trim());
+                    if (qty <= 0) {
+                        errors.add("Số lượng phải lớn hơn 0");
+                    }
+                    if (qty > 9999) {
+                        errors.add("Số lượng không được vượt quá 9.999");
+                    }
+                    targetRow.put("gqty", String.valueOf(qty));
+                } catch (NumberFormatException ex) {
+                    errors.add("Số lượng phải là số nguyên");
+                    targetRow.put("gqty", "0");
+                }
+            }
+
+            // Unit price
+            if (newUp == null || newUp.trim().isEmpty()) {
+                errors.add("Đơn giá đề xuất không được trống");
+            } else {
+                try {
+                    String cleaned = newUp.trim().replace(",", "").replace(".", "");
+                    BigDecimal up = new BigDecimal(cleaned);
+                    if (up.compareTo(BigDecimal.ZERO) <= 0) {
+                        errors.add("Đơn giá phải lớn hơn 0");
+                    }
+                    targetRow.put("gunitPrice", up.toPlainString());
+                } catch (NumberFormatException ex) {
+                    errors.add("Đơn giá không hợp lệ");
+                }
+            }
+
+            // Supplier
+            String supplierQuery = newSup == null ? "" : newSup.trim();
+            if (supplierQuery.isEmpty()) {
+                errors.add("Tên nhà cung cấp không được trống");
+            } else {
+                targetRow.put("supplierQuery", supplierQuery);
+                List<Supplier> found = supDAO.findByNameExact(supplierQuery);
+                if (found.size() == 1) {
+                    supplierResolved = true;
+                    targetRow.put("supplierId", String.valueOf(found.get(0).getId()));
+                    targetRow.put("supplierNameResolved", found.get(0).getName());
+                    targetRow.remove("supplierMultiple");
+                    targetRow.remove("supplierMultipleCount");
+                } else if (found.size() >= 2) {
+                    targetRow.put("supplierMultiple", "true");
+                    targetRow.put("supplierMultipleCount", String.valueOf(found.size()));
+                } else {
+                    targetRow.put("supplierMultiple", "false");
+                }
+            }
+
+            if (!errors.isEmpty()) {
+                targetRow.put("gerrors", String.join("; ", errors));
+                targetRow.put("gid", "");
+                targetRow.remove("gwarnings");
+                failedMap.put(sttStr, String.join("; ", errors));
+            } else {
+                targetRow.remove("gerrors");
+                fixedList.add(stt);
+                if (!supplierResolved) {
+                    targetRow.remove("gwarnings");
+                    targetRow.put("gwarnings", "Chưa chọn được nhà cung cấp");
+                } else if (generatorResolved) {
+                    targetRow.remove("gwarnings");
+                }
+            }
+        }
+
+        // Rebuild pendingImportRows from allRows (only error-free rows)
+        List<Map<String, String>> pendingRows = new ArrayList<>();
+        for (Map<String, String> r : allRows) {
+            String errs = r.get("gerrors");
+            if (errs != null && !errs.isEmpty()) {
+                continue;
+            }
+            Map<String, String> copy = new LinkedHashMap<>(r);
+            copy.remove("__sessionIndex");
+            pendingRows.add(copy);
+        }
+        session.setAttribute("pendingImportRows", pendingRows);
+        session.setAttribute("pendingImportAllRows", allRows);
+
+        StringBuilder json = new StringBuilder("{");
+        json.append("\"ok\":true,");
+        json.append("\"fixed\":[");
+        boolean first = true;
+        for (int stt : fixedList) {
+            if (!first) json.append(",");
+            first = false;
+            json.append(stt);
+        }
+        json.append("],");
+        json.append("\"failed\":{");
+        first = true;
+        for (Map.Entry<String, String> e : failedMap.entrySet()) {
+            if (!first) json.append(",");
+            first = false;
+            json.append("\"").append(escapeJson(e.getKey())).append("\":\"").append(escapeJson(e.getValue())).append("\"");
+        }
+        json.append("}}");
+        response.getWriter().write(json.toString());
     }
 
     private void redirectCreateSupplier(HttpServletRequest request, HttpServletResponse response)

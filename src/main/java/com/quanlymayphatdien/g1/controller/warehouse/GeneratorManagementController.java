@@ -9,7 +9,6 @@ import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
-import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -205,6 +204,7 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("phases", catDAO.findByType("phase"));
         request.setAttribute("conditions", catDAO.findByType("condition"));
         request.setAttribute("origins", catDAO.findByType("origin"));
+
         request.getRequestDispatcher("/view/generator/generator-create.jsp").forward(request, response);
     }
 
@@ -234,7 +234,7 @@ public class GeneratorManagementController extends HttpServlet {
             if (!errors.isEmpty()) {
                 saveFormFields(request, model, powerStr, freq, weightStr, desc,
                         brandIdStr, genTypeIdStr, originIdStr, conditionIdStr,
-                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
+                        fuelTypeIdStr, phaseIdStr, powerRangeIdStr);
                 request.getSession().setAttribute("errors", errors);
                 response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=create");
                 return;
@@ -255,8 +255,9 @@ public class GeneratorManagementController extends HttpServlet {
             if (newId > 0) {
                 saveGeneratorCategories(request, dao, newId);
                 request.getSession().setAttribute("message", "Thêm máy phát điện thành công!");
-                logActivity(request, "generator", newId, model.trim(), "CREATE",
-                        "Tạo máy phát điện: " + model.trim() + ", Công suất: " + powerStr + "kVA");
+
+                String details = "Tạo máy phát điện: " + model.trim() + ", Công suất: " + powerStr + "kVA";
+                logActivity(request, "generator", newId, model.trim(), "CREATE", details);
             } else {
                 request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
             }
@@ -288,6 +289,7 @@ public class GeneratorManagementController extends HttpServlet {
                 List<Integer> selectedIds = selectedCats.stream()
                         .map(Category::getId).collect(Collectors.toList());
                 request.setAttribute("selectedCatIds", selectedIds);
+
                 request.getRequestDispatcher("/view/generator/generator-edit.jsp").forward(request, response);
                 return;
             }
@@ -341,8 +343,9 @@ public class GeneratorManagementController extends HttpServlet {
                     dao.deleteGeneratorCategories(id);
                     saveGeneratorCategories(request, dao, id);
                     request.getSession().setAttribute("message", "Cập nhật thành công!");
-                    logActivity(request, "generator", id, model.trim(), "UPDATE",
-                            "Cập nhật thông tin máy phát điện: " + model.trim());
+
+                    String details = "Cập nhật thông tin máy phát điện: " + model.trim();
+                    logActivity(request, "generator", id, model.trim(), "UPDATE", details);
                 } else {
                     request.getSession().setAttribute("message", "Cập nhật thất bại!");
                 }
@@ -504,4 +507,10 @@ public class GeneratorManagementController extends HttpServlet {
         log.setCreatedAt(LocalDateTime.now());
         new ActivityLogDAO().insertLog(log);
     }
+
+    /**
+     * Tính lại số PO APPROVED có máy chưa có trong kho và lưu vào session.
+     * Gọi sau khi sale staff tạo/cập nhật generator để badge trên sidebar
+     * được cập nhật ngay.
+     */
 }

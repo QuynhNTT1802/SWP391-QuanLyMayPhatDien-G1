@@ -329,7 +329,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
 
         String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
-                + "WHERE order_id = ? AND status IN (?, ?)";
+                + "WHERE order_id = ? AND status = ?";
 
         try {
             connection = getConnection();

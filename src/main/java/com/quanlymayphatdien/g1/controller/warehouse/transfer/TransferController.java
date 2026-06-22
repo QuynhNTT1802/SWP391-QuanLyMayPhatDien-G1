@@ -204,7 +204,7 @@ public class TransferController extends HttpServlet {
             throws ServletException, IOException {
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("generators", generatorDAO.findAllActive());
-        request.setAttribute("allSerials", loadAllInStockSerials());
+        request.setAttribute("allSerials", inventoryDAO.findAllInStock());
         request.setAttribute("activePage", "transfer-create");
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
     }
@@ -235,20 +235,9 @@ public class TransferController extends HttpServlet {
         request.setAttribute("isRevision", "NEEDS_REVISION".equals(t.getStatus()));
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("generators", generatorDAO.findAllActive());
-        request.setAttribute("allSerials", loadAllInStockSerials());
+        request.setAttribute("allSerials", inventoryDAO.findAllInStock());
         request.setAttribute("activePage", "transfer-edit");
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-edit.jsp").forward(request, response);
-    }
-
-    private List<Inventory> loadAllInStockSerials() {
-        List<Inventory> all = inventoryDAO.findAll();
-        List<Inventory> result = new ArrayList<>();
-        for (Inventory inv : all) {
-            if ("IN_STOCK".equals(inv.getStatus())) {
-                result.add(inv);
-            }
-        }
-        return result;
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
