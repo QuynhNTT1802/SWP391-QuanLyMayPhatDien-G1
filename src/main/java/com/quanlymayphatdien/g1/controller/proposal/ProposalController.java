@@ -762,7 +762,7 @@ public class ProposalController extends HttpServlet {
             return;
         }
         ImportProposalDAO dao = new ImportProposalDAO();
-        boolean ok = dao.revertApprovedToPending(id, currentUserId(request), reason.trim());
+        boolean ok = dao.revertApprovedToRevision(id, currentUserId(request), reason.trim());
         if (ok) {
             ImportProposal p = dao.findById(id);
             logActivity(currentUserId(request), "import_proposal", "REVERT_REVIEW", id,
