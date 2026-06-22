@@ -22,7 +22,7 @@ public class SystemLogFilter implements Filter {
         try {
             chain.doFilter(request, response);
         } catch (Throwable e) {
-            // Xác định URI request để biết lỗi xảy ra ở đâu
+
             String source = "Unknown";
             if (request instanceof HttpServletRequest) {
                 String uri = ((HttpServletRequest) request).getRequestURI();
@@ -33,7 +33,7 @@ public class SystemLogFilter implements Filter {
             String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
             SystemLogger.error(LogModule.SYSTEM, source, message, e);
 
-            // Re-throw để server tiếp tục xử lý (hiển thị trang lỗi 500)
+
             if (e instanceof IOException) throw (IOException) e;
             if (e instanceof ServletException) throw (ServletException) e;
             if (e instanceof RuntimeException) throw (RuntimeException) e;

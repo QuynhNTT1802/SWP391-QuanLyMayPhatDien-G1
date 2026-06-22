@@ -642,15 +642,6 @@ public class CategoryController extends HttpServlet {
         }
     }
 
-    /**
-     * Log cập nhật danh mục: chỉ mô tả các trường thực sự thay đổi (tên và
-     * trạng thái). Định dạng ví dụ: - Chỉ đổi tên: Nguyễn Văn A đã cập nhật
-     * 'Honda' thành 'Honda Generator' (Thương hiệu) - Chỉ đổi trạng thái:
-     * Nguyễn Văn A đã cập nhật 'Honda' (Thương hiệu) — Trạng thái: Hoạt động
-     * thành Không hoạt động - Cả hai: Nguyễn Văn A đã cập nhật 'Honda' thành
-     * 'Honda Generator' (Thương hiệu) — Trạng thái: Hoạt động thành Không hoạt
-     * động
-     */
     private String normalizeLogString(String s) {
         return (s == null || s.trim().isEmpty()) ? "(trống)" : s.trim();
     }
@@ -788,10 +779,8 @@ public class CategoryController extends HttpServlet {
         }
     }
 
-    /**
-     * Log khóa danh mục. Định dạng: Khóa: 'Honda' (Thương hiệu) — Trạng thái
-     * trước: Hoạt động
-     */
+
+
     private void logDelete(HttpServletRequest request, Integer entityId,
             String name, String type, String status, String module) {
         try {

@@ -18,161 +18,197 @@ public class CategoryExtensionDAO extends DBContext {
     public void saveBrand(CategoryBrand brand) {
         delete("category_brand", brand.getCategoryId());
         String sql = "INSERT INTO category_brand (category_id, country, website, founded_year, warranty_period) VALUES (?,?,?,?,?)";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, brand.getCategoryId());
-            p.setString(2, brand.getCountry());
-            p.setString(3, brand.getWebsite());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, brand.getCategoryId());
+            statement.setString(2, brand.getCountry());
+            statement.setString(3, brand.getWebsite());
             if (brand.getFoundedYear() != null) {
-                p.setInt(4, brand.getFoundedYear());
+                statement.setInt(4, brand.getFoundedYear());
             } else {
-                p.setNull(4, java.sql.Types.INTEGER);
+                statement.setNull(4, java.sql.Types.INTEGER);
             }
             if (brand.getWarrantyPeriod() != null) {
-                p.setInt(5, brand.getWarrantyPeriod());
+                statement.setInt(5, brand.getWarrantyPeriod());
             } else {
-                p.setNull(5, java.sql.Types.INTEGER);
+                statement.setNull(5, java.sql.Types.INTEGER);
             }
-            p.executeUpdate();
+            statement.executeUpdate();
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
     }
 
     public CategoryBrand findBrand(int categoryId) {
+        CategoryBrand result = null;
         String sql = "SELECT * FROM category_brand WHERE category_id = ?";
-        try (Connection c = getConnection(); 
-            PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, categoryId);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) {
-                    CategoryBrand b = new CategoryBrand();
-                    b.setCategoryId(categoryId);
-                    b.setCountry(rs.getString("country"));
-                    b.setWebsite(rs.getString("website"));
-                    b.setFoundedYear(rs.getInt("founded_year"));
-                    if (rs.wasNull()) {
-                        b.setFoundedYear(null);
-                    }
-                    b.setWarrantyPeriod(rs.getInt("warranty_period"));
-                    if (rs.wasNull()) {
-                        b.setWarrantyPeriod(null);
-                    }
-                    return b;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                CategoryBrand b = new CategoryBrand();
+                b.setCategoryId(categoryId);
+                b.setCountry(resultSet.getString("country"));
+                b.setWebsite(resultSet.getString("website"));
+                b.setFoundedYear(resultSet.getInt("founded_year"));
+                if (resultSet.wasNull()) {
+                    b.setFoundedYear(null);
                 }
+                b.setWarrantyPeriod(resultSet.getInt("warranty_period"));
+                if (resultSet.wasNull()) {
+                    b.setWarrantyPeriod(null);
+                }
+                result = b;
             }
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return null;
+        return result;
     }
 
     public void saveFuelType(CategoryFuelType ft) {
         delete("category_fuel_type", ft.getCategoryId());
         String sql = "INSERT INTO category_fuel_type (category_id, unit, typical_price) VALUES (?,?,?)";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, ft.getCategoryId());
-            p.setString(2, ft.getUnit());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, ft.getCategoryId());
+            statement.setString(2, ft.getUnit());
             if (ft.getTypicalPrice() != null) {
-                p.setBigDecimal(3, ft.getTypicalPrice());
+                statement.setBigDecimal(3, ft.getTypicalPrice());
             } else {
-                p.setNull(3, Types.DECIMAL);
+                statement.setNull(3, Types.DECIMAL);
             }
-            p.executeUpdate();
+            statement.executeUpdate();
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
     }
 
     public CategoryFuelType findFuelType(int categoryId) {
+        CategoryFuelType result = null;
         String sql = "SELECT * FROM category_fuel_type WHERE category_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, categoryId);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) {
-                    CategoryFuelType ft = new CategoryFuelType();
-                    ft.setCategoryId(categoryId);
-                    ft.setUnit(rs.getString("unit"));
-                    BigDecimal price = rs.getBigDecimal("typical_price");
-                    if (!rs.wasNull()) {
-                        ft.setTypicalPrice(price);
-                    }
-                    return ft;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                CategoryFuelType ft = new CategoryFuelType();
+                ft.setCategoryId(categoryId);
+                ft.setUnit(resultSet.getString("unit"));
+                BigDecimal price = resultSet.getBigDecimal("typical_price");
+                if (!resultSet.wasNull()) {
+                    ft.setTypicalPrice(price);
                 }
+                result = ft;
             }
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return null;
+        return result;
     }
 
     public void saveOrigin(CategoryOrigin origin) {
         delete("category_origin", origin.getCategoryId());
         String sql = "INSERT INTO category_origin (category_id, country_code) VALUES (?,?)";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, origin.getCategoryId());
-            p.setString(2, origin.getCountryCode());
-            p.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, origin.getCategoryId());
+            statement.setString(2, origin.getCountryCode());
+            statement.executeUpdate();
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
     }
 
     public CategoryOrigin findOrigin(int categoryId) {
+        CategoryOrigin result = null;
         String sql = "SELECT * FROM category_origin WHERE category_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, categoryId);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) {
-                    CategoryOrigin o = new CategoryOrigin();
-                    o.setCategoryId(categoryId);
-                    o.setCountryCode(rs.getString("country_code"));
-                    return o;
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                CategoryOrigin o = new CategoryOrigin();
+                o.setCategoryId(categoryId);
+                o.setCountryCode(resultSet.getString("country_code"));
+                result = o;
             }
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return null;
+        return result;
     }
 
     public void saveCustomerType(CategoryCustomerType ct) {
         delete("category_customer_type", ct.getCategoryId());
         String sql = "INSERT INTO category_customer_type (category_id, tax_type) VALUES (?,?)";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, ct.getCategoryId());
-            p.setString(2, ct.getTaxType());
-            p.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, ct.getCategoryId());
+            statement.setString(2, ct.getTaxType());
+            statement.executeUpdate();
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
     }
 
     public CategoryCustomerType findCustomerType(int categoryId) {
+        CategoryCustomerType result = null;
         String sql = "SELECT * FROM category_customer_type WHERE category_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, categoryId);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) {
-                    CategoryCustomerType ct = new CategoryCustomerType();
-                    ct.setCategoryId(categoryId);
-                    ct.setTaxType(rs.getString("tax_type"));
-                    return ct;
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                CategoryCustomerType ct = new CategoryCustomerType();
+                ct.setCategoryId(categoryId);
+                ct.setTaxType(resultSet.getString("tax_type"));
+                result = ct;
             }
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return null;
+        return result;
     }
 
     public void insertEmptyExtension(String tableName, int categoryId) {
+
         delete(tableName, categoryId);
         String sql = "INSERT INTO " + tableName + " (category_id) VALUES (?)";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, categoryId);
-            p.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
     }
 
@@ -182,11 +218,15 @@ public class CategoryExtensionDAO extends DBContext {
 
     private void delete(String tableName, int categoryId) {
         String sql = "DELETE FROM " + tableName + " WHERE category_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, categoryId);
-            p.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
     }
 
@@ -213,98 +253,110 @@ public class CategoryExtensionDAO extends DBContext {
         switch (type) {
             case "brand": {
                 String sql = "SELECT b.*, c.name FROM category_brand b JOIN category c ON b.category_id=c.id WHERE b.category_id IN (" + idsPlaceholder(catIds) + ")";
-                try (Connection conn = getConnection(); PreparedStatement p = conn.prepareStatement(sql)) {
+                try {
+                    connection = getConnection();
+                    statement = connection.prepareStatement(sql);
                     int i = 1;
                     for (Integer id : catIds) {
-                        p.setInt(i++, id);
+                        statement.setInt(i++, id);
                     }
-                    try (ResultSet rs = p.executeQuery()) {
-                        while (rs.next()) {
-                            CategoryBrand b = new CategoryBrand();
-                            int cid = rs.getInt("category_id");
-                            b.setCategoryId(cid);
-                            b.setCountry(rs.getString("country"));
-                            b.setWebsite(rs.getString("website"));
-                            b.setFoundedYear(rs.getInt("founded_year"));
-                            if (rs.wasNull()) {
-                                b.setFoundedYear(null);
-                            }
-                            b.setWarrantyPeriod(rs.getInt("warranty_period"));
-                            if (rs.wasNull()) {
-                                b.setWarrantyPeriod(null);
-                            }
-                            map.put(cid, b);
+                    resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        CategoryBrand b = new CategoryBrand();
+                        int cid = resultSet.getInt("category_id");
+                        b.setCategoryId(cid);
+                        b.setCountry(resultSet.getString("country"));
+                        b.setWebsite(resultSet.getString("website"));
+                        b.setFoundedYear(resultSet.getInt("founded_year"));
+                        if (resultSet.wasNull()) {
+                            b.setFoundedYear(null);
                         }
+                        b.setWarrantyPeriod(resultSet.getInt("warranty_period"));
+                        if (resultSet.wasNull()) {
+                            b.setWarrantyPeriod(null);
+                        }
+                        map.put(cid, b);
                     }
                 } catch (SQLException e) {
                     SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                } finally {
+                    closeResources();
                 }
                 break;
             }
             case "fuel_type": {
                 String sql = "SELECT * FROM category_fuel_type WHERE category_id IN (" + idsPlaceholder(catIds) + ")";
-                try (Connection conn = getConnection(); PreparedStatement p = conn.prepareStatement(sql)) {
+                try {
+                    connection = getConnection();
+                    statement = connection.prepareStatement(sql);
                     int i = 1;
                     for (Integer id : catIds) {
-                        p.setInt(i++, id);
+                        statement.setInt(i++, id);
                     }
-                    try (ResultSet rs = p.executeQuery()) {
-                        while (rs.next()) {
-                            CategoryFuelType ft = new CategoryFuelType();
-                            int cid = rs.getInt("category_id");
-                            ft.setCategoryId(cid);
-                            ft.setUnit(rs.getString("unit"));
-                            java.math.BigDecimal pr = rs.getBigDecimal("typical_price");
-                            if (!rs.wasNull()) {
-                                ft.setTypicalPrice(pr);
-                            }
-                            map.put(cid, ft);
+                    resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        CategoryFuelType ft = new CategoryFuelType();
+                        int cid = resultSet.getInt("category_id");
+                        ft.setCategoryId(cid);
+                        ft.setUnit(resultSet.getString("unit"));
+                        java.math.BigDecimal pr = resultSet.getBigDecimal("typical_price");
+                        if (!resultSet.wasNull()) {
+                            ft.setTypicalPrice(pr);
                         }
+                        map.put(cid, ft);
                     }
                 } catch (SQLException e) {
                     SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                } finally {
+                    closeResources();
                 }
                 break;
             }
             case "origin": {
                 String sql = "SELECT * FROM category_origin WHERE category_id IN (" + idsPlaceholder(catIds) + ")";
-                try (Connection conn = getConnection(); PreparedStatement p = conn.prepareStatement(sql)) {
+                try {
+                    connection = getConnection();
+                    statement = connection.prepareStatement(sql);
                     int i = 1;
                     for (Integer id : catIds) {
-                        p.setInt(i++, id);
+                        statement.setInt(i++, id);
                     }
-                    try (ResultSet rs = p.executeQuery()) {
-                        while (rs.next()) {
-                            CategoryOrigin o = new CategoryOrigin();
-                            int cid = rs.getInt("category_id");
-                            o.setCategoryId(cid);
-                            o.setCountryCode(rs.getString("country_code"));
-                            map.put(cid, o);
-                        }
+                    resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        CategoryOrigin o = new CategoryOrigin();
+                        int cid = resultSet.getInt("category_id");
+                        o.setCategoryId(cid);
+                        o.setCountryCode(resultSet.getString("country_code"));
+                        map.put(cid, o);
                     }
                 } catch (SQLException e) {
                     SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                } finally {
+                    closeResources();
                 }
                 break;
             }
             case "customer_type": {
                 String sql = "SELECT * FROM category_customer_type WHERE category_id IN (" + idsPlaceholder(catIds) + ")";
-                try (Connection conn = getConnection(); PreparedStatement p = conn.prepareStatement(sql)) {
+                try {
+                    connection = getConnection();
+                    statement = connection.prepareStatement(sql);
                     int i = 1;
                     for (Integer id : catIds) {
-                        p.setInt(i++, id);
+                        statement.setInt(i++, id);
                     }
-                    try (ResultSet rs = p.executeQuery()) {
-                        while (rs.next()) {
-                            CategoryCustomerType ct = new CategoryCustomerType();
-                            int cid = rs.getInt("category_id");
-                            ct.setCategoryId(cid);
-                            ct.setTaxType(rs.getString("tax_type"));
-                            map.put(cid, ct);
-                        }
+                    resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        CategoryCustomerType ct = new CategoryCustomerType();
+                        int cid = resultSet.getInt("category_id");
+                        ct.setCategoryId(cid);
+                        ct.setTaxType(resultSet.getString("tax_type"));
+                        map.put(cid, ct);
                     }
                 } catch (SQLException e) {
                     SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                } finally {
+                    closeResources();
                 }
                 break;
             }

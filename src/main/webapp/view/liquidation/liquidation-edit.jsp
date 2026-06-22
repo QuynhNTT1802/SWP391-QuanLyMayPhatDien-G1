@@ -77,7 +77,7 @@
                             </div>
                         </div>
 
-                        <!-- SECTION 02: CHỌN MÁY (Inline 2-col picker v4) -->
+                        <!-- SECTION 02: CHỌN MÁY -->
                         <div class="form-section">
                             <div class="form-section-head">
                                 <div class="form-section-num">02 — CHỌN MÁY</div>
@@ -175,11 +175,9 @@
     </div>
 </div>
 
-<!-- Side Panel: Serial Picker v3 (cart pattern) -->
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
-    /* v4 Picker — inline 2-col (kho ↔ cart). Edit page: preload cart từ ${details}. */
     var cart = {};
     var warehouseStock = {};
     var lockedByGen = {};
@@ -460,7 +458,6 @@
             });
     }
 
-    /* Wire events */
     document.querySelectorAll('.filter-chip').forEach(function(chip) {
         chip.addEventListener('click', function() {
             currentAgeFilter = chip.getAttribute('data-filter');
@@ -496,7 +493,6 @@
         });
     });
 
-    /* Init: preload cart từ ${details}, đồng thời load warehouse stock */
     (function initEdit() {
         var items = document.querySelectorAll('#initialCartData .initial-cart-item');
         items.forEach(function(it) {
