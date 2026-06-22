@@ -1210,49 +1210,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
-    public PurchaseOrder findActivePoByPeriodWarehouse(String period, int warehouseId) {
-        if (period == null || period.isEmpty() || warehouseId <= 0) {
-            return null;
-        }
-
-        String sql = "SELECT * FROM purchase_order "
-                + "WHERE period = ? AND warehouse_id = ? "
-                + "  AND status IN ('DRAFT', 'PENDING_CEO', 'RETURNED', 'APPROVED') "
-                + "ORDER BY po_id DESC "
-                + "LIMIT 1";
-
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, period);
-            ps.setInt(2, warehouseId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return getFromResultSet(rs);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public boolean hasRejectedPo(String period, int warehouseId) {
-        if (period == null || period.isEmpty() || warehouseId <= 0) {
-            return false;
-        }
-        String sql = "SELECT 1 FROM purchase_order "
-                + "WHERE period = ? AND warehouse_id = ? AND status = 'REJECTED' "
-                + "LIMIT 1";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, period);
-            ps.setInt(2, warehouseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     public java.math.BigDecimal findApprovedUnitPriceByGenerator(int generatorId) {
         String sql = "SELECT pod.unit_price "
                 + "FROM purchase_order_detail pod "

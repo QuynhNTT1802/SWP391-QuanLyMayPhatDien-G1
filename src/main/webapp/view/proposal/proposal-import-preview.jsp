@@ -722,26 +722,21 @@
                         }
 
                         if (data.fixed && data.fixed.length > 0) {
-                            // Remove fixed rows from invalid table
-                            var fixedSet = {};
-                            data.fixed.forEach(function (s) { fixedSet[String(s)] = true; });
-                            var rowsToKeep = [];
-                            trs.forEach(function (tr) {
-                                var stt = tr.getAttribute('data-original-stt');
-                                if (fixedSet[stt]) {
-                                    tr.remove();
-                                } else {
-                                    rowsToKeep.push(tr);
-                                }
-                            });
-
-                            // If all rows fixed, reload to show updated state
-                            if (rowsToKeep.length === 0) {
-                                var reShowUrl = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                                window.location.href = reShowUrl;
+                            // Luôn reload để server re-categorize và hiển thị dòng đã sửa
+                            // vào "Dòng hợp lệ" hoặc "Dòng cần lưu ý" ngay trên trang.
+                            var fixedCount = data.fixed.length;
+                            var failedCount = data.failed ? Object.keys(data.failed).length : 0;
+                            var msg = 'Đã thêm ' + fixedCount + ' dòng vào danh sách lưu.';
+                            if (failedCount > 0) {
+                                msg += ' Còn ' + failedCount + ' dòng cần sửa tiếp.';
                             }
+                            if (typeof showToast === 'function') {
+                                showToast(msg, 'success');
+                            }
+                            setTimeout(function () {
+                                window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
+                            }, 400);
                         } else {
-                            // Reload if no failures at all
                             var hasFailures = data.failed && Object.keys(data.failed).length > 0;
                             if (!hasFailures) {
                                 window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
