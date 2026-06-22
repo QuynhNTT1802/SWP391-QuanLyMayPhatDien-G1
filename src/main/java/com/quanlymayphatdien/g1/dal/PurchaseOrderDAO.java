@@ -415,6 +415,28 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return null;
     }
 
+    public List<PurchaseOrder> findBySupplierId(int supplierId) {
+        List<PurchaseOrder> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
+                + "FROM purchase_order p "
+                + "JOIN import_proposal ip ON p.po_id = ip.purchase_order_id "
+                + "JOIN import_proposal_detail ipd ON ip.proposal_id = ipd.proposal_id "
+                + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
+                + "LEFT JOIN user u_c ON u_c.id = p.created_by "
+                + "WHERE ipd.supplier_id = ? "
+                + "ORDER BY p.created_at DESC";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, supplierId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(getFromResultSet(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<PurchaseOrderDetail> findDetails(int poId) {
         List<PurchaseOrderDetail> list = new ArrayList<>();
         String sql = "SELECT d.*, g.model AS generator_code, g.description AS generator_name, "

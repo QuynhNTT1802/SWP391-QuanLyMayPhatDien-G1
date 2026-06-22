@@ -2,9 +2,11 @@ package com.quanlymayphatdien.g1.controller.warehouse;
 
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.SupplierDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
+import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.Supplier;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.RequestDispatcher;
@@ -175,6 +177,10 @@ public class SupplierController extends HttpServlet {
                 }
                 request.setAttribute("activityLogs", logs);
                 request.setAttribute("logDates", logDates);
+
+                PurchaseOrderDAO poDAO = new PurchaseOrderDAO();
+                List<PurchaseOrder> purchaseOrders = poDAO.findBySupplierId(id);
+                request.setAttribute("purchaseOrders", purchaseOrders);
 
                 request.getRequestDispatcher("/view/supplier/supplier-detail.jsp").forward(request, response);
                 return;

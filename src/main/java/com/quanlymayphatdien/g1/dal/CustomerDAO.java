@@ -27,6 +27,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -43,6 +45,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -115,6 +119,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -129,6 +135,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -143,6 +151,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -157,6 +167,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -207,6 +219,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             return new ArrayList<>(all.subList(start, end));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
@@ -246,6 +260,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -262,6 +278,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -284,6 +302,8 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
