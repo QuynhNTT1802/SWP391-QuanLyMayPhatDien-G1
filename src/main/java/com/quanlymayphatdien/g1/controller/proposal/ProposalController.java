@@ -257,14 +257,9 @@ public class ProposalController extends HttpServlet {
             return;
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String currentPeriod = PeriodUtils.currentPeriod();
-        boolean quarterBlocked = warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("generators", new GeneratorDAO().findAllActive());
         request.setAttribute("suppliers", new SupplierDAO().findAll());
-        request.setAttribute("quarterBlocked", quarterBlocked);
-        request.setAttribute("blockedPeriod", currentPeriod);
         request.setAttribute("blockedWarehouseId", warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
@@ -429,14 +424,6 @@ public class ProposalController extends HttpServlet {
 
         String submitType = request.getParameter("submitType");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String currentPeriod = PeriodUtils.currentPeriod();
-        if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
-            return;
-        }
 
         ImportProposal p = new ImportProposal();
         p.setWarehouseId(warehouseId);
@@ -908,14 +895,6 @@ public class ProposalController extends HttpServlet {
         String warehouseIdRaw = request.getParameter("warehouseId");
         String note = request.getParameter("note");
         int warehouseId = parseInt(warehouseIdRaw);
-        String currentPeriod = PeriodUtils.currentPeriod();
-        if (warehouseId > 0 && new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
-            return;
-        }
 
         Part filePart = null;
         try {
@@ -1267,15 +1246,6 @@ public class ProposalController extends HttpServlet {
             session.setAttribute("toastMessage", "Vui lòng chọn kho nhập");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=create");
-            return;
-        }
-
-        String currentPeriod = PeriodUtils.currentPeriod();
-        if (new PurchaseOrderDAO().hasRejectedPo(currentPeriod, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + currentPeriod + " tại kho này đã bị CEO từ chối PO. Không thể tạo đề xuất mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
             return;
         }
 

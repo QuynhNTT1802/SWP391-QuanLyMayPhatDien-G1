@@ -1289,60 +1289,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return list;
     }
 
-    public PurchaseOrder findActivePoByPeriodWarehouse(String period, int warehouseId) {
-        if (period == null || period.isEmpty() || warehouseId <= 0) {
-            return null;
-        }
-        PurchaseOrder result = null;
-        String sql = "SELECT * FROM purchase_order "
-                + "WHERE period = ? AND warehouse_id = ? "
-                + "  AND status IN ('DRAFT', 'PENDING_CEO', 'RETURNED', 'APPROVED') "
-                + "ORDER BY po_id DESC "
-                + "LIMIT 1";
-
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, period);
-            statement.setInt(2, warehouseId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                result = getFromResultSet(resultSet);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return result;
-    }
-
-    public boolean hasRejectedPo(String period, int warehouseId) {
-        if (period == null || period.isEmpty() || warehouseId <= 0) {
-            return false;
-        }
-        boolean result = false;
-        String sql = "SELECT 1 FROM purchase_order "
-                + "WHERE period = ? AND warehouse_id = ? AND status = 'REJECTED' "
-                + "LIMIT 1";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, period);
-            statement.setInt(2, warehouseId);
-            resultSet = statement.executeQuery();
-            result = resultSet.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return result;
-    }
-    /**
-     * Lookup unit_price tu purchase_order_detail cho generator chi dinh,
-     * uu tien PO da APPROVED moi nhat. Tra null neu khong co dong nao thoa.
-     */
     public java.math.BigDecimal findApprovedUnitPriceByGenerator(int generatorId) {
         java.math.BigDecimal result = null;
         String sql = "SELECT pod.unit_price "
