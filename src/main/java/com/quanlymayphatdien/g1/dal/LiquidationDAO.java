@@ -314,14 +314,18 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return false;
     }
 
-    public boolean updateReasonAndStatus(int liquidationId, int reasonId) {
-        String sql = "UPDATE liquidation SET reason_id = ?, status = 'PENDING_MANAGER', manager_feedback_id = NULL, manager_reviewed_by = NULL, manager_reviewed_at = NULL, updated_at = ? WHERE liquidation_id = ?";
+    public boolean updateReasonAndStatus(int liquidationId, int reasonId, String targetStatus) {
+        String sql = "UPDATE liquidation SET reason_id = ?, status = ?, "
+                + "manager_feedback_id = NULL, manager_reviewed_by = NULL, manager_reviewed_at = NULL, "
+                + "ceo_feedback_id = NULL, ceo_reviewed_by = NULL, ceo_reviewed_at = NULL, "
+                + "updated_at = ? WHERE liquidation_id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, reasonId);
-            statement.setObject(2, LocalDateTime.now());
-            statement.setInt(3, liquidationId);
+            statement.setString(2, targetStatus);
+            statement.setObject(3, LocalDateTime.now());
+            statement.setInt(4, liquidationId);
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateReasonAndStatus", e.getMessage(), e);
@@ -329,6 +333,20 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             closeResources();
         }
         return false;
+    }
+
+    public boolean updateReasonAndStatus(Connection conn, int liquidationId, int reasonId, String targetStatus) throws SQLException {
+        String sql = "UPDATE liquidation SET reason_id = ?, status = ?, "
+                + "manager_feedback_id = NULL, manager_reviewed_by = NULL, manager_reviewed_at = NULL, "
+                + "ceo_feedback_id = NULL, ceo_reviewed_by = NULL, ceo_reviewed_at = NULL, "
+                + "updated_at = ? WHERE liquidation_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, reasonId);
+            stmt.setString(2, targetStatus);
+            stmt.setObject(3, LocalDateTime.now());
+            stmt.setInt(4, liquidationId);
+            return stmt.executeUpdate() > 0;
+        }
     }
 
     public boolean updateCustomer(int liquidationId, int customerId) {
