@@ -691,10 +691,11 @@
     document.addEventListener('DOMContentLoaded', function () {
         var whId = document.getElementById('warehouseSelect').value;
         if (whId) onWarehouseChange();
+        if (window.SESSION_DATA && window.SESSION_DATA.message) {
+            toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+            window.SESSION_DATA = null;
+        }
     });
-
-    document.getElementById('serialSearchInput').addEventListener('input', filterAndSortSerials);
-    document.getElementById('serialSortOrder').addEventListener('change', filterAndSortSerials);
 </script>
 </body>
 </html>
