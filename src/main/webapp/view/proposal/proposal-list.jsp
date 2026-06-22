@@ -293,7 +293,7 @@
                                             <tr data-id="${p.proposalId}">
                                                 <c:if test="${canCreatePo}">
                                                     <td class="col-check">
-                                                        <c:set var="canTick" value="${p.status == 'PENDING' && empty p.poCode}"/>
+                                                        <c:set var="canTick" value="${p.status == 'APPROVED' && empty p.poCode}"/>
                                                         <input type="checkbox" class="checkbox row-check" name="proposalIds" value="${p.proposalId}" data-period="${p.period}" data-warehouse="${p.warehouseId}" <c:if test="${!canTick}">disabled</c:if>/>
                                                     </td>
                                                 </c:if>
@@ -388,15 +388,13 @@
                                                                         <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
                                                                         <span class="label">Duyệt</span>
                                                                     </button>
+                                                                </c:if>
+
+                                                                <c:if test="${p.status == 'PENDING' && canRejectProposal}">
                                                                     <div class="dropdown-divider"></div>
                                                                     <button class="dropdown-item reject" onclick="openRejectModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
                                                                         <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                                         <span class="label">Từ chối</span>
-                                                                    </button>
-                                                                    <div class="dropdown-divider"></div>
-                                                                    <button class="dropdown-item revision" onclick="openRevisionModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
-                                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                        <span class="label">Yêu cầu chỉnh sửa</span>
                                                                     </button>
                                                                 </c:if>
 
@@ -405,17 +403,6 @@
                                                                         <input type="hidden" name="id" value="${p.proposalId}" />
                                                                         <div class="dropdown-divider"></div>
                                                                         <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                            <span class="label">Huỷ phiếu</span>
-                                                                        </button>
-                                                                    </form>
-                                                                </c:if>
-
-                                                                <c:if test="${p.status == 'APPROVED' && canCancelProposal}">
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <div class="dropdown-divider"></div>
-                                                                        <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất đã duyệt?')">
                                                                             <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                                                             <span class="label">Huỷ phiếu</span>
                                                                         </button>
@@ -456,7 +443,7 @@
 
         <div class="toast-host" id="toastHost"></div>
 
-        <c:if test="${canApproveProposal}">
+        <c:if test="${canApproveProposal || canRejectProposal}">
             <div class="modal-host" id="approveModalList">
                 <div class="modal-card">
                     <h3>Duyệt phiếu đề xuất</h3>
@@ -465,12 +452,14 @@
                         <input type="hidden" name="id" id="approveProposalId" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
             </div>
+        </c:if>
 
+        <c:if test="${canRejectProposal}">
             <div class="modal-host" id="rejectModalList">
                 <div class="modal-card">
                     <h3>Từ chối phiếu đề xuất</h3>
@@ -486,7 +475,9 @@
                     </form>
                 </div>
             </div>
+        </c:if>
 
+        <c:if test="${canApproveProposal}">
             <div class="modal-host" id="revisionModalList">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa</h3>
@@ -551,10 +542,6 @@
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
                 }
             });
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt phiếu đề xuất này?');
-            }
 
             function toggleDropdown(btn) {
                 var menu = btn.nextElementSibling;

@@ -120,7 +120,7 @@
                         <c:choose>
                             <c:when test="${empty creatorGroups}">
                                 <div class="card" style="padding: 24px; text-align: center; color: var(--muted);">
-                                    Tháng <strong>${selectedPeriod}</strong> chưa có đề xuất PENDING nào trong kho này.
+                                    Tháng <strong>${selectedPeriod}</strong> chưa có đề xuất APPROVED nào trong kho này.
                                 </div>
                             </c:when>
                             <c:otherwise>

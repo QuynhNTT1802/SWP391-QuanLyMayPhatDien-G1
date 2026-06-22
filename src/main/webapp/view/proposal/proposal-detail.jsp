@@ -196,16 +196,10 @@
                         </div>
                     </c:if>
 
-                    <c:if test="${proposal.hasNewGenerator() && proposal.status == 'APPROVED'}">
-                        <div class="alert alert-warn">
-                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span>Phiếu có chứa máy phát chưa có trong kho. Warehouse cần tự thêm category trước khi tạo phiếu nhập.</span>
-                        </div>
-                    </c:if>
-
                     <c:set var="isOwner" value="${sessionScope.loggedUser.id == proposal.createdBy}" />
                     <c:set var="perms" value="${sessionScope.userPermissions}" />
                     <c:set var="canApprove" value="${perms.contains('proposals.approve')}" />
+                    <c:set var="canReject" value="${perms.contains('proposals.reject')}" />
                     <c:set var="canCancelProp" value="${perms.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
 
@@ -258,17 +252,16 @@
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Duyệt phiếu
                                 </button>
-                                <button type="button" class="btn" onclick="openModal('revisionModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                    Yêu cầu chỉnh sửa
-                                </button>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canReject}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
                                 </button>
                             </c:if>
 
-                            <c:if test="${(proposal.status == 'PENDING' || proposal.status == 'APPROVED') && canCancelProp}">
+                            <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
                                 <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
                                     <input type="hidden" name="id" value="${proposal.proposalId}" />
                                     <button type="submit" class="btn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
@@ -599,23 +592,7 @@
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal-host" id="rejectModal">
-                <div class="modal-card">
-                    <h3>Từ chối phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <label for="rejectReason">Lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
@@ -638,6 +615,24 @@
             </div>
         </c:if>
 
+        <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canReject}">
+            <div class="modal-host" id="rejectModal">
+                <div class="modal-card">
+                    <h3>Từ chối phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <label for="rejectReason">Lý do từ chối <span style="color:var(--danger)">*</span></label>
+                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
         <div class="toast-host" id="toastHost"></div>
 
         <script>
@@ -654,10 +649,6 @@
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt phiếu đề xuất này?');
-            }
-
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
             document.querySelectorAll('.modal-host').forEach(function (m) {

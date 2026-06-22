@@ -47,16 +47,21 @@
             .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55; padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
             .info-value .status-pill { white-space: nowrap; }
             .mono { font-family: 'JetBrains Mono', monospace; }
-
-            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-            .modal-host.show { display: flex; }
-            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
-            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+            .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 24px; margin: 16px 0; }
+            .info-grid .row { padding: 6px 0; }
+            .info-grid .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+            .info-grid .val { font-size: 14px; font-weight: 500; }
+            .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+            .status-draft { background: #e2e3e5; color: #383d41; }
+            .status-pending_ceo { background: #fff3cd; color: #856404; }
+            .status-approved { background: #d4edda; color: #155724; }
+            .status-rejected { background: #f8d7da; color: #721c24; }
+            .status-cancelled { background: #e2e3e5; color: #383d41; }
+            .po-code { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent); }
+            .action-bar { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+            .alert { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius); border: 1px solid; align-items: flex-start; }
+            .alert svg { width: 22px; height: 22px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; }
+            .alert-warn { background: var(--warn-soft, #fff8e1); color: var(--warn, #b45309); border-color: color-mix(in srgb, var(--warn, #b45309) 30%, transparent); }
         </style>
     </head>
     <body>
@@ -89,6 +94,102 @@
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <span><c:out value="${error}"/></span>
                         </div>
+                    </div>
+
+                    <script>
+                        <c:if test="${not empty sessionScope.message}">
+                        window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
+                            <c:remove var="message" scope="session"/>
+                        </c:if>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>'};
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
+                        </c:if>
+                    </script>
+
+                    <div class="card" style="padding: 20px;">
+                        <div class="info-grid">
+                            <div class="row"><div class="lbl">Tháng</div><div class="val">${po.period} (${po.periodStart} → ${po.periodEnd})</div></div>
+                            <div class="row"><div class="lbl">Kho</div><div class="val">${po.warehouseName}</div></div>
+                            <div class="row"><div class="lbl">Người tạo</div><div class="val">${po.createdByName} lúc ${po.createdAt.format(poFmt)}</div></div>
+                            <div class="row"><div class="lbl">Số proposal gom</div><div class="val">${po.totalProposals}</div></div>
+                            <c:if test="${po.status == 'APPROVED'}">
+                                <div class="row"><div class="lbl">CEO duyệt lúc</div><div class="val">${po.approvedAt.format(poFmt)}</div></div>
+                            </c:if>
+                            <c:if test="${po.status == 'REJECTED'}">
+                                <div class="row"><div class="lbl">CEO từ chối lúc</div><div class="val">${po.rejectedAt.format(poFmt)}</div></div>
+                                <div class="row" style="grid-column: span 2;"><div class="lbl">Lý do từ chối</div><div class="val" style="color: var(--danger);">${po.rejectReason}</div></div>
+                            </c:if>
+                            <c:if test="${not empty po.note}">
+                                <div class="row" style="grid-column: span 2;"><div class="lbl">Ghi chú PO</div><div class="val">${po.note}</div></div>
+                            </c:if>
+                        </div>
+                    </div>
+
+                    <c:set var="perms" value="${sessionScope.userPermissions}"/>
+
+                    <h3 style="margin-top: 20px;">Chi tiết các dòng máy (${fn:length(po.details)} dòng)</h3>
+                    <table class="po-table">
+                        <thead>
+                            <tr>
+                                <th>Mã máy</th>
+                                <th>Tên máy</th>
+                                <th>Thương hiệu</th>
+                                <th>SL đề xuất</th>
+                                <th>Tồn kho</th>
+                                <th>SL mua cuối</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <c:forEach var="d" items="${po.details}">
+                                <tr>
+                                    <td>${d.generatorCode}</td>
+                                    <td>${d.generatorName}</td>
+                                    <td>${d.brandName}</td>
+                                    <td>${d.proposedQuantity}</td>
+                                    <td>${d.currentStock}</td>
+                                    <td><strong>${d.finalQuantity}</strong></td>
+                                    <td class="mono"><c:choose><c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                    <td class="mono"><c:choose><c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice * d.finalQuantity}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose></td>
+                                    <td>${d.note}</td>
+                                </tr>
+                            </c:forEach>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="7" style="text-align:right;font-weight:700;">Tổng cộng:</td>
+                                <td class="mono" style="font-weight:700;font-size:15px;"><fmt:formatNumber value="${grandTotal}" type="number" groupingUsed="true" minFractionDigits="0"/> ₫</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <c:if test="${not empty sourceProposals}">
+                        <h3 style="margin-top: 24px;">Đề xuất gốc từ sale staff (${fn:length(sourceProposals)} phiếu)</h3>
+                        <table class="po-table">
+                            <thead>
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Người tạo</th>
+                                    <th>Kho</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="sp" items="${sourceProposals}">
+                                    <tr>
+                                        <td><a href="${pageContext.request.contextPath}/proposal?action=detail&id=${sp.proposalId}">${sp.proposalCode}</a></td>
+                                        <td>${sp.createdByName}</td>
+                                        <td>${sp.warehouseName}</td>
+                                        <td>${sp.status}</td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
                     </c:if>
 
                     <c:choose>

@@ -233,6 +233,7 @@ public class PurchaseOrderController extends HttpServlet {
     private void showReviewCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         if (perms == null || !perms.contains("purchase_orders.create")) {
             session.setAttribute("toastMessage", "Bạn không có quyền tạo phiếu mua");
@@ -330,6 +331,8 @@ public class PurchaseOrderController extends HttpServlet {
         }
         request.setAttribute("creatorGroups", creatorGroups);
 
+        request.setAttribute("canApproveProposal", perms != null && perms.contains("proposals.approve"));
+        request.setAttribute("currentUserId", user.getId());
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-review-create.jsp").forward(request, response);
     }
