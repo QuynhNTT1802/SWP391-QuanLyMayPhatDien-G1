@@ -356,10 +356,13 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     }
 
     public PurchaseOrder findById(int poId) {
-        String sql = "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
+        String sql = "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name, "
+                + "u_a.name AS approved_by_name, u_r.name AS rejected_by_name "
                 + "FROM purchase_order p "
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by "
+                + "LEFT JOIN user u_a ON u_a.id = p.approved_by "
+                + "LEFT JOIN user u_r ON u_r.id = p.rejected_by "
                 + "WHERE p.po_id = ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, poId);
@@ -392,6 +395,14 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 po.setNote(rs.getString("note"));
                 po.setWarehouseName(rs.getString("warehouse_name"));
                 po.setCreatedByName(rs.getString("created_by_name"));
+                try {
+                    po.setApprovedByName(rs.getString("approved_by_name"));
+                } catch (SQLException ignored) {
+                }
+                try {
+                    po.setRejectedByName(rs.getString("rejected_by_name"));
+                } catch (SQLException ignored) {
+                }
                 Timestamp stc = rs.getTimestamp("sent_to_ceo_at");
                 if (stc != null) {
                     po.setSentToCeoAt(stc.toLocalDateTime());
