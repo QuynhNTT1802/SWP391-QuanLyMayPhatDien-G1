@@ -331,11 +331,14 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
                 + "WHERE order_id = ? AND status = ?";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(updateSql)) {
-            ps.setString(1, GlobalUtils.STATUS_CANCELLED);
-            ps.setInt(2, cancelledBy);
-            ps.setInt(3, orderId);
-            ps.setString(4, GlobalUtils.STATUS_PENDING);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(updateSql);
+            statement.setString(1, GlobalUtils.STATUS_CANCELLED);
+            statement.setInt(2, cancelledBy);
+            statement.setInt(3, orderId);
+            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            statement.setString(5, GlobalUtils.STATUS_APPROVED);
 
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0 ? 1 : 0;

@@ -180,10 +180,12 @@
                         </div>
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <option value="IN_STOCK" <c:if test="${status == 'IN_STOCK'}">selected</c:if>>IN_STOCK</option>
-                            <option value="SOLD" <c:if test="${status == 'SOLD'}">selected</c:if>>SOLD</option>
-                            <option value="PENDING_LIQUIDATION" <c:if test="${status == 'PENDING_LIQUIDATION'}">selected</c:if>>PENDING_LIQUIDATION</option>
-                            <option value="LIQUIDATED" <c:if test="${status == 'LIQUIDATED'}">selected</c:if>>LIQUIDATED</option>
+                            <option value="IN_STOCK" <c:if test="${status == 'IN_STOCK'}">selected</c:if>>Tồn kho</option>
+                            <option value="SOLD" <c:if test="${status == 'SOLD'}">selected</c:if>>Đã bán</option>
+                            <option value="PENDING_LIQUIDATION" <c:if test="${status == 'PENDING_LIQUIDATION'}">selected</c:if>>Đang thanh lý</option>
+                            <option value="PENDING_IMPORT" <c:if test="${status == 'PENDING_IMPORT'}">selected</c:if>>Đang nhập</option>
+                            <option value="PENDING_EXPORT" <c:if test="${status == 'PENDING_EXPORT'}">selected</c:if>>Đang xuất</option>
+                            <option value="LIQUIDATED" <c:if test="${status == 'LIQUIDATED'}">selected</c:if>>Đã thanh lý</option>
                             <option value="IN_TRANSIT" <c:if test="${status == 'IN_TRANSIT'}">selected</c:if>>IN_TRANSIT</option>
                         </select>
                         <button type="submit" class="btn btn-primary">
