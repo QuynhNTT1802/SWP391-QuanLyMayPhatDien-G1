@@ -19,14 +19,17 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                      "u.created_at, u.updated_at, u.created_by, u.updated_by, " +
                      "a.department, a.last_login " +
                      "FROM user u INNER JOIN admin a ON u.id = a.admin_id";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -34,14 +37,14 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
     @Override
     public boolean update(Admin t) {
         String updateUser = "UPDATE user SET name=?, username=?, password=?, email=?, phone=?, address=?, status=?, updated_by=? WHERE id=?";
-        // Nên dùng transaction ?? ??m b?o toàn v?n d? li?u
+        // Nï¿½n dï¿½ng transaction ?? ??m b?o toï¿½n v?n d? li?u
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement psUser = conn.prepareStatement(updateUser)) {
                 // Update user
                 psUser.setString(1, t.getName());
                 psUser.setString(2, t.getUsername());
-                psUser.setString(3, t.getPassword());  // Nên hash
+                psUser.setString(3, t.getPassword());  // Nï¿½n hash
                 psUser.setString(4, t.getEmail());
                 psUser.setString(5, t.getPhone());
                 psUser.setString(6, t.getAddress());
@@ -69,7 +72,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
     @Override
     public boolean delete(Admin t) {
-        // Xóa admin tr??c vì khóa ngo?i, sau ?ó xóa user
+        // Xï¿½a admin tr??c vï¿½ khï¿½a ngo?i, sau ?ï¿½ xï¿½a user
         String deleteAdmin = "DELETE FROM admin WHERE admin_id=?";
         String deleteUser = "DELETE FROM user WHERE id=?";
         try (Connection conn = getConnection()) {
@@ -132,7 +135,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 if (rs.next()) {
                     generatedId = rs.getInt(1);
                 } else {
-                    throw new SQLException("Không l?y ???c ID sau khi insert user.");
+                    throw new SQLException("Khï¿½ng l?y ???c ID sau khi insert user.");
                 }
 
                 // Insert admin
@@ -162,7 +165,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
 
     @Override
     public Admin getFromResultSet(ResultSet rs) throws SQLException {
-        // Các c?t t? user
+        // Cï¿½c c?t t? user
         int id = rs.getInt("id");
         String name = rs.getString("name");
         String username = rs.getString("username");
@@ -180,7 +183,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
         Integer createdBy = rs.getObject("created_by") != null ? rs.getInt("created_by") : null;
         Integer updatedBy = rs.getObject("updated_by") != null ? rs.getInt("updated_by") : null;
 
-        // Các c?t t? admin
+        // Cï¿½c c?t t? admin
         String department = rs.getString("department");
         LocalDateTime lastLogin = rs.getTimestamp("last_login") != null
                 ? rs.getTimestamp("last_login").toLocalDateTime() : null;
@@ -199,22 +202,25 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                          department, lastLogin);
     }
 
-    // Ti?n ích: tìm Admin theo ID
+    // Ti?n ï¿½ch: tï¿½m Admin theo ID
     public Admin findById(int id) {
         String sql = "SELECT u.id, u.name, u.username, u.password, u.email, u.phone, u.address, u.status, " +
                      "u.created_at, u.updated_at, u.created_by, u.updated_by, " +
                      "a.department, a.last_login " +
                      "FROM user u INNER JOIN admin a ON u.id = a.admin_id " +
                      "WHERE u.id = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return getFromResultSet(rs);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return null;
     }

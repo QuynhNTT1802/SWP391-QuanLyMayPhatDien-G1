@@ -81,14 +81,7 @@ public class ProposalExcelSupport {
         return headerStyle;
     }
 
-    /**
-     * Tạo file mẫu Excel với 16 cột. Mỗi sample row điền đủ thông tin máy (tham khảo) +
-     * tên nhà cung cấp + đơn giá + số lượng để người dùng đối chiếu.
-     *
-     * @param sampleGenerators danh sách máy phát active (tối đa 3 sẽ được lấy làm mẫu)
-     * @param sampleSuppliers  danh sách NCC active (tối đa 3 sẽ được lấy làm mẫu)
-     * @param categoryMapByType map[type → Map<categoryId, name>] cho brand/origin/condition/fuel/phase/gen_type
-     */
+
     public static XSSFWorkbook createTemplateWorkbook(
             List<Generator> sampleGenerators,
             List<Supplier> sampleSuppliers,
@@ -106,7 +99,6 @@ public class ProposalExcelSupport {
             cell.setCellStyle(headerStyle);
         }
 
-        // Luôn chỉ dùng 1 dòng mẫu static (Honda), không lấy từ DB
         {
             Row row = sheet.createRow(1);
             int col = 0;

@@ -19,7 +19,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -194,14 +197,9 @@ public class PurchaseOrderController extends HttpServlet {
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
 
-        boolean quarterBlocked = warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId);
-
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
-        request.setAttribute("quarterBlocked", quarterBlocked);
-        request.setAttribute("blockedPeriod", period);
         if (warehouseId > 0) {
             List<ImportProposal> allProposals = new ImportProposalDAO()
                     .findPendingByPeriodAndWarehouse(period, warehouseId);
@@ -233,6 +231,7 @@ public class PurchaseOrderController extends HttpServlet {
     private void showReviewCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         if (perms == null || !perms.contains("purchase_orders.create")) {
             session.setAttribute("toastMessage", "Bạn không có quyền tạo phiếu mua");
@@ -288,27 +287,15 @@ public class PurchaseOrderController extends HttpServlet {
                 return;
             }
         }
-        if (new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
 
         PurchaseOrderDAO poDao = new PurchaseOrderDAO();
         List<Map<String, Object>> aggregations = poDao.aggregateByProposalIds(proposalIds, warehouseId);
-        PurchaseOrder existingPo = poDao.findActivePoByPeriodWarehouse(period, warehouseId);
-        boolean quarterBlocked = poDao.hasRejectedPo(period, warehouseId);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("aggregations", aggregations);
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("existingPo", existingPo);
-        request.setAttribute("quarterBlocked", quarterBlocked);
-        request.setAttribute("blockedPeriod", period);
 
         List<Map<String, Object>> creatorGroups = new ArrayList<>();
         String lastCreator = null;
@@ -330,6 +317,8 @@ public class PurchaseOrderController extends HttpServlet {
         }
         request.setAttribute("creatorGroups", creatorGroups);
 
+        request.setAttribute("canApproveProposal", perms != null && perms.contains("proposals.approve"));
+        request.setAttribute("currentUserId", user.getId());
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-review-create.jsp").forward(request, response);
     }
@@ -344,15 +333,6 @@ public class PurchaseOrderController extends HttpServlet {
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
-
-        if (period != null && !period.isEmpty() && warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] proposalIdArr = request.getParameterValues("proposalId");
@@ -471,15 +451,6 @@ public class PurchaseOrderController extends HttpServlet {
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
 
-        if (period != null && !period.isEmpty() && warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
         String[] genIds = request.getParameterValues("generatorId");
         String[] proposalIdArr = request.getParameterValues("proposalId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
@@ -505,19 +476,6 @@ public class PurchaseOrderController extends HttpServlet {
 
         try {
             PurchaseOrderDAO dao = new PurchaseOrderDAO();
-
-            PurchaseOrder existing = dao.findActivePoByPeriodWarehouse(period, warehouseId);
-            if (existing != null) {
-                session.setAttribute("toastMessage",
-                        "Đã tồn tại phiếu mua " + existing.getPoCode()
-                        + " (trạng thái " + existing.getStatus() + ") cho kỳ và kho này");
-                StringBuilder back = new StringBuilder("/purchase-order?action=reviewCreate");
-                for (Integer pid : proposalIds) {
-                    back.append("&proposalIds=").append(pid);
-                }
-                response.sendRedirect(request.getContextPath() + back.toString());
-                return;
-            }
 
             PurchaseOrderDAO aggDao = new PurchaseOrderDAO();
             List<Map<String, Object>> aggs = aggDao.aggregateByProposalIds(proposalIds, warehouseId);
@@ -633,6 +591,14 @@ public class PurchaseOrderController extends HttpServlet {
             }
         }
 
+        String tab = request.getParameter("tab");
+        String currentTab = "history".equals(tab) ? "history" : "info";
+        request.setAttribute("currentTab", currentTab);
+
+        if ("history".equals(currentTab)) {
+            buildHistoryLog(request, po);
+        }
+
         List<ImportProposal> sourceProposals = dao.findProposalsByPo(id);
         request.setAttribute("po", po);
         request.setAttribute("grandTotal", grandTotal);
@@ -641,6 +607,169 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("canCreatePo", perms.contains("purchase_orders.create"));
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-detail.jsp").forward(request, response);
+    }
+
+    private void buildHistoryLog(HttpServletRequest request, PurchaseOrder po) {
+        String logSearch = request.getParameter("logSearch");
+        String logAction = request.getParameter("logAction");
+        String dateFrom = request.getParameter("dateFrom");
+        String dateTo = request.getParameter("dateTo");
+
+        List<Map<String, Object>> logList = new ArrayList<>();
+
+        if (po.getCreatedAt() != null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getCreatedAt()));
+            m.put("user", po.getCreatedByName() != null ? po.getCreatedByName() : "—");
+            m.put("action", "CREATE");
+            m.put("actionLabel", "Tạo phiếu mua");
+            m.put("details", "Tạo phiếu mua " + po.getPoCode());
+            logList.add(m);
+        }
+
+        if (po.getSentToCeoAt() != null
+                && (po.getCreatedAt() == null || !po.getSentToCeoAt().isEqual(po.getCreatedAt()))) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getSentToCeoAt()));
+            m.put("user", po.getCreatedByName() != null ? po.getCreatedByName() : "—");
+            m.put("action", "SEND_TO_CEO");
+            m.put("actionLabel", "Gửi CEO duyệt");
+            m.put("details", "Gửi phiếu mua " + po.getPoCode() + " cho CEO duyệt");
+            logList.add(m);
+        }
+
+        if (po.getApprovedBy() != null && po.getApprovedAt() != null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getApprovedAt()));
+            m.put("user", po.getApprovedByName() != null ? po.getApprovedByName() : "—");
+            m.put("action", "APPROVE");
+            m.put("actionLabel", "Duyệt phiếu mua");
+            m.put("details", "Duyệt phiếu mua " + po.getPoCode());
+            logList.add(m);
+        }
+
+        if ("RETURNED".equals(po.getStatus()) && po.getRejectedAt() != null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getRejectedAt()));
+            m.put("user", po.getRejectedByName() != null ? po.getRejectedByName() : "—");
+            m.put("action", "RETURN");
+            m.put("actionLabel", "Trả lại chỉnh sửa");
+            m.put("details", "Trả lại phiếu mua cho bộ phận tạo"
+                    + (po.getRejectReason() != null ? ": " + po.getRejectReason() : ""));
+            logList.add(m);
+        } else if ("REJECTED".equals(po.getStatus()) && po.getRejectedAt() != null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getRejectedAt()));
+            m.put("user", po.getRejectedByName() != null ? po.getRejectedByName() : "—");
+            m.put("action", "REJECT");
+            m.put("actionLabel", "Từ chối");
+            m.put("details", "Từ chối phiếu mua"
+                    + (po.getRejectReason() != null ? ": " + po.getRejectReason() : ""));
+            logList.add(m);
+        }
+
+        if ("CANCELLED".equals(po.getStatus()) && po.getRejectedAt() != null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getRejectedAt()));
+            m.put("user", po.getRejectedByName() != null ? po.getRejectedByName() : "—");
+            String mode = po.getCancelMode();
+            String cancelLabel = "REBUILD".equals(mode) ? "Hủy & trả đề xuất về chờ duyệt" : "Hủy & từ chối đề xuất";
+            m.put("action", "CANCEL");
+            m.put("actionLabel", cancelLabel);
+            m.put("details", cancelLabel + " phiếu mua " + po.getPoCode()
+                    + (po.getCancelReason() != null ? ": " + po.getCancelReason() : ""));
+            logList.add(m);
+        }
+
+        if (po.getUpdatedAt() != null && po.getCreatedAt() != null
+                && po.getUpdatedAt().isAfter(po.getCreatedAt())
+                && !"RETURNED".equals(po.getStatus())
+                && !"REJECTED".equals(po.getStatus())
+                && !"CANCELLED".equals(po.getStatus())
+                && po.getApprovedBy() == null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("createdAt", toDate(po.getUpdatedAt()));
+            m.put("user", po.getCreatedByName() != null ? po.getCreatedByName() : "—");
+            m.put("action", "UPDATE");
+            m.put("actionLabel", "Cập nhật");
+            m.put("details", "Cập nhật nội dung phiếu mua");
+            logList.add(m);
+        }
+
+        List<Map<String, Object>> filtered = new ArrayList<>();
+        for (Map<String, Object> m : logList) {
+            if (logAction != null && !logAction.trim().isEmpty()
+                    && !logAction.equalsIgnoreCase((String) m.get("action"))) {
+                continue;
+            }
+            if (logSearch != null && !logSearch.trim().isEmpty()) {
+                String s = logSearch.trim().toLowerCase();
+                boolean match = ((String) m.get("user")).toLowerCase().contains(s)
+                        || ((String) m.get("actionLabel")).toLowerCase().contains(s)
+                        || ((String) m.get("details")).toLowerCase().contains(s);
+                if (!match) {
+                    continue;
+                }
+            }
+            Date created = (Date) m.get("createdAt");
+            if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+                try {
+                    Date from = new SimpleDateFormat("yyyy-MM-dd").parse(dateFrom);
+                    if (created.before(from)) {
+                        continue;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            if (dateTo != null && !dateTo.trim().isEmpty()) {
+                try {
+                    Date to = new SimpleDateFormat("yyyy-MM-dd").parse(dateTo);
+                    Date endOfDay = new Date(to.getTime() + 24L * 60 * 60 * 1000 - 1);
+                    if (created.after(endOfDay)) {
+                        continue;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            filtered.add(m);
+        }
+
+        filtered.sort((a, b) -> {
+            Date da = (Date) a.get("createdAt");
+            Date db = (Date) b.get("createdAt");
+            if (da == null && db == null) return 0;
+            if (da == null) return 1;
+            if (db == null) return -1;
+            return db.compareTo(da);
+        });
+
+        int pageSize = 20;
+        int page = 1;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Math.max(1, Integer.parseInt(pageStr));
+            } catch (NumberFormatException ignored) {
+                page = 1;
+            }
+        }
+        int totalLogs = filtered.size();
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
+        if (page > totalPages) page = totalPages;
+        int fromIdx = (page - 1) * pageSize;
+        int toIdx = Math.min(page * pageSize, totalLogs);
+        List<Map<String, Object>> pageList = fromIdx < totalLogs
+                ? filtered.subList(fromIdx, toIdx)
+                : new ArrayList<>();
+
+        request.setAttribute("logList", pageList);
+        request.setAttribute("logPage", page);
+        request.setAttribute("logTotalPages", totalPages);
+        request.setAttribute("totalLogs", totalLogs);
+        request.setAttribute("logSearch", logSearch != null ? logSearch : "");
+        request.setAttribute("logAction", logAction != null ? logAction : "");
+        request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
+        request.setAttribute("dateTo", dateTo != null ? dateTo : "");
     }
 
     private void showRejectForm(HttpServletRequest request, HttpServletResponse response)
@@ -947,5 +1076,10 @@ public class PurchaseOrderController extends HttpServlet {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private Date toDate(java.time.LocalDateTime ldt) {
+        if (ldt == null) return null;
+        return Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
 }
