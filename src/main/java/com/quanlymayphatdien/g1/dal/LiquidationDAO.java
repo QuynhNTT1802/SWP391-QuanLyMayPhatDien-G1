@@ -82,12 +82,17 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "ORDER BY l.created_at DESC";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql); ResultSet rs = p.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi lấy danh sách", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -108,17 +113,20 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             sql.append(" AND l.status = ?");
             params.add(status);
         }
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                p.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countTotal", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -144,17 +152,20 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         params.add(limit);
         params.add(offset);
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                p.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = p.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findWithPagination", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -166,17 +177,20 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             sql += " WHERE created_by = ?";
         }
         sql += " GROUP BY status";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             if (createdBy != null) {
-                p.setInt(1, createdBy);
+                statement.setInt(1, createdBy);
             }
-            try (ResultSet rs = p.executeQuery()) {
-                while (rs.next()) {
-                    kpis.put(rs.getString(1), rs.getInt(2));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                kpis.put(resultSet.getString(1), resultSet.getInt(2));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getKpiCounts", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return kpis;
     }
@@ -195,15 +209,18 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN category mf ON l.manager_feedback_id = mf.id "
                 + "LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id "
                 + "WHERE l.liquidation_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, id);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) {
-                    return getFromResultSet(rs);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findById", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -217,30 +234,34 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         }
         sql += " WHERE liquidation_id = ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setString(1, status);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, status);
             LocalDateTime now = LocalDateTime.now();
-            p.setObject(2, now);
+            statement.setObject(2, now);
 
             if (role.equals("manager")) {
-                p.setInt(3, reviewerId);
-                p.setObject(4, now);
-                p.setInt(5, liquidationId);
+                statement.setInt(3, reviewerId);
+                statement.setObject(4, now);
+                statement.setInt(5, liquidationId);
             } else if (role.equals("ceo")) {
-                p.setInt(3, reviewerId);
-                p.setObject(4, now);
+                statement.setInt(3, reviewerId);
+                statement.setObject(4, now);
                 if (receiptId != null) {
-                    p.setInt(5, receiptId);
+                    statement.setInt(5, receiptId);
                 } else {
-                    p.setNull(5, java.sql.Types.INTEGER);
+                    statement.setNull(5, java.sql.Types.INTEGER);
                 }
-                p.setInt(6, liquidationId);
+                statement.setInt(6, liquidationId);
             } else {
-                p.setInt(3, liquidationId);
+                statement.setInt(3, liquidationId);
             }
-            return p.executeUpdate() > 0;
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateStatus", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -252,17 +273,21 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     public boolean updateCeoReject(int liquidationId, int ceoId, int feedbackId, boolean isPermanent) {
         String status = isPermanent ? "REJECTED_BY_CEO" : "CEO_REQUEST_EDIT";
         String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_feedback_id = ?, updated_at = ? WHERE liquidation_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             LocalDateTime now = LocalDateTime.now();
-            p.setString(1, status);
-            p.setInt(2, ceoId);
-            p.setObject(3, now);
-            p.setInt(4, feedbackId);
-            p.setObject(5, now);
-            p.setInt(6, liquidationId);
-            return p.executeUpdate() > 0;
+            statement.setString(1, status);
+            statement.setInt(2, ceoId);
+            statement.setObject(3, now);
+            statement.setInt(4, feedbackId);
+            statement.setObject(5, now);
+            statement.setInt(6, liquidationId);
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCeoReject", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -270,42 +295,70 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     public boolean updateManagerReject(int liquidationId, int managerId, int feedbackId, boolean isPermanent) {
         String status = isPermanent ? "REJECTED_BY_MANAGER" : "MANAGER_REQUEST_EDIT";
         String sql = "UPDATE liquidation SET status = ?, manager_reviewed_by = ?, manager_reviewed_at = ?, manager_feedback_id = ?, updated_at = ? WHERE liquidation_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             LocalDateTime now = LocalDateTime.now();
-            p.setString(1, status);
-            p.setInt(2, managerId);
-            p.setObject(3, now);
-            p.setInt(4, feedbackId);
-            p.setObject(5, now);
-            p.setInt(6, liquidationId);
-            return p.executeUpdate() > 0;
+            statement.setString(1, status);
+            statement.setInt(2, managerId);
+            statement.setObject(3, now);
+            statement.setInt(4, feedbackId);
+            statement.setObject(5, now);
+            statement.setInt(6, liquidationId);
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateManagerReject", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     public boolean updateReasonAndStatus(int liquidationId, int reasonId) {
         String sql = "UPDATE liquidation SET reason_id = ?, status = 'PENDING_MANAGER', manager_feedback_id = NULL, manager_reviewed_by = NULL, manager_reviewed_at = NULL, updated_at = ? WHERE liquidation_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, reasonId);
-            p.setObject(2, LocalDateTime.now());
-            p.setInt(3, liquidationId);
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, reasonId);
+            statement.setObject(2, LocalDateTime.now());
+            statement.setInt(3, liquidationId);
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateReasonAndStatus", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     public boolean updateCustomer(int liquidationId, int customerId) {
         String sql = "UPDATE liquidation SET customer_id = ? WHERE liquidation_id = ?";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, customerId);
-            p.setInt(2, liquidationId);
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, customerId);
+            statement.setInt(2, liquidationId);
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCustomer", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean updateCancel(int liquidationId) {
+        String sql = "UPDATE liquidation SET status = 'CANCELLED', updated_at = ? WHERE liquidation_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setObject(1, LocalDateTime.now());
+            statement.setInt(2, liquidationId);
+            return statement.executeUpdate() > 0;
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCancel", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -324,28 +377,31 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     public int insert(Liquidation t) {
         String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, created_at, updated_at) "
                 + "VALUES (?, ?, 'PENDING_MANAGER', ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            p.setString(1, t.getLiquidationCode());
-            p.setInt(2, t.getCreatedBy());
-            p.setInt(3, t.getReasonId());
-            p.setInt(4, t.getWarehouseId());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, t.getLiquidationCode());
+            statement.setInt(2, t.getCreatedBy());
+            statement.setInt(3, t.getReasonId());
+            statement.setInt(4, t.getWarehouseId());
             if (t.getCustomerId() != null) {
-                p.setInt(5, t.getCustomerId());
+                statement.setInt(5, t.getCustomerId());
             } else {
-                p.setNull(5, java.sql.Types.INTEGER);
+                statement.setNull(5, java.sql.Types.INTEGER);
             }
             LocalDateTime now = LocalDateTime.now();
-            p.setObject(6, now);
-            p.setObject(7, now);
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            statement.setObject(6, now);
+            statement.setObject(7, now);
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
                 }
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi tạo đơn", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return -1;
     }

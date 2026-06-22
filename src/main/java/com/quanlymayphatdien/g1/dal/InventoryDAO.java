@@ -85,16 +85,20 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             sql.append("AND g.model LIKE ? ");
             params.add("%" + search.trim() + "%");
         }
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -260,16 +264,19 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     public int countTotalInStockByGenerator(int generatorId) {
         String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND status = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, generatorId);
-            ps.setString(2, STATUS_IN_STOCK);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            statement.setString(2, STATUS_IN_STOCK);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -495,11 +502,14 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
      * Overload khong can connection (tu mo connection rieng).
      */
     public boolean updateStatusBySerial(String serialNumber, String newStatus) {
-        try (Connection c = getConnection()) {
-            return updateStatusBySerial(c, serialNumber, newStatus) > 0;
+        try {
+            connection = getConnection();
+            return updateStatusBySerial(connection, serialNumber, newStatus) > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -614,10 +624,13 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     public boolean isInStockAtWarehouse(String serialNumber, int warehouseId) {
-        try (Connection c = getConnection()) {
-            return isInStockAtWarehouse(c, serialNumber, warehouseId);
+        try {
+            connection = getConnection();
+            return isInStockAtWarehouse(connection, serialNumber, warehouseId);
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -685,12 +698,17 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
                 + "WHERE w.status = 'active' AND i.status = 'IN_STOCK' "
                 + "GROUP BY i.warehouse_id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                map.put(rs.getInt("warehouse_id"), rs.getInt("cnt"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                map.put(resultSet.getInt("warehouse_id"), resultSet.getInt("cnt"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return map;
     }
@@ -704,13 +722,18 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "FROM inventory i "
                 + "WHERE i.status = 'IN_STOCK' "
                 + "GROUP BY i.warehouse_id, i.generator_id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                String key = rs.getInt("warehouse_id") + "_" + rs.getInt("generator_id");
-                map.put(key, rs.getInt("cnt"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getInt("warehouse_id") + "_" + resultSet.getInt("generator_id");
+                map.put(key, resultSet.getInt("cnt"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return map;
     }
@@ -719,36 +742,51 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         String sql = "SELECT COUNT(*) FROM inventory i "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
                 + "WHERE w.status = 'active' AND i.status = 'IN_STOCK'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getLong(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getLong(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public int countActiveWarehouses() {
         String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'active'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public int countLockedWarehouses() {
         String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'locked'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -758,15 +796,18 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
      */
     public int countDistinctGeneratorsInStockByWarehouse(int warehouseId) {
         String sql = "SELECT COUNT(DISTINCT generator_id) FROM inventory WHERE warehouse_id = ? AND status = 'IN_STOCK'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, warehouseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -776,15 +817,18 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
      */
     public int countByWarehouseId(int warehouseId) {
         String sql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND status = 'IN_STOCK'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, warehouseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -928,6 +972,8 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -944,6 +990,8 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }

@@ -37,17 +37,20 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         params.add(pageSize);
         params.add((page - 1) * pageSize);
 
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -69,17 +72,20 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             params.add(status);
         }
 
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -90,15 +96,18 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
                 + "JOIN warehouse w ON ic.warehouse_id = w.warehouse_id "
                 + "JOIN user u ON ic.created_by = u.id "
                 + "WHERE ic.id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return getFromResultSet(rs);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -115,23 +124,25 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         String sql = "INSERT INTO inventory_check (check_code, warehouse_id, status, notes, "
                 + "created_by, started_at, created_at) "
                 + "VALUES (?, ?, 'doing', ?, ?, ?, ?)";
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, check.getCheckCode());
-            ps.setInt(2, check.getWarehouseId());
-            ps.setString(3, check.getNotes());
-            ps.setInt(4, check.getCreatedBy());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, check.getCheckCode());
+            statement.setInt(2, check.getWarehouseId());
+            statement.setString(3, check.getNotes());
+            statement.setInt(4, check.getCreatedBy());
             LocalDateTime now = LocalDateTime.now();
-            ps.setTimestamp(5, Timestamp.valueOf(now));
-            ps.setTimestamp(6, Timestamp.valueOf(now));
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            statement.setTimestamp(5, Timestamp.valueOf(now));
+            statement.setTimestamp(6, Timestamp.valueOf(now));
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return -1;
     }
@@ -139,13 +150,17 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
     @Override
     public boolean update(InventoryCheck check) {
         String sql = "UPDATE inventory_check SET warehouse_id = ?, notes = ? WHERE id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, check.getWarehouseId());
-            ps.setString(2, check.getNotes());
-            ps.setInt(3, check.getId());
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, check.getWarehouseId());
+            statement.setString(2, check.getNotes());
+            statement.setInt(3, check.getId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -153,12 +168,16 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
     public boolean complete(int id) {
         String sql = "UPDATE inventory_check SET status = 'completed', completed_at = ? "
                 + "WHERE id = ? AND status = 'doing'";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
-            ps.setInt(2, id);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, id);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -183,15 +202,18 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
                 + "JOIN generator g ON icd.generator_id = g.id "
                 + "WHERE icd.check_id = ? "
                 + "ORDER BY g.model";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getDetailFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getDetailFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -200,25 +222,27 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         String sql = "INSERT INTO inventory_check_detail "
                 + "(check_id, generator_id, system_quantity, actual_quantity, notes) "
                 + "VALUES (?, ?, ?, ?, ?)";
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, detail.getCheckId());
-            ps.setInt(2, detail.getGeneratorId());
-            ps.setInt(3, detail.getSystemQuantity());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, detail.getCheckId());
+            statement.setInt(2, detail.getGeneratorId());
+            statement.setInt(3, detail.getSystemQuantity());
             if (detail.getActualQuantity() != null) {
-                ps.setInt(4, detail.getActualQuantity());
+                statement.setInt(4, detail.getActualQuantity());
             } else {
-                ps.setNull(4, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
-            ps.setString(5, detail.getNotes());
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            statement.setString(5, detail.getNotes());
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return -1;
     }
@@ -245,17 +269,21 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
 
     public boolean updateDetail(InventoryCheckDetail detail) {
         String sql = "UPDATE inventory_check_detail SET actual_quantity = ?, notes = ? WHERE id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             if (detail.getActualQuantity() != null) {
-                ps.setInt(1, detail.getActualQuantity());
+                statement.setInt(1, detail.getActualQuantity());
             } else {
-                ps.setNull(1, Types.INTEGER);
+                statement.setNull(1, Types.INTEGER);
             }
-            ps.setString(2, detail.getNotes());
-            ps.setInt(3, detail.getId());
-            return ps.executeUpdate() > 0;
+            statement.setString(2, detail.getNotes());
+            statement.setInt(3, detail.getId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -285,55 +313,69 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
 
     public boolean deleteDetailsByCheckId(int checkId) {
         String sql = "DELETE FROM inventory_check_detail WHERE check_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            ps.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            statement.executeUpdate();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     public int countDetailsByCheckId(int checkId) {
         String sql = "SELECT COUNT(*) FROM inventory_check_detail WHERE check_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public int countTotal() {
         String sql = "SELECT COUNT(*) FROM inventory_check";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public int countByStatus(String status) {
         String sql = "SELECT COUNT(*) FROM inventory_check WHERE status = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, status);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, status);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -386,15 +428,18 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
                 + "JOIN generator g ON icd.generator_id = g.id "
                 + "WHERE icd.check_id = ? "
                 + "ORDER BY icd.id, ics.id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getSerialFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getSerialFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -402,15 +447,18 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
     public List<InventoryCheckSerial> findSerialsByDetailId(int detailId) {
         List<InventoryCheckSerial> list = new ArrayList<>();
         String sql = "SELECT * FROM inventory_check_serial WHERE check_detail_id = ? ORDER BY id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, detailId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getSerialFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, detailId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getSerialFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -452,15 +500,18 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         String sql = "SELECT COUNT(*) FROM inventory_check_serial ics "
                 + "JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
                 + "WHERE icd.check_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -469,16 +520,19 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         String sql = "SELECT COUNT(*) FROM inventory_check_serial ics "
                 + "JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
                 + "WHERE icd.check_id = ? AND ics.status = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            ps.setString(2, status);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            statement.setString(2, status);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -487,15 +541,18 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         String sql = "SELECT COUNT(*) FROM inventory_check_serial ics "
                 + "JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
                 + "WHERE icd.check_id = ? AND ics.status IS NULL";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, checkId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, checkId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }

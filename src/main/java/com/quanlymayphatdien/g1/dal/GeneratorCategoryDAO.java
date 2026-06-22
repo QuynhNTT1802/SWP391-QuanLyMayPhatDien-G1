@@ -34,12 +34,15 @@ public class GeneratorCategoryDAO extends DBContext {
 
     public void deleteByGenerator(int generatorId) {
         String sql = "DELETE FROM generator_category WHERE generator_id = ?";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, generatorId);
-            p.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
     }
 
@@ -48,21 +51,23 @@ public class GeneratorCategoryDAO extends DBContext {
         String sql = "SELECT c.* FROM category c "
                 + "JOIN generator_category gc ON c.id = gc.category_id "
                 + "WHERE gc.generator_id = ? ORDER BY c.type, c.name";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, generatorId);
-            try (ResultSet rs = p.executeQuery()) {
-                while (rs.next()) {
-                    Category cat = new Category();
-                    cat.setId(rs.getInt("id"));
-                    cat.setName(rs.getString("name"));
-                    cat.setType(rs.getString("type"));
-                    cat.setDescription(rs.getString("description"));
-                    list.add(cat);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Category cat = new Category();
+                cat.setId(resultSet.getInt("id"));
+                cat.setName(resultSet.getString("name"));
+                cat.setType(resultSet.getString("type"));
+                cat.setDescription(resultSet.getString("description"));
+                list.add(cat);
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }

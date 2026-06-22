@@ -7,8 +7,6 @@ package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.Permission;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -23,71 +21,75 @@ import java.util.Set;
  * @author LENOVO
  */
 public class PermissionDAO extends DBContext implements I_DAO<Permission> {
-    
+
     //ABAC override -> RBAC
     public Set<String> getEffectPermissions(int userId) throws SQLException {
-    Set<String> permissions = getRolePermissions(userId);
-    Set<String> denies = applyOverrides(userId, permissions);
-    autoGrantViews(permissions, denies);
-    return permissions;
+        Set<String> permissions = getRolePermissions(userId);
+        Set<String> denies = applyOverrides(userId, permissions);
+        autoGrantViews(permissions, denies);
+        return permissions;
 
-}
+    }
 
     private void autoGrantViews(Set<String> permissions, Set<String> denies) {
-    Set<String> toAdd = new HashSet<>();
-    for (String perm : permissions) {
-        int dot = perm.lastIndexOf('.');
-        if (dot > 0) {
-            String action = perm.substring(dot + 1);
-            if (!"view".equals(action)) {              
-                String viewPerm = perm.substring(0, dot) + ".view";
-                if (!denies.contains(viewPerm)             
-                    && !permissions.contains(viewPerm)) {     
-                    toAdd.add(viewPerm);
+        Set<String> toAdd = new HashSet<>();
+        for (String perm : permissions) {
+            int dot = perm.lastIndexOf('.');
+            if (dot > 0) {
+                String action = perm.substring(dot + 1);
+                if (!"view".equals(action)) {
+                    String viewPerm = perm.substring(0, dot) + ".view";
+                    if (!denies.contains(viewPerm)
+                            && !permissions.contains(viewPerm)) {
+                        toAdd.add(viewPerm);
+                    }
                 }
             }
         }
+        permissions.addAll(toAdd);
     }
-    permissions.addAll(toAdd);
-}
-    
+
     //lay quyen dua tren role goc
-    public Set<String> getRolePermissions(int userId) throws SQLException {
+    public Set<String> getRolePermissions(int userId) {
         Set<String> permissions = new HashSet<>();
         String sql = "select p.resource, p.action from permission p "
                 + "join role_permission rp on p.id = rp.permission_id "
                 + "join user_role ur on rp.role_id = ur.role_id "
                 + "join role r on r.id = ur.role_id "
                 + "where ur.user_id = ? and r.status = 'active'";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, userId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                String key = rs.getString("resource") + "." + rs.getString("action");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getString("resource") + "." + resultSet.getString("action");
                 permissions.add(key);
             }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.getRolePermissions", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return permissions;
     }
 
     // xu li quyen ngoai le overide uu tien cao nhat
-    public Set<String> applyOverrides(int userId, Set<String> permissions) throws SQLException {
+    public Set<String> applyOverrides(int userId, Set<String> permissions) {
         Set<String> grants = new HashSet<>();
         Set<String> denies = new HashSet<>();
 
         String sql = "select * from permission p join user_permission up "
                 + "on p.id = up.permission_id "
                 + "where up.user_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, userId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                String key = rs.getString("resource") + "." + rs.getString("action");
-                String type = rs.getString("type");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getString("resource") + "." + resultSet.getString("action");
+                String type = resultSet.getString("type");
 
                 if ("GRANT".equals(type)) {
                     grants.add(key);
@@ -96,8 +98,10 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 }
             }
 
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.applyOverrides", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         permissions.addAll(grants);
         permissions.removeAll(denies);
@@ -105,82 +109,94 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     }
 
     //xem detail cua mot role cu the co nhung quyen j
-    public List<Permission> getPermissionByRoleId(int roleId) throws SQLException {
+    public List<Permission> getPermissionByRoleId(int roleId) {
         List<Permission> list = new ArrayList<>();
         String sql = "select p.* from permission p join role_permission rp "
                 + "on p.id = rp.permission_id "
                 + "where rp.role_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, roleId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, roleId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.getPermissionByRoleId", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
     // lay danh sach quyen ngoai le cua 1 user
-    public List<String[]> getUserOverrides(int userId) throws SQLException {
+    public List<String[]> getUserOverrides(int userId) {
         List<String[]> list = new ArrayList<>();
         String sql = "select p.resource, p.action, up.type from permission p "
                 + "join user_permission up "
                 + "on p.id = up.permission_id "
                 + "where up.user_id = ?";
 
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, userId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                String key = rs.getString("resource") + "." + rs.getString("action");
-                String type = rs.getString("type");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getString("resource") + "." + resultSet.getString("action");
+                String type = resultSet.getString("type");
                 String[] value = new String[]{key, type};
                 list.add(value);
             }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.getUserOverrides", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
     //them moi hoac cap nhat quyen ngoai le cho user
-    public boolean setUserOverride(int userId, int perId, String type) throws SQLException {
+    public boolean setUserOverride(int userId, int perId, String type) {
         String sql = "INSERT INTO user_permission (user_id, permission_id, type) "
                 + "VALUES (?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE type = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, userId);
-            p.setInt(2, perId);
-            p.setString(3, type);
-            p.setString(4, type);
-            return p.executeUpdate() > 0;
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            statement.setInt(2, perId);
+            statement.setString(3, type);
+            statement.setString(4, type);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.setUserOverride", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     // xoa bo quyen ngoai le ca nhan luc do user tro lai quyen mac dich RBAC
-    public boolean removeUserOverride(int userId, int perId) throws SQLException {
+    public boolean removeUserOverride(int userId, int perId) {
         String sql = "DELETE FROM user_permission WHERE user_id = ? AND permission_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, userId);
-            p.setInt(2, perId);
-            return p.executeUpdate() > 0;
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            statement.setInt(2, perId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.removeUserOverride", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     public void applyUserOverrides(int userId, List<Permission> allPermissions,
-                                    Map<Integer, String> overrides) throws SQLException {
+            Map<Integer, String> overrides) throws SQLException {
         Map<Integer, Permission> permById = new HashMap<>();
         Map<String, Integer> resourceViewPermId = new HashMap<>();
         for (Permission p : allPermissions) {
@@ -216,14 +232,17 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     public List<Permission> findAll() {
         List<Permission> list = new ArrayList<>();
         String sql = "select * from permission order by module, feature_name, action";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.findAll", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -246,14 +265,14 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
     @Override
     public Permission getFromResultSet(ResultSet rs) throws SQLException {
         return new Permission(
-            rs.getInt("id"),
-            rs.getString("resource"),
-            rs.getString("action"),
-            rs.getString("description"),
-            rs.getString("module"),
-            rs.getString("feature_name"),
-            rs.getString("task_type")
-         );
+                rs.getInt("id"),
+                rs.getString("resource"),
+                rs.getString("action"),
+                rs.getString("description"),
+                rs.getString("module"),
+                rs.getString("feature_name"),
+                rs.getString("task_type")
+        );
     }
 
 }

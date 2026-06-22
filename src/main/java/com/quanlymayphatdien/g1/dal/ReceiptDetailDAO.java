@@ -34,15 +34,18 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                    + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
                    + "LEFT JOIN generator g ON i.generator_id = g.id "
                    + "WHERE rd.receipt_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, receiptId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, receiptId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -61,18 +64,21 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     public int insert(ReceiptDetail rd) {
         String sql = "INSERT INTO receipt_detail (receipt_id, inventory_id, note) "
                    + "VALUES (?, ?, ?)";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, rd.getReceiptId());
-            ps.setInt(2, rd.getInventoryId());
-            ps.setString(3, rd.getNote());
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, rd.getReceiptId());
+            statement.setInt(2, rd.getInventoryId());
+            statement.setString(3, rd.getNote());
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return -1;
     }
@@ -98,16 +104,19 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                    + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
                    + "WHERE rd.receipt_id = ? AND i.generator_id = ? "
                    + "ORDER BY rd.receipt_detail_id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, receiptId);
-            ps.setInt(2, generatorId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(rs.getInt("inventory_id"));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, receiptId);
+            statement.setInt(2, generatorId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(resultSet.getInt("inventory_id"));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -115,15 +124,18 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     public List<Integer> findInventoryIdsByReceiptId(int receiptId) {
         List<Integer> list = new ArrayList<>();
         String sql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, receiptId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(rs.getInt("inventory_id"));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, receiptId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(resultSet.getInt("inventory_id"));
             }
         } catch (SQLException e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -133,16 +145,18 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
             + "JOIN receipt r ON rd.receipt_id = r.receipt_id "
             + "WHERE rd.serial_number = ? AND r.receipt_type = 'IMPORT' "
             + "ORDER BY r.created_at DESC LIMIT 1";
-          try (Connection c = getConnection();
-               PreparedStatement ps = c.prepareStatement(sql)) {
-               ps.setString(1, serialNumber);
-               try (ResultSet rs  = ps.executeQuery()) {
-                   if(rs.next()) {
-                       return rs.getBigDecimal("unit_price");
-                   }
-               } catch(Exception e) {
-                   SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null? e.getMessage() : e.getClass().getName(),e);
-               }
+          try {
+              connection = getConnection();
+              statement = connection.prepareStatement(sql);
+              statement.setString(1, serialNumber);
+              resultSet = statement.executeQuery();
+              if (resultSet.next()) {
+                  return resultSet.getBigDecimal("unit_price");
+              }
+          } catch(Exception e) {
+              SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null? e.getMessage() : e.getClass().getName(),e);
+          } finally {
+              closeResources();
           }
           return null;
     }

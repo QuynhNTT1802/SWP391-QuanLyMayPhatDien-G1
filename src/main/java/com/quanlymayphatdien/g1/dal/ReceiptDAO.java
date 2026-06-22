@@ -101,6 +101,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return allReceipts.subList(start, end);
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
@@ -156,6 +158,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -188,6 +192,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -482,6 +488,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -508,6 +516,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
