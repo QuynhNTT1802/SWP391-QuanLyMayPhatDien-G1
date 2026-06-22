@@ -32,20 +32,20 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
     public List<Transfer> findAll() {
         List<Transfer> list = new ArrayList<>();
         String sql = "SELECT t.*, "
-                   + "  ws.name AS source_warehouse_name, "
-                   + "  wd.name AS dest_warehouse_name, "
-                   + "  u1.name AS created_by_name, "
-                   + "  u2.name AS manager_reviewed_by_name, "
-                   + "  u3.name AS ceo_reviewed_by_name, "
-                   + "  u4.name AS final_reviewed_by_name "
-                   + "FROM transfer t "
-                   + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
-                   + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
-                   + "LEFT JOIN user u1 ON t.created_by = u1.id "
-                   + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
-                   + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
-                   + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
-                   + "ORDER BY t.created_at DESC";
+                + "  ws.name AS source_warehouse_name, "
+                + "  wd.name AS dest_warehouse_name, "
+                + "  u1.name AS created_by_name, "
+                + "  u2.name AS manager_reviewed_by_name, "
+                + "  u3.name AS ceo_reviewed_by_name, "
+                + "  u4.name AS final_reviewed_by_name "
+                + "FROM transfer t "
+                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+                + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
+                + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
+                + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "ORDER BY t.created_at DESC";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -138,7 +138,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 statement.setObject(i + 1, params.get(i));
             }
             resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getInt(1);
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
@@ -182,20 +184,20 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public Transfer findById(int id) {
         String sql = "SELECT t.*, "
-                   + "  ws.name AS source_warehouse_name, "
-                   + "  wd.name AS dest_warehouse_name, "
-                   + "  u1.name AS created_by_name, "
-                   + "  u2.name AS manager_reviewed_by_name, "
-                   + "  u3.name AS ceo_reviewed_by_name, "
-                   + "  u4.name AS final_reviewed_by_name "
-                   + "FROM transfer t "
-                   + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
-                   + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
-                   + "LEFT JOIN user u1 ON t.created_by = u1.id "
-                   + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
-                   + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
-                   + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
-                   + "WHERE t.transfer_id = ?";
+                + "  ws.name AS source_warehouse_name, "
+                + "  wd.name AS dest_warehouse_name, "
+                + "  u1.name AS created_by_name, "
+                + "  u2.name AS manager_reviewed_by_name, "
+                + "  u3.name AS ceo_reviewed_by_name, "
+                + "  u4.name AS final_reviewed_by_name "
+                + "FROM transfer t "
+                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+                + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
+                + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
+                + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "WHERE t.transfer_id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -219,7 +221,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
     @Override
     public int insert(Transfer t) {
         String sql = "INSERT INTO transfer (transfer_code, source_warehouse_id, dest_warehouse_id, "
-                   + "status, created_by, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "status, created_by, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -252,7 +254,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public boolean updateHeader(Transfer t) {
         String sql = "UPDATE transfer SET source_warehouse_id = ?, dest_warehouse_id = ?, "
-                   + "note = ?, updated_at = ? WHERE transfer_id = ? AND status = 'DRAFT'";
+                + "note = ?, updated_at = ? WHERE transfer_id = ? AND status = 'DRAFT'";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -299,7 +301,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public boolean submitForReview(int transferId, int userId) {
         String sql = "UPDATE transfer SET status = 'PENDING_MANAGER', updated_at = ? "
-                   + "WHERE transfer_id = ? AND status = 'DRAFT' AND created_by = ?";
+                + "WHERE transfer_id = ? AND status = 'DRAFT' AND created_by = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -318,9 +320,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public boolean managerApproveForward(int transferId, int managerId) {
         String sql = "UPDATE transfer SET status = 'PENDING_CEO', "
-                   + "manager_reviewed_by = ?, manager_reviewed_at = ?, updated_at = ? "
-                   + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
-                   + "AND ceo_reviewed_at IS NULL AND final_reviewed_at IS NULL";
+                + "manager_reviewed_by = ?, manager_reviewed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
+                + "AND ceo_reviewed_at IS NULL AND final_reviewed_at IS NULL";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -340,8 +342,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public boolean ceoApproveReturnToManager(int transferId, int ceoId) {
         String sql = "UPDATE transfer SET status = 'PENDING_MANAGER', "
-                   + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ? "
-                   + "WHERE transfer_id = ? AND status = 'PENDING_CEO' AND final_reviewed_at IS NULL";
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_CEO' AND final_reviewed_at IS NULL";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -361,8 +363,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public boolean staffCancel(int transferId, int userId) {
         String sql = "UPDATE transfer SET status = 'CANCELLED', updated_at = ? "
-                   + "WHERE transfer_id = ? AND created_by = ? "
-                   + "AND status IN ('DRAFT', 'PENDING_MANAGER') AND ceo_reviewed_at IS NULL";
+                + "WHERE transfer_id = ? AND created_by = ? "
+                + "AND status IN ('DRAFT', 'PENDING_MANAGER') AND ceo_reviewed_at IS NULL";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -392,9 +394,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         }
 
         String sql = "UPDATE transfer SET status = 'REJECTED', "
-                   + reviewerCol + " = ?, " + reviewerAtCol + " = ?, "
-                   + noteCol + " = ?, updated_at = ? "
-                   + "WHERE transfer_id = ? " + whereClause;
+                + reviewerCol + " = ?, " + reviewerAtCol + " = ?, "
+                + noteCol + " = ?, updated_at = ? "
+                + "WHERE transfer_id = ? " + whereClause;
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -419,10 +421,10 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
 
     public boolean setStatusCompleted(int transferId, int finalReviewerId) {
         String sql = "UPDATE transfer SET status = 'COMPLETED', "
-                   + "final_reviewed_by = ?, final_reviewed_at = ?, "
-                   + "executed_at = ?, updated_at = ? "
-                   + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
-                   + "AND ceo_reviewed_at IS NOT NULL AND final_reviewed_at IS NULL";
+                + "final_reviewed_by = ?, final_reviewed_at = ?, "
+                + "executed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
+                + "AND ceo_reviewed_at IS NOT NULL AND final_reviewed_at IS NULL";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -743,14 +745,16 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         t.setNote(rs.getString("note"));
         return t;
     }
-    
-     public boolean requestRevisionByManager(int transferId, int managerId, String note) {
+
+    public boolean requestRevisionByManager(int transferId, int managerId, String note) {
         String sql = "UPDATE transfer SET status = 'NEEDS_REVISION', "
                 + "manager_reviewed_by = ?, manager_reviewed_at = ?, "
                 + "manager_note = ?, updated_at = ? "
                 + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
                 + "AND ceo_reviewed_at IS NULL AND final_reviewed_at IS NULL";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+        try {
+            Connection c = getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
             ps.setInt(1, managerId);
             ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             if (note != null && !note.trim().isEmpty()) {
@@ -764,6 +768,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -774,7 +780,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "ceo_note = ?, updated_at = ? "
                 + "WHERE transfer_id = ? AND status = 'PENDING_CEO' "
                 + "AND final_reviewed_at IS NULL";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+        try {
+            Connection c = getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
             ps.setInt(1, ceoId);
             ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             if (note != null && !note.trim().isEmpty()) {
@@ -788,6 +796,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
