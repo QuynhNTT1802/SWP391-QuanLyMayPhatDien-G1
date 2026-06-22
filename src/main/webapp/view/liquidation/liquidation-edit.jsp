@@ -148,9 +148,9 @@
                                     <c:forEach var="g" items="${generators}">
                                         <c:if test="${g.id == d.generatorId}">
                                             <c:set var="modelName" value="${g.model}"/>
-                                            <c:set var="modelPrice" value="${g.unitPrice}"/>
                                         </c:if>
                                     </c:forEach>
+                                    <c:set var="modelPrice" value="${d.originalPrice}"/>
                                     <span class="initial-cart-item"
                                           data-gen-id="${d.generatorId}"
                                           data-model="<c:out value='${modelName}'/>"
