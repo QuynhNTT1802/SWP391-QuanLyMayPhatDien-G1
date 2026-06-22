@@ -49,18 +49,6 @@
                         <c:remove var="errors" scope="session"/>
                     </c:if>
 
-                    <c:set var="ctxFromPo" value="${not empty fromPo ? fromPo : sessionScope.formFromPo}"/>
-                    <c:set var="ctxFromGen" value="${not empty fromGen ? fromGen : sessionScope.formFromGen}"/>
-                    <c:if test="${not empty ctxFromPo}">
-                        <div style="background:var(--warn-soft, #fff8e1);color:var(--warn, #b45309);border:1px solid color-mix(in srgb, var(--warn, #b45309) 30%, transparent);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;font-size:13px;">
-                            <strong>Ngữ cảnh:</strong> Bạn đang tạo máy phát điện để phục vụ
-                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${ctxFromPo}" style="color:var(--warn); font-weight:600;">phiếu mua #${ctxFromPo}</a><c:if test="${not empty ctxFromGen}"> (đề xuất dùng máy ID ${ctxFromGen})</c:if>.
-                            Sau khi tạo xong, máy sẽ được gắn với generator_id trong đề xuất.
-                        </div>
-                        <c:remove var="formFromPo" scope="session"/>
-                        <c:remove var="formFromGen" scope="session"/>
-                    </c:if>
-
                     <a class="back-link" href="${pageContext.request.contextPath}/warehouse/generators?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại danh sách

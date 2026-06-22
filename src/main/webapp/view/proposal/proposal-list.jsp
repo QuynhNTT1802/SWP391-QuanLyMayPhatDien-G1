@@ -388,11 +388,6 @@
                                                                         <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
                                                                         <span class="label">Duyệt</span>
                                                                     </button>
-                                                                    <div class="dropdown-divider"></div>
-                                                                    <button class="dropdown-item revision" onclick="openRevisionModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
-                                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                        <span class="label">Yêu cầu chỉnh sửa</span>
-                                                                    </button>
                                                                 </c:if>
 
                                                                 <c:if test="${p.status == 'PENDING' && canRejectProposal}">
@@ -408,17 +403,6 @@
                                                                         <input type="hidden" name="id" value="${p.proposalId}" />
                                                                         <div class="dropdown-divider"></div>
                                                                         <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                            <span class="label">Huỷ phiếu</span>
-                                                                        </button>
-                                                                    </form>
-                                                                </c:if>
-
-                                                                <c:if test="${p.status == 'APPROVED' && canCancelProposal}">
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <div class="dropdown-divider"></div>
-                                                                        <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất đã duyệt?')">
                                                                             <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
                                                                             <span class="label">Huỷ phiếu</span>
                                                                         </button>

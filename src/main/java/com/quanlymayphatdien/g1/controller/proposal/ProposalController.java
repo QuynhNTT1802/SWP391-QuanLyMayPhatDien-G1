@@ -974,7 +974,8 @@ public class ProposalController extends HttpServlet {
                     enriched.put("gid", String.valueOf(g.getId()));
                     enriched.put("gname", g.getModel());
                 } else {
-                    errors.add("Không tìm thấy máy phát với mã: " + model.trim());
+                    enriched.put("gname", model.trim());
+                    warnings.add("Máy phát mới chưa có trong hệ thống: " + model.trim() + ".");
                 }
             }
 
@@ -1562,8 +1563,9 @@ public class ProposalController extends HttpServlet {
             return;
         }
         String gidStr = request.getParameter("gid");
-        if (gidStr == null || gidStr.isEmpty()) {
-            gidStr = request.getParameter("rowIndex");
+        String rowIdxStr = request.getParameter("rowIndex");
+        if ((gidStr == null || gidStr.isEmpty()) && (rowIdxStr != null && !rowIdxStr.isEmpty())) {
+            gidStr = rowIdxStr;
         }
         String supIdStr = request.getParameter("supplierId");
         int supId = parseInt(supIdStr);
@@ -1583,8 +1585,11 @@ public class ProposalController extends HttpServlet {
             return;
         }
         boolean found = false;
-        for (Map<String, String> p : rows) {
-            if (gidStr.equals(p.get("gid"))) {
+        boolean useRowIndex = rowIdxStr != null && !rowIdxStr.isEmpty();
+        int rowIdx = useRowIndex ? parseInt(rowIdxStr) : -1;
+        for (int i = 0; i < rows.size(); i++) {
+            Map<String, String> p = rows.get(i);
+            if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
                 p.put("supplierId", String.valueOf(s.getId()));
                 p.put("supplierNameResolved", s.getName());
                 p.remove("supplierQuery");
@@ -1601,8 +1606,9 @@ public class ProposalController extends HttpServlet {
         List<Map<String, String>> allRows =
                 (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
         if (allRows != null) {
-            for (Map<String, String> p : allRows) {
-                if (gidStr.equals(p.get("gid"))) {
+            for (int i = 0; i < allRows.size(); i++) {
+                Map<String, String> p = allRows.get(i);
+                if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
                     p.put("supplierId", String.valueOf(s.getId()));
                     p.put("supplierNameResolved", s.getName());
                     p.remove("supplierQuery");
@@ -1695,7 +1701,8 @@ public class ProposalController extends HttpServlet {
                     targetRow.put("gid", String.valueOf(g.getId()));
                     targetRow.put("gname", g.getModel());
                 } else {
-                    errors.add("Không tìm thấy máy phát với mã: " + newModel.trim());
+                    targetRow.put("gname", newModel.trim());
+                    targetRow.put("gwarnings", "Máy phát mới chưa có trong hệ thống: " + newModel.trim() + ".");
                 }
             }
 
@@ -1762,11 +1769,12 @@ public class ProposalController extends HttpServlet {
                 failedMap.put(sttStr, String.join("; ", errors));
             } else {
                 targetRow.remove("gerrors");
-                targetRow.remove("gwarnings");
                 fixedList.add(stt);
                 if (!supplierResolved) {
+                    targetRow.remove("gwarnings");
                     targetRow.put("gwarnings", "Chưa chọn được nhà cung cấp");
                 } else if (generatorResolved) {
+                    targetRow.remove("gwarnings");
                     Integer wid = (Integer) session.getAttribute("pendingImportWarehouseId");
                     if (wid != null && wid > 0 && !genDAO.isInWarehouse(
                             Integer.parseInt(targetRow.get("gid")), wid)) {

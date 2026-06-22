@@ -33,27 +33,6 @@
             .alert-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
             .alert-text { font-size: 13px; line-height: 1.45; opacity: 0.9; margin-bottom: 10px; }
             .alert-warn { background: var(--warn-soft, #fff8e1); color: var(--warn, #b45309); border-color: color-mix(in srgb, var(--warn, #b45309) 30%, transparent); }
-            .pending-new-banner { margin-bottom: 16px; }
-            .pending-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 12.5px;
-                margin-top: 6px;
-            }
-            .pending-table th, .pending-table td {
-                padding: 8px 10px;
-                border-bottom: 1px solid color-mix(in srgb, var(--warn, #b45309) 20%, transparent);
-                text-align: left;
-            }
-            .pending-table th {
-                font-weight: 600;
-                font-size: 11px;
-                text-transform: uppercase;
-                color: color-mix(in srgb, var(--warn, #b45309) 80%, var(--fg));
-            }
-            .pending-table td .muted { color: var(--muted); font-family: var(--font-mono); font-size: 11px; margin-left: 4px; }
-            .pending-table a { color: var(--accent); text-decoration: none; font-weight: 600; }
-            .pending-table a:hover { text-decoration: underline; }
             .btn-sm { padding: 4px 10px !important; font-size: 12px !important; }
         </style>
     </head>
@@ -78,56 +57,6 @@
                 </header>
 
                 <main>
-                    <c:set var="perms" value="${sessionScope.userPermissions}"/>
-                    <c:if test="${not empty pendingNewGenerators and perms.contains('generators.create')}">
-                        <div class="alert alert-warn pending-new-banner" role="alert">
-                            <svg class="alert-icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <div class="alert-body">
-                                <div class="alert-title">
-                                    Có <strong>${fn:length(pendingNewGenerators)}</strong> máy phát điện cần bạn cập nhật thông tin vào danh mục
-                                </div>
-                                <div class="alert-text">
-                                    Các máy này thuộc phiếu mua đã được CEO duyệt nhưng chưa từng có trong kho.
-                                    Bạn cần bổ sung brand, xuất xứ, nhiên liệu, pha… trước khi nhập kho.
-                                </div>
-                                <table class="pending-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Mã phiếu mua</th>
-                                            <th>Kho</th>
-                                            <th>Máy (ID)</th>
-                                            <th>Thương hiệu</th>
-                                            <th>Công suất</th>
-                                            <th>Số lượng</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="item" items="${pendingNewGenerators}">
-                                            <tr>
-                                                <td><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${item.poId}"><c:out value="${item.poCode}"/></a></td>
-                                                <td><c:out value="${item.warehouseName}"/></td>
-                                                <td>
-                                                    <strong><c:out value="${item.model}"/></strong>
-                                                    <span class="muted">#${item.generatorId}</span>
-                                                </td>
-                                                <td><c:out value="${empty item.brandName ? '—' : item.brandName}"/></td>
-                                                <td><span class="mono"><c:out value="${item.powerRating}"/> kVA</span></td>
-                                                <td><c:out value="${item.totalQuantity}"/></td>
-                                                <td>
-                                                    <a class="btn btn-primary btn-sm"
-                                                       href="${pageContext.request.contextPath}/warehouse/generators?action=update&id=${item.generatorId}&fromPo=${item.poId}">
-                                                        + Cập nhật máy này
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </c:if>
-
                     <div class="page-head">
                         <div class="left">
                             <div class="eyebrow">Quản trị</div>
