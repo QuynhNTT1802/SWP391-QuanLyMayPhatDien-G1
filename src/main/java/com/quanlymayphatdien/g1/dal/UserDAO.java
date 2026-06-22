@@ -91,38 +91,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         return false;
     }
 
-    @Override
-    public int insert(User user) {
-        String sql = "INSERT INTO user (name, username, password, email, phone, address, status, created_at, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, user.getName());
-            statement.setString(2, user.getUsername());
-            statement.setString(3, user.getPassword());
-            statement.setString(4, user.getEmail());
-            statement.setString(5, user.getPhone());
-            statement.setString(6, user.getAddress());
-            statement.setString(7, user.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
-            statement.setInt(9, user.getCreatedBy());
-
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows > 0) {
-                resultSet = statement.getGeneratedKeys();
-                if (resultSet.next()) {
-                    return resultSet.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } finally {
-            closeResources();
-        }
-        return false;
-    }
-
     public User findById(int id) {
         String sql = "SELECT * FROM user WHERE id = ?";
         try {
@@ -530,12 +498,12 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         List<Integer> list = new ArrayList<>();
         String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
         try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, roleId);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(resultSet.getInt("user_id"));
+            Connection c = getConnection();
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("user_id"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
