@@ -194,14 +194,9 @@ public class PurchaseOrderController extends HttpServlet {
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
 
-        boolean quarterBlocked = warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId);
-
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
-        request.setAttribute("quarterBlocked", quarterBlocked);
-        request.setAttribute("blockedPeriod", period);
         if (warehouseId > 0) {
             List<ImportProposal> allProposals = new ImportProposalDAO()
                     .findPendingByPeriodAndWarehouse(period, warehouseId);
@@ -289,27 +284,15 @@ public class PurchaseOrderController extends HttpServlet {
                 return;
             }
         }
-        if (new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
 
         PurchaseOrderDAO poDao = new PurchaseOrderDAO();
         List<Map<String, Object>> aggregations = poDao.aggregateByProposalIds(proposalIds, warehouseId);
-        PurchaseOrder existingPo = poDao.findActivePoByPeriodWarehouse(period, warehouseId);
-        boolean quarterBlocked = poDao.hasRejectedPo(period, warehouseId);
 
         request.setAttribute("proposals", proposals);
         request.setAttribute("aggregations", aggregations);
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("existingPo", existingPo);
-        request.setAttribute("quarterBlocked", quarterBlocked);
-        request.setAttribute("blockedPeriod", period);
 
         List<Map<String, Object>> creatorGroups = new ArrayList<>();
         String lastCreator = null;
@@ -347,15 +330,6 @@ public class PurchaseOrderController extends HttpServlet {
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
-
-        if (period != null && !period.isEmpty() && warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] proposalIdArr = request.getParameterValues("proposalId");
@@ -474,15 +448,6 @@ public class PurchaseOrderController extends HttpServlet {
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
 
-        if (period != null && !period.isEmpty() && warehouseId > 0
-                && new PurchaseOrderDAO().hasRejectedPo(period, warehouseId)) {
-            session.setAttribute("toastMessage",
-                    "Tháng " + period + " tại kho này đã bị CEO từ chối PO. Không thể tạo PO mới.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
         String[] genIds = request.getParameterValues("generatorId");
         String[] proposalIdArr = request.getParameterValues("proposalId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
@@ -508,19 +473,6 @@ public class PurchaseOrderController extends HttpServlet {
 
         try {
             PurchaseOrderDAO dao = new PurchaseOrderDAO();
-
-            PurchaseOrder existing = dao.findActivePoByPeriodWarehouse(period, warehouseId);
-            if (existing != null) {
-                session.setAttribute("toastMessage",
-                        "Đã tồn tại phiếu mua " + existing.getPoCode()
-                        + " (trạng thái " + existing.getStatus() + ") cho kỳ và kho này");
-                StringBuilder back = new StringBuilder("/purchase-order?action=reviewCreate");
-                for (Integer pid : proposalIds) {
-                    back.append("&proposalIds=").append(pid);
-                }
-                response.sendRedirect(request.getContextPath() + back.toString());
-                return;
-            }
 
             PurchaseOrderDAO aggDao = new PurchaseOrderDAO();
             List<Map<String, Object>> aggs = aggDao.aggregateByProposalIds(proposalIds, warehouseId);
