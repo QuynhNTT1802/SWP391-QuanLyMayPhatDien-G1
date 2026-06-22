@@ -480,12 +480,23 @@
             window.SESSION_DATA = window.SESSION_DATA || {};
             window.SESSION_DATA.message = '<c:out value="${sessionScope.message}"/>';
             window.SESSION_DATA.type = '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>';
+            <c:remove var="message" scope="session"/>
+            <c:remove var="messageType" scope="session"/>
             </c:if>
         </script>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                    if (typeof showToast === 'function') {
+                        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                    }
+                }
+            });
+        </script>
         <script>
             (function () {
                 var rows = document.querySelectorAll('#detailBody .detail-row');
