@@ -94,7 +94,7 @@
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <span><c:out value="${error}"/></span>
                         </div>
-                    </div>
+                    </c:if>
 
                     <script>
                         <c:if test="${not empty sessionScope.message}">
