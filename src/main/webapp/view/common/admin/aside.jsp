@@ -206,7 +206,7 @@
         </div>
     </c:if>
 
-    <c:if test="${not empty perms and perms.contains('system_log.view')}">
+    <!-- comment  <c:if test="${not empty perms and perms.contains('system_log.view')}">
         <a href="${pageContext.request.contextPath}/admin/system-log"
            class="${activePage == 'system-log' ? 'active' : ''}">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -218,7 +218,8 @@
             </svg>
             System Log
         </a>
-    </c:if>
+    </c:if> 
+    -->
 
 
     <c:if test="${not empty perms and (perms.contains('users.view') or perms.contains('roles.view') or perms.contains('forgot_pw.process'))}">
