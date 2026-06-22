@@ -466,27 +466,68 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public boolean rejectReceipt(int receiptId, int approvedBy, Integer reasonId, String reasonNote) {
-        String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
-                + "approved_at = ?, reason_id = ?, reason_note = ? "
-                + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
+        Connection conn = null;
         try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, approvedBy);
-            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            if (reasonId != null) {
-                statement.setInt(3, reasonId);
-            } else {
-                statement.setNull(3, Types.INTEGER);
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Lay danh sach inventory_id cua receipt
+            List<Integer> inventoryIds = new ArrayList<>();
+            String selInvSql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(selInvSql)) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        inventoryIds.add(rs.getInt("inventory_id"));
+                    }
+                }
             }
-            if (reasonNote != null && !reasonNote.trim().isEmpty()) {
-                statement.setString(4, reasonNote.trim());
-            } else {
-                statement.setNull(4, Types.VARCHAR);
+
+            // 2. Xoa inventory rows PENDING_IMPORT (receipt_detail se tu xoa nho ON DELETE CASCADE)
+            if (!inventoryIds.isEmpty()) {
+                String placeholders = String.join(",",
+                        java.util.Collections.nCopies(inventoryIds.size(), "?"));
+                String delInvSql = "DELETE FROM inventory WHERE status = ? AND inventory_id IN (" + placeholders + ")";
+                try (PreparedStatement ps = conn.prepareStatement(delInvSql)) {
+                    ps.setString(1, InventoryDAO.STATUS_PENDING_IMPORT);
+                    for (int i = 0; i < inventoryIds.size(); i++) {
+                        ps.setInt(i + 2, inventoryIds.get(i));
+                    }
+                    ps.executeUpdate();
+                }
             }
-            statement.setInt(5, receiptId);
-            return statement.executeUpdate() > 0;
+
+            // 3. Update receipt status
+            String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
+                    + "approved_at = ?, reason_id = ?, reason_note = ? "
+                    + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, approvedBy);
+                ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                if (reasonId != null) {
+                    ps.setInt(3, reasonId);
+                } else {
+                    ps.setNull(3, Types.INTEGER);
+                }
+                if (reasonNote != null && !reasonNote.trim().isEmpty()) {
+                    ps.setString(4, reasonNote.trim());
+                } else {
+                    ps.setNull(4, Types.VARCHAR);
+                }
+                ps.setInt(5, receiptId);
+                int updated = ps.executeUpdate();
+                if (updated == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
             System.out.println(e.getMessage());
         } finally {
             closeResources();

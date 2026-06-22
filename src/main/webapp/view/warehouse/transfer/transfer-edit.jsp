@@ -89,6 +89,17 @@
             font-size: 12.5px;
             margin-bottom: 12px;
         }
+        .alert-warn {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 14px; border-radius: var(--radius);
+            background: var(--warn-soft); color: var(--warn);
+            border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent);
+            font-size: 13px; line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .alert-warn svg { flex-shrink: 0; margin-top: 2px; }
+        .alert-warn .alert-body { flex: 1; }
+        .alert-warn pre { margin: 6px 0 0; font-family: inherit; font-size: 13px; white-space: pre-wrap; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -104,6 +115,16 @@
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Quay lại chi tiết
             </a>
+
+            <c:if test="${isRevision && (not empty transfer.managerNote or not empty transfer.ceoNote)}">
+                <div class="alert-warn" style="margin-top:14px;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    <div class="alert-body">
+                        <strong>Yêu cầu chỉnh sửa từ người duyệt</strong>
+                        <pre><c:out value="${not empty transfer.managerNote ? transfer.managerNote : transfer.ceoNote}"/></pre>
+                    </div>
+                </div>
+            </c:if>
 
             <div class="page-head">
                 <div class="eyebrow">Luân chuyển · Cập nhật phiếu</div>
@@ -243,7 +264,10 @@
                         <a class="btn" href="${pageContext.request.contextPath}/transfers?action=detail&id=${transfer.transferId}">Huỷ bỏ</a>
                         <button type="submit" form="transferForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                            Cập nhật phiếu
+                            <c:choose>
+                                <c:when test="${isRevision}">Lưu &amp; gửi lại duyệt</c:when>
+                                <c:otherwise>Cập nhật phiếu</c:otherwise>
+                            </c:choose>
                         </button>
                     </div>
                 </form>
