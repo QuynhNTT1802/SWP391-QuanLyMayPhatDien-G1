@@ -1035,15 +1035,13 @@ public class ProposalController extends HttpServlet {
                 }
             }
 
-            if (generatorResolved && warehouseId > 0
-                    && !genDAO.isInWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)) {
-                warnings.add("Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
-            }
-
             if (!errors.isEmpty()) {
                 enriched.put("gerrors", String.join("; ", errors));
                 invalidRows.add(enriched);
             } else if (!supplierResolved) {
+                if (!warnings.isEmpty()) {
+                    enriched.put("gwarnings", String.join("; ", warnings));
+                }
                 unresolvedSupplierRows.add(enriched);
             } else if (!warnings.isEmpty()) {
                 enriched.put("gwarnings", String.join("; ", warnings));
@@ -1107,14 +1105,26 @@ public class ProposalController extends HttpServlet {
         @SuppressWarnings("unchecked")
         List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
         if (pendingRows == null || pendingRows.isEmpty()) {
+            // Vẫn có thể có invalid rows trong pendingImportAllRows
+            List<Map<String, String>> emptyInvalid = new ArrayList<>();
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+            if (allRows != null) {
+                for (Map<String, String> r : allRows) {
+                    String errs = r.get("gerrors");
+                    if (errs != null && !errs.isEmpty()) {
+                        emptyInvalid.add(r);
+                    }
+                }
+            }
             request.setAttribute("validRows", new ArrayList<>());
             request.setAttribute("warningRows", new ArrayList<>());
-            request.setAttribute("invalidRows", new ArrayList<>());
+            request.setAttribute("invalidRows", emptyInvalid);
             request.setAttribute("unresolvedSupplierRows", new ArrayList<>());
             request.setAttribute("currentWarehouseId", 0);
             request.setAttribute("currentNote", "");
             request.setAttribute("warehouses", new WarehouseDAO().findAll());
-            request.setAttribute("sessionExpired", Boolean.TRUE);
+            request.setAttribute("sessionExpired", emptyInvalid.isEmpty() ? Boolean.TRUE : Boolean.FALSE);
             request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
                     .forward(request, response);
             return;
@@ -1204,6 +1214,18 @@ public class ProposalController extends HttpServlet {
                 warningRows.add(copy);
             } else {
                 validRows.add(copy);
+            }
+        }
+
+        // Merge invalid rows từ pendingImportAllRows (giữ lại dòng lỗi như qty=-1)
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+        if (allRows != null) {
+            for (Map<String, String> r : allRows) {
+                String errs = r.get("gerrors");
+                if (errs != null && !errs.isEmpty()) {
+                    invalidRows.add(r);
+                }
             }
         }
 
@@ -1775,12 +1797,6 @@ public class ProposalController extends HttpServlet {
                     targetRow.put("gwarnings", "Chưa chọn được nhà cung cấp");
                 } else if (generatorResolved) {
                     targetRow.remove("gwarnings");
-                    Integer wid = (Integer) session.getAttribute("pendingImportWarehouseId");
-                    if (wid != null && wid > 0 && !genDAO.isInWarehouse(
-                            Integer.parseInt(targetRow.get("gid")), wid)) {
-                        targetRow.put("gwarnings",
-                                "Máy chưa có trong kho này, cần báo cáo Sale Manager xét duyệt");
-                    }
                 }
             }
         }

@@ -195,13 +195,6 @@
                         </div>
                     </c:if>
 
-                    <c:if test="${proposal.hasNewGenerator() && proposal.status == 'APPROVED'}">
-                        <div class="alert alert-warn">
-                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span>Đề xuất có chứa máy phát điện chưa từng có trong kho ${proposal.warehouseName}. Sau khi phiếu mua được CEO duyệt, sale staff sẽ nhận thông báo trên menu "Máy phát điện" để cập nhật danh mục máy trước khi nhập kho.</span>
-                        </div>
-                    </c:if>
-
                     <c:set var="isOwner" value="${sessionScope.loggedUser.id == proposal.createdBy}" />
                     <c:set var="perms" value="${sessionScope.userPermissions}" />
                     <c:set var="canApprove" value="${perms.contains('proposals.approve')}" />
@@ -598,7 +591,7 @@
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
@@ -655,10 +648,6 @@
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt phiếu đề xuất này?');
-            }
-
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
             document.querySelectorAll('.modal-host').forEach(function (m) {
