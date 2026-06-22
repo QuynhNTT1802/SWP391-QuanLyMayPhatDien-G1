@@ -299,7 +299,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             } catch (SQLException ex) {
                 ex.printStackTrace();
             }
-            return 0;
+            // Surface the real DB error instead of silently returning 0 so the
+            // controller can show a meaningful message (e.g. duplicate PO for the
+            // same period + warehouse via uk_po_period_warehouse).
+            throw new RuntimeException(translateSqlError(e), e);
         } finally {
             try {
                 if (c != null) {
@@ -310,6 +313,30 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 ex.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Convert a low-level SQLException into a user-friendly Vietnamese message
+     * so the controller can show what actually went wrong instead of a generic
+     * "Tạo phiếu mua thất bại".
+     */
+    private String translateSqlError(SQLException e) {
+        String msg = e.getMessage() == null ? "" : e.getMessage();
+        if (e instanceof java.sql.SQLIntegrityConstraintViolationException
+                || e.getErrorCode() == 1062) {
+            if (msg.contains("uk_po_period_warehouse")) {
+                return "Đã tồn tại phiếu mua cho kỳ và kho này. Mỗi kỳ/kho chỉ được tạo 1 phiếu mua.";
+            }
+            if (msg.contains("uk_po_code")) {
+                return "Mã phiếu mua đã tồn tại, vui lòng thử lại.";
+            }
+            if (msg.contains("uk_po_detail_generator")) {
+                return "Có máy phát điện bị trùng trong danh sách chi tiết phiếu mua.";
+            }
+            return "Dữ liệu phiếu mua bị trùng (vi phạm ràng buộc duy nhất).";
+        }
+        // Foreign key violations (1452) or other DB errors
+        return "Lỗi cơ sở dữ liệu khi tạo phiếu mua: " + msg;
     }
 
     public void insertDetails(int poId, List<PurchaseOrderDetail> details) {
