@@ -53,7 +53,7 @@
 [data-theme="dark"] .status-completed {
     color: var(--accent);
 }
-/* ===== Detail ===== */
+
 .tabs {
     display: flex;
     gap: 2px;
@@ -354,21 +354,21 @@
 .radio-label:hover { border-color: var(--accent); }
 .radio-label.radio-active { border-width: 2px; }
 .radio-label.active-good {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, transparent);
-    color: var(--accent);
+    border-color: var(--black);
+    background: color-mix(in srgb, var(--black) 10%, transparent);
+    color: var(--black);
     font-weight: 600;
 }
 .radio-label.active-poor {
-    border-color: var(--warn);
-    background: color-mix(in srgb, var(--warn) 10%, transparent);
-    color: var(--warn);
+    border-color: var(--black);
+    background: color-mix(in srgb, var(--black) 10%, transparent);
+    color: var(--black);
     font-weight: 600;
 }
 .radio-label.active-damaged {
-    border-color: var(--danger);
-    background: color-mix(in srgb, var(--danger) 10%, transparent);
-    color: var(--danger);
+    border-color: var(--black);
+    background: color-mix(in srgb, var(--black) 10%, transparent);
+    color: var(--black);
     font-weight: 600;
 }
 

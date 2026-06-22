@@ -115,10 +115,19 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "  (SELECT c.name FROM generator_category gc "
                 + "     JOIN category c ON gc.category_id = c.id "
                 + "     WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand, "
-                + "  w.name AS warehouse_name "
+                + "  w.name AS warehouse_name, "
+                + "  imp.receipt_id AS import_receipt_id, "
+                + "  imp.receipt_code AS import_receipt_code "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN ( "
+                + "  SELECT rd.inventory_id, r.receipt_id, r.receipt_code "
+                + "  FROM receipt_detail rd "
+                + "  JOIN receipt r ON r.receipt_id = rd.receipt_id "
+                + "  WHERE r.receipt_type = 'IMPORT' "
+                + "    AND r.status NOT IN ('CANCELLED','REJECTED') "
+                + ") imp ON imp.inventory_id = i.inventory_id "
                 + "WHERE w.status <> 'locked' ");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
@@ -157,6 +166,14 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 }
                 try {
                     inv.setGeneratorBrand(resultSet.getString("generator_brand"));
+                } catch (SQLException ignored) {
+                }
+                try {
+                    int rid = resultSet.getInt("import_receipt_id");
+                    if (!resultSet.wasNull()) {
+                        inv.setImportReceiptId(rid);
+                        inv.setImportReceiptCode(resultSet.getString("import_receipt_code"));
+                    }
                 } catch (SQLException ignored) {
                 }
                 list.add(inv);
@@ -246,6 +263,25 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             closeResources();
         }
         return list;
+    }
+
+    /**
+     * Đếm tổng số IN_STOCK của một generator trên tất cả kho.
+     */
+    public int countTotalInStockByGenerator(int generatorId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND status = ?";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ps.setString(2, STATUS_IN_STOCK);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
     }
 
     /**

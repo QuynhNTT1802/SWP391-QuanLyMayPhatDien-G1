@@ -3,13 +3,15 @@ const APP_CTX = window.APP_CTX || '';
 const root = document.documentElement;
 const storedTheme = localStorage.getItem('wh-theme');
 if (storedTheme === 'dark' || storedTheme === 'light') root.setAttribute('data-theme', storedTheme);
-document.getElementById('themeToggle').addEventListener('click', () => {
+var themeToggle = document.getElementById('themeToggle');
+if (themeToggle) themeToggle.addEventListener('click', () => {
   const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   root.setAttribute('data-theme', next);
   localStorage.setItem('wh-theme', next);
 });
 
-document.getElementById('clearFilters').addEventListener('click', () => {
+var clearFiltersBtn = document.getElementById('clearFilters');
+if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', () => {
   window.location.href = APP_CTX + '/warehouse/suppliers?action=list';
 });
 
@@ -32,18 +34,33 @@ function confirmAction(title, text, cb) {
   confirmCb = cb;
   document.getElementById('confirmModal').classList.add('open');
 }
-document.getElementById('modalCancel').addEventListener('click', () => {
-  document.getElementById('confirmModal').classList.remove('open');
+var modalCancel = document.getElementById('modalCancel');
+var modalConfirm = document.getElementById('modalConfirm');
+var confirmModal = document.getElementById('confirmModal');
+if (modalCancel) modalCancel.addEventListener('click', () => {
+  if (confirmModal) confirmModal.classList.remove('open');
   confirmCb = null;
 });
-document.getElementById('modalConfirm').addEventListener('click', () => {
+if (modalConfirm) modalConfirm.addEventListener('click', () => {
   if (confirmCb) confirmCb();
-  document.getElementById('confirmModal').classList.remove('open');
+  if (confirmModal) confirmModal.classList.remove('open');
   confirmCb = null;
 });
-document.getElementById('confirmModal').addEventListener('click', e => {
+if (confirmModal) confirmModal.addEventListener('click', e => {
   if (e.target.id === 'confirmModal') {
-    document.getElementById('confirmModal').classList.remove('open');
+    confirmModal.classList.remove('open');
     confirmCb = null;
   }
+});
+
+// tabs
+document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+        var key = t.getAttribute('data-tab');
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+        t.classList.add('active');
+        var panel = document.getElementById('tab-' + key);
+        if (panel) panel.classList.add('active');
+    });
 });

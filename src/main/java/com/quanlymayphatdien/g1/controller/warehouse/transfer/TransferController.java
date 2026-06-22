@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet(name = "TransferController", urlPatterns = {"/transfers"})
 public class TransferController extends HttpServlet {
@@ -157,7 +158,13 @@ public class TransferController extends HttpServlet {
         int limit = 10;
         int offset = (page - 1) * limit;
 
-        int total = transferDAO.countTotal(search, statusFilter, null);
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean isManager = perms != null && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
+        Integer createdByFilter = isManager ? null : loggedUser.getId();
+
+        int total = transferDAO.countTotal(search, statusFilter, createdByFilter);
         int totalPages = (int) Math.ceil((double) total / limit);
         if (totalPages < 1) {
             totalPages = 1;
@@ -167,8 +174,8 @@ public class TransferController extends HttpServlet {
         }
         offset = (page - 1) * limit;
 
-        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, null);
-        Map<String, Integer> kpis = transferDAO.getKpiCounts(null);
+        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, createdByFilter);
+        Map<String, Integer> kpis = transferDAO.getKpiCounts(createdByFilter);
 
         request.setAttribute("transfers", list);
         request.setAttribute("kpiDraft", kpis.getOrDefault("DRAFT", 0));
@@ -212,6 +219,12 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
         }
+        HttpSession session = request.getSession(false);
+        User user = (User) session.getAttribute("loggedUser");
+        if (t.getCreatedBy() != user.getId()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         request.setAttribute("transfer", t);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("generators", generatorDAO.findAllActive());
@@ -249,6 +262,12 @@ public class TransferController extends HttpServlet {
         }
 
         boolean isOwner = (t.getCreatedBy() == user.getId());
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean isManager = perms != null && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
+        if (!isManager && !isOwner) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         String tab = request.getParameter("tab");
         String currentTab = "history".equals(tab) ? "history" : "info";
