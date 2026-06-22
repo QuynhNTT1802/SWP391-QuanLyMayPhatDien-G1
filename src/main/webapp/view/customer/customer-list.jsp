@@ -194,7 +194,7 @@
 
 <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-<script src="${pageContext.request.contextPath}/assets/js/customer-js.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/customer-js.js" charset="UTF-8"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 </body>
 </html>
