@@ -39,38 +39,39 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
 
     @Override
     public int insert(SystemLog t) {
+        int result = -1;
         String sql = "INSERT INTO system_log(level, module, source, message, stack_trace) VALUES(?,?,?,?,?)";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
 
+            statement.setString(1, t.getLevel() != null ? t.getLevel() : "ERROR");
 
-            p.setString(1, t.getLevel() != null ? t.getLevel() : "ERROR");
+            statement.setString(2, t.getModule() != null ? t.getModule() : "OTHER");
 
-
-            p.setString(2, t.getModule() != null ? t.getModule() : "OTHER");
-            
             if (t.getSource() != null) {
-                p.setString(3, t.getSource());
+                statement.setString(3, t.getSource());
             } else {
-                p.setNull(3, java.sql.Types.VARCHAR);
+                statement.setNull(3, java.sql.Types.VARCHAR);
             }
 
-            p.setString(4, t.getMessage() != null ? t.getMessage() : "(no message)");
+            statement.setString(4, t.getMessage() != null ? t.getMessage() : "(no message)");
 
             if (t.getStackTrace() != null) {
-                p.setString(5, t.getStackTrace());
+                statement.setString(5, t.getStackTrace());
             } else {
-                p.setNull(5, java.sql.Types.CLOB);
+                statement.setNull(5, java.sql.Types.CLOB);
             }
 
-            p.executeUpdate();
-            try (ResultSet rs = p.getGeneratedKeys()) {
-                if (rs.next()) return rs.getInt(1);
-            }
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) result = resultSet.getInt(1);
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return -1;
+        return result;
     }
 
 
@@ -110,19 +111,23 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         String sql = "SELECT * FROM system_log " + where
                 + "ORDER BY created_at DESC LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
-                p.setObject(idx++, param);
+                statement.setObject(idx++, param);
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -167,14 +172,17 @@ public class SystemLogDAO extends DBContext implements I_DAO<SystemLog> {
         }
 
         String sql = "SELECT COUNT(*) FROM system_log " + where;
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
-            for (Object param : params) p.setObject(idx++, param);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) return rs.getInt(1);
+            for (Object param : params) statement.setObject(idx++, param);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }

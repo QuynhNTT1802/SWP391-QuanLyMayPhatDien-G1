@@ -41,33 +41,36 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
 
     @Override
     public int insert(ActivityLog t) {
+        int result = -1;
         String sql = "insert into activity_log(user_id, entity_type, action, entity_id, entity_name, details, created_at) "
                 + "values(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setInt(1, t.getUserId());
-            p.setString(2, t.getEntityType());
-            p.setString(3, t.getAction());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, t.getUserId());
+            statement.setString(2, t.getEntityType());
+            statement.setString(3, t.getAction());
             if (t.getEntityId() != null) {
-                p.setInt(4, t.getEntityId());
+                statement.setInt(4, t.getEntityId());
             } else {
-                p.setNull(4, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
-            p.setString(5, t.getEntityName());
-            p.setString(6, t.getDetails());
-            p.setObject(7, LocalDateTime.now());
+            statement.setString(5, t.getEntityName());
+            statement.setString(6, t.getDetails());
+            statement.setObject(7, LocalDateTime.now());
 
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    result = resultSet.getInt(1);
                 }
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return -1;
+        return result;
     }
 
     @Override
@@ -92,36 +95,43 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "where al.entity_type = ? "
                 + "order by al.created_at desc "
                 + "limit ? offset ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, pageSize);
-            p.setInt(3, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, pageSize);
+            statement.setInt(3, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
     public int countByEntityType(String entityType) {
+        int result = 0;
         String sql = "SELECT COUNT(*) FROM activity_log WHERE entity_type = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                result = resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return 0;
+        return result;
     }
 
  
@@ -165,31 +175,34 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
-
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -228,25 +241,29 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "FROM activity_log al JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -297,29 +314,33 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -364,25 +385,29 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "LEFT JOIN category c ON al.entity_id = c.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -440,29 +465,33 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -516,25 +545,29 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "LEFT JOIN category c ON al.entity_id = c.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
 
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
 
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -577,28 +610,32 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -638,23 +675,27 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -666,18 +707,21 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "where entity_type = ? and entity_id = ? "
                 + "order by created_at desc "
                 + "limit ? offset ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, entityId);
-            p.setInt(3, pageSize);
-            p.setInt(4, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getLogFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, entityId);
+            statement.setInt(3, pageSize);
+            statement.setInt(4, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getLogFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -696,33 +740,36 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
     }
 
     public int insertLog(ActivityLog t) {
+        int result = -1;
         String sql = "insert into activity_log(user_id, action, entity_type, entity_id, entity_name, details, created_at) "
                 + "values(?, ?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setInt(1, t.getUserId());
-            p.setString(2, t.getAction());
-            p.setString(3, t.getEntityType());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, t.getUserId());
+            statement.setString(2, t.getAction());
+            statement.setString(3, t.getEntityType());
             if (t.getEntityId() != null) {
-                p.setInt(4, t.getEntityId());
+                statement.setInt(4, t.getEntityId());
             } else {
-                p.setNull(4, Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
-            p.setString(5, t.getEntityName());
-            p.setString(6, t.getDetails());
-            p.setObject(7, LocalDateTime.now());
+            statement.setString(5, t.getEntityName());
+            statement.setString(6, t.getDetails());
+            statement.setObject(7, LocalDateTime.now());
 
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    result = resultSet.getInt(1);
                 }
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return -1;
+        return result;
     }
 
     public List<ActivityLog> getLogsByRoleId(int roleId, String search, String action, String dateFrom, String dateTo, int page, int pageSize) {
@@ -760,30 +807,33 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
 
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -819,25 +869,28 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
         String sql = "SELECT COUNT(*) FROM activity_log al JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -880,28 +933,32 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "ORDER BY al.created_at DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            p.setInt(idx++, pageSize);
-            p.setInt(idx, (page - 1) * pageSize);
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx, (page - 1) * pageSize);
 
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -941,42 +998,50 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "JOIN user u ON al.user_id = u.id "
                 + where;
 
-        try (Connection c = getConnection(); PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             int idx = 1;
             for (Object param : params) {
                 if (param instanceof String) {
-                    p.setString(idx++, (String) param);
+                    statement.setString(idx++, (String) param);
                 } else if (param instanceof LocalDateTime) {
-                    p.setObject(idx++, (LocalDateTime) param);
+                    statement.setObject(idx++, (LocalDateTime) param);
                 } else {
-                    p.setObject(idx++, param);
+                    statement.setObject(idx++, param);
                 }
             }
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public int countByEntityTypeAndId(String entityType, int entityId) {
+        int result = 0;
         String sql = "SELECT COUNT(*) FROM activity_log "
                 + "WHERE entity_type = ? AND entity_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, entityId);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, entityId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                result = resultSet.getInt(1);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return 0;
+        return result;
     }
 
     public List<ActivityLog> findByEntityTypeAndId(String entityType, int entityId,
@@ -987,20 +1052,23 @@ public class ActivityLogDAO extends DBContext implements I_DAO<ActivityLog> {
                 + "where al.entity_type = ? and al.entity_id = ? "
                 + "order by al.created_at desc "
                 + "limit ? offset ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, entityType);
-            p.setInt(2, entityId);
-            p.setInt(3, pageSize);
-            p.setInt(4, (page - 1) * pageSize);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                ActivityLog log = getFromResultSet(rs);
-                log.setUsername(rs.getString("user_name"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, entityType);
+            statement.setInt(2, entityId);
+            statement.setInt(3, pageSize);
+            statement.setInt(4, (page - 1) * pageSize);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ActivityLog log = getFromResultSet(resultSet);
+                log.setUsername(resultSet.getString("user_name"));
                 list.add(log);
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi ngoai le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }

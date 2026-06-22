@@ -38,7 +38,7 @@ CREATE TABLE `activity_log` (
   KEY `idx_entity` (`entity_type`,`entity_id`),
   KEY `idx_created` (`created_at`),
   CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -47,7 +47,7 @@ CREATE TABLE `activity_log` (
 
 LOCK TABLES `activity_log` WRITE;
 /*!40000 ALTER TABLE `activity_log` DISABLE KEYS */;
-INSERT INTO `activity_log` VALUES (1,3,'warehouse','UNLOCK',2,'Kho Hồ Chí Minh','Admin đã mở khóa kho \'Kho Hồ Chí Minh\' — Trạng thái: Bị khóa -> Hoạt động','2026-06-19 16:43:39'),(2,3,'warehouse','LOCK',1,'Kho Hà Nội','Admin đã khóa kho \'Kho Hà Nội\' — Trạng thái: Hoạt động -> Bị khóa','2026-06-19 16:44:01'),(3,3,'warehouse','UNLOCK',1,'Kho Hà Nội','Admin đã mở khóa kho \'Kho Hà Nội\' — Trạng thái: Bị khóa -> Hoạt động','2026-06-19 16:44:13'),(4,3,'generator','UPDATE',3,'DHY8000','Cập nhật thông tin máy phát điện: DHY8000','2026-06-19 16:45:04'),(5,3,'user','CREATE',13,'CEO','Tạo người dùng: ceo','2026-06-19 16:58:07');
+INSERT INTO `activity_log` VALUES (1,3,'warehouse','UNLOCK',2,'Kho Hồ Chí Minh','Admin đã mở khóa kho \'Kho Hồ Chí Minh\' — Trạng thái: Bị khóa -> Hoạt động','2026-06-19 16:43:39'),(2,3,'warehouse','LOCK',1,'Kho Hà Nội','Admin đã khóa kho \'Kho Hà Nội\' — Trạng thái: Hoạt động -> Bị khóa','2026-06-19 16:44:01'),(3,3,'warehouse','UNLOCK',1,'Kho Hà Nội','Admin đã mở khóa kho \'Kho Hà Nội\' — Trạng thái: Bị khóa -> Hoạt động','2026-06-19 16:44:13'),(4,3,'generator','UPDATE',3,'DHY8000','Cập nhật thông tin máy phát điện: DHY8000','2026-06-19 16:45:04'),(5,3,'user','CREATE',13,'CEO','Tạo người dùng: ceo','2026-06-19 16:58:07'),(6,3,'import_proposal','CREATE',1,'PRC-20260619-001','Tạo phiếu đề xuất từ Excel (gửi duyệt) — 1 dòng','2026-06-19 17:12:10'),(7,3,'receipt','CREATE',1,'RX-IM-20260619-344','Tạo phiếu nhập kho','2026-06-19 17:13:06'),(8,3,'receipt','APPROVE',1,'RX-IM-20260619-344','Duyệt phiếu nhập kho, cập nhật tồn kho','2026-06-19 17:13:11'),(9,3,'receipt','CREATE',2,'RX-EX-20260619-396','Tạo phiếu xuất kho','2026-06-19 17:16:41'),(10,3,'receipt','APPROVE',2,'RX-EX-20260619-396','Duyệt phiếu xuất kho, cập nhật tồn kho','2026-06-19 17:16:46'),(11,3,'customer','DEACTIVATE',6,'Linh Hoàng','Khóa khách hàng: Linh Hoàng','2026-06-19 17:17:20'),(12,3,'customer','ACTIVATE',6,'Linh Hoàng','Kích hoạt khách hàng: Linh Hoàng','2026-06-19 17:18:04'),(13,3,'inventory_check','CREATE',1,'IC-20260619-829','Tạo phiếu kiểm kê tại kho Kho Hà Nội','2026-06-19 17:19:15'),(14,3,'inventory_check','UPDATE',1,'IC-20260619-829','Cập nhật số lượng kiểm kê','2026-06-19 17:19:22'),(15,3,'inventory_check','COMPLETE',1,'IC-20260619-829','Hoàn thành kiểm kê','2026-06-19 17:19:24'),(16,3,'categories','UPDATE',44,'Mitsubishi','Admin đã cập nhật \'Mitsubishi\' (Thương hiệu) — Mô tả: H?ng s?n xu?t m?y ph?t ?i?n Mitsubishi -> Mitsubishi | module:quản lý vật tư','2026-06-20 15:47:37');
 /*!40000 ALTER TABLE `activity_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -77,7 +77,7 @@ CREATE TABLE `category` (
 
 LOCK TABLES `category` WRITE;
 /*!40000 ALTER TABLE `category` DISABLE KEYS */;
-INSERT INTO `category` VALUES (1,'quản lý vật tư','Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-27 22:41:32'),(2,'quản lý vật tư','Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54','2026-05-27 22:41:54'),(3,'quản lý vật tư','Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54','2026-05-27 22:41:40'),(4,'quản lý vật tư','Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54','2026-05-30 08:40:53'),(5,'quản lý vật tư','Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54','2026-05-28 08:09:36'),(6,'quản lý vật tư','Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54','2026-05-29 09:58:26'),(11,'quản lý vật tư','Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'quản lý vật tư','Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'quản lý vật tư','Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'quản lý vật tư','1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'quản lý vật tư','3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'quản lý vật tư','Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54','2026-06-01 07:12:11'),(17,'quản lý vật tư','Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54','2026-05-27 22:46:02'),(18,'quản lý vật tư','Nhật Bản','origin','Xuất xứ Nhật Bản','active','2026-05-23 19:15:54',NULL),(19,'quản lý vật tư','Trung Quốc','origin','Xuất xứ Trung Quốc','active','2026-05-23 19:15:54',NULL),(20,'quản lý vật tư','Việt Nam','origin','Xuất xứ Việt Nam','active','2026-05-23 19:15:54',NULL),(21,'quản lý vật tư','Hàn Quốc','origin','Xuất xứ Hàn Quốc','active','2026-05-23 19:15:54','2026-06-01 07:12:34'),(22,'quản lý vật tư','Mỹ','origin','Xuất xứ Mỹ','active','2026-05-23 19:15:54',NULL),(25,'quản lý phiếu xuất nhập','Bảo hành','receipt_reason','Bảo hành sản phẩm','active','2026-05-28 04:28:53','2026-06-01 08:32:47'),(26,'quản lý phiếu xuất nhập','Bảo trì','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(27,'quản lý phiếu xuất nhập','Hư hỏng','receipt_reason','','active','2026-05-28 04:28:53','2026-05-28 08:07:58'),(28,'quản lý phiếu xuất nhập','Hết hạn sử dụng','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(29,'quản lý phiếu xuất nhập','Điều chuyển kho','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(30,'quản lý phiếu xuất nhập','Thanh lý','receipt_reason','','inactive','2026-05-28 04:28:53','2026-06-11 10:00:15'),(31,'quản lý phiếu xuất nhập','Khác','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(32,'quản lý phiếu mua bán','Cá nhân','customer_type','Khách hàng cá nhân','active','2026-05-23 19:15:54','2026-05-27 22:49:17'),(33,'quản lý phiếu mua bán','Doanh nghiệp','customer_type','Khách hàng doanh nghiệp','active','2026-05-23 19:15:54',NULL),(34,'quản lý kiểm kê','Hao hụt','adjust_reason','Lý do hao hụt','active','2026-05-23 19:15:54',NULL),(35,'quản lý kiểm kê','Hư hỏng','adjust_reason','Lý do hư hỏng','active','2026-05-23 19:15:54',NULL),(36,'quản lý kiểm kê','Điều chỉnh khác','adjust_reason','Lý do điều chỉnh khác','active','2026-05-23 19:15:54',NULL),(44,'quản lý vật tư','Mitsubishi','brand','H?ng s?n xu?t m?y ph?t ?i?n Mitsubishi','active','2026-05-26 21:07:30','2026-05-27 22:41:47'),(66,'quản lý vật tư','Cummi','brand','Group 1','active','2026-05-27 22:24:30','2026-06-01 07:11:59'),(67,'quản lý vật tư','2 pha','phase','Máy phát điện 2 pha','active','2026-05-27 22:48:06','2026-05-27 22:48:06'),(68,'quản lý phiếu mua bán','Nhà nước','customer_type','Nhà nước tài trợ','active','2026-05-27 22:49:02','2026-05-27 22:49:02'),(69,'quản lý vật tư','Test','brand','Test','active','2026-05-29 07:18:53','2026-05-29 07:18:53'),(70,'quản lý thanh lý','Máy quá cũ, hỏng nặng','liquidation_reason','Máy đã sử dụng lâu năm, không thể sửa chữa','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(71,'quản lý thanh lý','Chi phí sửa chữa quá cao','liquidation_reason','Chi phí bảo trì tốn kém hơn mua máy mới','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(72,'quản lý thanh lý','Thay đổi mục đích sử dụng','liquidation_reason','Không còn nhu cầu sử dụng loại máy này','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(73,'quản lý thanh lý','Giá đề xuất quá thấp','manager_reject_reason','Giá đề xuất quá thấp','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(74,'quản lý thanh lý','Thiết bị không thuộc diện thanh lý','manager_reject_reason','Thiết bị không thuộc diện thanh lý','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(75,'quản lý thanh lý','Sai thông tin series','manager_request_edit_reason','Sai thông tin series','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(76,'quản lý thanh lý','Cập nhật lại giá thanh lý','manager_request_edit_reason','Cập nhật lại giá thanh lý','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(77,'quản lý thanh lý','Không được phép thanh lý lúc này','ceo_reject_reason','Không được phép thanh lý lúc này','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(78,'quản lý thanh lý','Sai chiến lược giá','ceo_reject_reason','Sai chiến lược giá','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(79,'quản lý thanh lý','Cần xem xét lại giá thấp nhất','ceo_request_edit_reason','Cần xem xét lại giá thấp nhất','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(80,'quản lý thanh lý','Yêu cầu bổ sung chứng từ','ceo_request_edit_reason','Yêu cầu bổ sung chứng từ','active','2026-06-09 18:58:53','2026-06-09 18:58:53');
+INSERT INTO `category` VALUES (1,'quản lý vật tư','Honda','brand','Hãng sản xuất máy phát điện Honda','active','2026-05-23 19:15:54','2026-05-27 22:41:32'),(2,'quản lý vật tư','Yamaha','brand','Hãng sản xuất máy phát điện Yamaha','active','2026-05-23 19:15:54','2026-05-27 22:41:54'),(3,'quản lý vật tư','Hyundai','brand','Hãng sản xuất máy phát điện Hyundai','active','2026-05-23 19:15:54','2026-05-27 22:41:40'),(4,'quản lý vật tư','Cummins','brand','Hãng sản xuất máy phát điện Cummins','active','2026-05-23 19:15:54','2026-05-30 08:40:53'),(5,'quản lý vật tư','Xăng','fuel_type','Máy phát điện chạy xăng','active','2026-05-23 19:15:54','2026-05-28 08:09:36'),(6,'quản lý vật tư','Dầu Diesel','fuel_type','Máy phát điện chạy dầu diesel','active','2026-05-23 19:15:54','2026-05-29 09:58:26'),(11,'quản lý vật tư','Inverter','generator_type','Máy phát điện Inverter','active','2026-05-23 19:15:54',NULL),(12,'quản lý vật tư','Công nghiệp','generator_type','Máy phát điện công nghiệp','active','2026-05-23 19:15:54',NULL),(13,'quản lý vật tư','Dân dụng','generator_type','Máy phát điện dân dụng','active','2026-05-23 19:15:54',NULL),(14,'quản lý vật tư','1 pha','phase','Máy phát điện 1 pha','active','2026-05-23 19:15:54',NULL),(15,'quản lý vật tư','3 pha','phase','Máy phát điện 3 pha','active','2026-05-23 19:15:54',NULL),(16,'quản lý vật tư','Mới','condition','Máy mới 100%','active','2026-05-23 19:15:54','2026-06-01 07:12:11'),(17,'quản lý vật tư','Đã qua sử dụng','condition','Máy đã qua sử dụng','active','2026-05-23 19:15:54','2026-05-27 22:46:02'),(18,'quản lý vật tư','Nhật Bản','origin','Xuất xứ Nhật Bản','active','2026-05-23 19:15:54',NULL),(19,'quản lý vật tư','Trung Quốc','origin','Xuất xứ Trung Quốc','active','2026-05-23 19:15:54',NULL),(20,'quản lý vật tư','Việt Nam','origin','Xuất xứ Việt Nam','active','2026-05-23 19:15:54',NULL),(21,'quản lý vật tư','Hàn Quốc','origin','Xuất xứ Hàn Quốc','active','2026-05-23 19:15:54','2026-06-01 07:12:34'),(22,'quản lý vật tư','Mỹ','origin','Xuất xứ Mỹ','active','2026-05-23 19:15:54',NULL),(25,'quản lý phiếu xuất nhập','Bảo hành','receipt_reason','Bảo hành sản phẩm','active','2026-05-28 04:28:53','2026-06-01 08:32:47'),(26,'quản lý phiếu xuất nhập','Bảo trì','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(27,'quản lý phiếu xuất nhập','Hư hỏng','receipt_reason','','active','2026-05-28 04:28:53','2026-05-28 08:07:58'),(28,'quản lý phiếu xuất nhập','Hết hạn sử dụng','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(29,'quản lý phiếu xuất nhập','Điều chuyển kho','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(30,'quản lý phiếu xuất nhập','Thanh lý','receipt_reason','','inactive','2026-05-28 04:28:53','2026-06-11 10:00:15'),(31,'quản lý phiếu xuất nhập','Khác','receipt_reason',NULL,'active','2026-05-28 04:28:53',NULL),(32,'quản lý phiếu mua bán','Cá nhân','customer_type','Khách hàng cá nhân','active','2026-05-23 19:15:54','2026-05-27 22:49:17'),(33,'quản lý phiếu mua bán','Doanh nghiệp','customer_type','Khách hàng doanh nghiệp','active','2026-05-23 19:15:54',NULL),(34,'quản lý kiểm kê','Hao hụt','adjust_reason','Lý do hao hụt','active','2026-05-23 19:15:54',NULL),(35,'quản lý kiểm kê','Hư hỏng','adjust_reason','Lý do hư hỏng','active','2026-05-23 19:15:54',NULL),(36,'quản lý kiểm kê','Điều chỉnh khác','adjust_reason','Lý do điều chỉnh khác','active','2026-05-23 19:15:54',NULL),(44,'quản lý vật tư','Mitsubishi','brand',' Mitsubishi','active','2026-05-26 21:07:30','2026-06-20 08:47:37'),(66,'quản lý vật tư','Cummi','brand','Group 1','active','2026-05-27 22:24:30','2026-06-01 07:11:59'),(67,'quản lý vật tư','2 pha','phase','Máy phát điện 2 pha','active','2026-05-27 22:48:06','2026-05-27 22:48:06'),(68,'quản lý phiếu mua bán','Nhà nước','customer_type','Nhà nước tài trợ','active','2026-05-27 22:49:02','2026-05-27 22:49:02'),(69,'quản lý vật tư','Test','brand','Test','active','2026-05-29 07:18:53','2026-05-29 07:18:53'),(70,'quản lý thanh lý','Máy quá cũ, hỏng nặng','liquidation_reason','Máy đã sử dụng lâu năm, không thể sửa chữa','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(71,'quản lý thanh lý','Chi phí sửa chữa quá cao','liquidation_reason','Chi phí bảo trì tốn kém hơn mua máy mới','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(72,'quản lý thanh lý','Thay đổi mục đích sử dụng','liquidation_reason','Không còn nhu cầu sử dụng loại máy này','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(73,'quản lý thanh lý','Giá đề xuất quá thấp','manager_reject_reason','Giá đề xuất quá thấp','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(74,'quản lý thanh lý','Thiết bị không thuộc diện thanh lý','manager_reject_reason','Thiết bị không thuộc diện thanh lý','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(75,'quản lý thanh lý','Sai thông tin series','manager_request_edit_reason','Sai thông tin series','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(76,'quản lý thanh lý','Cập nhật lại giá thanh lý','manager_request_edit_reason','Cập nhật lại giá thanh lý','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(77,'quản lý thanh lý','Không được phép thanh lý lúc này','ceo_reject_reason','Không được phép thanh lý lúc này','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(78,'quản lý thanh lý','Sai chiến lược giá','ceo_reject_reason','Sai chiến lược giá','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(79,'quản lý thanh lý','Cần xem xét lại giá thấp nhất','ceo_request_edit_reason','Cần xem xét lại giá thấp nhất','active','2026-06-09 18:58:53','2026-06-09 18:58:53'),(80,'quản lý thanh lý','Yêu cầu bổ sung chứng từ','ceo_request_edit_reason','Yêu cầu bổ sung chứng từ','active','2026-06-09 18:58:53','2026-06-09 18:58:53');
 /*!40000 ALTER TABLE `category` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -319,7 +319,7 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'Công ty TNHH Xây Dựng ABC','0988123456','abc@xaydungabc.com','12 Trần Duy Hưng, Cầu Giấy, Hà Nội','Công ty TNHH Xây Dựng ABC',33,'active','2026-05-21 09:00:00',4,NULL,NULL),(2,'Công ty CP Điện Máy XYZ','0977123456','xyz@dienmayxyz.com','56 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh','Công ty CP Điện Máy XYZ',33,'active','2026-05-21 10:00:00',4,NULL,NULL),(3,'123','123','123@gmail.com','123','123',32,'active','2026-06-07 03:40:43',3,'2026-06-07 03:40:43',NULL),(4,'1','1','123@gmail.com','123','1',32,'active','2026-06-07 04:30:08',3,'2026-06-07 04:30:08',NULL),(5,'123','0944727285','123@gmail.com','ninh bình','Công ty 123',33,'active','2026-06-07 05:15:24',3,'2026-06-07 05:15:24',NULL),(6,'Linh Hoàng','0978287102','123@gmail.com',' Hà Nội','',32,'active','2026-06-07 15:36:06',3,'2026-06-08 00:07:39',2),(7,'Thị Thu Hiền Hoàng','0981059011','12345@gmail.com','Hà Nội','',32,'active','2026-06-09 12:07:22',2,'2026-06-09 12:07:22',NULL),(8,'Nguyễn Văn Khánh','02938434','vankhan@gmail.com','23434','FPT University',32,'active','2026-06-19 15:14:36',3,'2026-06-19 15:14:36',NULL),(9,'Khánh Nguyễn Văn','0846723234','vankhanhak54@gmail.com','TP HN','FPT University',32,'active','2026-06-19 15:28:34',3,'2026-06-19 15:28:34',NULL),(10,'Khánh Nguyễn Văn','0846723771','vankhanhak54@gmail.com','TP HN','FPT University',32,'active','2026-06-19 15:29:38',3,'2026-06-19 15:29:37',NULL);
+INSERT INTO `customer` VALUES (1,'Công ty TNHH Xây Dựng ABC','0988123456','abc@xaydungabc.com','12 Trần Duy Hưng, Cầu Giấy, Hà Nội','Công ty TNHH Xây Dựng ABC',33,'active','2026-05-21 09:00:00',4,NULL,NULL),(2,'Công ty CP Điện Máy XYZ','0977123456','xyz@dienmayxyz.com','56 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh','Công ty CP Điện Máy XYZ',33,'active','2026-05-21 10:00:00',4,'2026-06-19 17:15:17',3),(3,'123','123','123@gmail.com','123','123',32,'active','2026-06-07 03:40:43',3,'2026-06-07 03:40:43',NULL),(4,'1','1','123@gmail.com','123','1',32,'active','2026-06-07 04:30:08',3,'2026-06-07 04:30:08',NULL),(5,'123','0944727285','123@gmail.com','ninh bình','Công ty 123',33,'active','2026-06-07 05:15:24',3,'2026-06-07 05:15:24',NULL),(6,'Linh Hoàng','0978287102','123@gmail.com',' Hà Nội','',32,'active','2026-06-07 15:36:06',3,'2026-06-19 17:18:04',2),(7,'Thị Thu Hiền Hoàng','0981059011','12345@gmail.com','Hà Nội','',32,'active','2026-06-09 12:07:22',2,'2026-06-09 12:07:22',NULL),(8,'Nguyễn Văn Khánh','02938434','vankhan@gmail.com','23434','FPT University',32,'active','2026-06-19 15:14:36',3,'2026-06-19 15:14:36',NULL),(9,'Khánh Nguyễn Văn','0846723234','vankhanhak54@gmail.com','TP HN','FPT University',32,'active','2026-06-19 15:28:34',3,'2026-06-19 15:28:34',NULL),(10,'Khánh Nguyễn Văn','0846723771','vankhanhak54@gmail.com','TP HN','FPT University',32,'active','2026-06-19 15:29:38',3,'2026-06-19 15:29:37',NULL);
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -421,7 +421,7 @@ CREATE TABLE `import_proposal` (
   CONSTRAINT `fk_proposal_po` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -430,6 +430,7 @@ CREATE TABLE `import_proposal` (
 
 LOCK TABLES `import_proposal` WRITE;
 /*!40000 ALTER TABLE `import_proposal` DISABLE KEYS */;
+INSERT INTO `import_proposal` VALUES (1,'PRC-20260619-001','APPROVED',1,3,NULL,NULL,'2026-06-19 17:12:10','202606',1,'',NULL,NULL,NULL,'2026-06-19 17:12:10','2026-06-19 17:12:22');
 /*!40000 ALTER TABLE `import_proposal` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -456,7 +457,7 @@ CREATE TABLE `import_proposal_detail` (
   CONSTRAINT `fk_pd_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_pd_proposal` FOREIGN KEY (`proposal_id`) REFERENCES `import_proposal` (`proposal_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pd_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `supplier` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -465,6 +466,7 @@ CREATE TABLE `import_proposal_detail` (
 
 LOCK TABLES `import_proposal_detail` WRITE;
 /*!40000 ALTER TABLE `import_proposal_detail` DISABLE KEYS */;
+INSERT INTO `import_proposal_detail` VALUES (1,1,1,2,2,0,18000000.00,'');
 /*!40000 ALTER TABLE `import_proposal_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -490,7 +492,7 @@ CREATE TABLE `inventory` (
   KEY `idx_inv_status` (`status`),
   CONSTRAINT `fk_inv_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`),
   CONSTRAINT `fk_inv_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -499,6 +501,7 @@ CREATE TABLE `inventory` (
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
+INSERT INTO `inventory` VALUES (1,'SR3213232399',1,1,'SOLD','2026-06-19 17:13:06','2026-06-19 17:16:46'),(2,'SR3213232398',1,1,'SOLD','2026-06-19 17:13:06','2026-06-19 17:16:46');
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -525,7 +528,7 @@ CREATE TABLE `inventory_check` (
   KEY `created_by` (`created_by`),
   CONSTRAINT `inventory_check_ibfk_1` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`),
   CONSTRAINT `inventory_check_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -534,6 +537,7 @@ CREATE TABLE `inventory_check` (
 
 LOCK TABLES `inventory_check` WRITE;
 /*!40000 ALTER TABLE `inventory_check` DISABLE KEYS */;
+INSERT INTO `inventory_check` VALUES (1,'IC-20260619-829',1,'completed','',3,'2026-06-19 17:19:15','2026-06-19 17:19:24','2026-06-19 17:19:15','2026-06-19 17:19:24');
 /*!40000 ALTER TABLE `inventory_check` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -556,7 +560,7 @@ CREATE TABLE `inventory_check_detail` (
   KEY `generator_id` (`generator_id`),
   CONSTRAINT `inventory_check_detail_ibfk_1` FOREIGN KEY (`check_id`) REFERENCES `inventory_check` (`id`) ON DELETE CASCADE,
   CONSTRAINT `inventory_check_detail_ibfk_2` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -565,6 +569,7 @@ CREATE TABLE `inventory_check_detail` (
 
 LOCK TABLES `inventory_check_detail` WRITE;
 /*!40000 ALTER TABLE `inventory_check_detail` DISABLE KEYS */;
+INSERT INTO `inventory_check_detail` VALUES (1,1,1,0,0,'');
 /*!40000 ALTER TABLE `inventory_check_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -704,7 +709,7 @@ CREATE TABLE `notification` (
   KEY `fk_notif_user` (`user_id`),
   KEY `idx_notif_entity` (`entity_type`,`entity_id`),
   CONSTRAINT `fk_notif_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -713,6 +718,7 @@ CREATE TABLE `notification` (
 
 LOCK TABLES `notification` WRITE;
 /*!40000 ALTER TABLE `notification` DISABLE KEYS */;
+INSERT INTO `notification` VALUES (1,7,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260619-344 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-19 17:13:06'),(2,8,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260619-344 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-19 17:13:06'),(3,9,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260619-344 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-19 17:13:06'),(4,7,'Phiếu xuất kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu xuất RX-EX-20260619-396 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/export-receipt?action=detail&id=2','export_receipt',2,0,'2026-06-19 17:16:41'),(5,8,'Phiếu xuất kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu xuất RX-EX-20260619-396 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/export-receipt?action=detail&id=2','export_receipt',2,0,'2026-06-19 17:16:41'),(6,9,'Phiếu xuất kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu xuất RX-EX-20260619-396 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/export-receipt?action=detail&id=2','export_receipt',2,0,'2026-06-19 17:16:41');
 /*!40000 ALTER TABLE `notification` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -761,7 +767,7 @@ CREATE TABLE `order_detail` (
   KEY `idx_od_generator` (`generator_id`),
   CONSTRAINT `fk_od_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_od_order` FOREIGN KEY (`order_id`) REFERENCES `sale_order` (`order_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -770,6 +776,7 @@ CREATE TABLE `order_detail` (
 
 LOCK TABLES `order_detail` WRITE;
 /*!40000 ALTER TABLE `order_detail` DISABLE KEYS */;
+INSERT INTO `order_detail` VALUES (1,1,1,1,18000000.00,NULL);
 /*!40000 ALTER TABLE `order_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -831,7 +838,7 @@ CREATE TABLE `permission` (
 
 LOCK TABLES `permission` WRITE;
 /*!40000 ALTER TABLE `permission` DISABLE KEYS */;
-INSERT INTO `permission` VALUES (1,'users','view','Xem danh sach nguoi dung','admin','Người dùng','READ'),(2,'users','create','Them nguoi dung moi','admin','Người dùng','CREATE'),(3,'users','update','Cap nhat thong tin nguoi dung','admin','Người dùng','UPDATE'),(4,'users','deactivate','Vo hieu hoa nguoi dung','admin','Người dùng','DELETE'),(5,'roles','view','Xem danh sach vai tro','admin','Vai trò','READ'),(6,'roles','create','Them vai tro moi','admin','Vai trò','CREATE'),(7,'roles','update','Cap nhat vai tro','admin','Vai trò','UPDATE'),(8,'roles','deactivate','Vo hieu hoa vai tro','admin','Vai trò','DELETE'),(9,'roles','edit_permissions','Chinh sua quyen cua vai tro','admin','Vai trò','UPDATE'),(10,'generators','view','Xem danh sach may phat dien','warehouse','Máy phát điện','READ'),(11,'generators','create','Them may phat dien moi','warehouse','Máy phát điện','CREATE'),(12,'generators','update','Cap nhat thong tin may','warehouse','Máy phát điện','UPDATE'),(22,'inventory','view','Xem ton kho','warehouse','Tồn kho','READ'),(24,'inventory','adjust','Dieu chinh ton kho','warehouse','Tồn kho','ADJUST'),(25,'warehouses','view','Xem thong tin kho','warehouse','Kho','READ'),(26,'warehouses','create','Them kho moi','warehouse','Kho','CREATE'),(27,'warehouses','update','Cap nhat thong tin kho','warehouse','Kho','UPDATE'),(45,'orders','view','Xem don hang','sales','Đơn hàng','READ'),(46,'orders','create','Tao don hang','sales','Đơn hàng','CREATE'),(47,'orders','update','Cap nhat don hang','sales','Đơn hàng','UPDATE'),(48,'orders','cancel','Huy don hang','sales','Đơn hàng','CANCEL'),(65,'reports','view','Xem bao cao','report','Báo cáo','READ'),(66,'reports','export','Xuat bao cao','report','Báo cáo','EXPORT'),(91,'dashboard','view','Xem dashboard','system','Dashboard','READ'),(95,'profile','view','Xem ho so ca nhan','account','Hồ sơ cá nhân','READ'),(96,'profile','edit','Sua ho so ca nhan','account','Hồ sơ cá nhân','UPDATE'),(97,'password','change','Doi mat khau','account','Mật khẩu','UPDATE'),(98,'forgot_pw','process','Xu ly yeu cau reset mat khau','account','Đặt lại mật khẩu','UPDATE'),(100,'orders','approve','Duyet don hang (sale_manager)','sales','Đơn hàng','APPROVE'),(101,'receipts','view','Xem phieu xuat/nhap kho','warehouse','Phiếu xuất/nhập','READ'),(102,'receipts','create','Tao phieu xuat/nhap kho','warehouse','Phiếu xuất/nhập','CREATE'),(103,'receipts','approve','Duyet phieu xuat/nhap kho (warehouse_manager)','warehouse','Phiếu xuất/nhập','APPROVE'),(104,'stock_card','view','Xem the kho','warehouse','Thẻ kho','READ'),(105,'orders','reject','Tu choi don hang (sale_manager)','sales','Đơn hàng','REJECT'),(106,'receipts','reject','Tu choi phieu xuat/nhap kho (warehouse_manager)','warehouse','Phiếu xuất/nhập','REJECT'),(107,'categories','view','Xem danh mục','system','Danh mục','READ'),(108,'categories','create','Tạo danh mục mới','system','Danh mục','CREATE'),(109,'categories','update','Sửa danh mục','system','Danh mục','UPDATE'),(110,'categories','delete','Xóa danh mục','system','Danh mục','DELETE'),(111,'activity_log','view','Xem lịch sử hoạt động','system','Lịch sử hoạt động','READ'),(112,'system_log','view','Xem nhật ký hệ thống','system','Nhật ký hệ thống','READ'),(113,'customers','view','Xem danh sách khách hàng','sales','Khách hàng','READ'),(114,'customers','create','Thêm khách hàng mới','sales','Khách hàng','CREATE'),(115,'customers','update','Sửa thông tin khách hàng','sales','Khách hàng','UPDATE'),(116,'customers','deactivate','Vô hiệu hóa khách hàng','sales','Khách hàng','DELETE'),(117,'proposals','view','Xem phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','READ'),(118,'proposals','create','Tạo phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','CREATE'),(119,'proposals','update','Cập nhật phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','UPDATE'),(120,'proposals','cancel','Hủy phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','CANCEL'),(121,'proposals','approve','Duyệt phiếu đề xuất nhập kho (sale_manager)','sales','Đề xuất nhập kho','APPROVE'),(122,'proposals','reject','Từ chối phiếu đề xuất nhập kho (sale_manager)','sales','Đề xuất nhập kho','REJECT'),(124,'liquidations','view','Xem danh sách đơn thanh lý','warehouse','Đơn thanh lý','READ'),(125,'liquidations','create','Tạo đơn thanh lý (Warehouse Staff)','warehouse','Đơn thanh lý','CREATE'),(126,'liquidations','approve_manager','Duyệt và báo giá đơn thanh lý (Warehouse Manager)','warehouse','Đơn thanh lý','APPROVE'),(127,'liquidations','approve_ceo','Duyệt/Yêu cầu sửa đơn thanh lý (CEO)','warehouse','Đơn thanh lý','APPROVE'),(128,'transfers','view','Xem phiếu luân chuyển kho','warehouse','Phiếu luân chuyển','READ'),(129,'transfers','create','Tạo phiếu luân chuyển kho','warehouse','Phiếu luân chuyển','CREATE'),(130,'transfers','approve_manager','Duyệt phiếu luân chuyển (warehouse_manager)','warehouse','Phiếu luân chuyển','APPROVE'),(131,'transfers','approve_ceo','Duyệt phiếu luân chuyển (ceo)','warehouse','Phiếu luân chuyển','APPROVE'),(132,'purchase_orders','reject','Từ chối phiếu mua (CEO)','sales','Phiếu mua hàng','REJECT'),(133,'purchase_orders','view','Xem phiếu mua','sales','Phiếu mua hàng','READ'),(134,'purchase_orders','create','Tạo/gom phiếu mua (sale_manager)','sales','Phiếu mua hàng','CREATE'),(135,'purchase_orders','send_ceo','Gửi phiếu mua cho CEO','sales','Phiếu mua hàng','APPROVE'),(136,'purchase_orders','approve','Duyệt phiếu mua (CEO)','sales','Phiếu mua hàng','APPROVE'),(137,'suppliers','view','Xem danh sách nhà cung cấp','sales','Nhà cung cấp','READ'),(138,'suppliers','create','Thêm nhà cung cấp mới','sales','Nhà cung cấp','CREATE'),(139,'suppliers','update','Cập nhật thông tin nhà cung cấp','sales','Nhà cung cấp','UPDATE'),(140,'suppliers','deactivate','Vô hiệu hóa nhà cung cấp','sales','Nhà cung cấp','DELETE'),(141,'inventory_check','view','Xem phieu kiem ke','warehouse','Kiểm kê','READ'),(142,'inventory_check','create','Tao phieu kiem ke','warehouse','Kiểm kê','CREATE'),(143,'inventory_check','update','Cap nhat phieu kiem ke','warehouse','Kiểm kê','UPDATE'),(144,'inventory_check','complete','Hoan thanh kiem ke','warehouse','Kiểm kê','COMPLETE');
+INSERT INTO `permission` VALUES (1,'users','view','Xem danh sach nguoi dung','admin','Người dùng','READ'),(2,'users','create','Them nguoi dung moi','admin','Người dùng','CREATE'),(3,'users','update','Cap nhat thong tin nguoi dung','admin','Người dùng','UPDATE'),(4,'users','deactivate','Vo hieu hoa nguoi dung','admin','Người dùng','DELETE'),(5,'roles','view','Xem danh sach vai tro','admin','Vai trò','READ'),(6,'roles','create','Them vai tro moi','admin','Vai trò','CREATE'),(7,'roles','update','Cap nhat vai tro','admin','Vai trò','UPDATE'),(8,'roles','deactivate','Vo hieu hoa vai tro','admin','Vai trò','DELETE'),(9,'roles','edit_permissions','Chinh sua quyen cua vai tro','admin','Vai trò','UPDATE'),(10,'generators','view','Xem danh sach may phat dien','warehouse','Máy phát điện','READ'),(11,'generators','create','Them may phat dien moi','warehouse','Máy phát điện','CREATE'),(12,'generators','update','Cap nhat thong tin may','warehouse','Máy phát điện','UPDATE'),(22,'inventory','view','Xem ton kho','warehouse','Tồn kho','READ'),(24,'inventory','adjust','Dieu chinh ton kho','warehouse','Tồn kho','ADJUST'),(25,'warehouses','view','Xem thong tin kho','warehouse','Kho','READ'),(26,'warehouses','create','Them kho moi','warehouse','Kho','CREATE'),(27,'warehouses','update','Cap nhat thong tin kho','warehouse','Kho','UPDATE'),(45,'orders','view','Xem don hang','sales','Đơn hàng','READ'),(46,'orders','create','Tao don hang','sales','Đơn hàng','CREATE'),(47,'orders','update','Cap nhat don hang','sales','Đơn hàng','UPDATE'),(48,'orders','cancel','Huy don hang','sales','Đơn hàng','CANCEL'),(65,'reports','view','Xem bao cao','report','Báo cáo','READ'),(66,'reports','export','Xuat bao cao','report','Báo cáo','EXPORT'),(91,'dashboard','view','Xem dashboard','system','Dashboard','READ'),(95,'profile','view','Xem ho so ca nhan','account','Hồ sơ cá nhân','READ'),(96,'profile','edit','Sua ho so ca nhan','account','Hồ sơ cá nhân','UPDATE'),(97,'password','change','Doi mat khau','account','Mật khẩu','UPDATE'),(98,'forgot_pw','process','Xu ly yeu cau reset mat khau','account','Đặt lại mật khẩu','UPDATE'),(100,'orders','approve','Duyet don hang (sale_manager)','sales','Đơn hàng','APPROVE'),(101,'receipts','view','Xem phieu xuat/nhap kho','warehouse','Phiếu xuất/nhập','READ'),(102,'receipts','create','Tao phieu xuat/nhap kho','warehouse','Phiếu xuất/nhập','CREATE'),(103,'receipts','approve','Duyet phieu xuat/nhap kho (warehouse_manager)','warehouse','Phiếu xuất/nhập','APPROVE'),(104,'stock_card','view','Xem the kho','warehouse','Thẻ kho','READ'),(105,'orders','reject','Tu choi don hang (sale_manager)','sales','Đơn hàng','REJECT'),(106,'receipts','reject','Tu choi phieu xuat/nhap kho (warehouse_manager)','warehouse','Phiếu xuất/nhập','REJECT'),(107,'categories','view','Xem danh mục','system','Danh mục','READ'),(108,'categories','create','Tạo danh mục mới','system','Danh mục','CREATE'),(109,'categories','update','Sửa danh mục','system','Danh mục','UPDATE'),(110,'categories','delete','Xóa danh mục','system','Danh mục','DELETE'),(111,'activity_log','view','Xem lịch sử hoạt động','system','Lịch sử hoạt động','READ'),(112,'system_log','view','Xem nhật ký hệ thống','system','Nhật ký hệ thống','READ'),(113,'customers','view','Xem danh sách khách hàng','sales','Khách hàng','READ'),(114,'customers','create','Thêm khách hàng mới','sales','Khách hàng','CREATE'),(115,'customers','update','Sửa thông tin khách hàng','sales','Khách hàng','UPDATE'),(116,'customers','deactivate','Vô hiệu hóa khách hàng','sales','Khách hàng','DELETE'),(117,'proposals','view','Xem phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','READ'),(118,'proposals','create','Tạo phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','CREATE'),(119,'proposals','update','Cập nhật phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','UPDATE'),(120,'proposals','cancel','Hủy phiếu đề xuất nhập kho','sales','Đề xuất nhập kho','CANCEL'),(121,'proposals','approve','Duyệt phiếu đề xuất nhập kho (sale_manager)','sales','Đề xuất nhập kho','APPROVE'),(122,'proposals','reject','Từ chối phiếu đề xuất nhập kho (sale_manager)','sales','Đề xuất nhập kho','REJECT'),(124,'liquidations','view','Xem danh sách đơn thanh lý','warehouse','Đơn thanh lý','READ'),(125,'liquidations','create','Tạo đơn thanh lý (Warehouse Staff)','warehouse','Đơn thanh lý','CREATE'),(126,'liquidations','approve_manager','Duyệt và báo giá đơn thanh lý (Warehouse Manager)','warehouse','Đơn thanh lý','APPROVE'),(127,'liquidations','approve_ceo','Duyệt/Yêu cầu sửa đơn thanh lý (CEO)','warehouse','Đơn thanh lý','APPROVE'),(128,'transfers','view','Xem phiếu luân chuyển kho','warehouse','Phiếu luân chuyển','READ'),(129,'transfers','create','Tạo phiếu luân chuyển kho','warehouse','Phiếu luân chuyển','CREATE'),(130,'transfers','approve_manager','Duyệt phiếu luân chuyển (warehouse_manager)','warehouse','Phiếu luân chuyển','APPROVE'),(131,'transfers','approve_ceo','Duyệt phiếu luân chuyển (ceo)','warehouse','Phiếu luân chuyển','APPROVE'),(132,'purchase_orders','reject','Từ chối phiếu mua (CEO)','sales','Phiếu mua hàng','REJECT'),(133,'purchase_orders','view','Xem phiếu mua','sales','Phiếu mua hàng','READ'),(134,'purchase_orders','create','Tạo/gom phiếu mua (sale_manager)','sales','Phiếu mua hàng','CREATE'),(135,'purchase_orders','send_ceo','Gửi phiếu mua cho CEO','sales','Phiếu mua hàng','APPROVE'),(136,'purchase_orders','approve','Duyệt phiếu mua (CEO)','sales','Phiếu mua hàng','APPROVE'),(137,'suppliers','view','Xem danh sách nhà cung cấp','sales','Nhà cung cấp','READ'),(138,'suppliers','create','Thêm nhà cung cấp mới','sales','Nhà cung cấp','CREATE'),(139,'suppliers','update','Cập nhật thông tin nhà cung cấp','sales','Nhà cung cấp','UPDATE'),(140,'suppliers','deactivate','Vô hiệu hóa nhà cung cấp','sales','Nhà cung cấp','DELETE'),(141,'inventory_check','view','Xem phieu kiem ke','warehouse','Kiểm kê','READ'),(142,'inventory_check','create','Tao phieu kiem ke','warehouse','Kiểm kê','CREATE'),(143,'inventory_check','update','Cap nhat phieu kiem ke','warehouse','Kiểm kê','UPDATE'),(144,'inventory_check','complete','Hoan thanh kiem ke','warehouse','Kiểm kê','COMPLETE'),(145,'liquidations','cancel','Hủy đơn thanh lý do mình tạo (Warehouse Staff)','warehouse','Đơn thanh lý','CANCEL');
 /*!40000 ALTER TABLE `permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -875,7 +882,7 @@ CREATE TABLE `purchase_order` (
   CONSTRAINT `fk_po_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`),
   CONSTRAINT `fk_po_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_po_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -909,7 +916,7 @@ CREATE TABLE `purchase_order_detail` (
   KEY `idx_pod_generator` (`generator_id`),
   CONSTRAINT `fk_pod_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`),
   CONSTRAINT `fk_pod_po` FOREIGN KEY (`po_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -959,7 +966,7 @@ CREATE TABLE `receipt` (
   CONSTRAINT `fk_receipt_po` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_receipt_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT,
   CONSTRAINT `receipt_ibfk_1` FOREIGN KEY (`reason_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -968,6 +975,7 @@ CREATE TABLE `receipt` (
 
 LOCK TABLES `receipt` WRITE;
 /*!40000 ALTER TABLE `receipt` DISABLE KEYS */;
+INSERT INTO `receipt` VALUES (1,'RX-IM-20260619-344','IMPORT',NULL,1,1,3,3,'COMPLETED','','2026-06-19 17:13:11','2026-06-19 17:13:06','2026-06-19 17:13:10',25,NULL),(2,'RX-EX-20260619-396','EXPORT',1,NULL,1,3,3,'COMPLETED','Tạo từ đơn OR-34354986586','2026-06-19 17:16:46','2026-06-19 17:16:41','2026-06-19 17:16:46',25,NULL);
 /*!40000 ALTER TABLE `receipt` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -988,7 +996,7 @@ CREATE TABLE `receipt_detail` (
   KEY `idx_rd_inventory` (`inventory_id`),
   CONSTRAINT `fk_rd_inventory` FOREIGN KEY (`inventory_id`) REFERENCES `inventory` (`inventory_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_rd_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -997,6 +1005,7 @@ CREATE TABLE `receipt_detail` (
 
 LOCK TABLES `receipt_detail` WRITE;
 /*!40000 ALTER TABLE `receipt_detail` DISABLE KEYS */;
+INSERT INTO `receipt_detail` VALUES (1,1,1,''),(2,1,2,''),(3,2,2,''),(4,2,1,'');
 /*!40000 ALTER TABLE `receipt_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1052,7 +1061,7 @@ CREATE TABLE `role_permission` (
 
 LOCK TABLES `role_permission` WRITE;
 /*!40000 ALTER TABLE `role_permission` DISABLE KEYS */;
-INSERT INTO `role_permission` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(2,10),(3,10),(5,10),(10,10),(1,11),(1,12),(1,22),(2,22),(3,22),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(1,27),(2,27),(1,45),(2,45),(3,45),(5,45),(10,45),(1,46),(5,46),(1,47),(5,47),(1,48),(5,48),(1,65),(2,65),(10,65),(1,66),(2,66),(1,91),(2,91),(3,91),(5,91),(10,91),(1,95),(2,95),(3,95),(5,95),(10,95),(1,96),(2,96),(3,96),(5,96),(10,96),(1,97),(2,97),(3,97),(5,97),(10,97),(1,98),(1,100),(10,100),(1,101),(2,101),(3,101),(1,102),(2,102),(3,102),(1,103),(2,103),(1,104),(2,104),(1,105),(10,105),(1,106),(2,106),(1,107),(1,108),(1,109),(1,110),(1,111),(1,112),(1,113),(1,114),(1,115),(1,116),(1,117),(2,117),(5,117),(10,117),(1,118),(5,118),(1,119),(5,119),(1,120),(5,120),(1,121),(10,121),(1,122),(10,122),(1,124),(2,124),(3,124),(10,124),(13,124),(1,125),(3,125),(1,126),(2,126),(1,127),(10,127),(13,127),(1,128),(2,128),(3,128),(13,128),(1,129),(2,129),(3,129),(1,130),(2,130),(1,131),(13,131),(1,132),(13,132),(1,133),(10,133),(13,133),(1,134),(10,134),(1,135),(10,135),(1,136),(13,136),(1,137),(1,138),(1,139),(1,140),(1,141),(1,142),(1,143),(1,144);
+INSERT INTO `role_permission` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(2,10),(3,10),(5,10),(10,10),(1,11),(1,12),(1,22),(2,22),(3,22),(1,24),(2,24),(1,25),(2,25),(3,25),(1,26),(2,26),(1,27),(2,27),(1,45),(2,45),(3,45),(5,45),(10,45),(1,46),(5,46),(1,47),(5,47),(1,48),(5,48),(1,65),(2,65),(10,65),(1,66),(2,66),(1,91),(2,91),(3,91),(5,91),(10,91),(1,95),(2,95),(3,95),(5,95),(10,95),(1,96),(2,96),(3,96),(5,96),(10,96),(1,97),(2,97),(3,97),(5,97),(10,97),(1,98),(1,100),(10,100),(1,101),(2,101),(3,101),(1,102),(2,102),(3,102),(1,103),(2,103),(1,104),(2,104),(1,105),(10,105),(1,106),(2,106),(1,107),(1,108),(1,109),(1,110),(1,111),(1,112),(1,113),(1,114),(1,115),(1,116),(1,117),(2,117),(5,117),(10,117),(1,118),(5,118),(1,119),(5,119),(1,120),(5,120),(1,121),(10,121),(1,122),(10,122),(1,124),(2,124),(3,124),(10,124),(13,124),(1,125),(3,125),(1,126),(2,126),(1,127),(10,127),(13,127),(1,128),(2,128),(3,128),(13,128),(1,129),(2,129),(3,129),(1,130),(2,130),(1,131),(13,131),(1,132),(13,132),(1,133),(10,133),(13,133),(1,134),(10,134),(1,135),(10,135),(1,136),(13,136),(1,137),(1,138),(1,139),(1,140),(1,141),(1,142),(1,143),(1,144),(1,145),(3,145);
 /*!40000 ALTER TABLE `role_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1093,7 +1102,7 @@ CREATE TABLE `sale_order` (
   CONSTRAINT `fk_order_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_so_customer` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_so_rejected_by` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1102,6 +1111,7 @@ CREATE TABLE `sale_order` (
 
 LOCK TABLES `sale_order` WRITE;
 /*!40000 ALTER TABLE `sale_order` DISABLE KEYS */;
+INSERT INTO `sale_order` VALUES (1,'OR-34354986586',2,3,3,'APPROVED',18000000.00,NULL,'Giao giờ khách hàng','2026-06-18 00:00:00','2026-06-19 17:15:39','2026-06-19 17:15:17','2026-06-19 17:15:39',NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `sale_order` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1166,7 +1176,7 @@ CREATE TABLE `stock_card` (
   CONSTRAINT `fk_sc_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_sc_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_sc_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1175,6 +1185,7 @@ CREATE TABLE `stock_card` (
 
 LOCK TABLES `stock_card` WRITE;
 /*!40000 ALTER TABLE `stock_card` DISABLE KEYS */;
+INSERT INTO `stock_card` VALUES (1,1,1,1,'IMPORT',2,2,'Phi?u RX-IM-20260619-344','2026-06-19 17:13:11',3),(2,1,1,2,'EXPORT',-2,0,'Phi?u RX-EX-20260619-396','2026-06-19 17:16:46',3);
 /*!40000 ALTER TABLE `stock_card` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1469,4 +1480,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-19 17:00:20
+-- Dump completed on 2026-06-20 21:28:47

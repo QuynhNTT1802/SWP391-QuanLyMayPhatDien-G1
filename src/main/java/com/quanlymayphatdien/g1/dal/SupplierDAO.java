@@ -25,6 +25,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -41,6 +43,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -113,6 +117,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -127,6 +133,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -141,6 +149,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -155,6 +165,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -275,6 +287,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -367,6 +381,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }

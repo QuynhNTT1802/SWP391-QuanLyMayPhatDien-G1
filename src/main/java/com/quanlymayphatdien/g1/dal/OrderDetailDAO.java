@@ -23,13 +23,17 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
     public List<OrderDetail> findAll() {
         List<OrderDetail> list = new ArrayList<>();
         String sql = "SELECT * FROM order_detail";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -37,16 +41,18 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
     public List<OrderDetail> findByOrderId(int orderId) {
         List<OrderDetail> list = new ArrayList<>();
         String sql = "SELECT * FROM order_detail WHERE order_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, orderId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, orderId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -56,17 +62,20 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
          String sql = "SELECT od.*, g.model FROM order_detail od "
                + "JOIN generator g ON od.generator_id = g.id "
                + "WHERE od.order_id = ?";
-        try(Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            try(ResultSet rs = ps.executeQuery()) {
-                while(rs.next()) {
-                    OrderDetail d = getFromResultSet(rs);
-                    d.setGeneratorModel(rs.getString("model"));
-                    list.add(d);
-                }
-            } 
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, orderId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                OrderDetail d = getFromResultSet(resultSet);
+                d.setGeneratorModel(resultSet.getString("model"));
+                list.add(d);
+            }
         } catch (Exception e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -79,12 +88,16 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
     @Override
     public boolean delete(OrderDetail t) {
         String sql = "DELETE FROM order_detail WHERE order_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)){
-            ps.setInt(1, t.getOrderId());
-            ps.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getOrderId());
+            statement.executeUpdate();
             return true;
         } catch (Exception e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -93,21 +106,23 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
     public int insert(OrderDetail d) {
         String sql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection(); // S? d?ng RETURN_GENERATED_KEYS ?? l?y l?i ID v?a t?o
-                 PreparedStatement ps = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, d.getOrderId());
-            ps.setInt(2, d.getGeneratorId());
-            ps.setInt(3, d.getQuantity());
-            ps.setDouble(4, d.getUnitPrice());
-            ps.setString(5, d.getNote());
-            ps.executeUpdate();         
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1); 
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, d.getOrderId());
+            statement.setInt(2, d.getGeneratorId());
+            statement.setInt(3, d.getQuantity());
+            statement.setDouble(4, d.getUnitPrice());
+            statement.setString(5, d.getNote());
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return -1;
     }

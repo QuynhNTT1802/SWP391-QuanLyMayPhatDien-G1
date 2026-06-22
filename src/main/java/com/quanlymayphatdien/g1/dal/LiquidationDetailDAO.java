@@ -21,13 +21,16 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
     @Override
     public boolean update(LiquidationDetail t) {
          String sql = "update liquidation_detail set liquidation_price = ? where liquidation_detail_id = ? ";
-         try (Connection c = getConnection()) {
-             PreparedStatement p = c.prepareStatement(sql);
-             p.setBigDecimal(1, t.getLiquidationPrice());
-             p.setInt(2, t.getLiquidationDetailId());
-             return p.executeUpdate() > 0;
+         try {
+             connection = getConnection();
+             statement = connection.prepareStatement(sql);
+             statement.setBigDecimal(1, t.getLiquidationPrice());
+             statement.setInt(2, t.getLiquidationDetailId());
+             return statement.executeUpdate() > 0;
          } catch (Exception e) {
              SystemLogger.error(LogModule.LIQUIDATION, "Lỗi update detail liquidation", e.getMessage(), e);
+         } finally {
+             closeResources();
          }
          return false;
     }
@@ -41,23 +44,26 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
     public int insert(LiquidationDetail t) {
         String sql = "insert into liquidation_detail(liquidation_id, generator_id, serial_number, original_price, liquidation_price) "
                 + "values (?, ? ,? ,? ,?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, t.getLiquidationId());
-            p.setInt(2, t.getGeneratorId());
-            p.setString(3, t.getSerialNumber());
-            p.setBigDecimal(4, t.getOriginalPrice());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getLiquidationId());
+            statement.setInt(2, t.getGeneratorId());
+            statement.setString(3, t.getSerialNumber());
+            statement.setBigDecimal(4, t.getOriginalPrice());
 
             if (t.getLiquidationPrice() != null) {
-                p.setBigDecimal(5, t.getLiquidationPrice());
+                statement.setBigDecimal(5, t.getLiquidationPrice());
 
             } else {
-                p.setNull(5, java.sql.Types.DECIMAL);
+                statement.setNull(5, java.sql.Types.DECIMAL);
             }
 
-            return p.executeUpdate() > 0 ? 1 : 0;
+            return statement.executeUpdate() > 0 ? 1 : 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi khi thêm detail cho liquidation", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return -1;
 
@@ -87,28 +93,33 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
                    + "from liquidation_detail ld "
                    + "join generator g on ld.generator_id = g.id "
                    + "where ld.liquidation_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, liquidationId);
-            try (ResultSet rs  = p.executeQuery()) {
-                while(rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, liquidationId);
+            resultSet = statement.executeQuery();
+            while(resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findByLiquidationId", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
     public boolean deleteByLiquidationId(int liquidationId) {
         String sql = "DELETE FROM liquidation_detail WHERE liquidation_id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, liquidationId);
-            return p.executeUpdate() >= 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, liquidationId);
+            return statement.executeUpdate() >= 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi deleteByLiquidationId", e.getMessage(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }

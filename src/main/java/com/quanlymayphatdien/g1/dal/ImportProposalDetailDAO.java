@@ -54,15 +54,18 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
                 + "LEFT JOIN supplier s ON s.id = d.supplier_id "
                 + "WHERE d.proposal_id = ? "
                 + "ORDER BY d.proposal_detail_id ASC";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, proposalId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, proposalId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -71,25 +74,29 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
         String sql = "INSERT INTO import_proposal_detail "
                 + "(proposal_id, generator_id, supplier_id, quantity, current_stock, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, d.getProposalId());
-            ps.setInt(2, d.getGeneratorId());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, d.getProposalId());
+            statement.setInt(2, d.getGeneratorId());
             if (d.getSupplierId() != null) {
-                ps.setInt(3, d.getSupplierId());
+                statement.setInt(3, d.getSupplierId());
             } else {
-                ps.setNull(3, Types.INTEGER);
+                statement.setNull(3, Types.INTEGER);
             }
-            ps.setInt(4, d.getQuantity());
-            ps.setInt(5, d.getCurrentStock());
+            statement.setInt(4, d.getQuantity());
+            statement.setInt(5, d.getCurrentStock());
             if (d.getUnitPrice() != null) {
-                ps.setBigDecimal(6, d.getUnitPrice());
+                statement.setBigDecimal(6, d.getUnitPrice());
             } else {
-                ps.setNull(6, Types.DECIMAL);
+                statement.setNull(6, Types.DECIMAL);
             }
-            ps.setString(7, d.getNote());
-            return ps.executeUpdate() > 0;
+            statement.setString(7, d.getNote());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -125,11 +132,15 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
 
     public void deleteByProposalId(int proposalId) {
         String sql = "DELETE FROM import_proposal_detail WHERE proposal_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, proposalId);
-            ps.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, proposalId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
     }
 
@@ -142,38 +153,46 @@ public class ImportProposalDetailDAO extends DBContext implements I_DAO<ImportPr
     public boolean update(ImportProposalDetail t) {
         String sql = "UPDATE import_proposal_detail SET generator_id = ?, supplier_id = ?, quantity = ?, "
                 + "current_stock = ?, unit_price = ?, note = ? WHERE proposal_detail_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, t.getGeneratorId());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getGeneratorId());
             if (t.getSupplierId() != null) {
-                ps.setInt(2, t.getSupplierId());
+                statement.setInt(2, t.getSupplierId());
             } else {
-                ps.setNull(2, Types.INTEGER);
+                statement.setNull(2, Types.INTEGER);
             }
-            ps.setInt(3, t.getQuantity());
-            ps.setInt(4, t.getCurrentStock());
+            statement.setInt(3, t.getQuantity());
+            statement.setInt(4, t.getCurrentStock());
             if (t.getUnitPrice() != null) {
-                ps.setBigDecimal(5, t.getUnitPrice());
+                statement.setBigDecimal(5, t.getUnitPrice());
             } else {
-                ps.setNull(5, Types.DECIMAL);
+                statement.setNull(5, Types.DECIMAL);
             }
-            ps.setString(6, t.getNote());
-            ps.setInt(7, t.getProposalDetailId());
-            return ps.executeUpdate() > 0;
+            statement.setString(6, t.getNote());
+            statement.setInt(7, t.getProposalDetailId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     @Override
     public boolean delete(ImportProposalDetail t) {
         String sql = "DELETE FROM import_proposal_detail WHERE proposal_detail_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, t.getProposalDetailId());
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getProposalDetailId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 

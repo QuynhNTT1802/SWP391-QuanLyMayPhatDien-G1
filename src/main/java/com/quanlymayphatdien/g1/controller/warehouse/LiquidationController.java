@@ -386,7 +386,7 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
-        java.util.Set<String> perms = (java.util.Set<String>) session.getAttribute("userPermissions");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         if (perms == null) {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
@@ -464,6 +464,14 @@ public class LiquidationController extends HttpServlet {
                         return;
                     }
                     handleCEOReject(request, response, currentUser, false);
+                    break;
+                case "cancel":
+                    if (!perms.contains("liquidations.cancel")) {
+                        request.setAttribute("requiredPerm", "liquidations.cancel");
+                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
+                        return;
+                    }
+                    handleCancel(request, response, currentUser);
                     break;
             }
         } catch (Exception e) {
@@ -934,6 +942,85 @@ public class LiquidationController extends HttpServlet {
         log.setEntityId(liquidationId);
         log.setEntityName(l.getLiquidationCode());
         log.setDetails(isPermanent ? "Quản lý từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "Quản lý yêu cầu sửa đơn thanh lý");
+        activityLogDAO.insert(log);
+
+        response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
+    }
+
+    private void handleCancel(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
+        int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
+
+        Liquidation l = liquidationDAO.findById(liquidationId);
+        if (l == null) {
+            response.sendRedirect(request.getContextPath() + "/liquidations");
+            return;
+        }
+
+        // Chỉ người tạo đơn mới được huỷ đơn của mình
+        if (l.getCreatedBy() != user.getId()) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + encode("Bạn chỉ có thể huỷ đơn do chính mình tạo", "UTF-8"));
+            return;
+        }
+
+        // Chỉ huỷ được khi đơn chưa được duyệt xong (đang chờ duyệt hoặc bị yêu cầu sửa)
+        String st = l.getStatus();
+        boolean cancellable = "PENDING_MANAGER".equals(st) || "PENDING_CEO".equals(st)
+                || "MANAGER_REQUEST_EDIT".equals(st) || "CEO_REQUEST_EDIT".equals(st);
+        if (!cancellable) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
+                    + "&error=" + encode("Đơn không ở trạng thái có thể huỷ", "UTF-8"));
+            return;
+        }
+
+        liquidationDAO.updateCancel(liquidationId);
+
+        // Trả serial về IN_STOCK
+        List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
+        List<String> serials = new ArrayList<>();
+        for (LiquidationDetail d : details) {
+            serials.add(d.getSerialNumber());
+        }
+        if (!serials.isEmpty()) {
+            Connection conn = null;
+            try {
+                conn = inventoryDAO.getConnection();
+                conn.setAutoCommit(false);
+                inventoryDAO.updateStatusBatch(conn, serials, InventoryDAO.STATUS_IN_STOCK);
+                conn.commit();
+            } catch (Exception ex) {
+                if (conn != null) try { conn.rollback(); } catch (Exception ignored) {}
+                throw ex;
+            } finally {
+                if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
+            }
+        }
+
+        // Báo cho các quản lý/CEO đang chờ xử lý biết đơn đã được người tạo rút lại
+        List<User> reviewers = new ArrayList<>();
+        if ("PENDING_CEO".equals(st)) {
+            reviewers.addAll(userDAO.findUsersByPermission("liquidations", "approve_ceo"));
+        } else {
+            reviewers.addAll(userDAO.findUsersByPermission("liquidations", "approve_manager"));
+        }
+        for (User rv : reviewers) {
+            NotificationService.send(
+                    rv.getId(),
+                    "Đơn thanh lý đã bị huỷ",
+                    "Nhân viên " + user.getName() + " đã huỷ đơn thanh lý " + l.getLiquidationCode() + ".",
+                    request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
+                    "liquidation",
+                    liquidationId
+            );
+        }
+
+        ActivityLog log = new ActivityLog();
+        log.setUserId(user.getId());
+        log.setEntityType("liquidation");
+        log.setAction("CANCELLED");
+        log.setEntityId(liquidationId);
+        log.setEntityName(l.getLiquidationCode());
+        log.setDetails("Người tạo huỷ đơn thanh lý");
         activityLogDAO.insert(log);
 
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);

@@ -30,6 +30,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -62,6 +64,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -76,6 +80,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -133,6 +139,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -146,6 +154,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -159,6 +169,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -192,6 +204,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -251,6 +265,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return pageList;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
@@ -294,6 +310,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -311,6 +329,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -332,6 +352,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -348,6 +370,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -370,6 +394,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -389,6 +415,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -440,9 +468,11 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
-    } 
+    }
 
     public List<Generator> findInStockByWarehouse(int warehouseId) {
         List<Generator> list = new ArrayList<>();
@@ -460,6 +490,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
