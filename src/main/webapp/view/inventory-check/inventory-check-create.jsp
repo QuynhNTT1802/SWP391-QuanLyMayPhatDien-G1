@@ -90,8 +90,8 @@
                                         <thead>
                                             <tr>
                                                 <th style="width: 40px;">Chọn</th>
-                                                <th style="width: 40px;">#</th>
-                                                <th>Mã máy</th>                                                
+                                                <th style="width: 40px;">STT</th>
+                                                <th>Mẫu máy</th>                                                
                                                 <th>SL trên hệ thống</th>
                                             </tr>
                                         </thead>

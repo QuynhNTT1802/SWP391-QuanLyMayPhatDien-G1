@@ -6,13 +6,6 @@ package com.quanlymayphatdien.g1.entity;
 
 import java.time.LocalDateTime;
 
-/**
- *
- * @author FPTShop
- *
- * Moi serial = 1 dong trong bang inventory.
- * Quan ly ton kho = quan ly serial.
- */
 public class Inventory {
 
     private int inventoryId;
@@ -129,11 +122,6 @@ public class Inventory {
         this.importReceiptCode = importReceiptCode;
     }
 
-    /**
-     * Tinh so serial IN_STOCK theo (warehouse, generator).
-     * Su dung khi can hien thi tong ton o trang overview/aggregate.
-     * @return 1 vi moi dong = 1 serial
-     */
     public int getQuantity() {
         return 1;
     }
