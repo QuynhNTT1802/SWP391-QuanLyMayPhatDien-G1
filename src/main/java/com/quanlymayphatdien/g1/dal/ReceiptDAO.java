@@ -532,6 +532,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         } finally {
             closeResources();
         }
+        return false;
     }
 
     public boolean requestRevision(int receiptId, int managerId, Integer reasonId, String reasonNote) {

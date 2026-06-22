@@ -743,4 +743,52 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         t.setNote(rs.getString("note"));
         return t;
     }
+    
+     public boolean requestRevisionByManager(int transferId, int managerId, String note) {
+        String sql = "UPDATE transfer SET status = 'NEEDS_REVISION', "
+                + "manager_reviewed_by = ?, manager_reviewed_at = ?, "
+                + "manager_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
+                + "AND ceo_reviewed_at IS NULL AND final_reviewed_at IS NULL";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, managerId);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                ps.setString(3, note.trim());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(5, transferId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return false;
+    }
+
+    public boolean requestRevisionByCeo(int transferId, int ceoId, String note) {
+        String sql = "UPDATE transfer SET status = 'NEEDS_REVISION', "
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, "
+                + "ceo_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_CEO' "
+                + "AND final_reviewed_at IS NULL";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, ceoId);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                ps.setString(3, note.trim());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(5, transferId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        }
+        return false;
+    }
 }
