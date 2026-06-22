@@ -165,6 +165,13 @@
         </a>
     </c:if>
 
+    <c:if test="${not empty perms and perms.contains('inventory_check.view')}">
+        <a href="${pageContext.request.contextPath}/inventory-check">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+            Kiểm kê
+        </a>
+    </c:if>
+
 
     <div class="nav-section">Quản trị</div>
 
@@ -258,12 +265,10 @@
         </a>
     </c:if>
 
-    <c:if test="${not empty perms and perms.contains('generators.view')}">
-        <a href="${pageContext.request.contextPath}/warehouse/generators">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            Máy phát điện
-        </a>
-    </c:if>
+    <a href="${pageContext.request.contextPath}/warehouse/generators">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Máy phát điện
+    </a>
 
     <div class="nav-section">Tài khoản</div>
 

@@ -18,7 +18,6 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -92,7 +91,7 @@ public class ProposalController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doGet", e.getMessage(), e);
+            SystemLogger.error("Quản lý đề xuất nhập", "ProposalController.doGet", e.getMessage(), e);
             e.printStackTrace();
             if (!response.isCommitted()) {
                 session.setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
@@ -159,7 +158,7 @@ public class ProposalController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doPost", e.getMessage(), e);
+            SystemLogger.error("Quản lý đề xuất nhập", "ProposalController.doPost", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
             session.setAttribute("toastType", "danger");
@@ -173,8 +172,7 @@ public class ProposalController extends HttpServlet {
         User loggedUser = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
-        // Sale manager (có quyền approve) xem tất cả phiếu TRỪ DRAFT.
-        // Sale staff (không có quyền approve) chỉ xem phiếu của mình, bao gồm DRAFT.
+     
         Integer createdByFilter = canApprove ? null : loggedUser.getId();
         boolean excludeDraft = canApprove;
 

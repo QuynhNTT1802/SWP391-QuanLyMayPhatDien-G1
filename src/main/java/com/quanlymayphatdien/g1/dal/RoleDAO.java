@@ -57,19 +57,22 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     public List<Role> getRolesByUserId(int userId) {
         List<Role> roles = new ArrayList<>();
         String sql = "SELECT r.* FROM role r JOIN user_role ur ON r.id = ur.role_id WHERE ur.user_id = ? AND r.status = 'active'";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, userId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
                 Role role = new Role();
-                role.setRoleId(rs.getInt("id"));
-                role.setRoleName(rs.getString("name"));
-                role.setDescription(rs.getString("description"));
+                role.setRoleId(resultSet.getInt("id"));
+                role.setRoleName(resultSet.getString("name"));
+                role.setDescription(resultSet.getString("description"));
                 roles.add(role);
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return roles;
     }
@@ -77,29 +80,35 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     //deactive or active
     public boolean updateStatus(int roleId, String status) {
         String sql = "UPDATE role SET status = ? WHERE id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, status);
-            p.setInt(2, roleId);
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, status);
+            statement.setInt(2, roleId);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     public boolean isRoleNameExists(String name, int excludeRoleId) {
         String sql = "SELECT COUNT(*) FROM role WHERE name = ? AND id != ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, name);
-            p.setInt(2, excludeRoleId);
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, name);
+            statement.setInt(2, excludeRoleId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -107,17 +116,20 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     public List<Role> searchByName(String keyword) {
         List<Role> list = new ArrayList<>();
         String sql = "SELECT * FROM role WHERE name LIKE ? OR description LIKE ? ORDER BY id";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             String likeKeyword = "%" + keyword + "%";
-            p.setString(1, likeKeyword);
-            p.setString(2, likeKeyword);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+            statement.setString(1, likeKeyword);
+            statement.setString(2, likeKeyword);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -127,14 +139,17 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     public List<Role> findAll() {
         List<Role> list = new ArrayList<>();
         String sql = "SELECT * FROM role ORDER BY id";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -142,16 +157,19 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     @Override
     public boolean update(Role role) {
         String sql = "UPDATE role SET name = ?, description = ?, status = ?, updated_at = ? WHERE id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, role.getRoleName());
-            p.setString(2, role.getDescription());
-            p.setString(3, role.getStatus());
-            p.setObject(4, LocalDateTime.now());
-            p.setInt(5, role.getRoleId());
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, role.getRoleName());
+            statement.setString(2, role.getDescription());
+            statement.setString(3, role.getStatus());
+            statement.setObject(4, LocalDateTime.now());
+            statement.setInt(5, role.getRoleId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -159,13 +177,16 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     @Override
     public boolean delete(Role role) {
         String sql = "UPDATE role SET status = 'inactive', updated_at = ? WHERE id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setObject(1, LocalDateTime.now());
-            p.setInt(2, role.getRoleId());
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setObject(1, LocalDateTime.now());
+            statement.setInt(2, role.getRoleId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -173,24 +194,26 @@ public class RoleDAO extends DBContext implements I_DAO<Role> {
     @Override
     public int insert(Role role) {
         String sql = "INSERT INTO role (name, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setString(1, role.getRoleName());
-            p.setString(2, role.getDescription());
-            p.setString(3, role.getStatus());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, role.getRoleName());
+            statement.setString(2, role.getDescription());
+            statement.setString(3, role.getStatus());
             LocalDateTime now = LocalDateTime.now();
-            p.setObject(4, now);
-            p.setObject(5, now);
+            statement.setObject(4, now);
+            statement.setObject(5, now);
 
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
                 }
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return -1;
     }

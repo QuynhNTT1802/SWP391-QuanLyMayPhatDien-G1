@@ -211,7 +211,7 @@ main { padding: 20px 24px 60px; min-width: 0; }
 .status.inactive .sdot { background: var(--muted-2); }
 .status.inactive { color: var(--muted); }
 
-.row-actions { display: inline-flex; gap: 2px; opacity: 0; transition: opacity .15s ease; }
+.row-actions { display: inline-flex; gap: 2px; opacity: 1; }
 tbody tr:hover .row-actions { opacity: 1; }
 .row-actions .icon-mini { width: 26px; height: 26px; border: 1px solid transparent; background: transparent; color: var(--muted); border-radius: 4px; display: grid; place-items: center; cursor: pointer; transition: all .12s ease; }
 .row-actions .icon-mini:hover { background: var(--surface); border-color: var(--border); color: var(--fg); }

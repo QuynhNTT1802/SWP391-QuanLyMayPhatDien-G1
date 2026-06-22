@@ -207,6 +207,9 @@
                                                 <c:when test="${liq.status == 'REJECTED_BY_CEO'}">
                                                     <span class="pill liq-rejected" title="Sếp từ chối: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Đã hủy</span>
                                                 </c:when>
+                                                <c:when test="${liq.status == 'CANCELLED'}">
+                                                    <span class="pill liq-rejected"><span class="pdot"></span>Đã huỷ đơn</span>
+                                                </c:when>
                                                 <c:otherwise>
                                                     <span class="pill liq-muted"><span class="pdot"></span>${liq.status}</span>
                                                 </c:otherwise>

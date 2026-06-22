@@ -24,15 +24,18 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
                    + "FROM transfer_detail td "
                    + "LEFT JOIN generator g ON td.generator_id = g.id "
                    + "ORDER BY td.transfer_detail_id ASC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -44,28 +47,35 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
                    + "LEFT JOIN generator g ON td.generator_id = g.id "
                    + "WHERE td.transfer_id = ? "
                    + "ORDER BY td.transfer_detail_id ASC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, transferId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, transferId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
 
     public boolean deleteByTransferId(int transferId) {
         String sql = "DELETE FROM transfer_detail WHERE transfer_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, transferId);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, transferId);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -74,24 +84,28 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
     public boolean update(TransferDetail d) {
         String sql = "UPDATE transfer_detail SET generator_id = ?, serial_number = ?, "
                    + "quantity = ?, note = ? WHERE transfer_detail_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, d.getGeneratorId());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, d.getGeneratorId());
             if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                ps.setString(2, d.getSerialNumber().trim());
+                statement.setString(2, d.getSerialNumber().trim());
             } else {
-                ps.setNull(2, Types.VARCHAR);
+                statement.setNull(2, Types.VARCHAR);
             }
-            ps.setInt(3, d.getQuantity());
+            statement.setInt(3, d.getQuantity());
             if (d.getNote() != null && !d.getNote().trim().isEmpty()) {
-                ps.setString(4, d.getNote().trim());
+                statement.setString(4, d.getNote().trim());
             } else {
-                ps.setNull(4, Types.VARCHAR);
+                statement.setNull(4, Types.VARCHAR);
             }
-            ps.setInt(5, d.getTransferDetailId());
-            return ps.executeUpdate() > 0;
+            statement.setInt(5, d.getTransferDetailId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -99,12 +113,16 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
     @Override
     public boolean delete(TransferDetail d) {
         String sql = "DELETE FROM transfer_detail WHERE transfer_detail_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, d.getTransferDetailId());
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, d.getTransferDetailId());
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -113,30 +131,32 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
     public int insert(TransferDetail d) {
         String sql = "INSERT INTO transfer_detail (transfer_id, generator_id, serial_number, quantity, note) "
                    + "VALUES (?, ?, ?, ?, ?)";
-        try (Connection c = getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, d.getTransferId());
-            ps.setInt(2, d.getGeneratorId());
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setInt(1, d.getTransferId());
+            statement.setInt(2, d.getGeneratorId());
             if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                ps.setString(3, d.getSerialNumber().trim());
+                statement.setString(3, d.getSerialNumber().trim());
             } else {
-                ps.setNull(3, Types.VARCHAR);
+                statement.setNull(3, Types.VARCHAR);
             }
-            ps.setInt(4, d.getQuantity());
+            statement.setInt(4, d.getQuantity());
             if (d.getNote() != null && !d.getNote().trim().isEmpty()) {
-                ps.setString(5, d.getNote().trim());
+                statement.setString(5, d.getNote().trim());
             } else {
-                ps.setNull(5, Types.VARCHAR);
+                statement.setNull(5, Types.VARCHAR);
             }
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return -1;
     }

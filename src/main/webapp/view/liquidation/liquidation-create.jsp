@@ -32,7 +32,7 @@
                 <h2 class="page-title">Tạo đơn thanh lý</h2>
             </div>
 
-            <div class="form-layout">
+            <div class="form-layout form-layout--full">
                 <form id="liquidationForm" class="form-card" action="${pageContext.request.contextPath}/liquidations" method="POST">
                     <input type="hidden" name="action" value="create" />
                     <input type="hidden" name="customerId" id="customerIdHidden" />
@@ -67,78 +67,46 @@
                         </div>
                     </div>
 
-                    <!-- SECTION 02: CHỌN MÁY (Inline 2-col picker) -->
+                    <!-- SECTION 02: CHỌN MÁY (List 1 cột + sticky bar) -->
                     <div class="form-section">
                         <div class="form-section-head">
                             <div class="form-section-num">02 — CHỌN MÁY</div>
                             <h3 class="form-section-title">Chọn máy phát điện thanh lý</h3>
                         </div>
 
-                        <div class="liq-picker-shell">
-                            <div class="liq-picker-mobile-tabs">
-                                <button type="button" class="is-active" data-mobile-pane="left">Kho hàng <span class="badge" id="warehouseAvailBadge">0</span></button>
-                                <button type="button" data-mobile-pane="right">Đã chọn <span class="badge" id="cartCountBadge">0</span></button>
+                        <div class="liq-pick">
+                            <div class="liq-pick-tools">
+                                <input type="text" id="serialSearchInput" class="serial-search-box" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                                <select id="serialAgeFilter" class="serial-sort-select" title="Lọc theo tuổi" style="display:none;">
+                                    <option value="all" data-base="Tất cả">Tất cả</option>
+                                    <option value="old" data-base="&ge; 12 tháng">&ge; 12 tháng</option>
+                                    <option value="mid" data-base="6-12 tháng">6-12 tháng</option>
+                                    <option value="fresh" data-base="&lt; 6 tháng">&lt; 6 tháng</option>
+                                </select>
+                                <select id="serialSortOrder" class="serial-sort-select" title="Sắp xếp">
+                                    <option value="asc">Cũ nhất</option>
+                                    <option value="desc">Mới nhất</option>
+                                </select>
                             </div>
-
-                            <div class="liq-picker-grid">
-                                <!-- LEFT: KHO HÀNG -->
-                                <div class="liq-picker-pane" id="leftPane">
-                                    <div class="liq-pane-head">
-                                        <span class="pane-title">Kho hàng</span>
-                                        <span class="pane-meta" id="leftPaneMeta">Chọn kho ở mục 01</span>
-                                    </div>
-                                    <div class="liq-pane-tools">
-                                        <input type="text" id="serialSearchInput" class="serial-search-box" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
-                                        <select id="serialSortOrder" class="serial-sort-select" title="Sắp xếp">
-                                            <option value="asc">Cũ nhất</option>
-                                            <option value="desc">Mới nhất</option>
-                                        </select>
-                                    </div>
-                                    <div class="liq-pane-filters summary-chips" id="warehouseFilters" style="display:none;">
-                                        <button type="button" class="filter-chip filter-all is-active" data-filter="all">
-                                            <span class="dot"></span><span class="lbl">Tất cả</span><span class="num" id="cntAll">0</span>
-                                        </button>
-                                        <button type="button" class="filter-chip filter-old" data-filter="old">
-                                            <span class="dot"></span><span class="lbl">≥ 12th</span><span class="num" id="cntOld">0</span>
-                                        </button>
-                                        <button type="button" class="filter-chip filter-mid" data-filter="mid">
-                                            <span class="dot"></span><span class="lbl">6-12th</span><span class="num" id="cntMid">0</span>
-                                        </button>
-                                        <button type="button" class="filter-chip filter-fresh" data-filter="fresh">
-                                            <span class="dot"></span><span class="lbl">&lt;6th</span><span class="num" id="cntFresh">0</span>
-                                        </button>
-                                    </div>
-                                    <div class="liq-pane-body" id="warehousePaneBody">
-                                        <div class="pane-empty" id="warehouseEmpty">Chọn Kho hàng ở mục 01 để xem máy có sẵn.</div>
-                                    </div>
+                            <div class="liq-pick-body" id="pickBody">
+                                <div class="pick-empty" id="pickEmpty">Chọn Kho hàng ở mục 01 để xem máy có sẵn.</div>
+                            </div>
+                            <div class="liq-pick-bar">
+                                <div class="bar-summary">
+                                    <div class="bar-count">Đã chọn <strong id="barSelectedCount">0</strong> máy<span id="barModelCount" style="color:var(--muted);font-weight:500;"></span></div>
+                                    <div class="bar-total">Tổng giá gốc: <span class="total-val" id="formTotalVal">0 đ</span></div>
                                 </div>
-
-                                <!-- RIGHT: CART -->
-                                <div class="liq-picker-pane is-hidden-mobile" id="rightPane">
-                                    <div class="liq-pane-head">
-                                        <span class="pane-title">Đã chọn</span>
-                                        <span class="pane-meta" id="rightPaneMeta">0 máy</span>
-                                    </div>
-                                    <div class="liq-pane-body" id="cartPaneBody">
-                                        <div class="pane-empty" id="cartEmpty">Click vào máy bên trái để thêm vào phiếu.</div>
-                                    </div>
-                                    <div class="liq-pane-foot">
-                                        <span>Tổng giá gốc</span>
-                                        <span class="total-val" id="formTotalVal">0 đ</span>
-                                    </div>
+                                <div class="bar-actions">
+                                    <a class="btn" href="${pageContext.request.contextPath}/liquidations">Huỷ bỏ</a>
+                                    <button type="submit" form="liquidationForm" class="btn btn-primary">
+                                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                        Lưu &amp; Đề xuất
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <div id="hiddenInputs"></div>
-                    </div>
-
-                    <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
-                        <a class="btn" href="${pageContext.request.contextPath}/liquidations">Huỷ bỏ</a>
-                        <button type="submit" form="liquidationForm" class="btn btn-primary">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                            Lưu & Đề xuất
-                        </button>
                     </div>
                 </form>
             </div>
@@ -150,15 +118,16 @@
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
 
-    var cart = {};
+    var selected = {};
     var warehouseStock = {};
     var lockedByGen = {};
     var currentAgeFilter = 'all';
+    var collapsedGroups = {};
 
     function escapeHtml(s) {
         if (s == null) return '';
-        return String(s).replace(/[&<>"']/g, function(c) {
-            return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+        return String(s).replace(/[&<>"\']/g, function(c) {
+            return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "\'":'&#39;' }[c];
         });
     }
     function fmt(n) { return Number(n || 0).toLocaleString('vi-VN'); }
@@ -189,40 +158,43 @@
         }
     }
 
-    /* ============================================================
-       LEFT pane render (kho)
-       ============================================================ */
-    function renderWarehousePane() {
-        var body = document.getElementById('warehousePaneBody');
-        var empty = document.getElementById('warehouseEmpty');
+    function isSelected(gid, serial) {
+        return !!(selected[gid] && selected[gid].items[serial]);
+    }
+    function toggleSelect(gid, grp, item) {
+        if (!selected[gid]) {
+            selected[gid] = { model: grp.model, unitPrice: grp.unitPrice, items: {} };
+        }
+        if (selected[gid].items[item.serial]) {
+            delete selected[gid].items[item.serial];
+            if (Object.keys(selected[gid].items).length === 0) delete selected[gid];
+        } else {
+            selected[gid].items[item.serial] = { serial: item.serial, createdAt: item.createdAt };
+        }
+    }
+
+    function render() {
+        var body = document.getElementById('pickBody');
+        var hidden = document.getElementById('hiddenInputs');
         body.innerHTML = '';
+        hidden.innerHTML = '';
 
-        var keys = Object.keys(warehouseStock);
-        // Build map serial-in-cart để loại
-        var inCart = {};
-        Object.keys(cart).forEach(function(gid) {
-            inCart[gid] = inCart[gid] || {};
-            cart[gid].items.forEach(function(it) { inCart[gid][it.serial] = true; });
-        });
-
-        var totalAvail = 0, cOld = 0, cMid = 0, cFresh = 0;
-        var anyRendered = false;
         var query = (document.getElementById('serialSearchInput').value || '').toLowerCase().trim();
         var sortOrder = document.getElementById('serialSortOrder').value;
+        var keys = Object.keys(warehouseStock);
+
+        var totalAvail = 0, cOld = 0, cMid = 0, cFresh = 0;
+        var totalSelected = 0, totalPrice = 0;
+        var anyRendered = false;
 
         keys.forEach(function(gid) {
             var grp = warehouseStock[gid];
-            var available = (grp.items || []).filter(function(it) {
-                return !(inCart[gid] && inCart[gid][it.serial]);
-            });
+            var items = (grp.items || []).slice();
             var lockedHere = lockedByGen[gid] || [];
-            if (available.length === 0 && lockedHere.length === 0) return;
 
-            // Filter by query
             var modelMatch = (grp.model || '').toLowerCase().indexOf(query) > -1;
-            var filtered = available.filter(function(it) {
-                if (modelMatch) return true;
-                if (!query) return true;
+            var filtered = items.filter(function(it) {
+                if (modelMatch || !query) return true;
                 return (it.serial || '').toLowerCase().indexOf(query) > -1;
             }).filter(function(it) {
                 if (currentAgeFilter === 'all') return true;
@@ -231,192 +203,156 @@
                     || (currentAgeFilter === 'mid' && age === 'age-mid')
                     || (currentAgeFilter === 'fresh' && age === 'age-fresh');
             });
-            // Sort
             filtered.sort(function(a, b) {
                 var ta = tsOf(a.createdAt), tb = tsOf(b.createdAt);
                 return sortOrder === 'desc' ? tb - ta : ta - tb;
             });
 
+            // tính count theo all (không phụ thuộc filter) cho summary chips
+            items.forEach(function(it) {
+                var age = ageOf(tsOf(it.createdAt)).cls;
+                if (age === 'age-old') cOld++;
+                else if (age === 'age-mid') cMid++;
+                else cFresh++;
+                totalAvail++;
+            });
+
             if (filtered.length === 0 && lockedHere.length === 0) return;
             anyRendered = true;
 
-            // Group label
-            var label = document.createElement('div');
-            label.className = 'pane-group-label';
-            label.innerHTML =
-                '<span class="lbl">' + escapeHtml(grp.model) + '</span>'
-                + '<span class="count">' + filtered.length + '</span>'
-                + (filtered.length > 1 ? '<button type="button" class="move-all" data-gen-id="' + gid + '">Chọn tất cả</button>' : '');
-            var moveAllBtn = label.querySelector('.move-all');
-            if (moveAllBtn) {
-                moveAllBtn.addEventListener('click', function() {
-                    filtered.forEach(function(it) { addToCart(gid, grp, it); });
-                    refreshAll();
+            var selCount = 0;
+            filtered.forEach(function(it) { if (isSelected(gid, it.serial)) selCount++; });
+
+            var group = document.createElement('div');
+            group.className = 'pick-group' + (collapsedGroups[gid] ? ' is-collapsed' : '');
+
+            var head = document.createElement('div');
+            head.className = 'pick-group-head';
+            var allOn = filtered.length > 0 && selCount === filtered.length;
+            head.innerHTML =
+                '<svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>'
+                + '<span class="model">' + escapeHtml(grp.model) + '</span>'
+                + '<span class="count">' + selCount + '/' + filtered.length + ' máy</span>'
+                + (filtered.length > 0
+                    ? '<button type="button" class="pick-all' + (allOn ? ' is-all-on' : '') + '">' + (allOn ? 'Bỏ tất cả' : 'Chọn tất cả') + '</button>'
+                    : '');
+            head.addEventListener('click', function(e) {
+                if (e.target.closest('.pick-all')) return;
+                collapsedGroups[gid] = !collapsedGroups[gid];
+                render();
+            });
+            var pickAllBtn = head.querySelector('.pick-all');
+            if (pickAllBtn) {
+                pickAllBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (allOn) {
+                        filtered.forEach(function(it) {
+                            if (isSelected(gid, it.serial)) toggleSelect(gid, grp, it);
+                        });
+                    } else {
+                        filtered.forEach(function(it) {
+                            if (!isSelected(gid, it.serial)) toggleSelect(gid, grp, it);
+                        });
+                    }
+                    render();
                 });
             }
-            body.appendChild(label);
+            group.appendChild(head);
 
-            // Rows
+            var groupBody = document.createElement('div');
+            groupBody.className = 'pick-group-body';
+
             filtered.forEach(function(it) {
-                totalAvail++;
                 var ts = tsOf(it.createdAt);
                 var age = ageOf(ts);
-                if (age.cls === 'age-old') cOld++;
-                else if (age.cls === 'age-mid') cMid++;
-                else cFresh++;
+                var checked = isSelected(gid, it.serial);
+                var price = parseFloat(grp.unitPrice || 0) || 0;
 
-                var row = document.createElement('div');
-                row.className = 'move-row ' + age.cls;
-                row.title = 'Click để thêm vào phiếu';
+                var row = document.createElement('label');
+                row.className = 'pick-row ' + age.cls + (checked ? ' is-checked' : '');
                 row.innerHTML =
-                    '<span class="age-dot"></span>'
+                    '<input type="checkbox" class="pick-cb"' + (checked ? ' checked' : '') + '/>'
+                    + '<span class="age-dot"></span>'
                     + '<span class="row-serial">' + escapeHtml(it.serial) + '</span>'
-                    + '<span class="row-meta">' + age.text + '</span>'
-                    + '<span class="row-meta">' + dateStrOf(it.createdAt) + '</span>'
-                    + '<svg class="row-action-icon" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>';
-                row.addEventListener('click', function() {
-                    addToCart(gid, grp, it);
-                    refreshAll();
+                    + '<span class="row-age">' + age.text + '</span>'
+                    + '<span class="row-date">' + dateStrOf(it.createdAt) + '</span>'
+                    + '<span class="row-price">' + fmt(price) + ' đ</span>';
+                row.querySelector('.pick-cb').addEventListener('change', function() {
+                    toggleSelect(gid, grp, it);
+                    render();
                 });
-                body.appendChild(row);
+                groupBody.appendChild(row);
             });
 
-            // Locked entries
-            if (lockedHere.length > 0) {
-                var locked = document.createElement('div');
-                locked.className = 'pane-locked-block';
-                locked.innerHTML = '<div>' + lockedHere.length + ' máy đang khoá ở phiếu khác</div>';
-                lockedHere.forEach(function(l) {
-                    var rl = document.createElement('div');
-                    rl.className = 'row-locked';
-                    rl.innerHTML =
-                        '<span>' + escapeHtml(l.serialNumber) + '</span>'
-                        + '<span>·</span>'
-                        + '<span>' + lockedStatusLabel(l.liquidationStatus) + '</span>'
-                        + '<a class="mono" href="${pageContext.request.contextPath}/liquidations?action=detail&id=' + encodeURIComponent(l.liquidationId) + '" target="_blank">'
-                        + escapeHtml(l.liquidationCode) + '</a>';
-                    locked.appendChild(rl);
-                });
-                body.appendChild(locked);
-            }
+            // Locked rows
+            lockedHere.forEach(function(l) {
+                var row = document.createElement('div');
+                row.className = 'pick-row is-locked';
+                var ctx = '${pageContext.request.contextPath}';
+                row.innerHTML =
+                    '<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 1 1 8 0v4"/></svg>'
+                    + '<span class="age-dot" style="background:#f59e0b;"></span>'
+                    + '<span class="row-locked-info">'
+                    + '<span style="font-family:var(--font-mono);font-weight:700;color:#92400e;">' + escapeHtml(l.serialNumber) + '</span>'
+                    + '<span>·</span>'
+                    + '<span>' + lockedStatusLabel(l.liquidationStatus) + '</span>'
+                    + '<a class="mono" href="' + ctx + '/liquidations?action=detail&id=' + encodeURIComponent(l.liquidationId) + '" target="_blank">' + escapeHtml(l.liquidationCode) + '</a>'
+                    + '</span>';
+                groupBody.appendChild(row);
+            });
+
+            group.appendChild(groupBody);
+            body.appendChild(group);
+        });
+
+        // Hidden inputs + totals
+        Object.keys(selected).forEach(function(gid) {
+            var grp = selected[gid];
+            var price = parseFloat(grp.unitPrice || 0) || 0;
+            Object.keys(grp.items).forEach(function(sn) {
+                totalSelected++;
+                totalPrice += price;
+                hidden.insertAdjacentHTML('beforeend',
+                    '<input type="hidden" name="generatorId" value="' + escapeHtml(gid) + '">'
+                    + '<input type="hidden" name="serialNumber" value="' + escapeHtml(sn) + '">'
+                );
+            });
         });
 
         if (!anyRendered) {
-            body.innerHTML = '<div class="pane-empty">' + (query ? 'Không có kết quả phù hợp' : 'Không có máy khả dụng') + '</div>';
+            var msg;
+            if (query) msg = 'Không có kết quả phù hợp';
+            else if (Object.keys(warehouseStock).length === 0) msg = 'Kho này chưa có máy phát điện đang IN_STOCK';
+            else msg = 'Không có máy khả dụng';
+            body.innerHTML = '<div class="pick-empty">' + msg + '</div>';
         }
 
-        document.getElementById('cntAll').textContent = totalAvail;
-        document.getElementById('cntOld').textContent = cOld;
-        document.getElementById('cntMid').textContent = cMid;
-        document.getElementById('cntFresh').textContent = cFresh;
-        document.getElementById('warehouseAvailBadge').textContent = totalAvail;
-        document.getElementById('leftPaneMeta').textContent = totalAvail + ' máy khả dụng';
-    }
-
-    /* ============================================================
-       RIGHT pane render (cart) + hidden inputs
-       ============================================================ */
-    function renderCart() {
-        var body = document.getElementById('cartPaneBody');
-        var hidden = document.getElementById('hiddenInputs');
-        body.innerHTML = '';
-        hidden.innerHTML = '';
-
-        var totalItems = 0, totalPrice = 0;
-        var keys = Object.keys(cart);
-
-        if (keys.length === 0) {
-            body.innerHTML = '<div class="pane-empty">Click vào máy bên trái để thêm vào phiếu.</div>';
-            document.getElementById('rightPaneMeta').textContent = '0 máy';
-            document.getElementById('formTotalVal').textContent = '0 đ';
-            document.getElementById('cartCountBadge').textContent = '0';
-            return;
-        }
-
-        keys.forEach(function(gid) {
-            var grp = cart[gid];
-            if (!grp.items.length) return;
-            var price = parseFloat(grp.unitPrice || 0) || 0;
-            var subTotal = price * grp.items.length;
-            totalItems += grp.items.length;
-            totalPrice += subTotal;
-
-            var groupBox = document.createElement('div');
-            groupBox.className = 'cart-pane-group';
-
-            var head = document.createElement('div');
-            head.className = 'cart-pane-group-head';
-            head.innerHTML =
-                '<span class="model">' + escapeHtml(grp.model) + '</span>'
-                + '<span class="count">' + grp.items.length + '</span>'
-                + '<span class="price">' + fmt(subTotal) + ' đ</span>';
-            groupBox.appendChild(head);
-
-            grp.items.forEach(function(it) {
-                var ts = tsOf(it.createdAt);
-                var age = ageOf(ts);
-                var row = document.createElement('div');
-                row.className = 'move-row ' + age.cls;
-                row.title = 'Click để bỏ khỏi phiếu';
-                row.innerHTML =
-                    '<span class="age-dot"></span>'
-                    + '<span class="row-serial">' + escapeHtml(it.serial) + '</span>'
-                    + '<span class="row-meta">' + age.text + '</span>'
-                    + '<span class="row-meta">' + fmt(price) + ' đ</span>'
-                    + '<svg class="row-action-icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-                row.addEventListener('click', function() {
-                    removeFromCart(gid, it.serial);
-                    refreshAll();
-                });
-                groupBox.appendChild(row);
-
-                hidden.insertAdjacentHTML('beforeend',
-                    '<input type="hidden" name="generatorId" value="' + escapeHtml(gid) + '">'
-                    + '<input type="hidden" name="serialNumber" value="' + escapeHtml(it.serial) + '">'
-                );
-            });
-            body.appendChild(groupBox);
+        var ageSelect = document.getElementById('serialAgeFilter');
+        var counts = { all: totalAvail, old: cOld, mid: cMid, fresh: cFresh };
+        Array.prototype.forEach.call(ageSelect.options, function(opt) {
+            var base = opt.getAttribute('data-base') || opt.value;
+            opt.innerHTML = base + ' (' + (counts[opt.value] || 0) + ')';
         });
 
-        document.getElementById('rightPaneMeta').textContent = totalItems + ' máy · ' + Object.keys(cart).filter(function(k) { return cart[k].items.length > 0; }).length + ' model';
+        document.getElementById('barSelectedCount').textContent = totalSelected;
+        var modelCount = Object.keys(selected).length;
+        document.getElementById('barModelCount').textContent = modelCount > 0 ? ' · ' + modelCount + ' model' : '';
         document.getElementById('formTotalVal').textContent = fmt(totalPrice) + ' đ';
-        document.getElementById('cartCountBadge').textContent = totalItems;
     }
 
-    function addToCart(gid, grp, item) {
-        if (!cart[gid]) {
-            cart[gid] = { model: grp.model, unitPrice: grp.unitPrice, items: [] };
-        }
-        if (cart[gid].items.find(function(x) { return x.serial === item.serial; })) return;
-        cart[gid].items.push({ serial: item.serial, createdAt: item.createdAt });
-    }
-    function removeFromCart(gid, serial) {
-        if (!cart[gid]) return;
-        cart[gid].items = cart[gid].items.filter(function(x) { return x.serial !== serial; });
-        if (!cart[gid].items.length) delete cart[gid];
-    }
-    function refreshAll() {
-        renderWarehousePane();
-        renderCart();
-    }
-
-    /* ============================================================
-       Load warehouse stock
-       ============================================================ */
     function loadWarehouseStock() {
         var warehouseId = document.getElementById('warehouseId').value;
-        var body = document.getElementById('warehousePaneBody');
+        var body = document.getElementById('pickBody');
         if (!warehouseId) {
             warehouseStock = {};
             lockedByGen = {};
-            body.innerHTML = '<div class="pane-empty">Chọn Kho hàng ở mục 01 để xem máy có sẵn.</div>';
-            document.getElementById('warehouseFilters').style.display = 'none';
-            document.getElementById('leftPaneMeta').textContent = 'Chọn kho ở mục 01';
-            renderCart();
+            body.innerHTML = '<div class="pick-empty">Chọn Kho hàng ở mục 01 để xem máy có sẵn.</div>';
+            document.getElementById('serialAgeFilter').style.display = 'none';
+            render();
             return;
         }
 
-        body.innerHTML = '<div class="pane-empty">Đang tải...</div>';
+        body.innerHTML = '<div class="pick-empty">Đang tải...</div>';
 
         fetch('${pageContext.request.contextPath}/liquidations?action=get_serials_all&warehouseId=' + encodeURIComponent(warehouseId))
             .then(function(r) { return r.json(); })
@@ -436,55 +372,35 @@
                     if (!lockedByGen[l.generatorId]) lockedByGen[l.generatorId] = [];
                     lockedByGen[l.generatorId].push(l);
                 });
-                document.getElementById('warehouseFilters').style.display = 'flex';
-                refreshAll();
+                document.getElementById('serialAgeFilter').style.display = '';
+                render();
             })
             .catch(function() {
-                body.innerHTML = '<div class="pane-empty" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
+                body.innerHTML = '<div class="pick-empty" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
             });
     }
 
-    /* ============================================================
-       Wire events
-       ============================================================ */
-    document.querySelectorAll('.filter-chip').forEach(function(chip) {
-        chip.addEventListener('click', function() {
-            currentAgeFilter = chip.getAttribute('data-filter');
-            document.querySelectorAll('.filter-chip').forEach(function(c) {
-                c.classList.toggle('is-active', c === chip);
-            });
-            renderWarehousePane();
-        });
+    document.getElementById('serialAgeFilter').addEventListener('change', function() {
+        currentAgeFilter = this.value;
+        render();
     });
-    document.getElementById('serialSearchInput').addEventListener('input', renderWarehousePane);
-    document.getElementById('serialSortOrder').addEventListener('change', renderWarehousePane);
+    document.getElementById('serialSearchInput').addEventListener('input', render);
+    document.getElementById('serialSortOrder').addEventListener('change', render);
 
     document.getElementById('warehouseId').addEventListener('change', function() {
-        if (Object.keys(cart).length > 0) {
+        if (Object.keys(selected).length > 0) {
             if (!confirm('Đổi kho sẽ xoá danh sách máy đã chọn. Tiếp tục?')) {
                 this.value = this.getAttribute('data-prev-value') || '';
                 return;
             }
-            cart = {};
+            selected = {};
         }
         this.setAttribute('data-prev-value', this.value);
         loadWarehouseStock();
     });
 
-    document.querySelectorAll('.liq-picker-mobile-tabs button[data-mobile-pane]').forEach(function(tab) {
-        tab.addEventListener('click', function() {
-            var which = tab.getAttribute('data-mobile-pane');
-            document.querySelectorAll('.liq-picker-mobile-tabs button').forEach(function(b) {
-                b.classList.toggle('is-active', b === tab);
-            });
-            document.getElementById('leftPane').classList.toggle('is-hidden-mobile', which !== 'left');
-            document.getElementById('rightPane').classList.toggle('is-hidden-mobile', which !== 'right');
-        });
-    });
-
-    /* Init */
     document.getElementById('warehouseId').setAttribute('data-prev-value', document.getElementById('warehouseId').value);
-    renderCart();
+    render();
 </script>
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">

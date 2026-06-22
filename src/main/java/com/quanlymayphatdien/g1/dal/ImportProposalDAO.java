@@ -33,12 +33,17 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public int countTodayProposals() {
         String sql = "SELECT COUNT(*) FROM import_proposal WHERE DATE(proposal_date) = CURDATE()";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -58,12 +63,17 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
                 + "ORDER BY p.proposal_date DESC, p.proposal_id DESC";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -83,18 +93,21 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
                 + "WHERE p.proposal_id = ?";
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    ImportProposal p = getFromResultSet(rs);
-                    p.setDetails(findDetailsByProposalId(id));
-                    p.setHasNewGenerator(hasNewGenerator(p.getWarehouseId(), id));
-                    return p;
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                ImportProposal p = getFromResultSet(resultSet);
+                p.setDetails(findDetailsByProposalId(id));
+                p.setHasNewGenerator(hasNewGenerator(p.getWarehouseId(), id));
+                return p;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -108,16 +121,19 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "WHERE d.proposal_id = ? "
                 + "AND NOT EXISTS (SELECT 1 FROM inventory i "
                 + "    WHERE i.warehouse_id = ? AND i.generator_id = d.generator_id)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, proposalId);
-            ps.setInt(2, warehouseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0;
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, proposalId);
+            statement.setInt(2, warehouseId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -142,17 +158,20 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND proposal_date < ?");
             params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -160,13 +179,17 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     @Override
     public boolean delete(ImportProposal t) {
         String sql = "DELETE FROM import_proposal WHERE proposal_id = ? AND status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, t.getProposalId());
-            ps.setString(2, GlobalUtils.STATUS_DRAFT);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getProposalId());
+            statement.setString(2, GlobalUtils.STATUS_DRAFT);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -174,29 +197,32 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     public int insert(ImportProposal t) {
         String sql = "INSERT INTO import_proposal (proposal_code, status, warehouse_id, created_by, "
                 + "proposal_date, period, note) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, t.getProposalCode());
-            ps.setString(2, t.getStatus());
-            ps.setInt(3, t.getWarehouseId());
-            ps.setInt(4, t.getCreatedBy());
-            ps.setTimestamp(5, t.getProposalDate() != null
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, t.getProposalCode());
+            statement.setString(2, t.getStatus());
+            statement.setInt(3, t.getWarehouseId());
+            statement.setInt(4, t.getCreatedBy());
+            statement.setTimestamp(5, t.getProposalDate() != null
                     ? Timestamp.valueOf(t.getProposalDate())
                     : Timestamp.valueOf(LocalDateTime.now()));
-            ps.setString(6, PeriodUtils.currentPeriod());
-            ps.setString(7, t.getNote());
+            statement.setString(6, PeriodUtils.currentPeriod());
+            statement.setString(7, t.getNote());
 
-            int affected = ps.executeUpdate();
+            int affected = statement.executeUpdate();
             if (affected > 0) {
-                try (ResultSet keys = ps.getGeneratedKeys()) {
-                    if (keys.next()) {
-                        int newId = keys.getInt(1);
-                        t.setProposalId(newId);
-                        return newId;
-                    }
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    int newId = resultSet.getInt(1);
+                    t.setProposalId(newId);
+                    return newId;
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -255,15 +281,19 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     public boolean approveProposal(int proposalId, int approverId) {
         String sql = "UPDATE import_proposal SET status = ?, approved_by = ?, approved_at = NOW() "
                 + "WHERE proposal_id = ? AND status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_APPROVED);
-            ps.setInt(2, approverId);
-            ps.setInt(3, proposalId);
-            ps.setString(4, GlobalUtils.STATUS_PENDING);   // chỉ duyệt khi PENDING
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setInt(2, approverId);
+            statement.setInt(3, proposalId);
+            statement.setString(4, GlobalUtils.STATUS_PENDING);   // chỉ duyệt khi PENDING
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -271,31 +301,39 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
                 + "rejected_by = ?, rejected_at = NOW() "
                 + "WHERE proposal_id = ? AND status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_REJECTED);
-            ps.setString(2, reason);
-            ps.setInt(3, rejecterId);
-            ps.setInt(4, proposalId);
-            ps.setString(5, GlobalUtils.STATUS_PENDING);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_REJECTED);
+            statement.setString(2, reason);
+            statement.setInt(3, rejecterId);
+            statement.setInt(4, proposalId);
+            statement.setString(5, GlobalUtils.STATUS_PENDING);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     public boolean cancelProposal(int proposalId, int cancellerId) {
         String sql = "UPDATE import_proposal SET status = ?, updated_at = NOW() "
                 + "WHERE proposal_id = ? AND status IN (?, ?)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_CANCELLED);
-            ps.setInt(2, proposalId);
-            ps.setString(3, GlobalUtils.STATUS_DRAFT);
-            ps.setString(4, GlobalUtils.STATUS_PENDING);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_CANCELLED);
+            statement.setInt(2, proposalId);
+            statement.setString(3, GlobalUtils.STATUS_DRAFT);
+            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -303,16 +341,20 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
                 + "rejected_by = ?, rejected_at = NOW() "
                 + "WHERE proposal_id = ? AND status = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
-            ps.setString(2, reason);
-            ps.setInt(3, userId);
-            ps.setInt(4, proposalId);
-            ps.setString(5, GlobalUtils.STATUS_PENDING);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            statement.setString(2, reason);
+            statement.setInt(3, userId);
+            statement.setInt(4, proposalId);
+            statement.setString(5, GlobalUtils.STATUS_PENDING);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -368,17 +410,20 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -418,28 +463,35 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append(" AND p.proposal_date < ?");
             params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
 
     public void deleteDetails(int proposalId) {
         String sql = "DELETE FROM import_proposal_detail WHERE proposal_id = ?";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, proposalId);
-            ps.executeUpdate();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, proposalId);
+            statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
     }
 
@@ -528,20 +580,23 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "AND p.status = 'PENDING' "
                 + "AND p.purchase_order_id IS NULL "
                 + "ORDER BY u_c.name, p.proposal_id";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, period);
-            ps.setInt(2, warehouseId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    ImportProposal p = getFromResultSet(rs);
-                    p.setWarehouseName(rs.getString("warehouse_name"));
-                    p.setCreatedByName(rs.getString("created_by_name"));
-                    p.setDetails(findDetailsByProposalId(p.getProposalId()));
-                    list.add(p);
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, period);
+            statement.setInt(2, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ImportProposal p = getFromResultSet(resultSet);
+                p.setWarehouseName(resultSet.getString("warehouse_name"));
+                p.setCreatedByName(resultSet.getString("created_by_name"));
+                p.setDetails(findDetailsByProposalId(p.getProposalId()));
+                list.add(p);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -581,17 +636,20 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         sql.append("ORDER BY p.approved_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -618,21 +676,24 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             sql.append("AND DATE(p.approved_at) <= ? ");
             params.add(toDate);
         }
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
-    
+
     public List<ImportProposal> findByIdsForReview(List<Integer> proposalIds) {
     if (proposalIds == null || proposalIds.isEmpty()) {
         return new ArrayList<>();
@@ -657,23 +718,25 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                + "  AND ip.purchase_order_id IS NULL "
                + "ORDER BY ip.proposal_id ASC";
     
-    try (Connection c = getConnection();
-         PreparedStatement ps = c.prepareStatement(sql)) {
-        for (int i = 0; i < proposalIds.size(); i++) {
-            ps.setInt(i + 1, proposalIds.get(i));
+    try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < proposalIds.size(); i++) {
+                statement.setInt(i + 1, proposalIds.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                ImportProposal p = getFromResultSet(resultSet);
+                p.setWarehouseName(resultSet.getString("warehouse_name"));
+                p.setCreatedByName(resultSet.getString("created_by_name"));
+                p.setDetails(findDetailsByProposalId(p.getProposalId()));
+                list.add(p);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
         }
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-
-            ImportProposal p = getFromResultSet(rs);
-            p.setWarehouseName(rs.getString("warehouse_name"));
-            p.setCreatedByName(rs.getString("created_by_name"));
-            p.setDetails(findDetailsByProposalId(p.getProposalId()));
-            list.add(p);
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-    }
     return list;
 }
 
@@ -681,16 +744,20 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     public boolean update(ImportProposal t) {
         String sql = "UPDATE import_proposal SET note = ?, status = ?, updated_at = NOW() "
                 + "WHERE proposal_id = ? AND status IN (?, ?)";
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, t.getNote());
-            ps.setString(2, t.getStatus());
-            ps.setInt(3, t.getProposalId());
-            ps.setString(4, GlobalUtils.STATUS_DRAFT);
-            ps.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, t.getNote());
+            statement.setString(2, t.getStatus());
+            statement.setInt(3, t.getProposalId());
+            statement.setString(4, GlobalUtils.STATUS_DRAFT);
+            statement.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 }

@@ -1,0 +1,9 @@
+.power-rating {
+    color: var(--purple);
+    border: 1px solid color-mix(in srgb, var(--purple) 30%, transparent);
+}
+
+.fuel-type {
+    color: var(--green);
+    border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+}
