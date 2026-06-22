@@ -319,10 +319,9 @@ public class GeneratorManagementController extends HttpServlet {
             Map<String, String> errors = validateGeneratorForm(model, powerStr,
                     freq, weightStr, id);
             if (!errors.isEmpty()) {
-                saveFormFields(request, model, powerStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr);
+                saveFormFields(request, model, powerStr, freq, weightStr, desc, brandIdStr, genTypeIdStr, originIdStr, conditionIdStr, fuelTypeIdStr, phaseIdStr, powerRangeIdStr); 
                 request.getSession().setAttribute("errors", errors);
-                response.sendRedirect(request.getContextPath()
-                        + "/warehouse/generators?action=update&id=" + id);
+                response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=update&id=" + id);
                 return;
             }
 
