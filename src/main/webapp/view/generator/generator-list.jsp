@@ -5,6 +5,7 @@
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
     <head>
@@ -19,6 +20,21 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+        <style>
+            .alert {
+                display: flex; gap: 12px;
+                padding: 14px 16px;
+                border-radius: var(--radius);
+                border: 1px solid;
+                align-items: flex-start;
+            }
+            .alert-icon { width: 22px; height: 22px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; }
+            .alert-body { flex: 1; min-width: 0; }
+            .alert-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+            .alert-text { font-size: 13px; line-height: 1.45; opacity: 0.9; margin-bottom: 10px; }
+            .alert-warn { background: var(--warn-soft, #fff8e1); color: var(--warn, #b45309); border-color: color-mix(in srgb, var(--warn, #b45309) 30%, transparent); }
+            .btn-sm { padding: 4px 10px !important; font-size: 12px !important; }
+        </style>
     </head>
     <body>
         <div class="app">
