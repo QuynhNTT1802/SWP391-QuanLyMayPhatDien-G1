@@ -206,12 +206,6 @@
                                 để tải lại file Excel.
                             </div>
                         </c:if>
-                        <c:if test="${not empty warningRows}">
-                            <div class="alert alert-warn" style="margin-bottom:12px">
-                                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                <span>Có <strong>${fn:length(warningRows)}</strong> dòng cần lưu ý (máy chưa có trong kho hoặc máy mới). Manager sẽ thấy cảnh báo khi duyệt.</span>
-                            </div>
-                        </c:if>
                         <c:if test="${not empty unresolvedSupplierRows}">
                             <div class="alert alert-error" id="unresolvedAlert" style="margin-bottom:12px">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -325,7 +319,7 @@
                                                 <td style="text-align:right; white-space:nowrap">
                                                     <c:set var="_returnUrl" value="${pageContext.request.contextPath}/proposal?action=importConfirm" />
                                                     <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=${java.net.URLEncoder.encode(row.supplierQuery, 'UTF-8')}&amp;returnUrl=${java.net.URLEncoder.encode(_returnUrl, 'UTF-8')}&amp;gid=${row.gid}" target="_self">Tạo NCC mới</a>
-                                                    <button type="button" class="btn btn-primary" onclick="openSupplierPanel('<c:out value='${row.gid}'/>', '<c:out value='${row.supplierQuery}'/>', this.closest('tr'))">Chọn từ DS</button>
+                                                    <button type="button" class="btn btn-primary" data-gid="<c:out value='${row.gid}'/>" data-query="<c:out value='${row.supplierQuery}'/>" onclick="openSupplierPanel(this.dataset.gid, this.dataset.query, this.closest('tr'))">Chọn từ DS</button>
                                                 </td>
                                             </tr>
                                         </c:forEach>

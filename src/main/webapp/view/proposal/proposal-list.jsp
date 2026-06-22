@@ -452,7 +452,7 @@
                         <input type="hidden" name="id" id="approveProposalId" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
@@ -542,10 +542,6 @@
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
                 }
             });
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt phiếu đề xuất này?');
-            }
 
             function toggleDropdown(btn) {
                 var menu = btn.nextElementSibling;
