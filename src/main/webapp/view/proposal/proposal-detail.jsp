@@ -258,10 +258,6 @@
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Duyệt phiếu
                                 </button>
-                                <button type="button" class="btn" onclick="openModal('revisionModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                    Yêu cầu chỉnh sửa
-                                </button>
                             </c:if>
 
                             <c:if test="${proposal.status == 'PENDING' && canReject}">
@@ -271,7 +267,7 @@
                                 </button>
                             </c:if>
 
-                            <c:if test="${(proposal.status == 'PENDING' || proposal.status == 'APPROVED') && canCancelProp}">
+                            <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
                                 <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
                                     <input type="hidden" name="id" value="${proposal.proposalId}" />
                                     <button type="submit" class="btn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">

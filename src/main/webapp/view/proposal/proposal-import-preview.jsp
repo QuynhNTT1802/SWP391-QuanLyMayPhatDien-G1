@@ -185,7 +185,7 @@
                             <span class="pill ok"><span class="pill-num"><c:out value="${fn:length(validRows)}"/></span> dòng hợp lệ</span>
                         </c:if>
                         <c:if test="${not empty warningRows}">
-                            <span class="pill warn"><span class="pill-num"><c:out value="${fn:length(warningRows)}"/></span> máy chưa có trong kho</span>
+                            <span class="pill warn"><span class="pill-num"><c:out value="${fn:length(warningRows)}"/></span> dòng cần lưu ý</span>
                         </c:if>
                         <c:if test="${not empty unresolvedSupplierRows}">
                             <span class="pill bad"><span class="pill-num"><c:out value="${fn:length(unresolvedSupplierRows)}"/></span> chưa chọn được NCC</span>
@@ -209,7 +209,7 @@
                         <c:if test="${not empty warningRows}">
                             <div class="alert alert-warn" style="margin-bottom:12px">
                                 <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                <span>Có <strong>${fn:length(warningRows)}</strong> máy phát chưa có trong kho. Manager sẽ thấy cảnh báo khi duyệt, warehouse tự thêm category sau.</span>
+                                <span>Có <strong>${fn:length(warningRows)}</strong> dòng cần lưu ý (máy chưa có trong kho hoặc máy mới). Manager sẽ thấy cảnh báo khi duyệt.</span>
                             </div>
                         </c:if>
                         <c:if test="${not empty unresolvedSupplierRows}">
@@ -255,7 +255,7 @@
                         </c:if>
                         <c:if test="${not empty warningRows}">
                             <div class="section" style="padding:0">
-                                <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Máy chưa có trong kho</h3><span class="sub">${fn:length(warningRows)} dòng</span></div></div>
+                                <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Dòng cần lưu ý</h3><span class="sub">${fn:length(warningRows)} dòng</span></div></div>
                                 <div class="table-scroll">
                                 <table class="data-table">
                                     <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th></tr></thead>
@@ -602,10 +602,15 @@
 
             function pickSupplier(supplier) {
                 if (currentRowIndex == null) return;
+                var body = 'gid=' + encodeURIComponent(currentRowIndex) + '&supplierId=' + encodeURIComponent(supplier.id);
+                if (!currentRowIndex && currentUnresolvedRow) {
+                    var ri = currentUnresolvedRow.getAttribute('data-row-index');
+                    if (ri) body += '&rowIndex=' + encodeURIComponent(ri);
+                }
                 fetch('${pageContext.request.contextPath}/proposal?action=assignSupplier', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: 'gid=' + encodeURIComponent(currentRowIndex) + '&supplierId=' + encodeURIComponent(supplier.id)
+                    body: body
                 })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
