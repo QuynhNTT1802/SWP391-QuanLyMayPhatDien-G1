@@ -724,6 +724,39 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
+    public int countInStockByGeneratorAndWarehouse(int generatorId, int warehouseId) {
+        String sql = "SELECT COUNT(*) FROM inventory "
+                + "WHERE generator_id = ? AND warehouse_id = ? AND status = 'IN_STOCK'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            ps.setInt(2, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
+    public int countInStockByGenerator(int generatorId) {
+        String sql = "SELECT COUNT(*) FROM inventory "
+                + "WHERE generator_id = ? AND status = 'IN_STOCK'";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, generatorId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0;
+    }
+
     public int countActiveWarehouses() {
         String sql = "SELECT COUNT(*) FROM warehouse WHERE status = 'active'";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {

@@ -184,8 +184,12 @@
                 <main>
                     <script>
                         <c:if test="${not empty sessionScope.message}">
-                        window.SESSION_DATA = {message: '<c:out value="${sessionScope.message}"/>', type: 'success'};
+                        window.SESSION_DATA = {
+                            message: '<c:out value="${sessionScope.message}"/>',
+                            type: '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>'
+                        };
                             <c:remove var="message" scope="session"/>
+                            <c:remove var="messageType" scope="session"/>
                         </c:if>
                         <c:if test="${not empty error}">
                         window.SESSION_DATA = window.SESSION_DATA || {};
@@ -349,7 +353,7 @@
                                                     </c:forEach>
                                                 </select>
                                             </td>
-                                            <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
+                                            <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
                                             <td class="col-price">
                                                 <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
                                             </td>
@@ -381,7 +385,7 @@
                                                 </c:forEach>
                                             </select>
                                         </td>
-                                        <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
+                                        <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
                                         <td class="col-price">
                                             <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
                                         </td>
@@ -525,6 +529,14 @@
                 });
             }
             document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
+
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                    if (typeof showToast === 'function') {
+                        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                    }
+                }
+            });
         </script>
 
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>

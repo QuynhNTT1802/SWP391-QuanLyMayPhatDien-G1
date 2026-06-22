@@ -3,6 +3,7 @@ package com.quanlymayphatdien.g1.controller.order;
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CustomerDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
+import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.entity.Category;
@@ -399,6 +400,7 @@ public class OrderController extends HttpServlet {
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
+        InventoryDAO inventoryDao = new InventoryDAO();
 
         String orderCode = request.getParameter("orderCode");
         if (orderCode == null || orderCode.trim().isEmpty()) {
@@ -421,6 +423,7 @@ public class OrderController extends HttpServlet {
         Customer customer = null;
         if (custPhone == null || custPhone.trim().isEmpty()) {
             session.setAttribute("message", "Vui lòng nhập số điện thoại khách hàng.");
+            session.setAttribute("messageType", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=create");
             return;
         }
@@ -443,6 +446,7 @@ public class OrderController extends HttpServlet {
             int newCustId = customerDAO.insert(customer);
             if (newCustId <= 0) {
                 request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
+                request.getSession().setAttribute("messageType", "danger");
                 response.sendRedirect(request.getContextPath() + "/order?action=create");
                 return;
             }
@@ -500,12 +504,29 @@ public class OrderController extends HttpServlet {
 
                 if (inputPrice <= 0) {
                     session.setAttribute("message", "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
+                    session.setAttribute("messageType", "danger");
+                    response.sendRedirect(request.getContextPath() + "/order?action=create");
+                    return;
+                }
+
+                if (qty <= 0) {
+                    session.setAttribute("message", "Số lượng dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
+                    session.setAttribute("messageType", "danger");
                     response.sendRedirect(request.getContextPath() + "/order?action=create");
                     return;
                 }
 
                 Generator gen = generatorDao.findById(genId);
                 if (gen != null) {
+                    int inStock = inventoryDao.countInStockByGenerator(genId);
+                    if (qty > inStock) {
+                        session.setAttribute("message", "Số lượng dòng máy thứ " + (i + 1)
+                                + " (" + qty + ") vượt quá tồn kho (" + inStock + ").");
+                        session.setAttribute("messageType", "danger");
+                        response.sendRedirect(request.getContextPath() + "/order?action=create");
+                        return;
+                    }
+
                     double salePrice = inputPrice;
                     OrderDetail detail = new OrderDetail();
                     detail.setGeneratorId(genId);
@@ -520,6 +541,7 @@ public class OrderController extends HttpServlet {
 
         if (detailsList.isEmpty()) {
             session.setAttribute("message", "Vui lòng chọn ít nhất 1 máy cho đơn hàng.");
+            session.setAttribute("messageType", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=create");
             return;
         }
@@ -534,10 +556,12 @@ public class OrderController extends HttpServlet {
                 orderdetaildao.insert(d);
             }
             session.setAttribute("message", "Tạo đơn hàng thành công! Mã đơn: " + order.getOrderCode());
+            session.setAttribute("messageType", "success");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         } else {
-            request.setAttribute("error", "Tạo đơn hàng thất bại.");
-            request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
+            session.setAttribute("message", "Tạo đơn hàng thất bại.");
+            session.setAttribute("messageType", "danger");
+            response.sendRedirect(request.getContextPath() + "/order?action=create");
         }
     }
 
