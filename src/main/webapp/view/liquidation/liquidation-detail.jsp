@@ -343,11 +343,10 @@
                         </table>
                     </div>
 
-                    <c:set var="canCancel" value="${sessionScope.userPermissions.contains('liquidations.cancel') and sessionScope.loggedUser.id == liquidation.createdBy and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'PENDING_CEO' or liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'CEO_REQUEST_EDIT')}"/>
-                    <c:if test="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO') or (isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT') or canCancel}">
+                    <c:if test="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO') or (isStaff and (liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'CEO_REQUEST_EDIT'))}">
                         <div class="liq-action-bar">
                             <div class="hint">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở phía trên trước khi ra quyết định.</div>
-                            <c:if test="${isStaff and liquidation.status == 'MANAGER_REQUEST_EDIT'}">
+                            <c:if test="${isStaff and (liquidation.status == 'MANAGER_REQUEST_EDIT' or liquidation.status == 'CEO_REQUEST_EDIT')}">
                                 <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liquidation.liquidationId}" class="btn btn-primary">Sửa đơn (Cập nhật lại)</a>
                             </c:if>
                             <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')}">
@@ -360,10 +359,6 @@
                                 <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">Yêu cầu sửa</button>
                                 <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger-solid', 'select_ceo_reject')">Từ chối đơn</button>
                                 <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
-                            </c:if>
-                            <c:set var="showReviewReject" value="${(isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')) or (isCeo and liquidation.status == 'PENDING_CEO')}"/>
-                            <c:if test="${canCancel and not showReviewReject}">
-                                <button type="button" class="btn btn-outline-danger" onclick="openModal('confirmCancelModal')">Thu hồi đơn</button>
                             </c:if>
                         </div>
                     </c:if>
@@ -472,21 +467,6 @@
             <button type="button" class="btn" onclick="closeModal('confirmApproveModal')">Huỷ</button>
             <button type="button" class="btn btn-success-solid" onclick="document.getElementById('hiddenApproveCeoBtn').click();">Xác nhận duyệt &amp; xuất</button>
         </div>
-    </div>
-</div>
-
-<div class="modal-host" id="confirmCancelModal">
-    <div class="modal">
-        <h3>Xác nhận huỷ đơn</h3>
-        <p>Bạn có chắc chắn muốn <strong>huỷ</strong> đơn thanh lý này? Các máy đã chọn sẽ được trả lại kho và đơn sẽ bị đóng. Hành động này không thể hoàn tác.</p>
-        <form method="POST" action="${pageContext.request.contextPath}/liquidations">
-            <input type="hidden" name="action" value="cancel" />
-            <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
-            <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
-                <button type="button" class="btn" onclick="closeModal('confirmCancelModal')">Đóng</button>
-                <button type="submit" class="btn btn-danger-solid">Xác nhận huỷ đơn</button>
-            </div>
-        </form>
     </div>
 </div>
 
