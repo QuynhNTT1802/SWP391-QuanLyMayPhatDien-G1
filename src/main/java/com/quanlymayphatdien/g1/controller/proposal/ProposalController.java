@@ -258,9 +258,7 @@ public class ProposalController extends HttpServlet {
             return;
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("generators", new GeneratorDAO().findAllActive());
-        request.setAttribute("suppliers", new SupplierDAO().findAll());
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());      
         request.setAttribute("blockedWarehouseId", warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
@@ -837,36 +835,8 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/authen?action=login");
             return;
         }
-        GeneratorDAO genDAO = new GeneratorDAO();
-        List<Generator> samples = genDAO.findAllActive();
-        for (Generator g : samples) {
-            g.setCategories(genDAO.getCategoriesByGeneratorId(g.getId()));
-        }
-        List<Supplier> suppliers = new SupplierDAO().findAll();
-        List<Supplier> activeSuppliers = new ArrayList<>();
-        for (Supplier s : suppliers) {
-            if ("active".equalsIgnoreCase(s.getStatus())) {
-                activeSuppliers.add(s);
-                if (activeSuppliers.size() >= 3) {
-                    break;
-                }
-            }
-        }
 
-        Map<String, Map<Integer, String>> categoryMapByType = new LinkedHashMap<>();
-        CategoryDAO catDAO = new CategoryDAO();
-        String[] types = {"brand", "origin", "condition", "fuel_type", "phase", "generator_type"};
-        for (String t : types) {
-            List<Category> list = catDAO.findByType(t);
-            Map<Integer, String> map = new LinkedHashMap<>();
-            for (Category c : list) {
-                map.put(c.getId(), c.getName());
-            }
-            categoryMapByType.put(t, map);
-        }
-
-        XSSFWorkbook workbook = ProposalExcelSupport.createTemplateWorkbook(
-                samples, activeSuppliers, categoryMapByType);
+        XSSFWorkbook workbook = ProposalExcelSupport.createTemplateWorkbook();
 
         String today = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
         String fileName = "mau-de-xuat-nhap-" + today + ".xlsx";
@@ -975,7 +945,7 @@ public class ProposalController extends HttpServlet {
                     errors.add("Số lượng phải lớn hơn 0");
                 }
                 if (qty > 9999) {
-                    errors.add("Số lượng không được vượt quá 9.999");
+                    errors.add("Số lượng không được vượt quá 9999");
                 }
             }
             enriched.put("gqty", String.valueOf(qty));

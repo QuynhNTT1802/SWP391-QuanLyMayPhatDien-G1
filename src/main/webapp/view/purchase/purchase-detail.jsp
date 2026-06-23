@@ -54,6 +54,16 @@
             .status-pill .pdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
             .action-bar-top { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+
+            .modal-host { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.4); z-index: 50; display: none; align-items: center; justify-content: center; padding: 20px; }
+            .modal-host.show { display: flex; }
+            .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; padding: 20px 22px; box-shadow: 0 20px 50px oklch(0% 0 0 / 0.25); }
+            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+            .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+            .modal-card label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-soft); margin-bottom: 6px; }
+            .modal-card textarea { width: 100%; min-height: 90px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--fg); font-family: var(--font-ui); font-size: 13px; resize: vertical; }
+            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
     </head>
     <body>
