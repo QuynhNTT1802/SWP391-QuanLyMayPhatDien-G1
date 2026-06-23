@@ -679,44 +679,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         return 0;
     }
 
-    public List<Map<String, Object>> aggregatePendingProposals(String period, int warehouseId) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT ipd.generator_id, g.model AS generator_code, g.description AS generator_name, "
-                + "(SELECT c.name FROM generator_category gc "
-                + "   JOIN category c ON c.id = gc.category_id "
-                + "  WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS brand_name, "
-                + "SUM(ipd.quantity) AS total_proposed, "
-                + "COUNT(DISTINCT ip.proposal_id) AS proposal_count, "
-                + "COALESCE((SELECT COUNT(*) FROM inventory i "
-                + "          WHERE i.generator_id = ipd.generator_id AND i.warehouse_id = ? AND i.status = 'IN_STOCK'), 0) AS current_stock "
-                + "FROM import_proposal ip "
-                + "JOIN import_proposal_detail ipd ON ipd.proposal_id = ip.proposal_id "
-                + "JOIN generator g ON g.id = ipd.generator_id "
-                + "WHERE ip.period = ? AND ip.warehouse_id = ? AND ip.status = 'APPROVED' AND ip.purchase_order_id IS NULL "
-                + "GROUP BY ipd.generator_id, g.model, g.description "
-                + "ORDER BY g.description";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, warehouseId);
-            ps.setString(2, period);
-            ps.setInt(3, warehouseId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Map<String, Object> row = new LinkedHashMap<>();
-                row.put("generatorId", rs.getInt("generator_id"));
-                row.put("generatorCode", rs.getString("generator_code"));
-                row.put("generatorName", rs.getString("generator_name"));
-                row.put("brandName", rs.getString("brand_name"));
-                row.put("totalProposed", rs.getInt("total_proposed"));
-                row.put("currentStock", rs.getInt("current_stock"));
-                row.put("proposalCount", rs.getInt("proposal_count"));
-                list.add(row);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
     public List<Map<String, Object>> aggregateByProposalIds(List<Integer> proposalIds, int warehouseId) {
         if (proposalIds == null || proposalIds.isEmpty()) {
             return new ArrayList<>();

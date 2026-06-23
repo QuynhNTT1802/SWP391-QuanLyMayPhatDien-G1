@@ -393,7 +393,7 @@
             </div>
         </div>
 
-        <!-- Slide-out panel cho chọn lại nhà cung cấp (pattern từ liquidation-edit.jsp) -->
+        
         <div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSupplierPanel()"></div>
         <div class="side-panel" id="sidePanel">
             <div class="side-panel-head">
@@ -492,7 +492,7 @@
                 if (btnDraft) btnDraft.addEventListener('click', function () { submitForm('draft'); });
                 if (btnPending) btnPending.addEventListener('click', function () { submitForm('pending'); });
 
-                // Auto reload nếu vừa tạo NCC mới xong
+                
                 var newSupplierId = new URLSearchParams(window.location.search).get('newSupplierId');
                 var newSupplierName = new URLSearchParams(window.location.search).get('newSupplierName');
                 if (newSupplierId && newSupplierName) {
@@ -516,7 +516,7 @@
                 }
             })();
 
-            // === Slide-out panel logic (copy pattern từ liquidation-edit.jsp) ===
+           
             var currentRowIndex = null;
             var currentUnresolvedRow = null;
 
