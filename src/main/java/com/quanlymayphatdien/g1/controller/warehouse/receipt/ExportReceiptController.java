@@ -1,3 +1,4 @@
+
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
@@ -217,6 +218,24 @@ public class ExportReceiptController extends HttpServlet {
                 prefill.setDetails(ds);
                 request.setAttribute("receipt", prefill);
                 request.setAttribute("order", order);
+
+                List<String> stockWarnings = new ArrayList<>();
+                List<Integer> shortGenIds = new ArrayList<>();
+                for (OrderDetail od : ods) {
+                    int genId = od.getGeneratorId();
+                    int qty = od.getQuantity() > 0 ? od.getQuantity() : 1;
+                    int totalInStock = inventoryDAO.countTotalInStockByGenerator(genId);
+                    if (totalInStock < qty) {
+                        Generator gen = genDAO.findById(genId);
+                        String model = (gen != null && gen.getModel() != null && !gen.getModel().isEmpty())
+                                ? gen.getModel() : ("#" + genId);
+                        int shortage = qty - totalInStock;
+                        stockWarnings.add(model + " cần " + qty + " máy, chỉ còn " + totalInStock + " máy trên tất cả kho. Cần nhập thêm " + shortage + " máy.");
+                        shortGenIds.add(genId);
+                    }
+                }
+                request.setAttribute("stockWarnings", stockWarnings);
+                request.setAttribute("stockWarningGenIds", shortGenIds);
             }
         }
         request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);

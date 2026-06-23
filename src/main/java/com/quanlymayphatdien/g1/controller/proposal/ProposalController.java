@@ -378,6 +378,10 @@ public class ProposalController extends HttpServlet {
             }
         }
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
+        request.setAttribute("canApprove", canApprove);
+        request.setAttribute("perms", perms);
+        request.setAttribute("activePage", "proposal-detail");
         request.getRequestDispatcher("/view/proposal/proposal-detail.jsp").forward(request, response);
     }
 

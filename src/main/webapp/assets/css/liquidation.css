@@ -2130,10 +2130,279 @@
 }
 
 
+
 /* ============================================================
-   SERIAL PICKER v4 — INLINE 2-COL (kho ↔ cart)
+   SERIAL PICKER v5 — SIMPLE LIST + STICKY BAR
+   List doc 1 cot, gom theo model, checkbox toggle.
+   Sticky footer hien tong + nut submit.
    ============================================================ */
 
+.liq-pick {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.liq-pick-tools {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    flex-wrap: wrap;
+}
+.liq-pick-tools .serial-search-box {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+.liq-pick-tools .serial-sort-select {
+    width: 140px;
+    padding: 8px 28px 8px 10px;
+    font-size: 13px;
+}
+
+.liq-pick-filters {
+    display: flex;
+    gap: 6px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-wrap: wrap;
+}
+
+.liq-pick-body {
+    max-height: 520px;
+    overflow-y: auto;
+    padding: 6px 0;
+}
+
+/* Group: 1 model */
+.pick-group {
+    border-top: 1px solid var(--border);
+}
+.pick-group:first-child { border-top: none; }
+.pick-group-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--surface-2);
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+.pick-group-head .chev {
+    width: 12px; height: 12px;
+    stroke: var(--muted);
+    fill: none;
+    stroke-width: 2;
+    transition: transform .15s ease;
+    flex-shrink: 0;
+}
+.pick-group.is-collapsed .chev { transform: rotate(-90deg); }
+.pick-group-head .model {
+    flex: 1;
+    font-weight: 700;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pick-group-head .count {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+}
+.pick-group-head .pick-all {
+    font-size: 11.5px;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 2px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.pick-group-head .pick-all:hover { background: var(--accent-soft); border-color: var(--accent); }
+.pick-group-head .pick-all.is-all-on { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+.pick-group-body { display: block; }
+.pick-group.is-collapsed .pick-group-body { display: none; }
+
+/* Single row: 1 unit */
+.pick-row {
+    display: grid;
+    grid-template-columns: 18px 8px 1fr auto auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 16px 9px 20px;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s ease;
+}
+.pick-row:hover { background: var(--surface-2); }
+.pick-row.is-checked { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.pick-row.is-checked:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+
+.pick-row .pick-cb {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.pick-row .age-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+.pick-row.age-old .age-dot { background: var(--danger); }
+.pick-row.age-mid .age-dot { background: var(--warn); }
+
+.pick-row .row-serial {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pick-row .row-age {
+    font-size: 11.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: right;
+}
+.pick-row.age-old .row-age { color: var(--danger); font-weight: 600; }
+.pick-row.age-mid .row-age { color: var(--warn); font-weight: 600; }
+.pick-row .row-date {
+    font-size: 11.5px;
+    color: var(--muted-2);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: right;
+}
+.pick-row .row-price {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--fg-soft);
+    white-space: nowrap;
+    min-width: 110px;
+    text-align: right;
+}
+
+/* Locked rows */
+.pick-row.is-locked {
+    cursor: not-allowed;
+    background: var(--surface-2);
+    opacity: 0.7;
+}
+.pick-row.is-locked:hover { background: var(--surface-2); }
+.pick-row.is-locked .pick-cb { display: none; }
+.pick-row.is-locked .row-locked-info {
+    grid-column: 3 / -1;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 11.5px;
+    color: #92400e;
+}
+.pick-row.is-locked .row-locked-info .mono {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+.pick-row.is-locked .row-locked-info .mono:hover { text-decoration: underline; }
+.pick-row.is-locked .lock-icon {
+    width: 14px; height: 14px;
+    stroke: #f59e0b;
+    fill: none;
+    stroke-width: 2;
+    flex-shrink: 0;
+}
+
+/* Empty state */
+.pick-empty {
+    padding: 36px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* Sticky bar */
+.liq-pick-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+.liq-pick-bar .bar-summary {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.liq-pick-bar .bar-count {
+    font-size: 13px;
+    color: var(--fg);
+    font-weight: 600;
+}
+.liq-pick-bar .bar-count strong {
+    font-family: var(--font-mono);
+    color: var(--accent);
+}
+.liq-pick-bar .bar-total {
+    font-size: 12px;
+    color: var(--muted);
+}
+.liq-pick-bar .bar-total .total-val {
+    font-family: var(--font-mono);
+    color: var(--fg);
+    font-weight: 700;
+}
+.liq-pick-bar .bar-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+    .liq-pick-tools { padding: 10px; }
+    .liq-pick-tools .serial-sort-select { width: 100%; }
+    .pick-row {
+        grid-template-columns: 18px 8px 1fr auto;
+        gap: 10px;
+        padding: 9px 12px;
+    }
+    .pick-row .row-date,
+    .pick-row .row-price { display: none; }
+    .liq-pick-bar { padding: 10px 12px; }
+    .liq-pick-bar .bar-actions { width: 100%; }
+    .liq-pick-bar .bar-actions .btn { flex: 1; }
+}
+
+/* ---------- Form layout full-width override (Liquidation create) ---------- */
+.form-layout.form-layout--full {
+    grid-template-columns: 1fr;
+}
+
+
+
+/* ---------- Two-pane picker (Liquidation edit page) — restored from 54fb466~1 ---------- */
 .liq-picker-shell {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -2433,4 +2702,5 @@
     }
     .liq-picker-pane.is-hidden-mobile { display: none; }
     .liq-pane-body { max-height: 60vh; }
+
 }

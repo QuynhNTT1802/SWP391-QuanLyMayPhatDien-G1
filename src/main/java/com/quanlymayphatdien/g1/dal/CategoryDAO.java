@@ -25,63 +25,75 @@ import java.util.Map;
 public class CategoryDAO extends DBContext implements I_DAO<Category> {
 
     public Category findById(int id) {
+        Category result = null;
         String sql = "select * from category where id = ?";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setInt(1, id);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) return getFromResultSet(rs);
-            }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) result = getFromResultSet(resultSet);
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return null;
+        return result;
     }
 
     public Category findByNameAndType(String name, String type) {
+        Category result = null;
         String sql = "select * from category where name = ? and type = ? and status = 'active' limit 1";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setString(1, name);
-            p.setString(2, type);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) return getFromResultSet(rs);
-            }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, name);
+            statement.setString(2, type);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) result = getFromResultSet(resultSet);
         } catch (Exception e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return null;
+        return result;
     }
 
     public boolean existsByNameAndTypeAndModule(String name, String type, String module, int excludeId) {
+        boolean result = false;
         String sql = "select count(*) from category where name = ? and type = ? and module = ? and id != ?";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setString(1, name);
-            p.setString(2, type);
-            p.setString(3, module);
-            p.setInt(4, excludeId);
-            try (ResultSet rs = p.executeQuery()) {
-                if (rs.next()) return rs.getInt(1) > 0;
-            }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, name);
+            statement.setString(2, type);
+            statement.setString(3, module);
+            statement.setInt(4, excludeId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) result = resultSet.getInt(1) > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return false;
+        return result;
     }
 
     public List<Category> findByType(String type) {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category where type = ? and status = 'active' order by name";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, type);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, type);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -89,14 +101,17 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     public List<String> getDistrictTypes() {
         List<String> types = new ArrayList<>();
         String sql = "select distinct type from category order by type";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                types.add(rs.getString("type"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                types.add(resultSet.getString("type"));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return types;
     }
@@ -113,23 +128,27 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
             sql = "SELECT * FROM category WHERE module = ? AND type = ? "
                 + "AND (name LIKE ? OR description LIKE ?) ORDER BY name";
         }
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             String k = "%" + keyword + "%";
-            p.setString(1, module);
-            p.setString(2, type);
-            p.setString(3, k);
-            p.setString(4, k);
+            statement.setString(1, module);
+            statement.setString(2, type);
+            statement.setString(3, k);
+            statement.setString(4, k);
             int idx = 5;
             if ("brand".equals(type)) {
-                p.setString(idx++, k); p.setString(idx++, k);
+                statement.setString(idx++, k); statement.setString(idx++, k);
             } else if ("fuel_type".equals(type)) {
-                p.setString(idx++, k);
+                statement.setString(idx++, k);
             }
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) list.add(getFromResultSet(rs));
-        } catch (SQLException e) { 
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e); }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) list.add(getFromResultSet(resultSet));
+        } catch (SQLException e) {
+            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
         return list;
     }
 
@@ -158,15 +177,18 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     public List<Category> findByModule(String module) {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category where module = ? order by type, name";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setString(1, module);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, module);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -174,33 +196,37 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     public List<String> getTypesByModule(String module) {
         List<String> types = new ArrayList<>();
         String sql = "select distinct type from category where module = ? order by type";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setString(1, module);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                types.add(rs.getString("type"));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, module);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                types.add(resultSet.getString("type"));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return types;
     }
 
-
     public Map<String, Integer> getMinIdByType(String module) {
         Map<String, Integer> result = new HashMap<>();
         String sql = "SELECT type, MIN(id) AS min_id FROM category WHERE module = ? GROUP BY type";
-        try (Connection c = getConnection();
-             PreparedStatement p = c.prepareStatement(sql)) {
-            p.setString(1, module);
-            try (ResultSet rs = p.executeQuery()) {
-                while (rs.next()) {
-                    result.put(rs.getString("type"), rs.getInt("min_id"));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, module);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                result.put(resultSet.getString("type"), resultSet.getInt("min_id"));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return result;
     }
@@ -210,17 +236,20 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     public List<Category> searchByName(String name) {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category where name like ? or description like ? order by type, name";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             String keyword = "%" + name + "%";
-            p.setString(1, keyword);
-            p.setString(2, keyword);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+            statement.setString(1, keyword);
+            statement.setString(2, keyword);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -229,14 +258,17 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     public List<Category> findAll() {
         List<Category> list = new ArrayList<>();
         String sql = "select * from category order by type,name ";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add((Category) getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add((Category) getFromResultSet(resultSet));
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -244,18 +276,21 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     @Override
     public boolean update(Category category) {
         String sql = "update category set module = ?, name = ?, type = ?, description = ?, status = ?, updated_at = ? where id = ? ";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setString(1, category.getModule());
-            p.setString(2, category.getName());
-            p.setString(3, category.getType());
-            p.setString(4, category.getDescription());
-            p.setString(5, category.getStatus());
-            p.setObject(6, LocalDateTime.now());
-            p.setInt(7, category.getId());
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, category.getModule());
+            statement.setString(2, category.getName());
+            statement.setString(3, category.getType());
+            statement.setString(4, category.getDescription());
+            statement.setString(5, category.getStatus());
+            statement.setObject(6, LocalDateTime.now());
+            statement.setInt(7, category.getId());
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -263,42 +298,48 @@ public class CategoryDAO extends DBContext implements I_DAO<Category> {
     @Override
     public boolean delete(Category t) {
         String sql = "update category set status = 'inactive', updated_at = ? where id = ?";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setObject(1, LocalDateTime.now());
-            p.setInt(2, t.getId());
-            return p.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setObject(1, LocalDateTime.now());
+            statement.setInt(2, t.getId());
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return false;
     }
 
     @Override
     public int insert(Category t) {
+        int result = -1;
         String sql = "insert into category (module, name, type, description, status, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection c = getConnection()) {
-            PreparedStatement p = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            p.setString(1, t.getModule());
-            p.setString(2, t.getName());
-            p.setString(3, t.getType());
-            p.setString(4, t.getDescription());
-            p.setString(5, t.getStatus() != null ? t.getStatus() : "active");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, t.getModule());
+            statement.setString(2, t.getName());
+            statement.setString(3, t.getType());
+            statement.setString(4, t.getDescription());
+            statement.setString(5, t.getStatus() != null ? t.getStatus() : "active");
             LocalDateTime now = LocalDateTime.now();
-            p.setObject(6, now);
-            p.setObject(7, now);
+            statement.setObject(6, now);
+            statement.setObject(7, now);
 
-            if (p.executeUpdate() > 0) {
-                try (ResultSet rs = p.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+            if (statement.executeUpdate() > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    result = resultSet.getInt(1);
                 }
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
-        return -1;
+        return result;
     }
 
     @Override

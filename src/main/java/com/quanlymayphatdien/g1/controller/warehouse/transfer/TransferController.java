@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @WebServlet(name = "TransferController", urlPatterns = {"/transfers"})
 public class TransferController extends HttpServlet {
@@ -134,6 +135,12 @@ public class TransferController extends HttpServlet {
                 case "final_reject":
                     handleFinalReject(request, response, user);
                     break;
+                case "request_revision_manager":
+                    handleManagerRequestRevision(request, response, user);
+                    break;
+                case "request_revision_ceo":
+                    handleCeoRequestRevision(request, response, user);
+                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -157,7 +164,13 @@ public class TransferController extends HttpServlet {
         int limit = 10;
         int offset = (page - 1) * limit;
 
-        int total = transferDAO.countTotal(search, statusFilter, null);
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean isManager = perms != null && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
+        Integer createdByFilter = isManager ? null : loggedUser.getId();
+
+        int total = transferDAO.countTotal(search, statusFilter, createdByFilter);
         int totalPages = (int) Math.ceil((double) total / limit);
         if (totalPages < 1) {
             totalPages = 1;
@@ -167,8 +180,8 @@ public class TransferController extends HttpServlet {
         }
         offset = (page - 1) * limit;
 
-        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, null);
-        Map<String, Integer> kpis = transferDAO.getKpiCounts(null);
+        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, createdByFilter);
+        Map<String, Integer> kpis = transferDAO.getKpiCounts(createdByFilter);
 
         request.setAttribute("transfers", list);
         request.setAttribute("kpiDraft", kpis.getOrDefault("DRAFT", 0));
@@ -191,7 +204,7 @@ public class TransferController extends HttpServlet {
             throws ServletException, IOException {
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("generators", generatorDAO.findAllActive());
-        request.setAttribute("allSerials", loadAllInStockSerials());
+        request.setAttribute("allSerials", inventoryDAO.findAllInStock());
         request.setAttribute("activePage", "transfer-create");
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
     }
@@ -208,27 +221,23 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
-        if (!"DRAFT".equals(t.getStatus())) {
+        if (!"DRAFT".equals(t.getStatus()) && !"NEEDS_REVISION".equals(t.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
         }
+        HttpSession session = request.getSession(false);
+        User user = (User) session.getAttribute("loggedUser");
+        if (t.getCreatedBy() != user.getId()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         request.setAttribute("transfer", t);
+        request.setAttribute("isRevision", "NEEDS_REVISION".equals(t.getStatus()));
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("generators", generatorDAO.findAllActive());
-        request.setAttribute("allSerials", loadAllInStockSerials());
+        request.setAttribute("allSerials", inventoryDAO.findAllInStock());
         request.setAttribute("activePage", "transfer-edit");
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-edit.jsp").forward(request, response);
-    }
-
-    private List<Inventory> loadAllInStockSerials() {
-        List<Inventory> all = inventoryDAO.findAll();
-        List<Inventory> result = new ArrayList<>();
-        for (Inventory inv : all) {
-            if ("IN_STOCK".equals(inv.getStatus())) {
-                result.add(inv);
-            }
-        }
-        return result;
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
@@ -249,6 +258,12 @@ public class TransferController extends HttpServlet {
         }
 
         boolean isOwner = (t.getCreatedBy() == user.getId());
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean isManager = perms != null && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
+        if (!isManager && !isOwner) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
         String tab = request.getParameter("tab");
         String currentTab = "history".equals(tab) ? "history" : "info";
@@ -263,15 +278,20 @@ public class TransferController extends HttpServlet {
             int pageSize = 20;
             String pageStr = request.getParameter("page");
             if (pageStr != null && !pageStr.isEmpty()) {
-                try { page = Math.max(1, Integer.parseInt(pageStr)); }
-                catch (NumberFormatException ignored) { page = 1; }
+                try {
+                    page = Math.max(1, Integer.parseInt(pageStr));
+                } catch (NumberFormatException ignored) {
+                    page = 1;
+                }
             }
             List<ActivityLog> logs = activityLogDAO.findByEntityTypeAndId2("transfer", id, logSearch, logAction,
                     dateFrom, dateTo, page, pageSize);
             int totalLogs = activityLogDAO.countByEntityTypeAndId2("transfer", id, logSearch, logAction,
                     dateFrom, dateTo);
             int totalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
-            if (page > totalPages) page = totalPages;
+            if (page > totalPages) {
+                page = totalPages;
+            }
             request.setAttribute("logList", logs);
             request.setAttribute("logPage", page);
             request.setAttribute("logTotalPages", totalPages);
@@ -330,9 +350,13 @@ public class TransferController extends HttpServlet {
         if (serials != null) {
             for (int i = 0; i < serials.length; i++) {
                 String serial = serials[i];
-                if (serial == null) continue;
+                if (serial == null) {
+                    continue;
+                }
                 serial = serial.trim();
-                if (serial.isEmpty()) continue;
+                if (serial.isEmpty()) {
+                    continue;
+                }
 
                 int rowNum = i + 1;
                 if (serial.length() > MAX_SERIAL_LENGTH) {
@@ -435,20 +459,34 @@ public class TransferController extends HttpServlet {
         String[] detailNotes = request.getParameterValues("detailNote");
 
         List<String> errors = new ArrayList<>();
-        if (sourceWh <= 0) errors.add("Vui long chon kho nguon");
-        if (destWh <= 0) errors.add("Vui long chon kho dich");
-        if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) errors.add("Kho nguon va kho dich phai khac nhau");
-        if (note != null && note.length() > MAX_NOTE_LENGTH) errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
-        if (serials == null || serials.length == 0) errors.add("Phai co it nhat 1 dong chi tiet");
+        if (sourceWh <= 0) {
+            errors.add("Vui long chon kho nguon");
+        }
+        if (destWh <= 0) {
+            errors.add("Vui long chon kho dich");
+        }
+        if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) {
+            errors.add("Kho nguon va kho dich phai khac nhau");
+        }
+        if (note != null && note.length() > MAX_NOTE_LENGTH) {
+            errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
+        }
+        if (serials == null || serials.length == 0) {
+            errors.add("Phai co it nhat 1 dong chi tiet");
+        }
 
         java.util.Set<String> seenSerials = new java.util.HashSet<>();
         List<TransferDetail> details = new ArrayList<>();
         if (serials != null) {
             for (int i = 0; i < serials.length; i++) {
                 String serial = serials[i];
-                if (serial == null) continue;
+                if (serial == null) {
+                    continue;
+                }
                 serial = serial.trim();
-                if (serial.isEmpty()) continue;
+                if (serial.isEmpty()) {
+                    continue;
+                }
 
                 int rowNum = i + 1;
                 if (serial.length() > MAX_SERIAL_LENGTH) {
@@ -488,7 +526,9 @@ public class TransferController extends HttpServlet {
                 details.add(d);
             }
         }
-        if (details.isEmpty()) errors.add("Phai co it nhat 1 dong chi tiet hop le");
+        if (details.isEmpty()) {
+            errors.add("Phai co it nhat 1 dong chi tiet hop le");
+        }
 
         if (!errors.isEmpty()) {
             request.setAttribute("toastType", "danger");
@@ -574,7 +614,9 @@ public class TransferController extends HttpServlet {
             return;
         }
         Transfer existing = transferDAO.findById(id);
-        if (existing == null || !"DRAFT".equals(existing.getStatus()) || existing.getCreatedBy() != user.getId()) {
+        if (existing == null
+                || (!"DRAFT".equals(existing.getStatus()) && !"NEEDS_REVISION".equals(existing.getStatus()))
+                || existing.getCreatedBy() != user.getId()) {
             response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
@@ -601,9 +643,13 @@ public class TransferController extends HttpServlet {
         if (serials != null) {
             for (int i = 0; i < serials.length; i++) {
                 String serial = serials[i];
-                if (serial == null) continue;
+                if (serial == null) {
+                    continue;
+                }
                 serial = serial.trim();
-                if (serial.isEmpty()) continue;
+                if (serial.isEmpty()) {
+                    continue;
+                }
 
                 int rowNum = i + 1;
                 if (serial.length() > MAX_SERIAL_LENGTH) {
@@ -1095,6 +1141,128 @@ public class TransferController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
     }
 
+    private void handleManagerRequestRevision(HttpServletRequest request, HttpServletResponse response, User user)
+            throws ServletException, IOException {
+        int id = parseInt(request.getParameter("id"), 0);
+        String note = request.getParameter("managerNote");
+        if (note != null) {
+            note = note.trim();
+        }
+        if (note == null || note.isEmpty()) {
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Vui long nhap ly do yeu cau chinh sua");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+            return;
+        }
+        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+            return;
+        }
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
+        Transfer t = transferDAO.findById(id);
+        if (t == null) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
+        boolean ok = transferDAO.requestRevisionByManager(id, user.getId(), note);
+        if (ok) {
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("transfer");
+            log.setAction("REQUEST_REVISION");
+            log.setEntityId(id);
+            log.setEntityName(t.getTransferCode());
+            log.setDetails("Manager yeu cau chinh sua (vong 1): " + note);
+            activityLogDAO.insert(log);
+
+            NotificationService.send(
+                    t.getCreatedBy(),
+                    "Quan ly yeu cau chinh sua phieu luan chuyen",
+                    "Phieu " + t.getTransferCode() + " bi Manager yeu cau chinh sua. Ly do: " + note,
+                    request.getContextPath() + "/transfers?action=detail&id=" + id,
+                    "transfer",
+                    id
+            );
+
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Da gui yeu cau chinh sua cho nhan vien");
+            session.setAttribute("toastType", "success");
+        } else {
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Khong the yeu cau chinh sua (trang thai khong hop le)");
+            session.setAttribute("toastType", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+    }
+
+    private void handleCeoRequestRevision(HttpServletRequest request, HttpServletResponse response, User user)
+            throws ServletException, IOException {
+        int id = parseInt(request.getParameter("id"), 0);
+        String note = request.getParameter("ceoNote");
+        if (note != null) {
+            note = note.trim();
+        }
+        if (note == null || note.isEmpty()) {
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Vui long nhap ly do yeu cau chinh sua");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+            return;
+        }
+        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+            return;
+        }
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
+        Transfer t = transferDAO.findById(id);
+        if (t == null) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
+        boolean ok = transferDAO.requestRevisionByCeo(id, user.getId(), note);
+        if (ok) {
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("transfer");
+            log.setAction("REQUEST_REVISION");
+            log.setEntityId(id);
+            log.setEntityName(t.getTransferCode());
+            log.setDetails("CEO yeu cau chinh sua: " + note);
+            activityLogDAO.insert(log);
+
+            NotificationService.send(
+                    t.getCreatedBy(),
+                    "CEO yeu cau chinh sua phieu luan chuyen",
+                    "Phieu " + t.getTransferCode() + " bi CEO yeu cau chinh sua. Ly do: " + note,
+                    request.getContextPath() + "/transfers?action=detail&id=" + id,
+                    "transfer",
+                    id
+            );
+
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Da gui yeu cau chinh sua cho nhan vien");
+            session.setAttribute("toastType", "success");
+        } else {
+            HttpSession session = request.getSession();
+            session.setAttribute("toastMessage", "Khong the yeu cau chinh sua (trang thai khong hop le)");
+            session.setAttribute("toastType", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+    }
+
     private int parseInt(String s, int def) {
         if (s == null || s.isEmpty()) {
             return def;
@@ -1107,7 +1275,9 @@ public class TransferController extends HttpServlet {
     }
 
     private String escapeJson(String s) {
-        if (s == null) return "";
+        if (s == null) {
+            return "";
+        }
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\r", "\\r")

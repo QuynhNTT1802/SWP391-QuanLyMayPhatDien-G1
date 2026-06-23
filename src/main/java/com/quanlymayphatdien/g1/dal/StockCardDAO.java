@@ -34,16 +34,19 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 + "LEFT JOIN user u ON sc.created_by = u.id "
                 + "WHERE sc.warehouse_id = ? AND sc.generator_id = ? "
                 + "ORDER BY sc.created_at DESC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, warehouseId);
-            ps.setInt(2, generatorId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setInt(2, generatorId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -94,17 +97,20 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         sql.append("ORDER BY sc.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -141,17 +147,20 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             sql.append("AND DATE(sc.created_at) <= ? ");
             params.add(toDate);
         }
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -208,17 +217,20 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         sql.append("ORDER BY sc.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -261,17 +273,20 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             sql.append("AND DATE(sc.created_at) <= ? ");
             params.add(toDate);
         }
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -313,15 +328,18 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
     public List<StockCard> findByReceiptId(int receiptId) {
         List<StockCard> list = new ArrayList<>();
         String sql = "SELECT * FROM stock_card WHERE receipt_id = ? ORDER BY stock_card_id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, receiptId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(getFromResultSet(rs));
-                }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, receiptId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -343,10 +361,13 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
 
     @Override
     public int insert(StockCard sc) {
-        try (Connection c = getConnection()) {
-            return insert(c, sc);   // gọi method bên trên
+        try {
+            connection = getConnection();
+            return insert(connection, sc);   // g?i method b�n tr�n
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
         }
         return -1;
     }

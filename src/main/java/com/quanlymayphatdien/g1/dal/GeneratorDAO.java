@@ -30,6 +30,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -62,6 +64,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -76,6 +80,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -133,6 +139,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -146,6 +154,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -159,6 +169,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -178,6 +190,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -192,6 +206,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -251,6 +267,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             return pageList;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
@@ -294,8 +312,52 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
+    }
+
+    public boolean isInWarehouse(int generatorId, int warehouseId) {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE generator_id = ? AND warehouse_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            statement.setInt(2, warehouseId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public Generator findByModel(String model) {
+        if (model == null || model.trim().isEmpty()) {
+            return null;
+        }
+        String sql = "SELECT * FROM generator WHERE model = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, model.trim());
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Generator g = getFromResultSet(resultSet);
+                g.setCategories(getCategoriesByGeneratorId(g.getId()));
+                return g;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return null;
     }
 
     public int countByStatus(String status) {
@@ -310,6 +372,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -332,6 +396,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -351,6 +417,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -389,7 +457,7 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
 
         return g;
     }
-
+    
     public List<Generator> findAllActive() {
         List<Generator> list = new ArrayList<>();
         String sql = "SELECT * FROM generator WHERE status = 'active' ORDER BY model";
@@ -402,6 +470,8 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -422,29 +492,11 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
 
-    public Generator findByModel(String model) {
-        if (model == null || model.trim().isEmpty()) {
-            return null;
-        }
-        String sql = "SELECT * FROM generator WHERE model = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, model.trim());
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                Generator g = getFromResultSet(resultSet);
-                g.setCategories(getCategoriesByGeneratorId(g.getId()));
-                return g;
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
-
+    
 }

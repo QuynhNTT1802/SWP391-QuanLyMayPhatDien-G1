@@ -26,6 +26,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -51,6 +53,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -65,6 +69,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -79,40 +85,10 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        }
-        return false;
-    }
-
-    @Override
-    public int insert(User user) {
-        String sql = "INSERT INTO user (name, username, password, email, phone, address, status, created_at, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, user.getName());
-            statement.setString(2, user.getUsername());
-            statement.setString(3, user.getPassword());
-            statement.setString(4, user.getEmail());
-            statement.setString(5, user.getPhone());
-            statement.setString(6, user.getAddress());
-            statement.setString(7, user.getStatus());
-            statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
-            statement.setInt(9, user.getCreatedBy());
-
-            int affectedRows = statement.executeUpdate();
-            if (affectedRows > 0) {
-                resultSet = statement.getGeneratedKeys();
-                if (resultSet.next()) {
-                    return resultSet.getInt(1);
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
         } finally {
             closeResources();
         }
-        return 0;
+        return false;
     }
 
     public User findById(int id) {
@@ -127,6 +103,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -143,6 +121,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -160,6 +140,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -176,6 +158,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -232,6 +216,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
 
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
@@ -296,6 +282,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -349,6 +337,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -371,6 +361,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -393,6 +385,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -409,6 +403,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -424,6 +420,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -455,29 +453,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             }
         }
     }
-
-    public List<Integer> getUserIdsByRoleId(int roleId) {
-        List<Integer> list = new ArrayList<>();
-        String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
-        try {
-            Connection c = getConnection();
-            PreparedStatement p = c.prepareStatement(sql);
-            p.setInt(1, roleId);
-            ResultSet rs = p.executeQuery();
-            while (rs.next()) {
-                list.add(rs.getInt("user_id"));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return list;
-    }
-
-    /**
-     * Tìm tất cả user đang nắm quyền (resource, action) — gộp cả RBAC (qua role)
-     * và ABAC override (bảng user_permission, type GRANT/DENY).
-     * Admin được grant lẻ một quyền vẫn xuất hiện ở đây.
-     */
     public List<User> findUsersByPermission(String resource, String action) {
         List<User> list = new ArrayList<>();
         String sql =
@@ -519,5 +494,55 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         }
         return list;
     }
+    public List<Integer> getUserIdsByRoleId(int roleId) {
+        List<Integer> list = new ArrayList<>();
+        String sql = "SELECT user_id FROM user_role WHERE role_id = ?";
+        try {
+            Connection c = getConnection();
+            PreparedStatement p = c.prepareStatement(sql);
+            p.setInt(1, roleId);
+            ResultSet rs = p.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt("user_id"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+    
+     @Override
+    public int insert(User user) {
+        String sql = "INSERT INTO user (name, username, password, email, phone, address, status, created_at, created_by) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, user.getName());
+            statement.setString(2, user.getUsername());
+            statement.setString(3, user.getPassword());
+            statement.setString(4, user.getEmail());
+            statement.setString(5, user.getPhone());
+            statement.setString(6, user.getAddress());
+            statement.setString(7, user.getStatus());
+            statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
+            statement.setInt(9, user.getCreatedBy());
 
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows > 0) {
+                resultSet = statement.getGeneratedKeys();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
 }
+     

@@ -1,5 +1,5 @@
 package com.quanlymayphatdien.g1.controller.user;
-import static com.quanlymayphatdien.g1.config.GlobalConfig.REGEX_PASSWORD;
+import static com.quanlymayphatdien.g1.utils.GlobalUtils.REGEX_PASSWORD;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
