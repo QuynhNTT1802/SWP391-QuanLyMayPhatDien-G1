@@ -47,9 +47,6 @@ public class PurchaseOrderController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create":
-                    showCreateForm(request, response);
-                    break;
                 case "reviewCreate":
                     showReviewCreate(request, response);
                     break;
@@ -91,9 +88,6 @@ public class PurchaseOrderController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create":
-                    create(request, response);
-                    break;
                 case "reviewCreate":
                     showReviewCreate(request, response);
                     break;
@@ -178,54 +172,6 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("activePage", "purchase-order");
 
         request.getRequestDispatcher("/view/purchase/purchase-list.jsp").forward(request, response);
-    }
-
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("purchase_orders.create")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền tạo phiếu mua");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
-        String period = request.getParameter("period");
-        if (period != null) period = period.replace("-", "");
-        if (period == null || period.isEmpty()) {
-            period = PeriodUtils.currentPeriod();
-        }
-        int warehouseId = parseInt(request.getParameter("warehouseId"));
-
-        request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("selectedPeriod", period);
-        request.setAttribute("selectedWarehouseId", warehouseId);
-        if (warehouseId > 0) {
-            List<ImportProposal> allProposals = new ImportProposalDAO()
-                    .findPendingByPeriodAndWarehouse(period, warehouseId);
-            // Nhóm theo người đề xuất
-            List<Map<String, Object>> creatorGroups = new java.util.ArrayList<>();
-            String lastCreator = null;
-            Map<String, Object> currentGroup = null;
-            for (ImportProposal prop : allProposals) {
-                String creator = prop.getCreatedByName();
-                if (creator == null) creator = "(không xác định)";
-                if (!creator.equals(lastCreator)) {
-                    currentGroup = new java.util.LinkedHashMap<>();
-                    currentGroup.put("creatorName", creator);
-                    List<ImportProposal> list = new java.util.ArrayList<>();
-                    list.add(prop);
-                    currentGroup.put("proposals", list);
-                    creatorGroups.add(currentGroup);
-                    lastCreator = creator;
-                } else {
-                    ((List<ImportProposal>) currentGroup.get("proposals")).add(prop);
-                }
-            }
-            request.setAttribute("creatorGroups", creatorGroups);
-        }
-        request.setAttribute("activePage", "purchase-order");
-        request.getRequestDispatcher("/view/purchase/purchase-create.jsp").forward(request, response);
     }
 
     private void showReviewCreate(HttpServletRequest request, HttpServletResponse response)
@@ -321,123 +267,6 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("currentUserId", user.getId());
         request.setAttribute("activePage", "purchase-order");
         request.getRequestDispatcher("/view/purchase/purchase-review-create.jsp").forward(request, response);
-    }
-
-    private void create(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession();
-        User user = (User) session.getAttribute("loggedUser");
-
-        String period = request.getParameter("period");
-        if (period != null) period = period.replace("-", "");
-        int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String submitType = request.getParameter("submitType");
-        String note = request.getParameter("note");
-
-        String[] genIds = request.getParameterValues("generatorId");
-        String[] proposalIdArr = request.getParameterValues("proposalId");
-        String[] finalQtys = request.getParameterValues("finalQuantity");
-        String[] unitPrices = request.getParameterValues("unitPrice");
-        String[] detailNotes = request.getParameterValues("detailNote");
-
-        if (genIds == null || genIds.length == 0) {
-            session.setAttribute("toastMessage", "Chưa chọn dòng máy nào");
-            response.sendRedirect(request.getContextPath()
-                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
-            return;
-        }
-
-        // Nhóm các dòng theo generatorId (gộp số lượng)
-        java.util.Map<Integer, PurchaseOrderDetail> detailMap = new java.util.LinkedHashMap<>();
-        java.util.Set<Integer> uniqueProposalIds = new java.util.HashSet<>();
-        for (int i = 0; i < genIds.length; i++) {
-            int gid = parseInt(genIds[i]);
-            int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
-            if (gid <= 0 || qty <= 0) continue;
-
-            // Thu thập proposalId
-            if (proposalIdArr != null && i < proposalIdArr.length) {
-                int pid = parseInt(proposalIdArr[i]);
-                if (pid > 0) uniqueProposalIds.add(pid);
-            }
-
-            String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-            String upStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
-
-            if (detailMap.containsKey(gid)) {
-                PurchaseOrderDetail existing = detailMap.get(gid);
-                existing.setFinalQuantity(existing.getFinalQuantity() + qty);
-            } else {
-                PurchaseOrderDetail d = new PurchaseOrderDetail();
-                d.setGeneratorId(gid);
-                d.setFinalQuantity(qty);
-                d.setNote(dNote);
-                if (upStr != null && !upStr.trim().isEmpty()) {
-                    try { d.setUnitPrice(new java.math.BigDecimal(upStr.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
-                }
-                detailMap.put(gid, d);
-            }
-        }
-
-        if (detailMap.isEmpty()) {
-            session.setAttribute("toastMessage", "Không có dòng hợp lệ");
-            response.sendRedirect(request.getContextPath()
-                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
-            return;
-        }
-
-        try {
-            PurchaseOrderDAO dao = new PurchaseOrderDAO();
-            PurchaseOrder po = new PurchaseOrder();
-            po.setPoCode(dao.generatePoCode(period));
-            po.setPeriod(period);
-            po.setPeriodStart(PeriodUtils.startOf(period));
-            po.setPeriodEnd(PeriodUtils.endOf(period));
-            po.setWarehouseId(warehouseId);
-            po.setCreatedBy(user.getId());
-            po.setStatus("send".equals(submitType) ? GlobalUtils.PO_STATUS_PENDING_CEO : GlobalUtils.PO_STATUS_DRAFT);
-            po.setNote(note);
-
-            List<PurchaseOrderDetail> details = new ArrayList<>(detailMap.values());
-            int totalQty = 0;
-            for (PurchaseOrderDetail d : details) totalQty += d.getFinalQuantity();
-            po.setTotalQuantity(totalQty);
-
-            // Lay current_stock + proposed_quantity tu aggregation
-            List<Map<String, Object>> aggs = dao.aggregatePendingProposals(period, warehouseId);
-            for (PurchaseOrderDetail d : details) {
-                int gid = d.getGeneratorId();
-                int proposed = 0, stock = 0;
-                for (Map<String, Object> a : aggs) {
-                    if (((Number) a.get("generatorId")).intValue() == gid) {
-                        proposed = ((Number) a.get("totalProposed")).intValue();
-                        stock = ((Number) a.get("currentStock")).intValue();
-                        break;
-                    }
-                }
-                d.setProposedQuantity(proposed);
-                d.setCurrentStock(stock);
-            }
-
-            // Tạo PO + details + link proposals trong transaction
-            int poId = dao.createPoWithDetailsAndLinks(po, details, new ArrayList<>(uniqueProposalIds));
-            if (poId <= 0) {
-                throw new Exception("Insert PO failed");
-            }
-
-            if ("send".equals(submitType)) {
-                dao.sendToCeo(poId);
-            }
-
-            session.setAttribute("toastMessage", "Tạo phiếu mua thành công");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.create", e.getMessage(), e);
-            e.printStackTrace();
-            session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
-            response.sendRedirect(request.getContextPath()
-                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
-        }
     }
 
     private void submitReviewCreate(HttpServletRequest request, HttpServletResponse response)
