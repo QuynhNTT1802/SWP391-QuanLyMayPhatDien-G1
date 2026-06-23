@@ -102,49 +102,92 @@
                         <div class="section">
                             <div class="section-head">
                                 <h3>Danh sách các quyền</h3>
-                                <div class="input has-icon" style="width:220px;">
-                                    <span class="leading">
-                                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                                    </span>
-                                    <input type="text" id="permSearch" placeholder="Tìm kiếm quyền..." value="${param.permSearch}" autocomplete="off">
-                                </div>
                             </div>
-                            <div class="perm-table" id="permTable">
 
-                                <c:forEach var="moduleEntry" items="${groupedByModule}">
-                                    <div class="perm-module-header" style="margin:14px 0 6px; padding:6px 10px; background:#f3f6fb; border-left:3px solid var(--info); font-weight:600; color:#334; border-radius:4px;">
-                                        ${moduleEntry.key}
+                            <div class="perm-2pane" id="permPane">
+                                <!-- LEFT: search + tree module > feature -->
+                                <div class="perm-tree" id="permTree">
+                                    <div class="perm-tree-search">
+                                        <svg class="perm-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        <input type="text" id="permSearch" placeholder="Tìm tính năng..." autocomplete="off">
                                     </div>
-                                    <c:forEach var="featureEntry" items="${moduleEntry.value}">
-                                        <div class="perm-row">
-                                            <div class="res-info">
-                                                <div>
-                                                    <div class="res-name">${featureEntry.key}</div>
-                                                </div>
+                                    <c:forEach var="moduleEntry" items="${groupedByModule}" varStatus="mIdx">
+                                        <div class="perm-tree-module" data-module="${moduleEntry.key}">
+                                            <div class="perm-tree-module-head">
+                                                <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                                                <span class="m-name">${moduleEntry.key}</span>
+                                                <span class="m-count" data-role="m-count">0</span>
                                             </div>
-
-                                            <c:forEach var="perm" items="${featureEntry.value}">
-                                                <c:set var="isChecked" value="false" />
-                                                <c:forEach var="rPerm" items="${rolePermissions}">
-                                                    <c:if test="${rPerm.permissionId == perm.permissionId}">
-                                                        <c:set var="isChecked" value="true" />
-                                                    </c:if>
+                                            <div class="perm-tree-features">
+                                                <c:forEach var="featureEntry" items="${moduleEntry.value}" varStatus="fIdx">
+                                                    <c:set var="featureKey" value="${moduleEntry.key}::${featureEntry.key}"/>
+                                                    <c:set var="totalInFeature" value="${0}"/>
+                                                    <c:set var="checkedInFeature" value="${0}"/>
+                                                    <c:forEach var="perm" items="${featureEntry.value}">
+                                                        <c:set var="totalInFeature" value="${totalInFeature + 1}"/>
+                                                        <c:forEach var="rPerm" items="${rolePermissions}">
+                                                            <c:if test="${rPerm.permissionId == perm.permissionId}">
+                                                                <c:set var="checkedInFeature" value="${checkedInFeature + 1}"/>
+                                                            </c:if>
+                                                        </c:forEach>
+                                                    </c:forEach>
+                                                    <button type="button"
+                                                            class="perm-tree-feature ${mIdx.first and fIdx.first ? 'is-active' : ''}"
+                                                            data-feature-key="${featureKey}">
+                                                        <span class="f-name">${featureEntry.key}</span>
+                                                        <span class="f-count" data-checked="${checkedInFeature}" data-total="${totalInFeature}">${checkedInFeature}/${totalInFeature}</span>
+                                                    </button>
                                                 </c:forEach>
-
-                                                <div style="text-align: center;">
-                                                    <span style="font-size: 10px; color: gray; display:block; margin-bottom:4px;" title="${perm.description}">
-                                                        <c:out value="${empty perm.taskType ? perm.action : perm.taskType}" />
-                                                    </span>
-                                                    <label class="perm-toggle ${isChecked ? 'on' : ''}">
-                                                        <input type="checkbox" name="perIds" value="${perm.permissionId}" style="display:none;" ${isChecked ? 'checked' : ''}>
-                                                        <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
-                                                    </label>
-                                                </div>
-                                            </c:forEach>
+                                            </div>
                                         </div>
                                     </c:forEach>
-                                </c:forEach>
+                                    <div class="perm-tree-empty" id="permTreeEmpty" style="display:none;">Không có tính năng phù hợp.</div>
+                                </div>
 
+                                <!-- RIGHT: checklist permissions của feature đang chọn -->
+                                <div class="perm-detail" id="permDetail">
+                                    <c:forEach var="moduleEntry" items="${groupedByModule}" varStatus="mIdx">
+                                        <c:forEach var="featureEntry" items="${moduleEntry.value}" varStatus="fIdx">
+                                            <c:set var="featureKey" value="${moduleEntry.key}::${featureEntry.key}"/>
+                                            <div class="perm-detail-pane ${mIdx.first and fIdx.first ? 'is-active' : ''}"
+                                                 data-feature-key="${featureKey}">
+                                                <div class="perm-detail-head">
+                                                    <div>
+                                                        <div class="pd-eyebrow">${moduleEntry.key}</div>
+                                                        <h4 class="pd-title">${featureEntry.key}</h4>
+                                                    </div>
+                                                    <div class="perm-detail-actions">
+                                                        <button type="button" class="btn btn-sm" data-bulk="all">Cấp tất cả</button>
+                                                        <button type="button" class="btn btn-sm" data-bulk="none">Bỏ tất cả</button>
+                                                    </div>
+                                                </div>
+                                                <div class="perm-checklist">
+                                                    <c:forEach var="perm" items="${featureEntry.value}">
+                                                        <c:set var="isChecked" value="false" />
+                                                        <c:forEach var="rPerm" items="${rolePermissions}">
+                                                            <c:if test="${rPerm.permissionId == perm.permissionId}">
+                                                                <c:set var="isChecked" value="true" />
+                                                            </c:if>
+                                                        </c:forEach>
+                                                        <label class="perm-check ${isChecked ? 'is-checked' : ''}">
+                                                            <input type="checkbox" name="perIds" value="${perm.permissionId}" ${isChecked ? 'checked' : ''}>
+                                                            <span class="cb-box">
+                                                                <svg viewBox="0 0 24 24"><polyline points="4 12 10 18 20 6"/></svg>
+                                                            </span>
+                                                            <span class="pc-body">
+                                                                <span class="pc-label"><c:out value="${empty perm.taskType ? perm.action : perm.taskType}"/></span>
+                                                                <c:if test="${not empty perm.description}">
+                                                                    <span class="pc-desc">${perm.description}</span>
+                                                                </c:if>
+                                                            </span>
+                                                        </label>
+                                                    </c:forEach>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </c:forEach>
+                                    <div class="perm-detail-empty" id="permDetailEmpty" style="display:none;">Chọn tính năng ở bên trái để xem các quyền.</div>
+                                </div>
                             </div>
                         </div>
                     </div>

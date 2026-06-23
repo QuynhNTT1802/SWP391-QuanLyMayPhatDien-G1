@@ -2,164 +2,140 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
-    <head>
-        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Thêm nhà cung cấp — Warehouse OS</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
-    </head>
-    <body>
-        <div class="app">
-            <jsp:include page="../common/admin/aside.jsp"></jsp:include>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thêm nhà cung cấp — Warehouse OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+</head>
+<body>
+<div class="app">
+    <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-                <div>
-                    <header class="topbar">
-                        <h1>Thêm nhà cung cấp</h1>
-                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Nhà cung cấp</a> / Thêm mới</span>
-                    <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+    <div>
+        <header class="topbar">
+            <h1>Thêm nhà cung cấp</h1>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Nhà cung cấp</a> / Thêm mới</span>
+            <div class="top-actions">
+                <button class="icon-btn theme-toggle" id="themeToggle">
+                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <c:if test="${not empty sessionScope.message}">
+                <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                    <c:out value="${sessionScope.message}"/>
+                </div>
+                <c:remove var="message" scope="session"/>
+            </c:if>
+            <c:if test="${not empty sessionScope.errors}">
+                <c:forEach var="err" items="${sessionScope.errors}">
+                    <div style="background:#ffeaea;color:#e74c3c;border:1px solid #e7b4b4;border-radius:6px;padding:10px 16px;margin-bottom:8px;font-size:13px;font-weight:600;">
+                        <c:out value="${err.value}"/>
+                    </div>
+                </c:forEach>
+                <c:remove var="errors" scope="session"/>
+            </c:if>
+
+            <a class="back-link" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Quay lại danh sách
+            </a>
+
+            <div class="page-head">
+                <div class="eyebrow">Quản lý nhà cung cấp · Nhà cung cấp mới</div>
+                <h2 class="page-title">Thêm nhà cung cấp</h2>
+            </div>
+
+            <div class="form-layout">
+                <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/suppliers?action=create">
+
+                    <div class="form-section">
+                        <div class="form-section-head">
+                            <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
+                            <h3 class="form-section-title">Thông tin liên hệ & phân loại</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label class="field-label">Tên nhà cung cấp <span class="req">*</span></label>
+                                <input class="input" name="name" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldName}"/>" required />
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                                <input class="input mono" name="phone" placeholder="VD: 0912345678" value="<c:out value="${sessionScope.fieldPhone}"/>" required />
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Email</label>
+                                <input class="input" name="email" type="email" placeholder="email@example.com" value="<c:out value="${sessionScope.fieldEmail}"/>" />
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Loại nhà cung cấp</label>
+                                <select class="select" name="supplierTypeId">
+                                    <option value="">-- Chọn loại NCC --</option>
+                                    <c:forEach var="t" items="${supplierTypeList}">
+                                        <option value="${t.id}" <c:if test="${sessionScope.fieldSupplierTypeId == t.id}">selected</c:if>>${t.name}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label">Tên công ty</label>
+                                <input class="input" name="companyName" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldCompanyName}"/>" />
+                            </div>
+                            <div class="field full-width">
+                                <label class="field-label">Địa chỉ</label>
+                                <textarea class="input" name="address" rows="3" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM"><c:out value="${sessionScope.fieldAddress}"/></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-head">
+                            <div class="form-section-num">02 — TRẠNG THÁI</div>
+                            <h3 class="form-section-title">Thông tin bổ sung</h3>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label class="field-label">Trạng thái</label>
+                                <select class="select" name="status">
+                                    <option value="active">Hoạt động</option>
+                                    <option value="locked">Bị khóa</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                        <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Hủy</a>
+                        <button type="submit" class="btn btn-primary">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                            Thêm nhà cung cấp
                         </button>
                     </div>
-                </header>
-
-                <main>
-                    <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
-                        <c:remove var="message" scope="session"/>
-                    </c:if>
-                    <c:if test="${not empty sessionScope.errors}">
-                        <c:forEach var="err" items="${sessionScope.errors}">
-                            <div style="background:#ffeaea;color:#e74c3c;border:1px solid #e7b4b4;border-radius:6px;padding:10px 16px;margin-bottom:8px;font-size:13px;font-weight:600;">
-                                <c:out value="${err.value}"/>
-                            </div>
-                        </c:forEach>
-                        <c:remove var="errors" scope="session"/>
-                    </c:if>
-
-                    <c:choose>
-                        <c:when test="${not empty returnUrl}">
-                            <a class="back-link" href="<c:out value='${returnUrl}'/>">
-                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                                Quay lại luồng đề xuất
-                            </a>
-                        </c:when>
-                        <c:otherwise>
-                            <a class="back-link" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">
-                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                                Quay lại danh sách
-                            </a>
-                        </c:otherwise>
-                    </c:choose>
-                    <c:if test="${not empty returnUrl}">
-                        <div style="background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:6px;padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                            Bạn đang tạo NCC từ luồng nhập đề xuất. Sau khi lưu, hệ thống sẽ tự động gán NCC mới vào dòng đang chờ.
-                        </div>
-                    </c:if>
-
-                    <div class="page-head">
-                        <div class="eyebrow">Quản lý nhà cung cấp · Nhà cung cấp mới</div>
-                        <h2 class="page-title">Thêm nhà cung cấp</h2>
-                    </div>
-
-                    <div class="form-layout">
-                        <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/suppliers?action=create">
-                            <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}'/>"/>
-                            <input type="hidden" name="rowGid" value="<c:out value='${rowGid}'/>"/>
-
-                            <div class="form-section">
-                                <div class="form-section-head">
-                                    <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
-                                    <h3 class="form-section-title">Thông tin liên hệ & phân loại</h3>
-                                </div>
-                                <div class="form-grid">
-                                    <div class="field">
-                                        <label class="field-label">Tên nhà cung cấp <span class="req">*</span></label>
-                                        <input class="input" name="name" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${not empty sessionScope.fieldName ? sessionScope.fieldName : prefillName}"/>" required />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <input class="input mono" name="phone" placeholder="VD: 0912345678" value="<c:out value="${sessionScope.fieldPhone}"/>" required />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Email</label>
-                                        <input class="input" name="email" type="email" placeholder="email@example.com" value="<c:out value="${sessionScope.fieldEmail}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Loại nhà cung cấp</label>
-                                        <select class="select" name="supplierTypeId">
-                                            <option value="">-- Chọn loại NCC --</option>
-                                            <c:forEach var="t" items="${supplierTypeList}">
-                                                <option value="${t.id}" <c:if test="${sessionScope.fieldSupplierTypeId == t.id}">selected</c:if>>${t.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tên công ty</label>
-                                        <input class="input" name="companyName" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldCompanyName}"/>" />
-                                    </div>
-                                    <div class="field full-width">
-                                        <label class="field-label">Địa chỉ</label>
-                                        <textarea class="input" name="address" rows="3" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM"><c:out value="${sessionScope.fieldAddress}"/></textarea>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-section">
-                                <div class="form-section-head">
-                                    <div class="form-section-num">02 — TRẠNG THÁI</div>
-                                    <h3 class="form-section-title">Thông tin bổ sung</h3>
-                                </div>
-                                <div class="form-grid">
-                                    <div class="field">
-                                        <label class="field-label">Trạng thái</label>
-                                        <select class="select" name="status">
-                                            <option value="active">Hoạt động</option>
-                                            <option value="locked">Bị khóa</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
-                                <c:choose>
-                                    <c:when test="${not empty returnUrl}">
-                                        <a class="btn" href="<c:out value='${returnUrl}'/>">Hủy</a>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Hủy</a>
-                                    </c:otherwise>
-                                </c:choose>
-                                <button type="submit" class="btn btn-primary">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                    Thêm nhà cung cấp
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </main>
+                </form>
             </div>
-        </div>
+        </main>
+    </div>
+</div>
 
-        <c:remove var="fieldName" scope="session"/>
-        <c:remove var="fieldPhone" scope="session"/>
-        <c:remove var="fieldEmail" scope="session"/>
-        <c:remove var="fieldAddress" scope="session"/>
-        <c:remove var="fieldCompanyName" scope="session"/>
-        <c:remove var="fieldSupplierTypeId" scope="session"/>
-        <c:remove var="fieldNote" scope="session"/>
+<c:remove var="fieldName" scope="session"/>
+<c:remove var="fieldPhone" scope="session"/>
+<c:remove var="fieldEmail" scope="session"/>
+<c:remove var="fieldAddress" scope="session"/>
+<c:remove var="fieldCompanyName" scope="session"/>
+<c:remove var="fieldSupplierTypeId" scope="session"/>
+<c:remove var="fieldNote" scope="session"/>
 
-        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-    </body>
+<script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+</body>
 </html>

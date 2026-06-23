@@ -101,6 +101,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return allReceipts.subList(start, end);
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return new ArrayList<>();
     }
@@ -156,6 +158,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
         } catch (SQLException ex) {
             System.out.println(ex.getMessage());
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -188,6 +192,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -241,6 +247,50 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         return -1;
     }
 
+
+    public int insert(Connection conn, Receipt r) throws SQLException {
+        String status = r.getStatus();
+        if (status == null || status.trim().isEmpty()) {
+            status = GlobalUtils.RECEIPT_STATUS_PENDING;
+        }
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
+                + "warehouse_id, created_by, status, note, reason_id, created_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, r.getReceiptCode());
+            ps.setString(2, r.getReceiptType());
+            if (r.getOrderId() != null) {
+                ps.setInt(3, r.getOrderId());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            if (r.getPurchaseOrderId() != null) {
+                ps.setInt(4, r.getPurchaseOrderId());
+            } else {
+                ps.setNull(4, Types.INTEGER);
+            }
+            ps.setInt(5, r.getWarehouseId());
+            ps.setInt(6, r.getCreatedBy());
+            ps.setString(7, status);
+            ps.setString(8, r.getNote());
+            if (r.getReasonId() != null) {
+                ps.setInt(9, r.getReasonId());
+            } else {
+                ps.setNull(9, Types.INTEGER);
+            }
+            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            int affectedRows = ps.executeUpdate();
+            if (affectedRows > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
     public List<String> approveReceipt(int receiptId, int approvedBy) {
         List<String> errors = new ArrayList<>();
         try {
@@ -257,7 +307,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             int updated = statement.executeUpdate();
             if (updated == 0) {
                 connection.rollback();
-                errors.add("Phiếu không ở trạng thái chờ duyệt");
+                errors.add("Phi?u kh�ng ? tr?ng th�i ch? duy?t");
                 return errors;
             }
             // 2. Lay receipt_detail (join inventory de lay generator_id, serial_number)
@@ -273,7 +323,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             while (resultSet.next()) {
                 details.add(rdDAO.getFromResultSet(resultSet));
             }
-            // 3. Lay receipt_type de biet IMPORT hay EXPORT
+
             String typeSql = "SELECT receipt_type, warehouse_id, receipt_code FROM receipt WHERE receipt_id = ?";
             statement = connection.prepareStatement(typeSql);
             statement.setInt(1, receiptId);
@@ -385,7 +435,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 sc.setTransactionType(receiptType);
                 sc.setQuantityChange(change);
                 sc.setQuantityAfter(qtyAfter);
-                sc.setReferenceNote("Phiếu " + receiptCode);
+                sc.setReferenceNote("Phi?u " + receiptCode);
                 sc.setCreatedAt(LocalDateTime.now());
                 sc.setCreatedBy(approvedBy);
                 scDAO.insert(connection, sc);
@@ -402,7 +452,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 ex.printStackTrace();
             }
             e.printStackTrace();
-            errors.add("Lỗi hệ thống: " + e.getMessage());
+            errors.add("L?i h? th?ng: " + e.getMessage());
             return errors;
         } finally {
             try {
@@ -416,28 +466,71 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public boolean rejectReceipt(int receiptId, int approvedBy, Integer reasonId, String reasonNote) {
-        String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
-                + "approved_at = ?, reason_id = ?, reason_note = ? "
-                + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
+        Connection conn = null;
         try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, approvedBy);
-            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            if (reasonId != null) {
-                statement.setInt(3, reasonId);
-            } else {
-                statement.setNull(3, Types.INTEGER);
+            conn = getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Lay danh sach inventory_id cua receipt
+            List<Integer> inventoryIds = new ArrayList<>();
+            String selInvSql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(selInvSql)) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        inventoryIds.add(rs.getInt("inventory_id"));
+                    }
+                }
             }
-            if (reasonNote != null && !reasonNote.trim().isEmpty()) {
-                statement.setString(4, reasonNote.trim());
-            } else {
-                statement.setNull(4, Types.VARCHAR);
+
+            // 2. Xoa inventory rows PENDING_IMPORT (receipt_detail se tu xoa nho ON DELETE CASCADE)
+            if (!inventoryIds.isEmpty()) {
+                String placeholders = String.join(",",
+                        java.util.Collections.nCopies(inventoryIds.size(), "?"));
+                String delInvSql = "DELETE FROM inventory WHERE status = ? AND inventory_id IN (" + placeholders + ")";
+                try (PreparedStatement ps = conn.prepareStatement(delInvSql)) {
+                    ps.setString(1, InventoryDAO.STATUS_PENDING_IMPORT);
+                    for (int i = 0; i < inventoryIds.size(); i++) {
+                        ps.setInt(i + 2, inventoryIds.get(i));
+                    }
+                    ps.executeUpdate();
+                }
             }
-            statement.setInt(5, receiptId);
-            return statement.executeUpdate() > 0;
+
+            // 3. Update receipt status
+            String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
+                    + "approved_at = ?, reason_id = ?, reason_note = ? "
+                    + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, approvedBy);
+                ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                if (reasonId != null) {
+                    ps.setInt(3, reasonId);
+                } else {
+                    ps.setNull(3, Types.INTEGER);
+                }
+                if (reasonNote != null && !reasonNote.trim().isEmpty()) {
+                    ps.setString(4, reasonNote.trim());
+                } else {
+                    ps.setNull(4, Types.VARCHAR);
+                }
+                ps.setInt(5, receiptId);
+                int updated = ps.executeUpdate();
+                if (updated == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
         } catch (SQLException e) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            }
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -464,6 +557,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return false;
     }
@@ -725,5 +820,47 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         return r;
     }
+//    public int insert(Connection conn, Receipt r) throws SQLException {
+//        String status = r.getStatus();
+//        if (status == null || status.trim().isEmpty()) {
+//            status = GlobalUtils.RECEIPT_STATUS_PENDING;
+//        }
+//        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, proposal_id, "
+//                + "warehouse_id, created_by, status, note, reason_id, created_at) "
+//                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+//        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+//            ps.setString(1, r.getReceiptCode());
+//            ps.setString(2, r.getReceiptType());
+//            if (r.getOrderId() != null) {
+//                ps.setInt(3, r.getOrderId());
+//            } else {
+//                ps.setNull(3, Types.INTEGER);
+//            }
+//            if (r.getProposalId() != null) {
+//                ps.setInt(4, r.getProposalId());
+//            } else {
+//                ps.setNull(4, Types.INTEGER);
+//            }
+//            ps.setInt(5, r.getWarehouseId());
+//            ps.setInt(6, r.getCreatedBy());
+//            ps.setString(7, status);
+//            ps.setString(8, r.getNote());
+//            if (r.getReasonId() != null) {
+//                ps.setInt(9, r.getReasonId());
+//            } else {
+//                ps.setNull(9, Types.INTEGER);
+//            }
+//            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+//            int affectedRows = ps.executeUpdate();
+//            if (affectedRows > 0) {
+//                try (ResultSet rs = ps.getGeneratedKeys()) {
+//                    if (rs.next()) {
+//                        return rs.getInt(1);
+//                    }
+//                }
+//            }
+//        }
+//        return -1;
+//    }
 
 }

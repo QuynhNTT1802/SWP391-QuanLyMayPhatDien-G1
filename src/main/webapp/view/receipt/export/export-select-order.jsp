@@ -135,7 +135,17 @@
     </div>
 </div>
 
+<div class="toast-host" id="toastHost"></div>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.SESSION_DATA && window.SESSION_DATA.message) {
+            toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+            window.SESSION_DATA = null;
+        }
+    });
+</script>
 </body>
 </html>
