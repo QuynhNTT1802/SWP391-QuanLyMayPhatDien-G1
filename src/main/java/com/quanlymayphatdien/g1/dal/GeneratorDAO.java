@@ -337,6 +337,25 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return false;
     }
 
+    public java.util.Map<Integer, Integer> getTotalStockMap() {
+        java.util.Map<Integer, Integer> stockMap = new java.util.HashMap<>();
+        String sql = "SELECT generator_id, COUNT(*) AS stock FROM inventory "
+                + "WHERE status = 'IN_STOCK' GROUP BY generator_id";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                stockMap.put(resultSet.getInt("generator_id"), resultSet.getInt("stock"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return stockMap;
+    }
+
     public Generator findByModel(String model) {
         if (model == null || model.trim().isEmpty()) {
             return null;
