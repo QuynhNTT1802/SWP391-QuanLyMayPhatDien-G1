@@ -220,8 +220,8 @@
                             <div class="stat"><div class="lbl">Nháp</div><div class="val">${draftCount}</div></div>
                         </c:if>
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
-                        <div class="stat"><div class="lbl">Đã duyệt</div><div class="val">${approvedCount}</div></div>
-                        <div class="stat"><div class="lbl">Từ chối</div><div class="val">${rejectedCount}</div></div>
+                        <div class="stat"><div class="lbl">Đã duyệt bởi Sale Manager</div><div class="val">${approvedCount}</div></div>
+                        <div class="stat"><div class="lbl">Từ chối bởi Sale Manager</div><div class="val">${rejectedCount}</div></div>
                         <div class="stat"><div class="lbl">Đã hủy</div><div class="val">${cancelledCount}</div></div>
                     </div>
 
@@ -252,8 +252,8 @@
                             </c:if>
                             <option value="PENDING"   <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="PENDING_CEO" <c:if test="${statusFilter == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
-                            <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                            <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                            <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt (Sale Manager / CEO)</option>
+                            <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối (Sale Manager / CEO)</option>
                             <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                         </select>
@@ -324,8 +324,10 @@
                                                         <c:when test="${p.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Nháp</span></c:when>
                                                         <c:when test="${p.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${p.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
-                                                        <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
-                                                        <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
+                                                        <c:when test="${p.status == 'APPROVED' and not empty p.purchaseOrderId}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt bởi CEO</span></c:when>
+                                                        <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt bởi Sale Manager</span></c:when>
+                                                        <c:when test="${p.status == 'REJECTED' and not empty p.purchaseOrderId}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối bởi CEO</span></c:when>
+                                                        <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối bởi Sale Manager</span></c:when>
                                                         <c:when test="${p.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
@@ -386,7 +388,7 @@
                                                                     <div class="dropdown-divider"></div>
                                                                     <button class="dropdown-item approve" onclick="openApproveModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
                                                                         <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                        <span class="label">Duyệt</span>
+                                                                        <span class="label">Duyệt bởi Sale Manager</span>
                                                                     </button>
                                                                 </c:if>
 
@@ -394,7 +396,7 @@
                                                                     <div class="dropdown-divider"></div>
                                                                     <button class="dropdown-item reject" onclick="openRejectModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
                                                                         <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                        <span class="label">Từ chối</span>
+                                                                        <span class="label">Từ chối bởi Sale Manager</span>
                                                                     </button>
                                                                 </c:if>
 
@@ -446,13 +448,13 @@
         <c:if test="${canApproveProposal || canRejectProposal}">
             <div class="modal-host" id="approveModalList">
                 <div class="modal-card">
-                    <h3>Duyệt phiếu đề xuất</h3>
-                    <div class="modal-sub" id="approveModalSub">Xác nhận duyệt phiếu đề xuất?</div>
+                    <h3>Duyệt bởi Sale Manager</h3>
+                    <div class="modal-sub" id="approveModalSub">Xác nhận duyệt phiếu đề xuất bởi Sale Manager?</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve">
                         <input type="hidden" name="id" id="approveProposalId" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt (Sale Manager)</button>
                         </div>
                     </form>
                 </div>
@@ -462,15 +464,15 @@
         <c:if test="${canRejectProposal}">
             <div class="modal-host" id="rejectModalList">
                 <div class="modal-card">
-                    <h3>Từ chối phiếu đề xuất</h3>
-                    <div class="modal-sub" id="rejectModalSub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
+                    <h3>Từ chối bởi Sale Manager</h3>
+                    <div class="modal-sub" id="rejectModalSub">Phiếu sẽ bị từ chối bởi Sale Manager và không thể hoàn tác.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
                         <input type="hidden" name="id" id="rejectProposalId" />
                         <label for="rejectReasonList">Lý do từ chối <span style="color:var(--danger)">*</span></label>
                         <textarea id="rejectReasonList" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (Sale Manager)</button>
                         </div>
                     </form>
                 </div>
@@ -504,14 +506,14 @@
                 var el = document.getElementById('approveProposalId');
                 if (el) el.value = id;
                 var sub = document.getElementById('approveModalSub');
-                if (sub) sub.innerHTML = 'Xác nhận duyệt phiếu đề xuất <strong>' + code + '</strong>?';
+                if (sub) sub.innerHTML = 'Xác nhận duyệt (Sale Manager) phiếu đề xuất <strong>' + code + '</strong>?';
                 openModal('approveModalList');
             }
             function openRejectModal(id, code) {
                 var el = document.getElementById('rejectProposalId');
                 if (el) el.value = id;
                 var sub = document.getElementById('rejectModalSub');
-                if (sub) sub.innerHTML = 'Từ chối phiếu đề xuất <strong>' + code + '</strong>? Hành động này không thể hoàn tác.';
+                if (sub) sub.innerHTML = 'Từ chối (Sale Manager) phiếu đề xuất <strong>' + code + '</strong>? Hành động này không thể hoàn tác.';
                 var reason = document.getElementById('rejectReasonList');
                 if (reason) reason.value = '';
                 openModal('rejectModalList');

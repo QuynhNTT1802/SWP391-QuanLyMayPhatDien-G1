@@ -203,24 +203,24 @@
 
                             <%-- Sale Staff (chỉ có view): thấy trạng thái cuối, KHÔNG có Chờ CEO duyệt --%>
                             <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
-                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
                             <%-- CEO (chỉ có approve): thấy Chờ CEO, Đã duyệt, Từ chối --%>
                             <c:if test="${perms.contains('purchase_orders.approve') and !perms.contains('purchase_orders.create')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
-                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                             </c:if>
 
                             <%-- Sale Manager (có create + view): thấy Nháp, Chờ CEO, Đã duyệt, Từ chối, Đã hủy --%>
                             <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
-                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
@@ -228,8 +228,8 @@
                             <c:if test="${perms.contains('purchase_orders.approve') and perms.contains('purchase_orders.create')}">
                                 <option value="DRAFT" <c:if test="${status == 'DRAFT'}">selected</c:if>>Nháp</option>
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
-                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
-                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                                <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
                         </select>
@@ -272,8 +272,8 @@
                                                     <c:choose>
                                                         <c:when test="${po.status == 'DRAFT'}"><span class="status-pill status-draft">Nháp</span></c:when>
                                                         <c:when test="${po.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo">Chờ CEO duyệt</span></c:when>
-                                                        <c:when test="${po.status == 'APPROVED'}"><span class="status-pill status-approved">Đã duyệt</span></c:when>
-                                                        <c:when test="${po.status == 'REJECTED'}"><span class="status-pill status-rejected">Từ chối</span></c:when>
+                                                        <c:when test="${po.status == 'APPROVED'}"><span class="status-pill status-approved">Đã duyệt bởi CEO</span></c:when>
+                                                        <c:when test="${po.status == 'REJECTED'}"><span class="status-pill status-rejected">Từ chối bởi CEO</span></c:when>
                                                         <c:when test="${po.status == 'CANCELLED'}"><span class="status-pill status-cancelled">Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><c:out value="${po.status}"/></span></c:otherwise>
                                                     </c:choose>
@@ -315,13 +315,13 @@
                                                                     <input type="hidden" name="id" value="${po.poId}" />
                                                                     <button type="submit" class="dropdown-item approve" onclick="return confirmApproveAction()">
                                                                         <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                        <span class="label">Duyệt</span>
+                                                                        <span class="label">Duyệt bởi CEO</span>
                                                                     </button>
                                                                 </form>
                                                                 <div class="dropdown-divider"></div>
                                                                 <button type="button" class="dropdown-item reject" onclick="openRejectModal(${po.poId}, '<c:out value="${fn:escapeXml(po.poCode)}"/>')">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    <span class="label">Từ chối</span>
+                                                                    <span class="label">Từ chối bởi CEO</span>
                                                                 </button>
                                                             </c:if>
                                                         </div>
@@ -360,15 +360,15 @@
         <c:if test="${canApprovePo}">
             <div class="modal-host" id="rejectModalList">
                 <div class="modal-card">
-                    <h3>Từ chối phiếu mua</h3>
-                    <div class="modal-sub" id="rejectModalSub">Phiếu sẽ bị từ chối và trả về cho Sale Manager.</div>
+                    <h3>Từ chối bởi CEO</h3>
+                    <div class="modal-sub" id="rejectModalSub">Phiếu sẽ bị từ chối bởi CEO và trả về cho Sale Manager.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=reject">
                         <input type="hidden" name="id" id="rejectPoId" />
                         <label for="rejectReasonList">Lý do từ chối <span style="color:var(--danger)">*</span></label>
                         <textarea id="rejectReasonList" name="rejectReason" required placeholder="Ví dụ: Vượt ngân sách tháng, cần điều chỉnh số lượng..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (CEO)</button>
                         </div>
                     </form>
                 </div>
@@ -384,14 +384,14 @@
                 var el = document.getElementById('rejectPoId');
                 if (el) el.value = id;
                 var sub = document.getElementById('rejectModalSub');
-                if (sub) sub.innerHTML = 'Từ chối phiếu mua <strong>' + code + '</strong>? Hành động này không thể hoàn tác.';
+                if (sub) sub.innerHTML = 'Từ chối (CEO) phiếu mua <strong>' + code + '</strong>? Hành động này không thể hoàn tác.';
                 var reason = document.getElementById('rejectReasonList');
                 if (reason) reason.value = '';
                 openModal('rejectModalList');
             }
 
             function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt phiếu mua này?');
+                return confirm('Bạn có chắc muốn duyệt (CEO) phiếu mua này?');
             }
 
             function openModal(id) {

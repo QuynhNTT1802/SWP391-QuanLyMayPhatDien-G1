@@ -104,7 +104,7 @@
                             <c:set var="statusFg" value="#856404"/>
                         </c:when>
                         <c:when test="${po.status == 'APPROVED'}">
-                            <c:set var="statusLabel" value="Đã duyệt"/>
+                            <c:set var="statusLabel" value="Đã duyệt bởi CEO"/>
                             <c:set var="statusBg" value="#d4edda"/>
                             <c:set var="statusFg" value="#155724"/>
                         </c:when>
@@ -114,7 +114,7 @@
                             <c:set var="statusFg" value="#b15c00"/>
                         </c:when>
                         <c:when test="${po.status == 'REJECTED'}">
-                            <c:set var="statusLabel" value="Từ chối"/>
+                            <c:set var="statusLabel" value="Từ chối bởi CEO"/>
                             <c:set var="statusBg" value="#f8d7da"/>
                             <c:set var="statusFg" value="#721c24"/>
                         </c:when>
@@ -191,7 +191,7 @@
                         <div class="action-bar-top">
                             <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                Duyệt phiếu
+                                Duyệt bởi CEO
                             </button>
                             <button type="button" class="btn" onclick="openModal('returnModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -199,7 +199,7 @@
                             </button>
                             <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                Từ chối
+                                Từ chối bởi CEO
                             </button>
                         </div>
                     </c:if>
@@ -241,8 +241,8 @@
                                         <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
                                         <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu mua</option>
                                         <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi CEO duyệt</option>
-                                        <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
-                                        <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
+                                        <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt bởi CEO</option>
+                                        <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối bởi CEO</option>
                                         <option value="RETURN" ${logAction == 'RETURN' ? 'selected' : ''}>Trả lại chỉnh sửa</option>
                                         <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
                                         <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy phiếu</option>
@@ -398,7 +398,7 @@
                                     </c:if>
                                     <c:if test="${po.status == 'REJECTED' || po.status == 'RETURNED'}">
                                         <div class="info-field">
-                                            <div class="info-label">Người ${po.status == 'RETURNED' ? 'trả lại' : 'từ chối'}</div>
+                                            <div class="info-label">Người ${po.status == 'RETURNED' ? 'trả lại' : 'từ chối (CEO)'}</div>
                                             <div class="info-value"><c:out value="${po.rejectedByName != null ? po.rejectedByName : '—'}"/></div>
                                         </div>
                                         <div class="info-field">
@@ -559,13 +559,13 @@
         <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
             <div class="modal-host" id="approveModal">
                 <div class="modal-card">
-                    <h3>Duyệt phiếu mua</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu mua <strong><c:out value="${po.poCode}"/></strong>?</div>
+                    <h3>Duyệt bởi CEO</h3>
+                    <div class="modal-sub">Xác nhận duyệt phiếu mua <strong><c:out value="${po.poCode}"/></strong> bởi CEO?</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve">
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn duyệt phiếu mua này?');">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn duyệt (CEO) phiếu mua này?');">Xác nhận duyệt (CEO)</button>
                         </div>
                     </form>
                 </div>
@@ -573,15 +573,15 @@
 
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
-                    <h3>Từ chối phiếu mua</h3>
-                    <div class="modal-sub">Phiếu mua sẽ bị từ chối và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
+                    <h3>Từ chối bởi CEO</h3>
+                    <div class="modal-sub">Phiếu mua sẽ bị từ chối bởi CEO và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=reject">
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
                         <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Vượt ngân sách, sai số lượng, thiếu thông tin..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (CEO)</button>
                         </div>
                     </form>
                 </div>
