@@ -20,6 +20,7 @@ public class ImportProposal {
     private int createdBy;
     private Integer approvedBy;
     private Integer rejectedBy;
+    private String revisionRequestedByRole;
     private LocalDateTime proposalDate;
     private String note;
     private String rejectReason;
@@ -44,7 +45,7 @@ public class ImportProposal {
     public ImportProposal() {
     }
 
-    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
+    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, String revisionRequestedByRole, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
         this.proposalId = proposalId;
         this.proposalCode = proposalCode;
         this.status = status;
@@ -52,6 +53,7 @@ public class ImportProposal {
         this.createdBy = createdBy;
         this.approvedBy = approvedBy;
         this.rejectedBy = rejectedBy;
+        this.revisionRequestedByRole = revisionRequestedByRole;
         this.proposalDate = proposalDate;
         this.note = note;
         this.rejectReason = rejectReason;
@@ -150,6 +152,14 @@ public class ImportProposal {
 
     public void setRejectedBy(Integer rejectedBy) {
         this.rejectedBy = rejectedBy;
+    }
+
+    public String getRevisionRequestedByRole() {
+        return revisionRequestedByRole;
+    }
+
+    public void setRevisionRequestedByRole(String revisionRequestedByRole) {
+        this.revisionRequestedByRole = revisionRequestedByRole;
     }
 
     public LocalDateTime getProposalDate() {

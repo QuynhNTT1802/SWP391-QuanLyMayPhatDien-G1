@@ -329,7 +329,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
 
         String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
-                + "WHERE order_id = ? AND status = ?";
+                + "WHERE order_id = ? AND (status = ? OR status = ?)";
 
         try {
             connection = getConnection();
@@ -372,6 +372,30 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
+    public java.util.Map<Integer, Integer> getApprovedQuantitiesByGeneratorExcept(int excludeOrderId) {
+        java.util.Map<Integer, Integer> map = new java.util.HashMap<>();
+        String sql = "SELECT od.generator_id, SUM(od.quantity) AS total_qty "
+                + "FROM order_detail od "
+                + "JOIN sale_order so ON od.order_id = so.order_id "
+                + "WHERE so.status = ? AND so.order_id != ? "
+                + "GROUP BY od.generator_id";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setInt(2, excludeOrderId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                map.put(resultSet.getInt("generator_id"), resultSet.getInt("total_qty"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return map;
+    }
+
     public boolean rejectOrder(int orderId, int rejectedBy, String rejectReason) {
         String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, rejected_by = ?, updated_at = NOW() "
                 + "WHERE order_id = ? AND status = ?";
@@ -394,7 +418,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public boolean requestRevisionOrder(int orderId, int userId, String reason) {
-        String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, updated_by = ?, updated_at = NOW(), "
+        String sql = "UPDATE sale_order SET status = ?, revision_reason = ?, reject_reason = NULL, "
+                + "updated_by = ?, updated_at = NOW(), "
                 + "approved_by = NULL, approved_at = NULL "
                 + "WHERE order_id = ? AND status = ?";
         try {
@@ -566,6 +591,10 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
         s.setRejectReason(rs.getString("reject_reason"));
+        try {
+            s.setRevisionReason(rs.getString("revision_reason"));
+        } catch (SQLException e) {
+        }
 
         try {
             s.setCustomerNote(rs.getString("customer_note"));
@@ -592,8 +621,9 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public boolean updateWithDetails(SaleOrder s, List<OrderDetail> newDetails) {
         String updateSql = "UPDATE sale_order SET customer_id = ?, customer_note = ?, "
-                + "total_amount = ?, note = ?, updated_at = NOW() "
-                + "WHERE order_id = ? AND status = ?";
+                + "total_amount = ?, note = ?, status = ?, revision_reason = NULL, "
+                + "updated_at = NOW() "
+                + "WHERE order_id = ? AND status IN (?, ?)";
         String deleteDetailSql = "DELETE FROM order_detail WHERE order_id = ?";
         String insertDetailSql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?)";
@@ -611,8 +641,10 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     ps.setString(2, s.getCustomerNote());
                     ps.setDouble(3, s.getTotalAmount());
                     ps.setString(4, s.getNote());
-                    ps.setInt(5, s.getOrderId());
-                    ps.setString(6, GlobalUtils.STATUS_PENDING);
+                    ps.setString(5, GlobalUtils.STATUS_PENDING);
+                    ps.setInt(6, s.getOrderId());
+                    ps.setString(7, GlobalUtils.STATUS_PENDING);
+                    ps.setString(8, GlobalUtils.STATUS_NEEDS_REVISION);
 
                     int rows = ps.executeUpdate();
                     if (rows == 0) {

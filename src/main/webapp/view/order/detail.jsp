@@ -44,6 +44,10 @@
             .empty-state strong { color: var(--fg); font-size: 14px; }
 
             .info-value .status-pill { white-space: nowrap; }
+            .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
+            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
     </head>
     <body>
@@ -141,7 +145,10 @@
 
                     <c:if test="${order.status == 'PENDING' && canApproveOrder}">
                         <div class="action-bar-top">
-                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                            <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm" style="display:none;">
+                                <input type="hidden" name="id" value="${order.orderId}" />
+                            </form>
+                            <button type="button" class="btn btn-primary" onclick="if(confirm('Bạn có chắc muốn duyệt đơn hàng này?')) document.getElementById('approveForm').submit();">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                 Duyệt đơn
                             </button>
@@ -153,6 +160,24 @@
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 Từ chối
                             </button>
+                            <c:if test="${canCancelOrder}">
+                                <form method="POST" action="${pageContext.request.contextPath}/order?action=cancel" id="cancelForm" style="display:none;">
+                                    <input type="hidden" name="id" value="${order.orderId}" />
+                                </form>
+                                <button type="button" class="btn" onclick="if(confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.')) document.getElementById('cancelForm').submit();">
+                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Hủy đơn
+                                </button>
+                            </c:if>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${order.status == 'NEEDS_REVISION' && order.createdBy == sessionScope.loggedUser.id}">
+                        <div class="action-bar-top">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Sửa lại & Gửi duyệt
+                            </a>
                         </div>
                     </c:if>
 
@@ -347,12 +372,20 @@
                                     </div>
                                 </div>
 
-                                <c:if test="${not empty order.rejectReason}">
-                                    <div style="margin-top: 18px;">
-                                        <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
-                                        <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
-                                    </div>
-                                </c:if>
+                                <c:choose>
+                                    <c:when test="${order.status == 'REJECTED' && not empty order.rejectReason}">
+                                        <div style="margin-top: 18px;">
+                                            <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
+                                            <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
+                                        </div>
+                                    </c:when>
+                                    <c:when test="${order.status == 'NEEDS_REVISION' && not empty order.revisionReason}">
+                                        <div style="margin-top: 18px;">
+                                            <div class="info-label" style="font-size:11px;color:#b15c00;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do yêu cầu chỉnh sửa</div>
+                                            <div class="note-soft" style="border-left:3px solid #b15c00;"><c:out value="${order.revisionReason}"/></div>
+                                        </div>
+                                    </c:when>
+                                </c:choose>
                                 <c:if test="${not empty order.note}">
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú nội bộ</div>
@@ -426,20 +459,6 @@
         </div>
 
         <c:if test="${order.status == 'PENDING' && canApproveOrder}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt đơn hàng</h3>
-                    <div class="modal-sub">Xác nhận duyệt đơn hàng <strong><c:out value="${order.orderCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm">
-                        <input type="hidden" name="id" value="${order.orderId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
                     <h3>Từ chối đơn hàng</h3>
@@ -540,25 +559,14 @@
                 document.getElementById('genModal').classList.remove('open');
             }
 
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
-            }
-            function confirmCancelAction() {
-                return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
-            }
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
-            }
-
-            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
-            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
+            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('open'); }
+            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('open'); }
             document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('open'); });
             });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    document.querySelectorAll('.modal-host.open').forEach(function (m) { m.classList.remove('open'); });
                     closeGenModal();
                 }
             });

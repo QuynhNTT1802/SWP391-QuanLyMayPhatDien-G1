@@ -4,9 +4,6 @@
  */
 package com.quanlymayphatdien.g1.utils;
 
-import com.quanlymayphatdien.g1.entity.Category;
-import com.quanlymayphatdien.g1.entity.Generator;
-import com.quanlymayphatdien.g1.entity.Supplier;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -82,10 +79,7 @@ public class ProposalExcelSupport {
     }
 
 
-    public static XSSFWorkbook createTemplateWorkbook(
-            List<Generator> sampleGenerators,
-            List<Supplier> sampleSuppliers,
-            Map<String, Map<Integer, String>> categoryMapByType) {
+    public static XSSFWorkbook createTemplateWorkbook() {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Chi tiết đề xuất (Mẫu)");
 
@@ -124,22 +118,6 @@ public class ProposalExcelSupport {
         }
 
         return workbook;
-    }
-
-    private static String pickCategoryName(Generator g, String type, Map<Integer, String> map) {
-        if (g == null || g.getCategories() == null) {
-            return "";
-        }
-        for (Category c : g.getCategories()) {
-            if (type.equals(c.getType())) {
-                String n = map.get(c.getId());
-                if (n != null) {
-                    return n;
-                }
-                return c.getName() != null ? c.getName() : "";
-            }
-        }
-        return "";
     }
 
     public static List<Map<String, String>> parseFromExcel(InputStream is) throws IOException {
