@@ -126,6 +126,18 @@ public class ExportReceiptController extends HttpServlet {
                 case "requestRevision":
                     requestRevision(request, response);
                     break;
+                case "addScannedSerial":
+                    addScannedSerial(request, response);
+                    break;
+                case "removeScannedSerial":
+                    removeScannedSerial(request, response);
+                    break;
+                case "discardDraft":
+                    discardDraft(request, response);
+                    break;
+                case "cancelPending":
+                    cancelPending(request, response);
+                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -407,6 +419,7 @@ public class ExportReceiptController extends HttpServlet {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
         boolean isDraft = "draft".equals(request.getParameter("submitMode"));
+        int existingReceiptId = parseId(request.getParameter("receiptId"));
 
         int warehouseId = parseId(request.getParameter("warehouseId"));
         String note = request.getParameter("note");
@@ -437,6 +450,20 @@ public class ExportReceiptController extends HttpServlet {
         String[] serials = request.getParameterValues("serialNumber");
         String[] detailNotes = request.getParameterValues("detailNote");
 
+        Receipt existingReceipt = null;
+        if (existingReceiptId > 0) {
+            existingReceipt = receiptDAO.findById(existingReceiptId);
+            if (existingReceipt == null || !TYPE.equals(existingReceipt.getReceiptType())) {
+                response.sendRedirect(request.getContextPath() + "/export-receipt");
+                return;
+            }
+            boolean isDraftStatus = GlobalUtils.RECEIPT_STATUS_DRAFT.equals(existingReceipt.getStatus());
+            if (existingReceipt.getCreatedBy() != loggedUser.getId() || !isDraftStatus) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+        }
+
         List<ReceiptDetail> details;
         if (isDraft) {
             details = parseDetailsLenient(genIds, serials, detailNotes);
@@ -459,36 +486,48 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
             request.setAttribute("allSerials", loadAllInStockSerials());
-            request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
-            return;
-        }
-
-        Receipt r = new Receipt();
-        r.setReceiptCode(receiptDAO.generateReceiptCode(TYPE));
-        r.setReceiptType(TYPE);
-        r.setWarehouseId(warehouseId);
-        r.setCreatedBy(loggedUser.getId());
-        r.setNote(note);
-        r.setReasonId(reasonId);
-        String oid = request.getParameter("orderId");
-        if (oid != null && !oid.isEmpty()) {
-            try {
-                r.setOrderId(Integer.parseInt(oid));
-            } catch (NumberFormatException ignored) {
+            if (existingReceipt != null) {
+                request.setAttribute("receipt", existingReceipt);
+                request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
             }
-        }
-        r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
-
-        int receiptId = receiptDAO.insert(r);
-        if (receiptId <= 0) {
-            request.setAttribute("toastMessage", "Không thể tạo phiếu, vui lòng thử lại");
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", new ArrayList<>());
-            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-            request.setAttribute("allSerials", loadAllInStockSerials());
-            request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
             return;
+        }
+
+        int receiptId;
+        Receipt r;
+        if (existingReceipt != null) {
+            receiptId = existingReceipt.getReceiptId();
+            r = existingReceipt;
+        } else {
+            r = new Receipt();
+            r.setReceiptCode(receiptDAO.generateReceiptCode(TYPE));
+            r.setReceiptType(TYPE);
+            r.setWarehouseId(warehouseId);
+            r.setCreatedBy(loggedUser.getId());
+            r.setNote(note);
+            r.setReasonId(reasonId);
+            String oid = request.getParameter("orderId");
+            if (oid != null && !oid.isEmpty()) {
+                try {
+                    r.setOrderId(Integer.parseInt(oid));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
+
+            receiptId = receiptDAO.insert(r);
+            if (receiptId <= 0) {
+                request.setAttribute("toastMessage", "Không thể tạo phiếu, vui lòng thử lại");
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("warehouses", warehouseDAO.findAll());
+                request.setAttribute("generators", new ArrayList<>());
+                request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+                request.setAttribute("allSerials", loadAllInStockSerials());
+                request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
+                return;
+            }
         }
 
         java.sql.Connection conn = null;
@@ -496,24 +535,76 @@ public class ExportReceiptController extends HttpServlet {
         try {
             conn = receiptDAO.getConnection();
             conn.setAutoCommit(false);
-            for (ReceiptDetail d : details) {
-                if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
-                    continue;
+
+            if (existingReceipt != null) {
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "UPDATE receipt SET warehouse_id = ?, note = ?, reason_id = ?, "
+                                + "status = ?, approved_by = NULL, approved_at = NULL "
+                                + "WHERE receipt_id = ? AND status = ?")) {
+                    ps.setInt(1, warehouseId);
+                    ps.setString(2, note);
+                    if (reasonId != null) ps.setInt(3, reasonId); else ps.setNull(3, java.sql.Types.INTEGER);
+                    ps.setString(4, isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
+                    ps.setInt(5, receiptId);
+                    ps.setString(6, GlobalUtils.RECEIPT_STATUS_DRAFT);
+                    ps.executeUpdate();
                 }
-                Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
-                if (inv == null) {
-                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
+
+                java.util.Set<String> existingSerials = new java.util.HashSet<>();
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT i.serial_number FROM receipt_detail rd "
+                                + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                                + "WHERE rd.receipt_id = ?")) {
+                    ps.setInt(1, receiptId);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) existingSerials.add(rs.getString(1));
+                    }
                 }
-                if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
-                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
+
+                java.util.List<ReceiptDetail> toInsert = new java.util.ArrayList<>();
+                for (ReceiptDetail d : details) {
+                    if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) continue;
+                    String sn = d.getSerialNumber().trim();
+                    if (existingSerials.contains(sn)) continue;
+
+                    Inventory inv = inventoryDAO.findBySerialNumber(sn);
+                    if (inv == null) {
+                        throw new SQLException("Serial \"" + sn + "\" không tồn tại trong hệ thống");
+                    }
+                    if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
+                        throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
+                    }
+                    if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                        throw new SQLException("Serial \"" + sn + "\" đã bị reserve bởi phiếu khác");
+                    }
+                    d.setReceiptId(receiptId);
+                    d.setInventoryId(inv.getInventoryId());
+                    toInsert.add(d);
                 }
-                if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
-                    throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                if (!toInsert.isEmpty()) {
+                    detailDAO.batchInsert(conn, toInsert);
                 }
-                d.setReceiptId(receiptId);
-                d.setInventoryId(inv.getInventoryId());
+            } else {
+                for (ReceiptDetail d : details) {
+                    if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
+                        continue;
+                    }
+                    Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
+                    if (inv == null) {
+                        throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
+                    }
+                    if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
+                        throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
+                    }
+                    if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                        throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                    }
+                    d.setReceiptId(receiptId);
+                    d.setInventoryId(inv.getInventoryId());
+                }
+                detailDAO.batchInsert(conn, details);
             }
-            detailDAO.batchInsert(conn, details);
+
             conn.commit();
             ok = true;
         } catch (java.sql.SQLException ex) {
@@ -534,14 +625,23 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
             request.setAttribute("allSerials", loadAllInStockSerials());
-            request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
+            if (existingReceipt != null) {
+                request.setAttribute("receipt", existingReceipt);
+                request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
+            }
             return;
         }
 
         ActivityLog log = new ActivityLog();
         log.setUserId(loggedUser.getId());
         log.setEntityType("receipt");
-        log.setAction("CREATE");
+        if (existingReceipt != null) {
+            log.setAction(isDraft ? "DRAFT_UPDATE" : "SUBMIT_DRAFT");
+        } else {
+            log.setAction("CREATE");
+        }
         log.setEntityId(receiptId);
         log.setEntityName(r.getReceiptCode());
         log.setDetails(isDraft ? "Lưu nháp phiếu xuất kho" : "Tạo phiếu xuất kho");
@@ -573,6 +673,487 @@ public class ExportReceiptController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/export-receipt?action=list");
         }
     }
+
+    /**
+     * POST /export-receipt?action=addScannedSerial
+     * Phuc vu cho o quet barcode tren form tao/sua phieu xuat.
+     *
+     * Input: warehouseId, serialNumber, receiptId (optional)
+     *
+     * Tra ve JSON: { success, receiptId, inventoryId, generatorId, generatorModel,
+     *                serialNumber, message }
+     *
+     * Dieu kien:
+     *  - Serial phai ton tai trong inventory.
+     *  - Serial phai o trang thai IN_STOCK tai dung kho dang chon.
+     *  - Neu chua co receiptId thi tu tao phieu DRAFT moi (export).
+     */
+    private void addScannedSerial(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        String serial = request.getParameter("serialNumber");
+        if (serial != null) serial = serial.trim();
+        if (serial == null || serial.isEmpty()) {
+            body.put("success", false);
+            body.put("message", "Serial trong");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        if (serial.length() > MAX_SERIAL_LENGTH) {
+            body.put("success", false);
+            body.put("message", "Serial qua dai (toi da " + MAX_SERIAL_LENGTH + " ky tu)");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        int warehouseId = parseId(request.getParameter("warehouseId"));
+        if (warehouseId <= 0) {
+            body.put("success", false);
+            body.put("message", "Vui long chon kho truoc khi quet");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        Inventory inv = inventoryDAO.findBySerialNumber(serial);
+        if (inv == null) {
+            body.put("success", false);
+            body.put("message", "Serial \"" + serial + "\" khong ton tai trong he thong");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        if (!inventoryDAO.isInStockAtWarehouse(serial, warehouseId)) {
+            body.put("success", false);
+            body.put("message", "Serial \"" + serial + "\" khong co san trong kho dang chon (trang thai: " + inv.getStatus() + ")");
+            body.put("currentStatus", inv.getStatus());
+            body.put("currentWarehouseId", inv.getWarehouseId());
+            body.put("currentWarehouseName", inv.getWarehouseName());
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        int receiptId = parseId(request.getParameter("receiptId"));
+
+        java.sql.Connection conn = null;
+        boolean ok = false;
+        try {
+            conn = receiptDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            if (receiptId <= 0) {
+                Receipt r = new Receipt();
+                r.setReceiptCode(receiptDAO.generateReceiptCode(TYPE));
+                r.setReceiptType(TYPE);
+                r.setWarehouseId(warehouseId);
+                r.setCreatedBy(loggedUser.getId());
+                r.setNote("Tao tu quet barcode");
+                r.setStatus(GlobalUtils.RECEIPT_STATUS_DRAFT);
+                receiptId = receiptDAO.insert(r);
+                if (receiptId <= 0) {
+                    throw new SQLException("Khong the tao phieu DRAFT");
+                }
+            } else {
+                Receipt existing = receiptDAO.findById(receiptId);
+                if (existing == null
+                        || !TYPE.equals(existing.getReceiptType())
+                        || existing.getCreatedBy() != loggedUser.getId()
+                        || !(GlobalUtils.RECEIPT_STATUS_DRAFT.equals(existing.getStatus())
+                            || GlobalUtils.RECEIPT_STATUS_REVISION.equals(existing.getStatus()))) {
+                    throw new SQLException("Phieu khong hop le de them serial");
+                }
+            }
+
+            if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                throw new SQLException("Serial \"" + serial + "\" da bi dat truoc boi phieu khac");
+            }
+
+            ReceiptDetail rd = new ReceiptDetail();
+            rd.setReceiptId(receiptId);
+            rd.setInventoryId(inv.getInventoryId());
+            detailDAO.batchInsert(conn, java.util.Collections.singletonList(rd));
+
+            conn.commit();
+            ok = true;
+
+            body.put("success", true);
+            body.put("receiptId", receiptId);
+            body.put("inventoryId", inv.getInventoryId());
+            body.put("generatorId", inv.getGeneratorId());
+            body.put("generatorModel", inv.getGeneratorModel());
+            body.put("generatorBrand", inv.getGeneratorBrand());
+            body.put("serialNumber", serial);
+            body.put("message", "Da them serial");
+        } catch (SQLException ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+            body.put("success", false);
+            body.put("message", "Loi: " + ex.getMessage());
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        if (ok) {
+            ActivityLog log = new ActivityLog();
+            log.setUserId(loggedUser.getId());
+            log.setEntityType("receipt");
+            log.setAction("SCAN_EXPORT");
+            log.setEntityId(receiptId);
+            log.setEntityName("scan:" + serial);
+            log.setDetails("Quet barcode xuat serial " + serial);
+            activityLogDAO.insert(log);
+        }
+
+        new Gson().toJson(body, response.getWriter());
+    }
+
+
+    /**
+     * POST /export-receipt?action=removeScannedSerial
+     * Phuc vu khi user bam nut xoa 1 dong trong form (create/edit) ma dong do
+     * vua duoc quet (hoac da luu) -> giai phong reservation cua inventory do.
+     *
+     * Input: receiptId, inventoryId
+     * Tra JSON: { success, message, emptyReceipt, remaining }
+     *
+     * Dieu kien:
+     *  - Receipt phai ton tai, thuoc loai EXPORT.
+     *  - Receipt phai o trang thai DRAFT hoac NEEDS_REVISION.
+     *  - User phai la nguoi tao receipt.
+     *  - inventoryId phai thuoc receipt do.
+     */
+    private void removeScannedSerial(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        int receiptId = parseId(request.getParameter("receiptId"));
+        int inventoryId = parseId(request.getParameter("inventoryId"));
+        if (receiptId <= 0 || inventoryId <= 0) {
+            body.put("success", false);
+            body.put("message", "Thieu receiptId hoac inventoryId");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        Receipt existing = receiptDAO.findById(receiptId);
+        if (existing == null || !TYPE.equals(existing.getReceiptType())) {
+            body.put("success", false);
+            body.put("message", "Phieu khong hop le");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        boolean isDraft = GlobalUtils.RECEIPT_STATUS_DRAFT.equals(existing.getStatus());
+        boolean isRevision = GlobalUtils.RECEIPT_STATUS_REVISION.equals(existing.getStatus());
+        if (!isDraft && !isRevision) {
+            body.put("success", false);
+            body.put("message", "Chi xoa duoc dong o phieu nhap hoac phieu yeu cau chinh sua");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        if (existing.getCreatedBy() != loggedUser.getId()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            body.put("success", false);
+            body.put("message", "Ban khong phai nguoi tao phieu nay");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        java.sql.Connection conn = null;
+        boolean ok = false;
+        int remaining = 0;
+        try {
+            conn = receiptDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM receipt_detail WHERE receipt_id = ? AND inventory_id = ?")) {
+                ps.setInt(1, receiptId);
+                ps.setInt(2, inventoryId);
+                ps.executeUpdate();
+            }
+
+            InventoryDAO invDAO = new InventoryDAO();
+            invDAO.releaseReservations(conn, java.util.Collections.singletonList(inventoryId));
+
+            try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM receipt_detail WHERE receipt_id = ?")) {
+                ps.setInt(1, receiptId);
+                try (java.sql.ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) remaining = rs.getInt(1);
+                }
+            }
+
+            conn.commit();
+            ok = true;
+        } catch (SQLException ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+            body.put("success", false);
+            body.put("message", "Loi: " + ex.getMessage());
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+                try { conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+
+        if (ok) {
+            body.put("success", true);
+            body.put("remaining", remaining);
+            body.put("emptyReceipt", remaining == 0);
+            body.put("message", remaining == 0
+                    ? "Da giai phong serial. Phieu dang trong, hay bam 'Huy phieu' de xoa phieu."
+                    : "Da giai phong serial");
+
+            ActivityLog log = new ActivityLog();
+            log.setUserId(loggedUser.getId());
+            log.setEntityType("receipt");
+            log.setAction("REMOVE_SCANNED_SERIAL");
+            log.setEntityId(receiptId);
+            log.setEntityName(existing.getReceiptCode());
+            log.setDetails("Xoa dong serial, giai phong reservation inventory_id=" + inventoryId);
+            activityLogDAO.insert(log);
+        }
+
+        new Gson().toJson(body, response.getWriter());
+    }
+
+
+    /**
+     * POST /export-receipt?action=discardDraft
+     * Huy phieu DRAFT: set status CANCELLED, giai phong tat ca reservation,
+     * giu nguyen receipt_detail (audit).
+     *
+     * Quyen: creator cua phieu DRAFT.
+     */
+    private void discardDraft(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        int receiptId = parseId(request.getParameter("receiptId"));
+        if (receiptId <= 0) {
+            body.put("success", false);
+            body.put("message", "Thieu receiptId");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        Receipt existing = receiptDAO.findById(receiptId);
+        if (existing == null || !TYPE.equals(existing.getReceiptType())) {
+            body.put("success", false);
+            body.put("message", "Phieu khong hop le");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        if (!GlobalUtils.RECEIPT_STATUS_DRAFT.equals(existing.getStatus())) {
+            body.put("success", false);
+            body.put("message", "Chi huy duoc phieu o trang thai BAN_NHAP");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        if (existing.getCreatedBy() != loggedUser.getId()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            body.put("success", false);
+            body.put("message", "Ban khong phai nguoi tao phieu");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        java.sql.Connection conn = null;
+        boolean ok = false;
+        int released = 0;
+        try {
+            conn = receiptDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            java.util.List<Integer> inventoryIds = inventoryDAO.getInventoryIdsByReceiptId(conn, receiptId);
+            if (!inventoryIds.isEmpty()) {
+                released = inventoryDAO.releaseReservations(conn, inventoryIds);
+            }
+
+            try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE receipt SET status = ?, approved_by = NULL, "
+                            + "approved_at = NULL WHERE receipt_id = ?")) {
+                ps.setString(1, GlobalUtils.RECEIPT_STATUS_CANCELLED);
+                ps.setInt(2, receiptId);
+                if (ps.executeUpdate() == 0) {
+                    throw new SQLException("Khong the cap nhat trang thai phieu");
+                }
+            }
+
+            conn.commit();
+            ok = true;
+        } catch (SQLException ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+            body.put("success", false);
+            body.put("message", "Loi: " + ex.getMessage());
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+                try { conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+
+        if (ok) {
+            body.put("success", true);
+            body.put("released", released);
+            body.put("message", "Da huy phieu nhap, giai phong " + released + " serial");
+
+            ActivityLog log = new ActivityLog();
+            log.setUserId(loggedUser.getId());
+            log.setEntityType("receipt");
+            log.setAction("DISCARD_DRAFT");
+            log.setEntityId(receiptId);
+            log.setEntityName(existing.getReceiptCode());
+            log.setDetails("Huy phieu nhap, giai phong " + released + " reservation");
+            activityLogDAO.insert(log);
+
+            if (existing.getCreatedBy() != loggedUser.getId()) {
+                session.setAttribute("toastMessage", "Da huy phieu nhap");
+                session.setAttribute("toastType", "success");
+            }
+        }
+
+        new Gson().toJson(body, response.getWriter());
+    }
+
+
+    /**
+     * POST /export-receipt?action=cancelPending
+     * Rut phieu PENDING do chinh user tao ra: set status CANCELLED,
+     * giai phong tat ca reservation.
+     *
+     * Quyen: creator cua phieu PENDING.
+     */
+    private void cancelPending(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        Map<String, Object> body = new LinkedHashMap<>();
+
+        int receiptId = parseId(request.getParameter("receiptId"));
+        if (receiptId <= 0) {
+            body.put("success", false);
+            body.put("message", "Thieu receiptId");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        Receipt existing = receiptDAO.findById(receiptId);
+        if (existing == null || !TYPE.equals(existing.getReceiptType())) {
+            body.put("success", false);
+            body.put("message", "Phieu khong hop le");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        if (!GlobalUtils.RECEIPT_STATUS_PENDING.equals(existing.getStatus())) {
+            body.put("success", false);
+            body.put("message", "Chi rut duoc phieu o trang thai CHO_DUYET");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+        if (existing.getCreatedBy() != loggedUser.getId()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            body.put("success", false);
+            body.put("message", "Chi nguoi tao moi duoc rut phieu");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        java.sql.Connection conn = null;
+        boolean ok = false;
+        int released = 0;
+        try {
+            conn = receiptDAO.getConnection();
+            conn.setAutoCommit(false);
+
+            java.util.List<Integer> inventoryIds = inventoryDAO.getInventoryIdsByReceiptId(conn, receiptId);
+            if (!inventoryIds.isEmpty()) {
+                released = inventoryDAO.releaseReservations(conn, inventoryIds);
+            }
+
+            try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE receipt SET status = ?, approved_by = NULL, "
+                            + "approved_at = NULL WHERE receipt_id = ? AND status = ?")) {
+                ps.setString(1, GlobalUtils.RECEIPT_STATUS_CANCELLED);
+                ps.setInt(2, receiptId);
+                ps.setString(3, GlobalUtils.RECEIPT_STATUS_PENDING);
+                if (ps.executeUpdate() == 0) {
+                    throw new SQLException("Phieu khong con o trang thai CHO_DUYET");
+                }
+            }
+
+            conn.commit();
+            ok = true;
+        } catch (SQLException ex) {
+            if (conn != null) {
+                try { conn.rollback(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+            body.put("success", false);
+            body.put("message", "Loi: " + ex.getMessage());
+        } finally {
+            if (conn != null) {
+                try { conn.setAutoCommit(true); } catch (SQLException e) { e.printStackTrace(); }
+                try { conn.close(); } catch (SQLException e) { e.printStackTrace(); }
+            }
+        }
+
+        if (ok) {
+            body.put("success", true);
+            body.put("released", released);
+            body.put("message", "Da rut phieu, giai phong " + released + " serial");
+
+            ActivityLog log = new ActivityLog();
+            log.setUserId(loggedUser.getId());
+            log.setEntityType("receipt");
+            log.setAction("CANCEL_PENDING");
+            log.setEntityId(receiptId);
+            log.setEntityName(existing.getReceiptCode());
+            log.setDetails("Rut phieu dang cho duyet, giai phong " + released + " reservation");
+            activityLogDAO.insert(log);
+
+            List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
+            String link = request.getContextPath() + "/export-receipt?action=detail&id=" + receiptId;
+            for (User mgr : approvers) {
+                if (mgr.getId() == loggedUser.getId()) continue;
+                NotificationService.send(
+                        mgr.getId(),
+                        "Phiếu xuất kho bị rút",
+                        "Nhân viên " + loggedUser.getName() + " đã rút phiếu xuất " + existing.getReceiptCode()
+                                + " đang chờ duyệt.",
+                        link,
+                        "export_receipt",
+                        receiptId
+                );
+            }
+        }
+
+        new Gson().toJson(body, response.getWriter());
+    }
+
 
     private void updateReceipt(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -884,6 +1465,35 @@ public class ExportReceiptController extends HttpServlet {
                     liqLog.setEntityName(r.getLiquidationCode() != null ? r.getLiquidationCode() : "N/A");
                     liqLog.setDetails("Quản lý kho từ chối phiếu xuất kho " + r.getReceiptCode() + " (do bùng kèo hoặc sự cố). Đơn thanh lý đã bị hủy và máy được hoàn trả về kho.");
                     activityLogDAO.insert(liqLog);
+                } else {
+                    java.sql.Connection releaseConn = null;
+                    try {
+                        releaseConn = receiptDAO.getConnection();
+                        releaseConn.setAutoCommit(false);
+                        java.util.List<Integer> inventoryIds = inventoryDAO.getInventoryIdsByReceiptId(releaseConn, id);
+                        if (!inventoryIds.isEmpty()) {
+                            int released = inventoryDAO.releaseReservations(releaseConn, inventoryIds);
+                            ActivityLog relLog = new ActivityLog();
+                            relLog.setUserId(loggedUser.getId());
+                            relLog.setEntityType("receipt");
+                            relLog.setAction("REJECT_RELEASE");
+                            relLog.setEntityId(id);
+                            relLog.setEntityName(r.getReceiptCode());
+                            relLog.setDetails("Tu choi phieu, giai phong " + released + " reservation");
+                            activityLogDAO.insert(relLog);
+                        }
+                        releaseConn.commit();
+                    } catch (java.sql.SQLException ex) {
+                        if (releaseConn != null) {
+                            try { releaseConn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                        }
+                        SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.rejectReceipt", ex.getMessage(), ex);
+                    } finally {
+                        if (releaseConn != null) {
+                            try { releaseConn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                            try { releaseConn.close(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                        }
+                    }
                 }
 
                 if (r.getCreatedBy() != loggedUser.getId()) {

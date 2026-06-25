@@ -106,7 +106,9 @@ public class ReceiptExcelSupport {
 
         String[] headers = new String[HEADERS.length];
         for (int i = 0; i < HEADERS.length; i++) {
-            headers[i] = getCellValueAsString(headerRow.getCell(i));
+            String raw = getCellValueAsString(headerRow.getCell(i));
+            raw = stripRequiredMarker(raw);
+            headers[i] = raw;
         }
 
         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
@@ -123,7 +125,11 @@ public class ReceiptExcelSupport {
             for (int j = 0; j < HEADERS.length; j++) {
                 Cell cell = row.getCell(j);
                 String value = getCellValueAsString(cell);
-                rowData.put(headers[j] != null && !headers[j].isEmpty() ? headers[j] : HEADERS[j], value);
+                String key = canonicalHeader(headers[j]);
+                if (key == null) {
+                    key = (headers[j] != null && !headers[j].isEmpty()) ? headers[j] : HEADERS[j];
+                }
+                rowData.put(key, value);
                 if (!value.isEmpty()) {
                     isEmpty = false;
                 }
@@ -135,6 +141,52 @@ public class ReceiptExcelSupport {
 
         workbook.close();
         return result;
+    }
+
+    /**
+     * Bo dau " (*)" o cuoi header (template tu danh dau cot bat buoc).
+     * "Ma may (*)" -> "Ma may", "Serial (*)" -> "Serial".
+     */
+    private static String stripRequiredMarker(String s) {
+        if (s == null) return "";
+        return s.replaceAll("\\s*\\(\\*\\)\\s*$", "").trim();
+    }
+
+    /**
+     * Map mot ten cot Excel ve canonical key (COL_MODEL / COL_SERIAL / COL_NOTE)
+     * de controller co the tra cuu nhat quan. So khop khong phan biet hoa thuong
+     va khong dau (Vi khong dau).
+     *
+     * Tra ve null neu khong nhan dien duoc.
+     */
+    public static String canonicalHeader(String header) {
+        if (header == null) return null;
+        String normalized = removeDiacritics(header.trim().toLowerCase());
+        if (normalized.isEmpty()) return null;
+
+        if (matchesAny(normalized, "ma may", "model", "may phat", "may phat dien", "generator")) {
+            return COL_MODEL;
+        }
+        if (matchesAny(normalized, "serial", "sn", "s/n", "so serial", "ma serial")) {
+            return COL_SERIAL;
+        }
+        if (matchesAny(normalized, "ghi chu", "note", "notes")) {
+            return COL_NOTE;
+        }
+        return null;
+    }
+
+    private static boolean matchesAny(String input, String... candidates) {
+        for (String c : candidates) {
+            if (input.equals(c)) return true;
+        }
+        return false;
+    }
+
+    private static String removeDiacritics(String s) {
+        if (s == null) return "";
+        String normalized = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 
     public static XSSFWorkbook exportToWorkbook(List<ReceiptDetail> details, List<Generator> generators) {

@@ -73,6 +73,18 @@
                                 Chỉnh sửa
                             </a>
                         </c:if>
+                        <c:if test="${receipt.status == 'DRAFT' && isOwner}">
+                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail('discard')">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                Huỷ phiếu nháp
+                            </button>
+                        </c:if>
+                        <c:if test="${receipt.status == 'PENDING' && isOwner}">
+                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail('cancel')">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                Rút phiếu
+                            </button>
+                        </c:if>
                     </div>
                 </header>
 
@@ -495,6 +507,7 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
         <script>
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
@@ -512,6 +525,44 @@
                     window.SESSION_DATA = null;
                 }
             });
+
+            var detailCancelLock = false;
+            function confirmCancelDetail(mode) {
+                var ctx = window.APP_CTX;
+                var receiptId = ${receipt.receiptId};
+                if (!receiptId || !window.ExportScannerActions) return;
+                if (detailCancelLock) return;
+                var title = mode === 'discard' ? 'Huỷ phiếu nháp' : 'Rút phiếu đang chờ duyệt';
+                var body = mode === 'discard'
+                    ? 'Phiếu nháp sẽ bị huỷ và tất cả serial sẽ được trả về kho. Hành động này không thể hoàn tác.'
+                    : 'Phiếu đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt sẽ nhận thông báo.';
+                var label = mode === 'discard' ? 'Huỷ phiếu nháp' : 'Rút phiếu';
+                window.ExportScannerActions.confirmAction({
+                    modalId: 'cancelDetailModal',
+                    title: title,
+                    body: body,
+                    confirmLabel: label,
+                    danger: true
+                }).then(function () {
+                    detailCancelLock = true;
+                    return (mode === 'discard'
+                            ? window.ExportScannerActions.discardDraft(receiptId)
+                            : window.ExportScannerActions.cancelPending(receiptId));
+                }).then(function (data) {
+                    detailCancelLock = false;
+                    if (!data || !data.success) {
+                        toast((data && data.message) ? data.message : 'Lỗi', 'danger');
+                        return;
+                    }
+                    toast(data.message || 'Đã huỷ phiếu', 'success');
+                    setTimeout(function () { window.location.reload(); }, 700);
+                }).catch(function (err) {
+                    detailCancelLock = false;
+                    if (err && err.message === 'cancelled') return;
+                    console.error(err);
+                    toast('Lỗi kết nối: ' + err.message, 'danger');
+                });
+            }
         </script>
     </body>
 </html>
