@@ -116,7 +116,11 @@
                                         <tbody>
                                             <c:forEach var="d" items="${po.details}">
                                                 <tr>
-                                                    <td><input type="hidden" name="generatorId" value="${d.generatorId}"/><c:out value="${d.generatorCode}"/></td>
+                                                    <td>
+                                                        <input type="hidden" name="generatorId" value="${d.generatorId}"/>
+                                                        <input type="hidden" name="proposalDetailId" value="${d.proposalDetailId}"/>
+                                                        <c:out value="${d.generatorCode}"/>
+                                                    </td>
                                                     <td><c:out value="${d.generatorName}"/></td>
                                                     <td><c:out value="${d.brandName}"/></td>
                                                     <td>${d.proposedQuantity}</td>

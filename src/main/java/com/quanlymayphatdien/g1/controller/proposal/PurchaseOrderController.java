@@ -282,6 +282,7 @@ public class PurchaseOrderController extends HttpServlet {
 
         String[] genIds = request.getParameterValues("generatorId");
         String[] proposalIdArr = request.getParameterValues("proposalId");
+        String[] proposalDetailIdArr = request.getParameterValues("proposalDetailId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
@@ -324,19 +325,25 @@ public class PurchaseOrderController extends HttpServlet {
             for (int i = 0; i < genIds.length; i++) {
                 int gid = parseInt(genIds[i]);
                 int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
+                int pdId = (proposalDetailIdArr != null && i < proposalDetailIdArr.length)
+                        ? parseInt(proposalDetailIdArr[i]) : 0;
                 if (gid <= 0 || qty <= 0) {
                     continue;
                 }
                 String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
                 int proposed = 0, stock = 0;
                 for (Map<String, Object> a : aggs) {
-                    if (((Number) a.get("generatorId")).intValue() == gid) {
+                    int matched = (pdId > 0)
+                            ? (((Number) a.get("proposalDetailId")).intValue() == pdId)
+                            : (((Number) a.get("generatorId")).intValue() == gid);
+                    if (matched) {
                         proposed = ((Number) a.get("totalProposed")).intValue();
                         stock = ((Number) a.get("currentStock")).intValue();
                         break;
                     }
                 }
                 PurchaseOrderDetail d = new PurchaseOrderDetail();
+                d.setProposalDetailId(pdId > 0 ? pdId : null);
                 d.setGeneratorId(gid);
                 d.setProposedQuantity(proposed);
                 d.setCurrentStock(stock);
@@ -772,6 +779,7 @@ public class PurchaseOrderController extends HttpServlet {
         String note = request.getParameter("note");
         String[] proposalIdArr = request.getParameterValues("proposalIds");
         String[] genIds = request.getParameterValues("generatorId");
+        String[] proposalDetailIdArr = request.getParameterValues("proposalDetailId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
@@ -812,19 +820,25 @@ public class PurchaseOrderController extends HttpServlet {
             for (int i = 0; i < genIds.length; i++) {
                 int gid = parseInt(genIds[i]);
                 int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
+                int pdId = (proposalDetailIdArr != null && i < proposalDetailIdArr.length)
+                        ? parseInt(proposalDetailIdArr[i]) : 0;
                 if (gid <= 0 || qty <= 0) {
                     continue;
                 }
                 String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
                 int proposed = 0, stock = 0;
                 for (Map<String, Object> a : aggs) {
-                    if (((Number) a.get("generatorId")).intValue() == gid) {
+                    int matched = (pdId > 0)
+                            ? (((Number) a.get("proposalDetailId")).intValue() == pdId)
+                            : (((Number) a.get("generatorId")).intValue() == gid);
+                    if (matched) {
                         proposed = ((Number) a.get("totalProposed")).intValue();
                         stock = ((Number) a.get("currentStock")).intValue();
                         break;
                     }
                 }
                 PurchaseOrderDetail d = new PurchaseOrderDetail();
+                d.setProposalDetailId(pdId > 0 ? pdId : null);
                 d.setGeneratorId(gid);
                 d.setProposedQuantity(proposed);
                 d.setCurrentStock(stock);
