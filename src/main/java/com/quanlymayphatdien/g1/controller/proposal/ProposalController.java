@@ -388,7 +388,7 @@ public class ProposalController extends HttpServlet {
         HttpSession session = request.getSession();
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("proposals.reject")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu đề xuất.");
+            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu đề xuất (Sale Manager).");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
@@ -642,7 +642,7 @@ public class ProposalController extends HttpServlet {
         HttpSession session = request.getSession();
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("proposals.approve")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền duyệt phiếu đề xuất.");
+            session.setAttribute("toastMessage", "Bạn không có quyền duyệt phiếu đề xuất (Sale Manager).");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
@@ -657,11 +657,11 @@ public class ProposalController extends HttpServlet {
         if (ok) {
             ImportProposal p = dao.findById(id);
             logActivity(currentUserId(request), "import_proposal", "APPROVE", id,
-                    p != null ? p.getProposalCode() : null, "Duyệt phiếu đề xuất");
-            session.setAttribute("toastMessage", "Đã duyệt phiếu đề xuất");
+                    p != null ? p.getProposalCode() : null, "Duyệt phiếu đề xuất (Sale Manager)");
+            session.setAttribute("toastMessage", "Đã duyệt phiếu đề xuất (Sale Manager)");
             session.setAttribute("toastType", "success");
         } else {
-            session.setAttribute("toastMessage", "Không thể duyệt (phiếu không ở trạng thái chờ duyệt)");
+            session.setAttribute("toastMessage", "Không thể duyệt (Sale Manager) (phiếu không ở trạng thái chờ duyệt)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
@@ -672,7 +672,7 @@ public class ProposalController extends HttpServlet {
         HttpSession session = request.getSession();
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("proposals.reject")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu đề xuất.");
+            session.setAttribute("toastMessage", "Bạn không có quyền từ chối phiếu đề xuất (Sale Manager).");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
@@ -694,11 +694,11 @@ public class ProposalController extends HttpServlet {
         if (ok) {
             ImportProposal p = dao.findById(id);
             logActivity(currentUserId(request), "import_proposal", "REJECT", id,
-                    p != null ? p.getProposalCode() : null, "Từ chối: " + reason.trim());
-            session.setAttribute("toastMessage", "Đã từ chối phiếu đề xuất");
+                    p != null ? p.getProposalCode() : null, "Từ chối (Sale Manager): " + reason.trim());
+            session.setAttribute("toastMessage", "Đã từ chối phiếu đề xuất (Sale Manager)");
             session.setAttribute("toastType", "success");
         } else {
-            session.setAttribute("toastMessage", "Không thể từ chối (phiếu không ở trạng thái chờ duyệt)");
+            session.setAttribute("toastMessage", "Không thể từ chối (Sale Manager) (phiếu không ở trạng thái chờ duyệt)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);

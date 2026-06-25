@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Từ chối phiếu mua — Warehouse OS</title>
+    <title>Từ chối bởi CEO — Warehouse OS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <style>
         :root {
@@ -41,12 +41,12 @@
         <jsp:include page="../common/admin/aside.jsp"></jsp:include>
         <div style="flex: 1; display: flex; flex-direction: column;">
             <header class="topbar">
-                <h1>Từ chối phiếu mua</h1>
+                <h1>Từ chối bởi CEO</h1>
             </header>
 
             <main>
                 <div class="card">
-                    <h3>Từ chối phiếu mua ${po.poCode}</h3>
+                    <h3>Từ chối (CEO) phiếu mua ${po.poCode}</h3>
                     <p>Vui lòng cung cấp lý do từ chối. Lý do này sẽ được ghi vào các đề xuất gốc của sale staff.</p>
 
                     <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=reject">
@@ -58,7 +58,7 @@
                         </div>
 
                         <div class="btn-group">
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (CEO)</button>
                             <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}" class="btn btn-secondary">Quay lại</a>
                         </div>
                     </form>

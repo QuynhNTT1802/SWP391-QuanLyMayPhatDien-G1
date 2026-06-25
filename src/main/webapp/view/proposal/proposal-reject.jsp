@@ -11,7 +11,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Từ chối đề xuất nhập kho - Warehouse OS</title>
+        <title>Từ chối bởi Sale Manager - Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -81,8 +81,8 @@
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
             <div>
                 <header class="topbar">
-                    <h1>Từ chối đề xuất</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Đề xuất nhập kho</a> / <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}"><c:out value="${proposal.proposalCode}"/></a> / Từ chối</span>
+                    <h1>Từ chối bởi Sale Manager</h1>
+                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Đề xuất nhập kho</a> / <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}"><c:out value="${proposal.proposalCode}"/></a> / Từ chối bởi Sale Manager</span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
@@ -93,9 +93,9 @@
                 <main>
                     <a class="back-link" href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}">Quay lại chi tiết</a>
                     <div class="page-head">
-                        <div class="eyebrow">Đề xuất nhập kho · Từ chối</div>
+                        <div class="eyebrow">Đề xuất nhập kho · Từ chối bởi Sale Manager</div>
                         <h1 class="title">
-                            <span>Từ chối phiếu đề xuất</span>
+                            <span>Từ chối phiếu đề xuất bởi Sale Manager</span>
                             <span class="pill pending"><span class="pdot"></span>Chờ duyệt</span>
                         </h1>
                         <div class="lede">Phiếu <c:out value="${proposal.proposalCode}"/> - vui lòng xem lại chi tiết và nhập lý do từ chối.</div>
@@ -185,7 +185,7 @@
                         <div class="section-body">
                             <div class="alert alert-warn">
                                 <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                <span><strong>Hành động này không thể hoàn tác.</strong> Phiếu sẽ chuyển sang trạng thái "Từ chối" và nhân viên tạo sẽ nhận được thông báo.</span>
+                                <span><strong>Hành động này không thể hoàn tác.</strong> Phiếu sẽ chuyển sang trạng thái "Từ chối bởi Sale Manager" và nhân viên tạo sẽ nhận được thông báo.</span>
                             </div>
                             <input type="hidden" name="id" value="${proposal.proposalId}" />
                             <div class="field">
@@ -194,7 +194,7 @@
                             </div>
                             <div class="form-actions">
                                 <a class="btn" href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}">Quay lại</a>
-                                <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                                <button type="submit" class="btn btn-danger">Xác nhận từ chối (Sale Manager)</button>
                             </div>
                         </div>
                     </form>
@@ -205,7 +205,7 @@
             function validateRejectForm() {
                 var reason = document.getElementById('rejectReason').value.trim();
                 if (reason.length < 5) { alert('Vui lòng nhập lý do từ chối (tối thiểu 5 ký tự).'); document.getElementById('rejectReason').focus(); return false; }
-                return confirm('Bạn có chắc chắn muốn từ chối phiếu đề xuất "' + (document.querySelector('.mono')?.textContent || '') + '"?');
+                return confirm('Bạn có chắc chắn muốn từ chối (Sale Manager) phiếu đề xuất "' + (document.querySelector('.mono')?.textContent || '') + '"?');
             }
         </script>
     </body>
