@@ -22,7 +22,7 @@ public class DBContext {
         try {
             //Change the username password and url to connect your own database
             String username = "root";
-            String password = "123456789";
+            String password = "root";
             String url = "jdbc:mysql://localhost:3306/warehousedb?useUnicode=true&characterEncoding=UTF-8";
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(url, username, password);
