@@ -216,6 +216,7 @@
                                                                     <td><input type="text" name="detailNote" class="note-input" placeholder="Ghi chú..."
                                                                            value="<c:out value='${d.note}'/>"/></td>
                                                                     <input type="hidden" name="generatorId" value="${d.generatorId}"/>
+                                                                    <input type="hidden" name="proposalDetailId" value="${d.proposalDetailId}"/>
                                                                     <input type="hidden" name="proposalId" value="${p.proposalId}"/>
                                                                 </tr>
                                                             </c:forEach>
