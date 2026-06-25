@@ -779,6 +779,26 @@ public class OrderController extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         User user = (User) request.getSession().getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
+        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
+        GeneratorDAO generatorDao = new GeneratorDAO();
+
+        // Kiểm tra tồn kho trước khi duyệt
+        List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
+        if (details != null && !details.isEmpty()) {
+            java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
+            for (OrderDetail d : details) {
+                int stock = stockMap.get(d.getGeneratorId()) != null ? stockMap.get(d.getGeneratorId()) : 0;
+                if (d.getQuantity() > stock) {
+                    String genName = generatorDao.findById(d.getGeneratorId()) != null
+                            ? generatorDao.findById(d.getGeneratorId()).getModel() : ("#" + d.getGeneratorId());
+                    request.getSession().setAttribute("message",
+                            "Không thể duyệt: máy \"" + genName + "\" cần " + d.getQuantity()
+                                    + " nhưng tồn kho chỉ có " + stock + ". Vui lòng giảm số lượng hoặc nhập thêm hàng.");
+                    response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
+                    return;
+                }
+            }
+        }
 
         boolean success = saleorderdao.approveOrder(id, user.getId());
 

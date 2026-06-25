@@ -94,7 +94,8 @@
                 box-sizing: border-box;
                 text-align: right;
             }
-            .unit-price-input.is-invalid {
+            .unit-price-input.is-invalid,
+            .qty-input.is-invalid {
                 border-color: var(--danger);
                 background: var(--danger-soft);
                 color: var(--danger);
