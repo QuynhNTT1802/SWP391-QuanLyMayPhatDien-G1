@@ -394,7 +394,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
     }
 
     public boolean requestRevisionOrder(int orderId, int userId, String reason) {
-        String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, updated_by = ?, updated_at = NOW(), "
+        String sql = "UPDATE sale_order SET status = ?, revision_reason = ?, reject_reason = NULL, "
+                + "updated_by = ?, updated_at = NOW(), "
                 + "approved_by = NULL, approved_at = NULL "
                 + "WHERE order_id = ? AND status = ?";
         try {
@@ -566,6 +567,10 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         s.setTotalAmount(rs.getDouble("total_amount"));
         s.setNote(rs.getString("note"));
         s.setRejectReason(rs.getString("reject_reason"));
+        try {
+            s.setRevisionReason(rs.getString("revision_reason"));
+        } catch (SQLException e) {
+        }
 
         try {
             s.setCustomerNote(rs.getString("customer_note"));
@@ -592,8 +597,9 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
 
     public boolean updateWithDetails(SaleOrder s, List<OrderDetail> newDetails) {
         String updateSql = "UPDATE sale_order SET customer_id = ?, customer_note = ?, "
-                + "total_amount = ?, note = ?, updated_at = NOW() "
-                + "WHERE order_id = ? AND status = ?";
+                + "total_amount = ?, note = ?, status = ?, revision_reason = NULL, "
+                + "updated_at = NOW() "
+                + "WHERE order_id = ? AND status IN (?, ?)";
         String deleteDetailSql = "DELETE FROM order_detail WHERE order_id = ?";
         String insertDetailSql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?)";
@@ -611,8 +617,10 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     ps.setString(2, s.getCustomerNote());
                     ps.setDouble(3, s.getTotalAmount());
                     ps.setString(4, s.getNote());
-                    ps.setInt(5, s.getOrderId());
-                    ps.setString(6, GlobalUtils.STATUS_PENDING);
+                    ps.setString(5, GlobalUtils.STATUS_PENDING);
+                    ps.setInt(6, s.getOrderId());
+                    ps.setString(7, GlobalUtils.STATUS_PENDING);
+                    ps.setString(8, GlobalUtils.STATUS_NEEDS_REVISION);
 
                     int rows = ps.executeUpdate();
                     if (rows == 0) {

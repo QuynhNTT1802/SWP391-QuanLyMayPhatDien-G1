@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
         <style>
             .detail-table {
                 width: 100%;
@@ -55,6 +55,13 @@
             }
             .col-qty {
                 width: 100px;
+            }
+            .col-stock {
+                width: 90px;
+                text-align: center;
+                font-size: 12px;
+                color: var(--muted);
+                padding-top: 14px !important;
             }
             .col-price {
                 width: 160px;
@@ -187,59 +194,48 @@
                                     <h3 class="form-section-title">Người nhận hàng</h3>
                                 </div>
 
-                                <div class="cust-picker" id="customerPicker">
-                                    <div class="cust-picker-head">
-                                        <div class="cust-picker-head-title">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                                            Khách hàng gần đây (click để đổi)
-                                        </div>
-                                        <button type="button" class="cust-picker-search" id="btnOpenCustSearch">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                                            Tìm kiếm
+                                <div class="sd" id="customerDropdown"
+                                     data-endpoint="${pageContext.request.contextPath}/warehouse/customers?action=search&q=">
+                                    <div class="cust-trigger-wrap">
+                                        <button type="button" class="cust-trigger" id="custTrigger"
+                                                onclick="openCustomerPanel()" aria-haspopup="dialog">
+                                            <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
+                                            <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="cust-clear-btn" id="custClearBtn"
+                                                onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M18 6L6 18M6 6l12 12"/>
+                                            </svg>
                                         </button>
                                     </div>
-                                    <div class="cust-picker-list">
-                                        <c:choose>
-                                            <c:when test="${not empty top4Customers}">
-                                                <c:forEach var="c" items="${top4Customers}">
-                                                    <button type="button" class="cust-picker-item"
-                                                            data-customer='{"id":${c.id},"name":"<c:out value='${c.name}' escapeXml='false'/>","phone":"<c:out value='${c.phone}' escapeXml='false'/>","email":"<c:out value='${c.email}' escapeXml='false'/>","address":"<c:out value='${c.address}' escapeXml='false'/>","companyName":"<c:out value='${c.companyName}' escapeXml='false'/>","customerTypeId":${c.customerTypeId}}'>
-                                                        <span class="cust-picker-item-name"><c:out value="${c.name}"/></span>
-                                                        <span class="cust-picker-item-phone"><c:out value="${c.phone}"/></span>
-                                                    </button>
-                                                </c:forEach>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="cust-picker-empty">Chưa có khách hàng nào.</div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
+                                    <input type="hidden" name="customerId" id="sdHiddenId" value="<c:out value="${order.customerId}"/>" />
                                 </div>
 
-                                <div class="cust-picker-hint" id="custDuplicateHint">
-                                    ⚠ Có nhiều khách hàng trùng tên này. Vui lòng nhập <strong>số điện thoại</strong> để chọn đúng người.
-                                </div>
+                                
 
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Tên khách hàng <span class="req">*</span></label>
                                         <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : order.customer.name}" />
-                                        <input class="input" name="customerName" id="inpCustName" value="<c:out value="${preName}"/>" required />
+                                        <input class="input" name="customerName" id="inpCustName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${preName}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
                                         <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : order.customer.phone}" />
-                                        <input class="input mono" name="customerPhone" id="inpCustPhone" value="<c:out value="${prePhone}"/>" required />
+                                        <input class="input mono" name="customerPhone" id="inpCustPhone" placeholder="VD: 0912345678" value="<c:out value="${prePhone}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Email</label>
                                         <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : order.customer.email}" />
-                                        <input class="input mono" name="customerEmail" id="inpCustEmail" type="email" value="<c:out value="${preEmail}"/>" />
+                                        <input class="input mono" name="customerEmail" id="inpCustEmail" type="email" placeholder="email@example.com" value="<c:out value="${preEmail}"/>" />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
                                         <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : order.customer.address}" />
-                                        <input class="input" name="customerAddress" id="inpCustAddress" value="<c:out value="${preAddress}"/>" required />
+                                        <input class="input" name="customerAddress" id="inpCustAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${preAddress}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Loại khách hàng <span class="req">*</span></label>
@@ -257,7 +253,7 @@
                                     <div class="field">
                                         <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
                                         <c:set var="preCompany" value="${(preselectCustomer != null) ? preselectCustomer.companyName : order.customer.companyName}" />
-                                        <input class="input" id="customerCompany" name="customerCompany" value="<c:out value="${preCompany}"/>" />
+                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${preCompany}"/>" />
                                     </div>
                                 </div>
                             </div>
@@ -290,6 +286,7 @@
                                             <th class="col-num">#</th>
                                             <th>Máy phát</th>
                                             <th class="col-qty">Số lượng</th>
+                                            <th class="col-stock">Tồn kho</th>
                                             <th class="col-price">Đơn giá bán</th>
                                             <th class="col-price">Thành tiền</th>
                                             <th class="col-del"></th>
@@ -302,7 +299,7 @@
                                                     <tr>
                                                         <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                         <td>
-                                                            <select name="generatorId" class="gen-select" required>
+                                                            <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
                                                                     <option value="${g.id}"
@@ -312,9 +309,10 @@
                                                                 </c:forEach>
                                                             </select>
                                                         </td>
-                                                        <td><input type="number" name="quantity" class="qty-input" value="${d.quantity}" min="1" max="9999" oninput="updateTotal()" required /></td>
+                                                        <td><input type="number" name="quantity" class="qty-input" value="${d.quantity}" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required /></td>
+                                                        <td class="col-stock"><span class="row-stock mono"><c:set var="dStock" value="${stockMap[d.generatorId] != null ? stockMap[d.generatorId] : 0}"/>${dStock}</span></td>
                                                         <td class="col-price">
-                                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" min="0" step="1000" oninput="updateTotal()" required />
+                                                            <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#,##0'/>" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
                                                         </td>
                                                         <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                         <td class="col-del">
@@ -327,7 +325,7 @@
                                                 <tr>
                                                     <td class="col-num"><span class="row-num">1</span></td>
                                                     <td>
-                                                        <select name="generatorId" class="gen-select" required>
+                                                        <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
                                                             <option value="">-- Chọn máy --</option>
                                                             <c:forEach var="g" items="${generators}">
                                                                 <option value="${g.id}">
@@ -336,10 +334,11 @@
                                                             </c:forEach>
                                                         </select>
                                                     </td>
-                                                    <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" oninput="updateTotal()" required /></td>
-                                                    <td class="col-price">
-                                                        <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
-                                                    </td>
+                                                        <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required /></td>
+                                                        <td class="col-stock"><span class="row-stock mono">—</span></td>
+                                                        <td class="col-price">
+                                                            <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
+                                                        </td>
                                                     <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                     <td class="col-del">
                                                         <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
@@ -350,7 +349,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="total-row">
-                                            <td colspan="4" class="text-right">Tổng cộng:</td>
+                                            <td colspan="5" class="text-right">Tổng cộng:</td>
                                             <td class="text-right mono" id="grandTotal">0₫</td>
                                             <td></td>
                                         </tr>
@@ -361,7 +360,7 @@
                                     <tr>
                                         <td class="col-num"><span class="row-num"></span></td>
                                         <td>
-                                            <select name="generatorId" class="gen-select" required>
+                                            <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
                                                     <option value="${g.id}">
@@ -370,9 +369,10 @@
                                                 </c:forEach>
                                             </select>
                                         </td>
-                                        <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" oninput="updateTotal()" required /></td>
+                                        <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required /></td>
+                                        <td class="col-stock"><span class="row-stock mono">—</span></td>
                                         <td class="col-price">
-                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
+                                            <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
                                         </td>
                                         <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                         <td class="col-del">
@@ -406,6 +406,7 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SESSION_DATA && window.SESSION_DATA.message) {
@@ -416,74 +417,187 @@
             });
         </script>
         <script>
-                                    function formatVND(num) {
-                                        return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
-                                    }
-                                    function updateTotal() {
-                                        var grand = 0;
-                                        document.querySelectorAll('#detailBody tr').forEach(function (row) {
-                                            var sel = row.querySelector('.gen-select');
-                                            var qty = parseInt(row.querySelector('.qty-input').value) || 0;
-                                            var priceInput = row.querySelector('.unit-price-input');
-                                            var price = parseFloat(priceInput.value) || 0;
-                                            var subtotal = price * qty;
-                                            row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
-                                            grand += subtotal;
-                                        });
-                                        document.getElementById('grandTotal').textContent = formatVND(grand);
-                                    }
-                                    function addRow() {
-                                        var tpl = document.getElementById('rowTemplate');
-                                        var clone = tpl.content.cloneNode(true);
-                                        document.getElementById('detailBody').appendChild(clone);
-                                        updateRowNumbers();
-                                        updateTotal();
-                                    }
-                                    function removeRow(btn) {
-                                        var tbody = document.getElementById('detailBody');
-                                        if (tbody.querySelectorAll('tr').length <= 1)
-                                            return;
-                                        btn.closest('tr').remove();
-                                        updateRowNumbers();
-                                        updateTotal();
-                                    }
-                                    function updateRowNumbers() {
-                                        document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
-                                            el.textContent = i + 1;
-                                        });
-                                    }
-                                    // Tự tính ngay khi load (vì có dữ liệu pre-fill)
-                                    document.addEventListener('DOMContentLoaded', updateTotal);
+            function formatVND(num) {
+                return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
+            }
+            function validateQty(input) {
+                var v = input.value.replace(/[^0-9]/g, '');
+                if (v === '' || v === '0') {
+                    input.value = v;
+                    return;
+                }
+                var n = parseInt(v);
+                if (n > 9999) {
+                    input.value = 9999;
+                } else {
+                    input.value = n;
+                }
+            }
+            function validateQtyOnBlur(input) {
+                var n = parseInt(input.value);
+                if (isNaN(n) || n < 1) {
+                    input.value = 1;
+                }
+            }
+            function validateUnitPrice(input) {
+                var original = input.value;
+                var cleaned = original.replace(/[^\d]/g, '');
+                if (original && cleaned === '') {
+                    alert('Đơn giá chỉ được nhập số, không nhập chữ!');
+                    input.value = '0';
+                    return;
+                }
+                input.value = cleaned;
+            }
+            function formatPriceDisplay(input) {
+                var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
+                if (n > 0) {
+                    input.value = n.toLocaleString('vi-VN');
+                } else {
+                    input.value = '0';
+                }
+            }
+            function unformatPrice(input) {
+                input.value = input.value.replace(/[^\d]/g, '');
+                if (input.value === '') {
+                    input.value = '0';
+                }
+            }
+            // Stock map từ server (generatorId -> tổng tồn kho IN_STOCK)
+            var STOCK_MAP = {
+                <c:forEach var="entry" items="${stockMap}">${entry.key}: ${entry.value},</c:forEach>
+            };
+            function getStockFor(generatorId) {
+                if (!generatorId) return 0;
+                return STOCK_MAP[generatorId] || 0;
+            }
+            function updateStockCell(selEl) {
+                var row = selEl.closest('tr');
+                var stockCell = row.querySelector('.row-stock');
+                if (!stockCell) return;
+                var gid = parseInt(selEl.value);
+                if (!gid) {
+                    stockCell.textContent = '—';
+                    return;
+                }
+                var stock = getStockFor(gid);
+                stockCell.textContent = stock;
+                stockCell.style.color = stock === 0 ? 'var(--danger)' : 'var(--fg)';
+                stockCell.style.fontWeight = stock === 0 ? '600' : '';
+            }
+            function updateTotal() {
+                var grand = 0;
+                document.querySelectorAll('#detailBody tr').forEach(function (row) {
+                    var sel = row.querySelector('.gen-select');
+                    var qty = parseInt(row.querySelector('.qty-input').value) || 0;
+                    var priceInput = row.querySelector('.unit-price-input');
+                    var price = parseInt(priceInput.value.replace(/[^\d]/g, '')) || 0;
+                    var subtotal = price * qty;
+                    row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
+                    grand += subtotal;
+                });
+                document.getElementById('grandTotal').textContent = formatVND(grand);
+            }
+            function addRow() {
+                var tpl = document.getElementById('rowTemplate');
+                var clone = tpl.content.cloneNode(true);
+                document.getElementById('detailBody').appendChild(clone);
+                updateRowNumbers();
+                updateTotal();
+            }
+            function removeRow(btn) {
+                var tbody = document.getElementById('detailBody');
+                if (tbody.querySelectorAll('tr').length <= 1)
+                    return;
+                btn.closest('tr').remove();
+                updateRowNumbers();
+                updateTotal();
+            }
+            function updateRowNumbers() {
+                document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
+                    el.textContent = i + 1;
+                });
+            }
+            // Validate trước khi submit
+            document.querySelector('form.form-card').addEventListener('submit', function (e) {
+                var rows = document.querySelectorAll('#detailBody tr');
+                var hasValid = false;
+                for (var i = 0; i < rows.length; i++) {
+                    var sel = rows[i].querySelector('.gen-select');
+                    var qtyInput = rows[i].querySelector('.qty-input');
+                    var priceInput = rows[i].querySelector('.unit-price-input');
+                    var qty = parseInt(qtyInput.value);
+                    var price = parseInt(priceInput.value.replace(/[^\d]/g, '')) || 0;
+                    if (sel.value && (isNaN(qty) || qty < 1)) {
+                        e.preventDefault();
+                        alert('Số lượng ở dòng ' + (i + 1) + ' phải lớn hơn 0.');
+                        qtyInput.focus();
+                        return false;
+                    }
+                    if (sel.value && price <= 0) {
+                        e.preventDefault();
+                        alert('Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.');
+                        priceInput.focus();
+                        return false;
+                    }
+                    if (sel.value) {
+                        hasValid = true;
+                        // Unformat price before submit
+                        priceInput.value = price;
+                    }
+                }
+                if (!hasValid) {
+                    e.preventDefault();
+                    alert('Vui lòng chọn ít nhất 1 máy phát điện.');
+                    return false;
+                }
+            });
+            // Tự tính ngay khi load (vì có dữ liệu pre-fill)
+            document.addEventListener('DOMContentLoaded', function () {
+                updateTotal();
+                // Cập nhật cột tồn kho cho các dòng đã chọn sẵn
+                document.querySelectorAll('#detailBody .gen-select').forEach(function (sel) {
+                    updateStockCell(sel);
+                });
+            });
 
-                                    // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
-                                    function onCustomerTypeChange() {
-                                        var sel = document.getElementById('customerTypeSelect');
-                                        var opt = sel.options[sel.selectedIndex];
-                                        var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
-                                        var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
-                                        document.getElementById('customerCompany').required = isCompany;
-                                        document.querySelectorAll('.company-req').forEach(function (el) {
-                                            el.style.display = isCompany ? 'inline' : 'none';
-                                        });
-                                    }
-                                    document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
+            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
+            function onCustomerTypeChange() {
+                var sel = document.getElementById('customerTypeSelect');
+                var opt = sel.options[sel.selectedIndex];
+                var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
+                var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
+                document.getElementById('customerCompany').required = isCompany;
+                document.querySelectorAll('.company-req').forEach(function (el) {
+                    el.style.display = isCompany ? 'inline' : 'none';
+                });
+            }
+            document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
 
-        <div class="cust-picker-modal" id="custSearchModal">
-            <div class="cust-picker-modal-dialog">
-                <div class="cust-picker-modal-head">
-                    <h3>Tìm khách hàng</h3>
-                    <button type="button" class="cust-picker-modal-close" id="btnCloseCustSearch">×</button>
+        <!-- Side panel for customer selection -->
+        <div class="side-panel-overlay" id="custPanelOverlay" onclick="closeCustomerPanel()"></div>
+        <div class="side-panel" id="custSidePanel">
+            <div class="side-panel-head">
+                <h3 class="side-panel-title">Chọn Khách Hàng</h3>
+                <button type="button" class="side-panel-close" onclick="closeCustomerPanel()">&times;</button>
+            </div>
+            <div class="side-panel-body">
+                <div style="display:flex; gap: 8px; margin-bottom: 20px;">
+                    <input type="text" id="custSearchInput" class="serial-search-box" placeholder="Tìm nhanh theo tên, SĐT, email..."/>
+                    <select id="custSortOrder" class="serial-search-box" style="width:auto;min-width:120px;">
+                        <option value="name_asc">Tên A-Z</option>
+                        <option value="name_desc">Tên Z-A</option>
+                        <option value="newest">Mới nhất</option>
+                    </select>
                 </div>
-                <div class="cust-picker-modal-search-wrap">
-                    <input type="text" class="cust-picker-modal-search" id="inpCustModalSearch" placeholder="Gõ tên hoặc số điện thoại..." autocomplete="off" />
+                <div id="custLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
+                    </svg><br>Đang tải...
                 </div>
-                <div class="cust-picker-modal-results" id="custModalResults">
-                    <div class="cust-picker-modal-empty">Gõ để bắt đầu tìm kiếm...</div>
-                </div>
+                <div class="cust-list-wrap" id="custList"></div>
             </div>
         </div>
-
-        <script src="${pageContext.request.contextPath}/assets/js/customer-picker.js"></script>
     </body>
 </html>

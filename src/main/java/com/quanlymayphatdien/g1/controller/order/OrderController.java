@@ -367,6 +367,7 @@ public class OrderController extends HttpServlet {
         List<Category> phases = categoryDao.findByType("phase");
         List<Category> customerTypes = categoryDao.findByType("customer_type");
         List<Customer> top4Customers = customerDao.findTop4Alphabetical();
+        java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
 
         request.setAttribute("customerTypes", customerTypes);
         request.setAttribute("generators", generators);
@@ -374,6 +375,7 @@ public class OrderController extends HttpServlet {
         request.setAttribute("fuelTypes", fuelTypes);
         request.setAttribute("phases", phases);
         request.setAttribute("top4Customers", top4Customers);
+        request.setAttribute("stockMap", stockMap);
 
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
     }
@@ -578,7 +580,7 @@ public class OrderController extends HttpServlet {
         GeneratorDAO generatordao = new GeneratorDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
 
-        if (order != null && "PENDING".equals(order.getStatus())) {
+        if (order != null && ("PENDING".equals(order.getStatus()) || "NEEDS_REVISION".equals(order.getStatus()))) {
             List<OrderDetail> existingDetails = orderdetaildao.findGeneratorById(id);
 
             List<Generator> generator = generatordao.findAll();
@@ -586,6 +588,7 @@ public class OrderController extends HttpServlet {
             CustomerDAO customerDao = new CustomerDAO();
             List<Category> customerTypes = categoryDao.findByType("customer_type");
             List<Customer> top4Customers = customerDao.findTop4Alphabetical();
+            java.util.Map<Integer, Integer> stockMap = generatordao.getTotalStockMap();
 
 
             String newCustIdStr = request.getParameter("newCustomerId");
@@ -606,6 +609,7 @@ public class OrderController extends HttpServlet {
             request.setAttribute("generators", generator);
             request.setAttribute("customerTypes", customerTypes);
             request.setAttribute("top4Customers", top4Customers);
+            request.setAttribute("stockMap", stockMap);
             request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
         } else {
             request.getSession().setAttribute("message", "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).");

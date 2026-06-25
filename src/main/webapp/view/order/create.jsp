@@ -62,6 +62,13 @@
         .col-qty {
             width: 100px;
         }
+        .col-stock {
+            width: 90px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--muted);
+            padding-top: 14px !important;
+        }
         .col-price {
             width: 160px;
             text-align: right;
@@ -335,6 +342,7 @@
                                             <th class="col-num">#</th>
                                             <th>Máy phát</th>
                                             <th class="col-qty">Số lượng</th>
+                                            <th class="col-stock">Tồn kho</th>
                                             <th class="col-price">Đơn giá bán</th>
                                             <th class="col-price">Thành tiền</th>
                                             <th class="col-del"></th>
@@ -344,7 +352,7 @@
                                         <tr>
                                             <td class="col-num"><span class="row-num">1</span></td>
                                             <td>
-                                                <select name="generatorId" class="gen-select" required>
+                                                <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
                                                     <option value="">-- Chọn máy --</option>
                                                     <c:forEach var="g" items="${generators}">
                                                         <option value="${g.id}">
@@ -353,9 +361,10 @@
                                                     </c:forEach>
                                                 </select>
                                             </td>
-                                            <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
+                                            <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required /></td>
+                                            <td class="col-stock"><span class="row-stock mono">—</span></td>
                                             <td class="col-price">
-                                                <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
+                                                <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
                                             </td>
                                             <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                             <td class="col-del">
@@ -365,7 +374,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="total-row">
-                                            <td colspan="4" class="text-right">Tổng cộng:</td>
+                                            <td colspan="5" class="text-right">Tổng cộng:</td>
                                             <td class="text-right mono" id="grandTotal">0₫</td>
                                             <td></td>
                                         </tr>
@@ -376,7 +385,7 @@
                                     <tr>
                                         <td class="col-num"><span class="row-num"></span></td>
                                         <td>
-                                            <select name="generatorId" class="gen-select" required>
+                                            <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
                                                 <option value="">-- Chọn máy --</option>
                                                 <c:forEach var="g" items="${generators}">
                                                     <option value="${g.id}">
@@ -385,9 +394,10 @@
                                                 </c:forEach>
                                             </select>
                                         </td>
-                                        <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" required /></td>
+                                        <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required /></td>
+                                        <td class="col-stock"><span class="row-stock mono">—</span></td>
                                         <td class="col-price">
-                                            <input type="number" name="unitPrice" class="unit-price-input mono" value="0" min="0" step="1000" oninput="updateTotal()" required />
+                                            <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
                                         </td>
                                         <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                         <td class="col-del">
@@ -449,16 +459,70 @@
                 return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
             }
             function validateQty(input) {
-                // Loại bỏ ký tự không phải số (an toàn cho trình duyệt cũ)
+                // Loại bỏ ký tự không phải số, cho phép xóa/empty khi đang nhập
                 var v = input.value.replace(/[^0-9]/g, '');
+                if (v === '' || v === '0') {
+                    input.value = v;
+                    return;
+                }
                 var n = parseInt(v);
-                if (isNaN(n) || n < 1) {
-                    input.value = 1;
-                } else if (n > 9999) {
+                if (n > 9999) {
                     input.value = 9999;
                 } else {
                     input.value = n;
                 }
+            }
+            function validateQtyOnBlur(input) {
+                var n = parseInt(input.value);
+                if (isNaN(n) || n < 1) {
+                    input.value = 1;
+                }
+            }
+            function validateUnitPrice(input) {
+                var original = input.value;
+                var cleaned = original.replace(/[^\d]/g, '');
+                if (original && cleaned === '') {
+                    alert('Đơn giá chỉ được nhập số, không nhập chữ!');
+                    input.value = '0';
+                    return;
+                }
+                input.value = cleaned;
+            }
+            function formatPriceDisplay(input) {
+                var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
+                if (n > 0) {
+                    input.value = n.toLocaleString('vi-VN');
+                } else {
+                    input.value = '0';
+                }
+            }
+            function unformatPrice(input) {
+                input.value = input.value.replace(/[^\d]/g, '');
+                if (input.value === '') {
+                    input.value = '0';
+                }
+            }
+            // Stock map từ server (generatorId -> tổng tồn kho IN_STOCK)
+            var STOCK_MAP = {
+                <c:forEach var="entry" items="${stockMap}">${entry.key}: ${entry.value},</c:forEach>
+            };
+            function getStockFor(generatorId) {
+                if (!generatorId) return 0;
+                return STOCK_MAP[generatorId] || 0;
+            }
+            function updateStockCell(selEl) {
+                var row = selEl.closest('tr');
+                var stockCell = row.querySelector('.row-stock');
+                if (!stockCell) return;
+                var gid = parseInt(selEl.value);
+                if (!gid) {
+                    stockCell.textContent = '—';
+                    return;
+                }
+                var stock = getStockFor(gid);
+                stockCell.textContent = stock;
+                stockCell.style.color = stock === 0 ? 'var(--danger)' : 'var(--fg)';
+                stockCell.style.fontWeight = stock === 0 ? '600' : '';
             }
             function updateTotal() {
                 var grand = 0;
@@ -466,7 +530,7 @@
                     var sel = row.querySelector('.gen-select');
                     var qty = parseInt(row.querySelector('.qty-input').value) || 0;
                     var priceInput = row.querySelector('.unit-price-input');
-                    var price = parseFloat(priceInput.value) || 0;
+                    var price = parseInt(priceInput.value.replace(/[^\d]/g, '')) || 0;
                     var subtotal = price * qty;
                     row.querySelector('.row-subtotal').textContent = formatVND(subtotal);
                     grand += subtotal;
@@ -500,15 +564,26 @@
                 for (var i = 0; i < rows.length; i++) {
                     var sel = rows[i].querySelector('.gen-select');
                     var qtyInput = rows[i].querySelector('.qty-input');
+                    var priceInput = rows[i].querySelector('.unit-price-input');
                     var qty = parseInt(qtyInput.value);
+                    var price = parseInt(priceInput.value.replace(/[^\d]/g, '')) || 0;
                     if (sel.value && (isNaN(qty) || qty < 1)) {
                         e.preventDefault();
-                        alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
+                        alert('Số lượng ở dòng ' + (i + 1) + ' phải lớn hơn 0.');
                         qtyInput.focus();
                         return false;
                     }
-                    if (sel.value)
+                    if (sel.value && price <= 0) {
+                        e.preventDefault();
+                        alert('Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.');
+                        priceInput.focus();
+                        return false;
+                    }
+                    if (sel.value) {
                         hasValid = true;
+                        // Unformat price before submit
+                        priceInput.value = price;
+                    }
                 }
                 if (!hasValid) {
                     e.preventDefault();

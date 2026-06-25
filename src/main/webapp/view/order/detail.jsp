@@ -156,6 +156,15 @@
                         </div>
                     </c:if>
 
+                    <c:if test="${order.status == 'NEEDS_REVISION' && order.createdBy == sessionScope.loggedUser.id}">
+                        <div class="action-bar-top">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Sửa lại & Gửi duyệt
+                            </a>
+                        </div>
+                    </c:if>
+
                     <div class="tab-bar">
                         <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
                             <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -347,12 +356,20 @@
                                     </div>
                                 </div>
 
-                                <c:if test="${not empty order.rejectReason}">
-                                    <div style="margin-top: 18px;">
-                                        <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
-                                        <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
-                                    </div>
-                                </c:if>
+                                <c:choose>
+                                    <c:when test="${order.status == 'REJECTED' && not empty order.rejectReason}">
+                                        <div style="margin-top: 18px;">
+                                            <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
+                                            <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
+                                        </div>
+                                    </c:when>
+                                    <c:when test="${order.status == 'NEEDS_REVISION' && not empty order.revisionReason}">
+                                        <div style="margin-top: 18px;">
+                                            <div class="info-label" style="font-size:11px;color:#b15c00;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do yêu cầu chỉnh sửa</div>
+                                            <div class="note-soft" style="border-left:3px solid #b15c00;"><c:out value="${order.revisionReason}"/></div>
+                                        </div>
+                                    </c:when>
+                                </c:choose>
                                 <c:if test="${not empty order.note}">
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú nội bộ</div>

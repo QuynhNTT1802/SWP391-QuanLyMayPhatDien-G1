@@ -48,6 +48,10 @@
                 background: #e2e3e5;
                 color: #383d41;
             }
+            .status-needs-revision {
+                background: #ffe0b2;
+                color: #b15c00;
+            }
             .amount-cell {
                 font-weight: 600;
                 color: var(--accent);
@@ -327,6 +331,7 @@
                             <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
                             <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
+                            <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </select>
 
@@ -395,6 +400,7 @@
                                                         <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${order.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
+                                                        <c:when test="${order.status == 'NEEDS_REVISION'}"><span class="status-pill status-needs-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                                                         <c:when test="${order.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${order.status}"/></span></c:otherwise>
                                                         </c:choose>
