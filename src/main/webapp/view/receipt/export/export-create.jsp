@@ -111,6 +111,12 @@
         #scannerCamera { display: none; margin-top: 8px; }
         #scannerCamera video { width: 100%; max-width: 400px; border-radius: var(--radius-sm); }
 
+        .order-counter { font-size: 12px; color: var(--muted); padding: 6px 0; }
+        .order-counter strong { color: var(--accent); }
+        .order-req-banner { background: var(--accent-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
+        .order-req-banner .req-title { font-weight: 700; margin-bottom: 4px; }
+        .order-req-banner .req-item { color: var(--fg); }
+        .order-req-banner .req-item strong { color: var(--accent); }
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -128,10 +134,6 @@
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <a class="btn" href="javascript:void(0)" onclick="confirmCancelCreate()">Huỷ</a>
-                        <button type="submit" name="submitMode" value="draft" form="receiptForm" class="btn" title="Lưu nháp để chỉnh sửa tiếp">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            Lưu nháp
-                        </button>
                         <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                             Gửi phiếu
@@ -272,6 +274,15 @@
                             <div id="scannerCamera"></div>
                             <small>Mỗi lần quét, hệ thống tự reserve serial nếu máy đang IN_STOCK tại kho đã chọn.</small>
                         </div>
+                        <c:if test="${fromOrder}">
+                        <div class="order-req-banner">
+                            <div class="req-title">Đơn hàng <strong><c:out value="${order.orderCode}"/></strong> yêu cầu:</div>
+                            <c:forEach var="req" items="${orderRequirements}" varStatus="st">
+                            <div class="req-item">${st.count}. <c:out value="${req.generatorModel}"/> <c:if test="${not empty req.brandName}">(<c:out value="${req.brandName}"/>)</c:if> x <strong>${req.quantity}</strong></div>
+                            </c:forEach>
+                        </div>
+                        </c:if>
+                        <div class="order-counter"><c:if test="${fromOrder}">Đã nhập: <strong id="orderScannedCount">0</strong> / <strong>${expectedRows}</strong> serial &middot; </c:if>Tổng số dòng: <strong id="totalRowCount">0</strong></div>
                         <table class="detail-table">
                             <thead>
                                 <tr>
@@ -303,10 +314,12 @@
                             </tbody>
                         </table>
 
+                        <c:if test="${not fromOrder}">
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
+                        </c:if>
                     </section>
                 </div>
 
@@ -360,6 +373,8 @@
         }<c:if test="${!st.last}">,</c:if>
         </c:forEach>
     ];
+    var isOrderMode = ${not empty fromOrder and fromOrder};
+    var expectedRows = ${empty expectedRows ? 0 : expectedRows};
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -441,6 +456,7 @@
             }
         });
         updateRowNumbers();
+        updateOrderCounter();
         validateInventoryRealtime();
         filterAlreadySelected();
         if (!generatorCache || generatorCache.length === 0) {
@@ -543,6 +559,7 @@
         var tbody = document.getElementById('detailBody');
         tbody.appendChild(buildEmptyRow());
         updateRowNumbers();
+        updateOrderCounter();
         validateInventoryRealtime();
         filterAlreadySelected();
     }
@@ -568,6 +585,7 @@
                     }
                     row.remove();
                     updateRowNumbers();
+                    updateOrderCounter();
                     validateInventoryRealtime();
                     toast(data.message || 'Đã giải phóng serial', 'success');
                 })
@@ -579,6 +597,7 @@
         } else {
             row.remove();
             updateRowNumbers();
+            updateOrderCounter();
             validateInventoryRealtime();
         }
     }
@@ -789,6 +808,19 @@
         isScanning = false;
     }
 
+    function updateOrderCounter() {
+        var totalRows = document.querySelectorAll('#detailBody tr').length;
+        var elTotal = document.getElementById('totalRowCount');
+        if (elTotal) elTotal.textContent = totalRows;
+        if (!isOrderMode) return;
+        var count = 0;
+        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+            if (sel.value) count++;
+        });
+        var el = document.getElementById('orderScannedCount');
+        if (el) el.textContent = count;
+    }
+
     function onExportScanned(serial) {
         if (!serial) return;
         var whId = document.getElementById('warehouseSelect').value;
@@ -847,8 +879,14 @@
                     stockDiv.style.color = 'var(--accent)';
                     stockDiv.style.fontWeight = '600';
                 }
-                document.getElementById('detailBody').appendChild(tr);
+                var tbody = document.getElementById('detailBody');
+                tbody.querySelectorAll('tr').forEach(function (r) {
+                    var gs = r.querySelector('select[name="generatorId"]');
+                    if (gs && !gs.value) r.remove();
+                });
+                tbody.appendChild(tr);
                 updateRowNumbers();
+                updateOrderCounter();
                 toast('Đã reserve serial ' + data.serialNumber, 'success');
                 var scanEl = document.getElementById('scanBox');
                 if (scanEl) { scanEl.value = ''; scanEl.focus(); }
@@ -878,6 +916,9 @@
         }
         if (scanInput && !scanInput.disabled) {
             scanInput.focus();
+        }
+        if (isOrderMode) {
+            updateOrderCounter();
         }
         (function () {
             var orphanedId = sessionStorage.getItem('scanDraftReceiptId');
@@ -960,6 +1001,7 @@
                     while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
                     tbody.appendChild(buildEmptyRow());
                     updateRowNumbers();
+                    updateOrderCounter();
                     prevWarehouse = newWh;
                     onWarehouseChange();
                     toast('Đã huỷ phiếu nháp và đổi kho', 'success');
