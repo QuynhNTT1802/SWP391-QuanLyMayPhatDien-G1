@@ -73,116 +73,12 @@
                 white-space: nowrap;
                 width: 130px;
             }
-            .col-actions {
-                white-space: nowrap;
-            }
             .col-check { width: 36px; text-align: center; }
             .row-check { cursor: pointer; }
             .row-check:disabled { cursor: not-allowed; opacity: 0.4; }
             .row-check:disabled:checked { background: var(--muted-2); border-color: var(--muted-2); }
             #groupBtn { display: none; }
             #groupBtn.show { display: inline-flex; }
-            .dropdown { position: relative; display: inline-block; }
-            .dropdown-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 4px 10px;
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                background: var(--surface);
-                color: var(--fg);
-                font-size: 12px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all .12s ease;
-                font-family: inherit;
-                white-space: nowrap;
-            }
-            .dropdown-btn:hover {
-                border-color: var(--accent);
-                color: var(--accent);
-            }
-            .dropdown-btn .arrow {
-                transition: transform .2s ease;
-                margin-left: 2px;
-                font-size: 10px;
-            }
-            .dropdown-btn.open .arrow {
-                transform: rotate(180deg);
-            }
-            .dropdown-menu {
-                position: fixed;
-                z-index: 999;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                box-shadow: 0 4px 20px rgba(0,0,0,.12);
-                padding: 4px;
-                min-width: 190px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(-4px);
-                transition: all .15s ease;
-                pointer-events: none;
-            }
-            .dropdown-menu.open {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-                pointer-events: auto;
-            }
-            .dropdown-item {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 7px 10px;
-                border: none;
-                border-radius: 4px;
-                background: transparent;
-                color: var(--fg);
-                font-size: 12.5px;
-                font-weight: 500;
-                cursor: pointer;
-                width: 100%;
-                text-align: left;
-                font-family: inherit;
-                text-decoration: none;
-                transition: background .1s ease;
-                box-sizing: border-box;
-                white-space: nowrap;
-            }
-            .dropdown-item:hover {
-                background: var(--surface-2);
-            }
-            .dropdown-item svg {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                flex-shrink: 0;
-            }
-            .dropdown-item .label { flex: 1; }
-            .dropdown-item.approve svg { stroke: #155724; }
-            .dropdown-item.reject svg { stroke: #721c24; }
-            .dropdown-item.revision svg { stroke: #b15c00; }
-            .dropdown-item.cancel svg { stroke: var(--muted); }
-            .dropdown-item.danger svg { stroke: var(--danger); }
-            .dropdown-divider {
-                height: 1px;
-                background: var(--border);
-                margin: 3px 0;
-            }
-            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-            .modal-host.show { display: flex; }
-            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
-            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
     </head>
     <body>
@@ -306,7 +202,7 @@
                                                     </td>
                                                 </c:if>
                                                 <td>
-                                                    <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${p.proposalId}" class="code-link"><c:out value="${p.proposalCode}"/></a>
+                                                    <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${p.proposalId}" class="code-link order-code"><c:out value="${p.proposalCode}"/></a>
                                                 </td>
                                                 <td><c:out value="${p.createdByName}"/></td>
                                                 <td>

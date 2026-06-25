@@ -22,24 +22,28 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         String sql = "INSERT INTO purchase_order (po_code, period, period_start, period_end, "
                 + "warehouse_id, status, created_by, note, total_proposals, total_quantity) "
                 + "VALUES (?,?,?,?,?,?,?,?,?,?)";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, po.getPoCode());
-            ps.setString(2, po.getPeriod());
-            ps.setDate(3, Date.valueOf(po.getPeriodStart()));
-            ps.setDate(4, Date.valueOf(po.getPeriodEnd()));
-            ps.setInt(5, po.getWarehouseId());
-            ps.setString(6, po.getStatus());
-            ps.setInt(7, po.getCreatedBy());
-            ps.setString(8, po.getNote());
-            ps.setInt(9, po.getTotalProposals());
-            ps.setInt(10, po.getTotalQuantity());
-            ps.executeUpdate();
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getInt(1);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement.setString(1, po.getPoCode());
+            statement.setString(2, po.getPeriod());
+            statement.setDate(3, Date.valueOf(po.getPeriodStart()));
+            statement.setDate(4, Date.valueOf(po.getPeriodEnd()));
+            statement.setInt(5, po.getWarehouseId());
+            statement.setString(6, po.getStatus());
+            statement.setInt(7, po.getCreatedBy());
+            statement.setString(8, po.getNote());
+            statement.setInt(9, po.getTotalProposals());
+            statement.setInt(10, po.getTotalQuantity());
+            statement.executeUpdate();
+            resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -52,12 +56,17 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by "
                 + "ORDER BY p.created_at DESC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -66,48 +75,54 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     public boolean update(PurchaseOrder t) {
         String sql = "UPDATE purchase_order SET note = ?, status = ?, total_proposals = ?, total_quantity = ? "
                 + "WHERE po_id = ? AND status = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, t.getNote());
-            ps.setString(2, t.getStatus());
-            ps.setInt(3, t.getTotalProposals());
-            ps.setInt(4, t.getTotalQuantity());
-            ps.setInt(5, t.getPoId());
-            ps.setString(6, GlobalUtils.PO_STATUS_DRAFT);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, t.getNote());
+            statement.setString(2, t.getStatus());
+            statement.setInt(3, t.getTotalProposals());
+            statement.setInt(4, t.getTotalQuantity());
+            statement.setInt(5, t.getPoId());
+            statement.setString(6, GlobalUtils.PO_STATUS_DRAFT);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     @Override
     public boolean delete(PurchaseOrder t) {
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps1 = c.prepareStatement(
-                    "UPDATE import_proposal SET purchase_order_id = NULL WHERE purchase_order_id = ?")) {
-                ps1.setInt(1, t.getPoId());
-                ps1.executeUpdate();
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
+                    "UPDATE import_proposal SET purchase_order_id = NULL WHERE purchase_order_id = ?");
+            statement.setInt(1, t.getPoId());
+            statement.executeUpdate();
+            closeResources();
+            statement = connection.prepareStatement(
+                    "DELETE FROM purchase_order_detail WHERE po_id = ?");
+            statement.setInt(1, t.getPoId());
+            statement.executeUpdate();
+            closeResources();
+            statement = connection.prepareStatement(
+                    "DELETE FROM purchase_order WHERE po_id = ? AND status = ?");
+            statement.setInt(1, t.getPoId());
+            statement.setString(2, GlobalUtils.PO_STATUS_DRAFT);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
-            try (PreparedStatement ps2 = c.prepareStatement(
-                    "DELETE FROM purchase_order_detail WHERE po_id = ?")) {
-                ps2.setInt(1, t.getPoId());
-                ps2.executeUpdate();
-            }
-            try (PreparedStatement ps3 = c.prepareStatement(
-                    "DELETE FROM purchase_order WHERE po_id = ? AND status = ?")) {
-                ps3.setInt(1, t.getPoId());
-                ps3.setString(2, GlobalUtils.PO_STATUS_DRAFT);
-                if (ps3.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
-            }
-            c.commit();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -321,47 +336,55 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         String sql = "INSERT INTO purchase_order_detail "
                 + "(po_id, proposal_detail_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
                 + "VALUES (?,?,?,?,?,?,?,?)";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
             for (PurchaseOrderDetail d : details) {
-                ps.setInt(1, poId);
+                statement.setInt(1, poId);
                 if (d.getProposalDetailId() != null) {
-                    ps.setInt(2, d.getProposalDetailId());
+                    statement.setInt(2, d.getProposalDetailId());
                 } else {
-                    ps.setNull(2, java.sql.Types.INTEGER);
+                    statement.setNull(2, java.sql.Types.INTEGER);
                 }
-                ps.setInt(3, d.getGeneratorId());
-                ps.setInt(4, d.getProposedQuantity());
-                ps.setInt(5, d.getCurrentStock());
+                statement.setInt(3, d.getGeneratorId());
+                statement.setInt(4, d.getProposedQuantity());
+                statement.setInt(5, d.getCurrentStock());
                 if (d.getUnitPrice() != null) {
-                    ps.setBigDecimal(6, d.getUnitPrice());
+                    statement.setBigDecimal(6, d.getUnitPrice());
                 } else {
-                    ps.setNull(6, java.sql.Types.DECIMAL);
+                    statement.setNull(6, java.sql.Types.DECIMAL);
                 }
-                ps.setInt(7, d.getFinalQuantity());
-                ps.setString(8, d.getNote());
-                ps.addBatch();
+                statement.setInt(7, d.getFinalQuantity());
+                statement.setString(8, d.getNote());
+                statement.addBatch();
             }
-            ps.executeBatch();
+            statement.executeBatch();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
     }
 
     public String generatePoCode(String period) {
         String prefix = "PO-" + period + "-";
         String sql = "SELECT po_code FROM purchase_order WHERE po_code LIKE ? ORDER BY po_id DESC LIMIT 1";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
-            ResultSet rs = ps.executeQuery();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, prefix + "%");
+            resultSet = statement.executeQuery();
             int n = 1;
-            if (rs.next()) {
-                String last = rs.getString(1);
+            if (resultSet.next()) {
+                String last = resultSet.getString(1);
                 n = Integer.parseInt(last.substring(last.lastIndexOf("-") + 1)) + 1;
             }
             return prefix + String.format("%03d", n);
         } catch (SQLException e) {
             e.printStackTrace();
             return prefix + "001";
+        } finally {
+            closeResources();
         }
     }
 
@@ -374,64 +397,68 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN user u_a ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r ON u_r.id = p.rejected_by "
                 + "WHERE p.po_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, poId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, poId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
                 PurchaseOrder po = new PurchaseOrder();
-                po.setPoId(rs.getInt("po_id"));
-                po.setPoCode(rs.getString("po_code"));
-                po.setPeriod(rs.getString("period"));
-                po.setPeriodStart(rs.getDate("period_start").toLocalDate());
-                po.setPeriodEnd(rs.getDate("period_end").toLocalDate());
-                po.setWarehouseId(rs.getInt("warehouse_id"));
-                po.setStatus(rs.getString("status"));
-                po.setCreatedBy(rs.getInt("created_by"));
-                int approvedBy = rs.getInt("approved_by");
-                po.setApprovedBy(rs.wasNull() ? null : approvedBy);
-                int rejectedBy = rs.getInt("rejected_by");
-                po.setRejectedBy(rs.wasNull() ? null : rejectedBy);
-                po.setRejectReason(rs.getString("reject_reason"));
+                po.setPoId(resultSet.getInt("po_id"));
+                po.setPoCode(resultSet.getString("po_code"));
+                po.setPeriod(resultSet.getString("period"));
+                po.setPeriodStart(resultSet.getDate("period_start").toLocalDate());
+                po.setPeriodEnd(resultSet.getDate("period_end").toLocalDate());
+                po.setWarehouseId(resultSet.getInt("warehouse_id"));
+                po.setStatus(resultSet.getString("status"));
+                po.setCreatedBy(resultSet.getInt("created_by"));
+                int approvedBy = resultSet.getInt("approved_by");
+                po.setApprovedBy(resultSet.wasNull() ? null : approvedBy);
+                int rejectedBy = resultSet.getInt("rejected_by");
+                po.setRejectedBy(resultSet.wasNull() ? null : rejectedBy);
+                po.setRejectReason(resultSet.getString("reject_reason"));
                 try {
-                    po.setCancelMode(rs.getString("cancel_mode"));
+                    po.setCancelMode(resultSet.getString("cancel_mode"));
                 } catch (SQLException ignored) {
                 }
                 try {
-                    po.setCancelReason(rs.getString("cancel_reason"));
+                    po.setCancelReason(resultSet.getString("cancel_reason"));
                 } catch (SQLException ignored) {
                 }
-                po.setTotalProposals(rs.getInt("total_proposals"));
-                po.setTotalQuantity(rs.getInt("total_quantity"));
-                po.setNote(rs.getString("note"));
-                po.setWarehouseName(rs.getString("warehouse_name"));
-                po.setCreatedByName(rs.getString("created_by_name"));
+                po.setTotalProposals(resultSet.getInt("total_proposals"));
+                po.setTotalQuantity(resultSet.getInt("total_quantity"));
+                po.setNote(resultSet.getString("note"));
+                po.setWarehouseName(resultSet.getString("warehouse_name"));
+                po.setCreatedByName(resultSet.getString("created_by_name"));
                 try {
-                    po.setApprovedByName(rs.getString("approved_by_name"));
+                    po.setApprovedByName(resultSet.getString("approved_by_name"));
                 } catch (SQLException ignored) {
                 }
                 try {
-                    po.setRejectedByName(rs.getString("rejected_by_name"));
+                    po.setRejectedByName(resultSet.getString("rejected_by_name"));
                 } catch (SQLException ignored) {
                 }
-                Timestamp stc = rs.getTimestamp("sent_to_ceo_at");
+                Timestamp stc = resultSet.getTimestamp("sent_to_ceo_at");
                 if (stc != null) {
                     po.setSentToCeoAt(stc.toLocalDateTime());
                 }
-                Timestamp sta = rs.getTimestamp("approved_at");
+                Timestamp sta = resultSet.getTimestamp("approved_at");
                 if (sta != null) {
                     po.setApprovedAt(sta.toLocalDateTime());
                 }
-                Timestamp str = rs.getTimestamp("rejected_at");
+                Timestamp str = resultSet.getTimestamp("rejected_at");
                 if (str != null) {
                     po.setRejectedAt(str.toLocalDateTime());
                 }
-                po.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-                po.setUpdatedAt(rs.getTimestamp("updated_at").toLocalDateTime());
+                po.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                po.setUpdatedAt(resultSet.getTimestamp("updated_at").toLocalDateTime());
                 po.setDetails(findDetails(poId));
                 return po;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -446,14 +473,18 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by "
                 + "WHERE ipd.supplier_id = ? "
                 + "ORDER BY p.created_at DESC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, supplierId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(getFromResultSet(rs));
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, supplierId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -473,30 +504,34 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN import_proposal ip ON ip.proposal_id = ipd.proposal_id "
                 + "WHERE d.po_id = ? "
                 + "ORDER BY d.po_detail_id ASC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, poId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, poId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
                 PurchaseOrderDetail d = new PurchaseOrderDetail();
-                d.setPoDetailId(rs.getInt("po_detail_id"));
-                d.setPoId(rs.getInt("po_id"));
+                d.setPoDetailId(resultSet.getInt("po_detail_id"));
+                d.setPoId(resultSet.getInt("po_id"));
                 try {
-                    int pdId = rs.getInt("pod_proposal_detail_id");
-                    d.setProposalDetailId(rs.wasNull() ? null : pdId);
+                    int pdId = resultSet.getInt("pod_proposal_detail_id");
+                    d.setProposalDetailId(resultSet.wasNull() ? null : pdId);
                 } catch (SQLException ignored) {}
-                d.setGeneratorId(rs.getInt("generator_id"));
-                d.setProposedQuantity(rs.getInt("proposed_quantity"));
-                d.setCurrentStock(rs.getInt("current_stock"));
-                d.setFinalQuantity(rs.getInt("final_quantity"));
-                d.setUnitPrice(rs.getBigDecimal("unit_price"));
-                d.setNote(rs.getString("note"));
-                d.setGeneratorCode(rs.getString("generator_code"));
-                d.setGeneratorName(rs.getString("generator_name"));
-                d.setBrandName(rs.getString("brand_name"));
+                d.setGeneratorId(resultSet.getInt("generator_id"));
+                d.setProposedQuantity(resultSet.getInt("proposed_quantity"));
+                d.setCurrentStock(resultSet.getInt("current_stock"));
+                d.setFinalQuantity(resultSet.getInt("final_quantity"));
+                d.setUnitPrice(resultSet.getBigDecimal("unit_price"));
+                d.setNote(resultSet.getString("note"));
+                d.setGeneratorCode(resultSet.getString("generator_code"));
+                d.setGeneratorName(resultSet.getString("generator_name"));
+                d.setBrandName(resultSet.getString("brand_name"));
                 list.add(d);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -506,14 +541,18 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "JOIN purchase_order p ON p.po_id = d.po_id "
                 + "WHERE d.generator_id = ? AND d.unit_price IS NOT NULL "
                 + "ORDER BY p.created_at DESC LIMIT 1";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, generatorId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getBigDecimal("unit_price");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getBigDecimal("unit_price");
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return null;
     }
@@ -545,27 +584,31 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         sql.append(" ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
                 PurchaseOrder po = new PurchaseOrder();
-                po.setPoId(rs.getInt("po_id"));
-                po.setPoCode(rs.getString("po_code"));
-                po.setPeriod(rs.getString("period"));
-                po.setWarehouseId(rs.getInt("warehouse_id"));
-                po.setStatus(rs.getString("status"));
-                po.setTotalProposals(rs.getInt("total_proposals"));
-                po.setTotalQuantity(rs.getInt("total_quantity"));
-                po.setWarehouseName(rs.getString("warehouse_name"));
-                po.setCreatedByName(rs.getString("created_by_name"));
-                po.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+                po.setPoId(resultSet.getInt("po_id"));
+                po.setPoCode(resultSet.getString("po_code"));
+                po.setPeriod(resultSet.getString("period"));
+                po.setWarehouseId(resultSet.getInt("warehouse_id"));
+                po.setStatus(resultSet.getString("status"));
+                po.setTotalProposals(resultSet.getInt("total_proposals"));
+                po.setTotalQuantity(resultSet.getInt("total_quantity"));
+                po.setWarehouseName(resultSet.getString("warehouse_name"));
+                po.setCreatedByName(resultSet.getString("created_by_name"));
+                po.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
                 list.add(po);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -589,16 +632,20 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             sql.append(" AND status = ?");
             params.add(status);
         }
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -631,34 +678,37 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         sql.append("ORDER BY p.approved_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    PurchaseOrder po = new PurchaseOrder();
-                    po.setPoId(rs.getInt("po_id"));
-                    po.setPoCode(rs.getString("po_code"));
-                    po.setPeriod(rs.getString("period"));
-                    po.setPeriodStart(rs.getDate("period_start").toLocalDate());
-                    po.setPeriodEnd(rs.getDate("period_end").toLocalDate());
-                    po.setWarehouseId(rs.getInt("warehouse_id"));
-                    po.setStatus(rs.getString("status"));
-                    po.setTotalProposals(rs.getInt("total_proposals"));
-                    po.setTotalQuantity(rs.getInt("total_quantity"));
-                    po.setWarehouseName(rs.getString("warehouse_name"));
-                    po.setCreatedByName(rs.getString("created_by_name"));
-                    po.setNote(rs.getString("note"));
-                    Timestamp ca = rs.getTimestamp("created_at");
-                    if (ca != null) po.setCreatedAt(ca.toLocalDateTime());
-                    Timestamp aa = rs.getTimestamp("approved_at");
-                    if (aa != null) po.setApprovedAt(aa.toLocalDateTime());
-                    list.add(po);
-                }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                PurchaseOrder po = new PurchaseOrder();
+                po.setPoId(resultSet.getInt("po_id"));
+                po.setPoCode(resultSet.getString("po_code"));
+                po.setPeriod(resultSet.getString("period"));
+                po.setPeriodStart(resultSet.getDate("period_start").toLocalDate());
+                po.setPeriodEnd(resultSet.getDate("period_end").toLocalDate());
+                po.setWarehouseId(resultSet.getInt("warehouse_id"));
+                po.setStatus(resultSet.getString("status"));
+                po.setTotalProposals(resultSet.getInt("total_proposals"));
+                po.setTotalQuantity(resultSet.getInt("total_quantity"));
+                po.setWarehouseName(resultSet.getString("warehouse_name"));
+                po.setCreatedByName(resultSet.getString("created_by_name"));
+                po.setNote(resultSet.getString("note"));
+                Timestamp ca = resultSet.getTimestamp("created_at");
+                if (ca != null) po.setCreatedAt(ca.toLocalDateTime());
+                Timestamp aa = resultSet.getTimestamp("approved_at");
+                if (aa != null) po.setApprovedAt(aa.toLocalDateTime());
+                list.add(po);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -684,17 +734,20 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             sql.append("AND DATE(p.approved_at) <= ? ");
             params.add(toDate);
         }
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql.toString())) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
             for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
+                statement.setObject(i + 1, params.get(i));
             }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return 0;
     }
@@ -729,28 +782,31 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  AND ip.warehouse_id = ? "
                 + "ORDER BY ipd.proposal_id, ipd.generator_id";
 
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, warehouseId);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
             for (int i = 0; i < proposalIds.size(); i++) {
-                ps.setInt(i + 2, proposalIds.get(i));
+                statement.setInt(i + 2, proposalIds.get(i));
             }
-            ps.setInt(proposalIds.size() + 2, warehouseId);
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
+            statement.setInt(proposalIds.size() + 2, warehouseId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
                 Map<String, Object> row = new LinkedHashMap<>();
-                row.put("proposalDetailId", rs.getInt("proposal_detail_id"));
-                row.put("proposalId", rs.getInt("proposal_id"));
-                row.put("generatorId", rs.getInt("generator_id"));
-                row.put("generatorCode", rs.getString("generator_code"));
-                row.put("generatorName", rs.getString("generator_name"));
-                row.put("brandName", rs.getString("brand_name"));
-                row.put("totalProposed", rs.getInt("total_proposed"));
-                row.put("currentStock", rs.getInt("current_stock"));
+                row.put("proposalDetailId", resultSet.getInt("proposal_detail_id"));
+                row.put("proposalId", resultSet.getInt("proposal_id"));
+                row.put("generatorId", resultSet.getInt("generator_id"));
+                row.put("generatorCode", resultSet.getString("generator_code"));
+                row.put("generatorName", resultSet.getString("generator_name"));
+                row.put("brandName", resultSet.getString("brand_name"));
+                row.put("totalProposed", resultSet.getInt("total_proposed"));
+                row.put("currentStock", resultSet.getInt("current_stock"));
                 list.add(row);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -773,17 +829,21 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  SELECT DISTINCT ipd.proposal_id FROM import_proposal_detail ipd "
                 + "  WHERE ipd.generator_id IN (" + placeholders + ")"
                 + ")";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, poId);
-            ps.setString(2, period);
-            ps.setInt(3, warehouseId);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, poId);
+            statement.setString(2, period);
+            statement.setInt(3, warehouseId);
             for (int i = 0; i < generatorIds.size(); i++) {
-                ps.setInt(4 + i, generatorIds.get(i));
+                statement.setInt(4 + i, generatorIds.get(i));
             }
-            return ps.executeUpdate();
+            return statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
+        } finally {
+            closeResources();
         }
     }
 
@@ -802,119 +862,133 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "WHERE proposal_id IN (" + placeholders + ") "
                 + "AND status = 'APPROVED' "
                 + "AND purchase_order_id IS NULL";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, poId);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, poId);
             for (int i = 0; i < proposalIds.size(); i++) {
-                ps.setInt(2 + i, proposalIds.get(i));
+                statement.setInt(2 + i, proposalIds.get(i));
             }
-            return ps.executeUpdate();
+            return statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
+        } finally {
+            closeResources();
         }
     }
 
     public boolean updateTotalProposals(int poId, int total) {
         String sql = "UPDATE purchase_order SET total_proposals = ? WHERE po_id = ?";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, total);
-            ps.setInt(2, poId);
-            return ps.executeUpdate() > 0;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, total);
+            statement.setInt(2, poId);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     public boolean sendToCeo(int poId) {
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps1 = c.prepareStatement(
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ?, sent_to_ceo_at = NOW() "
-                    + "WHERE po_id = ? AND status = ?")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_PENDING_CEO);
-                ps1.setInt(2, poId);
-                ps1.setString(3, GlobalUtils.PO_STATUS_DRAFT);
-                if (ps1.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
+                    + "WHERE po_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.PO_STATUS_PENDING_CEO);
+            statement.setInt(2, poId);
+            statement.setString(3, GlobalUtils.PO_STATUS_DRAFT);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
-            try (PreparedStatement ps2 = c.prepareStatement(
+            closeResources();
+            statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
-                    + "WHERE purchase_order_id = ? AND status = ?")) {
-                ps2.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
-                ps2.setInt(2, poId);
-                ps2.setString(3, GlobalUtils.STATUS_APPROVED);
-                ps2.executeUpdate();
-            }
-            c.commit();
+                    + "WHERE purchase_order_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
+            statement.setInt(2, poId);
+            statement.setString(3, GlobalUtils.STATUS_APPROVED);
+            statement.executeUpdate();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     public boolean approve(int poId, int ceoId) {
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps1 = c.prepareStatement(
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ?, approved_by = ?, approved_at = NOW() "
-                    + "WHERE po_id = ? AND status = ?")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_APPROVED);
-                ps1.setInt(2, ceoId);
-                ps1.setInt(3, poId);
-                ps1.setString(4, GlobalUtils.PO_STATUS_PENDING_CEO);
-                if (ps1.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
+                    + "WHERE po_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.PO_STATUS_APPROVED);
+            statement.setInt(2, ceoId);
+            statement.setInt(3, poId);
+            statement.setString(4, GlobalUtils.PO_STATUS_PENDING_CEO);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
-            try (PreparedStatement ps2 = c.prepareStatement(
+            closeResources();
+            statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
-                    + "WHERE purchase_order_id = ?")) {
-                ps2.setString(1, GlobalUtils.STATUS_APPROVED);
-                ps2.setInt(2, poId);
-                ps2.executeUpdate();
-            }
-            c.commit();
+                    + "WHERE purchase_order_id = ?");
+            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setInt(2, poId);
+            statement.executeUpdate();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     public boolean reject(int poId, int ceoId, String reason) {
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps1 = c.prepareStatement(
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ?, rejected_by = ?, rejected_at = NOW(), reject_reason = ? "
-                    + "WHERE po_id = ? AND status = ?")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_REJECTED);
-                ps1.setInt(2, ceoId);
-                ps1.setString(3, reason);
-                ps1.setInt(4, poId);
-                ps1.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
-                if (ps1.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
+                    + "WHERE po_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.PO_STATUS_REJECTED);
+            statement.setInt(2, ceoId);
+            statement.setString(3, reason);
+            statement.setInt(4, poId);
+            statement.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
-            try (PreparedStatement ps2 = c.prepareStatement(
+            closeResources();
+            statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ?, reject_reason = ? "
-                    + "WHERE purchase_order_id = ?")) {
-                ps2.setString(1, GlobalUtils.STATUS_REJECTED);
-                ps2.setString(2, reason);
-                ps2.setInt(3, poId);
-                ps2.executeUpdate();
-            }
-            c.commit();
+                    + "WHERE purchase_order_id = ?");
+            statement.setString(1, GlobalUtils.STATUS_REJECTED);
+            statement.setString(2, reason);
+            statement.setInt(3, poId);
+            statement.executeUpdate();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -927,39 +1001,41 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         if (poId <= 0 || ceoId <= 0 || reason == null || reason.trim().isEmpty()) {
             return false;
         }
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps1 = c.prepareStatement(
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ?, reject_reason = ?, "
                     + "rejected_by = ?, rejected_at = NOW() "
-                    + "WHERE po_id = ? AND status = ?")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_NEEDS_REVISION);
-                ps1.setString(2, reason.trim());
-                ps1.setInt(3, ceoId);
-                ps1.setInt(4, poId);
-                ps1.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
-                if (ps1.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
+                    + "WHERE po_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.PO_STATUS_NEEDS_REVISION);
+            statement.setString(2, reason.trim());
+            statement.setInt(3, ceoId);
+            statement.setInt(4, poId);
+            statement.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
-            try (PreparedStatement ps2 = c.prepareStatement(
+            closeResources();
+            statement = connection.prepareStatement(
                     "UPDATE import_proposal SET purchase_order_id = NULL, status = ?, "
                     + "reject_reason = ?, rejected_by = ?, rejected_at = NOW(), "
                     + "revision_requested_by_role = ? "
-                    + "WHERE purchase_order_id = ?")) {
-                ps2.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
-                ps2.setString(2, reason.trim());
-                ps2.setInt(3, ceoId);
-                ps2.setString(4, GlobalUtils.REVISION_REQUESTER_CEO);
-                ps2.setInt(5, poId);
-                ps2.executeUpdate();
-            }
-            c.commit();
+                    + "WHERE purchase_order_id = ?");
+            statement.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            statement.setString(2, reason.trim());
+            statement.setInt(3, ceoId);
+            statement.setString(4, GlobalUtils.REVISION_REQUESTER_CEO);
+            statement.setInt(5, poId);
+            statement.executeUpdate();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -968,76 +1044,79 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 || (!mode.equals("REBUILD") && !mode.equals("KILL"))) {
             return false;
         }
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps1 = c.prepareStatement(
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ?, cancel_mode = ?, cancel_reason = ?, "
                     + "rejected_by = ?, rejected_at = NOW() "
-                    + "WHERE po_id = ? AND status NOT IN ('CANCELLED', 'APPROVED')")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
-                ps1.setString(2, mode);
-                ps1.setString(3, reason);
-                ps1.setInt(4, ceoId);
-                ps1.setInt(5, poId);
-                if (ps1.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
+                    + "WHERE po_id = ? AND status NOT IN ('CANCELLED', 'APPROVED')");
+            statement.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
+            statement.setString(2, mode);
+            statement.setString(3, reason);
+            statement.setInt(4, ceoId);
+            statement.setInt(5, poId);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
+            closeResources();
             if ("REBUILD".equals(mode)) {
-                try (PreparedStatement ps2 = c.prepareStatement(
+                statement = connection.prepareStatement(
                         "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
-                        + "WHERE purchase_order_id = ?")) {
-                    ps2.setString(1, GlobalUtils.STATUS_APPROVED);
-                    ps2.setInt(2, poId);
-                    ps2.executeUpdate();
-                }
+                        + "WHERE purchase_order_id = ?");
+                statement.setString(1, GlobalUtils.STATUS_APPROVED);
+                statement.setInt(2, poId);
+                statement.executeUpdate();
             } else {
-                try (PreparedStatement ps2 = c.prepareStatement(
+                statement = connection.prepareStatement(
                         "UPDATE import_proposal SET status = ?, rejected_by = ?, rejected_at = NOW(), "
                         + "reject_reason = ? "
-                        + "WHERE purchase_order_id = ?")) {
-                    ps2.setString(1, GlobalUtils.STATUS_REJECTED);
-                    ps2.setInt(2, ceoId);
-                    ps2.setString(3, "PO bị hủy hoàn toàn: " + reason);
-                    ps2.setInt(4, poId);
-                    ps2.executeUpdate();
-                }
+                        + "WHERE purchase_order_id = ?");
+                statement.setString(1, GlobalUtils.STATUS_REJECTED);
+                statement.setInt(2, ceoId);
+                statement.setString(3, "PO bị hủy hoàn toàn: " + reason);
+                statement.setInt(4, poId);
+                statement.executeUpdate();
             }
-            c.commit();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
     public boolean cancel(int poId) {
-        try (Connection c = getConnection()) {
-            c.setAutoCommit(false);
-            try (PreparedStatement ps0 = c.prepareStatement(
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+            statement = connection.prepareStatement(
                     "UPDATE import_proposal SET purchase_order_id = NULL "
-                    + "WHERE purchase_order_id = ? AND status = ?")) {
-                ps0.setInt(1, poId);
-                ps0.setString(2, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
-                ps0.executeUpdate();
-            }
-            try (PreparedStatement ps1 = c.prepareStatement(
+                    + "WHERE purchase_order_id = ? AND status = ?");
+            statement.setInt(1, poId);
+            statement.setString(2, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
+            statement.executeUpdate();
+            closeResources();
+            statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ? "
-                    + "WHERE po_id = ? AND status = ?")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
-                ps1.setInt(2, poId);
-                ps1.setString(3, GlobalUtils.PO_STATUS_DRAFT);
-                if (ps1.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
+                    + "WHERE po_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
+            statement.setInt(2, poId);
+            statement.setString(3, GlobalUtils.PO_STATUS_DRAFT);
+            if (statement.executeUpdate() == 0) {
+                connection.rollback();
+                return false;
             }
-            c.commit();
+            connection.commit();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
+        } finally {
+            closeResources();
         }
     }
 
@@ -1056,23 +1135,27 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "      AND po.status IN ('PENDING_CEO', 'APPROVED')"
                 + "  ) "
                 + "ORDER BY w.warehouse_id";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(currentPeriodEnd));
-            ps.setString(2, currentPeriod);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int daysLeft = rs.getInt("days_left");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setDate(1, java.sql.Date.valueOf(currentPeriodEnd));
+            statement.setString(2, currentPeriod);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int daysLeft = resultSet.getInt("days_left");
                 if (daysLeft < 0) {
                     continue;
                 }
                 Map<String, Object> row = new LinkedHashMap<>();
-                row.put("warehouseId", rs.getInt("warehouse_id"));
-                row.put("warehouseName", rs.getString("warehouse_name"));
+                row.put("warehouseId", resultSet.getInt("warehouse_id"));
+                row.put("warehouseName", resultSet.getString("warehouse_name"));
                 row.put("daysLeft", daysLeft);
                 list.add(row);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -1089,28 +1172,32 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "LEFT JOIN user u_r ON u_r.id = p.rejected_by "
                 + "WHERE p.purchase_order_id = ? "
                 + "ORDER BY p.proposal_id ASC";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, poId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, poId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
                 ImportProposal p = new ImportProposal();
-                p.setProposalId(rs.getInt("proposal_id"));
-                p.setProposalCode(rs.getString("proposal_code"));
-                p.setStatus(rs.getString("status"));
-                p.setWarehouseId(rs.getInt("warehouse_id"));
-                p.setCreatedBy(rs.getInt("created_by"));
-                Timestamp pd = rs.getTimestamp("proposal_date");
+                p.setProposalId(resultSet.getInt("proposal_id"));
+                p.setProposalCode(resultSet.getString("proposal_code"));
+                p.setStatus(resultSet.getString("status"));
+                p.setWarehouseId(resultSet.getInt("warehouse_id"));
+                p.setCreatedBy(resultSet.getInt("created_by"));
+                Timestamp pd = resultSet.getTimestamp("proposal_date");
                 p.setProposalDate(pd != null ? pd.toLocalDateTime() : null);
-                p.setWarehouseName(rs.getString("warehouse_name"));
-                p.setCreatedByName(rs.getString("created_by_name"));
-                p.setPoCode(rs.getString("po_code"));
-                p.setPeriod(rs.getString("period"));
-                int poIdVal = rs.getInt("purchase_order_id");
-                p.setPurchaseOrderId(rs.wasNull() ? null : poIdVal);
+                p.setWarehouseName(resultSet.getString("warehouse_name"));
+                p.setCreatedByName(resultSet.getString("created_by_name"));
+                p.setPoCode(resultSet.getString("po_code"));
+                p.setPeriod(resultSet.getString("period"));
+                int poIdVal = resultSet.getInt("purchase_order_id");
+                p.setPurchaseOrderId(resultSet.wasNull() ? null : poIdVal);
                 list.add(p);
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return list;
     }
@@ -1124,14 +1211,18 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  AND pod.unit_price IS NOT NULL "
                 + "ORDER BY po.approved_at DESC "
                 + "LIMIT 1";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, generatorId);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getBigDecimal("unit_price");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, generatorId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getBigDecimal("unit_price");
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            closeResources();
         }
         return null;
     }

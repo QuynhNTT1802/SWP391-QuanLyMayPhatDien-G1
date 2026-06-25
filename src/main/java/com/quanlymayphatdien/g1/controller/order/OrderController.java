@@ -338,6 +338,7 @@ public class OrderController extends HttpServlet {
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
         request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
+        request.setAttribute("canCancelOrder", perms != null && perms.contains("orders.cancel"));
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
@@ -874,7 +875,7 @@ public class OrderController extends HttpServlet {
         } else if (result == -1) {
             session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
-            session.setAttribute("message", "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt.");
+            session.setAttribute("message", "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt hoặc đã duyệt (chưa xuất kho).");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }

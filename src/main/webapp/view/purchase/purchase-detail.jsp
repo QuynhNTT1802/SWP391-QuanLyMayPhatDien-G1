@@ -179,7 +179,7 @@
                                 <input type="hidden" name="id" value="${po.poId}"/>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    Gửi CEO duyệt
+                                    Gửi duyệt
                                 </button>
                             </form>
                             <c:if test="${isOwnerPo}">
@@ -195,7 +195,7 @@
                         <div class="action-bar-top">
                             <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                Duyệt bởi CEO
+                                Duyệt
                             </button>
                             <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -203,7 +203,7 @@
                             </button>
                             <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                Từ chối bởi CEO
+                                Từ chối
                             </button>
                         </div>
                     </c:if>
@@ -246,9 +246,9 @@
                                     <select name="logAction" class="filter-select">
                                         <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
                                         <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu mua</option>
-                                        <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi CEO duyệt</option>
-                                        <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt bởi CEO</option>
-                                        <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối bởi CEO</option>
+                                        <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi duyệt</option>
+                                        <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
+                                        <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
                                         <option value="REQUEST_REVISION" ${logAction == 'REQUEST_REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa đề xuất</option>
                                         <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
                                         <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy phiếu</option>
@@ -564,13 +564,13 @@
         <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
             <div class="modal-host" id="approveModal">
                 <div class="modal-card">
-                    <h3>Duyệt bởi CEO</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu mua <strong><c:out value="${po.poCode}"/></strong> bởi CEO?</div>
+                    <h3>Duyệt</h3>
+                    <div class="modal-sub">Xác nhận duyệt phiếu mua <strong><c:out value="${po.poCode}"/></strong>?</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve">
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn duyệt (CEO) phiếu mua này?');">Xác nhận duyệt (CEO)</button>
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn duyệt phiếu mua này?');">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
@@ -594,15 +594,15 @@
 
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
-                    <h3>Từ chối bởi CEO</h3>
-                    <div class="modal-sub">Phiếu mua sẽ bị từ chối bởi CEO và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
+                    <h3>Từ chối</h3>
+                    <div class="modal-sub">Phiếu mua sẽ bị từ chối và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=reject">
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
                         <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Vượt ngân sách, sai số lượng, thiếu thông tin..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (CEO)</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
                         </div>
                     </form>
                 </div>
