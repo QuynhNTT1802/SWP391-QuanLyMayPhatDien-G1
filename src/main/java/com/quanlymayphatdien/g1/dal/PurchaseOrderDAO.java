@@ -918,7 +918,12 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
     }
 
-    public boolean returnPo(int poId, int ceoId, String reason) {
+    /**
+     * CEO yêu cầu Sale Manager chỉnh sửa các đề xuất gốc trong PO này.
+     * - PO: PENDING_CEO -> NEEDS_REVISION (giữ nguyên mã PO để tra cứu)
+     * - Proposals: PENDING_CEO -> NEEDS_REVISION, purchase_order_id = NULL, role='CEO'
+     */
+    public boolean requestProposalRevision(int poId, int ceoId, String reason) {
         if (poId <= 0 || ceoId <= 0 || reason == null || reason.trim().isEmpty()) {
             return false;
         }
@@ -928,7 +933,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     "UPDATE purchase_order SET status = ?, reject_reason = ?, "
                     + "rejected_by = ?, rejected_at = NOW() "
                     + "WHERE po_id = ? AND status = ?")) {
-                ps1.setString(1, GlobalUtils.PO_STATUS_RETURNED);
+                ps1.setString(1, GlobalUtils.PO_STATUS_NEEDS_REVISION);
                 ps1.setString(2, reason.trim());
                 ps1.setInt(3, ceoId);
                 ps1.setInt(4, poId);
@@ -939,10 +944,15 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 }
             }
             try (PreparedStatement ps2 = c.prepareStatement(
-                    "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
+                    "UPDATE import_proposal SET purchase_order_id = NULL, status = ?, "
+                    + "reject_reason = ?, rejected_by = ?, rejected_at = NOW(), "
+                    + "revision_requested_by_role = ? "
                     + "WHERE purchase_order_id = ?")) {
-                ps2.setString(1, GlobalUtils.STATUS_APPROVED);
-                ps2.setInt(2, poId);
+                ps2.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+                ps2.setString(2, reason.trim());
+                ps2.setInt(3, ceoId);
+                ps2.setString(4, GlobalUtils.REVISION_REQUESTER_CEO);
+                ps2.setInt(5, poId);
                 ps2.executeUpdate();
             }
             c.commit();
@@ -950,131 +960,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
-        }
-    }
-
-    public boolean updateReturnedPo(PurchaseOrder po, List<PurchaseOrderDetail> details, List<Integer> proposalIds) {
-        if (po == null || po.getPoId() <= 0 || details == null || details.isEmpty()) {
-            return false;
-        }
-        Connection c = null;
-        try {
-            c = getConnection();
-            c.setAutoCommit(false);
-
-            try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE purchase_order SET status = ?, note = ?, total_quantity = ?, "
-                    + "rejected_by = NULL, rejected_at = NULL, reject_reason = NULL "
-                    + "WHERE po_id = ? AND status = ?")) {
-                ps.setString(1, GlobalUtils.PO_STATUS_PENDING_CEO);
-                ps.setString(2, po.getNote());
-                ps.setInt(3, po.getTotalQuantity());
-                ps.setInt(4, po.getPoId());
-                ps.setString(5, GlobalUtils.PO_STATUS_RETURNED);
-                if (ps.executeUpdate() == 0) {
-                    c.rollback();
-                    return false;
-                }
-            }
-
-            try (PreparedStatement ps = c.prepareStatement(
-                    "DELETE FROM purchase_order_detail WHERE po_id = ?")) {
-                ps.setInt(1, po.getPoId());
-                ps.executeUpdate();
-            }
-
-            try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO purchase_order_detail "
-                    + "(po_id, proposal_detail_id, generator_id, proposed_quantity, current_stock, unit_price, final_quantity, note) "
-                    + "VALUES (?,?,?,?,?,?,?,?)")) {
-                for (PurchaseOrderDetail d : details) {
-                    ps.setInt(1, po.getPoId());
-                    if (d.getProposalDetailId() != null) {
-                        ps.setInt(2, d.getProposalDetailId());
-                    } else {
-                        ps.setNull(2, java.sql.Types.INTEGER);
-                    }
-                    ps.setInt(3, d.getGeneratorId());
-                    ps.setInt(4, d.getProposedQuantity());
-                    ps.setInt(5, d.getCurrentStock());
-                    if (d.getUnitPrice() != null) {
-                        ps.setBigDecimal(6, d.getUnitPrice());
-                    } else {
-                        ps.setNull(6, java.sql.Types.DECIMAL);
-                    }
-                    ps.setInt(7, d.getFinalQuantity());
-                    ps.setString(8, d.getNote());
-                    ps.addBatch();
-                }
-                ps.executeBatch();
-            }
-
-            try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE import_proposal SET purchase_order_id = NULL "
-                    + "WHERE purchase_order_id = ?")) {
-                ps.setInt(1, po.getPoId());
-                ps.executeUpdate();
-            }
-
-            int linked = 0;
-            if (proposalIds != null && !proposalIds.isEmpty()) {
-                StringBuilder placeholders = new StringBuilder();
-                for (int i = 0; i < proposalIds.size(); i++) {
-                    if (i > 0) {
-                        placeholders.append(",");
-                    }
-                    placeholders.append("?");
-                }
-                try (PreparedStatement ps = c.prepareStatement(
-                        "UPDATE import_proposal SET purchase_order_id = ? "
-                        + "WHERE proposal_id IN (" + placeholders + ") "
-                        + "  AND status = ? "
-                        + "  AND purchase_order_id IS NULL")) {
-                    ps.setInt(1, po.getPoId());
-                    for (int i = 0; i < proposalIds.size(); i++) {
-                        ps.setInt(2 + i, proposalIds.get(i));
-                    }
-                    ps.setString(2 + proposalIds.size(), GlobalUtils.STATUS_APPROVED);
-                    linked = ps.executeUpdate();
-                }
-            }
-
-            try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE purchase_order SET total_proposals = ? WHERE po_id = ?")) {
-                ps.setInt(1, linked);
-                ps.setInt(2, po.getPoId());
-                ps.executeUpdate();
-            }
-
-            try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE import_proposal SET status = ? "
-                    + "WHERE purchase_order_id = ?")) {
-                ps.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
-                ps.setInt(2, po.getPoId());
-                ps.executeUpdate();
-            }
-
-            c.commit();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            try {
-                if (c != null) {
-                    c.rollback();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            return false;
-        } finally {
-            try {
-                if (c != null) {
-                    c.setAutoCommit(true);
-                    c.close();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
     }
 

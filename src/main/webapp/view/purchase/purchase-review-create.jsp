@@ -63,24 +63,6 @@
             .detail-table { width: 100%; border-collapse: collapse; }
             .detail-table th { text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; background: var(--surface); padding: 8px 12px; border-bottom: 1px solid var(--border); }
             .detail-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-            .revision-btn {
-                margin-left: auto;
-                padding: 3px 10px;
-                border: 1px solid #b15c00;
-                border-radius: 4px;
-                background: transparent;
-                color: #b15c00;
-                font-size: 11px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all .12s ease;
-                font-family: inherit;
-                white-space: nowrap;
-            }
-            .revision-btn:hover {
-                background: #b15c00;
-                color: #fff;
-            }
             .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
             .modal-host.show { display: flex; }
             .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
@@ -90,8 +72,6 @@
             .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
             .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
             .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-            .btn-warn { background: #b15c00; color: #fff; border: 1px solid #b15c00; }
-            .btn-warn:hover { background: #8c4900; border-color: #8c4900; }
         </style>
     </head>
     <body>
@@ -174,11 +154,6 @@
                                                             <c:otherwise>${p.proposalDate.format(propFmt)}</c:otherwise>
                                                         </c:choose>
                                                     </span>
-                                                    <c:if test="${canApproveProposal}">
-                                                        <button type="button" class="revision-btn" onclick="event.stopPropagation();openRevertModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')">
-                                                            Yêu cầu chỉnh sửa
-                                                        </button>
-                                                    </c:if>
                                                 </div>
                                                 <div class="proposal-body open">
                                                     <table class="detail-table">
@@ -305,24 +280,6 @@
             </div>
         </div>
 
-        <c:if test="${canApproveProposal}">
-            <div class="modal-host" id="revertModal">
-                <div class="modal-card">
-                    <h3>Yêu cầu chỉnh sửa đề xuất</h3>
-                    <div class="modal-sub" id="revertModalSub">Gửi phiếu lại cho nhân viên chỉnh sửa.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=revertReview">
-                        <input type="hidden" name="id" id="revertProposalId" />
-                        <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                        <textarea name="revertReason" id="revertReasonInput" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('revertModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <div class="toast-host" id="toastHost"></div>
 
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
@@ -356,15 +313,6 @@
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
                 }
             });
-            function openRevertModal(id, code) {
-                var el = document.getElementById('revertProposalId');
-                if (el) el.value = id;
-                var sub = document.getElementById('revertModalSub');
-                if (sub) sub.innerHTML = 'Gửi phiếu <strong>' + code + '</strong> lại cho nhân viên chỉnh sửa.';
-                var reason = document.getElementById('revertReasonInput');
-                if (reason) reason.value = '';
-                openModal('revertModal');
-            }
         </script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
