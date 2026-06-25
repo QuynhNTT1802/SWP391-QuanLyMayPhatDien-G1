@@ -66,6 +66,19 @@
         .row-del-btn:hover { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 25%, transparent); }
         .add-row-btn { margin-top: 12px; font-size: 13px; }
 
+        .scanner-box { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px;
+            background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+            border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+            border-radius: var(--radius); margin-bottom: 14px; }
+        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.04em; }
+        .scanner-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
+            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box; }
+        .scanner-box input:focus { outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+        .scanner-box small { color: var(--muted); font-size: 12px; }
+
         .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
             border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; }
         .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
@@ -106,6 +119,14 @@
         .badge-avail { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 700; background: #d1fae5; color: #059669; text-transform: uppercase; }
         .empty-msg { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
 
+        .scanner-row { display: flex; gap: 8px; align-items: stretch; }
+        .scanner-row input { flex: 1; }
+        .scanner-row .cam-btn { width: 42px; min-width: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
+        .scanner-row .cam-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+        .scanner-row .cam-btn.active { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+        #scannerCamera { display: none; margin-top: 8px; }
+        #scannerCamera video { width: 100%; max-width: 400px; border-radius: var(--radius-sm); }
+
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -122,7 +143,7 @@
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                <a class="btn" href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${receipt.receiptId}">Huỷ</a>
+                <a class="btn" href="javascript:void(0)" onclick="confirmCancelEdit()">Huỷ</a>
                 <c:if test="${isDraft}">
                     <button type="submit" name="submitMode" value="draft" form="receiptForm" class="btn">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -140,7 +161,7 @@
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${receipt.receiptId}">
+            <a class="back-link" href="javascript:void(0)" onclick="confirmCancelEdit()">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Huỷ và quay lại chi tiết phiếu
             </a>
@@ -254,6 +275,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="scanner-box">
+                            <label>Quét barcode nhanh</label>
+                            <div class="scanner-row">
+                                <input type="text" id="scanBox" autocomplete="off"
+                                       placeholder="Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
+                                <button type="button" class="cam-btn" id="camBtn" title="Mở camera để quét" onclick="toggleCamera()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                </button>
+                            </div>
+                            <div id="scannerCamera"></div>
+                            <small>Mỗi lần quét, hệ thống tự reserve serial nếu máy đang IN_STOCK tại kho <strong>${receipt.warehouseName}</strong>.</small>
+                        </div>
                         <table class="detail-table">
                             <thead>
                                 <tr>
@@ -268,7 +301,7 @@
                                 <c:choose>
                                     <c:when test="${not empty receipt.details}">
                                         <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                            <tr data-current="${d.generatorId}">
+                                            <tr data-current="${d.generatorId}" data-inventory-id="${d.inventoryId}" data-receipt-id="${receipt.receiptId}">
                                                 <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                 <td>
                                                     <select name="generatorId" required onchange="onGeneratorChange(this)">
@@ -357,10 +390,12 @@
     window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
     </c:if>
 </script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
 <script>
     var ctx = window.APP_CTX;
     var generatorCache = [];
@@ -396,6 +431,7 @@
     }
 
     function onWarehouseChange() {
+        stopCamera();
         var whId = document.getElementById('warehouseSelect').value;
         if (!whId) {
             generatorCache = [];
@@ -558,9 +594,33 @@
     function removeRow(btn) {
         var tbody = document.getElementById('detailBody');
         if (tbody.querySelectorAll('tr').length <= 1) return;
-        btn.closest('tr').remove();
-        updateRowNumbers();
-        validateInventoryRealtime();
+        var row = btn.closest('tr');
+        var invId = parseInt(row.getAttribute('data-inventory-id') || '0', 10);
+        var receiptId = parseInt(row.getAttribute('data-receipt-id') || ('${receipt.receiptId}') || '0', 10);
+        if (invId > 0 && receiptId > 0 && window.ExportScannerActions) {
+            btn.disabled = true;
+            window.ExportScannerActions.removeScannedSerial(receiptId, invId)
+                .then(function (data) {
+                    if (!data || !data.success) {
+                        btn.disabled = false;
+                        toast((data && data.message) ? data.message : 'Lỗi khi giải phóng serial', 'danger');
+                        return;
+                    }
+                    row.remove();
+                    updateRowNumbers();
+                    validateInventoryRealtime();
+                    toast(data.message || 'Đã giải phóng serial', 'success');
+                })
+                .catch(function (err) {
+                    btn.disabled = false;
+                    console.error(err);
+                    toast('Lỗi kết nối: ' + err.message, 'danger');
+                });
+        } else {
+            row.remove();
+            updateRowNumbers();
+            validateInventoryRealtime();
+        }
     }
     function updateRowNumbers() {
         document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
@@ -696,6 +756,178 @@
             window.SESSION_DATA = null;
         }
     });
+
+    var exportEditScannerLocked = false;
+    var currentEditReceiptId = parseInt('<c:out value="${receipt.receiptId}" default="0"/>', 10) || 0;
+
+    var html5Scanner = null;
+    var isScanning = false;
+
+    function toggleCamera() {
+        if (isScanning) { stopCamera(); }
+        else { startCamera(); }
+    }
+
+    function startCamera() {
+        var camDiv = document.getElementById('scannerCamera');
+        var camBtn = document.getElementById('camBtn');
+        if (!camDiv) return;
+        camDiv.style.display = 'block';
+        camBtn.classList.add('active');
+        camBtn.title = 'Tắt camera';
+        try {
+            html5Scanner = new Html5Qrcode('scannerCamera');
+            html5Scanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                function (decodedText) { onExportEditScanned(decodedText); },
+                function () {}
+            ).then(function () { isScanning = true; })
+            .catch(function (err) {
+                console.error(err);
+                toast('Không thể mở camera: ' + err, 'danger');
+                stopCamera();
+            });
+        } catch (e) {
+            console.error(e);
+            toast('Lỗi: ' + e.message, 'danger');
+            stopCamera();
+        }
+    }
+
+    function stopCamera() {
+        if (html5Scanner) {
+            try { html5Scanner.stop().then(function () { html5Scanner = null; }).catch(function () {}); } catch (e) {}
+        }
+        var camDiv = document.getElementById('scannerCamera');
+        if (camDiv) camDiv.style.display = 'none';
+        var camBtn = document.getElementById('camBtn');
+        if (camBtn) { camBtn.classList.remove('active'); camBtn.title = 'Mở camera để quét'; }
+        isScanning = false;
+    }
+
+    function onExportEditScanned(serial) {
+        if (!serial) return;
+        if (exportEditScannerLocked) return;
+        exportEditScannerLocked = true;
+        var whId = document.getElementById('warehouseSelect').value;
+        if (!whId) { toast('Không xác định được kho', 'danger'); exportEditScannerLocked = false; return; }
+
+        var url = ctx + '/export-receipt?action=addScannedSerial'
+                + '&warehouseId=' + encodeURIComponent(whId)
+                + '&serialNumber=' + encodeURIComponent(serial)
+                + '&receiptId=' + encodeURIComponent(currentEditReceiptId);
+
+        fetch(url, { method: 'POST' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                exportEditScannerLocked = false;
+                if (!data || !data.success) {
+                    toast((data && data.message) ? data.message : 'Lỗi khi quét', 'danger');
+                    return;
+                }
+                var tr = buildEmptyRow();
+                if (data.inventoryId) {
+                    tr.setAttribute('data-inventory-id', data.inventoryId);
+                }
+                tr.setAttribute('data-receipt-id', currentEditReceiptId);
+                var sel = tr.querySelector('select[name="generatorId"]');
+                if (sel && data.generatorId) {
+                    sel.setAttribute('data-current', data.generatorId);
+                    renderGeneratorOptions(sel);
+                }
+                var serialInput = tr.querySelector('input[name="serialNumber"]');
+                if (serialInput) {
+                    serialInput.value = data.serialNumber;
+                    serialInput.readOnly = true;
+                    serialInput.style.cursor = 'pointer';
+                    serialInput.style.background = 'var(--surface-2)';
+                    serialInput.onclick = function () { openSerialModal(serialInput); };
+                }
+                var stockDiv = tr.querySelector('.col-stock');
+                if (stockDiv && data.generatorModel) {
+                    stockDiv.textContent = 'Đã quét: ' + data.generatorModel;
+                    stockDiv.style.color = 'var(--accent)';
+                    stockDiv.style.fontWeight = '600';
+                }
+                document.getElementById('detailBody').appendChild(tr);
+                updateRowNumbers();
+                if (typeof validateInventoryRealtime === 'function') validateInventoryRealtime();
+                toast('Đã reserve serial ' + data.serialNumber, 'success');
+                var scanEl = document.getElementById('scanBox');
+                if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+            })
+            .catch(function (err) {
+                exportEditScannerLocked = false;
+                console.error(err);
+                toast('Lỗi kết nối: ' + err.message, 'danger');
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var scanInput = document.getElementById('scanBox');
+        if (scanInput) {
+            scanInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var val = scanInput.value.trim();
+                    if (val) onExportEditScanned(val);
+                }
+            });
+            scanInput.focus();
+        }
+    });
+
+    var editReceiptLock = false;
+    window.addEventListener('beforeunload', function () { stopCamera(); });
+
+    function confirmCancelEdit() {
+        var ctx = window.APP_CTX;
+        var receiptId = currentEditReceiptId;
+        if (!receiptId) {
+            window.location.href = ctx + '/export-receipt';
+            return;
+        }
+        if (editReceiptLock) return;
+        var status = ('${receipt.status}');
+        var isDraft = status === 'DRAFT';
+        if (!window.ExportScannerActions) {
+            window.location.href = ctx + '/export-receipt?action=detail&id=' + receiptId;
+            return;
+        }
+        var title = isDraft ? 'Huỷ phiếu nháp' : 'Rút phiếu đang chờ duyệt';
+        var body = isDraft
+            ? 'Phiếu nháp sẽ bị huỷ và tất cả serial đã reserve sẽ được trả về kho.'
+            : 'Phiếu đang chờ duyệt sẽ bị rút lại và tất cả serial sẽ được trả về kho. Người duyệt sẽ nhận được thông báo.';
+        var actionLabel = isDraft ? 'Huỷ phiếu nháp' : 'Rút phiếu';
+        window.ExportScannerActions.confirmAction({
+            modalId: 'cancelReceiptModalEdit',
+            title: title,
+            body: body,
+            confirmLabel: actionLabel,
+            danger: true
+        }).then(function () {
+            editReceiptLock = true;
+            return (isDraft
+                    ? window.ExportScannerActions.discardDraft(receiptId)
+                    : window.ExportScannerActions.cancelPending(receiptId));
+        }).then(function (data) {
+            editReceiptLock = false;
+            if (!data || !data.success) {
+                toast((data && data.message) ? data.message : 'Lỗi khi huỷ phiếu', 'danger');
+                return;
+            }
+            toast(data.message || 'Đã huỷ phiếu', 'success');
+            setTimeout(function () {
+                window.location.href = ctx + '/export-receipt';
+            }, 600);
+        }).catch(function (err) {
+            editReceiptLock = false;
+            if (err && err.message === 'cancelled') return;
+            console.error(err);
+            toast('Lỗi kết nối: ' + err.message, 'danger');
+        });
+    }
 </script>
 </body>
 </html>
