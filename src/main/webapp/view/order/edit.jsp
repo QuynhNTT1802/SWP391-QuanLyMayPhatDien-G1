@@ -432,6 +432,7 @@
                 } else {
                     input.value = n;
                 }
+                validateQtyAgainstStock(input.closest('tr'));
             }
             function validateQtyOnBlur(input) {
                 var n = parseInt(input.value);
@@ -484,6 +485,20 @@
                 stockCell.textContent = stock;
                 stockCell.style.color = stock === 0 ? 'var(--danger)' : 'var(--fg)';
                 stockCell.style.fontWeight = stock === 0 ? '600' : '';
+                validateQtyAgainstStock(row);
+            }
+            function validateQtyAgainstStock(row) {
+                var sel = row.querySelector('.gen-select');
+                var qtyInput = row.querySelector('.qty-input');
+                if (!sel || !qtyInput) return;
+                var gid = parseInt(sel.value);
+                var qty = parseInt(qtyInput.value) || 0;
+                var stock = getStockFor(gid);
+                if (gid && qty > stock) {
+                    qtyInput.classList.add('is-invalid');
+                } else {
+                    qtyInput.classList.remove('is-invalid');
+                }
             }
             function updateTotal() {
                 var grand = 0;
