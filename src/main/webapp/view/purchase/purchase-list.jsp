@@ -35,10 +35,17 @@
             .status-rejected { background: #f8d7da; color: #721c24; }
             .status-needs_revision { background: #ede9fe; color: #5b21b6; }
             .status-cancelled { background: #e2e3e5; color: #383d41; }
-            .po-code {
+            .po-code, .code-link {
                 font-family: 'JetBrains Mono', monospace;
-                font-size: 13px;
-                color: var(--muted);
+                font-size: 12.5px;
+            }
+            .code-link {
+                color: var(--accent);
+                text-decoration: none;
+                font-weight: 600;
+            }
+            .code-link:hover {
+                text-decoration: underline;
             }
             .col-status { white-space: nowrap; width: 140px; }
             .col-actions { white-space: nowrap; }
@@ -256,18 +263,18 @@
                                     <th>Ngày tạo</th>
                                     <th>SL đề xuất</th>
                                     <th class="col-status">Trạng thái</th>
-                                    <th class="col-actions">Hành động</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty purchaseOrders}">
-                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu mua nào.</td></tr>
+                                        <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu mua nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="po" items="${purchaseOrders}">
                                             <tr>
-                                                <td><div class="po-code"><c:out value="${po.poCode}"/></div></td>
+                                                <td><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}" class="code-link"><c:out value="${po.poCode}"/></a></td>
                                                 <td><c:out value="${po.period}"/></td>
                                                 <td><c:out value="${po.warehouseName}"/></td>
                                                 <td><c:out value="${po.createdByName}"/></td>
@@ -284,55 +291,7 @@
                                                         <c:otherwise><span class="status-pill"><c:out value="${po.status}"/></span></c:otherwise>
                                                     </c:choose>
                                                 </td>
-                                                <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-
-                                                            <c:if test="${po.status == 'DRAFT' && canCreatePo}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo" style="margin:0;">
-                                                                    <input type="hidden" name="id" value="${po.poId}" />
-                                                                    <button type="submit" class="dropdown-item approve" onclick="return confirm('Xác nhận gửi CEO duyệt phiếu mua này?')">
-                                                                        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                                                        <span class="label">Gửi CEO duyệt</span>
-                                                                    </button>
-                                                                </form>
-                                                                <c:if test="${currentUserId == po.createdBy}">
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${po.poId}" />
-                                                                        <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận hủy phiếu mua này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                            <span class="label">Hủy</span>
-                                                                        </button>
-                                                                    </form>
-                                                                </c:if>
-                                                            </c:if>
-
-                                                            <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve" style="margin:0;">
-                                                                    <input type="hidden" name="id" value="${po.poId}" />
-                                                                    <button type="submit" class="dropdown-item approve" onclick="return confirmApproveAction()">
-                                                                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                        <span class="label">Duyệt bởi CEO</span>
-                                                                    </button>
-                                                                </form>
-                                                                <div class="dropdown-divider"></div>
-                                                                <button type="button" class="dropdown-item reject" onclick="openRejectModal(${po.poId}, '<c:out value="${fn:escapeXml(po.poCode)}"/>')">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    <span class="label">Từ chối bởi CEO</span>
-                                                                </button>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                                
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
@@ -363,91 +322,11 @@
 
         <div class="toast-host" id="toastHost"></div>
 
-        <c:if test="${canApprovePo}">
-            <div class="modal-host" id="rejectModalList">
-                <div class="modal-card">
-                    <h3>Từ chối bởi CEO</h3>
-                    <div class="modal-sub" id="rejectModalSub">Phiếu sẽ bị từ chối bởi CEO và trả về cho Sale Manager.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=reject">
-                        <input type="hidden" name="id" id="rejectPoId" />
-                        <label for="rejectReasonList">Lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReasonList" name="rejectReason" required placeholder="Ví dụ: Vượt ngân sách tháng, cần điều chỉnh số lượng..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (CEO)</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script>
-            function openRejectModal(id, code) {
-                var el = document.getElementById('rejectPoId');
-                if (el) el.value = id;
-                var sub = document.getElementById('rejectModalSub');
-                if (sub) sub.innerHTML = 'Từ chối (CEO) phiếu mua <strong>' + code + '</strong>? Hành động này không thể hoàn tác.';
-                var reason = document.getElementById('rejectReasonList');
-                if (reason) reason.value = '';
-                openModal('rejectModalList');
-            }
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt (CEO) phiếu mua này?');
-            }
-
-            function openModal(id) {
-                var m = document.getElementById(id);
-                if (m) m.classList.add('show');
-            }
-            function closeModal(id) {
-                var m = document.getElementById(id);
-                if (m) m.classList.remove('show');
-            }
-            document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                }
-            });
-
-            function toggleDropdown(btn) {
-                var menu = btn.nextElementSibling;
-                var isOpen = menu.classList.contains('open');
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    if (m !== menu) {
-                        m.classList.remove('open');
-                        if (m.previousElementSibling) m.previousElementSibling.classList.remove('open');
-                    }
-                });
-                if (isOpen) {
-                    menu.classList.remove('open');
-                    btn.classList.remove('open');
-                    return;
-                }
-                var rect = btn.getBoundingClientRect();
-                menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.left = rect.left + 'px';
-                menu.style.minWidth = Math.max(190, rect.width) + 'px';
-                menu.classList.add('open');
-                btn.classList.add('open');
-            }
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                        m.classList.remove('open');
-                    });
-                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                        b.classList.remove('open');
-                    });
-                }
-            });
 
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SESSION_DATA && window.SESSION_DATA.message) {

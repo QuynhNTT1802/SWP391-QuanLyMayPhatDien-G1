@@ -353,20 +353,20 @@
                                     <th>Tổng tiền</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-address">Địa chỉ</th>
-                                    <th class="col-actions">Hành động</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody id="ordersBody">
                                 <c:choose>
                                     <c:when test="${empty orders}">
 
-                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
+                                        <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Không có đơn hàng nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="order" items="${orders}" varStatus="loop">
                                             <tr data-id="${order.orderId}" style="cursor:pointer;">
                                                 <td>
-                                                    <div class="order-code"><c:out value="${order.orderCode}"/></div>
+                                                    <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}" class="code-link"><c:out value="${order.orderCode}"/></a>
                                                 </td>
                                                 <td>
                                                     <div class="user-cell">
@@ -406,36 +406,7 @@
                                                         </c:choose>
                                                 </td>
                                                 <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customer.address}</span></td>
-                                                <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-                                                            <c:if test="${order.status == 'PENDING' && canApproveOrder}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item approve" onclick="openApproveModal(${order.orderId}, '<c:out value="${fn:escapeXml(order.orderCode)}"/>')" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                    <span class="label">Duyệt</span>
-                                                                </button>
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item reject" onclick="openRejectModal(${order.orderId}, '<c:out value="${fn:escapeXml(order.orderCode)}"/>')" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    <span class="label">Từ chối</span>
-                                                                </button>
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item revision" onclick="openRevisionModal(${order.orderId}, '<c:out value="${fn:escapeXml(order.orderCode)}"/>')" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                    <span class="label">Yêu cầu chỉnh sửa</span>
-                                                                </button>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                                
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
@@ -463,54 +434,6 @@
                 </main>
             </div>
         </div>
-
-        <c:if test="${canApproveOrder}">
-            <div class="modal-host" id="approveModalList">
-                <div class="modal-card">
-                    <h3>Duyệt đơn hàng</h3>
-                    <div class="modal-sub" id="approveModalSub">Xác nhận duyệt đơn hàng?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve">
-                        <input type="hidden" name="id" id="approveOrderId" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal-host" id="rejectModalList">
-                <div class="modal-card">
-                    <h3>Từ chối đơn hàng</h3>
-                    <div class="modal-sub" id="rejectModalSub">Đơn hàng sẽ bị huỷ.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=reject">
-                        <input type="hidden" name="orderId" id="rejectOrderId" />
-                        <label for="rejectReasonList">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReasonList" name="rejectReason" required placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, thông tin chưa hợp lệ..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal-host" id="revisionModalList">
-                <div class="modal-card">
-                    <h3>Yêu cầu chỉnh sửa</h3>
-                    <div class="modal-sub" id="revisionModalSub">Gửi đơn hàng lại cho nhân viên chỉnh sửa.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=requestRevision">
-                        <input type="hidden" name="id" id="revisionOrderId" />
-                        <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                        <textarea name="reason" id="revisionReasonList" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('revisionModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
 
         <div class="toast-host" id="toastHost"></div>
 
@@ -570,71 +493,6 @@
         });
     </script>
     <script>
-            function openApproveModal(orderId, orderCode) {
-                document.getElementById('approveOrderId').value = orderId;
-                document.getElementById('approveModalSub').innerHTML = 'Xác nhận duyệt đơn hàng <strong>' + orderCode + '</strong>?';
-                openModal('approveModalList');
-            }
-            function openRejectModal(orderId, orderCode) {
-                document.getElementById('rejectOrderId').value = orderId;
-                document.getElementById('rejectModalSub').innerHTML = 'Từ chối đơn hàng <strong>' + orderCode + '</strong>? Hành động này không thể hoàn tác.';
-                document.getElementById('rejectReasonList').value = '';
-                openModal('rejectModalList');
-            }
-            function openRevisionModal(orderId, orderCode) {
-                document.getElementById('revisionOrderId').value = orderId;
-                document.getElementById('revisionModalSub').innerHTML = 'Gửi đơn hàng <strong>' + orderCode + '</strong> lại cho nhân viên chỉnh sửa.';
-                document.getElementById('revisionReasonList').value = '';
-                openModal('revisionModalList');
-            }
-
-            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
-            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
-            document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                    closeCustomerModal();
-                }
-            });
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
-            }
-
-            function toggleDropdown(btn) {
-                var menu = btn.nextElementSibling;
-                var isOpen = menu.classList.contains('open');
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    if (m !== menu) {
-                        m.classList.remove('open');
-                        m.previousElementSibling.classList.remove('open');
-                    }
-                });
-                if (isOpen) {
-                    menu.classList.remove('open');
-                    btn.classList.remove('open');
-                    return;
-                }
-                var rect = btn.getBoundingClientRect();
-                menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.left = rect.left + 'px';
-                menu.style.minWidth = Math.max(170, rect.width) + 'px';
-                menu.classList.add('open');
-                btn.classList.add('open');
-            }
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                        m.classList.remove('open');
-                    });
-                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                        b.classList.remove('open');
-                    });
-                }
-            });
 
             function showCustomerModal(el) {
             event.stopPropagation();

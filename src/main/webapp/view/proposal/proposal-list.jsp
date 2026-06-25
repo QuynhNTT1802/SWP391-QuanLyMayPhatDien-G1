@@ -57,10 +57,17 @@
                 background: #fff3cd;
                 color: #856404;
             }
-            .order-code {
+            .order-code, .code-link {
                 font-family: 'JetBrains Mono', monospace;
                 font-size: 13px;
-                color: var(--muted);
+            }
+            .code-link {
+                color: var(--accent);
+                text-decoration: none;
+                font-weight: 600;
+            }
+            .code-link:hover {
+                text-decoration: underline;
             }
             .col-status {
                 white-space: nowrap;
@@ -281,13 +288,13 @@
                                 <th>Deadline</th>
                                 <th>Phiếu mua</th>
                                 <th class="col-status">Trạng thái</th>
-                                <th class="col-actions">Hành động</th>
+                                                
                                 </tr>
                             </thead>
                             <tbody id="proposalsBody">
                                 <c:choose>
                                     <c:when test="${empty proposals}">
-                                        <tr><td colspan="${canCreatePo ? 10 : 9}" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu đề xuất nào.</td></tr>
+                                        <tr><td colspan="${canCreatePo ? 9 : 8}" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu đề xuất nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="p" items="${proposals}" varStatus="loop">
@@ -299,7 +306,7 @@
                                                     </td>
                                                 </c:if>
                                                 <td>
-                                                    <div class="order-code"><c:out value="${p.proposalCode}"/></div>
+                                                    <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${p.proposalId}" class="code-link"><c:out value="${p.proposalCode}"/></a>
                                                 </td>
                                                 <td><c:out value="${p.createdByName}"/></td>
                                                 <td>
@@ -363,94 +370,7 @@
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
                                                     </c:choose>
                                                 </td>
-                                                <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/proposal?action=detail&id=${p.proposalId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-
-                                                            <c:if test="${empty p.purchaseOrderId}">
-                                                                <c:if test="${p.status == 'DRAFT' && currentUserId == p.createdBy}">
-                                                                    <div class="dropdown-divider"></div>
-                                                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/proposal?action=edit&id=${p.proposalId}">
-                                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                        <span class="label">Chỉnh sửa</span>
-                                                                    </a>
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <input type="hidden" name="submitType" value="submit" />
-                                                                        <button type="submit" class="dropdown-item approve" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                                                            <span class="label">Gửi duyệt</span>
-                                                                        </button>
-                                                                    </form>
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất nháp này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                            <span class="label">Huỷ phiếu</span>
-                                                                        </button>
-                                                                    </form>
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <button type="submit" class="dropdown-item danger" onclick="return confirm('Xác nhận xoá phiếu đề xuất nháp này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                                                                            <span class="label">Xoá</span>
-                                                                        </button>
-                                                                    </form>
-                                                                </c:if>
-
-                                                                <c:if test="${p.status == 'NEEDS_REVISION' && currentUserId == p.createdBy}">
-                                                                    <div class="dropdown-divider"></div>
-                                                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/proposal?action=edit&id=${p.proposalId}">
-                                                                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                        <span class="label">Chỉnh sửa</span>
-                                                                    </a>
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <input type="hidden" name="submitType" value="submit" />
-                                                                        <button type="submit" class="dropdown-item approve" onclick="return confirm('Xác nhận gửi duyệt lại?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                                                            <span class="label">Gửi duyệt lại</span>
-                                                                        </button>
-                                                                    </form>
-                                                                </c:if>
-
-                                                                <c:if test="${p.status == 'PENDING' && canApproveProposal}">
-                                                                    <div class="dropdown-divider"></div>
-                                                                    <button class="dropdown-item approve" onclick="openApproveModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
-                                                                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                        <span class="label">Duyệt bởi Sale Manager</span>
-                                                                    </button>
-                                                                </c:if>
-
-                                                                <c:if test="${p.status == 'PENDING' && canRejectProposal}">
-                                                                    <div class="dropdown-divider"></div>
-                                                                    <button class="dropdown-item reject" onclick="openRejectModal(${p.proposalId}, '<c:out value="${fn:escapeXml(p.proposalCode)}"/>')" type="button">
-                                                                        <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                        <span class="label">Từ chối bởi Sale Manager</span>
-                                                                    </button>
-                                                                </c:if>
-
-                                                                <c:if test="${p.status == 'PENDING' && canCancelProposal}">
-                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="margin:0;">
-                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
-                                                                        <div class="dropdown-divider"></div>
-                                                                        <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
-                                                                            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                                                            <span class="label">Huỷ phiếu</span>
-                                                                        </button>
-                                                                    </form>
-                                                                </c:if>
-                                                            </c:if>
-                                                        </div>
-                                                    </div>
-                                                </td>
+                                                
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
@@ -482,137 +402,11 @@
 
         <div class="toast-host" id="toastHost"></div>
 
-        <c:if test="${canApproveProposal || canRejectProposal}">
-            <div class="modal-host" id="approveModalList">
-                <div class="modal-card">
-                    <h3>Duyệt bởi Sale Manager</h3>
-                    <div class="modal-sub" id="approveModalSub">Xác nhận duyệt phiếu đề xuất bởi Sale Manager?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve">
-                        <input type="hidden" name="id" id="approveProposalId" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt (Sale Manager)</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${canRejectProposal}">
-            <div class="modal-host" id="rejectModalList">
-                <div class="modal-card">
-                    <h3>Từ chối bởi Sale Manager</h3>
-                    <div class="modal-sub" id="rejectModalSub">Phiếu sẽ bị từ chối bởi Sale Manager và không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
-                        <input type="hidden" name="id" id="rejectProposalId" />
-                        <label for="rejectReasonList">Lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReasonList" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (Sale Manager)</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${canApproveProposal}">
-            <div class="modal-host" id="revisionModalList">
-                <div class="modal-card">
-                    <h3>Yêu cầu chỉnh sửa</h3>
-                    <div class="modal-sub" id="revisionModalSub">Gửi phiếu lại cho nhân viên chỉnh sửa.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=revision">
-                        <input type="hidden" name="id" id="revisionProposalId" />
-                        <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                        <textarea name="revisionReason" id="revisionReasonList" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('revisionModalList')">Huỷ</button>
-                            <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script>
-            function openApproveModal(id, code) {
-                var el = document.getElementById('approveProposalId');
-                if (el) el.value = id;
-                var sub = document.getElementById('approveModalSub');
-                if (sub) sub.innerHTML = 'Xác nhận duyệt (Sale Manager) phiếu đề xuất <strong>' + code + '</strong>?';
-                openModal('approveModalList');
-            }
-            function openRejectModal(id, code) {
-                var el = document.getElementById('rejectProposalId');
-                if (el) el.value = id;
-                var sub = document.getElementById('rejectModalSub');
-                if (sub) sub.innerHTML = 'Từ chối (Sale Manager) phiếu đề xuất <strong>' + code + '</strong>? Hành động này không thể hoàn tác.';
-                var reason = document.getElementById('rejectReasonList');
-                if (reason) reason.value = '';
-                openModal('rejectModalList');
-            }
-            function openRevisionModal(id, code) {
-                var el = document.getElementById('revisionProposalId');
-                if (el) el.value = id;
-                var sub = document.getElementById('revisionModalSub');
-                if (sub) sub.innerHTML = 'Gửi phiếu <strong>' + code + '</strong> lại cho nhân viên chỉnh sửa.';
-                var reason = document.getElementById('revisionReasonList');
-                if (reason) reason.value = '';
-                openModal('revisionModalList');
-            }
-
-            function openModal(id) {
-                var m = document.getElementById(id);
-                if (m) m.classList.add('show');
-            }
-            function closeModal(id) {
-                var m = document.getElementById(id);
-                if (m) m.classList.remove('show');
-            }
-            document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                }
-            });
-
-            function toggleDropdown(btn) {
-                var menu = btn.nextElementSibling;
-                var isOpen = menu.classList.contains('open');
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    if (m !== menu) {
-                        m.classList.remove('open');
-                        if (m.previousElementSibling) m.previousElementSibling.classList.remove('open');
-                    }
-                });
-                if (isOpen) {
-                    menu.classList.remove('open');
-                    btn.classList.remove('open');
-                    return;
-                }
-                var rect = btn.getBoundingClientRect();
-                menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.left = rect.left + 'px';
-                menu.style.minWidth = Math.max(190, rect.width) + 'px';
-                menu.classList.add('open');
-                btn.classList.add('open');
-            }
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                        m.classList.remove('open');
-                    });
-                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                        b.classList.remove('open');
-                    });
-                }
-            });
 
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SESSION_DATA && window.SESSION_DATA.message) {
