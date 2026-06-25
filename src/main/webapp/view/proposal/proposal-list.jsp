@@ -273,20 +273,21 @@
                                     <c:if test="${canCreatePo}">
                                         <th class="col-check"><input type="checkbox" class="checkbox" id="selectAll" title="Chọn tất cả"/></th>
                                     </c:if>
-                                    <th>Mã phiếu</th>
-                                    <th>Người tạo</th>
-                                    <th>Ngày tạo</th>
-                                    <th>Tháng</th>
-                                    <th>Kho</th>
-                                    <th>Phiếu mua</th>
-                                    <th class="col-status">Trạng thái</th>
-                                    <th class="col-actions">Hành động</th>
+                                <th>Mã phiếu</th>
+                                <th>Người tạo</th>
+                                <th>Ngày tạo</th>
+                                <th>Tháng</th>
+                                <th>Kho</th>
+                                <th>Deadline</th>
+                                <th>Phiếu mua</th>
+                                <th class="col-status">Trạng thái</th>
+                                <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="proposalsBody">
                                 <c:choose>
                                     <c:when test="${empty proposals}">
-                                        <tr><td colspan="${canCreatePo ? 9 : 8}" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu đề xuất nào.</td></tr>
+                                        <tr><td colspan="${canCreatePo ? 10 : 9}" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu đề xuất nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="p" items="${proposals}" varStatus="loop">
@@ -311,8 +312,37 @@
                                                 <td><c:out value="${p.warehouseName}"/></td>
                                                 <td>
                                                     <c:choose>
+                                                        <c:when test="${p.period == currentPeriod}">
+                                                            <span style="font-size:11px; color:var(--muted);">—</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:set var="deadlineDate" value="${periodDeadlines[p.period]}" />
+                                                            <c:choose>
+                                                                <c:when test="${deadlineDate == null}">
+                                                                    <span style="font-size:11px; color:var(--muted);">—</span>
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <c:set var="deadlineStr" value="${deadlineDate.toString()}" />
+                                                                    <c:choose>
+                                                                        <c:when test="${deadlineDate.isBefore(currentDate)}">
+                                                                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--danger); font-weight:600;" title="Đã quá deadline">${deadlineStr}</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);" title="Deadline gom/duyệt">${deadlineStr}</span>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${not empty p.poCode && canViewPo}">
+                                                            <strong><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${p.purchaseOrderId}" class="po-link" style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none;" title="Xem chi tiết phiếu mua"><c:out value="${p.poCode}"/></a></strong>
+                                                        </c:when>
                                                         <c:when test="${not empty p.poCode}">
-                                                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${p.purchaseOrderId}" class="po-link" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent);"><c:out value="${p.poCode}"/></a>
+                                                            <strong style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--muted);" title="Bạn không có quyền xem phiếu mua"><c:out value="${p.poCode}"/></strong>
                                                         </c:when>
                                                         <c:otherwise>
                                                             <span style="color: var(--muted); font-size: 12px;">—</span>
@@ -357,6 +387,13 @@
                                                                         <button type="submit" class="dropdown-item approve" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">
                                                                             <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                                                                             <span class="label">Gửi duyệt</span>
+                                                                        </button>
+                                                                    </form>
+                                                                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="margin:0;">
+                                                                        <input type="hidden" name="id" value="${p.proposalId}" />
+                                                                        <button type="submit" class="dropdown-item cancel" onclick="return confirm('Xác nhận huỷ phiếu đề xuất nháp này?')">
+                                                                            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                                                            <span class="label">Huỷ phiếu</span>
                                                                         </button>
                                                                     </form>
                                                                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="margin:0;">
