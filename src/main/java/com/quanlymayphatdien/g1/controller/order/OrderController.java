@@ -783,18 +783,24 @@ public class OrderController extends HttpServlet {
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
 
-        // Kiểm tra tồn kho trước khi duyệt
+        // Kiểm tra tồn kho trước khi duyệt (trừ số lượng đã được duyệt ở các đơn khác)
         List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
         if (details != null && !details.isEmpty()) {
             java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
+            java.util.Map<Integer, Integer> reservedMap = saleorderdao.getApprovedQuantitiesByGeneratorExcept(id);
             for (OrderDetail d : details) {
                 int stock = stockMap.get(d.getGeneratorId()) != null ? stockMap.get(d.getGeneratorId()) : 0;
-                if (d.getQuantity() > stock) {
+                int reserved = reservedMap.getOrDefault(d.getGeneratorId(), 0);
+                int available = stock - reserved;
+                if (available < 0) available = 0;
+                if (d.getQuantity() > available) {
                     String genName = generatorDao.findById(d.getGeneratorId()) != null
                             ? generatorDao.findById(d.getGeneratorId()).getModel() : ("#" + d.getGeneratorId());
                     request.getSession().setAttribute("message",
                             "Không thể duyệt: máy \"" + genName + "\" cần " + d.getQuantity()
-                                    + " nhưng tồn kho chỉ có " + stock + ". Vui lòng giảm số lượng hoặc nhập thêm hàng.");
+                                    + " nhưng tồn kho khả dụng chỉ có " + available
+                                    + " (đã có " + reserved + " được duyệt ở đơn khác)."
+                                    + " Vui lòng giảm số lượng hoặc nhập thêm hàng.");
                     response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
                     return;
                 }

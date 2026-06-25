@@ -317,7 +317,10 @@
                             </c:if>
 
                             <c:if test="${proposal.status == 'PENDING' && canApprove && isWithinDeadline}">
-                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" id="approveForm" style="display:none;">
+                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                </form>
+                                <button type="button" class="btn btn-primary" onclick="if(confirm('Xác nhận duyệt phiếu đề xuất này?')) document.getElementById('approveForm').submit();">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Duyệt
                                 </button>
@@ -674,20 +677,6 @@
         </div>
 
         <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canApprove}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu đề xuất <strong><c:out value="${proposal.proposalCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" id="approveForm">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa</h3>
