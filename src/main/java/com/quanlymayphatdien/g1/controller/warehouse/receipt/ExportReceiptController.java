@@ -212,24 +212,45 @@ public class ExportReceiptController extends HttpServlet {
             int orderId = parseId(orderIdStr);
             SaleOrder order = new SaleOrderDAO().findById(orderId);
             if (order != null && "APPROVED".equalsIgnoreCase(order.getStatus())) {
-                List<OrderDetail> ods = new OrderDetailDAO().findByOrderId(orderId);
+                List<OrderDetail> ods = new OrderDetailDAO().findGeneratorById(orderId);
                 Receipt prefill = new Receipt();
                 prefill.setOrderId(orderId);
                 prefill.setReceiptType(TYPE);
                 prefill.setNote("Tạo từ đơn " + order.getOrderCode());
-                List<ReceiptDetail> ds = new ArrayList<>();
+                List<Map<String, Object>> orderRowList = new ArrayList<>();
+                int expectedRows = 0;
                 for (OrderDetail od : ods) {
                     int qty = od.getQuantity() > 0 ? od.getQuantity() : 1;
                     for (int k = 0; k < qty; k++) {
-                        ReceiptDetail rd = new ReceiptDetail();
-                        rd.setGeneratorId(od.getGeneratorId());
-                        rd.setNote(od.getNote());
-                        ds.add(rd);
+                        Map<String, Object> row = new LinkedHashMap<>();
+                        row.put("generatorId", od.getGeneratorId());
+                        row.put("generatorModel", od.getGeneratorModel() != null ? od.getGeneratorModel() : "");
+                        String brand = lookupGeneratorBrand(od.getGeneratorId());
+                        row.put("brandName", brand);
+                        row.put("note", od.getNote() != null ? od.getNote() : "");
+                        orderRowList.add(row);
+
+                        expectedRows++;
                     }
                 }
-                prefill.setDetails(ds);
+                prefill.setDetails(new ArrayList<>());
                 request.setAttribute("receipt", prefill);
                 request.setAttribute("order", order);
+                request.setAttribute("fromOrder", Boolean.TRUE);
+                request.setAttribute("expectedRows", expectedRows);
+                request.setAttribute("orderRowList", orderRowList);
+
+                List<Map<String, Object>> orderRequirements = new ArrayList<>();
+                for (OrderDetail od : ods) {
+                    Map<String, Object> req = new LinkedHashMap<>();
+                    req.put("generatorId", od.getGeneratorId());
+                    req.put("generatorModel", od.getGeneratorModel() != null ? od.getGeneratorModel() : "");
+                    String brand = lookupGeneratorBrand(od.getGeneratorId());
+                    req.put("brandName", brand);
+                    req.put("quantity", od.getQuantity() > 0 ? od.getQuantity() : 1);
+                    orderRequirements.add(req);
+                }
+                request.setAttribute("orderRequirements", orderRequirements);
 
                 List<String> stockWarnings = new ArrayList<>();
                 List<Integer> shortGenIds = new ArrayList<>();
@@ -732,6 +753,18 @@ public class ExportReceiptController extends HttpServlet {
             body.put("currentStatus", inv.getStatus());
             body.put("currentWarehouseId", inv.getWarehouseId());
             body.put("currentWarehouseName", inv.getWarehouseName());
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        String mode = request.getParameter("mode");
+        if ("validate".equals(mode)) {
+            body.put("success", true);
+            body.put("generatorId", inv.getGeneratorId());
+            body.put("generatorModel", inv.getGeneratorModel());
+            body.put("generatorBrand", inv.getGeneratorBrand());
+            body.put("serialNumber", serial);
+            body.put("message", "Serial hop le");
             new Gson().toJson(body, response.getWriter());
             return;
         }
@@ -1774,5 +1807,18 @@ public class ExportReceiptController extends HttpServlet {
                         + " máy, chỉ còn " + onHand + " máy. Vui lòng nhập thêm " + shortage + " máy.");
             }
         }
+    }
+
+    private String lookupGeneratorBrand(int generatorId) {
+        Generator gen = genDAO.findById(generatorId);
+        if (gen == null) return "";
+        if (gen.getCategories() != null) {
+            for (Category c : gen.getCategories()) {
+                if ("brand".equals(c.getType())) {
+                    return c.getName() != null ? c.getName() : "";
+                }
+            }
+        }
+        return "";
     }
 }

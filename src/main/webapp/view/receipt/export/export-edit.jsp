@@ -97,28 +97,6 @@
         .hero-avatar.edit { background: oklch(58% 0.16 250); }
         .field-error { display: none; font-size: 11px; color: #dc3545; margin-top: 3px; }
 
-        .side-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s; }
-        .side-panel-overlay.show { opacity: 1; visibility: visible; }
-        .side-panel { position: fixed; top: 0; right: -420px; width: 400px; max-width: 100%; height: 100%; background: var(--bg); box-shadow: -8px 0 32px rgba(0,0,0,0.1); z-index: 1001; transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }
-        .side-panel.show { right: 0; }
-        .side-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .side-panel-title { font-size: 18px; font-weight: 700; margin: 0; }
-        .side-panel-close { width: 32px; height: 32px; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 22px; display: grid; place-items: center; border-radius: var(--radius-sm); }
-        .side-panel-close:hover { background: var(--surface-2); color: var(--fg); }
-        .side-panel-body { flex: 1; overflow-y: auto; padding: 24px; }
-        .serial-search-box { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--fg); font-size: 14px; font-family: var(--font-ui); box-sizing: border-box; }
-        .serial-search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        .serial-list-wrap { display: flex; flex-direction: column; gap: 12px; }
-        .serial-card { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
-        .serial-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(13,110,253,0.1); transform: translateY(-1px); }
-        .serial-card-left { display: flex; flex-direction: column; gap: 6px; }
-        .serial-number-text { font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
-        .serial-meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
-        .serial-card-icon { color: var(--accent); opacity: 0; transition: 0.2s; transform: translateX(-8px); }
-        .serial-card:hover .serial-card-icon { opacity: 1; transform: translateX(0); }
-        .badge-avail { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 12px; font-size: 10px; font-weight: 700; background: #d1fae5; color: #059669; text-transform: uppercase; }
-        .empty-msg { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 14px; }
-
         .scanner-row { display: flex; gap: 8px; align-items: stretch; }
         .scanner-row input { flex: 1; }
         .scanner-row .cam-btn { width: 42px; min-width: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
@@ -144,12 +122,6 @@
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="javascript:void(0)" onclick="confirmCancelEdit()">Huỷ</a>
-                <c:if test="${isDraft}">
-                    <button type="submit" name="submitMode" value="draft" form="receiptForm" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        Lưu nháp
-                    </button>
-                </c:if>
                 <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                     <c:choose>
@@ -215,7 +187,7 @@
                                 </c:forEach>
                             </ul>
                             <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
-                                Bạn có thể <strong>Lưu nháp</strong> để xử lý sau, hoặc nhập thêm máy vào kho rồi cập nhật lại phiếu.
+                                Vui lòng nhập thêm máy vào kho rồi cập nhật lại phiếu.
                             </div>
                         </div>
                     </div>
@@ -271,7 +243,7 @@
                                 <div class="alert-title">Tồn kho không đủ để xuất</div>
                                 <ul id="realtimeWarnList"></ul>
                                 <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
-                                    Bạn có thể <strong>Lưu nháp</strong> để xử lý sau, hoặc nhập thêm máy vào kho rồi cập nhật lại phiếu.
+                                    Vui lòng nhập thêm máy vào kho rồi cập nhật lại phiếu.
                                 </div>
                             </div>
                         </div>
@@ -301,16 +273,22 @@
                                 <c:choose>
                                     <c:when test="${not empty receipt.details}">
                                         <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                            <tr data-current="${d.generatorId}" data-inventory-id="${d.inventoryId}" data-receipt-id="${receipt.receiptId}">
+                                            <tr data-inventory-id="${d.inventoryId}" data-receipt-id="${receipt.receiptId}">
                                                 <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                 <td>
-                                                    <select name="generatorId" required onchange="onGeneratorChange(this)">
+                                                    <select name="generatorId" data-current="${d.generatorId}" required onchange="onGeneratorChange(this)">
                                                         <option value="">-- Chọn máy --</option>
                                                     </select>
                                                     <div class="col-stock"></div>
                                                     <span class="field-error"></span>
                                                 </td>
-                                                <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" value="<c:out value='${d.serialNumber}'/>" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error"></span></td>
+                                                <td>
+                                                    <select name="serialNumber" data-current="${d.serialNumber}" required onchange="onSerialChange(this)" style="font-family: var(--font-mono); font-size: 12px;">
+                                                        <option value="">-- Chọn serial --</option>
+                                                        <option value="<c:out value='${d.serialNumber}'/>" selected><c:out value="${d.serialNumber}"/></option>
+                                                    </select>
+                                                    <span class="field-error"></span>
+                                                </td>
                                                 <td><input type="text" name="detailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -330,7 +308,12 @@
                                                 <div class="col-stock"></div>
                                                 <span class="field-error"></span>
                                             </td>
-                                            <td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error"></span></td>
+                                            <td>
+                                                <select name="serialNumber" required onchange="onSerialChange(this)" style="font-family: var(--font-mono); font-size: 12px;">
+                                                    <option value="">-- Chọn máy trước --</option>
+                                                </select>
+                                                <span class="field-error"></span>
+                                            </td>
                                             <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -354,28 +337,7 @@
     </div>
 </div>
 
-<div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSerialPanel()"></div>
-<div class="side-panel" id="sidePanel">
-    <div class="side-panel-head">
-        <h3 class="side-panel-title">Chọn Số Serial</h3>
-        <button class="side-panel-close" onclick="closeSerialPanel()">&times;</button>
-    </div>
-    <div class="side-panel-body">
-        <div style="display:flex; gap: 8px; margin-bottom: 20px;">
-            <input type="text" id="serialSearchInput" class="serial-search-box" placeholder="Tìm nhanh Serial..."/>
-            <select id="serialSortOrder" class="serial-search-box" style="width:auto;min-width:120px;">
-                <option value="desc">Mới nhất</option>
-                <option value="asc">Cũ nhất</option>
-            </select>
-        </div>
-        <div id="serialLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
-            </svg><br>Đang tải...
-        </div>
-        <div class="serial-list-wrap" id="serialList"></div>
-    </div>
-</div>
+
 
 <div class="toast-host" id="toastHost"></div>
 <script>
@@ -412,8 +374,6 @@
         }<c:if test="${!st.last}">,</c:if>
         </c:forEach>
     ];
-    var currentSerialInput = null;
-
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
     }
@@ -444,9 +404,7 @@
             .then(function (data) {
                 generatorCache = data || [];
                 refreshAllGeneratorSelects();
-                document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
-                    if (sel.value) onGeneratorChange(sel);
-                });
+                preSelectExistingRows();
                 validateInventoryRealtime();
             });
     }
@@ -466,107 +424,14 @@
             if (sel.value) stockInfo.textContent = 'Tồn kho: ' + stock + ' máy';
             else stockInfo.textContent = '';
         }
-        var serialInput = row.querySelector('input[name="serialNumber"]');
-        if (serialInput) serialInput.value = '';
+        var serialSelect = row.querySelector('select[name="serialNumber"]');
+        populateSerialOptions(serialSelect, parseInt(sel.value, 10));
         validateInventoryRealtime();
     }
 
-    function openSerialModal(inputElem) {
-        var whId = document.getElementById('warehouseSelect').value;
-        if (!whId) { toast('Vui lòng chọn Kho trước!', 'danger'); return; }
-        var tr = inputElem.closest('tr');
-        var genSelect = tr.querySelector('select[name="generatorId"]');
-        var genId = genSelect.value;
-        if (!genId) { toast('Vui lòng chọn Máy phát trước!', 'danger'); return; }
-        currentSerialInput = inputElem;
-        document.getElementById('serialSearchInput').value = '';
-        document.getElementById('serialSortOrder').value = 'desc';
-        document.getElementById('sidePanelOverlay').classList.add('show');
-        document.getElementById('sidePanel').classList.add('show');
-        document.getElementById('serialList').innerHTML = '';
-        document.getElementById('serialLoading').style.display = 'block';
-        setTimeout(function() { document.getElementById('serialSearchInput').focus(); }, 300);
-        var warehouseId = parseInt(whId, 10);
-        var gId = parseInt(genId, 10);
-        var filtered = [];
-        for (var k = 0; k < allSerials.length; k++) {
-            var s = allSerials[k];
-            if (s.warehouseId === warehouseId && s.generatorId === gId) {
-                filtered.push(s);
-            }
-        }
-        document.getElementById('serialLoading').style.display = 'none';
-        var listWrap = document.getElementById('serialList');
-        if (filtered.length === 0) {
-            listWrap.innerHTML = '<div class="empty-msg">Không có serial nào trong kho đang rảnh.</div>';
-            return;
-        }
-        var selectedSerials = Array.from(document.querySelectorAll('input[name="serialNumber"]'))
-            .map(function(inp) { return inp.value; }).filter(function(val) { return val !== ''; });
-        var count = 0;
-        for (var i = 0; i < filtered.length; i++) {
-            var sn = filtered[i];
-            if (selectedSerials.indexOf(sn.serialNumber) === -1) {
-                (function(serialNumber, createdAt) {
-                    var dateStr = 'Chưa xác định';
-                    var timestamp = 0;
-                    if (createdAt) {
-                        var d = new Date(createdAt);
-                        if (!isNaN(d.getTime())) {
-                            timestamp = d.getTime();
-                            var dd = String(d.getDate()).padStart(2, '0');
-                            var mm = String(d.getMonth() + 1).padStart(2, '0');
-                            var yyyy = d.getFullYear();
-                            dateStr = dd + '/' + mm + '/' + yyyy;
-                        }
-                    }
-                    var card = document.createElement('div');
-                    card.className = 'serial-card';
-                    card.setAttribute('data-serial', serialNumber.toLowerCase());
-                    card.setAttribute('data-date', dateStr);
-                    card.setAttribute('data-time', timestamp);
-                    card.innerHTML = '<div class="serial-card-left">'
-                        + '<div class="serial-number-text">' + escapeHtml(serialNumber) + '</div>'
-                        + '<div class="serial-meta"><span>' + dateStr + '</span><span class="badge-avail">IN STOCK</span></div>'
-                        + '</div>'
-                        + '<div class="serial-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>';
-                    card.onclick = function() {
-                        currentSerialInput.value = serialNumber;
-                        closeSerialPanel();
-                    };
-                    listWrap.appendChild(card);
-                    count++;
-                })(sn.serialNumber, sn.createdAt);
-            }
-        }
-        if (count === 0) {
-            listWrap.innerHTML = '<div class="empty-msg">Tất cả serial khả dụng đã được chọn.</div>';
-        }
-        filterAndSortSerials();
-    }
-
-    function filterAndSortSerials() {
-        var query = document.getElementById('serialSearchInput').value.toLowerCase().trim();
-        var sortOrder = document.getElementById('serialSortOrder').value;
-        var listWrap = document.getElementById('serialList');
-        var items = Array.from(listWrap.querySelectorAll('.serial-card'));
-        items.sort(function(a, b) {
-            var timeA = parseInt(a.getAttribute('data-time') || '0', 10);
-            var timeB = parseInt(b.getAttribute('data-time') || '0', 10);
-            if (sortOrder === 'desc') return timeB - timeA;
-            return timeA - timeB;
-        });
-        for (var i = 0; i < items.length; i++) {
-            var text = items[i].getAttribute('data-serial');
-            items[i].style.display = text.indexOf(query) !== -1 ? 'flex' : 'none';
-            listWrap.appendChild(items[i]);
-        }
-    }
-
-    function closeSerialPanel() {
-        document.getElementById('sidePanelOverlay').classList.remove('show');
-        document.getElementById('sidePanel').classList.remove('show');
-        currentSerialInput = null;
+    function onSerialChange(sel) {
+        filterAlreadySelected();
+        validateInventoryRealtime();
     }
 
     function escapeHtml(s) {
@@ -574,11 +439,26 @@
         return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function filterAlreadySelected() {
+        var selectedSerials = {};
+        document.querySelectorAll('#detailBody select[name="serialNumber"]').forEach(function (s) {
+            if (s.value) selectedSerials[s.value] = true;
+        });
+        document.querySelectorAll('#detailBody select[name="serialNumber"]').forEach(function (sel) {
+            var currentVal = sel.value;
+            for (var j = 0; j < sel.options.length; j++) {
+                var opt = sel.options[j];
+                if (!opt.value) continue;
+                opt.disabled = selectedSerials[opt.value] && opt.value !== currentVal;
+            }
+        });
+    }
+
     function buildEmptyRow() {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><div class="col-stock"></div><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="serialNumber" placeholder="Click để chọn S/N" required readonly style="cursor:pointer;background:var(--surface-2);" onclick="openSerialModal(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><select name="serialNumber" required onchange="onSerialChange(this)" style="font-family: var(--font-mono); font-size: 12px;"><option value="">-- Chọn máy trước --</option></select><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
         renderGeneratorOptions(tr.querySelector('select[name="generatorId"]'));
@@ -590,6 +470,7 @@
         tbody.appendChild(buildEmptyRow());
         updateRowNumbers();
         validateInventoryRealtime();
+        filterAlreadySelected();
     }
     function removeRow(btn) {
         var tbody = document.getElementById('detailBody');
@@ -742,7 +623,7 @@
         }
         var banner = document.getElementById('realtimeWarn');
         if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
-            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy hoặc Lưu nháp để xử lý sau.', 'danger');
+            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy.', 'danger');
             return false;
         }
         return valid;
@@ -836,13 +717,18 @@
                     sel.setAttribute('data-current', data.generatorId);
                     renderGeneratorOptions(sel);
                 }
-                var serialInput = tr.querySelector('input[name="serialNumber"]');
-                if (serialInput) {
-                    serialInput.value = data.serialNumber;
-                    serialInput.readOnly = true;
-                    serialInput.style.cursor = 'pointer';
-                    serialInput.style.background = 'var(--surface-2)';
-                    serialInput.onclick = function () { openSerialModal(serialInput); };
+                var serialSelect = tr.querySelector('select[name="serialNumber"]');
+                if (serialSelect) {
+                    var opt = document.createElement('option');
+                    opt.value = data.serialNumber;
+                    opt.textContent = data.serialNumber + ' (' + (data.generatorModel || '') + ')';
+                    opt.selected = true;
+                    serialSelect.innerHTML = '';
+                    serialSelect.appendChild(opt);
+                    var newOpt = document.createElement('option');
+                    newOpt.value = '';
+                    newOpt.textContent = '-- Chọn serial --';
+                    serialSelect.insertBefore(newOpt, opt);
                 }
                 var stockDiv = tr.querySelector('.col-stock');
                 if (stockDiv && data.generatorModel) {
@@ -864,6 +750,26 @@
             });
     }
 
+    function preSelectExistingRows() {
+        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+            var genId = parseInt(sel.getAttribute('data-current'), 10);
+            var tr = sel.closest('tr');
+            var serialSelect = tr.querySelector('select[name="serialNumber"]');
+            var curSerial = serialSelect && serialSelect.getAttribute('data-current');
+            if (genId && serialSelect) {
+                populateSerialOptions(serialSelect, genId, curSerial);
+                if (curSerial) serialSelect.value = curSerial;
+                filterAlreadySelected();
+                var stockInfo = tr.querySelector('.col-stock');
+                if (stockInfo) {
+                    var opt = sel.options[sel.selectedIndex];
+                    var stock = parseInt(opt && opt.getAttribute('data-stock')) || 0;
+                    if (sel.value) stockInfo.textContent = 'Tồn kho: ' + stock + ' máy';
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var scanInput = document.getElementById('scanBox');
         if (scanInput) {
@@ -878,55 +784,15 @@
         }
     });
 
-    var editReceiptLock = false;
     window.addEventListener('beforeunload', function () { stopCamera(); });
 
     function confirmCancelEdit() {
-        var ctx = window.APP_CTX;
         var receiptId = currentEditReceiptId;
-        if (!receiptId) {
-            window.location.href = ctx + '/export-receipt';
-            return;
+        if (receiptId) {
+            window.location.href = window.APP_CTX + '/export-receipt?action=detail&id=' + receiptId;
+        } else {
+            window.location.href = window.APP_CTX + '/export-receipt';
         }
-        if (editReceiptLock) return;
-        var status = ('${receipt.status}');
-        var isDraft = status === 'DRAFT';
-        if (!window.ExportScannerActions) {
-            window.location.href = ctx + '/export-receipt?action=detail&id=' + receiptId;
-            return;
-        }
-        var title = isDraft ? 'Huỷ phiếu nháp' : 'Rút phiếu đang chờ duyệt';
-        var body = isDraft
-            ? 'Phiếu nháp sẽ bị huỷ và tất cả serial đã reserve sẽ được trả về kho.'
-            : 'Phiếu đang chờ duyệt sẽ bị rút lại và tất cả serial sẽ được trả về kho. Người duyệt sẽ nhận được thông báo.';
-        var actionLabel = isDraft ? 'Huỷ phiếu nháp' : 'Rút phiếu';
-        window.ExportScannerActions.confirmAction({
-            modalId: 'cancelReceiptModalEdit',
-            title: title,
-            body: body,
-            confirmLabel: actionLabel,
-            danger: true
-        }).then(function () {
-            editReceiptLock = true;
-            return (isDraft
-                    ? window.ExportScannerActions.discardDraft(receiptId)
-                    : window.ExportScannerActions.cancelPending(receiptId));
-        }).then(function (data) {
-            editReceiptLock = false;
-            if (!data || !data.success) {
-                toast((data && data.message) ? data.message : 'Lỗi khi huỷ phiếu', 'danger');
-                return;
-            }
-            toast(data.message || 'Đã huỷ phiếu', 'success');
-            setTimeout(function () {
-                window.location.href = ctx + '/export-receipt';
-            }, 600);
-        }).catch(function (err) {
-            editReceiptLock = false;
-            if (err && err.message === 'cancelled') return;
-            console.error(err);
-            toast('Lỗi kết nối: ' + err.message, 'danger');
-        });
     }
 </script>
 </body>

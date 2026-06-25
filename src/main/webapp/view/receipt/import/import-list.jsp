@@ -26,7 +26,6 @@
                 font-size: 12px;
                 font-weight: 600;
             }
-            .status-draft { background: #e2e3e5; color: #383d41; }
             .status-pending { background: #fff3cd; color: #856404; }
             .status-revision { background: #ffe5b4; color: #8a5a00; }
             .status-completed { background: #d4edda; color: #155724; }
@@ -187,7 +186,6 @@
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Bản nháp</option>
                             <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                             <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
@@ -251,7 +249,6 @@
                                                 <td class="col-creator"><c:out value="${r.createdByName}"/></td>
                                                 <td class="col-status">
                                                     <c:choose>
-                                                        <c:when test="${r.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Bản nháp</span></c:when>
                                                         <c:when test="${r.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${r.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                                                         <c:when test="${r.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
@@ -270,7 +267,7 @@
                                                                 <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                                 <span class="label">Chi tiết</span>
                                                             </a>
-                                                            <c:if test="${(r.status == 'NEEDS_REVISION' || r.status == 'DRAFT') && r.createdBy == sessionScope.loggedUser.id}">
+                                                            <c:if test="${r.status == 'NEEDS_REVISION' && r.createdBy == sessionScope.loggedUser.id}">
                                                                 <div class="dropdown-divider"></div>
                                                                 <a class="dropdown-item" href="${pageContext.request.contextPath}/import-receipt?action=edit&id=${r.receiptId}">
                                                                     <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>

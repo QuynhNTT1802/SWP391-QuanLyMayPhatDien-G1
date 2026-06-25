@@ -97,18 +97,9 @@
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}">Huỷ</a>
-                <c:if test="${isDraft}">
-                    <button type="submit" name="submitMode" value="draft" form="receiptForm" class="btn">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                        Lưu nháp
-                    </button>
-                </c:if>
                 <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-                    <c:choose>
-                        <c:when test="${isDraft}">Gửi phiếu</c:when>
-                        <c:otherwise>Gửi lại để duyệt</c:otherwise>
-                    </c:choose>
+                    Gửi lại để duyệt
                 </button>
             </div>
         </header>
@@ -124,14 +115,7 @@
                 <div class="hero-body">
                     <h2 class="hero-name">
                         <c:out value="${receipt.receiptCode}"/>
-                        <c:choose>
-                            <c:when test="${isDraft}">
-                                <span class="status-pill" style="background: oklch(94% 0.04 250); color: oklch(45% 0.13 250); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Bản nháp</span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="status-pill" style="background: oklch(94% 0.04 75); color: oklch(50% 0.13 75); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Yêu cầu chỉnh sửa</span>
-                            </c:otherwise>
-                        </c:choose>
+                        <span class="status-pill" style="background: oklch(94% 0.04 75); color: oklch(50% 0.13 75); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Yêu cầu chỉnh sửa</span>
                     </h2>
                     <div class="hero-meta">
                         <span>Phiếu nhập kho</span>
@@ -216,10 +200,10 @@
                                 <c:choose>
                                     <c:when test="${not empty receipt.details}">
                                         <c:forEach var="d" items="${receipt.details}" varStatus="st">
-                                            <tr data-current="${d.generatorId}">
+                                            <tr>
                                                 <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                 <td>
-                                                    <select name="manualGeneratorId" required onchange="onGeneratorChange(this)">
+                                                    <select name="manualGeneratorId" required onchange="onGeneratorChange(this)" data-current="${d.generatorId}">
                                                         <option value="">-- Chọn máy --</option>
                                                     </select>
                                                     <span class="stock-info" data-stock-info></span>
@@ -401,8 +385,6 @@
 
     function validateReceiptForm() {
         var submitter = (typeof event !== 'undefined' && event && event.submitter) ? event.submitter : null;
-        var isDraft = submitter && submitter.value === 'draft';
-        if (isDraft) return true;
         var valid = true;
         var firstInvalid = null;
         document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
