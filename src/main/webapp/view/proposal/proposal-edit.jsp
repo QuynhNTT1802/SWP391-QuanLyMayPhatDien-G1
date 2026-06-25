@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%
     java.time.format.DateTimeFormatter __propFmt =
         java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -23,59 +24,84 @@
             label,.label{font-weight:600}
             input,select,textarea,button{font-weight:500}
             .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
-            main{padding:24px 32px 200px;max-width:960px;margin:0 auto}
+            main{padding:24px 32px 60px;max-width:1200px;margin:0 auto}
             .page-head{margin-bottom:20px}
             .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
             .eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent)}
             .page-head h1.title{font-size:26px;font-weight:700;letter-spacing:-0.02em;margin:0}
-            .page-head .lede{color:var(--muted);margin-top:6px;max-width:640px;font-size:14px}
+            .page-head .lede{color:var(--muted);margin-top:6px;max-width:720px;font-size:14px}
             .section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
-            .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)}
+            .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
             .section-head-left{display:flex;align-items:baseline;gap:12px;min-width:0}
             .section-head h3{font-size:14px;font-weight:700;margin:0}
             .section-head .sub{font-size:11.5px;color:var(--muted);font-family:var(--font-mono)}
             .section-body{padding:22px 20px}
-            .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
-            .info-field{display:flex;flex-direction:column;gap:6px;min-width:0}
-            .info-field.full{grid-column:1/-1}
-            .info-label{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.03em;display:flex;align-items:center;justify-content:space-between}
-            .info-label .req{color:var(--danger);margin-inline-start:2px}
-            .info-value{font-size:13.5px;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--fg)}
+            .form-grid{display:grid;grid-template-columns:1fr 2fr;gap:14px}
+            .info-field .info-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.02em;margin-bottom:4px;display:block}
+            .info-field .info-value{font-size:13.5px;color:var(--fg);padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm)}
             .info-input{font-family:var(--font-ui);font-size:13.5px;color:var(--fg);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;width:100%;line-height:1.4;box-sizing:border-box}
             .info-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
             .info-select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;padding-inline-end:32px;cursor:pointer;font-family:var(--font-ui);font-size:13.5px;color:var(--fg);background-color:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;width:100%;line-height:1.4;box-sizing:border-box}
             .info-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
             textarea.info-input{min-height:72px;resize:vertical}
-            .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+            .summary-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+            .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid}
+            .pill .pill-num{font-weight:700}
+            .pill.ok{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,transparent);background:var(--accent-soft)}
+            .pill.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 25%,transparent);background:var(--warn-soft)}
+            .pill.bad{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 25%,transparent);background:var(--danger-soft)}
+
+            .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0}
             table.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
             table.data-table thead th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;background:var(--surface-2);padding:11px 14px;border-bottom:1px solid var(--border);letter-spacing:0.04em}
-            table.data-table tbody td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+            table.data-table tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
             table.data-table tbody tr:last-child td{border-bottom:0}
             .text-right{text-align:right}
             .text-center{text-align:center}
-            .col-num{width:36px;text-align:center}
-            .col-qty{width:100px}
-            .col-del{width:40px;text-align:center}
-            .row-select{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box}
-            .row-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-            .row-qty{width:80px;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box;text-align:right}
-            .row-qty:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-            .row-note{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box}
-            .row-note:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+            .model-cell{font-weight:600}
+            .name-cell{color:var(--muted);font-size:12.5px}
+            .col-min{white-space:nowrap;width:1%}
+            .col-supplier{white-space:nowrap}
+            .col-price{white-space:nowrap;width:110px}
+            .col-qty{white-space:nowrap;width:80px}
+            .col-note{min-width:120px}
+            .col-del{white-space:nowrap;width:40px;text-align:center}
+            .error-msg{color:var(--danger);font-size:12px;font-weight:600;margin-top:4px}
+
+            table.data-table .row-qty{width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box;text-align:right}
+            table.data-table .row-qty:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+            table.data-table .row-note{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box}
+            table.data-table .row-note:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+            table.data-table .row-unitprice{width:110px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box;text-align:right;min-width:80px}
+            table.data-table .row-unitprice:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+            table.data-table .row-generator{width:160px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box}
+            table.data-table .row-generator:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+            table.data-table .row-supplier{width:170px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--fg);font-size:13px;font-family:inherit;box-sizing:border-box}
+            table.data-table .row-supplier:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+            .supplier-cell{font-size:12.5px;font-weight:600;color:var(--fg);display:block}
+            .supplier-cell .supplier-phone{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
+
             .row-del-btn{width:28px;height:28px;border:none;background:none;color:var(--danger);cursor:pointer;border-radius:var(--radius-sm);font-size:18px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
             .row-del-btn:hover{background:var(--danger-soft)}
+
             .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);color:var(--fg);padding:8px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-ui);text-decoration:none}
             .btn:hover{background:var(--surface-2)}
             .btn-primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
             .btn-primary:hover{background:var(--fg-soft);border-color:var(--fg-soft)}
-            .btn-danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 30%,transparent)}
-            .btn-danger:hover{background:var(--danger-soft)}
+            .btn-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+            .btn-danger:hover{opacity:.92}
+            .btn:disabled{opacity:0.4;cursor:not-allowed}
             .btn-sm{padding:5px 12px;font-size:12px}
-            .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+            .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+
             .alert{padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;border:1px solid}
             .alert svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+            .alert-warn{background:var(--warn-soft);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
             .alert-error{background:var(--danger-soft);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 30%,transparent)}
-            .alert-success{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)}
+            .alert-success{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 25%,transparent)}
+
             .topbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:12px 24px}
             .topbar h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-0.01em}
             .crumb{color:var(--muted);font-size:13px;font-weight:500}
@@ -86,10 +112,16 @@
             .back-link{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:14px}
             .back-link:hover{color:var(--fg)}
             .back-link svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
-            .add-row-btn{margin-top:0}
-            .status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid}
+
+            .status-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid;margin-left:8px}
             .status-badge.draft{color:var(--muted);border-color:var(--border);background:var(--surface-2)}
             .status-badge.revision{color:#7c3aed;border-color:color-mix(in srgb,#7c3aed 30%,transparent);background:color-mix(in srgb,#7c3aed 8%,transparent)}
+
+            .revision-reason{background:var(--surface-2);border:1px solid color-mix(in srgb,#7c3aed 30%,transparent);border-radius:10px;padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;align-items:flex-start}
+            .revision-reason .rr-icon{color:#7c3aed;flex-shrink:0;margin-top:2px}
+            .revision-reason .rr-icon svg{width:18px;height:18px}
+            .revision-reason .rr-body{font-size:13px;color:var(--fg)}
+            .revision-reason .rr-label{font-weight:700;font-size:11px;color:#7c3aed;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
         </style>
     </head>
     <body>
@@ -113,12 +145,23 @@
                     </a>
 
                     <c:if test="${not empty sessionScope.toastMessage}">
-                        <div class="alert ${sessionScope.toastType == 'danger' ? 'alert-error' : 'alert-success'}">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <div class="alert ${sessionScope.toastType == 'danger' ? 'alert-error' : (sessionScope.toastType == 'success' ? 'alert-success' : 'alert-warn')}">
                             <span><c:out value="${sessionScope.toastMessage}"/></span>
                         </div>
                         <c:remove var="toastMessage" scope="session"/>
                         <c:remove var="toastType" scope="session"/>
+                    </c:if>
+
+                    <c:if test="${proposal.status == 'NEEDS_REVISION' && not empty proposal.rejectReason}">
+                        <div class="revision-reason">
+                            <div class="rr-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <div class="rr-body">
+                                <div class="rr-label">Lý do ${proposal.revisionRequestedByRole == 'CEO' ? 'CEO' : 'Sale Manager'} yêu cầu chỉnh sửa</div>
+                                <div><c:out value="${proposal.rejectReason}"/></div>
+                            </div>
+                        </div>
                     </c:if>
 
                     <div class="page-head">
@@ -130,7 +173,7 @@
                                 <c:when test="${proposal.status == 'NEEDS_REVISION'}"><span class="status-badge revision">Cần chỉnh sửa</span></c:when>
                             </c:choose>
                         </h1>
-                        <div class="lede">Phiếu <c:out value="${proposal.proposalCode}"/></div>
+                        <div class="lede">Phiếu <c:out value="${proposal.proposalCode}"/> · Người tạo: <c:out value="${proposal.createdByName}"/></div>
                     </div>
 
                     <form id="uploadExcelForm" method="post" action="${pageContext.request.contextPath}/proposal?action=uploadEditExcel&id=${proposal.proposalId}" enctype="multipart/form-data" style="display:none">
@@ -146,15 +189,7 @@
                             <div class="section-body">
                                 <div class="form-grid">
                                     <div class="info-field">
-                                        <span class="info-label">Mã phiếu</span>
-                                        <div class="info-value mono"><c:out value="${proposal.proposalCode}"/></div>
-                                    </div>
-                                    <div class="info-field">
-                                        <span class="info-label">Người tạo</span>
-                                        <div class="info-value"><c:out value="${proposal.createdByName}"/></div>
-                                    </div>
-                                    <div class="info-field">
-                                        <span class="info-label">Kho nhập <span class="req">*</span></span>
+                                        <span class="info-label">Kho nhập <span style="color:var(--danger)">*</span></span>
                                         <select class="info-select" id="warehouseId" name="warehouseId" required>
                                             <option value="">-- Chọn kho --</option>
                                             <c:forEach var="w" items="${warehouses}">
@@ -163,15 +198,29 @@
                                         </select>
                                     </div>
                                     <div class="info-field">
-                                        <span class="info-label">Ngày tạo</span>
-                                        <div class="info-value mono"><c:choose><c:when test="${proposal.proposalDate == null}">—</c:when><c:otherwise>${proposal.proposalDate.format(propFmt)}</c:otherwise></c:choose></div>
-                                    </div>
-                                    <div class="info-field full">
-                                        <span class="info-label" for="note">Ghi chú</span>
+                                        <span class="info-label">Ghi chú phiếu</span>
                                         <textarea class="info-input" id="note" name="note" rows="2" placeholder="Ghi chú cho phiếu..."><c:out value="${proposal.note}"/></textarea>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="summary-row">
+                            <span class="pill ok"><span class="pill-num">${not empty proposal.details ? fn:length(proposal.details) : 0}</span> dòng máy phát</span>
+                            <c:set var="_totalQty" value="0" />
+                            <c:set var="_totalVal" value="0" />
+                            <c:forEach var="d" items="${proposal.details}">
+                                <c:set var="_totalQty" value="${_totalQty + d.quantity}" />
+                                <c:if test="${not empty d.unitPrice}">
+                                    <c:set var="_totalVal" value="${_totalVal + (d.unitPrice.doubleValue() * d.quantity)}" />
+                                </c:if>
+                            </c:forEach>
+                            <span class="pill"><span class="pill-num"><c:out value="${_totalQty}"/></span> tổng SL</span>
+                            <c:choose>
+                                <c:when test="${_totalVal > 0}">
+                                    <span class="pill"><strong style="font-family:var(--font-mono);">₫<fmt:formatNumber value="${_totalVal}" pattern="#,##0"/></strong> ước tính</span>
+                                </c:when>
+                            </c:choose>
                         </div>
 
                         <div class="section" style="padding:0">
@@ -182,20 +231,24 @@
                                 </div>
                             </div>
                             <div class="table-scroll">
-                                <table class="data-table" style="min-width:1200px;">
+                                <table class="data-table" style="min-width:1400px;">
                                     <thead>
                                         <tr>
-                                            <th class="col-num">#</th>
-                                            <th style="min-width:140px;">Máy phát <span class="req">*</span></th>
-                                            <th>Hãng</th>
+                                            <th class="col-min">#</th>
+                                            <th class="col-min">Mã máy phát <span style="color:var(--danger)">*</span></th>
+                                            <th>Thương hiệu</th>
                                             <th>Xuất xứ</th>
-                                            <th>Loại</th>
-                                            <th style="width:80px;">C.suất</th>
-                                            <th style="width:60px;">T.lượng</th>
-                                            <th style="min-width:140px;">NCC</th>
-                                            <th style="width:100px;" class="text-right">Đơn giá</th>
-                                            <th style="width:80px;" class="text-right">SL <span class="req">*</span></th>
-                                            <th style="min-width:120px;">Ghi chú dòng</th>
+                                            <th>Tình trạng</th>
+                                            <th>Nhiên liệu</th>
+                                            <th>Số pha</th>
+                                            <th>Loại máy phát</th>
+                                            <th class="col-min">Công suất (kVA)</th>
+                                            <th>Tần số</th>
+                                            <th class="col-min">Trọng lượng (kg)</th>
+                                            <th class="col-supplier">Nhà cung cấp</th>
+                                            <th class="col-price text-right">Đơn giá (VNĐ)</th>
+                                            <th class="col-qty text-right">Số lượng <span style="color:var(--danger)">*</span></th>
+                                            <th class="col-note">Ghi chú dòng</th>
                                             <th class="col-del"></th>
                                         </tr>
                                     </thead>
@@ -203,22 +256,26 @@
                                         <c:choose>
                                             <c:when test="${not empty proposal.details}">
                                                 <c:forEach var="d" items="${proposal.details}" varStatus="st">
-                                                    <tr>
-                                                        <td class="col-num mono">${st.index + 1}</td>
+                                                    <tr data-row-id="${d.proposalDetailId}">
+                                                        <td class="mono">${st.index + 1}</td>
                                                         <td>
-                                                            <select name="generatorId" class="row-select" required>
+                                                            <select name="generatorId" class="row-generator" required>
                                                                 <option value="">-- Chọn máy --</option>
                                                                 <c:forEach var="g" items="${generators}">
                                                                     <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>><c:out value="${g.model}"/></option>
                                                                 </c:forEach>
                                                             </select>
                                                         </td>
-                                                        <td class="gen-display"><c:out value="${d.brandName}"/></td>
-                                                        <td class="gen-display"><c:out value="${d.originName}"/></td>
-                                                        <td class="gen-display"><c:out value="${d.genTypeName}"/></td>
-                                                        <td class="gen-display mono"><c:out value="${d.powerRating}"/></td>
-                                                        <td class="gen-display mono"><c:out value="${d.weight}"/></td>
-                                                        <td>
+                                                        <td><c:out value="${d.brandName}"/></td>
+                                                        <td><c:out value="${d.originName}"/></td>
+                                                        <td><c:out value="${d.conditionName}"/></td>
+                                                        <td><c:out value="${d.fuelName}"/></td>
+                                                        <td><c:out value="${d.phaseName}"/></td>
+                                                        <td><c:out value="${d.genTypeName}"/></td>
+                                                        <td class="mono"><c:out value="${d.powerRating}"/></td>
+                                                        <td><c:out value="${d.frequency}"/></td>
+                                                        <td class="mono"><c:out value="${d.weight}"/></td>
+                                                        <td class="col-supplier">
                                                             <select name="supplierId" class="row-supplier">
                                                                 <option value="">-- Chọn NCC --</option>
                                                                 <c:forEach var="s" items="${suppliers}">
@@ -226,9 +283,9 @@
                                                                 </c:forEach>
                                                             </select>
                                                         </td>
-                                                        <td><input type="number" name="unitPrice" class="row-price" value="${d.unitPrice != null ? d.unitPrice : ''}" min="1" step="1" /></td>
+                                                        <td><input type="number" name="unitPrice" class="row-unitprice" value="${d.unitPrice != null ? d.unitPrice : ''}" min="0" step="1000" placeholder="0" /></td>
                                                         <td><input type="number" name="quantity" class="row-qty" value="${d.quantity}" min="1" max="9999" oninput="validateQty(this)" required /></td>
-                                                        <td><input type="text" name="detailNote" class="row-note" value="<c:out value="${d.note}"/>" placeholder="VD: Cần gấp cho dự án X" /></td>
+                                                        <td><input type="text" name="detailNote" class="row-note" value="<c:out value='${d.note}'/>" placeholder="VD: Cần gấp cho dự án X" /></td>
                                                         <td class="col-del">
                                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                                         </td>
@@ -237,21 +294,17 @@
                                             </c:when>
                                             <c:otherwise>
                                                 <tr>
-                                                    <td class="col-num mono">1</td>
+                                                    <td class="mono">1</td>
                                                     <td>
-                                                        <select name="generatorId" class="row-select" required>
+                                                        <select name="generatorId" class="row-generator" required>
                                                             <option value="">-- Chọn máy --</option>
                                                             <c:forEach var="g" items="${generators}">
                                                                 <option value="${g.id}"><c:out value="${g.model}"/></option>
                                                             </c:forEach>
                                                         </select>
                                                     </td>
-                                                    <td class="gen-display"></td>
-                                                    <td class="gen-display"></td>
-                                                    <td class="gen-display"></td>
-                                                    <td class="gen-display"></td>
-                                                    <td class="gen-display"></td>
-                                                    <td>
+                                                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                                                    <td class="col-supplier">
                                                         <select name="supplierId" class="row-supplier">
                                                             <option value="">-- Chọn NCC --</option>
                                                             <c:forEach var="s" items="${suppliers}">
@@ -259,7 +312,7 @@
                                                             </c:forEach>
                                                         </select>
                                                     </td>
-                                                    <td><input type="number" name="unitPrice" class="row-price" min="1" step="1" /></td>
+                                                    <td><input type="number" name="unitPrice" class="row-unitprice" min="0" step="1000" placeholder="0" /></td>
                                                     <td><input type="number" name="quantity" class="row-qty" value="1" min="1" max="9999" oninput="validateQty(this)" required /></td>
                                                     <td><input type="text" name="detailNote" class="row-note" placeholder="VD: Cần gấp cho dự án X" /></td>
                                                     <td class="col-del">
@@ -272,7 +325,7 @@
                                 </table>
                             </div>
                             <div style="padding:12px 20px;border-top:1px solid var(--border)">
-                                <button type="button" class="btn btn-sm add-row-btn" onclick="addRow()">
+                                <button type="button" class="btn btn-sm" onclick="addRow()">
                                     <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>
                                     Thêm dòng
                                 </button>
@@ -302,15 +355,25 @@
         <div class="toast-host" id="toastHost"></div>
         <template id="rowTemplate">
             <tr>
-                <td class="col-num mono"></td>
+                <td class="mono"></td>
                 <td>
-                    <select name="generatorId" class="row-select" required>
+                    <select name="generatorId" class="row-generator" required>
                         <option value="">-- Chọn máy --</option>
                         <c:forEach var="g" items="${generators}">
                             <option value="${g.id}"><c:out value="${g.model}"/></option>
                         </c:forEach>
                     </select>
                 </td>
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                <td class="col-supplier">
+                    <select name="supplierId" class="row-supplier">
+                        <option value="">-- Chọn NCC --</option>
+                        <c:forEach var="s" items="${suppliers}">
+                            <option value="${s.id}"><c:out value="${s.name}"/></option>
+                        </c:forEach>
+                    </select>
+                </td>
+                <td><input type="number" name="unitPrice" class="row-unitprice" min="0" step="1000" placeholder="0" /></td>
                 <td><input type="number" name="quantity" class="row-qty" value="1" min="1" max="9999" oninput="validateQty(this)" required /></td>
                 <td><input type="text" name="detailNote" class="row-note" placeholder="VD: Cần gấp cho dự án X" /></td>
                 <td class="col-del">
@@ -346,7 +409,7 @@
             }
             function updateRowNumbers() {
                 document.querySelectorAll('#detailBody tr').forEach(function (tr, i) {
-                    var td = tr.querySelector('.col-num');
+                    var td = tr.querySelector('td.mono');
                     if (td) td.textContent = i + 1;
                 });
             }
@@ -358,7 +421,7 @@
                 }
                 var hasValid = false;
                 for (var i = 0; i < rows.length; i++) {
-                    var sel = rows[i].querySelector('.row-select');
+                    var sel = rows[i].querySelector('.row-generator');
                     var qtyInput = rows[i].querySelector('.row-qty');
                     var qty = parseInt(qtyInput.value);
                     if (sel.value && (isNaN(qty) || qty < 1)) {

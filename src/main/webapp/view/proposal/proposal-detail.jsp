@@ -124,15 +124,30 @@
                             <c:set var="statusBg" value="#fff3cd"/>
                             <c:set var="statusFg" value="#856404"/>
                         </c:when>
-                        <c:when test="${proposal.status == 'APPROVED'}">
-                            <c:set var="statusLabel" value="Đã duyệt"/>
+                        <c:when test="${proposal.status == 'APPROVED' and not empty proposal.purchaseOrderId}">
+                            <c:set var="statusLabel" value="Đã duyệt bởi CEO"/>
                             <c:set var="statusBg" value="#d4edda"/>
                             <c:set var="statusFg" value="#155724"/>
                         </c:when>
-                        <c:when test="${proposal.status == 'REJECTED'}">
-                            <c:set var="statusLabel" value="Từ chối"/>
+                        <c:when test="${proposal.status == 'APPROVED'}">
+                            <c:set var="statusLabel" value="Đã duyệt bởi Sale Manager"/>
+                            <c:set var="statusBg" value="#d4edda"/>
+                            <c:set var="statusFg" value="#155724"/>
+                        </c:when>
+                        <c:when test="${proposal.status == 'REJECTED' and not empty proposal.purchaseOrderId}">
+                            <c:set var="statusLabel" value="Từ chối bởi CEO"/>
                             <c:set var="statusBg" value="#f8d7da"/>
                             <c:set var="statusFg" value="#721c24"/>
+                        </c:when>
+                        <c:when test="${proposal.status == 'REJECTED'}">
+                            <c:set var="statusLabel" value="Từ chối bởi Sale Manager"/>
+                            <c:set var="statusBg" value="#f8d7da"/>
+                            <c:set var="statusFg" value="#721c24"/>
+                        </c:when>
+                        <c:when test="${proposal.status == 'NEEDS_REVISION' and proposal.revisionRequestedByRole == 'CEO'}">
+                            <c:set var="statusLabel" value="Cần chỉnh sửa (yêu cầu từ CEO)"/>
+                            <c:set var="statusBg" value="#ede9fe"/>
+                            <c:set var="statusFg" value="#5b21b6"/>
                         </c:when>
                         <c:when test="${proposal.status == 'NEEDS_REVISION'}">
                             <c:set var="statusLabel" value="Cần chỉnh sửa"/>
@@ -182,26 +197,58 @@
                                 <span class="pill warehouse"><span class="pdot"></span>Kho: <c:out value="${proposal.warehouseName}"/></span>
                                 <span class="pill status-active"><span class="pdot"></span>Người tạo: <c:out value="${proposal.createdByName}"/></span>
                                 <c:if test="${not empty proposal.approvedByName}">
-                                    <span class="pill role-admin"><span class="pdot"></span>Người duyệt: <c:out value="${proposal.approvedByName}"/></span>
+                                    <span class="pill role-admin"><span class="pdot"></span>Người duyệt${not empty proposal.purchaseOrderId ? ' (CEO)' : ' (Sale Manager)'}: <c:out value="${proposal.approvedByName}"/></span>
                                 </c:if>
                                 <span class="pill warehouse"><span class="pdot"></span>Tổng tiền: <fmt:formatNumber value="${grandTotal}" pattern="#,##0"/> ₫</span>
                             </div>
                         </div>
                     </div>
 
-                    <c:if test="${not empty proposal.purchaseOrderId}">
-                        <div class="alert alert-info">
-                            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                            <span>Đã gom vào <strong>Phiếu mua</strong>: <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${proposal.purchaseOrderId}" style="color:var(--info); font-weight:600;">${proposal.poCode}</a>. Phiếu này bị khóa sửa.</span>
-                        </div>
-                    </c:if>
-
                     <c:set var="isOwner" value="${sessionScope.loggedUser.id == proposal.createdBy}" />
                     <c:set var="perms" value="${sessionScope.userPermissions}" />
+                    <c:set var="canViewPoDetail" value="${canViewPo or (perms != null && perms.contains('purchase_orders.view'))}" />
+                    <c:if test="${not empty proposal.purchaseOrderId}">
+                        <c:choose>
+                            <c:when test="${canViewPoDetail}">
+                                <div class="alert alert-info">
+                                    <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                    <span>Đã gom vào <strong>Phiếu mua</strong>: <strong><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${proposal.purchaseOrderId}" style="font-family: 'JetBrains Mono', monospace; color: var(--accent); text-decoration: none; font-weight: 700;" title="Xem chi tiết phiếu mua">${proposal.poCode}</a></strong>. Phiếu này bị khóa sửa.</span>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <div class="alert alert-info">
+                                    <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                    <span>Đã gom vào <strong>Phiếu mua</strong> (<strong style="font-family: 'JetBrains Mono', monospace; color: var(--muted);"><c:out value="${proposal.poCode}"/></strong>). Phiếu này bị khóa sửa.</span>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+                    </c:if>
+
                     <c:set var="canApprove" value="${perms.contains('proposals.approve')}" />
                     <c:set var="canReject" value="${perms.contains('proposals.reject')}" />
                     <c:set var="canCancelProp" value="${perms.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
+                    <c:set var="showDeadlineBanner" value="${not empty proposal.period and proposal.period != currentPeriod}" />
+
+                    <c:if test="${showDeadlineBanner}">
+                        <div class="alert ${isWithinDeadline ? 'alert-info' : 'alert-warn'}" style="margin-top: 14px;">
+                            <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <span>
+                                <strong>Deadline gom đơn / duyệt cho period ${proposal.period}:</strong>
+                                <c:choose>
+                                    <c:when test="${isWithinDeadline}">
+                                        còn hiệu lực đến <strong style="font-family:'JetBrains Mono',monospace;">${deadlineDate}</strong>
+                                        (5 ngày đầu tháng kế tiếp).
+                                    </c:when>
+                                    <c:otherwise>
+                                        đã <strong style="color:var(--danger);">quá hạn</strong> từ
+                                        <strong style="font-family:'JetBrains Mono',monospace;">${deadlineDate}</strong>.
+                                        Các thao tác duyệt/từ chối/yêu cầu chỉnh sửa đã bị khóa.
+                                    </c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                    </c:if>
 
                     <div class="action-bar-top">
                         <a class="btn" href="${pageContext.request.contextPath}/proposal?action=list">
@@ -221,6 +268,13 @@
                                     <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">
                                         <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                                         Gửi duyệt
+                                    </button>
+                                </form>
+                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
+                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                    <button type="submit" class="btn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất nháp này?')">
+                                        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                        Huỷ phiếu
                                     </button>
                                 </form>
                                 <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:inline;">
@@ -247,21 +301,46 @@
                                 </form>
                             </c:if>
 
-                            <c:if test="${proposal.status == 'PENDING' && canApprove}">
-                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                            <c:if test="${proposal.status == 'NEEDS_REVISION' && proposal.revisionRequestedByRole == 'CEO' && canApprove}">
+                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Sửa đề xuất (yêu cầu từ CEO)
+                                </a>
+                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
+                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                    <input type="hidden" name="submitType" value="submit" />
+                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt lại sau khi Sale Manager chỉnh sửa?')">
+                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                        Gửi duyệt lại
+                                    </button>
+                                </form>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canApprove && isWithinDeadline}">
+                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" id="approveForm" style="display:none;">
+                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
+                                </form>
+                                <button type="button" class="btn btn-primary" onclick="if(confirm('Xác nhận duyệt phiếu đề xuất này?')) document.getElementById('approveForm').submit();">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Duyệt phiếu
+                                    Duyệt
                                 </button>
                             </c:if>
 
-                            <c:if test="${proposal.status == 'PENDING' && canReject}">
+                            <c:if test="${proposal.status == 'PENDING' && canApprove && isWithinDeadline}">
+                                <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Yêu cầu chỉnh sửa
+                                </button>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canReject && isWithinDeadline}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
                                 </button>
                             </c:if>
 
-                            <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
+                            <c:if test="${proposal.status == 'PENDING' && canCancelProp && isWithinDeadline}">
                                 <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
                                     <input type="hidden" name="id" value="${proposal.proposalId}" />
                                     <button type="submit" class="btn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
@@ -269,6 +348,12 @@
                                         Huỷ phiếu
                                     </button>
                                 </form>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && !isWithinDeadline && (canApprove || canReject)}">
+                                <span style="font-size:12px; color:var(--muted); font-style:italic;">
+                                    Đã quá deadline — các thao tác duyệt/từ chối/yêu cầu chỉnh sửa bị khóa.
+                                </span>
                             </c:if>
                         </c:if>
                     </div>
@@ -434,7 +519,7 @@
                                         <div class="info-value"><c:out value="${proposal.createdByName}"/></div>
                                     </div>
                                     <div class="info-field">
-                                        <div class="info-label">Người duyệt</div>
+                                        <div class="info-label">Người duyệt${not empty proposal.purchaseOrderId ? ' (CEO)' : ' (Sale Manager)'}</div>
                                         <div class="info-value"><c:out value="${not empty proposal.approvedByName ? proposal.approvedByName : '—'}"/></div>
                                     </div>
                                     <div class="info-field">
@@ -470,6 +555,14 @@
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
                                         <div class="danger-note"><c:out value="${proposal.rejectReason}"/></div>
+                                    </div>
+                                </c:if>
+                                <c:if test="${proposal.status == 'NEEDS_REVISION' && not empty proposal.rejectReason}">
+                                    <div style="margin-top: 18px;">
+                                        <div class="info-label" style="font-size:11px;color:var(--warn);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
+                                            Lý do ${proposal.revisionRequestedByRole == 'CEO' ? 'CEO yêu cầu' : 'Sale Manager yêu cầu'} chỉnh sửa
+                                        </div>
+                                        <div class="note-soft"><c:out value="${proposal.rejectReason}"/></div>
                                     </div>
                                 </c:if>
                                 <c:if test="${not empty proposal.note}">
@@ -584,20 +677,6 @@
         </div>
 
         <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canApprove}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt phiếu đề xuất</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu đề xuất <strong><c:out value="${proposal.proposalCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" id="approveForm">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa</h3>
@@ -618,7 +697,7 @@
         <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canReject}">
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
-                    <h3>Từ chối phiếu đề xuất</h3>
+                    <h3>Từ chối</h3>
                     <div class="modal-sub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
