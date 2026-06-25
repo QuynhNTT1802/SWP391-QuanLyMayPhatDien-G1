@@ -372,6 +372,30 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
+    public java.util.Map<Integer, Integer> getApprovedQuantitiesByGeneratorExcept(int excludeOrderId) {
+        java.util.Map<Integer, Integer> map = new java.util.HashMap<>();
+        String sql = "SELECT od.generator_id, SUM(od.quantity) AS total_qty "
+                + "FROM order_detail od "
+                + "JOIN sale_order so ON od.order_id = so.order_id "
+                + "WHERE so.status = ? AND so.order_id != ? "
+                + "GROUP BY od.generator_id";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setInt(2, excludeOrderId);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                map.put(resultSet.getInt("generator_id"), resultSet.getInt("total_qty"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return map;
+    }
+
     public boolean rejectOrder(int orderId, int rejectedBy, String rejectReason) {
         String sql = "UPDATE sale_order SET status = ?, reject_reason = ?, rejected_by = ?, updated_at = NOW() "
                 + "WHERE order_id = ? AND status = ?";

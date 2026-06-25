@@ -44,6 +44,10 @@
             .empty-state strong { color: var(--fg); font-size: 14px; }
 
             .info-value .status-pill { white-space: nowrap; }
+            .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
+            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
     </head>
     <body>
@@ -141,7 +145,10 @@
 
                     <c:if test="${order.status == 'PENDING' && canApproveOrder}">
                         <div class="action-bar-top">
-                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                            <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm" style="display:none;">
+                                <input type="hidden" name="id" value="${order.orderId}" />
+                            </form>
+                            <button type="button" class="btn btn-primary" onclick="if(confirm('Bạn có chắc muốn duyệt đơn hàng này?')) document.getElementById('approveForm').submit();">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                 Duyệt đơn
                             </button>
@@ -154,20 +161,14 @@
                                 Từ chối
                             </button>
                             <c:if test="${canCancelOrder}">
-                                <button type="button" class="btn" onclick="openModal('cancelModal')">
+                                <form method="POST" action="${pageContext.request.contextPath}/order?action=cancel" id="cancelForm" style="display:none;">
+                                    <input type="hidden" name="id" value="${order.orderId}" />
+                                </form>
+                                <button type="button" class="btn" onclick="if(confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.')) document.getElementById('cancelForm').submit();">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Hủy đơn
                                 </button>
                             </c:if>
-                        </div>
-                    </c:if>
-
-                    <c:if test="${order.status == 'APPROVED' && canCancelOrder}">
-                        <div class="action-bar-top">
-                            <button type="button" class="btn" onclick="openModal('cancelModal')">
-                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                Hủy đơn
-                            </button>
                         </div>
                     </c:if>
 
@@ -458,20 +459,6 @@
         </div>
 
         <c:if test="${order.status == 'PENDING' && canApproveOrder}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt đơn hàng</h3>
-                    <div class="modal-sub">Xác nhận duyệt đơn hàng <strong><c:out value="${order.orderCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm">
-                        <input type="hidden" name="id" value="${order.orderId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
                     <h3>Từ chối đơn hàng</h3>
@@ -499,22 +486,6 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
                             <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${canCancelOrder}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Hủy đơn hàng</h3>
-                    <div class="modal-sub">Đơn hàng sẽ bị hủy. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=cancel">
-                        <input type="hidden" name="id" value="${order.orderId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger" onclick="return confirmCancelAction()">Xác nhận hủy</button>
                         </div>
                     </form>
                 </div>
@@ -588,21 +559,14 @@
                 document.getElementById('genModal').classList.remove('open');
             }
 
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
-            }
-            function confirmCancelAction() {
-                return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
-            }
-
-            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
-            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
+            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('open'); }
+            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('open'); }
             document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
+                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('open'); });
             });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    document.querySelectorAll('.modal-host.open').forEach(function (m) { m.classList.remove('open'); });
                     closeGenModal();
                 }
             });

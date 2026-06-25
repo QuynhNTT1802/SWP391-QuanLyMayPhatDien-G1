@@ -183,7 +183,10 @@
                                 </button>
                             </form>
                             <c:if test="${isOwnerPo}">
-                                <button type="button" class="btn btn-danger" onclick="openModal('cancelModal')">
+                                <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel" id="cancelForm" style="display:none;">
+                                    <input type="hidden" name="id" value="${po.poId}"/>
+                                </form>
+                                <button type="button" class="btn btn-danger" onclick="if(confirm('Bạn có chắc muốn hủy phiếu mua này?')) document.getElementById('cancelForm').submit();">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Hủy phiếu
                                 </button>
@@ -193,7 +196,10 @@
 
                     <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
                         <div class="action-bar-top">
-                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                            <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve" id="approveForm" style="display:none;">
+                                <input type="hidden" name="id" value="${po.poId}"/>
+                            </form>
+                            <button type="button" class="btn btn-primary" onclick="if(confirm('Xác nhận duyệt phiếu mua này?')) document.getElementById('approveForm').submit();">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                 Duyệt
                             </button>
@@ -545,37 +551,7 @@
             </div>
         </div>
 
-        <c:if test="${po.status == 'DRAFT' && canCreatePo && isOwnerPo}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Hủy phiếu mua</h3>
-                    <div class="modal-sub">Phiếu mua sẽ bị hủy và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel">
-                        <input type="hidden" name="id" value="${po.poId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn hủy phiếu mua này?');">Xác nhận hủy</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu mua <strong><c:out value="${po.poCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve">
-                        <input type="hidden" name="id" value="${po.poId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa đề xuất</h3>
