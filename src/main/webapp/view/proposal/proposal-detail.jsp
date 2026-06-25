@@ -319,7 +319,7 @@
                             <c:if test="${proposal.status == 'PENDING' && canApprove && isWithinDeadline}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Duyệt bởi Sale Manager
+                                    Duyệt
                                 </button>
                             </c:if>
 
@@ -333,7 +333,7 @@
                             <c:if test="${proposal.status == 'PENDING' && canReject && isWithinDeadline}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Từ chối bởi Sale Manager
+                                    Từ chối
                                 </button>
                             </c:if>
 
@@ -384,8 +384,8 @@
                                         <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
                                         <option value="CREATE"     ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu</option>
                                         <option value="UPDATE"     ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
-                                        <option value="APPROVE"    ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt bởi Sale Manager</option>
-                                        <option value="REJECT"     ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối bởi Sale Manager</option>
+                                        <option value="APPROVE"    ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
+                                        <option value="REJECT"     ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
                                         <option value="REVISION"   ${logAction == 'REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa</option>
                                         <option value="CANCEL"     ${logAction == 'CANCEL' ? 'selected' : ''}>Huỷ</option>
                                     </select>
@@ -461,8 +461,8 @@
                                                             <c:choose>
                                                                 <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
                                                                 <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
-                                                                <c:when test="${h.action == 'APPROVE'}">Duyệt bởi Sale Manager</c:when>
-                                                                <c:when test="${h.action == 'REJECT'}">Từ chối bởi Sale Manager</c:when>
+                                                                <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
+                                                                <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
                                                                 <c:when test="${h.action == 'REVISION'}">Yêu cầu sửa</c:when>
                                                                 <c:when test="${h.action == 'CANCEL'}">Huỷ</c:when>
                                                                 <c:otherwise>${h.action}</c:otherwise>
@@ -676,13 +676,13 @@
         <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canApprove}">
             <div class="modal-host" id="approveModal">
                 <div class="modal-card">
-                    <h3>Duyệt bởi Sale Manager</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu đề xuất <strong><c:out value="${proposal.proposalCode}"/></strong> bởi Sale Manager?</div>
+                    <h3>Duyệt</h3>
+                    <div class="modal-sub">Xác nhận duyệt phiếu đề xuất <strong><c:out value="${proposal.proposalCode}"/></strong>?</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" id="approveForm">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt (Sale Manager)</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
@@ -708,15 +708,15 @@
         <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canReject}">
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
-                    <h3>Từ chối bởi Sale Manager</h3>
-                    <div class="modal-sub">Phiếu sẽ bị từ chối bởi Sale Manager và không thể hoàn tác.</div>
+                    <h3>Từ chối</h3>
+                    <div class="modal-sub">Phiếu sẽ bị từ chối và không thể hoàn tác.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=reject">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <label for="rejectReason">Lý do từ chối <span style="color:var(--danger)">*</span></label>
                         <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Số lượng vượt nhu cầu, máy chưa có trong kho..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối (Sale Manager)</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
                         </div>
                     </form>
                 </div>

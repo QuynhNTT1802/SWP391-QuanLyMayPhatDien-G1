@@ -153,6 +153,21 @@
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 Từ chối
                             </button>
+                            <c:if test="${canCancelOrder}">
+                                <button type="button" class="btn" onclick="openModal('cancelModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Hủy đơn
+                                </button>
+                            </c:if>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${order.status == 'APPROVED' && canCancelOrder}">
+                        <div class="action-bar-top">
+                            <button type="button" class="btn" onclick="openModal('cancelModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Hủy đơn
+                            </button>
                         </div>
                     </c:if>
 
@@ -490,6 +505,22 @@
             </div>
         </c:if>
 
+        <c:if test="${canCancelOrder}">
+            <div class="modal-host" id="cancelModal">
+                <div class="modal-card">
+                    <h3>Hủy đơn hàng</h3>
+                    <div class="modal-sub">Đơn hàng sẽ bị hủy. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=cancel">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-danger" onclick="return confirmCancelAction()">Xác nhận hủy</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
         <div class="toast-host" id="toastHost"></div>
 
         <script>
@@ -562,10 +593,6 @@
             }
             function confirmCancelAction() {
                 return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
-            }
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
             }
 
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
