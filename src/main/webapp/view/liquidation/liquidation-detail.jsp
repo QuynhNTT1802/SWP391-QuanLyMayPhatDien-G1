@@ -502,54 +502,28 @@
     </div>
 </div>
 
-<!-- New Customer Modal -->
-<div class="modal-host" id="ncModalOverlay">
-    <div class="modal modal-lg">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <h3 style="margin: 0;">Thêm khách hàng mới</h3>
-            <button type="button" class="cust-clear" onclick="closeNewCustomerModal()" title="Đóng">
-                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+<!-- Side panel chọn khách hàng (dùng searchable-dropdown.js) -->
+<div class="side-panel-overlay" id="custPanelOverlay" onclick="closeCustomerPanel()"></div>
+<div class="side-panel" id="custSidePanel">
+    <div class="side-panel-head">
+        <h3 class="side-panel-title">Chọn Khách Hàng</h3>
+        <button type="button" class="side-panel-close" onclick="closeCustomerPanel()">&times;</button>
+    </div>
+    <div class="side-panel-body">
+        <div style="display:flex; gap: 8px; margin-bottom: 20px;">
+            <input type="text" id="custSearchInput" class="serial-search-box" placeholder="Tìm nhanh theo tên, SĐT, email..."/>
+            <select id="custSortOrder" class="serial-search-box" style="width:auto;min-width:120px;">
+                <option value="name_asc">Tên A-Z</option>
+                <option value="name_desc">Tên Z-A</option>
+                <option value="newest">Mới nhất</option>
+            </select>
         </div>
-
-        <div class="modal-error" id="ncError"></div>
-
-        <div class="modal-grid">
-            <div class="field span-2">
-                <label class="field-label">Họ và tên <span class="req">*</span></label>
-                <input type="text" id="ncName" class="input" placeholder="Nguyễn Văn A" />
-            </div>
-            <div class="field">
-                <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                <input type="tel" id="ncPhone" class="input" placeholder="0901234567" />
-            </div>
-            <div class="field">
-                <label class="field-label">Email</label>
-                <input type="email" id="ncEmail" class="input" placeholder="email@example.com" />
-            </div>
-            <div class="field span-2">
-                <label class="field-label">Địa chỉ</label>
-                <input type="text" id="ncAddress" class="input" placeholder="Số nhà, đường, quận, tỉnh..." />
-            </div>
-            <div class="field">
-                <label class="field-label">Tên công ty</label>
-                <input type="text" id="ncCompanyName" class="input" placeholder="Công ty TNHH..." />
-            </div>
-            <div class="field">
-                <label class="field-label">Loại khách hàng</label>
-                <select id="ncTypeId" class="feedback-select" style="margin: 0;">
-                    <option value="">-- Chọn loại --</option>
-                    <c:forEach var="ct" items="${customerTypes}">
-                        <option value="${ct.id}">${ct.name}</option>
-                    </c:forEach>
-                </select>
-            </div>
+        <div id="custLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
+            </svg><br>Đang tải...
         </div>
-
-        <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-            <button type="button" class="btn" onclick="closeNewCustomerModal()">Huỷ</button>
-            <button type="button" class="btn btn-primary" id="ncSaveBtn" onclick="saveNewCustomer()">Lưu khách hàng</button>
-        </div>
+        <div class="cust-list-wrap" id="custList"></div>
     </div>
 </div>
 
@@ -686,166 +660,17 @@
         }
     });
 
-    var custSearchInput = document.getElementById('custSearchInput');
-    if (custSearchInput) {
-        var custSearchTimer = null;
-
-        custSearchInput.addEventListener('input', function() {
-            clearTimeout(custSearchTimer);
-            var q = this.value.trim();
-            if (q.length < 1) { hideCustDropdown(); return; }
-            custSearchTimer = setTimeout(function() { searchCustomers(q); }, 280);
-        });
-
-        custSearchInput.addEventListener('focus', function() {
-            var q = this.value.trim();
-            if (q.length >= 1) searchCustomers(q);
-        });
-
-        document.addEventListener('click', function(e) {
-            var wrap = document.getElementById('custSearchWrap');
-            if (wrap && !wrap.contains(e.target)) {
-                hideCustDropdown();
-            }
-        });
-    }
-
-    function searchCustomers(q) {
-        fetch('${pageContext.request.contextPath}/liquidations?action=search_customer&q=' + encodeURIComponent(q))
-            .then(function(r) { return r.json(); })
-            .then(function(data) { renderCustDropdown(data); })
-            .catch(function() { hideCustDropdown(); });
-    }
-
-    function renderCustDropdown(data) {
-        var dd = document.getElementById('custDropdown');
-        dd.innerHTML = '';
-        if (!data || data.length === 0) {
-            dd.innerHTML = '<div class="cust-dropdown-empty">Không tìm thấy khách hàng</div>';
-            dd.classList.add('show');
-            return;
-        }
-        data.forEach(function(c) {
-            var div = document.createElement('div');
-            div.className = 'cust-option';
-            div.innerHTML = '<span class="cust-name">' + escHtml(c.name) + '</span>'
-                + '<span class="cust-sub">' + escHtml(c.phone)
-                + (c.companyName ? ' · ' + escHtml(c.companyName) : '') + '</span>';
-            div.addEventListener('click', function() { selectCustomer(c); });
-            dd.appendChild(div);
-        });
-        dd.classList.add('show');
-    }
-
-    function hideCustDropdown() {
-        var dd = document.getElementById('custDropdown');
-        if (dd) dd.classList.remove('show');
-    }
-
-    function selectCustomer(c) {
-        document.getElementById('customerIdHidden').value = c.id;
-        document.getElementById('custSearchInput').value = c.name;
-        hideCustDropdown();
-        showCustCard(c);
-    }
-
-    function showCustCard(c) {
-        document.getElementById('custSearchWrap').style.display = 'none';
-        document.getElementById('addNewCustBtn').style.display = 'none';
-
-        document.getElementById('custCardAvatar').textContent = c.name.charAt(0).toUpperCase();
-        document.getElementById('custCardName').textContent = c.name;
-        document.getElementById('custCardPhone').textContent = c.phone;
-
-        var emailRow = document.getElementById('custCardEmailRow');
-        document.getElementById('custCardEmail').textContent = c.email || '';
-        emailRow.style.display = c.email ? 'flex' : 'none';
-
-        var addrRow = document.getElementById('custCardAddrRow');
-        document.getElementById('custCardAddr').textContent = c.address || '';
-        addrRow.style.display = c.address ? 'flex' : 'none';
-
-        document.getElementById('custCard').style.display = 'flex';
-    }
-
-    function clearCustomer() {
-        document.getElementById('customerIdHidden').value = '';
-        document.getElementById('custSearchInput').value = '';
-        document.getElementById('custCard').style.display = 'none';
-        document.getElementById('custSearchWrap').style.display = 'block';
-        document.getElementById('addNewCustBtn').style.display = 'inline-flex';
-    }
-
-    function openNewCustomerModal() {
-        document.getElementById('ncName').value = '';
-        document.getElementById('ncPhone').value = document.getElementById('custSearchInput').value;
-        document.getElementById('ncEmail').value = '';
-        document.getElementById('ncAddress').value = '';
-        document.getElementById('ncCompanyName').value = '';
-        document.getElementById('ncTypeId').selectedIndex = 0;
-        hideNcError();
-        document.getElementById('ncModalOverlay').classList.add('show');
-        document.getElementById('ncName').focus();
-    }
-
-    function closeNewCustomerModal() {
-        document.getElementById('ncModalOverlay').classList.remove('show');
-    }
-
-    function showNcError(msg) {
-        var el = document.getElementById('ncError');
-        el.textContent = msg;
-        el.classList.add('show');
-    }
-    function hideNcError() {
-        document.getElementById('ncError').classList.remove('show');
-    }
-
-    function saveNewCustomer() {
-        var name = document.getElementById('ncName').value.trim();
-        var phone = document.getElementById('ncPhone').value.trim();
-        if (!name) { showNcError('Vui lòng nhập họ tên.'); document.getElementById('ncName').focus(); return; }
-        if (!phone) { showNcError('Vui lòng nhập số điện thoại.'); document.getElementById('ncPhone').focus(); return; }
-        hideNcError();
-
-        var btn = document.getElementById('ncSaveBtn');
-        btn.disabled = true; btn.textContent = 'Đang lưu...';
-
-        var fd = new FormData();
-        fd.append('action', 'create_customer');
-        fd.append('custName', name);
-        fd.append('custPhone', phone);
-        fd.append('custEmail', document.getElementById('ncEmail').value.trim());
-        fd.append('custAddress', document.getElementById('ncAddress').value.trim());
-        fd.append('custCompanyName', document.getElementById('ncCompanyName').value.trim());
-        fd.append('custTypeId', document.getElementById('ncTypeId').value);
-
-        fetch('${pageContext.request.contextPath}/liquidations', { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                btn.disabled = false; btn.textContent = 'Lưu khách hàng';
-                if (data.success) {
-                    var c = {
-                        id: data.id, name: data.name, phone: data.phone,
-                        email: data.email, address: data.address, companyName: data.companyName
-                    };
-                    if (data.existing) {
-                        showNcError('SĐT này đã tồn tại — đã tự động chọn khách hàng: ' + data.name);
-                        setTimeout(function() {
-                            closeNewCustomerModal();
-                            selectCustomer(c);
-                        }, 1500);
-                    } else {
-                        closeNewCustomerModal();
-                        selectCustomer(c);
-                    }
-                } else {
-                    showNcError(data.error || 'Lỗi không xác định');
-                }
-            }).catch(function() {
-                btn.disabled = false; btn.textContent = 'Lưu khách hàng';
-                showNcError('Lỗi kết nối máy chủ');
-            });
+    // Bật/tắt yêu cầu nhập Tên công ty theo loại khách hàng (doanh nghiệp/công ty).
+    function onCustomerTypeChange() {
+        var sel = document.getElementById('customerTypeSelect');
+        if (!sel) return;
+        var opt = sel.options[sel.selectedIndex];
+        var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
+        var isCompany = name.indexOf('doanh nghi') >= 0 || name.indexOf('công ty') >= 0;
+        var req = document.querySelector('.company-req');
+        if (req) req.style.display = isCompany ? '' : 'none';
+        var company = document.getElementById('customerCompany');
+        if (company) company.required = isCompany;
     }
 
     function escHtml(str) {
@@ -879,6 +704,7 @@
     </c:if>
 </script>
 <div class="toast-host" id="toastHost"></div>
+<script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>

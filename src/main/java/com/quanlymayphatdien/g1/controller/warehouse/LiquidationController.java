@@ -682,10 +682,57 @@ public class LiquidationController extends HttpServlet {
             }
         }
 
-        if (customerIdStr == null || customerIdStr.trim().isEmpty()) {
-            throw new Exception("Quản lý kho phải chọn Khách hàng trước khi gửi Sếp duyệt.");
+        Integer resolvedCustomerId = null;
+        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try {
+                resolvedCustomerId = Integer.parseInt(customerIdStr.trim());
+            } catch (NumberFormatException ignore) {
+            }
         }
-        liquidationDAO.updateCustomer(liquidationId, Integer.parseInt(customerIdStr));
+
+        // Nếu chưa chọn KH có sẵn nhưng nhập KH mới (tên + SĐT) → tạo/khớp khách hàng
+        if (resolvedCustomerId == null) {
+            String custName = request.getParameter("customerName");
+            String custPhone = request.getParameter("customerPhone");
+            if (custName != null && !custName.trim().isEmpty()
+                    && custPhone != null && !custPhone.trim().isEmpty()) {
+                if (customerDAO.isPhoneExists(custPhone.trim(), null)) {
+                    Customer existing = customerDAO.findByPhone(custPhone.trim());
+                    if (existing != null) {
+                        resolvedCustomerId = existing.getId();
+                    }
+                }
+                if (resolvedCustomerId == null) {
+                    Customer c = new Customer();
+                    c.setName(custName.trim());
+                    c.setPhone(custPhone.trim());
+                    String email = request.getParameter("customerEmail");
+                    String address = request.getParameter("customerAddress");
+                    String company = request.getParameter("customerCompany");
+                    String typeIdStr = request.getParameter("customerTypeId");
+                    c.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : null);
+                    c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+                    c.setCompanyName(company != null && !company.trim().isEmpty() ? company.trim() : null);
+                    if (typeIdStr != null && !typeIdStr.trim().isEmpty()) {
+                        try {
+                            c.setCustomerTypeId(Integer.parseInt(typeIdStr.trim()));
+                        } catch (NumberFormatException ignore) {
+                        }
+                    }
+                    c.setStatus("active");
+                    c.setCreatedBy(user.getId());
+                    int newId = customerDAO.insert(c);
+                    if (newId > 0) {
+                        resolvedCustomerId = newId;
+                    }
+                }
+            }
+        }
+
+        if (resolvedCustomerId == null) {
+            throw new Exception("Quản lý kho phải chọn hoặc nhập Khách hàng (Tên + SĐT) trước khi gửi Sếp duyệt.");
+        }
+        liquidationDAO.updateCustomer(liquidationId, resolvedCustomerId);
 
         liquidationDAO.updateStatus(liquidationId, "PENDING_CEO", user.getId(), "manager", null);
 
