@@ -73,6 +73,12 @@
                                 Chỉnh sửa
                             </a>
                         </c:if>
+                        <c:if test="${receipt.status == 'PENDING' && isOwner}">
+                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail()">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                Rút phiếu
+                            </button>
+                        </c:if>
                     </div>
                 </header>
 
@@ -495,6 +501,7 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
         <script>
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
@@ -512,6 +519,37 @@
                     window.SESSION_DATA = null;
                 }
             });
+
+            var detailCancelLock = false;
+            function confirmCancelDetail() {
+                var ctx = window.APP_CTX;
+                var receiptId = ${receipt.receiptId};
+                if (!receiptId || !window.ExportScannerActions) return;
+                if (detailCancelLock) return;
+                window.ExportScannerActions.confirmAction({
+                    modalId: 'cancelDetailModal',
+                    title: 'Rút phiếu đang chờ duyệt',
+                    body: 'Phiếu đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt sẽ nhận thông báo.',
+                    confirmLabel: 'Rút phiếu',
+                    danger: true
+                }).then(function () {
+                    detailCancelLock = true;
+                    return window.ExportScannerActions.cancelPending(receiptId);
+                }).then(function (data) {
+                    detailCancelLock = false;
+                    if (!data || !data.success) {
+                        toast((data && data.message) ? data.message : 'Lỗi', 'danger');
+                        return;
+                    }
+                    toast(data.message || 'Đã huỷ phiếu', 'success');
+                    setTimeout(function () { window.location.reload(); }, 700);
+                }).catch(function (err) {
+                    detailCancelLock = false;
+                    if (err && err.message === 'cancelled') return;
+                    console.error(err);
+                    toast('Lỗi kết nối: ' + err.message, 'danger');
+                });
+            }
         </script>
     </body>
 </html>

@@ -49,6 +49,7 @@
                     <div class="toast toast-danger">
                         <c:out value="${error}"/>
                     </div>
+                    <c:remove var="error" scope="session"/>
                 </c:if>
 
                 <div class="hero">

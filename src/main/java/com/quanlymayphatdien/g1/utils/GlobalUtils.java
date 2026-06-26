@@ -38,8 +38,13 @@ public class GlobalUtils {
     public static final String PO_STATUS_APPROVED = "APPROVED";
     public static final String PO_STATUS_REJECTED = "REJECTED";
     public static final String PO_STATUS_CANCELLED = "CANCELLED";
-    public static final String PO_STATUS_RETURNED = "RETURNED";
+    public static final String PO_STATUS_NEEDS_REVISION = "NEEDS_REVISION";
 
     public static final String PROPOSAL_STATUS_PENDING_CEO = "PENDING_CEO";
     public static final String STATUS_NEEDS_REVISION = "NEEDS_REVISION";
+
+    public static final String REVISION_REQUESTER_SM = "SM";
+    public static final String REVISION_REQUESTER_CEO = "CEO";
+
+    public static final int PROPOSAL_DEADLINE_DAY = 5;
 }

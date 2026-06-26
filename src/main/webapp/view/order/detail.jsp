@@ -44,6 +44,15 @@
             .empty-state strong { color: var(--fg); font-size: 14px; }
 
             .info-value .status-pill { white-space: nowrap; }
+            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+            .modal-host.show { display: flex; }
+            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
+            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
+            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
+            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
     </head>
     <body>
@@ -153,6 +162,21 @@
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 Từ chối
                             </button>
+                            <c:if test="${canCancelOrder}">
+                                <button type="button" class="btn" onclick="openModal('cancelModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Hủy đơn
+                                </button>
+                            </c:if>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${order.status == 'NEEDS_REVISION' && order.createdBy == sessionScope.loggedUser.id}">
+                        <div class="action-bar-top">
+                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Sửa lại & Gửi duyệt
+                            </a>
                         </div>
                     </c:if>
 
@@ -347,12 +371,20 @@
                                     </div>
                                 </div>
 
-                                <c:if test="${not empty order.rejectReason}">
-                                    <div style="margin-top: 18px;">
-                                        <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
-                                        <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
-                                    </div>
-                                </c:if>
+                                <c:choose>
+                                    <c:when test="${order.status == 'REJECTED' && not empty order.rejectReason}">
+                                        <div style="margin-top: 18px;">
+                                            <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
+                                            <div class="danger-note"><c:out value="${order.rejectReason}"/></div>
+                                        </div>
+                                    </c:when>
+                                    <c:when test="${order.status == 'NEEDS_REVISION' && not empty order.revisionReason}">
+                                        <div style="margin-top: 18px;">
+                                            <div class="info-label" style="font-size:11px;color:#b15c00;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do yêu cầu chỉnh sửa</div>
+                                            <div class="note-soft" style="border-left:3px solid #b15c00;"><c:out value="${order.revisionReason}"/></div>
+                                        </div>
+                                    </c:when>
+                                </c:choose>
                                 <c:if test="${not empty order.note}">
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú nội bộ</div>
@@ -429,12 +461,26 @@
             <div class="modal-host" id="approveModal">
                 <div class="modal-card">
                     <h3>Duyệt đơn hàng</h3>
-                    <div class="modal-sub">Xác nhận duyệt đơn hàng <strong><c:out value="${order.orderCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve" id="approveForm">
+                    <div class="modal-sub">Đơn hàng sẽ chuyển sang trạng thái "Đã duyệt". Vui lòng kiểm tra tồn kho trước khi xác nhận.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=approve">
                         <input type="hidden" name="id" value="${order.orderId}" />
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirmApproveAction()">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="cancelModal">
+                <div class="modal-card">
+                    <h3>Hủy đơn hàng</h3>
+                    <div class="modal-sub">Đơn hàng sẽ bị hủy. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=cancel">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
                         </div>
                     </form>
                 </div>
@@ -447,7 +493,7 @@
                     <form method="POST" action="${pageContext.request.contextPath}/order?action=reject">
                         <input type="hidden" name="orderId" value="${order.orderId}" />
                         <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, thông tin chưa hợp lệ..." style="margin-top:8px;"></textarea>
+                        <textarea id="rejectReason" name="rejectReason" required placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, thông tin chưa hợp lệ..."></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
                             <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
@@ -463,7 +509,7 @@
                     <form method="POST" action="${pageContext.request.contextPath}/order?action=requestRevision" id="revisionForm">
                         <input type="hidden" name="id" value="${order.orderId}" />
                         <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                        <textarea name="reason" id="revisionReason" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
+                        <textarea name="reason" id="revisionReason" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..."></textarea>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
                             <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
@@ -538,17 +584,6 @@
             }
             function closeGenModal() {
                 document.getElementById('genModal').classList.remove('open');
-            }
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
-            }
-            function confirmCancelAction() {
-                return confirm('Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác.');
-            }
-
-            function confirmApproveAction() {
-                return confirm('Bạn có chắc muốn duyệt đơn hàng này?');
             }
 
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }

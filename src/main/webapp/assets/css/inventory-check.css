@@ -95,7 +95,10 @@
     color: white;
     border-color: var(--accent);
 }
-.btn-success:hover { filter: brightness(1.05); }
+.btn-success:hover {
+    background: var(--accent);
+    filter: brightness(1.1);
+}
 
 .detail-table {
     width: 100%;
