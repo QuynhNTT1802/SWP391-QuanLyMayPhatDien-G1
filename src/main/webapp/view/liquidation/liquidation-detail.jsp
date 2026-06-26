@@ -242,9 +242,6 @@
                                                 <button type="button" class="cust-trigger" id="custTrigger"
                                                         onclick="openCustomerPanel()" aria-haspopup="dialog">
                                                     <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
-                                                    <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    </svg>
                                                 </button>
                                                 <button type="button" class="cust-clear-btn" id="custClearBtn"
                                                         onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
@@ -543,6 +540,57 @@
             </svg><br>Đang tải...
         </div>
         <div class="cust-list-wrap" id="custList"></div>
+        <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border);">
+            <button type="button" class="btn btn-primary" style="width:100%;" onclick="openNewCustomerModal()">
+                + Tạo khách hàng mới
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tạo khách hàng mới -->
+<div class="modal-host" id="ncModalOverlay">
+    <div class="modal modal-lg">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0;">Thêm khách hàng mới</h3>
+            <button type="button" class="side-panel-close" onclick="closeNewCustomerModal()" title="Đóng">&times;</button>
+        </div>
+        <div class="modal-error" id="ncError" style="display:none;"></div>
+        <div class="form-grid">
+            <div class="field">
+                <label class="field-label">Họ và tên <span class="req">*</span></label>
+                <input type="text" id="ncName" class="input" placeholder="Nguyễn Văn A" />
+            </div>
+            <div class="field">
+                <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                <input type="tel" id="ncPhone" class="input" placeholder="0901234567" />
+            </div>
+            <div class="field">
+                <label class="field-label">Email</label>
+                <input type="email" id="ncEmail" class="input" placeholder="email@example.com" />
+            </div>
+            <div class="field">
+                <label class="field-label">Địa chỉ</label>
+                <input type="text" id="ncAddress" class="input" placeholder="Số nhà, đường, quận, tỉnh..." />
+            </div>
+            <div class="field">
+                <label class="field-label">Tên công ty</label>
+                <input type="text" id="ncCompanyName" class="input" placeholder="Công ty TNHH..." />
+            </div>
+            <div class="field">
+                <label class="field-label">Loại khách hàng</label>
+                <select id="ncTypeId" class="input">
+                    <option value="">-- Chọn loại --</option>
+                    <c:forEach var="ct" items="${customerTypes}">
+                        <option value="${ct.id}">${ct.name}</option>
+                    </c:forEach>
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+            <button type="button" class="btn" onclick="closeNewCustomerModal()">Huỷ</button>
+            <button type="button" class="btn btn-primary" id="ncSaveBtn" onclick="saveNewCustomer()">Lưu khách hàng</button>
+        </div>
     </div>
 </div>
 
@@ -727,6 +775,80 @@
                 el.value = (el.value || '').replace(/[^0-9]/g, '');
             });
         });
+    }
+
+    // ===== Modal tạo khách hàng mới (tái dùng action create_customer) =====
+    function openNewCustomerModal() {
+        document.getElementById('ncName').value = (document.getElementById('inpCustName') || {}).value || '';
+        document.getElementById('ncPhone').value = (document.getElementById('inpCustPhone') || {}).value || '';
+        document.getElementById('ncEmail').value = '';
+        document.getElementById('ncAddress').value = '';
+        document.getElementById('ncCompanyName').value = '';
+        document.getElementById('ncTypeId').selectedIndex = 0;
+        hideNcError();
+        document.getElementById('ncModalOverlay').classList.add('show');
+        document.getElementById('ncName').focus();
+    }
+    function closeNewCustomerModal() {
+        document.getElementById('ncModalOverlay').classList.remove('show');
+    }
+    function showNcError(msg) {
+        var el = document.getElementById('ncError');
+        el.textContent = msg; el.style.display = 'block';
+    }
+    function hideNcError() {
+        var el = document.getElementById('ncError');
+        el.style.display = 'none';
+    }
+    function saveNewCustomer() {
+        var name = document.getElementById('ncName').value.trim();
+        var phone = document.getElementById('ncPhone').value.trim();
+        if (!name) { showNcError('Vui lòng nhập họ tên.'); document.getElementById('ncName').focus(); return; }
+        if (!phone) { showNcError('Vui lòng nhập số điện thoại.'); document.getElementById('ncPhone').focus(); return; }
+        hideNcError();
+
+        var btn = document.getElementById('ncSaveBtn');
+        btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+        var fd = new FormData();
+        fd.append('action', 'create_customer');
+        fd.append('custName', name);
+        fd.append('custPhone', phone);
+        fd.append('custEmail', document.getElementById('ncEmail').value.trim());
+        fd.append('custAddress', document.getElementById('ncAddress').value.trim());
+        fd.append('custCompanyName', document.getElementById('ncCompanyName').value.trim());
+        fd.append('custTypeId', document.getElementById('ncTypeId').value);
+
+        fetch('${pageContext.request.contextPath}/liquidations', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false; btn.textContent = 'Lưu khách hàng';
+                if (data.success) {
+                    applyChosenCustomer(data);
+                    closeNewCustomerModal();
+                    if (typeof closeCustomerPanel === 'function') closeCustomerPanel();
+                    if (data.existing) {
+                        alert('SĐT này đã tồn tại — đã tự động chọn khách hàng: ' + data.name);
+                    }
+                } else {
+                    showNcError(data.error || 'Lỗi không xác định');
+                }
+            }).catch(function() {
+                btn.disabled = false; btn.textContent = 'Lưu khách hàng';
+                showNcError('Lỗi kết nối máy chủ');
+            });
+    }
+    // Điền KH vừa tạo vào form + trigger (giống khi chọn từ panel)
+    function applyChosenCustomer(c) {
+        var set = function(id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
+        set('sdHiddenId', c.id);
+        set('inpCustName', c.name);
+        set('inpCustPhone', c.phone);
+        set('inpCustEmail', c.email);
+        set('inpCustAddress', c.address);
+        set('customerCompany', c.companyName);
+        var label = document.getElementById('custTriggerLabel');
+        if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
     }
 </script>
 <script>
