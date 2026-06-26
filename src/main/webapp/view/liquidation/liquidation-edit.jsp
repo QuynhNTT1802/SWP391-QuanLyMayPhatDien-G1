@@ -59,13 +59,13 @@
 
                             <div class="form-grid">
                                 <div class="field">
-                                    <label class="field-label">Kho hàng</label>
-                                    <select class="input" disabled>
+                                    <label class="field-label">Kho hàng <span class="req">*</span></label>
+                                    <select class="input" id="warehouseSelect" onchange="changeWarehouse(this.value);">
                                         <c:forEach var="w" items="${warehouses}">
-                                            <c:if test="${w.warehouseId == liquidation.warehouseId}"><option selected>${w.name}</option></c:if>
+                                            <option value="${w.warehouseId}" ${w.warehouseId == selectedWarehouseId ? 'selected' : ''}>${w.name}</option>
                                         </c:forEach>
                                     </select>
-                                    <input type="hidden" name="warehouseId" id="warehouseId" value="${liquidation.warehouseId}" />
+                                    <input type="hidden" name="warehouseId" id="warehouseId" value="${selectedWarehouseId}" />
                                 </div>
 
                                 <div class="field">
@@ -92,34 +92,49 @@
                                 </div>
                                 <div class="liq-pick-body" id="pickBody">
                                     <c:choose>
-                                        <c:when test="${empty genGroups}">
+                                        <c:when test="${empty pickRows}">
                                             <div class="pick-empty">Kho này chưa có máy phát điện khả dụng.</div>
                                         </c:when>
                                         <c:otherwise>
-                                            <c:forEach var="g" items="${genGroups}">
-                                                <div class="pick-group" data-model="<c:out value='${g.model}'/>">
-                                                    <div class="pick-group-head">
-                                                        <span class="model"><c:out value="${g.model}"/></span>
-                                                        <span class="count">${g.serials.size()} máy</span>
-                                                        <span class="price"><fmt:formatNumber value="${g.unitPrice}" type="number" maxFractionDigits="0"/> đ</span>
-                                                    </div>
-                                                    <div class="pick-group-body">
-                                                        <c:forEach var="s" items="${g.serials}">
-                                                            <label class="pick-row ${s.selected ? 'is-checked' : ''}">
+                                            <table class="pick-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="col-cb"><input type="checkbox" id="pickAll"/></th>
+                                                        <th>Serial</th>
+                                                        <th>Model</th>
+                                                        <th>Tình trạng</th>
+                                                        <th class="col-date">Ngày nhập</th>
+                                                        <th class="col-price">Giá gốc</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <c:forEach var="r" items="${pickRows}">
+                                                        <tr class="pick-trow ${r.selected ? 'is-checked' : ''}" data-model="<c:out value='${r.model}'/>">
+                                                            <td class="col-cb">
                                                                 <input type="checkbox" class="pick-cb" name="serialNumber"
-                                                                       value="<c:out value='${s.serialNumber}'/>"
-                                                                       data-gen="${g.generatorId}"
-                                                                       data-price="${g.unitPrice}"
-                                                                       ${s.selected ? 'checked' : ''}/>
-                                                                <input type="hidden" class="gen-hidden" name="generatorId" value="${g.generatorId}" ${s.selected ? '' : 'disabled'}/>
-                                                                <span class="age-dot"></span>
-                                                                <span class="row-serial"><c:out value="${s.serialNumber}"/></span>
-                                                                <span class="row-price"><fmt:formatNumber value="${g.unitPrice}" type="number" maxFractionDigits="0"/> đ</span>
-                                                            </label>
-                                                        </c:forEach>
-                                                    </div>
-                                                </div>
-                                            </c:forEach>
+                                                                       value="<c:out value='${r.serialNumber}'/>"
+                                                                       data-gen="${r.generatorId}"
+                                                                       data-price="${r.unitPrice}"
+                                                                       data-condition="${r.condition}"
+                                                                       ${r.selected ? 'checked' : ''}/>
+                                                                <input type="hidden" class="gen-hidden" name="generatorId" value="${r.generatorId}" ${r.selected ? '' : 'disabled'}/>
+                                                            </td>
+                                                            <td class="row-serial"><c:out value="${r.serialNumber}"/></td>
+                                                            <td class="row-model"><c:out value="${r.model}"/></td>
+                                                            <td>
+                                                                <c:choose>
+                                                                    <c:when test="${r.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                                    <c:when test="${r.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                                    <c:when test="${r.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                                    <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                                </c:choose>
+                                                            </td>
+                                                            <td class="col-date row-date"><c:out value="${r.createdAtStr}"/></td>
+                                                            <td class="col-price row-price"><fmt:formatNumber value="${r.unitPrice}" type="number" maxFractionDigits="0"/> đ</td>
+                                                        </tr>
+                                                    </c:forEach>
+                                                </tbody>
+                                            </table>
                                         </c:otherwise>
                                     </c:choose>
                                 </div>
@@ -159,7 +174,7 @@
             var count = 0, total = 0;
             var models = {};
             checkboxes.forEach(function (cb) {
-                var row = cb.closest('.pick-row');
+                var row = cb.closest('.pick-trow');
                 var genHidden = row ? row.querySelector('.gen-hidden') : null;
                 if (cb.checked) {
                     count++;
@@ -182,22 +197,29 @@
             cb.addEventListener('change', recalc);
         });
 
-        // Tìm kiếm S/N hoặc model (lọc các nhóm/dòng đã render sẵn)
+        // Checkbox header: chọn/bỏ tất cả các dòng đang hiển thị
+        var pickAll = document.getElementById('pickAll');
+        if (pickAll) {
+            pickAll.addEventListener('change', function () {
+                checkboxes.forEach(function (cb) {
+                    var row = cb.closest('.pick-trow');
+                    if (row && row.style.display !== 'none') cb.checked = pickAll.checked;
+                });
+                recalc();
+            });
+        }
+
+        // Tìm kiếm S/N hoặc model (lọc các dòng đã render sẵn)
         var search = document.getElementById('serialSearchInput');
         if (search) {
             search.addEventListener('input', function () {
                 var q = (this.value || '').toLowerCase().trim();
-                document.querySelectorAll('.pick-group').forEach(function (group) {
-                    var model = (group.getAttribute('data-model') || '').toLowerCase();
-                    var modelMatch = model.indexOf(q) > -1;
-                    var anyRow = false;
-                    group.querySelectorAll('.pick-row').forEach(function (row) {
-                        var serial = (row.querySelector('.row-serial').textContent || '').toLowerCase();
-                        var show = !q || modelMatch || serial.indexOf(q) > -1;
-                        row.style.display = show ? '' : 'none';
-                        if (show) anyRow = true;
-                    });
-                    group.style.display = anyRow ? '' : 'none';
+                document.querySelectorAll('.pick-trow').forEach(function (row) {
+                    var model = (row.getAttribute('data-model') || '').toLowerCase();
+                    var serialEl = row.querySelector('.row-serial');
+                    var serial = serialEl ? (serialEl.textContent || '').toLowerCase() : '';
+                    var show = !q || model.indexOf(q) > -1 || serial.indexOf(q) > -1;
+                    row.style.display = show ? '' : 'none';
                 });
             });
         }
@@ -216,6 +238,20 @@
 
         recalc();
     })();
+
+    // Đổi kho: tải lại trang theo kho mới (server render máy của kho đó).
+    // Máy đã chọn thuộc kho cũ sẽ không còn — cảnh báo trước khi đổi.
+    function changeWarehouse(whId) {
+        if (!whId) return;
+        var anyChecked = document.querySelectorAll('.pick-cb:checked').length > 0;
+        if (anyChecked && !confirm('Đổi kho sẽ bỏ các máy đã chọn ở kho hiện tại. Tiếp tục?')) {
+            var sel = document.getElementById('warehouseSelect');
+            sel.value = document.getElementById('warehouseId').value;
+            return;
+        }
+        var id = '${liquidation.liquidationId}';
+        window.location.href = '${pageContext.request.contextPath}/liquidations?action=edit_view&id=' + encodeURIComponent(id) + '&warehouseId=' + encodeURIComponent(whId);
+    }
 </script>
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">
