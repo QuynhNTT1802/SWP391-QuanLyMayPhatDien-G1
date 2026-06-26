@@ -87,13 +87,7 @@ public class LiquidationController extends HttpServlet {
         try {
             switch (action) {
                 case "create":
-                    List<Category> reasons = categoryDAO.findByType("liquidation_reason");
-                    request.setAttribute("reasons", reasons);
-                    GeneratorDAO genDAO = new GeneratorDAO();
-                    request.setAttribute("generators", genDAO.findAll());
-                    request.setAttribute("warehouses", warehouseDAO.findAll());
-                    request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
-                    request.getRequestDispatcher("/view/liquidation/liquidation-create.jsp").forward(request, response);
+                    showCreateView(request, response);
                     break;
                 case "edit_view":
                     if (!perms.contains("liquidations.create")) {
@@ -105,12 +99,6 @@ public class LiquidationController extends HttpServlet {
                     break;
                 case "detail":
                     showDetail(request, response);
-                    break;
-                case "get_serials":
-                    getSerials(request, response);
-                    break;
-                case "get_serials_all":
-                    getSerialsAll(request, response);
                     break;
                 case "search_customer":
                     searchCustomerJson(request, response);
@@ -134,118 +122,107 @@ public class LiquidationController extends HttpServlet {
         }
     }
 
-    private void getSerials(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
-        int generatorId = Integer.parseInt(request.getParameter("generatorId"));
-        List<Inventory> serials = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, generatorId);
-        List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerials(warehouseId, generatorId);
+    // Hiển thị màn tạo đơn: render danh sách máy server-side (JSTL), không dùng AJAX/JSON.
+    private void showCreateView(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        request.setAttribute("reasons", categoryDAO.findByType("liquidation_reason"));
+        request.setAttribute("warehouses", warehouseDAO.findAll());
+        request.setAttribute("customerTypes", categoryDAO.findByType("customer_type"));
 
-        JsonArray available = new JsonArray();
-        for (Inventory inv : serials) {
-            JsonObject o = new JsonObject();
-            o.addProperty("serialNumber", inv.getSerialNumber());
-            if (inv.getGeneratorModel() != null) {
-                o.addProperty("generatorName", inv.getGeneratorModel());
-            }
-            if (inv.getCreatedAt() != null) {
-                o.addProperty("createdAt", inv.getCreatedAt().toString());
-            }
-            available.add(o);
-        }
-        JsonArray lockedArr = new JsonArray();
-        for (Map<String, Object> m : locked) {
-            JsonObject o = new JsonObject();
-            o.addProperty("serialNumber", (String) m.get("serialNumber"));
-            o.addProperty("liquidationId", (Integer) m.get("liquidationId"));
-            o.addProperty("liquidationCode", (String) m.get("liquidationCode"));
-            o.addProperty("liquidationStatus", (String) m.get("liquidationStatus"));
-            if (m.get("createdAt") != null) {
-                o.addProperty("createdAt", m.get("createdAt").toString());
-            }
-            lockedArr.add(o);
-        }
-        JsonObject root = new JsonObject();
-        root.add("available", available);
-        root.add("locked", lockedArr);
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(new Gson().toJson(root));
-    }
-
-    private void getSerialsAll(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
-        List<Inventory> all = inventoryDAO.findInStockByWarehouse(warehouseId);
-        List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
-
-        LinkedHashMap<Integer, List<Inventory>> grouped = new LinkedHashMap<>();
-        HashMap<Integer, String> modelMap = new HashMap<>();
-        for (Inventory inv : all) {
-            grouped.computeIfAbsent(inv.getGeneratorId(), k -> new java.util.ArrayList<>()).add(inv);
-            if (inv.getGeneratorModel() != null) {
-                modelMap.put(inv.getGeneratorId(), inv.getGeneratorModel());
-            }
-        }
-
-        HashMap<Integer, java.math.BigDecimal> priceMap = new HashMap<>();
-        for (Integer genId : grouped.keySet()) {
+        Integer warehouseId = null;
+        String whParam = request.getParameter("warehouseId");
+        if (whParam != null && !whParam.trim().isEmpty()) {
             try {
-                priceMap.put(genId, purchaseOrderDAO.findApprovedUnitPriceByGenerator(genId));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                priceMap.put(genId, null);
+                warehouseId = Integer.parseInt(whParam.trim());
+            } catch (NumberFormatException ignore) {
             }
         }
+        request.setAttribute("selectedWarehouseId", warehouseId);
 
-        JsonArray generators = new JsonArray();
-        for (Map.Entry<Integer, List<Inventory>> e : grouped.entrySet()) {
-            int genId = e.getKey();
-            JsonObject g = new JsonObject();
-            g.addProperty("generatorId", genId);
-            g.addProperty("model", modelMap.getOrDefault(genId, ""));
-            BigDecimal price = priceMap.get(genId);
-            if (price != null) {
-                g.addProperty("unitPrice", price);
-            } else {
-                g.add("unitPrice", com.google.gson.JsonNull.INSTANCE);
-            }
+        String reasonParam = request.getParameter("reasonId");
+        if (reasonParam != null && !reasonParam.trim().isEmpty()) {
+            request.setAttribute("selectedReasonId", reasonParam.trim());
+        }
 
-            JsonArray serials = new JsonArray();
-            for (Inventory inv : e.getValue()) {
-                JsonObject s = new JsonObject();
-                s.addProperty("serialNumber", inv.getSerialNumber());
-                if (inv.getCreatedAt() != null) {
-                    s.addProperty("createdAt", inv.getCreatedAt().toString());
+        String condFilter = request.getParameter("cond");
+        request.setAttribute("condFilter", condFilter != null ? condFilter : "all");
+
+        if (warehouseId != null) {
+            List<Inventory> inStock = inventoryDAO.findInStockByWarehouse(warehouseId);
+            List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
+
+            int cGood = 0, cPoor = 0, cDamaged = 0;
+            for (Inventory inv : inStock) {
+                if ("GOOD".equals(inv.getCondition())) {
+                    cGood++;
+                } else if ("POOR".equals(inv.getCondition())) {
+                    cPoor++;
+                } else if ("DAMAGED".equals(inv.getCondition())) {
+                    cDamaged++;
                 }
-                serials.add(s);
             }
-            g.add("serials", serials);
-            generators.add(g);
+            request.setAttribute("condCountGood", cGood);
+            request.setAttribute("condCountPoor", cPoor);
+            request.setAttribute("condCountDamaged", cDamaged);
+            request.setAttribute("condCountAll", inStock.size());
+
+            boolean filtering = condFilter != null && !condFilter.isEmpty() && !"all".equals(condFilter);
+            List<Inventory> filtered = new ArrayList<>();
+            for (Inventory inv : inStock) {
+                if (filtering && !condFilter.equals(inv.getCondition())) {
+                    continue;
+                }
+                filtered.add(inv);
+            }
+
+            request.setAttribute("pickRows", buildPickRows(filtered, java.util.Collections.emptySet()));
+
+            List<Map<String, Object>> lockedRows = new ArrayList<>();
+            for (Map<String, Object> m : locked) {
+                Map<String, Object> r = new HashMap<>();
+                r.put("serialNumber", m.get("serialNumber"));
+                r.put("model", m.get("generatorModel"));
+                r.put("liquidationId", m.get("liquidationId"));
+                r.put("liquidationCode", m.get("liquidationCode"));
+                lockedRows.add(r);
+            }
+            request.setAttribute("lockedRows", lockedRows);
         }
 
-        JsonArray lockedArr = new JsonArray();
-        for (Map<String, Object> m : locked) {
-            JsonObject o = new JsonObject();
-            o.addProperty("serialNumber", (String) m.get("serialNumber"));
-            o.addProperty("generatorId", (Integer) m.get("generatorId"));
-            o.addProperty("generatorModel", (String) m.get("generatorModel"));
-            o.addProperty("liquidationId", (Integer) m.get("liquidationId"));
-            o.addProperty("liquidationCode", (String) m.get("liquidationCode"));
-            o.addProperty("liquidationStatus", (String) m.get("liquidationStatus"));
-            if (m.get("createdAt") != null) {
-                o.addProperty("createdAt", m.get("createdAt").toString());
-            }
-            lockedArr.add(o);
-        }
-
-        JsonObject root = new JsonObject();
-        root.add("generators", generators);
-        root.add("locked", lockedArr);
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(new Gson().toJson(root));
+        request.getRequestDispatcher("/view/liquidation/liquidation-create.jsp").forward(request, response);
     }
+
+    // Build danh sách máy phẳng để render bảng, giữ nguyên thứ tự của inStock
+    // (DAO đã sắp Hỏng->Kém->Tốt). Mỗi row: serialNumber, generatorId, model,
+    // unitPrice, condition, createdAtStr, selected.
+    private List<Map<String, Object>> buildPickRows(List<Inventory> inStock, Set<String> selectedSerials) {
+        java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        Map<Integer, BigDecimal> priceCache = new HashMap<>();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Inventory inv : inStock) {
+            int gid = inv.getGeneratorId();
+            BigDecimal price = priceCache.get(gid);
+            if (price == null && !priceCache.containsKey(gid)) {
+                try {
+                    price = purchaseOrderDAO.findApprovedUnitPriceByGenerator(gid);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    price = null;
+                }
+                priceCache.put(gid, price);
+            }
+            Map<String, Object> r = new HashMap<>();
+            r.put("serialNumber", inv.getSerialNumber());
+            r.put("generatorId", gid);
+            r.put("model", inv.getGeneratorModel());
+            r.put("unitPrice", price != null ? price : BigDecimal.ZERO);
+            r.put("condition", inv.getCondition());
+            r.put("createdAtStr", inv.getCreatedAt() != null ? inv.getCreatedAt().format(df) : "");
+            r.put("selected", selectedSerials.contains(inv.getSerialNumber()));
+            rows.add(r);
+        }
+        return rows;
+    }
+
     
 
     private void searchCustomerJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -1015,71 +992,69 @@ public class LiquidationController extends HttpServlet {
         List<LiquidationDetail> details = detailDAO.findByLiquidationId(id);
         request.setAttribute("details", details);
 
-        // Build danh sách máy chọn (render server-side, không dùng AJAX/JS).
-        // Gồm: máy IN_STOCK của kho + máy đã có trong đơn (đang PENDING_LIQUIDATION).
-        int whId = l.getWarehouseId();
+        // Cho phép đổi kho: nhận warehouseId qua GET; nếu khác kho gốc thì hiện máy kho mới
+        // và KHÔNG giữ lại các máy đã chọn (chúng thuộc kho cũ).
+        int orderWhId = l.getWarehouseId();
+        Integer paramWh = null;
+        String whParam = request.getParameter("warehouseId");
+        if (whParam != null && !whParam.trim().isEmpty()) {
+            try {
+                paramWh = Integer.parseInt(whParam.trim());
+            } catch (NumberFormatException ignore) {
+            }
+        }
+        int whId = (paramWh != null) ? paramWh : orderWhId;
+        boolean sameWarehouse = (whId == orderWhId);
+        request.setAttribute("selectedWarehouseId", whId);
+
         Set<String> selectedSerials = new LinkedHashSet<>();
-        for (LiquidationDetail d : details) {
-            selectedSerials.add(d.getSerialNumber());
+        if (sameWarehouse) {
+            for (LiquidationDetail d : details) {
+                selectedSerials.add(d.getSerialNumber());
+            }
         }
 
         List<Inventory> inStock = inventoryDAO.findInStockByWarehouse(whId);
 
-        LinkedHashMap<Integer, List<Map<String, Object>>> serialsByGen = new LinkedHashMap<>();
-        LinkedHashMap<Integer, String> genModelMap = new LinkedHashMap<>();
+        // Danh sách máy phẳng (giữ thứ tự DAO đã sắp Hỏng->Kém->Tốt), tick sẵn máy đã có trong đơn
+        List<Map<String, Object>> pickRows = buildPickRows(inStock, selectedSerials);
 
-        for (Inventory inv : inStock) {
-            int gid = inv.getGeneratorId();
-            genModelMap.putIfAbsent(gid, inv.getGeneratorModel());
-            Map<String, Object> row = new HashMap<>();
-            row.put("serialNumber", inv.getSerialNumber());
-            row.put("createdAt", inv.getCreatedAt());
-            row.put("selected", selectedSerials.contains(inv.getSerialNumber()));
-            serialsByGen.computeIfAbsent(gid, k -> new ArrayList<>()).add(row);
-        }
-
-        // Thêm các máy đã có trong đơn mà không còn IN_STOCK (đang giữ chỗ cho đơn này)
-        for (LiquidationDetail d : details) {
-            int gid = d.getGeneratorId();
-            boolean exists = false;
-            List<Map<String, Object>> rows = serialsByGen.get(gid);
-            if (rows != null) {
-                for (Map<String, Object> r : rows) {
-                    if (d.getSerialNumber().equals(r.get("serialNumber"))) {
-                        exists = true;
-                        break;
-                    }
+        // Chỉ khi xem đúng kho gốc mới bổ sung các máy đã có trong đơn nhưng không còn IN_STOCK
+        // (đang giữ chỗ PENDING_LIQUIDATION cho đơn này).
+        if (sameWarehouse) {
+            Set<String> inStockSerials = new LinkedHashSet<>();
+            for (Inventory inv : inStock) {
+                inStockSerials.add(inv.getSerialNumber());
+            }
+            List<String> missingSerials = new ArrayList<>();
+            for (LiquidationDetail d : details) {
+                if (!inStockSerials.contains(d.getSerialNumber())) {
+                    missingSerials.add(d.getSerialNumber());
                 }
             }
-            if (!exists) {
-                genModelMap.putIfAbsent(gid, d.getGeneratorModelName());
-                Map<String, Object> row = new HashMap<>();
-                row.put("serialNumber", d.getSerialNumber());
-                row.put("createdAt", null);
-                row.put("selected", true);
-                serialsByGen.computeIfAbsent(gid, k -> new ArrayList<>()).add(row);
+            Map<String, String> condBySerial = inventoryDAO.findLatestConditionBySerials(missingSerials);
+            for (LiquidationDetail d : details) {
+                if (!inStockSerials.contains(d.getSerialNumber())) {
+                    BigDecimal price;
+                    try {
+                        price = purchaseOrderDAO.findApprovedUnitPriceByGenerator(d.getGeneratorId());
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        price = null;
+                    }
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("serialNumber", d.getSerialNumber());
+                    r.put("generatorId", d.getGeneratorId());
+                    r.put("model", d.getGeneratorModelName());
+                    r.put("unitPrice", price != null ? price : BigDecimal.ZERO);
+                    r.put("condition", condBySerial.get(d.getSerialNumber()));
+                    r.put("createdAtStr", "");
+                    r.put("selected", true);
+                    pickRows.add(r);
+                }
             }
         }
-
-        // Gom theo generator + lấy đơn giá PO duyệt
-        List<Map<String, Object>> genGroups = new ArrayList<>();
-        for (Map.Entry<Integer, List<Map<String, Object>>> e : serialsByGen.entrySet()) {
-            int gid = e.getKey();
-            BigDecimal price;
-            try {
-                price = purchaseOrderDAO.findApprovedUnitPriceByGenerator(gid);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                price = null;
-            }
-            Map<String, Object> g = new HashMap<>();
-            g.put("generatorId", gid);
-            g.put("model", genModelMap.getOrDefault(gid, ""));
-            g.put("unitPrice", price != null ? price : BigDecimal.ZERO);
-            g.put("serials", e.getValue());
-            genGroups.add(g);
-        }
-        request.setAttribute("genGroups", genGroups);
+        request.setAttribute("pickRows", pickRows);
 
         List<Category> reasons = categoryDAO.findByType("liquidation_reason");
         request.setAttribute("reasons", reasons);
