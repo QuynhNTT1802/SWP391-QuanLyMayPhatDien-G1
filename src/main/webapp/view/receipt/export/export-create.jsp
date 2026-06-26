@@ -72,6 +72,21 @@
         .add-row-btn { margin-top: 12px; font-size: 13px; }
         .add-row-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        .scanner-box { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px;
+            background: color-mix(in srgb, var(--accent) 6%, var(--bg));
+            border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+            border-radius: var(--radius); margin-bottom: 14px; }
+        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.04em; }
+        .scanner-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
+            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box; }
+        .scanner-box input:focus { outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+        .scanner-box small { color: var(--muted); font-size: 12px; }
+        .scanner-box.disabled { opacity: 0.5; }
+        .scanner-box.disabled input { cursor: not-allowed; }
+
         .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
             border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; }
         .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
@@ -88,6 +103,20 @@
 
         a.btn { text-decoration: none; }
 
+        .scanner-row { display: flex; gap: 8px; align-items: stretch; }
+        .scanner-row input { flex: 1; }
+        .scanner-row .cam-btn { width: 42px; min-width: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
+        .scanner-row .cam-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+        .scanner-row .cam-btn.active { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+        #scannerCamera { display: none; margin-top: 8px; }
+        #scannerCamera video { width: 100%; max-width: 400px; border-radius: var(--radius-sm); }
+
+        .order-counter { font-size: 12px; color: var(--muted); padding: 6px 0; }
+        .order-counter strong { color: var(--accent); }
+        .order-req-banner { background: var(--accent-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
+        .order-req-banner .req-title { font-weight: 700; margin-bottom: 4px; }
+        .order-req-banner .req-item { color: var(--fg); }
+        .order-req-banner .req-item strong { color: var(--accent); }
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -104,11 +133,7 @@
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                        <a class="btn" href="${pageContext.request.contextPath}/export-receipt">Huỷ</a>
-                        <button type="submit" name="submitMode" value="draft" form="receiptForm" class="btn" title="Lưu nháp để chỉnh sửa tiếp">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            Lưu nháp
-                        </button>
+                        <a class="btn" href="javascript:void(0)" onclick="confirmCancelCreate()">Huỷ</a>
                         <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                             Gửi phiếu
@@ -117,7 +142,7 @@
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/export-receipt">
+            <a class="back-link" href="javascript:void(0)" onclick="confirmCancelCreate()">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Huỷ và quay lại danh sách
             </a>
@@ -150,6 +175,7 @@
                 <c:if test="${not empty receipt.orderId}">
                     <input type="hidden" name="orderId" value="${receipt.orderId}" />
                 </c:if>
+                <input type="hidden" name="receiptId" id="receiptIdField" value="0" />
 
                 <div class="content">
                     <section class="section">
@@ -236,6 +262,27 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="scanner-box" id="scannerBox">
+                            <label>Quét barcode nhanh</label>
+                            <div class="scanner-row">
+                                <input type="text" id="scanBox" autocomplete="off"
+                                       placeholder="Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
+                                <button type="button" class="cam-btn" id="camBtn" title="Mở camera để quét" onclick="toggleCamera()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                </button>
+                            </div>
+                            <div id="scannerCamera"></div>
+                            <small>Mỗi lần quét, hệ thống tự reserve serial nếu máy đang IN_STOCK tại kho đã chọn.</small>
+                        </div>
+                        <c:if test="${fromOrder}">
+                        <div class="order-req-banner">
+                            <div class="req-title">Đơn hàng <strong><c:out value="${order.orderCode}"/></strong> yêu cầu:</div>
+                            <c:forEach var="req" items="${orderRequirements}" varStatus="st">
+                            <div class="req-item">${st.count}. <c:out value="${req.generatorModel}"/> <c:if test="${not empty req.brandName}">(<c:out value="${req.brandName}"/>)</c:if> x <strong>${req.quantity}</strong></div>
+                            </c:forEach>
+                        </div>
+                        </c:if>
+                        <div class="order-counter"><c:if test="${fromOrder}">Đã nhập: <strong id="orderScannedCount">0</strong> / <strong>${expectedRows}</strong> serial &middot; </c:if>Tổng số dòng: <strong id="totalRowCount">0</strong></div>
                         <table class="detail-table">
                             <thead>
                                 <tr>
@@ -267,10 +314,12 @@
                             </tbody>
                         </table>
 
+                        <c:if test="${not fromOrder}">
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
+                        </c:if>
                     </section>
                 </div>
 
@@ -292,10 +341,12 @@
     window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
     </c:if>
 </script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
 <script>
     var ctx = window.APP_CTX;
     var generatorCache = [];
@@ -322,6 +373,8 @@
         }<c:if test="${!st.last}">,</c:if>
         </c:forEach>
     ];
+    var isOrderMode = ${not empty fromOrder and fromOrder};
+    var expectedRows = ${empty expectedRows ? 0 : expectedRows};
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -403,6 +456,7 @@
             }
         });
         updateRowNumbers();
+        updateOrderCounter();
         validateInventoryRealtime();
         filterAlreadySelected();
         if (!generatorCache || generatorCache.length === 0) {
@@ -505,6 +559,7 @@
         var tbody = document.getElementById('detailBody');
         tbody.appendChild(buildEmptyRow());
         updateRowNumbers();
+        updateOrderCounter();
         validateInventoryRealtime();
         filterAlreadySelected();
     }
@@ -512,9 +567,39 @@
     function removeRow(btn) {
         var tbody = document.getElementById('detailBody');
         if (tbody.querySelectorAll('tr').length <= 1) return;
-        btn.closest('tr').remove();
-        updateRowNumbers();
-        validateInventoryRealtime();
+        var row = btn.closest('tr');
+        var invId = parseInt(row.getAttribute('data-inventory-id') || '0', 10);
+        var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
+        if (invId > 0 && receiptId > 0 && window.ExportScannerActions) {
+            btn.disabled = true;
+            window.ExportScannerActions.removeScannedSerial(receiptId, invId)
+                .then(function (data) {
+                    if (!data || !data.success) {
+                        btn.disabled = false;
+                        toast((data && data.message) ? data.message : 'Lỗi khi giải phóng serial', 'danger');
+                        return;
+                    }
+                    if (data.emptyReceipt) {
+                        document.getElementById('receiptIdField').value = '0';
+                        sessionStorage.removeItem('scanDraftReceiptId');
+                    }
+                    row.remove();
+                    updateRowNumbers();
+                    updateOrderCounter();
+                    validateInventoryRealtime();
+                    toast(data.message || 'Đã giải phóng serial', 'success');
+                })
+                .catch(function (err) {
+                    btn.disabled = false;
+                    console.error(err);
+                    toast('Lỗi kết nối: ' + err.message, 'danger');
+                });
+        } else {
+            row.remove();
+            updateRowNumbers();
+            updateOrderCounter();
+            validateInventoryRealtime();
+        }
     }
 
     function updateRowNumbers() {
@@ -608,6 +693,7 @@
         var submitter = (typeof event !== 'undefined' && event && event.submitter) ? event.submitter : null;
         var isDraft = submitter && submitter.value === 'draft';
         if (isDraft) {
+            sessionStorage.removeItem('scanDraftReceiptId');
             return true;
         }
         var valid = true;
@@ -632,6 +718,7 @@
             toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy hoặc Lưu nháp để xử lý sau.', 'danger');
             return false;
         }
+        sessionStorage.removeItem('scanDraftReceiptId');
         return valid;
     }
 
@@ -645,6 +732,298 @@
         if (window.SESSION_DATA && window.SESSION_DATA.message) {
             toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
             window.SESSION_DATA = null;
+        }
+    });
+
+    var currentExportReceiptId = 0;
+    var exportScannerLocked = false;
+
+    function refreshExportScannerState() {
+        var box = document.getElementById('scannerBox');
+        var input = document.getElementById('scanBox');
+        if (!box || !input) return;
+        var whId = document.getElementById('warehouseSelect').value;
+        if (!whId) {
+            box.classList.add('disabled');
+            input.disabled = true;
+            input.placeholder = 'Vui lòng chọn kho trước khi quét...';
+        } else {
+            box.classList.remove('disabled');
+            input.disabled = false;
+            input.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+        }
+    }
+
+    function findGeneratorInCache(generatorId) {
+        if (!generatorCache) return null;
+        for (var i = 0; i < generatorCache.length; i++) {
+            if (String(generatorCache[i].id) === String(generatorId)) return generatorCache[i];
+        }
+        return null;
+    }
+
+    var html5Scanner = null;
+    var isScanning = false;
+
+    function toggleCamera() {
+        if (isScanning) { stopCamera(); }
+        else { startCamera(); }
+    }
+
+    function startCamera() {
+        var camDiv = document.getElementById('scannerCamera');
+        var camBtn = document.getElementById('camBtn');
+        if (!camDiv) return;
+        camDiv.style.display = 'block';
+        camBtn.classList.add('active');
+        camBtn.title = 'Tắt camera';
+        try {
+            html5Scanner = new Html5Qrcode('scannerCamera');
+            html5Scanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                function (decodedText) { onExportScanned(decodedText); },
+                function () {}
+            ).then(function () { isScanning = true; })
+            .catch(function (err) {
+                console.error(err);
+                toast('Không thể mở camera: ' + err, 'danger');
+                stopCamera();
+            });
+        } catch (e) {
+            console.error(e);
+            toast('Lỗi: ' + e.message, 'danger');
+            stopCamera();
+        }
+    }
+
+    function stopCamera() {
+        if (html5Scanner) {
+            try { html5Scanner.stop().then(function () { html5Scanner = null; }).catch(function () {}); } catch (e) {}
+        }
+        var camDiv = document.getElementById('scannerCamera');
+        if (camDiv) camDiv.style.display = 'none';
+        var camBtn = document.getElementById('camBtn');
+        if (camBtn) { camBtn.classList.remove('active'); camBtn.title = 'Mở camera để quét'; }
+        isScanning = false;
+    }
+
+    function updateOrderCounter() {
+        var totalRows = document.querySelectorAll('#detailBody tr').length;
+        var elTotal = document.getElementById('totalRowCount');
+        if (elTotal) elTotal.textContent = totalRows;
+        if (!isOrderMode) return;
+        var count = 0;
+        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+            if (sel.value) count++;
+        });
+        var el = document.getElementById('orderScannedCount');
+        if (el) el.textContent = count;
+    }
+
+    function onExportScanned(serial) {
+        if (!serial) return;
+        var whId = document.getElementById('warehouseSelect').value;
+        if (!whId) { toast('Vui lòng chọn kho trước khi quét', 'danger'); return; }
+        if (exportScannerLocked) return;
+        exportScannerLocked = true;
+
+        var url = ctx + '/export-receipt?action=addScannedSerial'
+                + '&warehouseId=' + encodeURIComponent(whId)
+                + '&serialNumber=' + encodeURIComponent(serial)
+                + (currentExportReceiptId ? '&receiptId=' + currentExportReceiptId : '');
+
+        fetch(url, { method: 'POST' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                exportScannerLocked = false;
+                if (!data || !data.success) {
+                    toast((data && data.message) ? data.message : 'Lỗi khi quét', 'danger');
+                    return;
+                }
+                currentExportReceiptId = data.receiptId || currentExportReceiptId;
+                var receiptIdField = document.getElementById('receiptIdField');
+                if (receiptIdField && data.receiptId) {
+                    receiptIdField.value = data.receiptId;
+                    sessionStorage.setItem('scanDraftReceiptId', data.receiptId);
+                }
+
+                var tr = buildEmptyRow();
+                if (data.inventoryId) {
+                    tr.setAttribute('data-inventory-id', data.inventoryId);
+                }
+                if (data.receiptId) {
+                    tr.setAttribute('data-receipt-id', data.receiptId);
+                }
+                var sel = tr.querySelector('select[name="generatorId"]');
+                if (sel && data.generatorId) {
+                    sel.setAttribute('data-current', data.generatorId);
+                    renderGeneratorOptions(sel);
+                }
+                var serialSel = tr.querySelector('select[name="serialNumber"]');
+                if (serialSel) {
+                    var opt = document.createElement('option');
+                    opt.value = data.serialNumber;
+                    opt.textContent = data.serialNumber + ' (' + (data.generatorModel || '') + ')';
+                    opt.selected = true;
+                    serialSel.innerHTML = '';
+                    serialSel.appendChild(opt);
+                    var newOpt = document.createElement('option');
+                    newOpt.value = '';
+                    newOpt.textContent = '-- Chọn serial --';
+                    serialSel.insertBefore(newOpt, opt);
+                }
+                var stockDiv = tr.querySelector('.col-stock');
+                if (stockDiv && data.generatorModel) {
+                    stockDiv.textContent = 'Đã quét: ' + data.generatorModel;
+                    stockDiv.style.color = 'var(--accent)';
+                    stockDiv.style.fontWeight = '600';
+                }
+                var tbody = document.getElementById('detailBody');
+                tbody.querySelectorAll('tr').forEach(function (r) {
+                    var gs = r.querySelector('select[name="generatorId"]');
+                    if (gs && !gs.value) r.remove();
+                });
+                tbody.appendChild(tr);
+                updateRowNumbers();
+                updateOrderCounter();
+                toast('Đã reserve serial ' + data.serialNumber, 'success');
+                var scanEl = document.getElementById('scanBox');
+                if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+            })
+            .catch(function (err) {
+                exportScannerLocked = false;
+                console.error(err);
+                toast('Lỗi kết nối: ' + err.message, 'danger');
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var scanInput = document.getElementById('scanBox');
+        if (scanInput) {
+            scanInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    var val = scanInput.value.trim();
+                    if (val) onExportScanned(val);
+                }
+            });
+        }
+        refreshExportScannerState();
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect) {
+            whSelect.addEventListener('change', refreshExportScannerState);
+        }
+        if (scanInput && !scanInput.disabled) {
+            scanInput.focus();
+        }
+        if (isOrderMode) {
+            updateOrderCounter();
+        }
+        (function () {
+            var orphanedId = sessionStorage.getItem('scanDraftReceiptId');
+            var currentId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
+            if (orphanedId && currentId === 0) {
+                var id = parseInt(orphanedId, 10);
+                if (id > 0 && window.ExportScannerActions) {
+                    window.ExportScannerActions.discardDraft(id)
+                        .then(function () { sessionStorage.removeItem('scanDraftReceiptId'); })
+                        .catch(function () { sessionStorage.removeItem('scanDraftReceiptId'); });
+                } else { sessionStorage.removeItem('scanDraftReceiptId'); }
+            }
+        })();
+    });
+
+    var createReceiptLock = false;
+    function confirmCancelCreate() {
+        var ctx = window.APP_CTX;
+        var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
+        if (!receiptId || !window.ExportScannerActions) {
+            window.location.href = ctx + '/export-receipt';
+            return;
+        }
+        if (createReceiptLock) return;
+        window.ExportScannerActions.confirmAction({
+            modalId: 'discardDraftModalCreate',
+            title: 'Huỷ phiếu nháp',
+            body: 'Phiếu nháp sẽ bị huỷ và tất cả serial đã quét sẽ được trả về kho. Hành động này không thể hoàn tác.',
+            confirmLabel: 'Huỷ phiếu nháp',
+            danger: true
+        }).then(function () {
+            createReceiptLock = true;
+            return window.ExportScannerActions.discardDraft(receiptId);
+        }).then(function (data) {
+            createReceiptLock = false;
+            if (!data || !data.success) {
+                toast((data && data.message) ? data.message : 'Lỗi khi huỷ phiếu', 'danger');
+                return;
+            }
+            toast(data.message || 'Đã huỷ phiếu nháp', 'success');
+            sessionStorage.removeItem('scanDraftReceiptId');
+            setTimeout(function () {
+                window.location.href = ctx + '/export-receipt';
+            }, 600);
+        }).catch(function (err) {
+            createReceiptLock = false;
+            if (err && err.message === 'cancelled') return;
+            console.error(err);
+            toast('Lỗi kết nối: ' + err.message, 'danger');
+        });
+    }
+
+    (function () {
+        var prevWarehouse = document.getElementById('warehouseSelect').value;
+        var whSelect = document.getElementById('warehouseSelect');
+        if (!whSelect) return;
+        whSelect.addEventListener('change', function () {
+            stopCamera();
+            var newWh = whSelect.value;
+            var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
+            if (newWh !== prevWarehouse && receiptId > 0 && window.ExportScannerActions) {
+                window.ExportScannerActions.confirmAction({
+                    modalId: 'changeWarehouseModalCreate',
+                    title: 'Đổi kho sẽ huỷ phiếu nháp',
+                    body: 'Bạn đang có phiếu nháp với các serial đã reserve. Đổi kho sẽ huỷ phiếu hiện tại và giải phóng các serial đã quét. Tiếp tục?',
+                    confirmLabel: 'Đổi kho và huỷ phiếu cũ',
+                    danger: true
+                }).then(function () {
+                    return window.ExportScannerActions.discardDraft(receiptId);
+                }).then(function (data) {
+                    if (!data || !data.success) {
+                        toast((data && data.message) ? data.message : 'Lỗi', 'danger');
+                        whSelect.value = prevWarehouse;
+                        return;
+                    }
+                    document.getElementById('receiptIdField').value = '0';
+                    currentExportReceiptId = 0;
+                    sessionStorage.removeItem('scanDraftReceiptId');
+                    var tbody = document.getElementById('detailBody');
+                    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+                    tbody.appendChild(buildEmptyRow());
+                    updateRowNumbers();
+                    updateOrderCounter();
+                    prevWarehouse = newWh;
+                    onWarehouseChange();
+                    toast('Đã huỷ phiếu nháp và đổi kho', 'success');
+                }).catch(function (err) {
+                    if (err && err.message === 'cancelled') {
+                        whSelect.value = prevWarehouse;
+                        return;
+                    }
+                    console.error(err);
+                    toast('Lỗi kết nối: ' + err.message, 'danger');
+                });
+            } else {
+                prevWarehouse = newWh;
+            }
+        });
+    })();
+
+    window.addEventListener('beforeunload', function () { stopCamera(); });
+    window.addEventListener('pagehide', function () {
+        var id = sessionStorage.getItem('scanDraftReceiptId');
+        if (id) {
+            navigator.sendBeacon(ctx + '/export-receipt?action=discardDraft&receiptId=' + encodeURIComponent(id));
         }
     });
 </script>

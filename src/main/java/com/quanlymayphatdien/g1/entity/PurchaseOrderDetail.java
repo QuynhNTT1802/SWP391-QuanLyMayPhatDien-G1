@@ -12,6 +12,7 @@ public class PurchaseOrderDetail {
 
     private int poDetailId;
     private int poId;
+    private Integer proposalDetailId;
     private int generatorId;
     private int proposedQuantity;
     private int currentStock;
@@ -37,6 +38,14 @@ public class PurchaseOrderDetail {
 
     public void setPoId(int poId) {
         this.poId = poId;
+    }
+
+    public Integer getProposalDetailId() {
+        return proposalDetailId;
+    }
+
+    public void setProposalDetailId(Integer proposalDetailId) {
+        this.proposalDetailId = proposalDetailId;
     }
 
     public int getGeneratorId() {

@@ -242,6 +242,9 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         int rejectedBy = rs.getInt("rejected_by");
         p.setRejectedBy(rs.wasNull() ? null : rejectedBy);
 
+        try { p.setRevisionRequestedByRole(rs.getString("revision_requested_by_role")); }
+        catch (SQLException ignored) { p.setRevisionRequestedByRole(GlobalUtils.REVISION_REQUESTER_SM); }
+
         Timestamp pd = rs.getTimestamp("proposal_date");
         p.setProposalDate(pd != null ? pd.toLocalDateTime() : null);
 
@@ -339,7 +342,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public boolean requestRevision(int proposalId, int userId, String reason) {
         String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
-                + "rejected_by = ?, rejected_at = NOW() "
+                + "rejected_by = ?, rejected_at = NOW(), revision_requested_by_role = ? "
                 + "WHERE proposal_id = ? AND status = ?";
         try {
             connection = getConnection();
@@ -347,8 +350,9 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             statement.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
             statement.setString(2, reason);
             statement.setInt(3, userId);
-            statement.setInt(4, proposalId);
-            statement.setString(5, GlobalUtils.STATUS_PENDING);
+            statement.setString(4, GlobalUtils.REVISION_REQUESTER_SM);
+            statement.setInt(5, proposalId);
+            statement.setString(6, GlobalUtils.STATUS_PENDING);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -360,14 +364,38 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public boolean revertApprovedToRevision(int proposalId, int userId, String reason) {
         String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
-                + "rejected_by = ?, rejected_at = NOW() "
+                + "rejected_by = ?, rejected_at = NOW(), revision_requested_by_role = ? "
                 + "WHERE proposal_id = ? AND status = ?";
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
             ps.setString(2, reason);
             ps.setInt(3, userId);
-            ps.setInt(4, proposalId);
-            ps.setString(5, GlobalUtils.STATUS_APPROVED);
+            ps.setString(4, GlobalUtils.REVISION_REQUESTER_SM);
+            ps.setInt(5, proposalId);
+            ps.setString(6, GlobalUtils.STATUS_APPROVED);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * CEO yêu cầu Sale Manager chỉnh sửa proposal. Đánh dấu revision_requested_by_role='CEO'.
+     * Đồng thời gỡ liên kết PO (purchase_order_id = NULL).
+     */
+    public boolean requestRevisionByCeo(int proposalId, int ceoId, String reason) {
+        String sql = "UPDATE import_proposal SET status = ?, reject_reason = ?, "
+                + "rejected_by = ?, rejected_at = NOW(), revision_requested_by_role = ?, "
+                + "purchase_order_id = NULL "
+                + "WHERE proposal_id = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            ps.setString(2, reason);
+            ps.setInt(3, ceoId);
+            ps.setString(4, GlobalUtils.REVISION_REQUESTER_CEO);
+            ps.setInt(5, proposalId);
+            ps.setString(6, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

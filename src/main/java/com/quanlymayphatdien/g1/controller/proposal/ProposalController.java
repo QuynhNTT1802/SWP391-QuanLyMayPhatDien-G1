@@ -220,6 +220,17 @@ public class ProposalController extends HttpServlet {
 
         List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, dateFrom, dateTo, page, pageSize);
 
+        java.util.Map<String, java.time.LocalDate> periodDeadlines = new java.util.HashMap<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (ImportProposal p : proposals) {
+            if (p.getPeriod() != null && seen.add(p.getPeriod())) {
+                periodDeadlines.put(p.getPeriod(), PeriodUtils.deadlineOf(p.getPeriod()));
+            }
+        }
+        request.setAttribute("periodDeadlines", periodDeadlines);
+        request.setAttribute("currentDate", java.time.LocalDate.now());
+        request.setAttribute("currentPeriod", PeriodUtils.currentPeriod());
+
         request.setAttribute("proposals", proposals);
         request.setAttribute("totalProposals", total);
         request.setAttribute("currentPage", page);
@@ -232,6 +243,7 @@ public class ProposalController extends HttpServlet {
 
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
         request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
+        request.setAttribute("canViewPo", perms != null && perms.contains("purchase_orders.view"));
         request.setAttribute("canApproveProposal", canApprove);
         request.setAttribute("canRejectProposal", perms != null && perms.contains("proposals.reject"));
         request.setAttribute("canCancelProposal", perms != null && perms.contains("proposals.cancel"));
@@ -263,6 +275,23 @@ public class ProposalController extends HttpServlet {
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
 
+    /**
+     * Kiểm tra user có quyền edit proposal hay không.
+     * - Creator có thể edit proposal ở DRAFT hoặc NEEDS_REVISION (do SM yêu cầu)
+     * - Sale Manager (canApprove) chỉ được edit khi proposal ở NEEDS_REVISION do CEO yêu cầu
+     */
+    private boolean canEditProposal(ImportProposal p, int currentUserId, boolean canApprove) {
+        if (p == null) return false;
+        if (!GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
+                && !GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())) {
+            return false;
+        }
+        if (p.getCreatedBy() == currentUserId) return true;
+        boolean isCeoRequestedRevision = GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())
+                && GlobalUtils.REVISION_REQUESTER_CEO.equals(p.getRevisionRequestedByRole());
+        return isCeoRequestedRevision && canApprove;
+    }
+
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
@@ -274,10 +303,9 @@ public class ProposalController extends HttpServlet {
             return;
         }
         ImportProposal p = new ImportProposalDAO().findById(id);
-        if (p == null
-                || !(GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
-                     || GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus()))
-                || p.getCreatedBy() != currentUserId(request)) {
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean canApprove = perms != null && perms.contains("proposals.approve");
+        if (!canEditProposal(p, currentUserId(request), canApprove)) {
             session.setAttribute("toastMessage", "Không thể sửa phiếu này (đã gửi duyệt hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
@@ -378,6 +406,13 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("grandTotal", grandTotal);
         request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
         request.setAttribute("canApprove", canApprove);
+        request.setAttribute("canViewPo", perms != null && perms.contains("purchase_orders.view"));
+        request.setAttribute("isWithinDeadline",
+                p.getPeriod() == null
+                        || PeriodUtils.isCurrentPeriod(p.getPeriod())
+                        || PeriodUtils.isWithinDeadline(p.getPeriod()));
+        request.setAttribute("deadlineDate",
+                p.getPeriod() == null ? null : PeriodUtils.deadlineOf(p.getPeriod()));
         request.setAttribute("perms", perms);
         request.setAttribute("activePage", "proposal-detail");
         request.getRequestDispatcher("/view/proposal/proposal-detail.jsp").forward(request, response);
@@ -465,10 +500,9 @@ public class ProposalController extends HttpServlet {
         }
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal existing = dao.findById(id);
-        if (existing == null
-                || (!GlobalUtils.STATUS_DRAFT.equals(existing.getStatus())
-                    && !GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus()))
-                || existing.getCreatedBy() != currentUserId(request)) {
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean canApprove = perms != null && perms.contains("proposals.approve");
+        if (!canEditProposal(existing, currentUserId(request), canApprove)) {
             session.setAttribute("toastMessage", "Không thể cập nhật phiếu này (đã gửi duyệt hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
@@ -476,9 +510,21 @@ public class ProposalController extends HttpServlet {
         }
 
         String submitType = request.getParameter("submitType");
+        boolean hasDetailForm = request.getParameterValues("generatorId") != null;
+        if (!"draft".equals(submitType) && existing.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(existing.getPeriod())
+                && !PeriodUtils.isWithinDeadline(existing.getPeriod())) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + existing.getPeriod()
+                            + ". Không thể gửi duyệt lại phiếu này.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
         ImportProposal p = new ImportProposal();
         p.setProposalId(id);
-        p.setNote(request.getParameter("note"));
+        p.setNote(hasDetailForm ? request.getParameter("note") : existing.getNote());
         boolean isRevision = GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus());
         if ("draft".equals(submitType) && !isRevision) {
             p.setStatus(GlobalUtils.STATUS_DRAFT);
@@ -487,10 +533,12 @@ public class ProposalController extends HttpServlet {
         }
         dao.update(p);
 
-        dao.deleteDetails(id);
-        List<ImportProposalDetail> details = parseDetailsFromRequest(request, id);
-        if (!details.isEmpty()) {
-            dao.insertDetailsBatch(details);
+        if (hasDetailForm) {
+            dao.deleteDetails(id);
+            List<ImportProposalDetail> details = parseDetailsFromRequest(request, id);
+            if (!details.isEmpty()) {
+                dao.insertDetailsBatch(details);
+            }
         }
 
         logActivity(currentUserId(request), "import_proposal", "UPDATE", id,
@@ -513,10 +561,9 @@ public class ProposalController extends HttpServlet {
         User user = (User) session.getAttribute("loggedUser");
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal existing = dao.findById(id);
-        if (existing == null
-                || !(GlobalUtils.STATUS_DRAFT.equals(existing.getStatus())
-                     || GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus()))
-                || existing.getCreatedBy() != user.getId()) {
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        boolean canApprove = perms != null && perms.contains("proposals.approve");
+        if (!canEditProposal(existing, user.getId(), canApprove)) {
             session.setAttribute("toastMessage", "Không thể thay thế dữ liệu phiếu này.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
@@ -653,6 +700,18 @@ public class ProposalController extends HttpServlet {
             return;
         }
         ImportProposalDAO dao = new ImportProposalDAO();
+        ImportProposal pCheck = dao.findById(id);
+        if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
+                && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + pCheck.getPeriod()
+                            + ". Không thể duyệt phiếu.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
         boolean ok = dao.approveProposal(id, currentUserId(request));
         if (ok) {
             ImportProposal p = dao.findById(id);
@@ -690,6 +749,18 @@ public class ProposalController extends HttpServlet {
             return;
         }
         ImportProposalDAO dao = new ImportProposalDAO();
+        ImportProposal pCheck = dao.findById(id);
+        if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
+                && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + pCheck.getPeriod()
+                            + ". Không thể từ chối phiếu.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
         boolean ok = dao.rejectProposal(id, currentUserId(request), reason.trim());
         if (ok) {
             ImportProposal p = dao.findById(id);
@@ -727,6 +798,18 @@ public class ProposalController extends HttpServlet {
             return;
         }
         ImportProposalDAO dao = new ImportProposalDAO();
+        ImportProposal pCheck = dao.findById(id);
+        if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
+                && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + pCheck.getPeriod()
+                            + ". Không thể yêu cầu chỉnh sửa.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
         boolean ok = dao.requestRevision(id, currentUserId(request), reason.trim());
         if (ok) {
             ImportProposal p = dao.findById(id);
@@ -756,6 +839,19 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
+        ImportProposalDAO dao = new ImportProposalDAO();
+        ImportProposal pCheck = dao.findById(id);
+        if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
+                && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + pCheck.getPeriod()
+                            + ". Không thể yêu cầu chỉnh sửa.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
+            return;
+        }
         String reason = request.getParameter("revertReason");
         if (reason == null || reason.trim().isEmpty()) {
             session.setAttribute("toastMessage", "Vui lòng nhập lý do yêu cầu chỉnh sửa");
@@ -763,7 +859,6 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
-        ImportProposalDAO dao = new ImportProposalDAO();
         boolean ok = dao.revertApprovedToRevision(id, currentUserId(request), reason.trim());
         if (ok) {
             ImportProposal p = dao.findById(id);

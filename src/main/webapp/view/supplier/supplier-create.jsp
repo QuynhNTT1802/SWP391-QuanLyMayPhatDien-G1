@@ -59,6 +59,8 @@
 
             <div class="form-layout">
                 <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/suppliers?action=create">
+                    <input type="hidden" name="returnUrl" value="<c:out value="${returnUrl}"/>" />
+                    <input type="hidden" name="rowGid" value="<c:out value="${rowGid}"/>" />
 
                     <div class="form-section">
                         <div class="form-section-head">
@@ -68,7 +70,8 @@
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field-label">Tên nhà cung cấp <span class="req">*</span></label>
-                                <input class="input" name="name" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldName}"/>" required />
+                                <c:set var="_nameValue" value="${empty sessionScope.fieldName ? prefillName : sessionScope.fieldName}" />
+                                <input class="input" name="name" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${_nameValue}"/>" required />
                             </div>
                             <div class="field">
                                 <label class="field-label">Số điện thoại <span class="req">*</span></label>

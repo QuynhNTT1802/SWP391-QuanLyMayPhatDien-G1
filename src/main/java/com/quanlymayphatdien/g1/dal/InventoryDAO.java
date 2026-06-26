@@ -33,7 +33,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
               + "FROM generator g "
               + "JOIN inventory i ON i.generator_id = g.id "
               + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-              + "WHERE w.status <> 'locked' ");
+              + "WHERE w.status <> 'locked' and i.status = 'IN_STOCK'");
         List<Object> params = new ArrayList<>();
         if (warehouseId != null) {
             sql.append("AND i.warehouse_id = ? ");
@@ -287,12 +287,21 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
      */
     public List<Inventory> findInStockByWarehouse(int warehouseId) {
         List<Inventory> list = new ArrayList<>();
-        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+        // Chỉ lấy máy đã có tình trạng từ phiếu kiểm kê hoàn thành gần nhất (INNER JOIN loại máy chưa kiểm kê).
+        // Sắp xếp ưu tiên Hỏng -> Kém -> Tốt để máy cần thanh lý nổi lên trên.
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name, latest.status AS condition_status "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "JOIN (SELECT ics.serial_number, ics.status, "
+                + "             ROW_NUMBER() OVER (PARTITION BY ics.serial_number ORDER BY ic.completed_at DESC, ic.id DESC) AS rn "
+                + "      FROM inventory_check_serial ics "
+                + "      JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
+                + "      JOIN inventory_check ic ON icd.check_id = ic.id "
+                + "      WHERE ic.status = 'completed' AND ics.status IS NOT NULL) latest "
+                + "  ON latest.serial_number = i.serial_number AND latest.rn = 1 "
                 + "WHERE i.warehouse_id = ? AND i.status = ? "
-                + "ORDER BY g.model, i.created_at, i.inventory_id";
+                + "ORDER BY FIELD(latest.status,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -307,6 +316,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 }
                 try {
                     inv.setWarehouseName(resultSet.getString("warehouse_name"));
+                } catch (SQLException ignored) {
+                }
+                try {
+                    inv.setCondition(resultSet.getString("condition_status"));
                 } catch (SQLException ignored) {
                 }
                 list.add(inv);
@@ -364,6 +377,48 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             if (gid instanceof Integer && ((Integer) gid) == generatorId) {
                 result.add(m);
             }
+        }
+        return result;
+    }
+
+    /**
+     * Lấy tình trạng kiểm kê (GOOD/POOR/DAMAGED) của lần kiểm kê hoàn thành gần
+     * nhất cho từng serial trong danh sách, bất kể trạng thái tồn kho hiện tại.
+     * Dùng cho màn sửa đơn: máy đã nằm trong đơn (PENDING_LIQUIDATION) vẫn cần
+     * hiển thị đúng tình trạng. Trả về Map serial -> status.
+     */
+    public Map<String, String> findLatestConditionBySerials(List<String> serials) {
+        Map<String, String> result = new HashMap<>();
+        if (serials == null || serials.isEmpty()) {
+            return result;
+        }
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < serials.size(); i++) {
+            placeholders.append(i == 0 ? "?" : ",?");
+        }
+        String sql = "SELECT latest.serial_number, latest.status FROM ("
+                + "  SELECT ics.serial_number, ics.status, "
+                + "         ROW_NUMBER() OVER (PARTITION BY ics.serial_number ORDER BY ic.completed_at DESC, ic.id DESC) AS rn "
+                + "  FROM inventory_check_serial ics "
+                + "  JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
+                + "  JOIN inventory_check ic ON icd.check_id = ic.id "
+                + "  WHERE ic.status = 'completed' AND ics.status IS NOT NULL "
+                + "    AND ics.serial_number IN (" + placeholders + ")"
+                + ") latest WHERE latest.rn = 1";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < serials.size(); i++) {
+                statement.setString(i + 1, serials.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                result.put(resultSet.getString("serial_number"), resultSet.getString("status"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
         }
         return result;
     }
@@ -450,6 +505,45 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             ps.setString(3, STATUS_RESERVED_EXPORT);
             return ps.executeUpdate() > 0;
         }
+    }
+
+
+    /**
+     * Giai phong nhieu reservation cung luc (RESERVED_EXPORT -> IN_STOCK) trong
+     * cung connection. Tra ve so dong thuc su update.
+     */
+    public int releaseReservations(Connection conn, java.util.List<Integer> inventoryIds) throws SQLException {
+        if (inventoryIds == null || inventoryIds.isEmpty()) {
+            return 0;
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(inventoryIds.size(), "?"));
+        String sql = "UPDATE inventory SET status = ? WHERE status = ? AND inventory_id IN (" + placeholders + ")";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, STATUS_IN_STOCK);
+            ps.setString(2, STATUS_RESERVED_EXPORT);
+            for (int i = 0; i < inventoryIds.size(); i++) {
+                ps.setInt(i + 3, inventoryIds.get(i));
+            }
+            return ps.executeUpdate();
+        }
+    }
+
+
+    /**
+     * Lay danh sach inventory_id theo receipt_id (tu receipt_detail).
+     */
+    public java.util.List<Integer> getInventoryIdsByReceiptId(Connection conn, int receiptId) throws SQLException {
+        java.util.List<Integer> ids = new java.util.ArrayList<>();
+        String sql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("inventory_id"));
+                }
+            }
+        }
+        return ids;
     }
 
 
