@@ -27,6 +27,10 @@
             .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
             .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
             .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
+            .alert-warn { background: color-mix(in srgb, var(--warn) 12%, transparent); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+            .alert-info { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); }
+            .btn-warn { background: var(--warn); color: #fff; border: 1px solid var(--warn); }
+            .btn-warn:hover { background: color-mix(in srgb, var(--warn) 85%, black); border-color: color-mix(in srgb, var(--warn) 85%, black); }
 
             .product-table { width: 100%; border-collapse: collapse; }
             .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
@@ -54,6 +58,16 @@
             .status-pill .pdot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
             .action-bar-top { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0; }
+
+            .modal-host { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.4); z-index: 50; display: none; align-items: center; justify-content: center; padding: 20px; }
+            .modal-host.show { display: flex; }
+            .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; padding: 20px 22px; box-shadow: 0 20px 50px oklch(0% 0 0 / 0.25); }
+            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+            .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+            .modal-card label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-soft); margin-bottom: 6px; }
+            .modal-card textarea { width: 100%; min-height: 90px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--fg); font-family: var(--font-ui); font-size: 13px; resize: vertical; }
+            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
     </head>
     <body>
@@ -94,17 +108,17 @@
                             <c:set var="statusFg" value="#856404"/>
                         </c:when>
                         <c:when test="${po.status == 'APPROVED'}">
-                            <c:set var="statusLabel" value="Đã duyệt"/>
+                            <c:set var="statusLabel" value="Đã duyệt bởi CEO"/>
                             <c:set var="statusBg" value="#d4edda"/>
                             <c:set var="statusFg" value="#155724"/>
                         </c:when>
-                        <c:when test="${po.status == 'RETURNED'}">
-                            <c:set var="statusLabel" value="Trả lại chỉnh sửa"/>
-                            <c:set var="statusBg" value="#ffe0b2"/>
-                            <c:set var="statusFg" value="#b15c00"/>
+                        <c:when test="${po.status == 'NEEDS_REVISION'}">
+                            <c:set var="statusLabel" value="Cần chỉnh sửa đề xuất"/>
+                            <c:set var="statusBg" value="#ede9fe"/>
+                            <c:set var="statusFg" value="#5b21b6"/>
                         </c:when>
                         <c:when test="${po.status == 'REJECTED'}">
-                            <c:set var="statusLabel" value="Từ chối"/>
+                            <c:set var="statusLabel" value="Từ chối bởi CEO"/>
                             <c:set var="statusBg" value="#f8d7da"/>
                             <c:set var="statusFg" value="#721c24"/>
                         </c:when>
@@ -161,13 +175,10 @@
 
                     <c:if test="${po.status == 'DRAFT' && canCreatePo}">
                         <div class="action-bar-top">
-                            <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo" style="display:inline;">
-                                <input type="hidden" name="id" value="${po.poId}"/>
-                                <button type="submit" class="btn btn-primary">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    Gửi CEO duyệt
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-primary" onclick="openModal('sendToCeoModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                Gửi duyệt
+                            </button>
                             <c:if test="${isOwnerPo}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('cancelModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -181,11 +192,11 @@
                         <div class="action-bar-top">
                             <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                Duyệt phiếu
+                                Duyệt
                             </button>
-                            <button type="button" class="btn" onclick="openModal('returnModal')">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Trả lại chỉnh sửa
+                            <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Yêu cầu chỉnh sửa đề xuất
                             </button>
                             <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -194,12 +205,14 @@
                         </div>
                     </c:if>
 
-                    <c:if test="${po.status == 'RETURNED' && isOwnerPo && canCreatePo}">
-                        <div class="action-bar-top">
-                            <a href="${pageContext.request.contextPath}/purchase-order?action=editReturned&id=${po.poId}" class="btn btn-primary">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Chỉnh sửa & gửi lại
-                            </a>
+                    <c:if test="${po.status == 'NEEDS_REVISION' && not empty po.rejectReason}">
+                        <div class="alert alert-warn">
+                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <span><strong>Lý do CEO yêu cầu chỉnh sửa đề xuất:</strong> <c:out value="${po.rejectReason}"/></span>
+                        </div>
+                        <div class="alert alert-info">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                            <span>Các đề xuất gốc đã được tách khỏi phiếu mua này và chuyển sang trạng thái <strong>Cần chỉnh sửa</strong>. Sale Manager cần sửa các đề xuất rồi gửi duyệt lại.</span>
                         </div>
                     </c:if>
 
@@ -230,10 +243,10 @@
                                     <select name="logAction" class="filter-select">
                                         <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
                                         <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu mua</option>
-                                        <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi CEO duyệt</option>
+                                        <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi duyệt</option>
                                         <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
                                         <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
-                                        <option value="RETURN" ${logAction == 'RETURN' ? 'selected' : ''}>Trả lại chỉnh sửa</option>
+                                        <option value="REQUEST_REVISION" ${logAction == 'REQUEST_REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa đề xuất</option>
                                         <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
                                         <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy phiếu</option>
                                     </select>
@@ -297,7 +310,6 @@
                                                             <c:when test="${log.action == 'SEND_TO_CEO'}">update</c:when>
                                                             <c:when test="${log.action == 'APPROVE'}">approve</c:when>
                                                             <c:when test="${log.action == 'REJECT'}">reject</c:when>
-                                                            <c:when test="${log.action == 'RETURN'}">update</c:when>
                                                             <c:when test="${log.action == 'UPDATE'}">update</c:when>
                                                             <c:when test="${log.action == 'CANCEL'}">cancel</c:when>
                                                             <c:otherwise>default</c:otherwise>
@@ -386,13 +398,13 @@
                                             <div class="info-value mono">${po.approvedAt.format(poFmt)}</div>
                                         </div>
                                     </c:if>
-                                    <c:if test="${po.status == 'REJECTED' || po.status == 'RETURNED'}">
+                                    <c:if test="${po.status == 'REJECTED'}">
                                         <div class="info-field">
-                                            <div class="info-label">Người ${po.status == 'RETURNED' ? 'trả lại' : 'từ chối'}</div>
+                                            <div class="info-label">Người từ chối (CEO)</div>
                                             <div class="info-value"><c:out value="${po.rejectedByName != null ? po.rejectedByName : '—'}"/></div>
                                         </div>
                                         <div class="info-field">
-                                            <div class="info-label">${po.status == 'RETURNED' ? 'Trả lại lúc' : 'Từ chối lúc'}</div>
+                                            <div class="info-label">Từ chối lúc</div>
                                             <div class="info-value mono">${po.rejectedAt.format(poFmt)}</div>
                                         </div>
                                     </c:if>
@@ -406,10 +418,10 @@
                                     </div>
                                 </div>
 
-                                <c:if test="${not empty po.rejectReason}">
+                                <c:if test="${not empty po.rejectReason && po.status == 'REJECTED'}">
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">
-                                            ${po.status == 'RETURNED' ? 'Lý do trả lại' : 'Lý do từ chối'}
+                                            Lý do từ chối
                                         </div>
                                         <div class="danger-note"><c:out value="${po.rejectReason}"/></div>
                                     </div>
@@ -530,32 +542,18 @@
             </div>
         </div>
 
-        <c:if test="${po.status == 'DRAFT' && canCreatePo && isOwnerPo}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Hủy phiếu mua</h3>
-                    <div class="modal-sub">Phiếu mua sẽ bị hủy và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel">
-                        <input type="hidden" name="id" value="${po.poId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn hủy phiếu mua này?');">Xác nhận hủy</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
-            <div class="modal-host" id="approveModal">
+            <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
-                    <h3>Duyệt phiếu mua</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu mua <strong><c:out value="${po.poCode}"/></strong>?</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve">
+                    <h3>Yêu cầu chỉnh sửa đề xuất</h3>
+                    <div class="modal-sub">Các đề xuất gốc sẽ được tách khỏi phiếu mua này và chuyển sang trạng thái <strong>Cần chỉnh sửa</strong> để Sale Manager chỉnh sửa (ghi chú, nhà cung cấp, kho, tháng...). Không áp dụng cho sai máy/giá/số lượng - trường hợp đó hãy dùng <strong>Từ chối</strong>.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=requestRevision">
                         <input type="hidden" name="id" value="${po.poId}"/>
+                        <label for="revisionReason">Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
+                        <textarea id="revisionReason" name="revisionReason" required placeholder="Ví dụ: Ghi chú chưa rõ, chọn nhầm kho, cần đổi nhà cung cấp..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn duyệt phiếu mua này?');">Xác nhận duyệt</button>
+                            <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
+                            <button type="submit" class="btn btn-warn">Gửi yêu cầu cho Sale Manager</button>
                         </div>
                     </form>
                 </div>
@@ -563,7 +561,7 @@
 
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
-                    <h3>Từ chối phiếu mua</h3>
+                    <h3>Từ chối</h3>
                     <div class="modal-sub">Phiếu mua sẽ bị từ chối và các đề xuất liên kết sẽ được giải phóng. Hành động này không thể hoàn tác.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=reject">
                         <input type="hidden" name="id" value="${po.poId}"/>
@@ -577,21 +575,51 @@
                 </div>
             </div>
 
-            <div class="modal-host" id="returnModal">
+            <div class="modal-host" id="approveModal">
                 <div class="modal-card">
-                    <h3>Trả lại chỉnh sửa</h3>
-                    <div class="modal-sub">Gửi phiếu mua lại cho bộ phận tạo kèm lý do để chỉnh sửa và gửi lại.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=return">
+                    <h3>Duyệt phiếu mua</h3>
+                    <div class="modal-sub">Phiếu mua sẽ chuyển sang trạng thái "Đã duyệt". Kho sẽ có thể tạo phiếu nhập từ phiếu mua này.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve">
                         <input type="hidden" name="id" value="${po.poId}"/>
-                        <label>Lý do trả lại <span style="color:var(--danger)">*</span></label>
-                        <textarea name="returnReason" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
                         <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('returnModal')">Huỷ</button>
-                            <button type="submit" class="btn">Gửi yêu cầu</button>
+                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
             </div>
+        </c:if>
+
+        <c:if test="${po.status == 'DRAFT' && canCreatePo}">
+            <div class="modal-host" id="sendToCeoModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt phiếu mua</h3>
+                    <div class="modal-sub">Phiếu mua sẽ chuyển sang trạng thái "Chờ CEO duyệt". Sau khi gửi, bạn sẽ không thể chỉnh sửa phiếu mua này nữa.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo">
+                        <input type="hidden" name="id" value="${po.poId}"/>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('sendToCeoModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <c:if test="${isOwnerPo}">
+                <div class="modal-host" id="cancelModal">
+                    <div class="modal-card">
+                        <h3>Huỷ phiếu mua</h3>
+                        <div class="modal-sub">Phiếu mua nháp sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                        <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel">
+                            <input type="hidden" name="id" value="${po.poId}"/>
+                            <div class="modal-actions">
+                                <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
+                                <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </c:if>
         </c:if>
 
         <div class="toast-host" id="toastHost"></div>

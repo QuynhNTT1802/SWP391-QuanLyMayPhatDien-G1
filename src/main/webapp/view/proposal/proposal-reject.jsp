@@ -11,7 +11,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Từ chối đề xuất nhập kho - Warehouse OS</title>
+        <title>Từ chối - Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -81,7 +81,7 @@
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
             <div>
                 <header class="topbar">
-                    <h1>Từ chối đề xuất</h1>
+                    <h1>Từ chối</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Đề xuất nhập kho</a> / <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}"><c:out value="${proposal.proposalCode}"/></a> / Từ chối</span>
                     <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
@@ -205,7 +205,7 @@
             function validateRejectForm() {
                 var reason = document.getElementById('rejectReason').value.trim();
                 if (reason.length < 5) { alert('Vui lòng nhập lý do từ chối (tối thiểu 5 ký tự).'); document.getElementById('rejectReason').focus(); return false; }
-                return confirm('Bạn có chắc chắn muốn từ chối phiếu đề xuất "' + (document.querySelector('.mono')?.textContent || '') + '"?');
+                return true;
             }
         </script>
     </body>
