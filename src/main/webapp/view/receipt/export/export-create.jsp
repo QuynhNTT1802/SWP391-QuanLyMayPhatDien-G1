@@ -314,12 +314,10 @@
                             </tbody>
                         </table>
 
-                        <c:if test="${not fromOrder}">
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
-                        </c:if>
                     </section>
                 </div>
 
@@ -375,6 +373,11 @@
     ];
     var isOrderMode = ${not empty fromOrder and fromOrder};
     var expectedRows = ${empty expectedRows ? 0 : expectedRows};
+    var ORDER_REQUIREMENTS = [
+        <c:forEach var="req" items="${orderRequirements}" varStatus="st">
+        {genId: ${req.generatorId}, model: '<c:out value="${req.generatorModel}"/>', qty: ${req.quantity}}<c:if test="${!st.last}">,</c:if>
+        </c:forEach>
+    ];
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -690,12 +693,6 @@
     }
 
     function validateReceiptForm() {
-        var submitter = (typeof event !== 'undefined' && event && event.submitter) ? event.submitter : null;
-        var isDraft = submitter && submitter.value === 'draft';
-        if (isDraft) {
-            sessionStorage.removeItem('scanDraftReceiptId');
-            return true;
-        }
         var valid = true;
         var firstInvalid = null;
         document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
@@ -715,8 +712,38 @@
         }
         var banner = document.getElementById('realtimeWarn');
         if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
-            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy hoặc Lưu nháp để xử lý sau.', 'danger');
+            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy.', 'danger');
             return false;
+        }
+        if (isOrderMode && ORDER_REQUIREMENTS && ORDER_REQUIREMENTS.length > 0) {
+            var scannedByGen = {};
+            document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+                if (sel.value) {
+                    scannedByGen[sel.value] = (scannedByGen[sel.value] || 0) + 1;
+                }
+            });
+            var orderGenIds = {};
+            ORDER_REQUIREMENTS.forEach(function (req) {
+                orderGenIds[String(req.genId)] = true;
+            });
+            var mismatches = [];
+            ORDER_REQUIREMENTS.forEach(function (req) {
+                var scanned = scannedByGen[String(req.genId)] || 0;
+                if (scanned < req.qty) {
+                    mismatches.push('Thiếu ' + (req.qty - scanned) + ' ' + req.model);
+                } else if (scanned > req.qty) {
+                    mismatches.push('Thừa ' + (scanned - req.qty) + ' ' + req.model);
+                }
+            });
+            Object.keys(scannedByGen).forEach(function (genId) {
+                if (!orderGenIds[genId]) {
+                    mismatches.push('Có dòng máy không thuộc đơn (ID=' + genId + ')');
+                }
+            });
+            if (mismatches.length > 0) {
+                toast('Chưa khớp với đơn hàng: ' + mismatches.join('; '), 'danger');
+                return false;
+            }
         }
         sessionStorage.removeItem('scanDraftReceiptId');
         return valid;

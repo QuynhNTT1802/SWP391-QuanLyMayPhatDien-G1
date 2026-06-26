@@ -38,6 +38,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -496,6 +498,11 @@ public class ExportReceiptController extends HttpServlet {
             if (errors.isEmpty() && warehouseId > 0) {
                 validateInventoryAvailability(warehouseId, details, errors);
             }
+        }
+
+        int orderId = parseId(request.getParameter("orderId"));
+        if (orderId > 0) {
+            validateOrderCompleteness(orderId, details, errors);
         }
 
         if (!errors.isEmpty()) {
@@ -1805,6 +1812,54 @@ public class ExportReceiptController extends HttpServlet {
                 int shortage = required - onHand;
                 errors.add("Máy " + model + " trong kho không đủ: cần " + required
                         + " máy, chỉ còn " + onHand + " máy. Vui lòng nhập thêm " + shortage + " máy.");
+            }
+        }
+    }
+
+    /**
+     * Kiem tra phieu xuat tao tu order da quet dung va du serial theo tung model.
+     * Ap dung cho ca draft va gui duyet (theo yeu cau nguoi dung).
+     * - Thieu may: so luong quet < quantity trong order
+     * - Thua may: so luong quet > quantity trong order
+     * - Quet nham: generatorId khong thuoc order
+     */
+    private void validateOrderCompleteness(int orderId, List<ReceiptDetail> details, List<String> errors) {
+        List<OrderDetail> ods = new OrderDetailDAO().findGeneratorById(orderId);
+        if (ods == null || ods.isEmpty()) {
+            errors.add("Đơn hàng không có chi tiết máy");
+            return;
+        }
+
+        Map<Integer, Integer> scannedByGen = new HashMap<>();
+        if (details != null) {
+            for (ReceiptDetail d : details) {
+                if (d.getGeneratorId() > 0) {
+                    Integer cur = scannedByGen.get(d.getGeneratorId());
+                    scannedByGen.put(d.getGeneratorId(), (cur == null ? 0 : cur) + 1);
+                }
+            }
+        }
+
+        Set<Integer> checkedGenIds = new HashSet<>();
+        for (OrderDetail od : ods) {
+            int genId = od.getGeneratorId();
+            int required = od.getQuantity() > 0 ? od.getQuantity() : 1;
+            int scanned = scannedByGen.getOrDefault(genId, 0);
+            String model = (od.getGeneratorModel() != null && !od.getGeneratorModel().isEmpty())
+                    ? od.getGeneratorModel() : ("#" + genId);
+            checkedGenIds.add(genId);
+
+            if (scanned < required) {
+                errors.add("Thiếu máy " + model + ": đã quét " + scanned + "/" + required);
+            } else if (scanned > required) {
+                errors.add("Thừa máy " + model + ": đã quét " + scanned + "/" + required);
+            }
+        }
+
+        for (Map.Entry<Integer, Integer> entry : scannedByGen.entrySet()) {
+            if (!checkedGenIds.contains(entry.getKey())) {
+                errors.add("Có dòng không thuộc đơn hàng (generatorId=" + entry.getKey()
+                        + ", số lượng=" + entry.getValue() + ")");
             }
         }
     }
