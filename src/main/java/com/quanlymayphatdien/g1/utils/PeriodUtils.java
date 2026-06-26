@@ -50,5 +50,31 @@ public class PeriodUtils {
         long daysLeft = daysUntilEnd(period);
         return daysLeft >= 0 && daysLeft <= thresholdDays;
     }
+
+    public static int getDeadlineDay() {
+        return GlobalUtils.PROPOSAL_DEADLINE_DAY;
+    }
+
+    public static LocalDate deadlineOf(String period) {
+        if (period == null || period.length() < 6) {
+            return LocalDate.now();
+        }
+        LocalDate endOfPeriod = endOf(period);
+        return endOfPeriod.plusMonths(1).withDayOfMonth(getDeadlineDay());
+    }
+
+    public static boolean isWithinDeadline(String period) {
+        if (period == null || period.isEmpty()) {
+            return false;
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWindow = startOf(period).plusMonths(1);
+        LocalDate endOfWindow = deadlineOf(period);
+        return !today.isBefore(startOfWindow) && !today.isAfter(endOfWindow);
+    }
+
+    public static boolean isCurrentPeriod(String period) {
+        return period != null && period.equals(currentPeriod());
+    }
 }
 

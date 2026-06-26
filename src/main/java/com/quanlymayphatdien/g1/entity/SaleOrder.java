@@ -32,6 +32,7 @@ public class SaleOrder {
     private String note;
     private String customerNote;
     private String rejectReason;
+    private String revisionReason;
 
     private Date orderDate;
     private Date approvedAt;
@@ -206,6 +207,14 @@ public class SaleOrder {
 
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
+    }
+
+    public String getRevisionReason() {
+        return revisionReason;
+    }
+
+    public void setRevisionReason(String revisionReason) {
+        this.revisionReason = revisionReason;
     }
 
     public Date getOrderDate() {

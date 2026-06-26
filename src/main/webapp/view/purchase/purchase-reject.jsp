@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Từ chối phiếu mua — Warehouse OS</title>
+    <title>Từ chối — Warehouse OS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <style>
         :root {
@@ -41,7 +41,7 @@
         <jsp:include page="../common/admin/aside.jsp"></jsp:include>
         <div style="flex: 1; display: flex; flex-direction: column;">
             <header class="topbar">
-                <h1>Từ chối phiếu mua</h1>
+                <h1>Từ chối</h1>
             </header>
 
             <main>

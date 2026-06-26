@@ -338,6 +338,7 @@ public class OrderController extends HttpServlet {
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
         request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
+        request.setAttribute("canCancelOrder", perms != null && perms.contains("orders.cancel"));
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
@@ -367,6 +368,7 @@ public class OrderController extends HttpServlet {
         List<Category> phases = categoryDao.findByType("phase");
         List<Category> customerTypes = categoryDao.findByType("customer_type");
         List<Customer> top4Customers = customerDao.findTop4Alphabetical();
+        java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
 
         request.setAttribute("customerTypes", customerTypes);
         request.setAttribute("generators", generators);
@@ -374,6 +376,7 @@ public class OrderController extends HttpServlet {
         request.setAttribute("fuelTypes", fuelTypes);
         request.setAttribute("phases", phases);
         request.setAttribute("top4Customers", top4Customers);
+        request.setAttribute("stockMap", stockMap);
 
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
     }
@@ -578,7 +581,7 @@ public class OrderController extends HttpServlet {
         GeneratorDAO generatordao = new GeneratorDAO();
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
 
-        if (order != null && "PENDING".equals(order.getStatus())) {
+        if (order != null && ("PENDING".equals(order.getStatus()) || "NEEDS_REVISION".equals(order.getStatus()))) {
             List<OrderDetail> existingDetails = orderdetaildao.findGeneratorById(id);
 
             List<Generator> generator = generatordao.findAll();
@@ -586,6 +589,7 @@ public class OrderController extends HttpServlet {
             CustomerDAO customerDao = new CustomerDAO();
             List<Category> customerTypes = categoryDao.findByType("customer_type");
             List<Customer> top4Customers = customerDao.findTop4Alphabetical();
+            java.util.Map<Integer, Integer> stockMap = generatordao.getTotalStockMap();
 
 
             String newCustIdStr = request.getParameter("newCustomerId");
@@ -606,6 +610,7 @@ public class OrderController extends HttpServlet {
             request.setAttribute("generators", generator);
             request.setAttribute("customerTypes", customerTypes);
             request.setAttribute("top4Customers", top4Customers);
+            request.setAttribute("stockMap", stockMap);
             request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
         } else {
             request.getSession().setAttribute("message", "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).");
@@ -775,6 +780,32 @@ public class OrderController extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         User user = (User) request.getSession().getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
+        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
+        GeneratorDAO generatorDao = new GeneratorDAO();
+
+        // Kiểm tra tồn kho trước khi duyệt (trừ số lượng đã được duyệt ở các đơn khác)
+        List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
+        if (details != null && !details.isEmpty()) {
+            java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
+            java.util.Map<Integer, Integer> reservedMap = saleorderdao.getApprovedQuantitiesByGeneratorExcept(id);
+            for (OrderDetail d : details) {
+                int stock = stockMap.get(d.getGeneratorId()) != null ? stockMap.get(d.getGeneratorId()) : 0;
+                int reserved = reservedMap.getOrDefault(d.getGeneratorId(), 0);
+                int available = stock - reserved;
+                if (available < 0) available = 0;
+                if (d.getQuantity() > available) {
+                    String genName = generatorDao.findById(d.getGeneratorId()) != null
+                            ? generatorDao.findById(d.getGeneratorId()).getModel() : ("#" + d.getGeneratorId());
+                    request.getSession().setAttribute("message",
+                            "Không thể duyệt: máy \"" + genName + "\" cần " + d.getQuantity()
+                                    + " nhưng tồn kho khả dụng chỉ có " + available
+                                    + " (đã có " + reserved + " được duyệt ở đơn khác)."
+                                    + " Vui lòng giảm số lượng hoặc nhập thêm hàng.");
+                    response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
+                    return;
+                }
+            }
+        }
 
         boolean success = saleorderdao.approveOrder(id, user.getId());
 
@@ -850,7 +881,7 @@ public class OrderController extends HttpServlet {
         } else if (result == -1) {
             session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
-            session.setAttribute("message", "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt.");
+            session.setAttribute("message", "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt hoặc đã duyệt (chưa xuất kho).");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }

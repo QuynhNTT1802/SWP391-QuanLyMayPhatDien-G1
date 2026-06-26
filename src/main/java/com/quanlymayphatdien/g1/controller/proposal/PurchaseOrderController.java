@@ -1,8 +1,10 @@
 package com.quanlymayphatdien.g1.controller.proposal;
 
+import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.ImportProposalDAO;
 import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
@@ -47,17 +49,11 @@ public class PurchaseOrderController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create":
-                    showCreateForm(request, response);
-                    break;
                 case "reviewCreate":
                     showReviewCreate(request, response);
                     break;
                 case "detail":
                     showDetail(request, response);
-                    break;
-                case "editReturned":
-                    editReturnedPo(request, response);
                     break;
                 case "reject":
                     showRejectForm(request, response);
@@ -91,9 +87,6 @@ public class PurchaseOrderController extends HttpServlet {
 
         try {
             switch (action) {
-                case "create":
-                    create(request, response);
-                    break;
                 case "reviewCreate":
                     showReviewCreate(request, response);
                     break;
@@ -109,11 +102,8 @@ public class PurchaseOrderController extends HttpServlet {
                 case "reject":
                     reject(request, response);
                     break;
-                case "return":
-                    returnPo(request, response);
-                    break;
-                case "submitEditReturned":
-                    submitEditReturnedPo(request, response);
+                case "requestRevision":
+                    requestProposalRevision(request, response);
                     break;
                 case "cancel":
                     cancel(request, response);
@@ -180,54 +170,6 @@ public class PurchaseOrderController extends HttpServlet {
         request.getRequestDispatcher("/view/purchase/purchase-list.jsp").forward(request, response);
     }
 
-    private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("purchase_orders.create")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền tạo phiếu mua");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
-        String period = request.getParameter("period");
-        if (period != null) period = period.replace("-", "");
-        if (period == null || period.isEmpty()) {
-            period = PeriodUtils.currentPeriod();
-        }
-        int warehouseId = parseInt(request.getParameter("warehouseId"));
-
-        request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("selectedPeriod", period);
-        request.setAttribute("selectedWarehouseId", warehouseId);
-        if (warehouseId > 0) {
-            List<ImportProposal> allProposals = new ImportProposalDAO()
-                    .findPendingByPeriodAndWarehouse(period, warehouseId);
-            // Nhóm theo người đề xuất
-            List<Map<String, Object>> creatorGroups = new java.util.ArrayList<>();
-            String lastCreator = null;
-            Map<String, Object> currentGroup = null;
-            for (ImportProposal prop : allProposals) {
-                String creator = prop.getCreatedByName();
-                if (creator == null) creator = "(không xác định)";
-                if (!creator.equals(lastCreator)) {
-                    currentGroup = new java.util.LinkedHashMap<>();
-                    currentGroup.put("creatorName", creator);
-                    List<ImportProposal> list = new java.util.ArrayList<>();
-                    list.add(prop);
-                    currentGroup.put("proposals", list);
-                    creatorGroups.add(currentGroup);
-                    lastCreator = creator;
-                } else {
-                    ((List<ImportProposal>) currentGroup.get("proposals")).add(prop);
-                }
-            }
-            request.setAttribute("creatorGroups", creatorGroups);
-        }
-        request.setAttribute("activePage", "purchase-order");
-        request.getRequestDispatcher("/view/purchase/purchase-create.jsp").forward(request, response);
-    }
-
     private void showReviewCreate(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
@@ -288,11 +230,42 @@ public class PurchaseOrderController extends HttpServlet {
             }
         }
 
+        if (period != null && !PeriodUtils.isWithinDeadline(period)) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + period
+                            + ". Không thể tổng hợp phiếu mua cho period này.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
+
         PurchaseOrderDAO poDao = new PurchaseOrderDAO();
         List<Map<String, Object>> aggregations = poDao.aggregateByProposalIds(proposalIds, warehouseId);
 
+        java.util.Map<Integer, java.util.Map<String, Object>> aggByGen = new java.util.LinkedHashMap<>();
+        for (java.util.Map<String, Object> row : aggregations) {
+            int gid = ((Number) row.get("generatorId")).intValue();
+            java.util.Map<String, Object> existing = aggByGen.get(gid);
+            if (existing == null) {
+                java.util.Map<String, Object> newRow = new java.util.LinkedHashMap<>(row);
+                newRow.remove("proposalDetailId");
+                newRow.remove("proposalId");
+                aggByGen.put(gid, newRow);
+            } else {
+                int sumQty = ((Number) existing.get("totalProposed")).intValue()
+                        + ((Number) row.get("totalProposed")).intValue();
+                existing.put("totalProposed", sumQty);
+                int minStock = Math.min(
+                        ((Number) existing.get("currentStock")).intValue(),
+                        ((Number) row.get("currentStock")).intValue());
+                existing.put("currentStock", minStock);
+            }
+        }
+        List<java.util.Map<String, Object>> aggregatedDisplay = new java.util.ArrayList<>(aggByGen.values());
+
         request.setAttribute("proposals", proposals);
-        request.setAttribute("aggregations", aggregations);
+        request.setAttribute("aggregations", aggregatedDisplay);
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
@@ -323,123 +296,6 @@ public class PurchaseOrderController extends HttpServlet {
         request.getRequestDispatcher("/view/purchase/purchase-review-create.jsp").forward(request, response);
     }
 
-    private void create(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession();
-        User user = (User) session.getAttribute("loggedUser");
-
-        String period = request.getParameter("period");
-        if (period != null) period = period.replace("-", "");
-        int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String submitType = request.getParameter("submitType");
-        String note = request.getParameter("note");
-
-        String[] genIds = request.getParameterValues("generatorId");
-        String[] proposalIdArr = request.getParameterValues("proposalId");
-        String[] finalQtys = request.getParameterValues("finalQuantity");
-        String[] unitPrices = request.getParameterValues("unitPrice");
-        String[] detailNotes = request.getParameterValues("detailNote");
-
-        if (genIds == null || genIds.length == 0) {
-            session.setAttribute("toastMessage", "Chưa chọn dòng máy nào");
-            response.sendRedirect(request.getContextPath()
-                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
-            return;
-        }
-
-        // Nhóm các dòng theo generatorId (gộp số lượng)
-        java.util.Map<Integer, PurchaseOrderDetail> detailMap = new java.util.LinkedHashMap<>();
-        java.util.Set<Integer> uniqueProposalIds = new java.util.HashSet<>();
-        for (int i = 0; i < genIds.length; i++) {
-            int gid = parseInt(genIds[i]);
-            int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
-            if (gid <= 0 || qty <= 0) continue;
-
-            // Thu thập proposalId
-            if (proposalIdArr != null && i < proposalIdArr.length) {
-                int pid = parseInt(proposalIdArr[i]);
-                if (pid > 0) uniqueProposalIds.add(pid);
-            }
-
-            String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-            String upStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
-
-            if (detailMap.containsKey(gid)) {
-                PurchaseOrderDetail existing = detailMap.get(gid);
-                existing.setFinalQuantity(existing.getFinalQuantity() + qty);
-            } else {
-                PurchaseOrderDetail d = new PurchaseOrderDetail();
-                d.setGeneratorId(gid);
-                d.setFinalQuantity(qty);
-                d.setNote(dNote);
-                if (upStr != null && !upStr.trim().isEmpty()) {
-                    try { d.setUnitPrice(new java.math.BigDecimal(upStr.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
-                }
-                detailMap.put(gid, d);
-            }
-        }
-
-        if (detailMap.isEmpty()) {
-            session.setAttribute("toastMessage", "Không có dòng hợp lệ");
-            response.sendRedirect(request.getContextPath()
-                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
-            return;
-        }
-
-        try {
-            PurchaseOrderDAO dao = new PurchaseOrderDAO();
-            PurchaseOrder po = new PurchaseOrder();
-            po.setPoCode(dao.generatePoCode(period));
-            po.setPeriod(period);
-            po.setPeriodStart(PeriodUtils.startOf(period));
-            po.setPeriodEnd(PeriodUtils.endOf(period));
-            po.setWarehouseId(warehouseId);
-            po.setCreatedBy(user.getId());
-            po.setStatus("send".equals(submitType) ? GlobalUtils.PO_STATUS_PENDING_CEO : GlobalUtils.PO_STATUS_DRAFT);
-            po.setNote(note);
-
-            List<PurchaseOrderDetail> details = new ArrayList<>(detailMap.values());
-            int totalQty = 0;
-            for (PurchaseOrderDetail d : details) totalQty += d.getFinalQuantity();
-            po.setTotalQuantity(totalQty);
-
-            // Lay current_stock + proposed_quantity tu aggregation
-            List<Map<String, Object>> aggs = dao.aggregatePendingProposals(period, warehouseId);
-            for (PurchaseOrderDetail d : details) {
-                int gid = d.getGeneratorId();
-                int proposed = 0, stock = 0;
-                for (Map<String, Object> a : aggs) {
-                    if (((Number) a.get("generatorId")).intValue() == gid) {
-                        proposed = ((Number) a.get("totalProposed")).intValue();
-                        stock = ((Number) a.get("currentStock")).intValue();
-                        break;
-                    }
-                }
-                d.setProposedQuantity(proposed);
-                d.setCurrentStock(stock);
-            }
-
-            // Tạo PO + details + link proposals trong transaction
-            int poId = dao.createPoWithDetailsAndLinks(po, details, new ArrayList<>(uniqueProposalIds));
-            if (poId <= 0) {
-                throw new Exception("Insert PO failed");
-            }
-
-            if ("send".equals(submitType)) {
-                dao.sendToCeo(poId);
-            }
-
-            session.setAttribute("toastMessage", "Tạo phiếu mua thành công");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.create", e.getMessage(), e);
-            e.printStackTrace();
-            session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
-            response.sendRedirect(request.getContextPath()
-                    + "/purchase-order?action=create&period=" + period + "&warehouseId=" + warehouseId);
-        }
-    }
-
     private void submitReviewCreate(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
@@ -451,8 +307,26 @@ public class PurchaseOrderController extends HttpServlet {
         String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
 
+        if (period != null && !PeriodUtils.isWithinDeadline(period)) {
+            session.setAttribute("toastMessage",
+                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
+                            + " tháng sau) cho period " + period
+                            + ". Không thể tạo phiếu mua cho period này.");
+            session.setAttribute("toastType", "danger");
+            StringBuilder back = new StringBuilder("/purchase-order?action=reviewCreate");
+            String[] proposalIdArr = request.getParameterValues("proposalId");
+            if (proposalIdArr != null) {
+                for (String pid : proposalIdArr) {
+                    back.append("&proposalIds=").append(pid);
+                }
+            }
+            response.sendRedirect(request.getContextPath() + back.toString());
+            return;
+        }
+
         String[] genIds = request.getParameterValues("generatorId");
         String[] proposalIdArr = request.getParameterValues("proposalId");
+        String[] proposalDetailIdArr = request.getParameterValues("proposalDetailId");
         String[] finalQtys = request.getParameterValues("finalQuantity");
         String[] unitPrices = request.getParameterValues("unitPrice");
         String[] detailNotes = request.getParameterValues("detailNote");
@@ -492,33 +366,67 @@ public class PurchaseOrderController extends HttpServlet {
 
             List<PurchaseOrderDetail> details = new ArrayList<>();
             int totalQty = 0;
+
+            java.util.Map<Integer, int[]> qtyByGen = new java.util.LinkedHashMap<>();
+            java.util.Map<Integer, String> noteByGen = new java.util.LinkedHashMap<>();
+            java.util.Map<Integer, java.math.BigDecimal> priceByGen = new java.util.LinkedHashMap<>();
+
             for (int i = 0; i < genIds.length; i++) {
                 int gid = parseInt(genIds[i]);
+                if (gid <= 0) continue;
                 int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
-                if (gid <= 0 || qty <= 0) {
-                    continue;
+                int pdId = (proposalDetailIdArr != null && i < proposalDetailIdArr.length)
+                        ? parseInt(proposalDetailIdArr[i]) : 0;
+                if (qty <= 0) continue;
+
+                int[] cur = qtyByGen.get(gid);
+                if (cur == null) {
+                    cur = new int[]{0, pdId};
+                    qtyByGen.put(gid, cur);
                 }
+                cur[0] += qty;
+                if (cur[1] <= 0 && pdId > 0) {
+                    cur[1] = pdId;
+                }
+
                 String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-                int proposed = 0, stock = 0;
-                for (Map<String, Object> a : aggs) {
-                    if (((Number) a.get("generatorId")).intValue() == gid) {
-                        proposed = ((Number) a.get("totalProposed")).intValue();
-                        stock = ((Number) a.get("currentStock")).intValue();
-                        break;
+                if (dNote != null && !dNote.trim().isEmpty() && !noteByGen.containsKey(gid)) {
+                    noteByGen.put(gid, dNote.trim());
+                }
+
+                if (unitPrices != null && i < unitPrices.length) {
+                    String up = unitPrices[i];
+                    if (up != null && !up.trim().isEmpty() && !priceByGen.containsKey(gid)) {
+                        try {
+                            priceByGen.put(gid, new java.math.BigDecimal(up.trim().replaceAll("[^0-9.]", "")));
+                        } catch (Exception ignored) {}
                     }
                 }
+            }
+
+            for (java.util.Map.Entry<Integer, int[]> entry : qtyByGen.entrySet()) {
+                int gid = entry.getKey();
+                int qty = entry.getValue()[0];
+                int firstPdId = entry.getValue()[1];
+
+                int proposed = 0, stock = 0;
+                for (Map<String, Object> a : aggs) {
+                    Object genIdObj = a.get("generatorId");
+                    if (genIdObj == null || ((Number) genIdObj).intValue() != gid) continue;
+                    Object tpObj = a.get("totalProposed");
+                    Object csObj = a.get("currentStock");
+                    if (tpObj != null) proposed += ((Number) tpObj).intValue();
+                    if (csObj != null && stock == 0) stock = ((Number) csObj).intValue();
+                }
+
                 PurchaseOrderDetail d = new PurchaseOrderDetail();
+                d.setProposalDetailId(firstPdId > 0 ? firstPdId : null);
                 d.setGeneratorId(gid);
                 d.setProposedQuantity(proposed);
                 d.setCurrentStock(stock);
                 d.setFinalQuantity(qty);
-                d.setNote(dNote);
-                if (unitPrices != null && i < unitPrices.length) {
-                    String up = unitPrices[i];
-                    if (up != null && !up.trim().isEmpty()) {
-                        try { d.setUnitPrice(new java.math.BigDecimal(up.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
-                    }
-                }
+                d.setNote(noteByGen.get(gid));
+                d.setUnitPrice(priceByGen.get(gid));
                 details.add(d);
                 totalQty += qty;
             }
@@ -863,170 +771,50 @@ public class PurchaseOrderController extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
     }
 
-    private void returnPo(HttpServletRequest request, HttpServletResponse response)
+    private void requestProposalRevision(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
         User user = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         if (perms == null || !perms.contains("purchase_orders.approve")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền trả phiếu mua");
+            session.setAttribute("toastMessage", "Bạn không có quyền yêu cầu chỉnh sửa phiếu mua.");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
             return;
         }
 
         int id = parseInt(request.getParameter("id"));
-        String reason = request.getParameter("returnReason");
         if (id <= 0) {
             session.setAttribute("toastMessage", "Thiếu mã phiếu mua");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
             return;
         }
+        String reason = request.getParameter("revisionReason");
         if (reason == null || reason.trim().isEmpty()) {
-            session.setAttribute("toastMessage", "Vui lòng nhập lý do trả lại");
+            session.setAttribute("toastMessage", "Vui lòng nhập lý do yêu cầu chỉnh sửa đề xuất");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
             return;
         }
 
-        boolean ok = new PurchaseOrderDAO().returnPo(id, user.getId(), reason.trim());
-        session.setAttribute("toastMessage", ok ? "Đã trả lại phiếu mua cho bộ phận tạo" : "Không thể trả lại phiếu mua");
+        boolean ok = new PurchaseOrderDAO().requestProposalRevision(id, user.getId(), reason.trim());
+        if (ok) {
+            ActivityLog log = new ActivityLog();
+            log.setUserId(user.getId());
+            log.setEntityType("purchase_order");
+            log.setAction("REQUEST_REVISION");
+            log.setEntityId(id);
+            log.setEntityName(null);
+            log.setDetails("CEO yêu cầu Sale Manager chỉnh sửa đề xuất: " + reason.trim());
+            new ActivityLogDAO().insertLog(log);
+            session.setAttribute("toastMessage", "Đã yêu cầu Sale Manager chỉnh sửa đề xuất");
+            session.setAttribute("toastType", "success");
+        } else {
+            session.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa (phiếu mua không ở trạng thái Chờ CEO duyệt)");
+            session.setAttribute("toastType", "danger");
+        }
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-    }
-
-    private void editReturnedPo(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("purchase_orders.create")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền chỉnh sửa phiếu mua");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
-        int id = parseInt(request.getParameter("id"));
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
-        PurchaseOrderDAO dao = new PurchaseOrderDAO();
-        PurchaseOrder po = dao.findById(id);
-        if (po == null) {
-            session.setAttribute("toastMessage", "Không tìm thấy phiếu mua");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-        if (!GlobalUtils.PO_STATUS_RETURNED.equals(po.getStatus())) {
-            session.setAttribute("toastMessage", "Phiếu mua không ở trạng thái RETURNED");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-            return;
-        }
-
-        List<ImportProposal> sourceProposals = dao.findProposalsByPo(id);
-
-        request.setAttribute("po", po);
-        request.setAttribute("sourceProposals", sourceProposals);
-        request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.setAttribute("activePage", "purchase-order");
-        request.getRequestDispatcher("/view/purchase/purchase-edit-returned.jsp").forward(request, response);
-    }
-
-    private void submitEditReturnedPo(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession();
-        int id = parseInt(request.getParameter("id"));
-        if (id <= 0) {
-            session.setAttribute("toastMessage", "Thiếu mã phiếu mua");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
-        String note = request.getParameter("note");
-        String[] proposalIdArr = request.getParameterValues("proposalIds");
-        String[] genIds = request.getParameterValues("generatorId");
-        String[] finalQtys = request.getParameterValues("finalQuantity");
-        String[] unitPrices = request.getParameterValues("unitPrice");
-        String[] detailNotes = request.getParameterValues("detailNote");
-
-        List<Integer> proposalIds = new ArrayList<>();
-        if (proposalIdArr != null) {
-            for (String s : proposalIdArr) {
-                int pid = parseInt(s);
-                if (pid > 0) {
-                    proposalIds.add(pid);
-                }
-            }
-        }
-
-        if (genIds == null || genIds.length == 0) {
-            session.setAttribute("toastMessage", "Chưa có dòng máy nào hợp lệ");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=editReturned&id=" + id);
-            return;
-        }
-
-        try {
-            PurchaseOrderDAO dao = new PurchaseOrderDAO();
-            PurchaseOrder existing = dao.findById(id);
-            if (existing == null || !GlobalUtils.PO_STATUS_RETURNED.equals(existing.getStatus())) {
-                session.setAttribute("toastMessage", "Phiếu mua không ở trạng thái RETURNED");
-                response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-                return;
-            }
-
-            List<Map<String, Object>> aggs = dao.aggregateByProposalIds(proposalIds, existing.getWarehouseId());
-
-            PurchaseOrder po = new PurchaseOrder();
-            po.setPoId(id);
-            po.setNote(note);
-
-            List<PurchaseOrderDetail> details = new ArrayList<>();
-            int totalQty = 0;
-            for (int i = 0; i < genIds.length; i++) {
-                int gid = parseInt(genIds[i]);
-                int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
-                if (gid <= 0 || qty <= 0) {
-                    continue;
-                }
-                String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-                int proposed = 0, stock = 0;
-                for (Map<String, Object> a : aggs) {
-                    if (((Number) a.get("generatorId")).intValue() == gid) {
-                        proposed = ((Number) a.get("totalProposed")).intValue();
-                        stock = ((Number) a.get("currentStock")).intValue();
-                        break;
-                    }
-                }
-                PurchaseOrderDetail d = new PurchaseOrderDetail();
-                d.setGeneratorId(gid);
-                d.setProposedQuantity(proposed);
-                d.setCurrentStock(stock);
-                d.setFinalQuantity(qty);
-                d.setNote(dNote);
-                if (unitPrices != null && i < unitPrices.length) {
-                    String up = unitPrices[i];
-                    if (up != null && !up.trim().isEmpty()) {
-                        try { d.setUnitPrice(new java.math.BigDecimal(up.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
-                    }
-                }
-                details.add(d);
-                totalQty += qty;
-            }
-            po.setTotalQuantity(totalQty);
-
-            if (details.isEmpty()) {
-                session.setAttribute("toastMessage", "Chưa có dòng máy hợp lệ nào");
-                response.sendRedirect(request.getContextPath() + "/purchase-order?action=editReturned&id=" + id);
-                return;
-            }
-
-            boolean ok = dao.updateReturnedPo(po, details, proposalIds);
-            session.setAttribute("toastMessage", ok ? "Đã cập nhật và gửi lại CEO duyệt" : "Không thể cập nhật");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.submitEditReturnedPo", e.getMessage(), e);
-            e.printStackTrace();
-            session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=editReturned&id=" + id);
-        }
     }
 
     private void cancel(HttpServletRequest request, HttpServletResponse response)

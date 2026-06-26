@@ -133,6 +133,8 @@
             .dropdown-item.approve svg { stroke: #155724; }
             .dropdown-item.reject svg { stroke: #721c24; }
             .dropdown-item.revision svg { stroke: #b15c00; }
+            .dropdown-item.danger { color: var(--danger); }
+            .dropdown-item.danger:hover { background: var(--danger-soft); }
             .dropdown-divider {
                 height: 1px;
                 background: var(--border);
@@ -292,6 +294,17 @@
                                                                     <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                                     <span class="label">Sửa</span>
                                                                 </a>
+                                                                <button class="dropdown-item danger" type="button" onclick="confirmCancelList(${r.receiptId}, 'discard', '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')">
+                                                                    <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                                                    <span class="label">Xoá nháp</span>
+                                                                </button>
+                                                            </c:if>
+                                                            <c:if test="${r.status == 'PENDING' && r.createdBy == sessionScope.loggedUser.id && empty r.liquidationCode}">
+                                                                <div class="dropdown-divider"></div>
+                                                                <button class="dropdown-item danger" type="button" onclick="confirmCancelList(${r.receiptId}, 'cancel', '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')">
+                                                                    <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                                                    <span class="label">Rút phiếu</span>
+                                                                </button>
                                                             </c:if>
                                                             <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
                                                                 <div class="dropdown-divider"></div>
@@ -410,6 +423,7 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
         <style>
             .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
             .modal-host.show { display: flex; }
@@ -508,6 +522,43 @@
             if (window.SESSION_DATA && window.SESSION_DATA.message) {
                 toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
                 window.SESSION_DATA = null;
+            }
+
+            var listCancelLock = false;
+            function confirmCancelList(receiptId, mode, code) {
+                var ctx = window.APP_CTX;
+                if (!receiptId || !window.ExportScannerActions) return;
+                if (listCancelLock) return;
+                var title = mode === 'discard' ? 'Xoá phiếu nháp' : 'Rút phiếu đang chờ duyệt';
+                var body = mode === 'discard'
+                    ? 'Phiếu nháp <strong>' + code + '</strong> sẽ bị huỷ và tất cả serial sẽ trả về kho.'
+                    : 'Phiếu <strong>' + code + '</strong> đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt nhận thông báo.';
+                var label = mode === 'discard' ? 'Xoá nháp' : 'Rút phiếu';
+                window.ExportScannerActions.confirmAction({
+                    modalId: 'cancelListModal',
+                    title: title,
+                    body: body,
+                    confirmLabel: label,
+                    danger: true
+                }).then(function () {
+                    listCancelLock = true;
+                    return (mode === 'discard'
+                            ? window.ExportScannerActions.discardDraft(receiptId)
+                            : window.ExportScannerActions.cancelPending(receiptId));
+                }).then(function (data) {
+                    listCancelLock = false;
+                    if (!data || !data.success) {
+                        toast((data && data.message) ? data.message : 'Lỗi', 'danger');
+                        return;
+                    }
+                    toast(data.message || 'Đã huỷ phiếu', 'success');
+                    setTimeout(function () { window.location.reload(); }, 700);
+                }).catch(function (err) {
+                    listCancelLock = false;
+                    if (err && err.message === 'cancelled') return;
+                    console.error(err);
+                    toast('Lỗi kết nối: ' + err.message, 'danger');
+                });
             }
         </script>
     </body>
