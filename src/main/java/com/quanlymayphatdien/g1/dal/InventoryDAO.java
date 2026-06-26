@@ -229,20 +229,12 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     public List<Inventory> findInStockByWarehouseAndGenerator(int warehouseId, int generatorId) {
         List<Inventory> list = new ArrayList<>();
-        // Chỉ lấy máy đã có tình trạng từ phiếu kiểm kê hoàn thành gần nhất (INNER JOIN loại máy chưa kiểm kê).
-        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name, latest.status AS condition_status "
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "JOIN (SELECT ics.serial_number, ics.status, "
-                + "             ROW_NUMBER() OVER (PARTITION BY ics.serial_number ORDER BY ic.completed_at DESC, ic.id DESC) AS rn "
-                + "      FROM inventory_check_serial ics "
-                + "      JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
-                + "      JOIN inventory_check ic ON icd.check_id = ic.id "
-                + "      WHERE ic.status = 'completed' AND ics.status IS NOT NULL) latest "
-                + "  ON latest.serial_number = i.serial_number AND latest.rn = 1 "
                 + "WHERE i.warehouse_id = ? AND i.generator_id = ? AND i.status = ? "
-                + "ORDER BY FIELD(latest.status,'DAMAGED','POOR','GOOD'), i.created_at, i.inventory_id";
+                + "ORDER BY i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -258,10 +250,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 }
                 try {
                     inv.setWarehouseName(resultSet.getString("warehouse_name"));
-                } catch (SQLException ignored) {
-                }
-                try {
-                    inv.setCondition(resultSet.getString("condition_status"));
                 } catch (SQLException ignored) {
                 }
                 list.add(inv);
