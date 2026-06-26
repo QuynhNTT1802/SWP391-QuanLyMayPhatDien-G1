@@ -391,6 +391,228 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return false;
     }
 
+    // ===================== BÁO CÁO THANH LÝ =====================
+    // Tất cả query báo cáo chỉ tính đơn ĐÃ thanh lý thực sự (status = 'APPROVED_BY_CEO'),
+    // mốc thời gian dùng ceo_reviewed_at. Lọc theo khoảng ngày + kho (tuỳ chọn).
+
+    // Build mệnh đề WHERE chung + nạp tham số theo đúng thứ tự.
+    private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, List<Object> params) {
+        StringBuilder w = new StringBuilder(" WHERE l.status = 'APPROVED_BY_CEO'");
+        if (from != null) {
+            w.append(" AND DATE(l.ceo_reviewed_at) >= ?");
+            params.add(java.sql.Date.valueOf(from));
+        }
+        if (to != null) {
+            w.append(" AND DATE(l.ceo_reviewed_at) <= ?");
+            params.add(java.sql.Date.valueOf(to));
+        }
+        if (warehouseId != null) {
+            w.append(" AND l.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        return w.toString();
+    }
+
+    private void bindParams(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+    }
+
+    // Tổng quan: số máy đã thanh lý, tổng nguyên giá, tổng giá thu hồi, tổn thất, % thu hồi.
+    public Map<String, Object> getReportSummary(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(ld.liquidation_detail_id) AS machine_count, "
+                + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
+                + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation, "
+                + "COUNT(DISTINCT l.liquidation_id) AS order_count "
+                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
+                + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            java.math.BigDecimal totalOriginal = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal totalLiquidation = java.math.BigDecimal.ZERO;
+            int machineCount = 0;
+            int orderCount = 0;
+            if (resultSet.next()) {
+                machineCount = resultSet.getInt("machine_count");
+                orderCount = resultSet.getInt("order_count");
+                totalOriginal = resultSet.getBigDecimal("total_original");
+                totalLiquidation = resultSet.getBigDecimal("total_liquidation");
+            }
+            java.math.BigDecimal loss = totalOriginal.subtract(totalLiquidation);
+            double recoveryRate = totalOriginal.signum() > 0
+                    ? totalLiquidation.multiply(new java.math.BigDecimal(100))
+                            .divide(totalOriginal, 1, java.math.RoundingMode.HALF_UP).doubleValue()
+                    : 0.0;
+            m.put("machineCount", machineCount);
+            m.put("orderCount", orderCount);
+            m.put("totalOriginal", totalOriginal);
+            m.put("totalLiquidation", totalLiquidation);
+            m.put("totalLoss", loss);
+            m.put("recoveryRate", recoveryRate);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportSummary", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return m;
+    }
+
+    // Phân tích theo lý do thanh lý: lý do | số máy | nguyên giá | thu hồi | tổn thất.
+    public List<Map<String, Object>> getReportByReason(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT c.name AS reason_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
+                + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
+                + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
+                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN category c ON l.reason_id = c.id"
+                + where
+                + " GROUP BY l.reason_id, c.name ORDER BY total_original DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
+                java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
+                r.put("reasonName", resultSet.getString("reason_name"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                r.put("totalOriginal", orig);
+                r.put("totalLiquidation", liq);
+                r.put("totalLoss", orig.subtract(liq));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportByReason", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Phân tích theo kho: kho | số máy | nguyên giá | thu hồi | tổn thất | % thu hồi.
+    public List<Map<String, Object>> getReportByWarehouse(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT w.name AS warehouse_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
+                + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
+                + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
+                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id"
+                + where
+                + " GROUP BY l.warehouse_id, w.name ORDER BY total_original DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
+                java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
+                double rate = orig.signum() > 0
+                        ? liq.multiply(new java.math.BigDecimal(100)).divide(orig, 1, java.math.RoundingMode.HALF_UP).doubleValue()
+                        : 0.0;
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                r.put("totalOriginal", orig);
+                r.put("totalLiquidation", liq);
+                r.put("totalLoss", orig.subtract(liq));
+                r.put("recoveryRate", rate);
+                list.add(r);
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportByWarehouse", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Top model bị thanh lý nhiều nhất: model | số máy | tổn thất.
+    public List<Map<String, Object>> getReportByModel(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, int limit) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT g.model AS model_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
+                + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
+                + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
+                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN generator g ON ld.generator_id = g.id"
+                + where
+                + " GROUP BY ld.generator_id, g.model ORDER BY machine_count DESC, total_original DESC LIMIT ?";
+        params.add(limit);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
+                java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
+                r.put("modelName", resultSet.getString("model_name"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                r.put("totalOriginal", orig);
+                r.put("totalLiquidation", liq);
+                r.put("totalLoss", orig.subtract(liq));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportByModel", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Xu hướng theo tháng: tháng (yyyy-MM) | số đơn | giá trị thanh lý.
+    public List<Map<String, Object>> getReportMonthlyTrend(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT DATE_FORMAT(l.ceo_reviewed_at, '%Y-%m') AS ym, "
+                + "COUNT(DISTINCT l.liquidation_id) AS order_count, "
+                + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
+                + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
+                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
+                + where
+                + " GROUP BY ym ORDER BY ym ASC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
+                java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
+                r.put("month", resultSet.getString("ym"));
+                r.put("orderCount", resultSet.getInt("order_count"));
+                r.put("totalOriginal", orig);
+                r.put("totalLiquidation", liq);
+                r.put("totalLoss", orig.subtract(liq));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportMonthlyTrend", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
     @Override
     public int insert(Liquidation t) {
         String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, created_at, updated_at) "
