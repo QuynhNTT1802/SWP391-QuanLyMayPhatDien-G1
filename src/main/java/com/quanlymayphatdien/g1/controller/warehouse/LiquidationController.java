@@ -279,13 +279,11 @@ public class LiquidationController extends HttpServlet {
         List<Liquidation> list = liquidationDAO.findWithPagination(limit, offset, search, statusFilter, filterUserId);
 
         java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts(filterUserId);
-        int kpiPendingManager = kpis.getOrDefault("PENDING_MANAGER", 0);
         int kpiPendingCeo = kpis.getOrDefault("PENDING_CEO", 0);
         int kpiApproved = kpis.getOrDefault("APPROVED_BY_CEO", 0);
         int kpiRequestEdit = kpis.getOrDefault("MANAGER_REQUEST_EDIT", 0) + kpis.getOrDefault("CEO_REQUEST_EDIT", 0);
         int kpiRejected = kpis.getOrDefault("REJECTED_BY_MANAGER", 0) + kpis.getOrDefault("REJECTED_BY_CEO", 0);
 
-        request.setAttribute("kpiPendingManager", kpiPendingManager);
         request.setAttribute("kpiPendingCeo", kpiPendingCeo);
         request.setAttribute("kpiApproved", kpiApproved);
         request.setAttribute("kpiRequestEdit", kpiRequestEdit);
@@ -527,16 +525,35 @@ public class LiquidationController extends HttpServlet {
         int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] serialNumbers = request.getParameterValues("serialNumber");
-        String customerIdStr = request.getParameter("customerId");
+        String[] liquidationPrices = request.getParameterValues("liquidationPrice");
 
         if (generatorIds == null || serialNumbers == null || generatorIds.length == 0) {
             response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Phải chọn ít nhất 1 máy", "UTF-8"));
             return;
         }
 
-        if (generatorIds.length != serialNumbers.length) {
+        if (generatorIds.length != serialNumbers.length
+                || liquidationPrices == null || liquidationPrices.length != generatorIds.length) {
             response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Dữ liệu không hợp lệ", "UTF-8"));
             return;
+        }
+
+        // Parse + validate giá thanh lý từng máy (bắt buộc > 0)
+        BigDecimal[] parsedPrices = new BigDecimal[liquidationPrices.length];
+        for (int i = 0; i < liquidationPrices.length; i++) {
+            String priceStr = liquidationPrices[i] == null ? "" : liquidationPrices[i].replaceAll("[^0-9]", "").trim();
+            if (priceStr.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
+                        + encode("Phải nhập giá thanh lý cho tất cả máy đã chọn", "UTF-8"));
+                return;
+            }
+            BigDecimal price = new BigDecimal(priceStr);
+            if (price.signum() <= 0) {
+                response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
+                        + encode("Giá thanh lý phải lớn hơn 0", "UTF-8"));
+                return;
+            }
+            parsedPrices[i] = price;
         }
 
         Set<String> uniqueSerials = new LinkedHashSet<>();
@@ -545,6 +562,14 @@ public class LiquidationController extends HttpServlet {
         }
         if (uniqueSerials.size() != serialNumbers.length) {
             response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Có serial trùng trong phiếu", "UTF-8"));
+            return;
+        }
+
+        // Resolve/tạo khách hàng — bắt buộc trước khi gửi Sếp duyệt
+        Integer resolvedCustomerId = resolveCustomerFromRequest(request, user);
+        if (resolvedCustomerId == null) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
+                    + encode("Phải chọn hoặc nhập Khách hàng (Tên + SĐT) trước khi gửi Sếp duyệt", "UTF-8"));
             return;
         }
 
@@ -567,11 +592,16 @@ public class LiquidationController extends HttpServlet {
                 return;
             }
 
+            // Quản lý kho tạo đơn đã kèm giá + khách hàng → gửi thẳng CEO duyệt.
             Liquidation l = new Liquidation();
             l.setLiquidationCode("LIQ" + System.currentTimeMillis());
             l.setCreatedBy(user.getId());
             l.setReasonId(reasonId);
             l.setWarehouseId(warehouseId);
+            l.setStatus("PENDING_CEO");
+            l.setCustomerId(resolvedCustomerId);
+            l.setManagerReviewedBy(user.getId());
+            l.setManagerReviewedAt(java.time.LocalDateTime.now());
 
             int insertedId = liquidationDAO.insert(l);
             if (insertedId <= 0) {
@@ -587,6 +617,7 @@ public class LiquidationController extends HttpServlet {
                 d.setSerialNumber(serialNumbers[i]);
                 BigDecimal poPrice = purchaseOrderDAO.findApprovedUnitPriceByGenerator(d.getGeneratorId());
                 d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
+                d.setLiquidationPrice(parsedPrices[i]);
                 if (detailDAO.insert(d) <= 0) {
                     throw new Exception("Không lưu được dòng chi tiết cho serial " + serialNumbers[i]);
                 }
@@ -594,12 +625,13 @@ public class LiquidationController extends HttpServlet {
 
             conn.commit();
 
-            List<User> managers = userDAO.findUsersByPermission("liquidations", "approve_manager");
-            for (User mgr : managers) {
+            // Đơn đi thẳng CEO → thông báo các CEO
+            List<User> ceos = userDAO.findUsersByPermission("liquidations", "approve_ceo");
+            for (User ceo : ceos) {
                 NotificationService.send(
-                        mgr.getId(),
-                        "Đơn thanh lý mới chờ duyệt",
-                        "Nhân viên " + user.getName() + " đã tạo đơn thanh lý " + l.getLiquidationCode() + " cần bạn duyệt.",
+                        ceo.getId(),
+                        "Đơn thanh lý chờ CEO duyệt",
+                        "Quản lý " + user.getName() + " đã tạo và trình lên đơn thanh lý " + l.getLiquidationCode() + " cần CEO duyệt.",
                         request.getContextPath() + "/liquidations?action=detail&id=" + insertedId,
                         "liquidation",
                         insertedId
@@ -612,7 +644,7 @@ public class LiquidationController extends HttpServlet {
             log.setAction("CREATE");
             log.setEntityId(insertedId);
             log.setEntityName(l.getLiquidationCode());
-            log.setDetails("Tạo mới đơn thanh lý " + l.getLiquidationCode());
+            log.setDetails("Quản lý kho tạo đơn thanh lý, báo giá & gửi CEO duyệt: " + l.getLiquidationCode());
             activityLogDAO.insert(log);
 
             response.sendRedirect(request.getContextPath() + "/liquidations");
@@ -633,6 +665,53 @@ public class LiquidationController extends HttpServlet {
                 }
             }
         }
+    }
+
+    // Resolve khách hàng từ request: ưu tiên customerId có sẵn, nếu không thì khớp theo SĐT
+    // hoặc tạo mới từ (tên + SĐT + ...). Trả về null nếu không có đủ thông tin.
+    private Integer resolveCustomerFromRequest(HttpServletRequest request, User user) throws Exception {
+        String customerIdStr = request.getParameter("customerId");
+        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
+            try {
+                return Integer.parseInt(customerIdStr.trim());
+            } catch (NumberFormatException ignore) {
+            }
+        }
+
+        String custName = request.getParameter("customerName");
+        String custPhone = request.getParameter("customerPhone");
+        if (custName == null || custName.trim().isEmpty()
+                || custPhone == null || custPhone.trim().isEmpty()) {
+            return null;
+        }
+
+        if (customerDAO.isPhoneExists(custPhone.trim(), null)) {
+            Customer existing = customerDAO.findByPhone(custPhone.trim());
+            if (existing != null) {
+                return existing.getId();
+            }
+        }
+
+        Customer c = new Customer();
+        c.setName(custName.trim());
+        c.setPhone(custPhone.trim());
+        String email = request.getParameter("customerEmail");
+        String address = request.getParameter("customerAddress");
+        String company = request.getParameter("customerCompany");
+        String typeIdStr = request.getParameter("customerTypeId");
+        c.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : null);
+        c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+        c.setCompanyName(company != null && !company.trim().isEmpty() ? company.trim() : null);
+        if (typeIdStr != null && !typeIdStr.trim().isEmpty()) {
+            try {
+                c.setCustomerTypeId(Integer.parseInt(typeIdStr.trim()));
+            } catch (NumberFormatException ignore) {
+            }
+        }
+        c.setStatus("active");
+        c.setCreatedBy(user.getId());
+        int newId = customerDAO.insert(c);
+        return newId > 0 ? newId : null;
     }
 
     private void handleManagerApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {

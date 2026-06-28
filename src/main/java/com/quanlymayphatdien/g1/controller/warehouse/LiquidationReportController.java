@@ -73,8 +73,9 @@ public class LiquidationReportController extends HttpServlet {
         String warehouseName = resolveWarehouseName(warehouseId);
 
         if ("export".equals(request.getParameter("action"))) {
+            List<Map<String, Object>> detailList = liquidationDAO.getReportDetailList(fromDate, toDate, warehouseId);
             exportExcel(response, fromDate, toDate, warehouseName,
-                    summary, byReason, byWarehouse, byModel, monthly);
+                    summary, byReason, byWarehouse, byModel, monthly, detailList);
             return;
         }
 
@@ -97,9 +98,10 @@ public class LiquidationReportController extends HttpServlet {
             List<Map<String, Object>> byReason,
             List<Map<String, Object>> byWarehouse,
             List<Map<String, Object>> byModel,
-            List<Map<String, Object>> monthly) throws IOException {
+            List<Map<String, Object>> monthly,
+            List<Map<String, Object>> detailList) throws IOException {
         XSSFWorkbook workbook = LiquidationReportExcelSupport.exportReport(
-                fromDate, toDate, warehouseName, summary, byReason, byWarehouse, byModel, monthly);
+                fromDate, toDate, warehouseName, summary, byReason, byWarehouse, byModel, monthly, detailList);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
                 "attachment; filename=BaoCaoThanhLy_" + fromDate + "_" + toDate + ".xlsx");
