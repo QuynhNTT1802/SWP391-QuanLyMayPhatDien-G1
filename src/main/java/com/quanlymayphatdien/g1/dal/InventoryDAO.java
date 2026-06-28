@@ -431,10 +431,52 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
 
+    /**
+     * Insert mot serial moi vao inventory voi trang thai IN_STOCK ngay lap tuc.
+     * Dung cho luong tao phieu nhap truc tiep (khong can manager duyet).
+     * Tra ve inventory_id vua tao, hoac -1 neu that bai.
+     */
+    public int insertInStock(Connection conn, int generatorId,
+                              String serialNumber, int warehouseId) throws SQLException {
+        String sql = "INSERT INTO inventory (generator_id, serial_number, warehouse_id, status) "
+                   + "VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, generatorId);
+            ps.setString(2, serialNumber);
+            ps.setInt(3, warehouseId);
+            ps.setString(4, STATUS_IN_STOCK);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return -1;
+    }
+
+
     public boolean reserveForExport(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, STATUS_RESERVED_EXPORT);
+            ps.setInt(2, inventoryId);
+            ps.setString(3, STATUS_IN_STOCK);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+
+    /**
+     * Danh dau mot serial IN_STOCK da duoc xuat truc tiep (IN_STOCK -> targetStatus).
+     * Dung cho luong tao phieu xuat khong can manager duyet: serial di thang tu IN_STOCK
+     * sang SOLD (hoac LIQUIDATED neu la phieu thanh ly).
+     * Tra ve true neu update duoc 1 row, false neu serial khong o trang thai IN_STOCK.
+     */
+    public boolean markAsExported(Connection conn, int inventoryId, String targetStatus) throws SQLException {
+        String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, targetStatus);
             ps.setInt(2, inventoryId);
             ps.setString(3, STATUS_IN_STOCK);
             return ps.executeUpdate() > 0;
