@@ -84,6 +84,9 @@ public class ProposalController extends HttpServlet {
                 case "redirectCreateSupplier":
                     redirectCreateSupplier(request, response);
                     return;
+                case "redirectCreateGenerator":
+                    redirectCreateGenerator(request, response);
+                    return;
                 case "importConfirm":
                     reShowImportPreview(request, response);
                     return;
@@ -1193,6 +1196,13 @@ public class ProposalController extends HttpServlet {
         Integer warehouseId = (Integer) session.getAttribute("pendingImportWarehouseId");
         String note = (String) session.getAttribute("pendingImportNote");
 
+        String newGeneratorModel = request.getParameter("newGeneratorModel");
+        if (newGeneratorModel != null && !newGeneratorModel.isEmpty()) {
+            session.setAttribute("toastMessage",
+                    "Đã thêm máy phát '" + newGeneratorModel + "' vào kho. Hệ thống đã tự cập nhật lại các dòng liên quan.");
+            session.setAttribute("toastType", "success");
+        }
+
         String newSupplierIdStr = request.getParameter("newSupplierId");
         String assignedGidStr = request.getParameter("assignedGid");
         if (assignedGidStr == null || assignedGidStr.isEmpty()) {
@@ -1220,10 +1230,45 @@ public class ProposalController extends HttpServlet {
         }
 
         SupplierDAO supDAO = new SupplierDAO();
+        GeneratorDAO genDAO = new GeneratorDAO();
         List<Map<String, String>> validRows = new ArrayList<>();
         List<Map<String, String>> warningRows = new ArrayList<>();
         List<Map<String, String>> invalidRows = new ArrayList<>();
         List<Map<String, String>> unresolvedSupplierRows = new ArrayList<>();
+
+        // Re-validate generator cho tất cả pending rows (sau khi user có thể đã thêm máy mới)
+        for (Map<String, String> enriched : pendingRows) {
+            String gmodel = enriched.get("gmodel");
+            String currentGid = enriched.get("gid");
+            if ((currentGid == null || currentGid.isEmpty())
+                    && gmodel != null && !gmodel.trim().isEmpty()) {
+                Generator g = genDAO.findByModel(gmodel.trim());
+                if (g != null) {
+                    enriched.put("gid", String.valueOf(g.getId()));
+                    enriched.put("gname", g.getModel());
+                    enriched.remove("gwarnings");
+                }
+            }
+        }
+
+        // Đồng bộ sang pendingImportAllRows để re-validate luôn thấy máy mới
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> allRowsForSync = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+        if (allRowsForSync != null) {
+            for (Map<String, String> r : allRowsForSync) {
+                String gmodel = r.get("gmodel");
+                String currentGid = r.get("gid");
+                if ((currentGid == null || currentGid.isEmpty())
+                        && gmodel != null && !gmodel.trim().isEmpty()) {
+                    Generator g = genDAO.findByModel(gmodel.trim());
+                    if (g != null) {
+                        r.put("gid", String.valueOf(g.getId()));
+                        r.put("gname", g.getModel());
+                        r.remove("gwarnings");
+                    }
+                }
+            }
+        }
 
         for (Map<String, String> enriched : pendingRows) {
             String supplierNameRaw = enriched.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
@@ -1897,6 +1942,28 @@ public class ProposalController extends HttpServlet {
                 .append("&prefillName=").append(urlEncode(supplierQuery))
                 .append("&returnUrl=").append(urlEncode(returnUrl))
                 .append("&rowGid=").append(urlEncode(rowGid));
+        response.sendRedirect(url.toString());
+    }
+
+    private void redirectCreateGenerator(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        Set<String> perms = (session != null)
+                ? (Set<String>) session.getAttribute("userPermissions") : null;
+        if (perms == null || !perms.contains("generators.create")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền thêm máy phát điện.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=importConfirm");
+            return;
+        }
+        String model = request.getParameter("model");
+        String stt = request.getParameter("stt");
+        String returnUrl = request.getContextPath() + "/proposal?action=importConfirm";
+        StringBuilder url = new StringBuilder(request.getContextPath())
+                .append("/warehouse/generators?action=create")
+                .append("&prefillModel=").append(urlEncode(model))
+                .append("&returnUrl=").append(urlEncode(returnUrl))
+                .append("&rowStt=").append(urlEncode(stt));
         response.sendRedirect(url.toString());
     }
 

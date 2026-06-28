@@ -61,6 +61,8 @@
 
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/generators?action=create">
+                            <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}'/>" />
+                            <input type="hidden" name="rowStt" value="<c:out value='${rowStt}'/>" />
 
                             <div class="form-section">
                                 <div class="form-section-head">
@@ -70,7 +72,8 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Mẫu máy <span class="req">*</span></label>
-                                        <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value="${sessionScope.fieldModel}"/>" required />
+                                        <c:set var="_modelValue" value="${empty sessionScope.fieldModel ? prefillModel : sessionScope.fieldModel}" />
+                                        <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value='${_modelValue}'/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Thương hiệu <span class="req">*</span></label>
