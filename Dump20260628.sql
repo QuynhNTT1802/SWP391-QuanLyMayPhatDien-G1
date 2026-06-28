@@ -38,7 +38,7 @@ CREATE TABLE `activity_log` (
   KEY `idx_entity` (`entity_type`,`entity_id`),
   KEY `idx_created` (`created_at`),
   CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -47,6 +47,7 @@ CREATE TABLE `activity_log` (
 
 LOCK TABLES `activity_log` WRITE;
 /*!40000 ALTER TABLE `activity_log` DISABLE KEYS */;
+INSERT INTO `activity_log` VALUES (1,3,'import_proposal','CREATE',1,'PRC-20260626-001','Tạo phiếu đề xuất từ Excel (gửi duyệt) — 1 dòng','2026-06-26 14:24:19'),(2,3,'import_proposal','APPROVE',1,'PRC-20260626-001','Duyệt phiếu đề xuất','2026-06-26 14:24:23'),(3,3,'receipt','CREATE',1,'RX-IM-20260627-016','Tạo phiếu nhập kho và cập nhật tồn kho','2026-06-27 01:25:08'),(4,3,'receipt','CREATE',2,'RX-EX-20260627-280','Tạo phiếu xuất kho','2026-06-27 02:02:37'),(5,3,'receipt','CREATE',3,'RX-IM-20260628-403','Tạo phiếu nhập kho và cập nhật tồn kho','2026-06-28 16:20:33'),(6,3,'receipt','CREATE',4,'RX-EX-20260628-658','Tạo phiếu xuất kho và cập nhật tồn kho','2026-06-28 16:21:31');
 /*!40000 ALTER TABLE `activity_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -421,7 +422,7 @@ CREATE TABLE `import_proposal` (
   CONSTRAINT `fk_proposal_po` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_proposal_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -430,6 +431,7 @@ CREATE TABLE `import_proposal` (
 
 LOCK TABLES `import_proposal` WRITE;
 /*!40000 ALTER TABLE `import_proposal` DISABLE KEYS */;
+INSERT INTO `import_proposal` VALUES (1,'PRC-20260626-001','APPROVED',1,3,3,NULL,'SM','2026-06-26 14:24:19','202606',1,'',NULL,'2026-06-26 14:24:22',NULL,'2026-06-26 14:24:19','2026-07-02 14:25:25');
 /*!40000 ALTER TABLE `import_proposal` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -456,7 +458,7 @@ CREATE TABLE `import_proposal_detail` (
   CONSTRAINT `fk_pd_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_pd_proposal` FOREIGN KEY (`proposal_id`) REFERENCES `import_proposal` (`proposal_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pd_supplier` FOREIGN KEY (`supplier_id`) REFERENCES `supplier` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -465,6 +467,7 @@ CREATE TABLE `import_proposal_detail` (
 
 LOCK TABLES `import_proposal_detail` WRITE;
 /*!40000 ALTER TABLE `import_proposal_detail` DISABLE KEYS */;
+INSERT INTO `import_proposal_detail` VALUES (1,1,1,2,2,0,18000000.00,'');
 /*!40000 ALTER TABLE `import_proposal_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -490,7 +493,7 @@ CREATE TABLE `inventory` (
   KEY `idx_inv_status` (`status`),
   CONSTRAINT `fk_inv_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`),
   CONSTRAINT `fk_inv_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -499,6 +502,7 @@ CREATE TABLE `inventory` (
 
 LOCK TABLES `inventory` WRITE;
 /*!40000 ALTER TABLE `inventory` DISABLE KEYS */;
+INSERT INTO `inventory` VALUES (1,'123454',4,2,'RESERVED_EXPORT','2026-06-27 01:25:08','2026-06-27 02:02:37'),(2,'123456789',1,1,'SOLD','2026-06-28 16:20:32','2026-06-28 16:21:30'),(3,'1234567891',1,1,'IN_STOCK','2026-06-28 16:20:32','2026-06-28 16:20:32');
 /*!40000 ALTER TABLE `inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -704,7 +708,7 @@ CREATE TABLE `notification` (
   KEY `fk_notif_user` (`user_id`),
   KEY `idx_notif_entity` (`entity_type`,`entity_id`),
   CONSTRAINT `fk_notif_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -713,7 +717,7 @@ CREATE TABLE `notification` (
 
 LOCK TABLES `notification` WRITE;
 /*!40000 ALTER TABLE `notification` DISABLE KEYS */;
-INSERT INTO `notification` VALUES (1,7,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260626-199 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-26 01:55:33'),(2,8,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260626-199 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-26 01:55:33'),(3,9,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260626-199 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-26 01:55:33');
+INSERT INTO `notification` VALUES (1,7,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260626-199 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-26 01:55:33'),(2,8,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260626-199 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-26 01:55:33'),(3,9,'Phiếu nhập kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu nhập RX-IM-20260626-199 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/import-receipt?action=detail&id=1','import_receipt',1,0,'2026-06-26 01:55:33'),(4,7,'Phiếu xuất kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu xuất RX-EX-20260627-280 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/export-receipt?action=detail&id=2','export_receipt',2,0,'2026-06-27 02:02:37'),(5,8,'Phiếu xuất kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu xuất RX-EX-20260627-280 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/export-receipt?action=detail&id=2','export_receipt',2,0,'2026-06-27 02:02:37'),(6,9,'Phiếu xuất kho mới chờ duyệt','Nhân viên Admin đã tạo phiếu xuất RX-EX-20260627-280 cần bạn duyệt.','/SWP391-QuanLyMayPhatDien-G1/export-receipt?action=detail&id=2','export_receipt',2,0,'2026-06-27 02:02:37');
 /*!40000 ALTER TABLE `notification` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -875,7 +879,7 @@ CREATE TABLE `purchase_order` (
   CONSTRAINT `fk_po_created` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`),
   CONSTRAINT `fk_po_rejected` FOREIGN KEY (`rejected_by`) REFERENCES `user` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_po_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -884,6 +888,7 @@ CREATE TABLE `purchase_order` (
 
 LOCK TABLES `purchase_order` WRITE;
 /*!40000 ALTER TABLE `purchase_order` DISABLE KEYS */;
+INSERT INTO `purchase_order` VALUES (1,'PO-202606-001','202606','2026-06-01','2026-06-30',1,'APPROVED',3,3,NULL,NULL,NULL,1,2,'',NULL,'2026-07-02 14:25:25',NULL,'2026-07-02 14:25:22','2026-07-02 14:25:25');
 /*!40000 ALTER TABLE `purchase_order` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -912,7 +917,7 @@ CREATE TABLE `purchase_order_detail` (
   CONSTRAINT `fk_pod_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`),
   CONSTRAINT `fk_pod_po` FOREIGN KEY (`po_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pod_proposal_detail` FOREIGN KEY (`proposal_detail_id`) REFERENCES `import_proposal_detail` (`proposal_detail_id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -921,6 +926,7 @@ CREATE TABLE `purchase_order_detail` (
 
 LOCK TABLES `purchase_order_detail` WRITE;
 /*!40000 ALTER TABLE `purchase_order_detail` DISABLE KEYS */;
+INSERT INTO `purchase_order_detail` VALUES (1,1,1,1,2,0,18000000.00,2,'');
 /*!40000 ALTER TABLE `purchase_order_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -962,7 +968,7 @@ CREATE TABLE `receipt` (
   CONSTRAINT `fk_receipt_po` FOREIGN KEY (`purchase_order_id`) REFERENCES `purchase_order` (`po_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_receipt_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT,
   CONSTRAINT `receipt_ibfk_1` FOREIGN KEY (`reason_id`) REFERENCES `category` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -971,6 +977,7 @@ CREATE TABLE `receipt` (
 
 LOCK TABLES `receipt` WRITE;
 /*!40000 ALTER TABLE `receipt` DISABLE KEYS */;
+INSERT INTO `receipt` VALUES (1,'RX-IM-20260627-016','IMPORT',NULL,NULL,2,3,3,'COMPLETED','','2026-06-27 01:25:08','2026-06-27 01:25:08','2026-06-27 01:25:08',83,NULL),(2,'RX-EX-20260627-280','EXPORT',NULL,NULL,2,3,NULL,'PENDING','',NULL,'2026-06-27 02:02:37','2026-06-27 02:02:37',26,NULL),(3,'RX-IM-20260628-403','IMPORT',NULL,1,1,3,3,'COMPLETED','','2026-06-28 16:20:31','2026-06-28 16:20:32','2026-06-28 16:20:32',83,NULL),(4,'RX-EX-20260628-658','EXPORT',NULL,NULL,1,3,3,'COMPLETED','','2026-06-28 16:21:31','2026-06-28 16:21:31','2026-06-28 16:21:30',25,NULL);
 /*!40000 ALTER TABLE `receipt` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -991,7 +998,7 @@ CREATE TABLE `receipt_detail` (
   KEY `idx_rd_inventory` (`inventory_id`),
   CONSTRAINT `fk_rd_inventory` FOREIGN KEY (`inventory_id`) REFERENCES `inventory` (`inventory_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_rd_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1000,6 +1007,7 @@ CREATE TABLE `receipt_detail` (
 
 LOCK TABLES `receipt_detail` WRITE;
 /*!40000 ALTER TABLE `receipt_detail` DISABLE KEYS */;
+INSERT INTO `receipt_detail` VALUES (1,1,1,''),(2,2,1,''),(3,3,2,''),(4,3,3,''),(5,4,2,'');
 /*!40000 ALTER TABLE `receipt_detail` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1170,7 +1178,7 @@ CREATE TABLE `stock_card` (
   CONSTRAINT `fk_sc_generator` FOREIGN KEY (`generator_id`) REFERENCES `generator` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_sc_receipt` FOREIGN KEY (`receipt_id`) REFERENCES `receipt` (`receipt_id`) ON DELETE SET NULL,
   CONSTRAINT `fk_sc_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE RESTRICT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1179,6 +1187,7 @@ CREATE TABLE `stock_card` (
 
 LOCK TABLES `stock_card` WRITE;
 /*!40000 ALTER TABLE `stock_card` DISABLE KEYS */;
+INSERT INTO `stock_card` VALUES (1,2,4,1,'IMPORT',1,1,'Phiếu RX-IM-20260627-016','2026-06-27 01:25:08',3),(2,1,1,3,'IMPORT',2,2,'Phiếu RX-IM-20260628-403','2026-06-28 16:20:32',3),(3,1,1,4,'EXPORT',-1,1,'Phiếu RX-EX-20260628-658','2026-06-28 16:21:31',3);
 /*!40000 ALTER TABLE `stock_card` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1362,13 +1371,16 @@ CREATE TABLE `user` (
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `created_by` int DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
+  `warehouse_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_username` (`username`),
   UNIQUE KEY `uk_email` (`email`),
   KEY `idx_created_by` (`created_by`),
   KEY `idx_updated_by` (`updated_by`),
+  KEY `fk_user_warehouse` (`warehouse_id`),
   CONSTRAINT `fk_user_created_by` FOREIGN KEY (`created_by`) REFERENCES `user` (`id`),
-  CONSTRAINT `fk_user_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `user` (`id`)
+  CONSTRAINT `fk_user_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `user` (`id`),
+  CONSTRAINT `fk_user_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `warehouse` (`warehouse_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1378,7 +1390,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'Nguyễn Văn A','vana','','vana@gmail.com','0944727281','Hà Nội','active','2026-05-16 18:57:20','2026-05-21 15:18:35',NULL,NULL),(2,'Trần Thị B','thib','123','thib@gmail.com','08467237727','Hà Nội','active','2026-05-16 18:57:20','2026-05-28 11:38:51',NULL,NULL),(3,'Admin','admin','admin123','admin@warehouse.com','0846723771','30','active','2026-05-16 18:57:20','2026-06-14 18:29:43',NULL,NULL),(4,'Nguyễn Văn Nam','salestaff1','$2a$10$zBXM5qSw.D.8QN8Kdp8FZ.SJ33GhtgKXLlRcW1rFpH0N71LoF0hAK','salestaff1@warehouse.com','0912345678','Bắc Giang','active','2026-05-21 08:00:00','2026-06-09 10:24:54',3,NULL),(5,'Trần Thị Hương','salemanager1','123','salemanager1@warehouse.com','0912345679','Hà Nội','active','2026-05-21 08:00:00','2026-05-21 15:20:58',3,NULL),(6,'Lê Văn Cường','warehousestaff1','123','warehousestaff1@warehouse.com','0912345680','Hà Nội','active','2026-05-21 08:00:00','2026-05-21 08:00:00',3,NULL),(7,'Khánh Nguyễn Văn','vanb','$2a$10$QbvQzIVNH/osQwDyFc6x3.AzYpVtYgyn6ADGSjP.DiGqKnF4eCJbq','vankhanhak54@gmail.com','0846723779','Hà Nội','active','2026-05-18 14:20:02','2026-05-21 15:18:28',1,NULL),(8,'Phạm Minh Tuấn','warehousemanager1','123','warehousemanager1@warehouse.com','0912345681','Hồ Chí Minh','active','2026-05-21 08:00:00','2026-06-05 10:39:55',3,NULL),(9,'Nguyễn Văn B','vanVB','$2a$10$RWSZe8R4XFrSUfHQe7CrYOym8.ysXZvUi3jEm.BBpcZcCrmpXIK2O','vanvb@gmail.com','0846723661','Bắc Giang','active','2026-05-22 04:02:50','2026-05-22 04:02:50',1,NULL),(10,'Khánh Nguyễn Văn','sale123_','$2a$10$XtG49C3Og360orC82gkEaOIoPTzGmx/P/YywjI5p3YLMoJpoaM0xS','khanh@gmail.com','0846723781','Hà Nội','active','2026-05-22 13:03:56','2026-05-22 13:03:56',1,NULL),(11,'1','a_v_g','$2a$10$/Lx1V/dM4vMwkRmi15zAQON4xWuYDWpFtK7y1BQCRP/1KPZ0D56WG','ABC@gmail.com','0846733771','Bắc Giang','active','2026-05-22 13:06:09','2026-05-22 17:15:52',1,NULL),(12,'Nguyen Van A','Anhcad','ncikanfc','ntf@gmail.com','0836786867','ha noi','active','2026-05-22 17:23:05','2026-05-28 17:28:27',NULL,NULL),(13,'CEO','ceo','$2a$10$fZ1zHDvp3bWhbIn/QPH5n.k3rENJEK7TAUt7WrbQ7QZvnnnnsragG','ceo@gmail.com','0846723711','30','active','2026-06-19 16:58:07','2026-06-19 16:58:07',1,NULL);
+INSERT INTO `user` VALUES (1,'Nguyễn Văn A','vana','','vana@gmail.com','0944727281','Hà Nội','active','2026-05-16 18:57:20','2026-05-21 15:18:35',NULL,NULL,NULL),(2,'Trần Thị B','thib','123','thib@gmail.com','08467237727','Hà Nội','active','2026-05-16 18:57:20','2026-05-28 11:38:51',NULL,NULL,NULL),(3,'Admin','admin','admin123','admin@warehouse.com','0846723771','30','active','2026-05-16 18:57:20','2026-06-14 18:29:43',NULL,NULL,NULL),(4,'Nguyễn Văn Nam','salestaff1','$2a$10$zBXM5qSw.D.8QN8Kdp8FZ.SJ33GhtgKXLlRcW1rFpH0N71LoF0hAK','salestaff1@warehouse.com','0912345678','Bắc Giang','active','2026-05-21 08:00:00','2026-06-09 10:24:54',3,NULL,NULL),(5,'Trần Thị Hương','salemanager1','123','salemanager1@warehouse.com','0912345679','Hà Nội','active','2026-05-21 08:00:00','2026-05-21 15:20:58',3,NULL,NULL),(6,'Lê Văn Cường','warehousestaff1','123','warehousestaff1@warehouse.com','0912345680','Hà Nội','active','2026-05-21 08:00:00','2026-05-21 08:00:00',3,NULL,NULL),(7,'Khánh Nguyễn Văn','vanb','$2a$10$QbvQzIVNH/osQwDyFc6x3.AzYpVtYgyn6ADGSjP.DiGqKnF4eCJbq','vankhanhak54@gmail.com','0846723779','Hà Nội','active','2026-05-18 14:20:02','2026-05-21 15:18:28',1,NULL,NULL),(8,'Phạm Minh Tuấn','warehousemanager1','123','warehousemanager1@warehouse.com','0912345681','Hồ Chí Minh','active','2026-05-21 08:00:00','2026-06-05 10:39:55',3,NULL,NULL),(9,'Nguyễn Văn B','vanVB','$2a$10$RWSZe8R4XFrSUfHQe7CrYOym8.ysXZvUi3jEm.BBpcZcCrmpXIK2O','vanvb@gmail.com','0846723661','Bắc Giang','active','2026-05-22 04:02:50','2026-05-22 04:02:50',1,NULL,NULL),(10,'Khánh Nguyễn Văn','sale123_','$2a$10$XtG49C3Og360orC82gkEaOIoPTzGmx/P/YywjI5p3YLMoJpoaM0xS','khanh@gmail.com','0846723781','Hà Nội','active','2026-05-22 13:03:56','2026-05-22 13:03:56',1,NULL,NULL),(11,'1','a_v_g','$2a$10$/Lx1V/dM4vMwkRmi15zAQON4xWuYDWpFtK7y1BQCRP/1KPZ0D56WG','ABC@gmail.com','0846733771','Bắc Giang','active','2026-05-22 13:06:09','2026-05-22 17:15:52',1,NULL,NULL),(12,'Nguyen Van A','Anhcad','ncikanfc','ntf@gmail.com','0836786867','ha noi','active','2026-05-22 17:23:05','2026-05-28 17:28:27',NULL,NULL,NULL),(13,'CEO','ceo','$2a$10$fZ1zHDvp3bWhbIn/QPH5n.k3rENJEK7TAUt7WrbQ7QZvnnnnsragG','ceo@gmail.com','0846723711','30','active','2026-06-19 16:58:07','2026-06-19 16:58:07',1,NULL,NULL);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1474,4 +1486,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-02 11:39:13
+-- Dump completed on 2026-06-28 17:17:32
