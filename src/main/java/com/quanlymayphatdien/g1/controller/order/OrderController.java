@@ -342,6 +342,17 @@ public class OrderController extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
+
+        int totalQty = 0;
+        int totalRows = 0;
+        if (details != null) {
+            totalRows = details.size();
+            for (OrderDetail d : details) {
+                totalQty += d.getQuantity();
+            }
+        }
+        request.setAttribute("totalQty", totalQty);
+        request.setAttribute("totalRows", totalRows);
         request.setAttribute("userPermissions", perms);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
