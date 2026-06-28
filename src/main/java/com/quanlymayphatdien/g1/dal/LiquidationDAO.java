@@ -613,25 +613,90 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return list;
     }
 
+    // Chi tiết từng máy đã thanh lý (mỗi dòng = 1 máy) để xuất sheet "Chi tiết".
+    // Cùng phạm vi lọc với các query báo cáo khác (APPROVED_BY_CEO, theo ngày + kho).
+    public List<Map<String, Object>> getReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT l.liquidation_code, ld.serial_number, g.model AS model_name, "
+                + "w.name AS warehouse_name, c.name AS reason_name, "
+                + "ld.original_price, ld.liquidation_price, "
+                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at "
+                + "FROM liquidation l "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN generator g ON ld.generator_id = g.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + where
+                + " ORDER BY l.ceo_reviewed_at DESC, l.liquidation_code, ld.serial_number";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                java.math.BigDecimal orig = resultSet.getBigDecimal("original_price");
+                java.math.BigDecimal liq = resultSet.getBigDecimal("liquidation_price");
+                if (orig == null) {
+                    orig = java.math.BigDecimal.ZERO;
+                }
+                if (liq == null) {
+                    liq = java.math.BigDecimal.ZERO;
+                }
+                r.put("liquidationCode", resultSet.getString("liquidation_code"));
+                r.put("serialNumber", resultSet.getString("serial_number"));
+                r.put("modelName", resultSet.getString("model_name"));
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("reasonName", resultSet.getString("reason_name"));
+                r.put("originalPrice", orig);
+                r.put("liquidationPrice", liq);
+                r.put("totalLoss", orig.subtract(liq));
+                r.put("customerName", resultSet.getString("customer_name"));
+                r.put("ceoName", resultSet.getString("ceo_name"));
+                java.time.LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", java.time.LocalDateTime.class);
+                r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
+                list.add(r);
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportDetailList", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
     @Override
     public int insert(Liquidation t) {
-        String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, created_at, updated_at) "
-                + "VALUES (?, ?, 'PENDING_MANAGER', ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, manager_reviewed_by, manager_reviewed_at, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            LocalDateTime now = LocalDateTime.now();
             statement.setString(1, t.getLiquidationCode());
             statement.setInt(2, t.getCreatedBy());
-            statement.setInt(3, t.getReasonId());
-            statement.setInt(4, t.getWarehouseId());
+            statement.setString(3, t.getStatus() != null ? t.getStatus() : "PENDING_MANAGER");
+            statement.setInt(4, t.getReasonId());
+            statement.setInt(5, t.getWarehouseId());
             if (t.getCustomerId() != null) {
-                statement.setInt(5, t.getCustomerId());
+                statement.setInt(6, t.getCustomerId());
             } else {
-                statement.setNull(5, java.sql.Types.INTEGER);
+                statement.setNull(6, java.sql.Types.INTEGER);
             }
-            LocalDateTime now = LocalDateTime.now();
-            statement.setObject(6, now);
-            statement.setObject(7, now);
+            if (t.getManagerReviewedBy() != null) {
+                statement.setInt(7, t.getManagerReviewedBy());
+                statement.setObject(8, t.getManagerReviewedAt() != null ? t.getManagerReviewedAt() : now);
+            } else {
+                statement.setNull(7, java.sql.Types.INTEGER);
+                statement.setNull(8, java.sql.Types.TIMESTAMP);
+            }
+            statement.setObject(9, now);
+            statement.setObject(10, now);
             if (statement.executeUpdate() > 0) {
                 resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {

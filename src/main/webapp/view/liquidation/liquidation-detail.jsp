@@ -121,12 +121,12 @@
             <div class="liq-stepper">
                 <div class="liq-step ${step1Cls}">
                     <div class="step-num"><span class="dot"></span>01</div>
-                    <div class="step-title">Tạo đơn</div>
+                    <div class="step-title">QL tạo đơn &amp; báo giá</div>
                     <div class="step-meta">${liquidation.createdByName}</div>
                 </div>
                 <div class="liq-step ${step2Cls}">
                     <div class="step-num"><span class="dot"></span>02</div>
-                    <div class="step-title">QL duyệt giá</div>
+                    <div class="step-title">Trình Sếp duyệt</div>
                     <div class="step-meta">
                         <c:choose>
                             <c:when test="${isMgrEdit}">Yêu cầu sửa</c:when>
@@ -342,8 +342,6 @@
                             </c:if>
                             <c:if test="${isManager and (liquidation.status == 'PENDING_MANAGER' or liquidation.status == 'CEO_REQUEST_EDIT' or liquidation.status == 'MANAGER_REQUEST_EDIT')}">
                                 <button type="submit" name="action" value="approve_manager" class="btn btn-primary">Lưu giá &amp; Gửi sếp duyệt</button>
-                                <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_manager', 'Quản lý yêu cầu sửa', 'managerFeedbackId', 'btn-warn', 'select_manager_edit')">Yêu cầu sửa</button>
-                                <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_manager', 'Từ chối đơn thanh lý', 'managerFeedbackId', 'btn-danger-solid', 'select_manager_reject')">Từ chối đơn</button>
                             </c:if>
                             <c:if test="${isCeo and liquidation.status == 'PENDING_CEO'}">
                                 <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>

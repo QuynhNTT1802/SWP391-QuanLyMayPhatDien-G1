@@ -32,7 +32,8 @@ public class LiquidationReportExcelSupport {
             List<Map<String, Object>> byReason,
             List<Map<String, Object>> byWarehouse,
             List<Map<String, Object>> byModel,
-            List<Map<String, Object>> monthly) {
+            List<Map<String, Object>> monthly,
+            List<Map<String, Object>> detailList) {
 
         XSSFWorkbook workbook = new XSSFWorkbook();
 
@@ -77,6 +78,7 @@ public class LiquidationReportExcelSupport {
                 ? fromDate.format(DF) + " - " + toDate.format(DF) : "Toàn bộ";
         String wh = warehouseName != null && !warehouseName.isEmpty() ? warehouseName : "Tất cả kho";
 
+        buildDetailSheet(workbook, styles, range, wh, detailList);
         buildSummarySheet(workbook, styles, range, wh, summary);
         buildReasonSheet(workbook, styles, byReason);
         buildWarehouseSheet(workbook, styles, byWarehouse);
@@ -159,6 +161,56 @@ public class LiquidationReportExcelSupport {
         for (int i = 0; i < cols; i++) {
             sheet.autoSizeColumn(i);
         }
+    }
+
+    private static void buildDetailSheet(XSSFWorkbook wb, Styles s, String range, String wh, List<Map<String, Object>> rows) {
+        XSSFSheet sheet = wb.createSheet("Chi tiết thanh lý");
+        String[] headers = {"STT", "Mã đơn", "Serial", "Model", "Kho", "Lý do thanh lý",
+            "Nguyên giá (VNĐ)", "Giá thanh lý (VNĐ)", "Tổn thất (VNĐ)", "Khách hàng", "CEO duyệt", "Ngày duyệt"};
+        writeHeaderBlock(sheet, s, "BÁO CÁO THANH LÝ - CHI TIẾT", range, wh, headers.length);
+        int r = 5;
+        makeHeaderRow(sheet, s, r++, headers);
+
+        BigDecimal sumOrig = BigDecimal.ZERO;
+        BigDecimal sumLiq = BigDecimal.ZERO;
+        BigDecimal sumLoss = BigDecimal.ZERO;
+        int idx = 1;
+        for (Map<String, Object> m : rows) {
+            Row row = sheet.createRow(r++);
+            cellInt(row, 0, idx++, s);
+            cellStr(row, 1, (String) m.get("liquidationCode"), s);
+            cellStr(row, 2, (String) m.get("serialNumber"), s);
+            cellStr(row, 3, (String) m.get("modelName"), s);
+            cellStr(row, 4, (String) m.get("warehouseName"), s);
+            cellStr(row, 5, (String) m.get("reasonName"), s);
+            cellMoney(row, 6, bd(m.get("originalPrice")), s);
+            cellMoney(row, 7, bd(m.get("liquidationPrice")), s);
+            cellMoney(row, 8, bd(m.get("totalLoss")), s);
+            cellStr(row, 9, (String) m.get("customerName"), s);
+            cellStr(row, 10, (String) m.get("ceoName"), s);
+            cellStr(row, 11, (String) m.get("reviewedAtStr"), s);
+            sumOrig = sumOrig.add(bd(m.get("originalPrice")));
+            sumLiq = sumLiq.add(bd(m.get("liquidationPrice")));
+            sumLoss = sumLoss.add(bd(m.get("totalLoss")));
+        }
+
+        // Dòng tổng cộng
+        Row total = sheet.createRow(r);
+        Cell label = total.createCell(0);
+        label.setCellValue("TỔNG CỘNG (" + rows.size() + " máy)");
+        label.setCellStyle(s.header);
+        for (int c = 1; c <= 5; c++) {
+            total.createCell(c).setCellStyle(s.header);
+        }
+        sheet.addMergedRegion(new CellRangeAddress(r, r, 0, 5));
+        cellMoney(total, 6, sumOrig, s);
+        cellMoney(total, 7, sumLiq, s);
+        cellMoney(total, 8, sumLoss, s);
+        for (int c = 9; c <= 11; c++) {
+            total.createCell(c).setCellStyle(s.header);
+        }
+
+        autoSize(sheet, headers.length);
     }
 
     private static void buildSummarySheet(XSSFWorkbook wb, Styles s, String range, String wh, Map<String, Object> sum) {
