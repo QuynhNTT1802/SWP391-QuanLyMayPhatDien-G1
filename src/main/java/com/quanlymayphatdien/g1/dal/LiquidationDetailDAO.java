@@ -124,4 +124,31 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
         return false;
     }
 
+    public void deleteByLiquidationId(Connection conn, int liquidationId) throws SQLException {
+        String sql = "DELETE FROM liquidation_detail WHERE liquidation_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, liquidationId);
+            stmt.executeUpdate();
+        }
+    }
+
+    public int insert(Connection conn, LiquidationDetail t) throws SQLException {
+        String sql = "insert into liquidation_detail(liquidation_id, generator_id, serial_number, original_price, liquidation_price) "
+                + "values (?, ? ,? ,? ,?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, t.getLiquidationId());
+            stmt.setInt(2, t.getGeneratorId());
+            stmt.setString(3, t.getSerialNumber());
+            stmt.setBigDecimal(4, t.getOriginalPrice());
+
+            if (t.getLiquidationPrice() != null) {
+                stmt.setBigDecimal(5, t.getLiquidationPrice());
+            } else {
+                stmt.setNull(5, java.sql.Types.DECIMAL);
+            }
+
+            return stmt.executeUpdate() > 0 ? 1 : 0;
+        }
+    }
+
 }

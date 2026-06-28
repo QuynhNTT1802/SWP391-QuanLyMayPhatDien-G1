@@ -49,6 +49,7 @@
                     <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
                         <c:out value="${error}"/>
                     </div>
+                    <c:remove var="error" scope="session"/>
                 </c:if>
 
                 <div class="hero">

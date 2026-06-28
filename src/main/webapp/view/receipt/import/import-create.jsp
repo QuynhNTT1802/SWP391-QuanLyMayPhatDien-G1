@@ -303,117 +303,11 @@
                             </div>
                         </c:if>
                     </section>
-
-                    <c:if test="${not empty validRows or not empty invalidRows}">
-                        <section class="section excel-preview-section" style="padding: 18px 22px; margin-top: 16px;">
-                            <div class="section-head">
-                                <div>
-                                    <div class="section-num">03 — XEM TRƯỚC TỪ EXCEL</div>
-                                    <h3 class="section-title">
-                                        Dữ liệu đọc từ file Excel
-                                        <span style="font-weight: 500; font-size: 12px; color: var(--muted); margin-left: 8px;">
-                                            Hợp lệ: <strong style="color:#065f46;">${fn:length(validRows)}</strong>
-                                            &nbsp;|&nbsp; Lỗi: <strong style="color:#991b1b;">${fn:length(invalidRows)}</strong>
-                                        </span>
-                                    </h3>
-                                </div>
-                            </div>
-
-                            <c:if test="${not empty invalidRows}">
-                                <div class="alert alert-warn" style="margin-bottom: 14px;">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                                    <div class="alert-body">
-                                        <div class="alert-title">Có ${fn:length(invalidRows)} dòng lỗi (sẽ bị bỏ qua)</div>
-                                        <ul style="margin: 4px 0 0 18px; padding: 0;">
-                                            <c:forEach var="row" items="${invalidRows}">
-                                                <li>Dòng ${row.rowNum}: ${row.model} / ${row.serial} - <strong style="color:#991b1b;">${row['_errors']}</strong></li>
-                                            </c:forEach>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </c:if>
-
-                            <c:if test="${empty validRows}">
-                                <div class="alert alert-error">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                    <div class="alert-body">
-                                        <div class="alert-title">Không có dòng hợp lệ nào trong file Excel</div>
-                                        <div>Hãy sửa file và upload lại.</div>
-                                    </div>
-                                </div>
-                            </c:if>
-
-                            <c:if test="${not empty validRows}">
-                                <div class="info-box" style="background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px;">
-                                    <strong>Lưu ý:</strong> Tick chọn các dòng muốn nhập. Khi bấm "Tạo phiếu nhập", các dòng tick sẽ được thêm vào phiếu nháp.
-                                    Các dòng manual trong bảng phía trên cũng sẽ được thêm.
-                                </div>
-                                <table class="detail-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-num" style="width: 36px;">
-                                                <input type="checkbox" id="checkAllExcel" checked
-                                                       onclick="document.querySelectorAll('.excel-row-cb').forEach(c => c.checked = this.checked)"/>
-                                            </th>
-                                            <th class="col-num">#</th>
-                                            <th class="col-gen">Máy phát</th>
-                                            <th class="col-serial">Serial</th>
-                                            <th class="col-note">Ghi chú</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="row" items="${validRows}" varStatus="st">
-                                            <tr>
-                                                <td class="col-num" style="text-align:center; padding-top:14px;">
-                                                    <input type="checkbox" class="excel-row-cb row-cb-excel"
-                                                           name="rowIndex" value="${st.index}" checked
-                                                           onchange="syncExcelHiddenInputs()"/>
-                                                </td>
-                                                <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
-                                                <td>
-                                                    <strong>${row.generatorModel}</strong>
-                                                    <span class="stock-info">${row.brand}</span>
-                                                    <input type="hidden" class="excel-gen" name="generatorId" value="${row.generatorId}"
-                                                           disabled="disabled"/>
-                                                </td>
-                                                <td>
-                                                    <span class="mono">${row.serial}</span>
-                                                    <input type="hidden" class="excel-serial" name="serialNumber" value="${row.serial}"
-                                                           disabled="disabled"/>
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="excel-note" name="detailNote" value="${row.note}"
-                                                           placeholder="(không có)" disabled="disabled"/>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-
-                                <div class="btn-row" style="display:flex; gap:10px; margin-top: 14px;">
-                                    <button type="button" class="btn btn-primary" onclick="submitImportConfirm()">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-                                        Tạo phiếu nháp từ <span id="selectedCount">${fn:length(validRows)}</span> dòng Excel đã chọn
-                                    </button>
-                                    <button type="button" class="btn" onclick="document.getElementById('excelFileInput').click()">
-                                        Upload lại file khác
-                                    </button>
-                                </div>
-                            </c:if>
-                        </section>
-                    </c:if>
                 </div>
             </form>
 
-            <form id="excelUploadForm" method="POST" enctype="multipart/form-data"
-                  action="${pageContext.request.contextPath}/import-receipt?action=importPreview" style="display:none;">
-                <input type="hidden" name="warehouseId" id="excelWarehouseId"/>
-                <input type="hidden" name="reasonId" id="excelReasonId"/>
-                <input type="hidden" name="note" id="excelNote"/>
-                <input type="hidden" name="poId" id="excelPoId" value="<c:out value='${receipt.purchaseOrderId}'/>"/>
-                <input type="file" name="excelFile" id="excelFileInput" accept=".xlsx"
-                       onchange="submitExcelUpload(this)"/>
-            </form>
+            <input type="file" name="excelFile" id="excelFileInput" accept=".xlsx"
+                   onchange="submitExcelUpload(this)" style="display:none;"/>
         </main>
     </div>
 </div>
@@ -715,17 +609,18 @@
         var noteEl = document.querySelector('textarea[name="note"]');
         if (noteEl) noteEl.value = '<c:out value="${preservedNote}"/>';
         </c:if>
-
-        syncExcelHiddenInputs();
     });
 
     function submitExcelUpload(input) {
         if (!input.files || !input.files[0]) {
             return;
         }
-        var whIdInput = document.querySelector('input[name="warehouseId"]');
-        var whSelect = document.getElementById('warehouseSelect');
-        var whId = whIdInput ? whIdInput.value : (whSelect ? whSelect.value : '');
+        var whSelect = document.querySelector('select[name="warehouseId"]');
+        var whId = whSelect ? whSelect.value : '';
+        if (!whId) {
+            var whHidden = document.querySelector('input[name="warehouseId"][type="hidden"]');
+            if (whHidden) whId = whHidden.value;
+        }
         if (!whId) {
             toast('Vui lòng chọn kho trước khi nhập Excel', 'danger');
             input.value = '';
@@ -733,16 +628,6 @@
         }
 
         var isPoMode = !!document.querySelector('tr.po-locked-row');
-        if (!isPoMode) {
-            document.getElementById('excelWarehouseId').value = whId;
-            var reasonEl = document.querySelector('select[name="reasonId"]');
-            if (reasonEl) document.getElementById('excelReasonId').value = reasonEl.value;
-            var noteEl = document.querySelector('textarea[name="note"]');
-            if (noteEl) document.getElementById('excelNote').value = noteEl.value;
-            document.getElementById('excelUploadForm').submit();
-            return;
-        }
-
         var reasonEl = document.querySelector('select[name="reasonId"]');
         var noteEl = document.querySelector('textarea[name="note"]');
         var existingPoId = document.querySelector('input[name="poId"]');
@@ -753,15 +638,6 @@
         formData.append('reasonId', reasonEl ? reasonEl.value : '');
         formData.append('note', noteEl ? noteEl.value : '');
         if (existingPoId) formData.append('poId', existingPoId.value || '');
-
-        document.querySelectorAll('#detailBody tr').forEach(function (tr) {
-            var g = tr.querySelector('select[name="manualGeneratorId"]');
-            var s = tr.querySelector('input[name="manualSerialNumber"]');
-            var n = tr.querySelector('input[name="manualDetailNote"]');
-            if (g) formData.append('manualGeneratorId', g.value || '');
-            if (s) formData.append('manualSerialNumber', s.value || '');
-            if (n) formData.append('manualDetailNote', n.value || '');
-        });
 
         var btn = document.getElementById('btnImportExcel');
         if (btn) { btn.disabled = true; btn.classList.add('loading'); }
@@ -782,9 +658,13 @@
                 toast((data && data.message) ? data.message : 'Lỗi khi đọc file', 'danger');
                 return;
             }
-            applySerialsToPoRows(data.serials || []);
-            if (typeof updatePoCounter === 'function') updatePoCounter();
-            toast(data.message || ('Đã đọc ' + data.serials.length + ' serial'), 'success');
+            if (isPoMode) {
+                applySerialsToPoRows(data.serials || []);
+                if (typeof updatePoCounter === 'function') updatePoCounter();
+            } else {
+                applySerialsToManualRows(data.generatorIds || [], data.serials || []);
+            }
+            toast(data.message || 'Đã đọc file Excel', 'success');
         })
         .catch(function (err) {
             if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
@@ -804,46 +684,21 @@
         }
     }
 
-    function addHidden(form, name, value) {
-        if (value === undefined || value === null) value = '';
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-    }
-
-    function syncExcelHiddenInputs() {
-        var checked = document.querySelectorAll('.excel-row-cb:checked').length;
-        var span = document.getElementById('selectedCount');
-        if (span) span.textContent = checked;
-
-        document.querySelectorAll('.excel-row-cb').forEach(function (cb) {
-            var row = cb.closest('tr');
-            if (!row) return;
-            var enabled = cb.checked;
-            row.querySelectorAll('input.excel-gen, input.excel-serial, input.excel-note').forEach(function (inp) {
-                inp.disabled = !enabled;
-            });
-        });
-    }
-
-    function submitImportConfirm() {
-        if (document.querySelector('tr.po-locked-row')) {
-            toast('Đang ở chế độ PO, hãy dùng nút Gửi phiếu.', 'info');
-            return;
+    function applySerialsToManualRows(generatorIds, serials) {
+        var tbody = document.getElementById('detailBody');
+        if (!tbody) return;
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        for (var i = 0; i < serials.length; i++) {
+            var genId = generatorIds[i];
+            var serial = serials[i];
+            if (!serial) continue;
+            var tr = buildEmptyRow(genId);
+            var snInput = tr.querySelector('input[name="manualSerialNumber"]');
+            if (snInput) snInput.value = serial;
+            tbody.appendChild(tr);
         }
-        var checkedCount = document.querySelectorAll('.excel-row-cb:checked').length;
-        if (checkedCount === 0) {
-            toast('Vui lòng tick chọn ít nhất 1 dòng Excel để nhập', 'danger');
-            return;
-        }
-        if (!confirm('Tạo phiếu nháp với ' + checkedCount + ' dòng Excel đã chọn (cộng với các dòng manual)? Bạn có thể chỉnh sửa trước khi gửi duyệt.')) {
-            return;
-        }
-        var form = document.getElementById('receiptForm');
-        form.action = ctx + '/import-receipt?action=importConfirm';
-        form.submit();
+        updateRowNumbers();
+        if (typeof updateOrderCounter === 'function') updateOrderCounter();
     }
 </script>
 </body>

@@ -27,13 +27,19 @@ public class InventoryCheckExcelSupport {
         XSSFSheet sheet = workbook.createSheet("Báo cáo kiểm kê");
 
         XSSFFont titleFont = workbook.createFont();
+        titleFont.setFontName("Times New Roman");
         titleFont.setBold(true);
         titleFont.setFontHeightInPoints((short) 14);
 
         XSSFFont headerFont = workbook.createFont();
+        headerFont.setFontName("Times New Roman");
         headerFont.setBold(true);
         headerFont.setFontHeightInPoints((short) 11);
         headerFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+
+        XSSFFont dataFont = workbook.createFont();
+        dataFont.setFontName("Times New Roman");
+        dataFont.setFontHeightInPoints((short) 11);
 
         CellStyle titleStyle = workbook.createCellStyle();
         titleStyle.setFont(titleFont);
@@ -44,6 +50,9 @@ public class InventoryCheckExcelSupport {
         infoStyle.setFillForegroundColor(HEADER_BG);
         infoStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         infoStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        CellStyle dataStyle = workbook.createCellStyle();
+        dataStyle.setFont(dataFont);
 
         int rowNum = 0;
 
@@ -56,7 +65,7 @@ public class InventoryCheckExcelSupport {
         Row dateRow = sheet.createRow(rowNum);
         dateRow.createCell(0).setCellValue("Ngày báo cáo: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         dateRow.getCell(0).setCellStyle(infoStyle);
-        sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, COL_COUNT - 1));
+sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, COL_COUNT - 1));
         rowNum++;
 
         Row whRow = sheet.createRow(rowNum);
@@ -109,16 +118,16 @@ public class InventoryCheckExcelSupport {
                 }
             }
             Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(idx++);
-            row.createCell(1).setCellValue(sc.getReceiptCode() != null ? sc.getReceiptCode() : "");
-            row.createCell(2).setCellValue(sc.getTransactionType() != null ? sc.getTransactionType() : "");
-            row.createCell(3).setCellValue(sc.getQuantityChange());
-            row.createCell(4).setCellValue(sc.getQuantityAfter());
-            row.createCell(5).setCellValue(sc.getSerialList() != null ? sc.getSerialList() : "");
-            row.createCell(6).setCellValue(sc.getCreatedByName() != null ? sc.getCreatedByName() : "");
-            row.createCell(7).setCellValue(sc.getCreatedAt() != null
-                    ? sc.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "");
-            row.createCell(8).setCellValue(sc.getReferenceNote() != null ? sc.getReferenceNote() : "");
+            Cell c0 = row.createCell(0); c0.setCellValue(idx++); c0.setCellStyle(dataStyle);
+            Cell c1 = row.createCell(1); c1.setCellValue(sc.getReceiptCode() != null ? sc.getReceiptCode() : ""); c1.setCellStyle(dataStyle);
+            Cell c2 = row.createCell(2); c2.setCellValue(sc.getTransactionType() != null ? sc.getTransactionType() : ""); c2.setCellStyle(dataStyle);
+            Cell c3 = row.createCell(3); c3.setCellValue(sc.getQuantityChange()); c3.setCellStyle(dataStyle);
+Cell c4 = row.createCell(4); c4.setCellValue(sc.getQuantityAfter()); c4.setCellStyle(dataStyle);
+            Cell c5 = row.createCell(5); c5.setCellValue(sc.getSerialList() != null ? sc.getSerialList() : ""); c5.setCellStyle(dataStyle);
+            Cell c6 = row.createCell(6); c6.setCellValue(sc.getCreatedByName() != null ? sc.getCreatedByName() : ""); c6.setCellStyle(dataStyle);
+            Cell c7 = row.createCell(7); c7.setCellValue(sc.getCreatedAt() != null
+                    ? sc.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : ""); c7.setCellStyle(dataStyle);
+            Cell c8 = row.createCell(8); c8.setCellValue(sc.getReferenceNote() != null ? sc.getReferenceNote() : ""); c8.setCellStyle(dataStyle);
         }
 
         for (int i = 0; i < headers.length; i++) {
