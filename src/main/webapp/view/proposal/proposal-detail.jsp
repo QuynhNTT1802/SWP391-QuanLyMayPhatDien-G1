@@ -533,16 +533,12 @@
                         </c:otherwise>
                     </c:choose>
 
-                    <c:set var="canApprove" value="${perms.contains('proposals.approve')}" />
-                    <c:set var="canReject" value="${perms.contains('proposals.reject')}" />
+                    <c:set var="canApprove" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.approve')}" />
+                    <c:set var="canReject" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.reject')}" />
+                    <c:set var="canCancelProp" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
-                    <c:set var="canApproveNow" value="${proposal.status == 'PENDING' && canApprove && isWithinDeadline && !hasLockedPO}" />
-                    <c:set var="canRejectNow" value="${proposal.status == 'PENDING' && canReject && isWithinDeadline && !hasLockedPO}" />
-                    <c:set var="canRevisionNow" value="${proposal.status == 'PENDING' && canApprove && isWithinDeadline && !hasLockedPO}" />
 
-                    <%-- ============================================================
-                         HEADER BAR: tag + tiêu đề + nhóm nút thao tác chính
-                         ============================================================ --%>
+
                     <div class="header-bar">
                         <div class="left">
                             <span class="code-tag">
@@ -567,28 +563,76 @@
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                                 Lưu
                             </button>
-                            <c:if test="${canApproveNow}">
+
+                            <c:if test="${!hasLockedPO && proposal.status == 'DRAFT' && isOwner}">
+                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="openModal('submitReviewModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt
+                                </button>
+                                <button type="button" class="btn" onclick="openModal('cancelDraftModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    Huỷ phiếu
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                    Xoá
+                                </button>
+                            </c:if>
+
+                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && isOwner}">
+                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt lại
+                                </button>
+                            </c:if>
+
+                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && proposal.revisionRequestedByRole == 'CEO' && canApprove}">
+                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Sửa đề xuất (yêu cầu từ CEO)
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt lại
+                                </button>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canApprove}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Xác nhận
                                 </button>
-                            </c:if>
-                            <c:if test="${canRevisionNow}">
                                 <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Yêu cầu chỉnh sửa
                                 </button>
                             </c:if>
-                            <c:if test="${canRejectNow}">
+
+                            <c:if test="${proposal.status == 'PENDING' && canReject}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
                                 </button>
                             </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
+                                <button type="button" class="btn" onclick="openModal('cancelModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Huỷ phiếu
+                                </button>
+                            </c:if>
                         </div>
                     </div>
 
-                    <c:set var="canViewPoDetail" value="${canViewPo or (perms != null && perms.contains('purchase_orders.view'))}" />
+                    <c:set var="canViewPoDetail" value="${canViewPo or (not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('purchase_orders.view'))}" />
                     <c:if test="${not empty proposal.purchaseOrderId}">
                         <c:choose>
                             <c:when test="${canViewPoDetail}">
@@ -627,9 +671,7 @@
                         </div>
                     </c:if>
 
-                    <%-- ============================================================
-                         KHỐI 1: THÔNG TIN CHUNG (form-grid disabled)
-                         ============================================================ --%>
+
                     <div class="section">
                         <div class="section-head">
                             <h3>Thông tin chung</h3>
@@ -683,9 +725,7 @@
                         </div>
                     </div>
 
-                    <%-- ============================================================
-                         KHỐI 2: DANH SÁCH MÁY PHÁT ĐĂNG KÝ
-                         ============================================================ --%>
+      
                     <div class="section">
                         <div class="section-head">
                             <h3>Danh sách máy phát đăng ký</h3>
@@ -703,7 +743,7 @@
                             </a>
                         </div>
 
-                        <%-- ============ Tab 1: Bảng máy phát ============ --%>
+
                         <div class="tab-panel ${currentTab != 'history' ? 'active' : ''}" data-panel="generators">
                             <div class="table-toolbar">
                                 <div class="search-input">
@@ -818,7 +858,7 @@
                             </div>
                         </div>
 
-                        <%-- ============ Tab 2: Lịch sử ============ --%>
+
                         <div class="tab-panel ${currentTab == 'history' ? 'active' : ''}" data-panel="history">
                             <form method="get" action="${pageContext.request.contextPath}/proposal" class="history-filter-bar">
                                 <input type="hidden" name="action" value="detail"/>
@@ -954,10 +994,8 @@
             </div>
         </div>
 
-        <%-- ============================================================
-             MODALS: approve / revision / reject
-             ============================================================ --%>
-        <c:if test="${canRevisionNow}">
+ 
+        <c:if test="${proposal.status == 'PENDING' && canApprove}">
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa</h3>
@@ -973,9 +1011,23 @@
                     </form>
                 </div>
             </div>
+
+            <div class="modal-host" id="approveModal">
+                <div class="modal-card">
+                    <h3>Duyệt phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu đề xuất sẽ chuyển sang trạng thái "Đã duyệt" và có thể được gom vào phiếu mua.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </c:if>
 
-        <c:if test="${canRejectNow}">
+        <c:if test="${proposal.status == 'PENDING' && canReject}">
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
                     <h3>Từ chối</h3>
@@ -993,16 +1045,78 @@
             </div>
         </c:if>
 
-        <c:if test="${canApproveNow}">
-            <div class="modal-host" id="approveModal">
+        <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
+            <div class="modal-host" id="cancelModal">
                 <div class="modal-card">
-                    <h3>Duyệt phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu đề xuất sẽ chuyển sang trạng thái "Đã duyệt" và có thể được gom vào phiếu mua.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve">
+                    <h3>Huỷ phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu đề xuất sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${!hasLockedPO && proposal.status == 'DRAFT' && isOwner}">
+            <div class="modal-host" id="submitReviewModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" và Sale Manager sẽ nhận được để xem xét.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <input type="hidden" name="submitType" value="submit" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('submitReviewModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="cancelDraftModal">
+                <div class="modal-card">
+                    <h3>Huỷ phiếu nháp</h3>
+                    <div class="modal-sub">Phiếu nháp sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('cancelDraftModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="deleteModal">
+                <div class="modal-card">
+                    <h3>Xoá phiếu nháp</h3>
+                    <div class="modal-sub">Phiếu nháp sẽ bị xoá hoàn toàn khỏi hệ thống. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('deleteModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận xoá</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && (isOwner || (proposal.revisionRequestedByRole == 'CEO' && canApprove))}">
+            <div class="modal-host" id="resubmitModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt lại</h3>
+                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" để Sale Manager xem xét lại sau khi đã chỉnh sửa.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <input type="hidden" name="submitType" value="submit" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('resubmitModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt lại</button>
                         </div>
                     </form>
                 </div>

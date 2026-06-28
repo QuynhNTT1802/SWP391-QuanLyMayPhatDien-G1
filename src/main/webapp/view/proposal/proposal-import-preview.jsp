@@ -108,6 +108,7 @@
             .spin-svg{animation: spin 1s linear infinite; margin-bottom: 8px;}
 
             .unresolved-card-row td{background:color-mix(in srgb,var(--warn) 6%,transparent)}
+            .warning-card-row td{background:color-mix(in srgb,var(--warn) 8%,transparent)}
             .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:0}
             .table-scroll table.data-table{width:100%}
             table.data-table .col-min{white-space:nowrap;width:1%}
@@ -185,7 +186,7 @@
                             <span class="pill ok"><span class="pill-num"><c:out value="${fn:length(validRows)}"/></span> dòng hợp lệ</span>
                         </c:if>
                         <c:if test="${not empty warningRows}">
-                            <span class="pill warn"><span class="pill-num"><c:out value="${fn:length(warningRows)}"/></span> dòng cần lưu ý</span>
+                            <span class="pill warn"><span class="pill-num"><c:out value="${fn:length(warningRows)}"/></span> máy phát mới - cần thêm</span>
                         </c:if>
                         <c:if test="${not empty unresolvedSupplierRows}">
                             <span class="pill bad"><span class="pill-num"><c:out value="${fn:length(unresolvedSupplierRows)}"/></span> chưa chọn được NCC</span>
@@ -249,13 +250,17 @@
                         </c:if>
                         <c:if test="${not empty warningRows}">
                             <div class="section" style="padding:0">
-                                <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Dòng cần lưu ý</h3><span class="sub">${fn:length(warningRows)} dòng</span></div></div>
+                                <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3 style="color:var(--warn);">Máy phát mới - cần thêm vào kho trước</h3><span class="sub">${fn:length(warningRows)} dòng · thêm máy phát để có thể lưu phiếu</span></div></div>
+                                <div class="alert alert-warn" style="margin:14px 18px 0;">
+                                    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    <span>Có <strong>${fn:length(warningRows)}</strong> mã máy phát chưa có trong kho. Bạn cần <strong>thêm từng máy phát</strong> trước khi lưu phiếu đề xuất. Nhấn <strong>"Thêm máy phát"</strong> ở mỗi dòng, hệ thống sẽ tự quay lại trang này sau khi thêm xong.</span>
+                                </div>
                                 <div class="table-scroll">
                                 <table class="data-table">
-                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th></tr></thead>
+                                    <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th><th style="width:170px" class="text-right">Hành động</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${warningRows}">
-                                            <tr data-id="<c:out value='${row.gid}'/>" data-supplier-id="<c:out value='${row.supplierId}'/>">
+                                            <tr class="warning-card-row" data-stt="<c:out value='${row.stt}'/>" data-gmodel="<c:out value='${row.gmodel}'/>">
                                                 <td class="mono"><c:out value="${row['stt']}"/></td>
                                                 <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
                                                 <td><c:out value="${row['Thương hiệu']}"/></td>
@@ -272,9 +277,12 @@
                                                         <c:out value="${row.supplierNameResolved}"/>
                                                     </span>
                                                 </td>
-                                                <td><input type="number" class="row-unitprice" min="0" step="1000" value="<c:out value='${row.gunitPrice}'/>" /></td>
-                                                <td><input type="number" class="row-qty" min="1" max="9999" value="<c:out value='${row.gqty}'/>" /></td>
-                                                <td><input type="text" class="row-note" value="<c:out value='${row.gline}'/>" /></td>
+                                                <td class="mono text-right"><c:out value="${row['gunitPrice']}"/></td>
+                                                <td class="mono text-right"><c:out value="${row['gqty']}"/></td>
+                                                <td><c:out value="${row['gline']}"/></td>
+                                                <td style="text-align:right; white-space:nowrap">
+                                                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=redirectCreateGenerator&amp;model=${java.net.URLEncoder.encode(row.gmodel, 'UTF-8')}&amp;stt=${row.stt}">Thêm máy phát</a>
+                                                </td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>
@@ -420,9 +428,10 @@
                 var btnPending = document.getElementById('btnPending');
                 var rows = document.querySelectorAll('tr[data-id]');
                 var unresolvedCount = document.querySelectorAll('tr.unresolved-card-row').length;
+                var warningCount = document.querySelectorAll('tr.warning-card-row').length;
 
                 function refreshSubmitState() {
-                    var disabled = rows.length === 0 || unresolvedCount > 0;
+                    var disabled = rows.length === 0 || unresolvedCount > 0 || warningCount > 0;
                     if (btnDraft) btnDraft.disabled = disabled;
                     if (btnPending) btnPending.disabled = disabled;
                 }
@@ -479,6 +488,10 @@
                 }
 
                 function submitForm(value) {
+                    if (warningCount > 0) {
+                        alert('Vẫn còn ' + warningCount + ' mã máy phát chưa có trong kho. Vui lòng bấm "Thêm máy phát" cho từng dòng trước khi lưu.');
+                        return;
+                    }
                     if (unresolvedCount > 0) {
                         alert('Vẫn còn ' + unresolvedCount + ' dòng chưa chọn nhà cung cấp. Vui lòng xử lý trước khi lưu.');
                         return;
@@ -492,7 +505,7 @@
                 if (btnDraft) btnDraft.addEventListener('click', function () { submitForm('draft'); });
                 if (btnPending) btnPending.addEventListener('click', function () { submitForm('pending'); });
 
-                
+
                 var newSupplierId = new URLSearchParams(window.location.search).get('newSupplierId');
                 var newSupplierName = new URLSearchParams(window.location.search).get('newSupplierName');
                 if (newSupplierId && newSupplierName) {

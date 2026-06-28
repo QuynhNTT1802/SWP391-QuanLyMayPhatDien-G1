@@ -534,9 +534,9 @@
                     </c:choose>
 
                     <c:set var="canApproveNow" value="${order.status == 'PENDING' && canApproveOrder}" />
-                    <c:set var="canRejectNow" value="${order.status == 'PENDING' && canRejectOrder}" />
+                    <c:set var="canRejectNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canRevisionNow" value="${order.status == 'PENDING' && canApproveOrder}" />
-                    <c:set var="canCancelNow" value="${order.status == 'PENDING' && canCancelOrder}" />
+                    <c:set var="canCancelNow" value="${order.status == 'PENDING' && canApproveOrder && canCancelOrder}" />
 
                     <%-- ============================================================
                          HEADER BAR
