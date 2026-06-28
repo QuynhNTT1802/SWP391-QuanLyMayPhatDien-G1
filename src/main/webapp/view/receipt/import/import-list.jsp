@@ -120,9 +120,6 @@
                 flex-shrink: 0;
             }
             .dropdown-item .label { flex: 1; }
-            .dropdown-item.approve svg { stroke: #155724; }
-            .dropdown-item.reject svg { stroke: #721c24; }
-            .dropdown-item.revision svg { stroke: #b15c00; }
             .dropdown-divider {
                 height: 1px;
                 background: var(--border);
@@ -274,27 +271,6 @@
                                                                     <span class="label">Sửa</span>
                                                                 </a>
                                                             </c:if>
-                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item approve" onclick="openApproveModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                                                                    <span class="label">Duyệt</span>
-                                                                </button>
-                                                            </c:if>
-                                                            <c:if test="${canRejectReceipt && r.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item reject" onclick="openRejectModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                                    <span class="label">Từ chối</span>
-                                                                </button>
-                                                            </c:if>
-                                                            <c:if test="${canApproveReceipt && r.status == 'PENDING'}">
-                                                                <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item revision" onclick="openRevisionModal(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')" type="button">
-                                                                    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                    <span class="label">Yêu cầu chỉnh sửa</span>
-                                                                </button>
-                                                            </c:if>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -338,55 +314,6 @@
 
         <div class="toast-host" id="toastHost"></div>
 
-        <div class="modal-host" id="revisionModal">
-            <div class="modal-card">
-                <h3>Yêu cầu chỉnh sửa</h3>
-                <div class="modal-sub">Gửi phiếu <strong id="revisionReceiptCode"></strong> lại cho nhân viên tạo phiếu kèm lý do để chỉnh sửa và gửi lại.</div>
-                <form method="POST" action="${pageContext.request.contextPath}/import-receipt" id="revisionForm">
-                    <input type="hidden" name="action" value="requestRevision" />
-                    <input type="hidden" name="id" id="revisionReceiptId" value="" />
-                    <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                    <textarea name="reason" id="revisionReason" placeholder="Mô tả chi tiết phần cần chỉnh sửa..." required></textarea>
-                    <div class="modal-actions">
-                        <button type="button" class="btn" onclick="closeRevisionModal()">Huỷ</button>
-                        <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="modal-host" id="approveModal">
-            <div class="modal-card">
-                <h3>Duyệt phiếu nhập</h3>
-                <div class="modal-sub">Xác nhận duyệt phiếu <strong id="approveReceiptCode"></strong>? Hệ thống sẽ cập nhật tồn kho tương ứng.</div>
-                <form method="POST" action="${pageContext.request.contextPath}/import-receipt" id="approveForm">
-                    <input type="hidden" name="action" value="approve" />
-                    <input type="hidden" name="id" id="approveReceiptId" value="" />
-                    <div class="modal-actions">
-                        <button type="button" class="btn" onclick="closeApproveModal()">Huỷ</button>
-                        <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="modal-host" id="rejectModal">
-            <div class="modal-card">
-                <h3>Từ chối phiếu nhập</h3>
-                <div class="modal-sub">Phiếu <strong id="rejectReceiptCode"></strong> sẽ bị huỷ và không cập nhật tồn kho. Hành động này không thể hoàn tác.</div>
-                <form method="POST" action="${pageContext.request.contextPath}/import-receipt" id="rejectForm">
-                    <input type="hidden" name="action" value="reject" />
-                    <input type="hidden" name="id" id="rejectReceiptId" value="" />
-                    <label>Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
-                    <textarea name="reason" id="rejectReason" placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, hàng không đạt chất lượng..." required></textarea>
-                    <div class="modal-actions">
-                        <button type="button" class="btn" onclick="closeRejectModal()">Huỷ</button>
-                        <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
@@ -412,58 +339,6 @@
             .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
         </style>
         <script>
-            function openApproveModal(receiptId, receiptCode) {
-                document.getElementById('approveReceiptId').value = receiptId;
-                document.getElementById('approveReceiptCode').textContent = receiptCode || '';
-                var m = document.getElementById('approveModal'); m.classList.add('show');
-            }
-            function closeApproveModal() { var m = document.getElementById('approveModal'); if (m) m.classList.remove('show'); }
-            function openRejectModal(receiptId, receiptCode) {
-                document.getElementById('rejectReceiptId').value = receiptId;
-                document.getElementById('rejectReceiptCode').textContent = receiptCode || '';
-                document.getElementById('rejectReason').value = '';
-                var m = document.getElementById('rejectModal'); m.classList.add('show');
-                setTimeout(function () { document.getElementById('rejectReason').focus(); }, 50);
-            }
-            function closeRejectModal() { var m = document.getElementById('rejectModal'); if (m) m.classList.remove('show'); }
-            function openRevisionModal(receiptId, receiptCode) {
-                document.getElementById('revisionReceiptId').value = receiptId;
-                document.getElementById('revisionReceiptCode').textContent = receiptCode || '';
-                document.getElementById('revisionReason').value = '';
-                var m = document.getElementById('revisionModal'); m.classList.add('show');
-                setTimeout(function () { document.getElementById('revisionReason').focus(); }, 50);
-            }
-            function closeRevisionModal() { var m = document.getElementById('revisionModal'); if (m) m.classList.remove('show'); }
-
-            (function () {
-                ['approveModal', 'rejectModal', 'revisionModal'].forEach(function (id) {
-                    var modal = document.getElementById(id);
-                    if (!modal) return;
-                    modal.addEventListener('click', function (e) {
-                        if (e.target === modal) modal.classList.remove('show');
-                    });
-                });
-                document.addEventListener('keydown', function (e) {
-                    if (e.key === 'Escape') {
-                        document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                    }
-                });
-                var rejectForm = document.getElementById('rejectForm');
-                if (rejectForm) {
-                    rejectForm.addEventListener('submit', function (e) {
-                        var ta = document.getElementById('rejectReason');
-                        if (ta && ta.value.trim() === '') { e.preventDefault(); ta.focus(); alert('Vui lòng nhập lý do từ chối.'); }
-                    });
-                }
-                var revisionForm = document.getElementById('revisionForm');
-                if (revisionForm) {
-                    revisionForm.addEventListener('submit', function (e) {
-                        var ta = document.getElementById('revisionReason');
-                        if (ta && ta.value.trim() === '') { e.preventDefault(); ta.focus(); alert('Vui lòng nhập lý do yêu cầu chỉnh sửa.'); }
-                    });
-                }
-            })();
-
             function toggleDropdown(btn) {
                 var menu = btn.nextElementSibling;
                 var isOpen = menu.classList.contains('open');

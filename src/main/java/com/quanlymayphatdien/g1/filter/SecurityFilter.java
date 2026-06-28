@@ -84,17 +84,13 @@ public class SecurityFilter implements Filter {
                     Map.of(
                             "create", "receipts.create",
                             "edit", "receipts.create",
-                            "update", "receipts.create",
-                            "approve", "receipts.approve",
-                            "reject", "receipts.reject"),
+                            "update", "receipts.create"),
                     "receipts.view"),
             Rule.action("/export-receipt",
                     Map.of(
                             "create", "receipts.create",
                             "edit", "receipts.create",
-                            "update", "receipts.create",
-                            "approve", "receipts.approve",
-                            "reject", "receipts.reject"),
+                            "update", "receipts.create"),
                     "receipts.view"),
             Rule.action("/order",
                     Map.of(
