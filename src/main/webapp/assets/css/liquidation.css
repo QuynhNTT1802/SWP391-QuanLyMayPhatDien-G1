@@ -628,6 +628,79 @@
     margin-bottom: 8px;
 }
 .modal .modal-grid .field.span-2 { grid-column: span 2; }
+
+/* Fields/inputs trong modal (trang detail khong load create-user.css) */
+.modal .modal-grid .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 0;
+}
+.modal .modal-grid .field-label {
+    font-size: 12px;
+    color: var(--fg-soft);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.modal .modal-grid .field-label .req {
+    color: var(--danger);
+    font-weight: 700;
+}
+.modal .modal-grid .input,
+.modal .modal-grid .select,
+.modal .modal-grid .textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--fg);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    font-weight: 500;
+    box-sizing: border-box;
+    transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.modal .modal-grid .input:hover,
+.modal .modal-grid .select:hover,
+.modal .modal-grid .textarea:hover { border-color: var(--muted-2); }
+.modal .modal-grid .input.mono { font-family: var(--font-mono); }
+.modal .modal-grid .textarea { resize: vertical; min-height: 40px; }
+.modal .modal-grid .input::placeholder,
+.modal .modal-grid .textarea::placeholder { color: var(--muted-2); }
+.modal .modal-grid .input:focus,
+.modal .modal-grid .select:focus,
+.modal .modal-grid .textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.modal .modal-grid .select {
+    appearance: none;
+    cursor: pointer;
+    padding-inline-end: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+.modal .modal-grid .field-error {
+    display: none;
+    font-size: 11.5px;
+    color: var(--danger);
+    font-weight: 600;
+}
+.modal .modal-grid .field.invalid .input,
+.modal .modal-grid .field.invalid .select,
+.modal .modal-grid .field.invalid .textarea {
+    border-color: var(--danger);
+}
+.modal .modal-grid .field.invalid .input:focus,
+.modal .modal-grid .field.invalid .select:focus {
+    box-shadow: 0 0 0 3px var(--danger-soft);
+}
+.modal .modal-grid .field.invalid .field-error { display: block; }
 .modal .modal-error {
     display: none;
     padding: 10px 12px;
@@ -2703,4 +2776,179 @@
     .liq-picker-pane.is-hidden-mobile { display: none; }
     .liq-pane-body { max-height: 60vh; }
 
+}
+
+/* === Badge tình trạng kiểm kê (Tốt/Kém/Hỏng) === */
+.cond-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.cond-good {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+}
+.cond-poor {
+    background: color-mix(in srgb, var(--warn) 15%, transparent);
+    color: var(--warn);
+}
+.cond-damaged {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
+}
+.cond-none {
+    background: color-mix(in srgb, var(--muted) 15%, transparent);
+    color: var(--muted);
+}
+
+/* Cảnh báo khi chọn máy tình trạng Tốt */
+.liq-cond-warn {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--warn) 12%, transparent);
+    color: var(--warn);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+.liq-cond-warn.is-shown { display: flex; }
+
+/* === Bảng chọn máy (pick-table) === */
+.pick-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.pick-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    text-align: left;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+.pick-table thead th.col-cb { width: 36px; text-align: center; }
+.pick-table thead th.col-price,
+.pick-table td.col-price { text-align: right; }
+.pick-table thead th.col-date,
+.pick-table td.col-date { white-space: nowrap; }
+
+.pick-table .pick-trow {
+    border-bottom: 1px solid var(--border);
+    transition: background .12s ease;
+}
+.pick-table .pick-trow:hover { background: var(--surface-2); }
+.pick-table .pick-trow.is-checked { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.pick-table .pick-trow.is-checked:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.pick-table td {
+    padding: 9px 14px;
+    vertical-align: middle;
+}
+.pick-table td.col-cb { text-align: center; }
+.pick-table .pick-cb {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.pick-table #pickAll {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+.pick-table .row-serial {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--fg);
+    white-space: nowrap;
+}
+.pick-table .row-model {
+    color: var(--fg-soft);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}
+.pick-table .row-date {
+    font-size: 12px;
+    color: var(--muted-2);
+    font-family: var(--font-mono);
+}
+.pick-table .row-price {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--fg-soft);
+    white-space: nowrap;
+}
+
+/* Hàng máy đang bị giữ chỗ bởi đơn khác */
+.pick-table .pick-trow.is-locked {
+    background: var(--surface-2);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+.pick-table .pick-trow.is-locked .locked-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--warn) 15%, transparent);
+    color: #92400e;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.pick-table .pick-trow.is-locked .locked-pill:hover {
+    background: color-mix(in srgb, var(--warn) 25%, transparent);
+    text-decoration: underline;
+}
+
+/* Cảnh báo khi tick máy tình trạng Tốt */
+.pick-table .pick-trow.cond-warn-selected {
+    box-shadow: inset 3px 0 0 0 color-mix(in srgb, var(--warn) 70%, transparent);
+}
+
+/* === Input giá thanh lý (dấu phẩy + đ) === */
+.liq-price-wrap {
+    position: relative;
+    display: inline-block;
+    max-width: 180px;
+    width: 100%;
+}
+.liq-price-wrap .liq-price-input {
+    max-width: none;
+    width: 100%;
+    padding-right: 26px;
+    text-align: right;
+}
+.liq-price-wrap .liq-price-suffix {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+@media (max-width: 760px) {
+    .pick-table thead th.col-date,
+    .pick-table td.col-date { display: none; }
+    .pick-table .row-model { max-width: 110px; }
 }

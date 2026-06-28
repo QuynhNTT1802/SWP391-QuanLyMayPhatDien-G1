@@ -1369,6 +1369,10 @@ public class ImportReceiptController extends HttpServlet {
                 errors.add("Serial \"" + serial + "\" bị trùng trong file");
             }
 
+            if (!serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
+                errors.add("Serial \"" + serial + "\" đã tồn tại trong hệ thống");
+            }
+
             if (resolved != null) {
                 row.put("generatorId", resolved.getId());
                 row.put("generatorModel", resolved.getModel());
@@ -1392,10 +1396,45 @@ public class ImportReceiptController extends HttpServlet {
             }
         }
 
-        request.setAttribute("validRows", validRows);
-        request.setAttribute("invalidRows", invalidRows);
-        preserveFormStateForInlinePreview(request, warehouseId, reasonId, note);
-        request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
+        if (!isAjaxRequest(request)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json;charset=UTF-8");
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("success", false);
+            body.put("message", "API importPreview chi ho tro AJAX");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        if (validRows.isEmpty() && !invalidRows.isEmpty()) {
+            response.setContentType("application/json;charset=UTF-8");
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("success", false);
+            List<String> errorMessages = new ArrayList<>();
+            for (Map<String, Object> inv : invalidRows) {
+                Object e = inv.get("_errors");
+                if (e != null) errorMessages.add("Dòng " + inv.get("rowNum") + ": " + e);
+            }
+            body.put("message", "File Excel không có dòng hợp lệ nào. "
+                    + String.join("; ", errorMessages));
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        response.setContentType("application/json;charset=UTF-8");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("success", true);
+        body.put("message", "Đã đọc " + validRows.size() + " dòng từ Excel"
+                + (invalidRows.isEmpty() ? "" : " (bỏ qua " + invalidRows.size() + " dòng lỗi)"));
+        List<String> serials = new ArrayList<>();
+        List<Integer> generatorIds = new ArrayList<>();
+        for (Map<String, Object> v : validRows) {
+            serials.add((String) v.get("serial"));
+            generatorIds.add((Integer) v.get("generatorId"));
+        }
+        body.put("serials", serials);
+        body.put("generatorIds", generatorIds);
+        new Gson().toJson(body, response.getWriter());
     }
 
     /**

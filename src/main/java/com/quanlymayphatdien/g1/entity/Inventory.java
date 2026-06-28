@@ -22,6 +22,8 @@ public class Inventory {
     private String warehouseName;
     private Integer importReceiptId;
     private String importReceiptCode;
+    // Tình trạng từ phiếu kiểm kê hoàn thành gần nhất: GOOD | POOR | DAMAGED
+    private String condition;
 
     public Inventory() {
     }
@@ -124,5 +126,13 @@ public class Inventory {
 
     public int getQuantity() {
         return 1;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 }
