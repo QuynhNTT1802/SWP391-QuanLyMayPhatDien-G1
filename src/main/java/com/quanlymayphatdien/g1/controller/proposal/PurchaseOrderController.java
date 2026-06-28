@@ -490,7 +490,9 @@ public class PurchaseOrderController extends HttpServlet {
         }
 
         java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
+        int totalRows = 0;
         if (po.getDetails() != null) {
+            totalRows = po.getDetails().size();
             for (PurchaseOrderDetail d : po.getDetails()) {
                 if (d.getUnitPrice() != null) {
                     grandTotal = grandTotal.add(
@@ -510,6 +512,7 @@ public class PurchaseOrderController extends HttpServlet {
         List<ImportProposal> sourceProposals = dao.findProposalsByPo(id);
         request.setAttribute("po", po);
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("totalRows", totalRows);
         request.setAttribute("sourceProposals", sourceProposals);
         request.setAttribute("canApprovePo", perms.contains("purchase_orders.approve"));
         request.setAttribute("canCreatePo", perms.contains("purchase_orders.create"));

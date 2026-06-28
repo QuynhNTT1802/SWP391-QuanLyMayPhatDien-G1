@@ -395,15 +395,27 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("proposal", p);
 
         java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
+        int totalQty = 0;
+        int totalRows = 0;
         if (p.getDetails() != null) {
+            totalRows = p.getDetails().size();
             for (ImportProposalDetail d : p.getDetails()) {
+                totalQty += d.getQuantity();
                 if (d.getUnitPrice() != null) {
                     grandTotal = grandTotal.add(
                         d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
                 }
             }
         }
+        java.time.format.DateTimeFormatter __dateFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        java.time.format.DateTimeFormatter __dtFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        String proposalDateInput = p.getProposalDate() != null ? p.getProposalDate().toLocalDate().format(__dateFmt) : "";
+        String approvedAtInput = p.getApprovedAt() != null ? p.getApprovedAt().format(__dtFmt) : "";
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("totalQty", totalQty);
+        request.setAttribute("totalRows", totalRows);
+        request.setAttribute("proposalDateInput", proposalDateInput);
+        request.setAttribute("approvedAtInput", approvedAtInput);
         request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
         request.setAttribute("canApprove", canApprove);
         request.setAttribute("canViewPo", perms != null && perms.contains("purchase_orders.view"));
