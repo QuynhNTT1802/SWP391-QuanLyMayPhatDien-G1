@@ -26,6 +26,7 @@ public abstract class User {
     LocalDateTime updatedAt;
     Integer createdBy;   
     Integer updatedBy;   
+    Integer warehouseId;
     
     
     private List<Role> roles;
@@ -145,6 +146,14 @@ public abstract class User {
 
     public void setUpdatedBy(Integer updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public Integer getWarehouseId() {
+        return warehouseId;
+    }
+
+    public void setWarehouseId(Integer warehouseId) {
+        this.warehouseId = warehouseId;
     }
 
     public List<Role> getRoles() {

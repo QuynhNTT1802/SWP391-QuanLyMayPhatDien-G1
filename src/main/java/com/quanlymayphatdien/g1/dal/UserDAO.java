@@ -35,7 +35,7 @@ public class UserDAO extends DBContext implements I_DAO<User> {
     @Override
     public boolean update(User user) {
         String sql = "UPDATE user SET name = ?, username = ?, email = ?, phone = ?, "
-                + "address = ?, status = ?, updated_at = ?, updated_by = ? WHERE id = ?";
+                + "address = ?, status = ?, updated_at = ?, updated_by = ?, warehouse_id = ? WHERE id = ?";
         try {
 
             connection = getConnection();
@@ -48,7 +48,12 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(6, user.getStatus());
             statement.setTimestamp(7, Timestamp.valueOf(user.getUpdatedAt()));
             statement.setNull(8, Types.INTEGER);
-            statement.setInt(9, user.getId());
+            if (user.getWarehouseId() != null) {
+                statement.setInt(9, user.getWarehouseId());
+            } else {
+                statement.setNull(9, Types.INTEGER);
+            }
+            statement.setInt(10, user.getId());
 
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -322,6 +327,11 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             user.setUpdatedBy(updatedBy);
         }
 
+        int warehouseId = resultSet.getInt("warehouse_id");
+        if (!resultSet.wasNull()) {
+            user.setWarehouseId(warehouseId);
+        }
+
         return user;
     }
 
@@ -515,8 +525,8 @@ public class UserDAO extends DBContext implements I_DAO<User> {
     
      @Override
     public int insert(User user) {
-        String sql = "INSERT INTO user (name, username, password, email, phone, address, status, created_at, created_by) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user (name, username, password, email, phone, address, status, created_at, created_by, warehouse_id) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -529,6 +539,11 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             statement.setString(7, user.getStatus());
             statement.setTimestamp(8, Timestamp.valueOf(user.getCreatedAt()));
             statement.setInt(9, user.getCreatedBy());
+            if (user.getWarehouseId() != null) {
+                statement.setInt(10, user.getWarehouseId());
+            } else {
+                statement.setNull(10, Types.INTEGER);
+            }
 
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
@@ -543,6 +558,39 @@ public class UserDAO extends DBContext implements I_DAO<User> {
             closeResources();
         }
         return 0;
+    }
+
+    /**
+     * Tra ve warehouse_id ma user bi scope (neu co), hoac -1 neu user khong bi scope
+     * (admin/sale/ceo), hoac 0 neu user warehouse_staff/manager nhung chua duoc gan kho.
+     */
+    public int getScopedWarehouseId(int userId) {
+        String sql = "SELECT u.warehouse_id, "
+                + "EXISTS (SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id "
+                + "         WHERE ur.user_id = u.id AND r.name IN ('warehouse_staff','warehouse_manager') AND r.status='active') AS is_warehouse_role "
+                + "FROM user u WHERE u.id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, userId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                boolean isWhRole = resultSet.getBoolean("is_warehouse_role");
+                int wid = resultSet.getInt("warehouse_id");
+                if (resultSet.wasNull()) {
+                    wid = 0;
+                }
+                if (!isWhRole) {
+                    return -1;
+                }
+                return wid;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return -1;
     }
 }
      

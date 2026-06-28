@@ -189,11 +189,18 @@
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                         </select>
 
-                        <select class="filter-select" name="warehouse" onchange="this.form.submit()">
-                            <option value="">Kho: Tất cả</option>
-                            <c:forEach var="wh" items="${warehouses}">
-                                <option value="${wh.warehouseId}" <c:if test="${whFilter == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                            </c:forEach>
+                        <select class="filter-select" name="warehouse" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
+                            <c:choose>
+                                <c:when test="${not empty scopedWarehouseId}">
+                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
+                                </c:when>
+                                <c:otherwise>
+                                    <option value="">Kho: Tất cả</option>
+                                    <c:forEach var="wh" items="${warehouses}">
+                                        <option value="${wh.warehouseId}" <c:if test="${whFilter == wh.warehouseId}">selected</c:if>>${wh.name}</option>
+                                    </c:forEach>
+                                </c:otherwise>
+                            </c:choose>
                         </select>
 
                         <div class="spacer"></div>

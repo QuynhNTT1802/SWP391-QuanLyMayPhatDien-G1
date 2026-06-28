@@ -27,6 +27,7 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
@@ -159,8 +160,20 @@ public class ExportReceiptController extends HttpServlet {
             createdByFilter = loggedUser.getId();
         }
 
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         String statusFilter = request.getParameter("status");
         String whFilter = request.getParameter("warehouse");
+        if (scopedWarehouseId > 0) {
+            if (whFilter != null && !whFilter.isEmpty()) {
+                try {
+                    if (Integer.parseInt(whFilter) != scopedWarehouseId) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+            whFilter = String.valueOf(scopedWarehouseId);
+        }
         String search = request.getParameter("search");
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
@@ -177,7 +190,16 @@ public class ExportReceiptController extends HttpServlet {
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("receiptList", receiptList);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        if (scopedWarehouseId > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+        if (scoped != null) {
+            request.setAttribute("scopedWarehouseName", scoped.getName());
+        }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("whFilter", whFilter);
         request.setAttribute("search", search);
@@ -193,7 +215,19 @@ public class ExportReceiptController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
+        if (scopedWarehouseId > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+        if (scoped != null) {
+            request.setAttribute("scopedWarehouseName", scoped.getName());
+        }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
@@ -295,7 +329,17 @@ public class ExportReceiptController extends HttpServlet {
 
         request.setAttribute("isDraft", isDraft);
         request.setAttribute("receipt", receipt);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        int scopedWarehouseIdShow = WarehouseAccessUtil.getScopedWarehouseId(request.getSession(false));
+        if (scopedWarehouseIdShow > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseIdShow);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseIdShow);
+            if (scoped != null) {
+                request.setAttribute("scopedWarehouseName", scoped.getName());
+            }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
@@ -322,6 +366,11 @@ public class ExportReceiptController extends HttpServlet {
         }
         if (!TYPE.equals(receipt.getReceiptType())) {
             response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + id);
+            return;
+        }
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+        if (scopedWarehouseId > 0 && receipt.getWarehouseId() != scopedWarehouseId) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         boolean isOwner = receipt.getCreatedBy() == loggedUser.getId();
@@ -430,6 +479,7 @@ public class ExportReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         boolean isDraft = "draft".equals(request.getParameter("submitMode"));
         int existingReceiptId = parseId(request.getParameter("receiptId"));
 
@@ -440,6 +490,9 @@ public class ExportReceiptController extends HttpServlet {
 
         if (warehouseId <= 0 && !isDraft) {
             errors.add("Vui lòng chọn kho");
+        }
+        if (scopedWarehouseId > 0 && warehouseId > 0 && warehouseId != scopedWarehouseId) {
+            errors.add("Bạn chỉ được phép tạo phiếu xuất cho kho của mình");
         }
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
             errors.add("Ghi chú phiếu không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
@@ -1702,3 +1755,5 @@ public class ExportReceiptController extends HttpServlet {
         return "";
     }
 }
+
+
