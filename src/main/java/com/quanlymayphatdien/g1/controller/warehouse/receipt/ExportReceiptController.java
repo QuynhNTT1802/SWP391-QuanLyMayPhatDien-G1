@@ -27,6 +27,7 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
@@ -119,15 +120,6 @@ public class ExportReceiptController extends HttpServlet {
                 case "update":
                     updateReceipt(request, response);
                     break;
-                case "approve":
-                    approveReceipt(request, response);
-                    break;
-                case "reject":
-                    rejectReceipt(request, response);
-                    break;
-                case "requestRevision":
-                    requestRevision(request, response);
-                    break;
                 case "addScannedSerial":
                     addScannedSerial(request, response);
                     break;
@@ -168,8 +160,20 @@ public class ExportReceiptController extends HttpServlet {
             createdByFilter = loggedUser.getId();
         }
 
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         String statusFilter = request.getParameter("status");
         String whFilter = request.getParameter("warehouse");
+        if (scopedWarehouseId > 0) {
+            if (whFilter != null && !whFilter.isEmpty()) {
+                try {
+                    if (Integer.parseInt(whFilter) != scopedWarehouseId) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+            whFilter = String.valueOf(scopedWarehouseId);
+        }
         String search = request.getParameter("search");
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
@@ -186,7 +190,16 @@ public class ExportReceiptController extends HttpServlet {
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("receiptList", receiptList);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        if (scopedWarehouseId > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+        if (scoped != null) {
+            request.setAttribute("scopedWarehouseName", scoped.getName());
+        }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("whFilter", whFilter);
         request.setAttribute("search", search);
@@ -195,14 +208,26 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("fromIndex", fromIndex);
         request.setAttribute("toIndex", toIndex);
-        request.setAttribute("canApproveReceipt", perms != null && perms.contains("receipts.approve"));
-        request.setAttribute("canRejectReceipt", perms != null && perms.contains("receipts.reject"));
+        request.setAttribute("canApproveReceipt", false);
+        request.setAttribute("canRejectReceipt", false);
         request.getRequestDispatcher("/view/receipt/export/export-list.jsp").forward(request, response);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
+        if (scopedWarehouseId > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+        if (scoped != null) {
+            request.setAttribute("scopedWarehouseName", scoped.getName());
+        }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
@@ -304,7 +329,17 @@ public class ExportReceiptController extends HttpServlet {
 
         request.setAttribute("isDraft", isDraft);
         request.setAttribute("receipt", receipt);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        int scopedWarehouseIdShow = WarehouseAccessUtil.getScopedWarehouseId(request.getSession(false));
+        if (scopedWarehouseIdShow > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseIdShow);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseIdShow);
+            if (scoped != null) {
+                request.setAttribute("scopedWarehouseName", scoped.getName());
+            }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
@@ -333,8 +368,11 @@ public class ExportReceiptController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + id);
             return;
         }
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        boolean isManager = perms != null && perms.contains("receipts.approve");
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+        if (scopedWarehouseId > 0 && receipt.getWarehouseId() != scopedWarehouseId) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         boolean isOwner = receipt.getCreatedBy() == loggedUser.getId();
 
         String tab = request.getParameter("tab");
@@ -370,7 +408,7 @@ public class ExportReceiptController extends HttpServlet {
         }
 
         request.setAttribute("receipt", receipt);
-        request.setAttribute("isManager", isManager);
+        request.setAttribute("isManager", false);
         request.setAttribute("isOwner", isOwner);
         request.setAttribute("activePage", "export-detail");
         request.getRequestDispatcher("/view/receipt/export/export-detail.jsp").forward(request, response);
@@ -441,6 +479,7 @@ public class ExportReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         boolean isDraft = "draft".equals(request.getParameter("submitMode"));
         int existingReceiptId = parseId(request.getParameter("receiptId"));
 
@@ -451,6 +490,9 @@ public class ExportReceiptController extends HttpServlet {
 
         if (warehouseId <= 0 && !isDraft) {
             errors.add("Vui lòng chọn kho");
+        }
+        if (scopedWarehouseId > 0 && warehouseId > 0 && warehouseId != scopedWarehouseId) {
+            errors.add("Bạn chỉ được phép tạo phiếu xuất cho kho của mình");
         }
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
             errors.add("Ghi chú phiếu không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
@@ -543,7 +585,13 @@ public class ExportReceiptController extends HttpServlet {
                 } catch (NumberFormatException ignored) {
                 }
             }
-            r.setStatus(isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
+            if (isDraft) {
+                r.setStatus(GlobalUtils.RECEIPT_STATUS_DRAFT);
+            } else {
+                r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
+                r.setApprovedBy(loggedUser.getId());
+                r.setApprovedAt(java.time.LocalDateTime.now());
+            }
 
             receiptId = receiptDAO.insert(r);
             if (receiptId <= 0) {
@@ -567,14 +615,22 @@ public class ExportReceiptController extends HttpServlet {
             if (existingReceipt != null) {
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "UPDATE receipt SET warehouse_id = ?, note = ?, reason_id = ?, "
-                                + "status = ?, approved_by = NULL, approved_at = NULL "
+                                + "status = ?, approved_by = ?, approved_at = ? "
                                 + "WHERE receipt_id = ? AND status = ?")) {
                     ps.setInt(1, warehouseId);
                     ps.setString(2, note);
                     if (reasonId != null) ps.setInt(3, reasonId); else ps.setNull(3, java.sql.Types.INTEGER);
-                    ps.setString(4, isDraft ? GlobalUtils.RECEIPT_STATUS_DRAFT : GlobalUtils.RECEIPT_STATUS_PENDING);
-                    ps.setInt(5, receiptId);
-                    ps.setString(6, GlobalUtils.RECEIPT_STATUS_DRAFT);
+                    if (isDraft) {
+                        ps.setString(4, GlobalUtils.RECEIPT_STATUS_DRAFT);
+                        ps.setNull(5, java.sql.Types.INTEGER);
+                        ps.setNull(6, java.sql.Types.TIMESTAMP);
+                    } else {
+                        ps.setString(4, GlobalUtils.RECEIPT_STATUS_COMPLETED);
+                        ps.setInt(5, loggedUser.getId());
+                        ps.setTimestamp(6, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+                    }
+                    ps.setInt(7, receiptId);
+                    ps.setString(8, GlobalUtils.RECEIPT_STATUS_DRAFT);
                     ps.executeUpdate();
                 }
 
@@ -602,8 +658,14 @@ public class ExportReceiptController extends HttpServlet {
                     if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
                         throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
                     }
-                    if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
-                        throw new SQLException("Serial \"" + sn + "\" đã bị reserve bởi phiếu khác");
+                    if (isDraft) {
+                        if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                            throw new SQLException("Serial \"" + sn + "\" đã bị reserve bởi phiếu khác");
+                        }
+                    } else {
+                        if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
+                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK");
+                        }
                     }
                     d.setReceiptId(receiptId);
                     d.setInventoryId(inv.getInventoryId());
@@ -611,6 +673,25 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 if (!toInsert.isEmpty()) {
                     detailDAO.batchInsert(conn, toInsert);
+                }
+
+                if (!isDraft) {
+                    java.util.List<Integer> existingInventoryIds = new java.util.ArrayList<>();
+                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                            "SELECT rd.inventory_id FROM receipt_detail rd "
+                                    + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                                    + "WHERE rd.receipt_id = ? AND i.status = ?")) {
+                        ps.setInt(1, receiptId);
+                        ps.setString(2, InventoryDAO.STATUS_RESERVED_EXPORT);
+                        try (java.sql.ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) existingInventoryIds.add(rs.getInt(1));
+                        }
+                    }
+                    for (Integer invId : existingInventoryIds) {
+                        if (!inventoryDAO.completeExport(conn, invId, InventoryDAO.STATUS_SOLD)) {
+                            throw new SQLException("Serial inventory_id=" + invId + " không ở trạng thái RESERVED_EXPORT");
+                        }
+                    }
                 }
             } else {
                 for (ReceiptDetail d : details) {
@@ -624,13 +705,82 @@ public class ExportReceiptController extends HttpServlet {
                     if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
                         throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
                     }
-                    if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
-                        throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                    if (isDraft) {
+                        if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                        }
+                    } else {
+                        if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
+                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
+                        }
                     }
                     d.setReceiptId(receiptId);
                     d.setInventoryId(inv.getInventoryId());
                 }
                 detailDAO.batchInsert(conn, details);
+            }
+
+            if (!isDraft) {
+                boolean isLiquidation = false;
+                Integer liquidationId = null;
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT liquidation_id, status FROM liquidation WHERE converted_receipt_id = ?")) {
+                    ps.setInt(1, receiptId);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            isLiquidation = true;
+                            liquidationId = rs.getInt("liquidation_id");
+                        }
+                    }
+                }
+                if (isLiquidation && liquidationId != null) {
+                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE inventory SET status = ? "
+                                    + "WHERE status = ? AND inventory_id IN ("
+                                    + "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?)")) {
+                        ps.setString(1, InventoryDAO.STATUS_LIQUIDATED);
+                        ps.setString(2, InventoryDAO.STATUS_SOLD);
+                        ps.setInt(3, receiptId);
+                        ps.executeUpdate();
+                    }
+                }
+
+                java.util.List<ReceiptDetail> allDetails = new java.util.ArrayList<>();
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT rd.*, i.generator_id, i.serial_number FROM receipt_detail rd "
+                                + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                                + "WHERE rd.receipt_id = ?")) {
+                    ps.setInt(1, receiptId);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            ReceiptDetail rd = new ReceiptDetail();
+                            rd.setReceiptId(rs.getInt("receipt_id"));
+                            rd.setInventoryId(rs.getInt("inventory_id"));
+                            rd.setGeneratorId(rs.getInt("generator_id"));
+                            allDetails.add(rd);
+                        }
+                    }
+                }
+                receiptDAO.writeStockCardsForExport(conn, receiptId, r.getReceiptCode(),
+                        warehouseId, loggedUser.getId(), allDetails);
+
+                if (isLiquidation && liquidationId != null) {
+                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE liquidation SET status = ?, updated_at = ? WHERE liquidation_id = ?")) {
+                        ps.setString(1, GlobalUtils.STATUS_COMPLETED);
+                        ps.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+                        ps.setInt(3, liquidationId);
+                        ps.executeUpdate();
+                    }
+                    ActivityLog liqLog = new ActivityLog();
+                    liqLog.setUserId(loggedUser.getId());
+                    liqLog.setEntityType("liquidation");
+                    liqLog.setAction("EXPORT_APPROVE");
+                    liqLog.setEntityId(liquidationId);
+                    liqLog.setEntityName(r.getReceiptCode());
+                    liqLog.setDetails("Hoàn tất xuất kho cho phiếu thanh lý " + r.getReceiptCode() + ".");
+                    activityLogDAO.insert(liqLog);
+                }
             }
 
             conn.commit();
@@ -672,24 +822,8 @@ public class ExportReceiptController extends HttpServlet {
         }
         log.setEntityId(receiptId);
         log.setEntityName(r.getReceiptCode());
-        log.setDetails(isDraft ? "Lưu nháp phiếu xuất kho" : "Tạo phiếu xuất kho");
+        log.setDetails(isDraft ? "Lưu nháp phiếu xuất kho" : "Tạo phiếu xuất kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
-
-        if (!isDraft) {
-            String notifLink = request.getContextPath() + "/export-receipt?action=detail&id=" + receiptId;
-            List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
-            for (User mgr : approvers) {
-                if (mgr.getId() == loggedUser.getId()) continue;
-                NotificationService.send(
-                        mgr.getId(),
-                        "Phiếu xuất kho mới chờ duyệt",
-                        "Nhân viên " + loggedUser.getName() + " đã tạo phiếu xuất " + r.getReceiptCode() + " cần bạn duyệt.",
-                        notifLink,
-                        "export_receipt",
-                        receiptId
-                );
-            }
-        }
 
         if (isDraft) {
             session.setAttribute("toastMessage", "Đã lưu nháp phiếu");
@@ -1376,262 +1510,6 @@ public class ExportReceiptController extends HttpServlet {
         }
     }
 
-    private void approveReceipt(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        if (!hasApprovePerm(session)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/export-receipt");
-            return;
-        }
-        List<String> errors = receiptDAO.approveReceipt(id, loggedUser.getId());
-        if (errors == null || errors.isEmpty()) {
-            Receipt r = receiptDAO.findById(id);
-            if (r != null) {
-                ActivityLog log = new ActivityLog();
-                log.setUserId(loggedUser.getId());
-                log.setEntityType("receipt");
-                log.setAction("APPROVE");
-                log.setEntityId(id);
-                log.setEntityName(r.getReceiptCode());
-                log.setDetails("Duyệt phiếu xuất kho, cập nhật tồn kho");
-                activityLogDAO.insert(log);
-
-                if (r.getLiquidationId() != null && r.getLiquidationId() > 0) {
-                    com.quanlymayphatdien.g1.dal.LiquidationDAO liqDAO = new com.quanlymayphatdien.g1.dal.LiquidationDAO();
-                    liqDAO.updateStatus(r.getLiquidationId(), com.quanlymayphatdien.g1.utils.GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), "warehouse", id);
-                    ActivityLog liqLog = new ActivityLog();
-                    liqLog.setUserId(loggedUser.getId());
-                    liqLog.setEntityType("liquidation");
-                    liqLog.setAction("EXPORT_APPROVE");
-                    liqLog.setEntityId(r.getLiquidationId());
-                    liqLog.setEntityName(r.getLiquidationCode() != null ? r.getLiquidationCode() : "N/A");
-                    liqLog.setDetails("Quản lý kho duyệt phiếu xuất kho " + r.getReceiptCode() + ", hoàn tất xuất máy thanh lý.");
-                    activityLogDAO.insert(liqLog);
-                }
-
-                if (r.getCreatedBy() != loggedUser.getId()) {
-                    NotificationService.send(
-                            r.getCreatedBy(),
-                            "Phiếu xuất kho đã được duyệt",
-                            "Phiếu xuất " + r.getReceiptCode() + " đã được " + loggedUser.getName() + " duyệt.",
-                            request.getContextPath() + "/export-receipt?action=detail&id=" + id,
-                            "export_receipt",
-                            id
-                    );
-                }
-            }
-            session.setAttribute("toastMessage", "Duyệt phiếu thành công");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/export-receipt?action=detail&id=" + id);
-        } else {
-            StringBuilder msg = new StringBuilder("Không thể duyệt phiếu:");
-            for (String e : errors) msg.append(" ").append(e).append(";");
-            request.setAttribute("toastMessage", msg.toString());
-            request.setAttribute("toastType", "danger");
-            viewDetail(request, response);
-        }
-    }
-
-    private void rejectReceipt(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        if (!hasApprovePerm(session)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/export-receipt");
-            return;
-        }
-        Integer reasonId = null;
-        String reasonIdStr = request.getParameter("reasonId");
-        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
-            try {
-                reasonId = Integer.parseInt(reasonIdStr);
-            } catch (NumberFormatException e) {
-                reasonId = null;
-            }
-        }
-        String reasonNote = request.getParameter("reason");
-        if (reasonNote != null) {
-            reasonNote = reasonNote.trim();
-            if (reasonNote.isEmpty()) {
-                reasonNote = null;
-            }
-        }
-        boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reasonId, reasonNote);
-        if (ok) {
-            Receipt r = receiptDAO.findById(id);
-            if (r != null) {
-                ActivityLog log = new ActivityLog();
-                log.setUserId(loggedUser.getId());
-                log.setEntityType("receipt");
-                log.setAction("REJECT");
-                log.setEntityId(id);
-                log.setEntityName(r.getReceiptCode());
-                String detail = "Từ chối phiếu";
-                if (reasonNote != null) {
-                    detail += ": " + reasonNote;
-                }
-                log.setDetails(detail);
-                activityLogDAO.insert(log);
-
-                if (r.getLiquidationId() != null && r.getLiquidationId() > 0) {
-                    com.quanlymayphatdien.g1.dal.LiquidationDAO liqDAO = new com.quanlymayphatdien.g1.dal.LiquidationDAO();
-                    liqDAO.updateStatus(r.getLiquidationId(), com.quanlymayphatdien.g1.utils.GlobalUtils.STATUS_CANCELLED, loggedUser.getId(), "warehouse", id);
-
-                    com.quanlymayphatdien.g1.dal.InventoryDAO invDAO = new com.quanlymayphatdien.g1.dal.InventoryDAO();
-                    if (r.getDetails() != null) {
-                        for (com.quanlymayphatdien.g1.entity.ReceiptDetail rd : r.getDetails()) {
-                            if (rd.getSerialNumber() != null && !rd.getSerialNumber().trim().isEmpty()) {
-                                invDAO.updateStatusBySerial(rd.getSerialNumber().trim(), com.quanlymayphatdien.g1.dal.InventoryDAO.STATUS_IN_STOCK);
-                            }
-                        }
-                    }
-
-                    ActivityLog liqLog = new ActivityLog();
-                    liqLog.setUserId(loggedUser.getId());
-                    liqLog.setEntityType("liquidation");
-                    liqLog.setAction("EXPORT_REJECT");
-                    liqLog.setEntityId(r.getLiquidationId());
-                    liqLog.setEntityName(r.getLiquidationCode() != null ? r.getLiquidationCode() : "N/A");
-                    liqLog.setDetails("Quản lý kho từ chối phiếu xuất kho " + r.getReceiptCode() + " (do bùng kèo hoặc sự cố). Đơn thanh lý đã bị hủy và máy được hoàn trả về kho.");
-                    activityLogDAO.insert(liqLog);
-                } else {
-                    java.sql.Connection releaseConn = null;
-                    try {
-                        releaseConn = receiptDAO.getConnection();
-                        releaseConn.setAutoCommit(false);
-                        java.util.List<Integer> inventoryIds = inventoryDAO.getInventoryIdsByReceiptId(releaseConn, id);
-                        if (!inventoryIds.isEmpty()) {
-                            int released = inventoryDAO.releaseReservations(releaseConn, inventoryIds);
-                            ActivityLog relLog = new ActivityLog();
-                            relLog.setUserId(loggedUser.getId());
-                            relLog.setEntityType("receipt");
-                            relLog.setAction("REJECT_RELEASE");
-                            relLog.setEntityId(id);
-                            relLog.setEntityName(r.getReceiptCode());
-                            relLog.setDetails("Tu choi phieu, giai phong " + released + " reservation");
-                            activityLogDAO.insert(relLog);
-                        }
-                        releaseConn.commit();
-                    } catch (java.sql.SQLException ex) {
-                        if (releaseConn != null) {
-                            try { releaseConn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-                        }
-                        SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.rejectReceipt", ex.getMessage(), ex);
-                    } finally {
-                        if (releaseConn != null) {
-                            try { releaseConn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-                            try { releaseConn.close(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-                        }
-                    }
-                }
-
-                if (r.getCreatedBy() != loggedUser.getId()) {
-                    String notifMsg = "Phiếu xuất " + r.getReceiptCode() + " đã bị từ chối bởi " + loggedUser.getName() + ".";
-                    if (reasonNote != null) notifMsg += " Lý do: " + reasonNote;
-                    NotificationService.send(
-                            r.getCreatedBy(),
-                            "Phiếu xuất kho bị từ chối",
-                            notifMsg,
-                            request.getContextPath() + "/export-receipt?action=detail&id=" + id,
-                            "export_receipt",
-                            id
-                    );
-                }
-            }
-            session.setAttribute("toastMessage", "Đã từ chối phiếu");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/export-receipt?action=detail&id=" + id);
-        } else {
-            request.setAttribute("toastMessage", "Không thể từ chối phiếu");
-            request.setAttribute("toastType", "danger");
-            viewDetail(request, response);
-        }
-    }
-
-    private void requestRevision(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        if (!hasApprovePerm(session)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/export-receipt");
-            return;
-        }
-        Integer reasonId = null;
-        String reasonIdStr = request.getParameter("reasonId");
-        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
-            try {
-                reasonId = Integer.parseInt(reasonIdStr);
-            } catch (NumberFormatException e) {
-                reasonId = null;
-            }
-        }
-        String reasonNote = request.getParameter("reason");
-        if (reasonNote != null) {
-            reasonNote = reasonNote.trim();
-            if (reasonNote.isEmpty()) {
-                reasonNote = null;
-            }
-        }
-        boolean ok = receiptDAO.requestRevision(id, loggedUser.getId(), reasonId, reasonNote);
-        if (ok) {
-            Receipt r = receiptDAO.findById(id);
-            if (r != null) {
-                ActivityLog log = new ActivityLog();
-                log.setUserId(loggedUser.getId());
-                log.setEntityType("receipt");
-                log.setAction("REVISION");
-                log.setEntityId(id);
-                log.setEntityName(r.getReceiptCode());
-                String detail = "Yêu cầu chỉnh sửa";
-                if (reasonNote != null) {
-                    detail += ": " + reasonNote;
-                }
-                log.setDetails(detail);
-                activityLogDAO.insert(log);
-                if (r.getCreatedBy() != loggedUser.getId()) {
-                    String notifMsg = "Phiếu xuất " + r.getReceiptCode() + " cần chỉnh sửa bởi " + loggedUser.getName() + ".";
-                    if (reasonNote != null) notifMsg += " Lý do: " + reasonNote;
-                    NotificationService.send(
-                            r.getCreatedBy(),
-                            "Phiếu xuất kho cần chỉnh sửa",
-                            notifMsg,
-                            request.getContextPath() + "/export-receipt?action=detail&id=" + id,
-                            "export_receipt",
-                            id
-                    );
-                }
-            }
-            session.setAttribute("toastMessage", "Đã gửi yêu cầu chỉnh sửa");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/export-receipt?action=detail&id=" + id);
-        } else {
-            request.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa");
-            request.setAttribute("toastType", "danger");
-            viewDetail(request, response);
-        }
-    }
-
-    private boolean hasApprovePerm(HttpSession session) {
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        return perms != null && perms.contains("receipts.approve");
-    }
-
     private int parseId(String s) {
         if (s == null || s.isEmpty()) {
             return 0;
@@ -1877,3 +1755,5 @@ public class ExportReceiptController extends HttpServlet {
         return "";
     }
 }
+
+
