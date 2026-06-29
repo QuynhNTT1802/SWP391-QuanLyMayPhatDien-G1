@@ -650,7 +650,7 @@
                         </c:choose>
                     </c:if>
 
-                    <c:set var="showDeadlineBanner" value="${not empty proposal.period and proposal.period != currentPeriod}" />
+                    <c:set var="showDeadlineBanner" value="${not empty proposal.period}" />
                     <c:if test="${showDeadlineBanner}">
                         <div class="alert ${isWithinDeadline ? 'alert-info' : 'alert-warn'}">
                             <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
