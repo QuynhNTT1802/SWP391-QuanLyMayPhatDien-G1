@@ -1078,7 +1078,7 @@ public class ProposalController extends HttpServlet {
                 errors.add("Đơn giá đề xuất không được trống");
             } else {
                 try {
-                    String cleaned = unitPriceStr.trim().replace(",", "").replace(".", "");
+                    String cleaned = unitPriceStr.trim().replaceAll("[^0-9.]", "");
                     unitPrice = new BigDecimal(cleaned);
                     if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
                         errors.add("Đơn giá phải lớn hơn 0");
@@ -1472,7 +1472,7 @@ public class ProposalController extends HttpServlet {
             }
             BigDecimal up;
             try {
-                String cleaned = upStr.trim().replace(",", "").replace(".", "");
+                String cleaned = upStr.trim().replaceAll("[^0-9.]", "");
                 up = new BigDecimal(cleaned);
                 if (up.compareTo(BigDecimal.ZERO) <= 0) {
                     continue;
@@ -1669,7 +1669,7 @@ public class ProposalController extends HttpServlet {
             if (unitPrices != null && i < unitPrices.length
                     && unitPrices[i] != null && !unitPrices[i].trim().isEmpty()) {
                 try {
-                    String cleaned = unitPrices[i].trim().replace(",", "").replace(".", "");
+                    String cleaned = unitPrices[i].trim().replaceAll("[^0-9.]", "");
                     up = new BigDecimal(cleaned);
                 } catch (NumberFormatException ex) {
                     up = null;
@@ -1999,7 +1999,7 @@ public class ProposalController extends HttpServlet {
                 errors.add("Đơn giá đề xuất không được trống");
             } else {
                 try {
-                    String cleaned = newUp.trim().replace(",", "").replace(".", "");
+                    String cleaned = newUp.trim().replaceAll("[^0-9.]", "");
                     BigDecimal up = new BigDecimal(cleaned);
                     if (up.compareTo(BigDecimal.ZERO) <= 0) {
                         errors.add("Đơn giá phải lớn hơn 0");
