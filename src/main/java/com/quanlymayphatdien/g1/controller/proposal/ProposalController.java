@@ -480,6 +480,7 @@ public class ProposalController extends HttpServlet {
         p.setStatus("draft".equals(submitType) ? GlobalUtils.STATUS_DRAFT : GlobalUtils.STATUS_PENDING);
         p.setCreatedBy(user.getId());
         p.setProposalDate(LocalDateTime.now());
+        p.setPeriod(PeriodUtils.currentPeriod());
 
         ImportProposalDAO dao = new ImportProposalDAO();
         p.setProposalCode(dao.generateProposalCode());
