@@ -173,6 +173,15 @@
                             </div>
                         </div>
                         <div class="info-field">
+                            <div class="info-label">Kho phụ trách</div>
+                            <div class="info-value">
+                                <c:choose>
+                                    <c:when test="${not empty userWarehouseName}"><span class="pill role-warehouse"><span class="pdot"></span><c:out value="${userWarehouseName}"/></span></c:when>
+                                    <c:otherwise><span style="color:var(--muted)">—</span></c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+                        <div class="info-field">
                             <div class="info-label">Ngày tạo</div>
                             <div class="info-value mono"><c:out value="${createdDate}"/></div>
                         </div>
