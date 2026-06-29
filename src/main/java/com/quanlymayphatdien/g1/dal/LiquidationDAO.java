@@ -392,12 +392,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     }
 
     // ===================== BÁO CÁO THANH LÝ =====================
-    // Tất cả query báo cáo chỉ tính đơn ĐÃ thanh lý thực sự (status = 'APPROVED_BY_CEO'),
-    // mốc thời gian dùng ceo_reviewed_at. Lọc theo khoảng ngày + kho (tuỳ chọn).
+    // Tất cả query báo cáo chỉ tính đơn ĐÃ thanh lý hoàn tất (status = 'COMPLETED'):
+    // máy đã xuất khỏi kho, giá trị thu hồi là tiền thật. Mốc thời gian dùng
+    // ceo_reviewed_at (giữ nguyên khi đơn chuyển sang COMPLETED).
+    // Lọc theo khoảng ngày + kho (tuỳ chọn).
 
     // Build mệnh đề WHERE chung + nạp tham số theo đúng thứ tự.
     private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, List<Object> params) {
-        StringBuilder w = new StringBuilder(" WHERE l.status = 'APPROVED_BY_CEO'");
+        StringBuilder w = new StringBuilder(" WHERE l.status = 'COMPLETED'");
         if (from != null) {
             w.append(" AND DATE(l.ceo_reviewed_at) >= ?");
             params.add(java.sql.Date.valueOf(from));
@@ -584,6 +586,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String where = buildReportWhere(from, to, warehouseId, params);
         String sql = "SELECT DATE_FORMAT(l.ceo_reviewed_at, '%Y-%m') AS ym, "
                 + "COUNT(DISTINCT l.liquidation_id) AS order_count, "
+                + "COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
                 + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
@@ -600,6 +603,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
                 r.put("month", resultSet.getString("ym"));
                 r.put("orderCount", resultSet.getInt("order_count"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
                 r.put("totalLoss", orig.subtract(liq));

@@ -914,8 +914,8 @@ public class LiquidationController extends HttpServlet {
 
         NotificationService.send(
                 l.getCreatedBy(),
-                "CEO da duyet don thanh ly",
-                "Don thanh ly " + l.getLiquidationCode() + " da duoc CEO duyet va chuyen sang cho xuat kho.",
+                "CEO đã duyệt đơn thanh lý",
+                "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
