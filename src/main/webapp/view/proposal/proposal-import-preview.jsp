@@ -192,7 +192,7 @@
                             <span class="pill bad"><span class="pill-num"><c:out value="${fn:length(unresolvedSupplierRows)}"/></span> chưa chọn được NCC</span>
                         </c:if>
                         <c:if test="${not empty invalidRows}">
-                            <span class="pill bad" id="invalidCountPill"><span class="pill-num"><c:out value="${fn:length(invalidRows)}"/></span> dòng không hợp lệ - cần sửa</span>
+                            <span class="pill bad" id="invalidCountPill"><span class="pill-num"><c:out value="${fn:length(invalidRows)}"/></span> dòng lỗi - cần tải lại Excel</span>
                         </c:if>
                     </div>
                     <form id="confirmForm" method="POST" action="${pageContext.request.contextPath}/proposal?action=importConfirm">
@@ -281,7 +281,8 @@
                                                 <td class="mono text-right"><c:out value="${row['gqty']}"/></td>
                                                 <td><c:out value="${row['gline']}"/></td>
                                                 <td style="text-align:right; white-space:nowrap">
-                                                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=redirectCreateGenerator&amp;model=${java.net.URLEncoder.encode(row.gmodel, 'UTF-8')}&amp;stt=${row.stt}">Thêm máy phát</a>
+                                                    <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateGenerator&amp;model=${java.net.URLEncoder.encode(row.gmodel, 'UTF-8')}&amp;stt=${row.stt}">Tạo mới</a>
+                                                    <button type="button" class="btn btn-primary" data-row-stt="<c:out value='${row.stt}'/>" data-row-gmodel="<c:out value='${row.gmodel}'/>" onclick="openGeneratorPanel(this.dataset.rowStt, this.dataset.rowGmodel, this.closest('tr'))">Chọn từ DS</button>
                                                 </td>
                                             </tr>
                                         </c:forEach>
@@ -340,52 +341,38 @@
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px">
                                     <div class="section-head-left">
-                                        <h3 style="color:var(--danger);">Dòng không hợp lệ - cần sửa</h3>
-                                        <span class="sub">${fn:length(invalidRows)} dòng · sửa ô bên dưới rồi nhấn "Kiểm tra lại"</span>
+                                        <h3 style="color:var(--danger);">Dòng lỗi — bắt buộc tải lại file Excel</h3>
+                                        <span class="sub">${fn:length(invalidRows)} dòng · sửa file Excel gốc rồi upload lại để tiếp tục</span>
                                     </div>
                                 </div>
+                                <div class="alert alert-error" style="margin:14px 18px 0;">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    <span>Hệ thống phát hiện <strong>${fn:length(invalidRows)}</strong> dòng có lỗi validate
+                                        (sai thông số kỹ thuật, số lượng, đơn giá hoặc nhà cung cấp).
+                                        Bạn cần <strong>sửa file Excel gốc</strong> và tải lại — hệ thống
+                                        <strong>không cho phép lưu</strong> khi còn dòng lỗi.</span>
+                                </div>
                                 <div class="table-scroll">
-                                <table class="data-table invalid-edit-table">
+                                <table class="data-table invalid-row-table">
                                     <thead><tr><th class="col-min">#</th><th>Mã máy phát</th><th class="col-qty text-right">Số lượng</th><th class="col-price text-right">Đơn giá (VNĐ)</th><th>Tên nhà cung cấp</th><th>Lỗi</th></tr></thead>
                                     <tbody>
                                         <c:forEach var="row" items="${invalidRows}">
-                                            <tr data-original-stt="<c:out value="${row['stt']}"/>">
+                                            <tr class="invalid-row">
                                                 <td class="mono"><c:out value="${row['stt']}"/></td>
-                                                <td>
-                                                    <input type="text" class="row-edit-model" data-row-key="model"
-                                                           value="<c:out value="${row['Mã máy phát']}"/>" />
-                                                </td>
-                                                <td>
-                                                    <input type="number" class="row-edit-qty" data-row-key="qty"
-                                                           min="1" max="9999"
-                                                           value="<c:out value="${row['Số lượng']}"/>" />
-                                                </td>
-                                                <td>
-                                                    <input type="number" class="row-edit-unitprice" data-row-key="unitPrice"
-                                                           min="0" step="1000"
-                                                           value="<c:out value="${row['Đơn giá đề xuất (VNĐ)']}"/>" />
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="row-edit-supplier" data-row-key="supplier"
-                                                           value="<c:out value="${row['Tên nhà cung cấp']}"/>" />
-                                                </td>
-                                                <td><div class="error-msg row-edit-error"><c:out value="${row['gerrors']}"/></div></td>
+                                                <td class="model-cell"><c:out value="${row['Mã máy phát']}"/></td>
+                                                <td class="mono text-right"><c:out value="${row['Số lượng']}"/></td>
+                                                <td class="mono text-right"><c:out value="${row['Đơn giá đề xuất (VNĐ)']}"/></td>
+                                                <td><c:out value="${row['Tên nhà cung cấp']}"/></td>
+                                                <td><div class="error-msg"><c:out value="${row['gerrors']}"/></div></td>
                                             </tr>
                                         </c:forEach>
                                     </tbody>
                                 </table>
                                 </div>
-                                <div style="padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center;">
-                                    <button type="button" class="btn" id="btnRevalidate">
-                                        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                                        Kiểm tra lại sau khi sửa
-                                    </button>
-                                    <small style="color:var(--muted); font-size:11px;">Sửa xong dòng nào, nhấn nút này. Dòng hợp lệ sẽ tự động được đưa vào danh sách lưu.</small>
-                                </div>
                             </div>
                         </c:if>
-                        <c:if test="${empty validRows and empty warningRows}">
-                            <div class="section"><div class="section-body text-center" style="color:var(--muted)">Không có dòng hợp lệ nào để lưu. Vui lòng quay lại và chỉnh sửa file Excel.</div></div>
+                        <c:if test="${empty validRows and empty warningRows and empty unresolvedSupplierRows}">
+                            <div class="section"><div class="section-body text-center" style="color:var(--muted)">Không có dòng nào để lưu. Vui lòng quay lại trang tạo đề xuất và tải lại file Excel.</div></div>
                         </c:if>
                         <div class="actions">
                             <a class="btn" href="${pageContext.request.contextPath}/proposal?action=create">
@@ -420,6 +407,24 @@
             </div>
         </div>
 
+        <div class="side-panel-overlay" id="generatorSidePanelOverlay" onclick="closeGeneratorPanel()"></div>
+        <div class="side-panel" id="generatorSidePanel">
+            <div class="side-panel-head">
+                <h3 class="side-panel-title">Chọn máy phát điện</h3>
+                <button class="side-panel-close" onclick="closeGeneratorPanel()" aria-label="Đóng">×</button>
+            </div>
+            <div class="side-panel-body">
+                <div style="display:flex; gap:8px; margin-bottom:16px;">
+                    <input type="text" id="generatorSearchInput" class="supplier-search-box" placeholder="Tìm theo mã máy phát (model)..." autocomplete="off" style="margin-bottom:0;"/>
+                </div>
+                <div id="generatorLoading" class="loading-msg" style="display:none;">
+                    <svg class="spin-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <div>Đang tải dữ liệu...</div>
+                </div>
+                <div class="supplier-list-wrap" id="generatorList"></div>
+            </div>
+        </div>
+
         <script>
             (function () {
                 var form = document.getElementById('confirmForm');
@@ -429,9 +434,10 @@
                 var rows = document.querySelectorAll('tr[data-id]');
                 var unresolvedCount = document.querySelectorAll('tr.unresolved-card-row').length;
                 var warningCount = document.querySelectorAll('tr.warning-card-row').length;
+                var invalidCount = document.querySelectorAll('tr.invalid-row').length;
 
                 function refreshSubmitState() {
-                    var disabled = rows.length === 0 || unresolvedCount > 0 || warningCount > 0;
+                    var disabled = rows.length === 0 || unresolvedCount > 0 || warningCount > 0 || invalidCount > 0;
                     if (btnDraft) btnDraft.disabled = disabled;
                     if (btnPending) btnPending.disabled = disabled;
                 }
@@ -488,6 +494,10 @@
                 }
 
                 function submitForm(value) {
+                    if (invalidCount > 0) {
+                        alert('Vẫn còn ' + invalidCount + ' dòng lỗi. Vui lòng sửa file Excel gốc và tải lại.');
+                        return;
+                    }
                     if (warningCount > 0) {
                         alert('Vẫn còn ' + warningCount + ' mã máy phát chưa có trong kho. Vui lòng bấm "Thêm máy phát" cho từng dòng trước khi lưu.');
                         return;
@@ -534,6 +544,7 @@
             var currentUnresolvedRow = null;
 
             function openSupplierPanel(rowIndex, query, tr) {
+                closeGeneratorPanel();
                 currentRowIndex = rowIndex;
                 currentUnresolvedRow = tr || null;
                 var searchInput = document.getElementById('supplierSearchInput');
@@ -663,104 +674,129 @@
 
             // ESC để đóng panel
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeSupplierPanel();
+                if (e.key === 'Escape') {
+                    closeSupplierPanel();
+                    closeGeneratorPanel();
+                }
             });
 
-            // === Revalidate invalid rows after editing ===
-            var btnReval = document.getElementById('btnRevalidate');
-            if (btnReval) {
-                btnReval.addEventListener('click', function () {
-                    var invalidTable = document.querySelector('.invalid-edit-table');
-                    if (!invalidTable) return;
-                    var trs = invalidTable.querySelectorAll('tbody tr');
-                    if (!trs.length) return;
+            // === Side panel: Chọn máy phát điện (cho warning rows) ===
+            var currentGeneratorRowStt = null;
 
-                    var sttVals = [], modelVals = [], qtyVals = [], upVals = [], supVals = [];
-                    trs.forEach(function (tr) {
-                        sttVals.push(tr.getAttribute('data-original-stt') || '');
-                        modelVals.push(tr.querySelector('.row-edit-model') ? tr.querySelector('.row-edit-model').value : '');
-                        qtyVals.push(tr.querySelector('.row-edit-qty') ? tr.querySelector('.row-edit-qty').value : '');
-                        upVals.push(tr.querySelector('.row-edit-unitprice') ? tr.querySelector('.row-edit-unitprice').value : '');
-                        supVals.push(tr.querySelector('.row-edit-supplier') ? tr.querySelector('.row-edit-supplier').value : '');
-                    });
+            function openGeneratorPanel(rowStt, gmodel, tr) {
+                closeSupplierPanel();
+                currentGeneratorRowStt = rowStt;
+                var searchInput = document.getElementById('generatorSearchInput');
+                document.getElementById('generatorSidePanelOverlay').classList.add('show');
+                document.getElementById('generatorSidePanel').classList.add('show');
+                document.getElementById('generatorList').innerHTML = '';
+                document.getElementById('generatorLoading').style.display = 'block';
+                setTimeout(function () { searchInput.focus(); }, 280);
+                loadGenerators(function () {
+                    searchInput.value = gmodel || '';
+                    searchInput.dispatchEvent(new Event('input'));
+                });
+            }
 
-                    var btn = this;
-                    btn.disabled = true;
-                    btn.innerHTML = '<svg class="spin-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Đang kiểm tra...';
+            function closeGeneratorPanel() {
+                document.getElementById('generatorSidePanelOverlay').classList.remove('show');
+                document.getElementById('generatorSidePanel').classList.remove('show');
+                currentGeneratorRowStt = null;
+            }
 
-                    var body = '';
-                    for (var i = 0; i < sttVals.length; i++) {
-                        if (i > 0) body += '&';
-                        body += 'stt=' + encodeURIComponent(sttVals[i])
-                            + '&model=' + encodeURIComponent(modelVals[i])
-                            + '&qty=' + encodeURIComponent(qtyVals[i])
-                            + '&unitPrice=' + encodeURIComponent(upVals[i])
-                            + '&supplier=' + encodeURIComponent(supVals[i]);
-                    }
-
-                    fetch('${pageContext.request.contextPath}/proposal?action=revalidateImport', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                        body: body
-                    })
+            function loadGenerators(callback) {
+                document.getElementById('generatorLoading').style.display = 'block';
+                var qInput = document.getElementById('generatorSearchInput');
+                fetch('${pageContext.request.contextPath}/proposal?action=searchGenerator&q='
+                        + encodeURIComponent(qInput ? qInput.value : ''))
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
-                        if (!data || !data.ok) {
-                            alert('Lỗi: ' + (data && data.error ? data.error : 'Không thể kiểm tra lại'));
-                            btn.disabled = false;
-                            btn.innerHTML = 'Kiểm tra lại sau khi sửa';
+                        document.getElementById('generatorLoading').style.display = 'none';
+                        var listWrap = document.getElementById('generatorList');
+                        listWrap.innerHTML = '';
+                        if (!data || data.length === 0) {
+                            listWrap.innerHTML = '<div class="empty-msg">Không tìm thấy máy phát điện nào.</div>';
+                            if (callback) callback();
                             return;
                         }
-
-                        // Update error messages for failed rows
-                        if (data.failed && Object.keys(data.failed).length > 0) {
-                            trs.forEach(function (tr) {
-                                var stt = tr.getAttribute('data-original-stt');
-                                var errCell = tr.querySelector('.row-edit-error');
-                                if (errCell && data.failed[stt]) {
-                                    errCell.textContent = data.failed[stt];
-                                } else if (errCell) {
-                                    errCell.textContent = '';
-                                }
-                            });
-                            btn.disabled = false;
-                            btn.innerHTML = 'Kiểm tra lại sau khi sửa';
-                            // Update pill count
-                            var failedCount = Object.keys(data.failed).length;
-                            var pill = document.getElementById('invalidCountPill');
-                            if (pill) {
-                                var numSpan = pill.querySelector('.pill-num');
-                                if (numSpan) numSpan.textContent = String(failedCount);
+                        data.forEach(function (g) {
+                            var card = document.createElement('div');
+                            card.className = 'supplier-card';
+                            card.setAttribute('data-model', (g.model || '').toLowerCase());
+                            var metaHtml = '';
+                            if (g.brand) {
+                                metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>'
+                                        + escapeHtml(g.brand) + '</span>';
                             }
-                        }
-
-                        if (data.fixed && data.fixed.length > 0) {
-                            // Luôn reload để server re-categorize và hiển thị dòng đã sửa
-                            // vào "Dòng hợp lệ" hoặc "Dòng cần lưu ý" ngay trên trang.
-                            var fixedCount = data.fixed.length;
-                            var failedCount = data.failed ? Object.keys(data.failed).length : 0;
-                            var msg = 'Đã thêm ' + fixedCount + ' dòng vào danh sách lưu.';
-                            if (failedCount > 0) {
-                                msg += ' Còn ' + failedCount + ' dòng cần sửa tiếp.';
+                            if (g.powerRating) {
+                                metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
+                                        + escapeHtml(g.powerRating) + ' kVA</span>';
                             }
-                            if (typeof showToast === 'function') {
-                                showToast(msg, 'success');
+                            if (g.status) {
+                                metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>'
+                                        + escapeHtml(g.status === 'active' ? 'Hoạt động' : g.status) + '</span>';
                             }
-                            setTimeout(function () {
-                                window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                            }, 400);
-                        } else {
-                            var hasFailures = data.failed && Object.keys(data.failed).length > 0;
-                            if (!hasFailures) {
-                                window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                            }
-                        }
+                            card.innerHTML = ''
+                                + '<div class="supplier-card-left">'
+                                +   '<div class="supplier-card-name">' + escapeHtml(g.model) + '</div>'
+                                +   '<div class="supplier-card-meta">' + metaHtml + '</div>'
+                                + '</div>'
+                                + '<div class="supplier-card-icon">'
+                                +   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
+                                + '</div>';
+                            card.onclick = function () { pickGenerator(g); };
+                            listWrap.appendChild(card);
+                        });
+                        if (callback) callback();
                     })
                     .catch(function () {
-                        alert('Lỗi kết nối khi kiểm tra lại dữ liệu');
-                        btn.disabled = false;
-                        btn.innerHTML = 'Kiểm tra lại sau khi sửa';
+                        document.getElementById('generatorLoading').style.display = 'none';
+                        document.getElementById('generatorList').innerHTML = '<div class="empty-msg" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
+                        if (callback) callback();
                     });
+            }
+
+            function pickGenerator(generator) {
+                if (currentGeneratorRowStt == null) return;
+                var body = 'stt=' + encodeURIComponent(currentGeneratorRowStt)
+                        + '&generatorId=' + encodeURIComponent(generator.id);
+                fetch('${pageContext.request.contextPath}/proposal?action=assignGenerator', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: body
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data && data.ok) {
+                        window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
+                    } else {
+                        alert('Không thể gán máy phát: ' + (data && data.error ? data.error : 'unknown'));
+                    }
+                })
+                .catch(function () {
+                    alert('Lỗi kết nối khi gán máy phát điện');
+                });
+            }
+
+            var generatorSearchDebounce = null;
+            var generatorSearchInput = document.getElementById('generatorSearchInput');
+            if (generatorSearchInput) {
+                generatorSearchInput.addEventListener('input', function () {
+                    var q = this.value.toLowerCase().trim();
+                    var cards = document.querySelectorAll('#generatorList .supplier-card');
+                    var words = q ? q.split(/\s+/) : [];
+                    cards.forEach(function (c) {
+                        if (!q) { c.style.display = ''; return; }
+                        var haystack = (c.getAttribute('data-model') || '');
+                        var all = true;
+                        for (var i = 0; i < words.length; i++) {
+                            if (haystack.indexOf(words[i]) < 0) { all = false; break; }
+                        }
+                        c.style.display = all ? '' : 'none';
+                    });
+                    if (generatorSearchDebounce) clearTimeout(generatorSearchDebounce);
+                    var self = this;
+                    generatorSearchDebounce = setTimeout(function () { loadGenerators(); }, 300);
                 });
             }
         </script>

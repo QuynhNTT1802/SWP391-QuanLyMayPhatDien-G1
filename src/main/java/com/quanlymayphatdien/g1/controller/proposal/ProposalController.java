@@ -81,6 +81,9 @@ public class ProposalController extends HttpServlet {
                 case "searchSupplier":
                     searchSupplierAjax(request, response);
                     return;
+                case "searchGenerator":
+                    searchGeneratorAjax(request, response);
+                    return;
                 case "redirectCreateSupplier":
                     redirectCreateSupplier(request, response);
                     return;
@@ -157,6 +160,9 @@ public class ProposalController extends HttpServlet {
                     break;
                 case "assignSupplier":
                     assignSupplierAjax(request, response);
+                    return;
+                case "assignGenerator":
+                    assignGeneratorAjax(request, response);
                     return;
                 case "revalidateImport":
                     revalidateImport(request, response);
@@ -1037,6 +1043,13 @@ public class ProposalController extends HttpServlet {
                     generatorResolved = true;
                     enriched.put("gid", String.valueOf(g.getId()));
                     enriched.put("gname", g.getModel());
+                    List<String> specDiffs = compareGeneratorSpecs(g, row);
+                    if (!specDiffs.isEmpty()) {
+                        errors.add("Thông số kỹ thuật trong Excel khác với máy '"
+                                + g.getModel() + "' đã có trong kho: "
+                                + String.join("; ", specDiffs)
+                                + ". Vui lòng sửa file Excel và tải lại.");
+                    }
                 } else {
                     enriched.put("gname", model.trim());
                     warnings.add("Máy phát mới chưa có trong hệ thống: " + model.trim() + ".");
@@ -1556,6 +1569,50 @@ public class ProposalController extends HttpServlet {
         return u != null ? u.getId() : 0;
     }
 
+    /**
+     * So sánh thông số kỹ thuật giữa dòng Excel và máy phát trong DB.
+     * Trả về danh sách các khác biệt (rỗng = khớp hoàn toàn).
+     * So sánh 3 trường: Power (Công suất kVA), Frequency (Tần số), Weight (Trọng lượng kg).
+     * Bỏ qua trường nào Excel trống hoặc DB null.
+     */
+    private List<String> compareGeneratorSpecs(Generator g, Map<String, String> row) {
+        List<String> diffs = new ArrayList<>();
+        if (g == null || row == null) {
+            return diffs;
+        }
+        String excelPower = row.get(ProposalExcelSupport.HEADER_POWER);
+        if (excelPower != null && !excelPower.trim().isEmpty() && g.getPowerRating() != null) {
+            try {
+                BigDecimal ep = new BigDecimal(excelPower.trim().replace(",", ""));
+                if (ep.compareTo(g.getPowerRating()) != 0) {
+                    diffs.add("Công suất: Excel " + ep.toPlainString()
+                            + " kVA vs DB " + g.getPowerRating().toPlainString() + " kVA");
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        String excelFreq = row.get(ProposalExcelSupport.HEADER_FREQUENCY);
+        if (excelFreq != null && !excelFreq.trim().isEmpty()
+                && g.getFrequency() != null && !g.getFrequency().trim().isEmpty()) {
+            if (!excelFreq.trim().equalsIgnoreCase(g.getFrequency().trim())) {
+                diffs.add("Tần số: Excel " + excelFreq.trim()
+                        + " vs DB " + g.getFrequency().trim());
+            }
+        }
+        String excelWeight = row.get(ProposalExcelSupport.HEADER_WEIGHT);
+        if (excelWeight != null && !excelWeight.trim().isEmpty() && g.getWeight() != null) {
+            try {
+                BigDecimal ew = new BigDecimal(excelWeight.trim().replace(",", ""));
+                if (ew.compareTo(g.getWeight()) != 0) {
+                    diffs.add("Trọng lượng: Excel " + ew.toPlainString()
+                            + " kg vs DB " + g.getWeight().toPlainString() + " kg");
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return diffs;
+    }
+
     private int parseId(HttpServletRequest request) {
         try {
             return Integer.parseInt(request.getParameter("id"));
@@ -1672,6 +1729,39 @@ public class ProposalController extends HttpServlet {
         response.getWriter().write(sb.toString());
     }
 
+    private void searchGeneratorAjax(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        String q = request.getParameter("q");
+        List<Generator> list = new GeneratorDAO().findByModelLike(q, 10);
+        StringBuilder sb = new StringBuilder("[");
+        boolean first = true;
+        for (Generator g : list) {
+            if (!first) {
+                sb.append(",");
+            }
+            first = false;
+            String brand = "";
+            if (g.getCategories() != null) {
+                for (Category c : g.getCategories()) {
+                    if ("brand".equals(c.getType())) {
+                        brand = c.getName();
+                        break;
+                    }
+                }
+            }
+            sb.append("{")
+              .append("\"id\":").append(g.getId()).append(",")
+              .append("\"model\":\"").append(escapeJson(g.getModel())).append("\",")
+              .append("\"brand\":\"").append(escapeJson(brand)).append("\",")
+              .append("\"powerRating\":\"").append(g.getPowerRating() == null ? "" : g.getPowerRating().toString()).append("\",")
+              .append("\"status\":\"").append(escapeJson(g.getStatus())).append("\"")
+              .append("}");
+        }
+        sb.append("]");
+        response.getWriter().write(sb.toString());
+    }
+
     @SuppressWarnings("unchecked")
     private void assignSupplierAjax(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -1739,6 +1829,66 @@ public class ProposalController extends HttpServlet {
 
         response.getWriter().write("{\"ok\":true,\"supplier\":{\"id\":" + s.getId()
                 + ",\"name\":\"" + escapeJson(s.getName()) + "\"}}");
+    }
+
+    @SuppressWarnings("unchecked")
+    private void assignGeneratorAjax(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
+            return;
+        }
+        String sttStr = request.getParameter("stt");
+        String rowIdxStr = request.getParameter("rowIndex");
+        if ((sttStr == null || sttStr.isEmpty()) && (rowIdxStr != null && !rowIdxStr.isEmpty())) {
+            sttStr = rowIdxStr;
+        }
+        String genIdStr = request.getParameter("generatorId");
+        int genId = parseInt(genIdStr);
+        if (sttStr == null || sttStr.isEmpty() || genId <= 0) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"bad_params\"}");
+            return;
+        }
+        List<Map<String, String>> rows =
+                (List<Map<String, String>>) session.getAttribute("pendingImportRows");
+        if (rows == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
+            return;
+        }
+        Generator g = new GeneratorDAO().findById(genId);
+        if (g == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"generator_not_found\"}");
+            return;
+        }
+        boolean found = false;
+        for (Map<String, String> p : rows) {
+            if (sttStr.equals(p.get("stt"))) {
+                p.put("gid", String.valueOf(g.getId()));
+                p.put("gname", g.getModel());
+                p.remove("gwarnings");
+                found = true;
+            }
+        }
+        if (!found) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
+            return;
+        }
+        List<Map<String, String>> allRows =
+                (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
+        if (allRows != null) {
+            for (Map<String, String> p : allRows) {
+                if (sttStr.equals(p.get("stt"))) {
+                    p.put("gid", String.valueOf(g.getId()));
+                    p.put("gname", g.getModel());
+                    p.remove("gwarnings");
+                }
+            }
+        }
+
+        response.getWriter().write("{\"ok\":true,\"generator\":{\"id\":" + g.getId()
+                + ",\"model\":\"" + escapeJson(g.getModel()) + "\"}}");
     }
 
     @SuppressWarnings("unchecked")
