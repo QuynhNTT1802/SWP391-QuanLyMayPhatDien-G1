@@ -786,7 +786,7 @@ public class OrderController extends HttpServlet {
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
 
-        // Kiểm tra tồn kho trước khi duyệt (trừ số lượng đã được duyệt ở các đơn khác)
+        
         List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
         if (details != null && !details.isEmpty()) {
             java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
