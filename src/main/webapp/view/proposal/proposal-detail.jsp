@@ -29,9 +29,7 @@
             .alert-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
             .alert-info { background: var(--info-soft); color: var(--info); border: 1px solid color-mix(in srgb, var(--info) 25%, transparent); }
 
-            /* ============================================================
-               HEADER BAR (tag + main title + action buttons)
-               ============================================================ */
+            
             .header-bar {
                 display: flex;
                 gap: 20px;
@@ -83,9 +81,7 @@
                 align-content: flex-start;
             }
 
-            /* ============================================================
-               SECTIONS
-               ============================================================ */
+            
             .section {
                 background: var(--surface);
                 border: 1px solid var(--border);
@@ -111,9 +107,7 @@
                 padding: 20px;
             }
 
-            /* ============================================================
-               FORM GRID (Thông tin chung)
-               ============================================================ */
+            
             .form-grid {
                 display: grid;
                 gap: 14px 18px;
@@ -196,9 +190,7 @@
             }
             .info-field.full { grid-column: 1 / -1; }
 
-            /* ============================================================
-               TAB BAR (3 tab mới)
-               ============================================================ */
+            
             .tab-bar {
                 display: flex;
                 gap: 4px;
@@ -247,9 +239,7 @@
             .tab-panel { display: none; }
             .tab-panel.active { display: block; }
 
-            /* ============================================================
-               TABLE TOOLBAR (search + status filter + actions)
-               ============================================================ */
+            
             .table-toolbar {
                 display: flex;
                 gap: 10px;
@@ -262,9 +252,7 @@
             }
             .table-toolbar .spacer { flex: 1; }
 
-            /* ============================================================
-               DATA TABLE
-               ============================================================ */
+            
             .product-table { width: 100%; border-collapse: collapse; }
             .product-table th, .product-table td {
                 padding: 11px 14px;
@@ -291,9 +279,7 @@
             .text-right { text-align: right; }
             .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
-            /* ============================================================
-               STATUS PILL (màu trạng thái)
-               ============================================================ */
+            
             .status-pill {
                 display: inline-flex;
                 align-items: center;
@@ -319,9 +305,7 @@
             .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
             .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
 
-            /* ============================================================
-               EMPTY STATE
-               ============================================================ */
+            
             .empty-state {
                 display: flex;
                 flex-direction: column;
@@ -350,9 +334,7 @@
                 font-size: 14px;
             }
 
-            /* ============================================================
-               HISTORY FILTER BAR
-               ============================================================ */
+            
             .history-filter-bar {
                 display: flex;
                 gap: 10px;
@@ -397,9 +379,7 @@
                 font-size: 11px;
             }
 
-            /* ============================================================
-               MODAL
-               ============================================================ */
+            
             .modal-host {
                 position: fixed;
                 inset: 0;
@@ -1136,6 +1116,18 @@
         </script>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script>
+            if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                if (typeof showToast === 'function') {
+                    showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                } else if (typeof toast === 'function') {
+                    toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+                } else {
+                    alert(window.SESSION_DATA.message);
+                }
+                window.SESSION_DATA = null;
+            }
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>

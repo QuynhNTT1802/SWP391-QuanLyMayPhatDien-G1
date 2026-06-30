@@ -504,7 +504,7 @@
                     input.value = '0';
                 }
             }
-            // Stock map từ server (generatorId -> tổng tồn kho IN_STOCK)
+            
             var STOCK_MAP = {
                 <c:forEach var="entry" items="${stockMap}">${entry.key}: ${entry.value},</c:forEach>
             };
@@ -573,7 +573,7 @@
                     el.textContent = i + 1;
                 });
             }
-            // Validate trước khi submit
+            
             document.querySelector('form.form-card').addEventListener('submit', function (e) {
                 var rows = document.querySelectorAll('#detailBody tr');
                 var hasValid = false;
@@ -607,8 +607,7 @@
                     return false;
                 }
             });
-            // Tự tính ngay khi load (vì có dữ liệu pre-fill)
-            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
+            
             function onCustomerTypeChange() {
                 var sel = document.getElementById('customerTypeSelect');
                 var opt = sel.options[sel.selectedIndex];
