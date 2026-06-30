@@ -1053,6 +1053,18 @@
         </script>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script>
+            if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                if (typeof showToast === 'function') {
+                    showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                } else if (typeof toast === 'function') {
+                    toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+                } else {
+                    alert(window.SESSION_DATA.message);
+                }
+                window.SESSION_DATA = null;
+            }
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>
