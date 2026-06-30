@@ -32,6 +32,9 @@
         .code-tag .ct-label { color: var(--muted); font-weight: 500; }
         .page-main-title { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.02em; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .header-bar .right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; align-content: flex-start; }
+        /* Đồng bộ kích thước các nút thao tác (gồm cả <a> lẫn <button>) trong header */
+        .header-bar .right .btn { min-height: 34px; padding: 6px 12px; line-height: 1.4; box-sizing: border-box; white-space: nowrap; }
+        .header-bar .right .btn .icon { width: 15px; height: 15px; flex-shrink: 0; }
 
         /* ===== SECTIONS ===== */
         .liqd .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
@@ -141,6 +144,24 @@
             .liqd .tab-panel { display: block !important; }
             body { background: #fff !important; }
         }
+
+        /* ===== EDIT MODE: fix for select elements using info-input ===== */
+        .liqd .info-input[required] { cursor: pointer; }
+        .liqd .info-input:not([disabled]):not([readonly]) {
+            background: var(--surface);
+        }
+        .liqd select.info-input {
+            appearance: auto;
+            padding-right: 8px;
+        }
+        /* ===== EDIT MODE: checkbox in pick table ===== */
+        #editPickTable .edit-pick-cb {
+            width: 16px; height: 16px; margin: 0; cursor: pointer;
+            accent-color: var(--accent);
+        }
+        #editPickTable .edit-gen-hidden { display: none; }
+        /* ===== EDIT MODE: pick table font ===== */
+        #editPickTable { font-size: 13px; }
     </style>
 </head>
 <body>
@@ -189,6 +210,9 @@
                     <h2 class="page-main-title">
                         #${liquidation.liquidationCode}
                         <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
+                        <c:if test="${isEditMode and isStaff}">
+                            <span class="status-pill status-revision"><span class="pdot"></span> Đang chỉnh sửa</span>
+                        </c:if>
                     </h2>
                 </div>
                 <div class="right">
@@ -200,28 +224,16 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                         Làm mới
                     </button>
-                    <c:if test="${isStaff and (isMgrEdit or isCeoEdit)}">
-                        <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liquidation.liquidationId}" class="btn btn-primary">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Sửa đơn
-                        </a>
-                    </c:if>
-                    <c:if test="${isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')}">
-                        <button type="button" class="btn btn-primary" onclick="document.getElementById('hiddenManagerSubmit').click()">
-                            <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            Lưu giá &amp; Gửi sếp duyệt
-                        </button>
-                    </c:if>
                     <c:if test="${isCeo and st == 'PENDING_CEO'}">
-                        <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">
+                        <button type="button" class="btn btn-primary" onclick="openConfirmApproveModal()">
                             <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                             Duyệt &amp; Xuất kho
                         </button>
-                        <button type="button" class="btn btn-outline-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
+                        <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             Yêu cầu sửa
                         </button>
-                        <button type="button" class="btn btn-outline-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger-solid', 'select_ceo_reject')">
+                        <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">
                             <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             Từ chối đơn
                         </button>
@@ -242,73 +254,153 @@
                     <span><strong>Phản hồi từ Quản lý kho:</strong> ${liquidation.managerFeedbackName}</span>
                 </div>
             </c:if>
-            <form action="${pageContext.request.contextPath}/liquidations" method="POST" id="mainForm">
-                <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
+            <%-- ===== FORM: edit mode vs normal mode ===== --%>
+            <c:set var="usingEditForm" value="${isEditMode and isStaff}" />
+            <c:choose>
+                <c:when test="${usingEditForm}">
+                    <form action="${pageContext.request.contextPath}/liquidations" method="POST" id="editForm">
+                    <input type="hidden" name="action" value="edit_submit" />
+                    <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
+                </c:when>
+                <c:otherwise>
+                    <form action="${pageContext.request.contextPath}/liquidations" method="POST" id="mainForm">
+                    <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
+                </c:otherwise>
+            </c:choose>
 
                 <%-- ===== SECTION: Thông tin chung ===== --%>
                 <div class="section">
                     <div class="section-head"><h3>Thông tin chung</h3></div>
                     <div class="section-body">
-                        <div class="form-grid cols-4">
-                            <div class="info-field">
-                                <label>Mã đơn</label>
-                                <input class="info-input mono" type="text" disabled value="${liquidation.liquidationCode}">
-                            </div>
-                            <div class="info-field">
-                                <label>Lý do thanh lý</label>
-                                <input class="info-input" type="text" disabled value="<c:out value='${liquidation.reasonName}'/>">
-                            </div>
-                            <div class="info-field">
-                                <label>Kho hàng</label>
-                                <input class="info-input" type="text" disabled value="<c:out value='${liquidation.warehouseName}'/>">
-                            </div>
-                            <div class="info-field">
-                                <label>Ngày tạo</label>
-                                <input class="info-input mono" type="text" disabled value="${liquidation.createdAt}">
-                            </div>
-                            <div class="info-field">
-                                <label>Người tạo</label>
-                                <input class="info-input" type="text" disabled value="<c:out value='${liquidation.createdByName}'/>">
-                            </div>
-                            <div class="info-field">
-                                <label>Quản lý duyệt</label>
-                                <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.managerReviewedByName ? liquidation.managerReviewedByName : "—"}'/>">
-                            </div>
-                            <div class="info-field">
-                                <label>Số máy</label>
-                                <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
-                            </div>
-                            <div class="info-field">
-                                <label>Chênh lệch giá</label>
-                                <c:choose>
-                                    <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
-                                        <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
-                                        <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <input class="info-input mono" type="text" disabled value="—">
-                                    </c:otherwise>
-                                </c:choose>
-                            </div>
-                        </div>
-                        <div class="form-grid cols-2" style="margin-top:14px;">
-                            <div class="info-field">
-                                <label>Tổng giá gốc (VNĐ)</label>
-                                <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
-                            </div>
-                            <div class="info-field">
-                                <label>Tổng giá thanh lý (VNĐ)</label>
-                                <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <%-- ===== SECTION: Khách hàng nhận ===== --%>
-                <div class="section">
-                    <div class="section-head"><h3>Khách hàng nhận</h3></div>
-                    <div class="section-body">
                         <c:choose>
-                            <c:when test="${canMgrEdit}">
+                            <%-- EDIT MODE: editable fields --%>
+                            <c:when test="${usingEditForm}">
+                                <div class="form-grid cols-4">
+                                    <div class="info-field">
+                                        <label>Mã đơn</label>
+                                        <input class="info-input mono" type="text" disabled value="${liquidation.liquidationCode}">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Lý do thanh lý <span style="color:var(--danger)">*</span></label>
+                                        <select class="info-input" name="reasonId" required>
+                                            <option value="">-- Chọn lý do --</option>
+                                            <c:forEach var="r" items="${reasons}">
+                                                <option value="${r.id}" ${r.id == liquidation.reasonId ? 'selected' : ''}>${r.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Kho hàng <span style="color:var(--danger)">*</span></label>
+                                        <select class="info-input" id="editWarehouseSelect" onchange="changeEditWarehouse(this.value);">
+                                            <c:forEach var="w" items="${warehouses}">
+                                                <option value="${w.warehouseId}" ${w.warehouseId == selectedWarehouseId ? 'selected' : ''}>${w.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                        <input type="hidden" name="warehouseId" id="editWarehouseId" value="${selectedWarehouseId}" />
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Ngày tạo</label>
+                                        <input class="info-input mono" type="text" disabled value="${liquidation.createdAt}">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Người tạo</label>
+                                        <input class="info-input" type="text" disabled value="<c:out value='${liquidation.createdByName}'/>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Quản lý duyệt</label>
+                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.managerReviewedByName ? liquidation.managerReviewedByName : "—"}'/>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Số máy</label>
+                                        <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Chênh lệch giá</label>
+                                        <c:choose>
+                                            <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
+                                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
+                                                <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <input class="info-input mono" type="text" disabled value="—">
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                                <div class="form-grid cols-2" style="margin-top:14px;">
+                                    <div class="info-field">
+                                        <label>Tổng giá gốc (VNĐ)</label>
+                                        <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Tổng giá thanh lý (VNĐ)</label>
+                                        <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
+                                    </div>
+                                </div>
+                            </c:when>
+                            <%-- NORMAL/VIEW MODE: read-only --%>
+                            <c:otherwise>
+                                <div class="form-grid cols-4">
+                                    <div class="info-field">
+                                        <label>Mã đơn</label>
+                                        <input class="info-input mono" type="text" disabled value="${liquidation.liquidationCode}">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Lý do thanh lý</label>
+                                        <input class="info-input" type="text" disabled value="<c:out value='${liquidation.reasonName}'/>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Kho hàng</label>
+                                        <input class="info-input" type="text" disabled value="<c:out value='${liquidation.warehouseName}'/>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Ngày tạo</label>
+                                        <input class="info-input mono" type="text" disabled value="${liquidation.createdAt}">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Người tạo</label>
+                                        <input class="info-input" type="text" disabled value="<c:out value='${liquidation.createdByName}'/>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Quản lý duyệt</label>
+                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.managerReviewedByName ? liquidation.managerReviewedByName : "—"}'/>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Số máy</label>
+                                        <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Chênh lệch giá</label>
+                                        <c:choose>
+                                            <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
+                                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
+                                                <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <input class="info-input mono" type="text" disabled value="—">
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                                <div class="form-grid cols-2" style="margin-top:14px;">
+                                    <div class="info-field">
+                                        <label>Tổng giá gốc (VNĐ)</label>
+                                        <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>Tổng giá thanh lý (VNĐ)</label>
+                                        <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
+                                    </div>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
+
+                        <%-- ===== Khách hàng nhận ===== --%>
+                        <div class="cust-subhead" style="margin-top:22px; padding-top:16px; border-top:1px solid var(--border);">
+                            <h4 style="font-size:13px; font-weight:700; margin:0 0 14px;">Khách hàng nhận</h4>
+                        </div>
+                        <c:choose>
+                            <c:when test="${usingEditForm or canMgrEdit}">
                                 <p class="kv-hint" style="margin-top:0;">Chọn khách hàng có sẵn hoặc nhập khách hàng mới để làm cơ sở tạo phiếu xuất.</p>
                                 <div id="managerCustomerArea">
                                     <div class="sd" id="customerDropdown"
@@ -324,6 +416,11 @@
                                             </button>
                                         </div>
                                         <input type="hidden" name="customerId" id="sdHiddenId" value="${liquidation.customerId}" />
+                                        <input type="hidden" id="inpCustName" value="<c:out value='${liquidation.customerName}'/>" />
+                                        <input type="hidden" id="inpCustPhone" value="<c:out value='${liquidation.customerPhone}'/>" />
+                                        <input type="hidden" id="inpCustEmail" value="<c:out value='${liquidation.customerEmail}'/>" />
+                                        <input type="hidden" id="inpCustAddress" value="<c:out value='${liquidation.customerAddress}'/>" />
+                                        <input type="hidden" id="customerCompany" value="" />
                                     </div>
                                     <div class="cust-newbtn-row">
                                         <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()">
@@ -388,72 +485,148 @@
 
                     <%-- ===== Tab 1: Danh sách máy ===== --%>
                     <div id="tab-machines" class="tab-panel active">
-                        <div class="table-toolbar">
-                            <div class="search-input">
-                                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input id="machineSearch" placeholder="Tìm theo dòng máy, serial..." autocomplete="off"/>
-                            </div>
-                            <div class="spacer"></div>
-                        </div>
-                        <div style="overflow-x:auto;">
-                            <table class="product-table" id="machineTable">
-                                <thead>
-                                    <tr>
-                                        <th>Dòng máy</th>
-                                        <th>Số Serial</th>
-                                        <th class="text-right">Giá gốc (VNĐ)</th>
-                                        <th class="text-right">Giá thanh lý (VNĐ)</th>
-                                        <th>Trạng thái</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <c:forEach var="d" items="${details}">
-                                        <tr data-search="<c:out value='${d.generatorModelName} ${d.serialNumber}'/>">
-                                            <td><strong>${d.generatorModelName}</strong></td>
-                                            <td class="mono">${d.serialNumber}</td>
-                                            <td class="text-right mono"><fmt:formatNumber value="${d.originalPrice}" type="number" maxFractionDigits="0"/></td>
-                                            <td class="text-right">
-                                                <input type="hidden" name="detailId" value="${d.liquidationDetailId}" />
-                                                <c:choose>
-                                                    <c:when test="${canMgrEdit}">
+                        <c:choose>
+                            <%-- EDIT MODE: checkbox table with machine picker --%>
+                            <c:when test="${usingEditForm}">
+                                <div class="liq-pick-tools">
+                                    <input type="text" id="editSerialSearch" class="serial-search-box" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                                    <span class="hint" style="font-size:12px;color:var(--muted);align-self:center;">Chọn máy cần thanh lý và nhập giá</span>
+                                </div>
+                                <div style="overflow-x:auto;">
+                                    <table class="pick-table" id="editPickTable">
+                                        <thead>
+                                            <tr>
+                                                <th class="col-cb"><input type="checkbox" id="editPickAll"/></th>
+                                                <th>Serial</th>
+                                                <th>Model</th>
+                                                <th>Tình trạng</th>
+                                                <th class="col-date">Ngày nhập</th>
+                                                <th class="col-price">Giá gốc</th>
+                                                <th class="col-price">Giá thanh lý <span class="req">*</span></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach var="r" items="${pickRows}">
+                                                <tr class="pick-trow ${r.selected ? 'is-checked' : ''}" data-model="<c:out value='${r.model}'/>">
+                                                    <td class="col-cb">
+                                                        <input type="checkbox" class="edit-pick-cb" name="serialNumber"
+                                                               value="<c:out value='${r.serialNumber}'/>"
+                                                               data-gen="${r.generatorId}"
+                                                               data-price="${r.unitPrice}"
+                                                               data-condition="${r.condition}"
+                                                               ${r.selected ? 'checked' : ''}/>
+                                                        <input type="hidden" class="edit-gen-hidden" name="generatorId" value="${r.generatorId}" ${r.selected ? '' : 'disabled'}/>
+                                                    </td>
+                                                    <td class="row-serial"><c:out value="${r.serialNumber}"/></td>
+                                                    <td class="row-model"><c:out value="${r.model}"/></td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${r.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                            <c:when test="${r.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                            <c:when test="${r.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                            <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td class="col-date row-date"><c:out value="${r.createdAtStr}"/></td>
+                                                    <td class="col-price row-price"><fmt:formatNumber value="${r.unitPrice}" type="number" maxFractionDigits="0"/> đ</td>
+                                                    <td class="col-price">
                                                         <div class="liq-price-wrap">
-                                                            <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice" value="<fmt:formatNumber value='${d.liquidationPrice}' type='number' maxFractionDigits='0' groupingUsed='true'/>" placeholder="Điền giá đề xuất..." required />
+                                                            <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice"
+                                                                   value="<c:if test='${r.liquidationPrice > 0}'><fmt:formatNumber value='${r.liquidationPrice}' type='number' maxFractionDigits='0' groupingUsed='true'/></c:if>"
+                                                                   placeholder="Nhập giá..." ${r.selected ? '' : 'disabled'}/>
                                                             <span class="liq-price-suffix">đ</span>
                                                         </div>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <strong class="mono"><fmt:formatNumber value="${d.liquidationPrice}" type="number" maxFractionDigits="0"/></strong>
-                                                        <input type="hidden" name="liquidationPrice" value="${d.liquidationPrice}" />
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td><span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span></td>
-                                        </tr>
-                                    </c:forEach>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="2" class="text-right">Tổng cộng:</td>
-                                        <td class="text-right mono"><c:if test="${not empty liquidation.totalOriginalPrice}"><fmt:formatNumber value="${liquidation.totalOriginalPrice}" type="number" maxFractionDigits="0"/></c:if></td>
-                                        <td class="text-right mono" style="color:var(--accent);"><c:if test="${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}"><fmt:formatNumber value="${liquidation.totalLiquidationPrice}" type="number" maxFractionDigits="0"/></c:if></td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+                                                    </td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="liq-pick-bar">
+                                    <div class="bar-summary">
+                                        <div class="bar-count">Đã chọn <strong id="editBarSelectedCount">0</strong> máy</div>
+                                        <div class="bar-total">Tổng giá gốc: <span class="total-val" id="editFormTotalVal">0 đ</span></div>
+                                        <div class="bar-total">Tổng giá thanh lý: <span class="total-val" id="editFormLiqTotalVal">0 đ</span></div>
+                                    </div>
+                                    <div class="bar-actions">
+                                        <a class="btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}">Huỷ bỏ</a>
+                                        <button type="submit" form="editForm" class="btn btn-primary">
+                                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                            Lưu &amp; Gửi lại
+                                        </button>
+                                    </div>
+                                </div>
+                            </c:when>
+                            <%-- VIEW / MANAGER MODE: read-only table --%>
+                            <c:otherwise>
+                                <div class="table-toolbar">
+                                    <div class="search-input">
+                                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                        <input id="machineSearch" placeholder="Tìm theo dòng máy, serial..." autocomplete="off"/>
+                                    </div>
+                                    <div class="spacer"></div>
+                                </div>
+                                <div style="overflow-x:auto;">
+                                    <table class="product-table" id="machineTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Dòng máy</th>
+                                                <th>Số Serial</th>
+                                                <th class="text-right">Giá gốc (VNĐ)</th>
+                                                <th class="text-right">Giá thanh lý (VNĐ)</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:forEach var="d" items="${details}">
+                                                <tr data-search="<c:out value='${d.generatorModelName} ${d.serialNumber}'/>">
+                                                    <td><strong>${d.generatorModelName}</strong></td>
+                                                    <td class="mono">${d.serialNumber}</td>
+                                                    <td class="text-right mono"><fmt:formatNumber value="${d.originalPrice}" type="number" maxFractionDigits="0"/></td>
+                                                    <td class="text-right">
+                                                        <input type="hidden" name="detailId" value="${d.liquidationDetailId}" />
+                                                        <c:choose>
+                                                            <c:when test="${canMgrEdit}">
+                                                                <div class="liq-price-wrap">
+                                                                    <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice" value="<fmt:formatNumber value='${d.liquidationPrice}' type='number' maxFractionDigits='0' groupingUsed='true'/>" placeholder="Điền giá đề xuất..." required />
+                                                                    <span class="liq-price-suffix">đ</span>
+                                                                </div>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <strong class="mono"><fmt:formatNumber value="${d.liquidationPrice}" type="number" maxFractionDigits="0"/></strong>
+                                                                <input type="hidden" name="liquidationPrice" value="${d.liquidationPrice}" />
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td>
+                                                    <td><span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span></td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="2" class="text-right">Tổng cộng:</td>
+                                                <td class="text-right mono"><c:if test="${not empty liquidation.totalOriginalPrice}"><fmt:formatNumber value="${liquidation.totalOriginalPrice}" type="number" maxFractionDigits="0"/></c:if></td>
+                                                <td class="text-right mono" style="color:var(--accent);"><c:if test="${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}"><fmt:formatNumber value="${liquidation.totalLiquidationPrice}" type="number" maxFractionDigits="0"/></c:if></td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
 
-                        <c:if test="${(isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')) or (isCeo and st == 'PENDING_CEO')}">
-                            <div class="liq-action-bar" style="padding:14px 16px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                <div class="hint" style="flex:1; font-size:12.5px; color:var(--muted);">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở trên trước khi ra quyết định.</div>
-                                <c:if test="${isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')}">
-                                    <button type="submit" name="action" value="approve_manager" id="hiddenManagerSubmit" class="btn btn-primary">Lưu giá &amp; Gửi sếp duyệt</button>
+                                <c:if test="${(isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')) or (isCeo and st == 'PENDING_CEO')}">
+                                    <div class="liq-action-bar" style="padding:14px 16px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                                        <div class="hint" style="flex:1; font-size:12.5px; color:var(--muted);">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở trên trước khi ra quyết định.</div>
+                                        <c:if test="${isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')}">
+                                            <button type="submit" name="action" value="approve_manager" id="hiddenManagerSubmit" class="btn btn-primary">Lưu &amp; Gửi lại</button>
+                                        </c:if>
+                                        <c:if test="${isCeo and st == 'PENDING_CEO'}">
+                                            <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>
+                                            <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
+                                        </c:if>
+                                    </div>
                                 </c:if>
-                                <c:if test="${isCeo and st == 'PENDING_CEO'}">
-                                    <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>
-                                    <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
-                                </c:if>
-                            </div>
-                        </c:if>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                     <%-- ===== Tab 2: Lịch sử xử lý ===== --%>
                     <div id="tab-history" class="tab-panel">
@@ -904,6 +1077,126 @@
         set('customerCompany', c.companyName);
         var label = document.getElementById('custTriggerLabel');
         if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
+    }
+
+    // ===== EDIT MODE: machine picker logic =====
+    (function() {
+        var cbs = Array.prototype.slice.call(document.querySelectorAll('.edit-pick-cb'));
+        if (cbs.length === 0) return;
+
+        function fmt(n) { return Number(n || 0).toLocaleString('vi-VN'); }
+
+        function recalc() {
+            var count = 0, total = 0, liqTotal = 0;
+            cbs.forEach(function(cb) {
+                var row = cb.closest('.pick-trow');
+                var genHidden = row ? row.querySelector('.edit-gen-hidden') : null;
+                var priceInput = row ? row.querySelector('.liq-price-input') : null;
+                if (cb.checked) {
+                    count++;
+                    total += parseFloat(cb.getAttribute('data-price') || '0') || 0;
+                    if (row) row.classList.add('is-checked');
+                    if (genHidden) genHidden.disabled = false;
+                    if (priceInput) {
+                        priceInput.disabled = false;
+                        liqTotal += parseFloat((priceInput.value || '').replace(/[^0-9]/g, '')) || 0;
+                    }
+                } else {
+                    if (row) row.classList.remove('is-checked');
+                    if (genHidden) genHidden.disabled = true;
+                    if (priceInput) priceInput.disabled = true;
+                }
+            });
+            var countEl = document.getElementById('editBarSelectedCount');
+            if (countEl) countEl.textContent = count;
+            var totalEl = document.getElementById('editFormTotalVal');
+            if (totalEl) totalEl.textContent = fmt(total) + ' đ';
+            var liqTotalEl = document.getElementById('editFormLiqTotalVal');
+            if (liqTotalEl) liqTotalEl.textContent = fmt(liqTotal) + ' đ';
+        }
+
+        cbs.forEach(function(cb) { cb.addEventListener('change', recalc); });
+
+        document.querySelectorAll('#editPickTable .liq-price-input').forEach(function(el) {
+            function formatPriceInput(el) {
+                var digits = (el.value || '').replace(/[^0-9]/g, '');
+                el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
+            }
+            formatPriceInput(el);
+            el.addEventListener('input', function() { formatPriceInput(el); recalc(); });
+        });
+
+        var pickAll = document.getElementById('editPickAll');
+        if (pickAll) {
+            pickAll.addEventListener('change', function() {
+                cbs.forEach(function(cb) {
+                    var row = cb.closest('.pick-trow');
+                    if (row && row.style.display !== 'none') cb.checked = pickAll.checked;
+                });
+                recalc();
+            });
+        }
+
+        var search = document.getElementById('editSerialSearch');
+        if (search) {
+            search.addEventListener('input', function() {
+                var q = (this.value || '').toLowerCase().trim();
+                document.querySelectorAll('#editPickTable .pick-trow').forEach(function(row) {
+                    var model = (row.getAttribute('data-model') || '').toLowerCase();
+                    var serialEl = row.querySelector('.row-serial');
+                    var serial = serialEl ? (serialEl.textContent || '').toLowerCase() : '';
+                    var show = !q || model.indexOf(q) > -1 || serial.indexOf(q) > -1;
+                    row.style.display = show ? '' : 'none';
+                });
+            });
+        }
+
+        var editForm = document.getElementById('editForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                var checked = cbs.filter(function(cb) { return cb.checked; });
+                if (checked.length === 0) {
+                    e.preventDefault();
+                    alert('Phải chọn ít nhất 1 máy phát điện.');
+                    return;
+                }
+                var missingPrice = checked.some(function(cb) {
+                    var row = cb.closest('.pick-trow');
+                    var priceInput = row ? row.querySelector('.liq-price-input') : null;
+                    var v = priceInput ? (priceInput.value || '').replace(/[^0-9]/g, '') : '';
+                    return !v || Number(v) <= 0;
+                });
+                if (missingPrice) {
+                    e.preventDefault();
+                    alert('Phải nhập giá thanh lý (lớn hơn 0) cho tất cả máy đã chọn.');
+                    return;
+                }
+                var custId = (document.getElementById('sdHiddenId') || {}).value;
+                if (!custId || !custId.trim()) {
+                    e.preventDefault();
+                    alert('Phải chọn khách hàng hoặc tạo khách hàng mới trước khi gửi.');
+                    return;
+                }
+                document.querySelectorAll('#editPickTable .liq-price-input').forEach(function(el) {
+                    el.value = (el.value || '').replace(/[^0-9]/g, '');
+                });
+            });
+        }
+
+        recalc();
+    })();
+
+    // ===== EDIT MODE: warehouse change =====
+    function changeEditWarehouse(whId) {
+        if (!whId) return;
+        var anyChecked = document.querySelectorAll('.edit-pick-cb:checked').length > 0;
+        if (anyChecked && !confirm('Đổi kho sẽ bỏ các máy đã chọn ở kho hiện tại. Tiếp tục?')) {
+            var sel = document.getElementById('editWarehouseSelect');
+            sel.value = document.getElementById('editWarehouseId').value;
+            return;
+        }
+        var id = '${liquidation.liquidationId}';
+        window.location.href = '${pageContext.request.contextPath}/liquidations?action=detail&id=' + encodeURIComponent(id) + '&warehouseId=' + encodeURIComponent(whId);
     }
 </script>
 </body>
