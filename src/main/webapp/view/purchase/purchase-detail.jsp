@@ -38,9 +38,7 @@
             .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55; padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
             .danger-note { background: color-mix(in srgb, var(--danger-soft) 70%, transparent); color: var(--danger); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--danger); white-space: pre-wrap; line-height: 1.55; }
 
-            /* ============================================================
-               HEADER BAR
-               ============================================================ */
+           
             .header-bar {
                 display: flex;
                 gap: 20px;
@@ -92,9 +90,7 @@
                 align-content: flex-start;
             }
 
-            /* ============================================================
-               SECTIONS
-               ============================================================ */
+            
             .section {
                 background: var(--surface);
                 border: 1px solid var(--border);
@@ -120,9 +116,7 @@
                 padding: 20px;
             }
 
-            /* ============================================================
-               FORM GRID
-               ============================================================ */
+            
             .form-grid {
                 display: grid;
                 gap: 14px 18px;
@@ -207,9 +201,7 @@
             }
             .info-field.full { grid-column: 1 / -1; }
 
-            /* ============================================================
-               TAB BAR
-               ============================================================ */
+            
             .tab-bar {
                 display: flex;
                 gap: 4px;
@@ -258,9 +250,7 @@
             .tab-panel { display: none; }
             .tab-panel.active { display: block; }
 
-            /* ============================================================
-               TABLE TOOLBAR
-               ============================================================ */
+            
             .table-toolbar {
                 display: flex;
                 gap: 10px;
@@ -273,9 +263,7 @@
             }
             .table-toolbar .spacer { flex: 1; }
 
-            /* ============================================================
-               DATA TABLE
-               ============================================================ */
+            
             .product-table { width: 100%; border-collapse: collapse; }
             .product-table th, .product-table td {
                 padding: 11px 14px;
@@ -302,9 +290,7 @@
             .text-right { text-align: right; }
             .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
-            /* ============================================================
-               STATUS PILL
-               ============================================================ */
+            
             .status-pill {
                 display: inline-flex;
                 align-items: center;
@@ -330,9 +316,7 @@
             .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
             .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
 
-            /* ============================================================
-               EMPTY STATE
-               ============================================================ */
+            
             .empty-state {
                 display: flex;
                 flex-direction: column;
@@ -361,9 +345,7 @@
                 font-size: 14px;
             }
 
-            /* ============================================================
-               HISTORY FILTER BAR
-               ============================================================ */
+            
             .history-filter-bar {
                 display: flex;
                 gap: 10px;
@@ -408,9 +390,7 @@
                 font-size: 11px;
             }
 
-            /* ============================================================
-               MODAL
-               ============================================================ */
+            
             .modal-host {
                 position: fixed;
                 inset: 0;
@@ -1053,6 +1033,18 @@
         </script>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script>
+            if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                if (typeof showToast === 'function') {
+                    showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                } else if (typeof toast === 'function') {
+                    toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+                } else {
+                    alert(window.SESSION_DATA.message);
+                }
+                window.SESSION_DATA = null;
+            }
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script>

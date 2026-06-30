@@ -284,11 +284,7 @@ public class ProposalController extends HttpServlet {
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
 
-    /**
-     * Kiểm tra user có quyền edit proposal hay không.
-     * - Creator có thể edit proposal ở DRAFT hoặc NEEDS_REVISION (do SM yêu cầu)
-     * - Sale Manager (canApprove) chỉ được edit khi proposal ở NEEDS_REVISION do CEO yêu cầu
-     */
+    
     private boolean canEditProposal(ImportProposal p, int currentUserId, boolean canApprove) {
         if (p == null) return false;
         if (!GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
@@ -1182,7 +1178,7 @@ public class ProposalController extends HttpServlet {
         @SuppressWarnings("unchecked")
         List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
         if (pendingRows == null || pendingRows.isEmpty()) {
-            // Vẫn có thể có invalid rows trong pendingImportAllRows
+            
             List<Map<String, String>> emptyInvalid = new ArrayList<>();
             @SuppressWarnings("unchecked")
             List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
@@ -1223,7 +1219,7 @@ public class ProposalController extends HttpServlet {
             assignedGidStr = request.getParameter("gid");
         }
 
-        // Nếu có newSupplierId + assignedGid, gán trực tiếp vào pendingImportRows
+       
         if (newSupplierIdStr != null && !newSupplierIdStr.isEmpty()
                 && assignedGidStr != null && !assignedGidStr.isEmpty()) {
             try {
@@ -1250,7 +1246,7 @@ public class ProposalController extends HttpServlet {
         List<Map<String, String>> invalidRows = new ArrayList<>();
         List<Map<String, String>> unresolvedSupplierRows = new ArrayList<>();
 
-        // Re-validate generator cho tất cả pending rows (sau khi user có thể đã thêm máy mới)
+       
         for (Map<String, String> enriched : pendingRows) {
             String gmodel = enriched.get("gmodel");
             String currentGid = enriched.get("gid");
@@ -1265,7 +1261,7 @@ public class ProposalController extends HttpServlet {
             }
         }
 
-        // Đồng bộ sang pendingImportAllRows để re-validate luôn thấy máy mới
+        
         @SuppressWarnings("unchecked")
         List<Map<String, String>> allRowsForSync = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
         if (allRowsForSync != null) {
@@ -1294,7 +1290,7 @@ public class ProposalController extends HttpServlet {
             String resolvedSupplierName = null;
             boolean supplierResolved = false;
 
-            // Nếu đã gán sẵn supplierId (từ newSupplier), dùng luôn
+            
             String sidStr = copy.get("supplierId");
             if (sidStr != null && !sidStr.isEmpty()) {
                 try {
@@ -1336,7 +1332,7 @@ public class ProposalController extends HttpServlet {
             }
         }
 
-        // Merge invalid rows từ pendingImportAllRows (giữ lại dòng lỗi như qty=-1)
+        
         @SuppressWarnings("unchecked")
         List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
         if (allRows != null) {
@@ -1498,7 +1494,7 @@ public class ProposalController extends HttpServlet {
         }
         dao.insertDetailsBatch(details);
 
-        // Cập nhật danh mục (hãng, xuất xứ, ...) cho generator từ dữ liệu Excel
+        
         updateGeneratorCategoriesFromImport(session, generatorIds);
 
         session.removeAttribute("pendingImportRows");
@@ -1569,12 +1565,7 @@ public class ProposalController extends HttpServlet {
         return u != null ? u.getId() : 0;
     }
 
-    /**
-     * So sánh thông số kỹ thuật giữa dòng Excel và máy phát trong DB.
-     * Trả về danh sách các khác biệt (rỗng = khớp hoàn toàn).
-     * So sánh 3 trường: Power (Công suất kVA), Frequency (Tần số), Weight (Trọng lượng kg).
-     * Bỏ qua trường nào Excel trống hoặc DB null.
-     */
+    
     private List<String> compareGeneratorSpecs(Generator g, Map<String, String> row) {
         List<String> diffs = new ArrayList<>();
         if (g == null || row == null) {
@@ -1811,7 +1802,7 @@ public class ProposalController extends HttpServlet {
             response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
             return;
         }
-        // Also update pendingImportAllRows for consistency
+        
         List<Map<String, String>> allRows =
                 (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
         if (allRows != null) {
@@ -1930,7 +1921,7 @@ public class ProposalController extends HttpServlet {
             int stt = parseInt(sttStr);
             if (stt <= 0) continue;
 
-            // Find the row in allRows by STT
+            
             Map<String, String> targetRow = null;
             for (Map<String, String> r : allRows) {
                 if (sttStr.equals(r.get("stt"))) {
@@ -1943,7 +1934,7 @@ public class ProposalController extends HttpServlet {
                 continue;
             }
 
-            // Overlay edited values onto the raw Excel data
+            
             String newModel = (modelArr != null && i < modelArr.length) ? modelArr[i] : "";
             String newQty = (qtyArr != null && i < qtyArr.length) ? qtyArr[i] : "";
             String newUp = (upArr != null && i < upArr.length) ? upArr[i] : "";
@@ -1975,7 +1966,7 @@ public class ProposalController extends HttpServlet {
                 }
             }
 
-            // Quantity
+            
             if (newQty == null || newQty.trim().isEmpty()) {
                 errors.add("Số lượng không được trống");
             } else {
@@ -1994,7 +1985,7 @@ public class ProposalController extends HttpServlet {
                 }
             }
 
-            // Unit price
+            
             if (newUp == null || newUp.trim().isEmpty()) {
                 errors.add("Đơn giá đề xuất không được trống");
             } else {
@@ -2048,7 +2039,7 @@ public class ProposalController extends HttpServlet {
             }
         }
 
-        // Rebuild pendingImportRows from allRows (only error-free rows)
+        
         List<Map<String, String>> pendingRows = new ArrayList<>();
         for (Map<String, String> r : allRows) {
             String errs = r.get("gerrors");
