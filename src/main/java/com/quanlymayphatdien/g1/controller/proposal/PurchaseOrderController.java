@@ -66,6 +66,7 @@ public class PurchaseOrderController extends HttpServlet {
             SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.doGet", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
+            request.getSession().setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
         }
     }
@@ -115,6 +116,7 @@ public class PurchaseOrderController extends HttpServlet {
             SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.doPost", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("toastMessage", "Lỗi xử lý: " + e.getMessage());
+            request.getSession().setAttribute("toastType", "danger");
             String redirect = action != null && (action.startsWith("submitReviewCreate") || action.startsWith("reviewCreate") || action.startsWith("submitEditReturned"))
                     ? "/proposal?action=list"
                     : "/purchase-order?action=list";
@@ -344,6 +346,7 @@ public class PurchaseOrderController extends HttpServlet {
 
         if (genIds == null || genIds.length == 0 || proposalIds.isEmpty()) {
             session.setAttribute("toastMessage", "Thiếu dữ liệu đầu vào");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
@@ -434,6 +437,7 @@ public class PurchaseOrderController extends HttpServlet {
 
             if (details.isEmpty()) {
                 session.setAttribute("toastMessage", "Chưa có dòng máy hợp lệ nào");
+                session.setAttribute("toastType", "danger");
                 StringBuilder back = new StringBuilder("/purchase-order?action=reviewCreate");
                 for (Integer pid : proposalIds) {
                     back.append("&proposalIds=").append(pid);
@@ -452,11 +456,13 @@ public class PurchaseOrderController extends HttpServlet {
             }
 
             session.setAttribute("toastMessage", "Tạo phiếu mua thành công");
+            session.setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
         } catch (Exception e) {
             SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.submitReviewCreate", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
+            session.setAttribute("toastType", "danger");
             StringBuilder back = new StringBuilder("/purchase-order?action=reviewCreate");
             for (Integer pid : proposalIds) {
                 back.append("&proposalIds=").append(pid);
@@ -485,12 +491,15 @@ public class PurchaseOrderController extends HttpServlet {
         PurchaseOrder po = dao.findById(id);
         if (po == null) {
             session.setAttribute("toastMessage", "Không tìm thấy phiếu mua");
+            session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
             return;
         }
 
         java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
+        int totalRows = 0;
         if (po.getDetails() != null) {
+            totalRows = po.getDetails().size();
             for (PurchaseOrderDetail d : po.getDetails()) {
                 if (d.getUnitPrice() != null) {
                     grandTotal = grandTotal.add(
@@ -510,6 +519,7 @@ public class PurchaseOrderController extends HttpServlet {
         List<ImportProposal> sourceProposals = dao.findProposalsByPo(id);
         request.setAttribute("po", po);
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("totalRows", totalRows);
         request.setAttribute("sourceProposals", sourceProposals);
         request.setAttribute("canApprovePo", perms.contains("purchase_orders.approve"));
         request.setAttribute("canCreatePo", perms.contains("purchase_orders.create"));

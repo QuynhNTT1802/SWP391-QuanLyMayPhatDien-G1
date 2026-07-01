@@ -40,18 +40,6 @@
             </div>
 
             <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px;">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Nháp</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiDraft}</div>
-                </div>
-
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_manager')}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Chờ Manager duyệt</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiPendingManager}</div>
-                </div>
-                </c:if>
-
                 <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_ceo')}">
                 <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Chờ CEO duyệt</div>
@@ -59,19 +47,22 @@
                 </div>
                 </c:if>
 
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_manager')}">
+                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_dest')}">
+                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Chờ kho đích xác nhận</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiAwaitingDest}</div>
+                </div>
+                </c:if>
+
                 <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Hoàn tất</div>
                     <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiCompleted}</div>
                 </div>
-                </c:if>
 
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
                 <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Bị từ chối / Hủy</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiRejected + kpiCancelled}</div>
+                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Bị từ chối</div>
+                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiRejected}</div>
                 </div>
-                </c:if>
             </div>
 
             <form method="get" action="${pageContext.request.contextPath}/transfers" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px;">
@@ -83,24 +74,10 @@
                 </div>
                 <select class="filter-select" name="status" onchange="this.form.submit()">
                     <option value="">Trạng thái: Tất cả</option>
-
-                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
-                        <option value="DRAFT" ${statusFilter == 'DRAFT' ? 'selected' : ''}>Nháp</option>
-                        <option value="PENDING_MANAGER" ${statusFilter == 'PENDING_MANAGER' ? 'selected' : ''}>Chờ Manager duyệt</option>
-                    </c:if>
-
-                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_ceo')}">
-                        <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ CEO duyệt</option>
-                    </c:if>
-
-                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_manager')}">
-                        <option value="COMPLETED" ${statusFilter == 'COMPLETED' ? 'selected' : ''}>Hoàn tất</option>
-                    </c:if>
-
-                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
-                        <option value="REJECTED" ${statusFilter == 'REJECTED' ? 'selected' : ''}>Bị từ chối</option>
-                        <option value="CANCELLED" ${statusFilter == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
-                    </c:if>
+                    <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ CEO duyệt</option>
+                    <option value="AWAITING_DEST_ACCEPT" ${statusFilter == 'AWAITING_DEST_ACCEPT' ? 'selected' : ''}>Chờ kho đích xác nhận</option>
+                    <option value="COMPLETED" ${statusFilter == 'COMPLETED' ? 'selected' : ''}>Hoàn tất</option>
+                    <option value="REJECTED" ${statusFilter == 'REJECTED' ? 'selected' : ''}>Bị từ chối</option>
                 </select>
                 <button type="submit" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -155,26 +132,17 @@
                                         </td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${t.status == 'DRAFT'}">
-                                                    <span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>Nháp</span>
-                                                </c:when>
-                                                <c:when test="${t.status == 'PENDING_MANAGER' && empty t.ceoReviewedAt}">
-                                                    <span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ Manager duyệt lần 1</span>
-                                                </c:when>
-                                                <c:when test="${t.status == 'PENDING_MANAGER' && not empty t.ceoReviewedAt}">
-                                                    <span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ Manager xác nhận cuối</span>
-                                                </c:when>
                                                 <c:when test="${t.status == 'PENDING_CEO'}">
                                                     <span class="pill" style="color: var(--purple); border-color: color-mix(in srgb, var(--purple) 30%, transparent); background: var(--purple-soft);"><span class="pdot" style="background: var(--purple);"></span>Chờ CEO duyệt</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'AWAITING_DEST_ACCEPT'}">
+                                                    <span class="pill" style="color: var(--info); border-color: color-mix(in srgb, var(--info) 30%, transparent); background: var(--info-soft);"><span class="pdot" style="background: var(--info);"></span>Chờ kho đích xác nhận</span>
                                                 </c:when>
                                                 <c:when test="${t.status == 'COMPLETED'}">
                                                     <span class="pill" style="color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft);"><span class="pdot" style="background: var(--accent);"></span>Hoàn tất</span>
                                                 </c:when>
                                                 <c:when test="${t.status == 'REJECTED'}">
                                                     <span class="pill" style="color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft);"><span class="pdot" style="background: var(--danger);"></span>Bị từ chối</span>
-                                                </c:when>
-                                                <c:when test="${t.status == 'CANCELLED'}">
-                                                    <span class="pill" style="color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: var(--warn-soft);"><span class="pdot" style="background: var(--warn);"></span>Đã hủy</span>
                                                 </c:when>
                                                 <c:otherwise><span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>${t.status}</span></c:otherwise>
                                             </c:choose>
@@ -184,11 +152,6 @@
                                                 <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}" class="icon-mini" title="Xem chi tiết">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 </a>
-                                                <c:if test="${t.status == 'DRAFT' and not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.create')}">
-                                                    <a href="${pageContext.request.contextPath}/transfers?action=edit_view&id=${t.transferId}" class="icon-mini" title="Chỉnh sửa">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                    </a>
-                                                </c:if>
                                             </div>
                                         </td>
                                     </tr>

@@ -153,7 +153,31 @@
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-head-left">
-                                        <div class="form-section-num">03 — QUYEN CA NHAN</div>
+                                        <div class="form-section-num">03 — KHO PHỤ TRÁCH</div>
+                                        <h3 class="form-section-title">Phân kho làm việc</h3>
+                                        <div class="form-section-desc">Chỉ áp dụng cho nhân viên kho / quản lý kho. Để trống nếu chưa phân công.</div>
+                                    </div>
+                                </div>
+                                <div class="form-grid single">
+                                    <div class="field">
+                                        <label class="field-label">Kho phụ trách</label>
+                                        <select class="select" name="warehouseId" data-orig="${user.warehouseId}">
+                                            <option value="">-- Chưa phân kho --</option>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <c:if test="${wh.status == 'active'}">
+                                                    <option value="${wh.warehouseId}" ${user.warehouseId == wh.warehouseId ? 'selected' : ''}><c:out value="${wh.name}"/></option>
+                                                </c:if>
+                                            </c:forEach>
+                                        </select>
+                                        <div class="field-help">Chỉ áp dụng cho vai trò nhân viên kho / quản lý kho.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-head-left">
+                                        <div class="form-section-num">04 — QUYEN CA NHAN</div>
                                         <h3 class="form-section-title">Ghi de quyen nguoi dung</h3>
                                         <div class="form-section-desc">GRANT cap them quyen, DENY tu choi quyen (uu tien cao hon role). De trong = theo role.</div>
                                     </div>
