@@ -17,6 +17,7 @@ import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -105,41 +106,17 @@ public class TransferController extends HttpServlet {
                 case "create":
                     handleCreate(request, response, user);
                     break;
-                case "create_and_submit":
-                    handleCreateAndSubmit(request, response, user);
-                    break;
-                case "edit_submit":
-                    handleEditSubmit(request, response, user);
-                    break;
-                case "submit":
-                    handleSubmit(request, response, user);
-                    break;
-                case "cancel":
-                    handleCancel(request, response, user);
-                    break;
-                case "approve_manager":
-                    handleManagerApprove(request, response, user);
-                    break;
-                case "reject_manager":
-                    handleManagerReject(request, response, user);
-                    break;
-                case "approve_ceo":
+                case "ce_approve":
                     handleCeoApprove(request, response, user);
                     break;
-                case "reject_ceo":
+                case "ce_reject":
                     handleCeoReject(request, response, user);
                     break;
-                case "final_approve":
-                    handleFinalApprove(request, response, user);
+                case "dest_accept":
+                    handleDestAccept(request, response, user);
                     break;
-                case "final_reject":
-                    handleFinalReject(request, response, user);
-                    break;
-                case "request_revision_manager":
-                    handleManagerRequestRevision(request, response, user);
-                    break;
-                case "request_revision_ceo":
-                    handleCeoRequestRevision(request, response, user);
+                case "dest_reject":
+                    handleDestReject(request, response, user);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -167,10 +144,14 @@ public class TransferController extends HttpServlet {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        boolean isManager = perms != null && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
-        Integer createdByFilter = isManager ? null : loggedUser.getId();
+        boolean isManagerOrCeo = perms != null
+                && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
 
-        int total = transferDAO.countTotal(search, statusFilter, createdByFilter);
+        int scopedWarehouseId = com.quanlymayphatdien.g1.utils.WarehouseAccessUtil.getScopedWarehouseId(session);
+
+        Integer filterUserId = (isManagerOrCeo && scopedWarehouseId <= 0) ? null : null;
+
+        int total = transferDAO.countTotal(search, statusFilter, filterUserId, scopedWarehouseId, loggedUser.getId());
         int totalPages = (int) Math.ceil((double) total / limit);
         if (totalPages < 1) {
             totalPages = 1;
@@ -180,16 +161,15 @@ public class TransferController extends HttpServlet {
         }
         offset = (page - 1) * limit;
 
-        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter, createdByFilter);
-        Map<String, Integer> kpis = transferDAO.getKpiCounts(createdByFilter);
+        List<Transfer> list = transferDAO.findWithPagination(limit, offset, search, statusFilter,
+                filterUserId, scopedWarehouseId, loggedUser.getId());
+        Map<String, Integer> kpis = transferDAO.getKpiCounts(filterUserId, scopedWarehouseId, loggedUser.getId());
 
         request.setAttribute("transfers", list);
-        request.setAttribute("kpiDraft", kpis.getOrDefault("DRAFT", 0));
-        request.setAttribute("kpiPendingManager", kpis.getOrDefault("PENDING_MANAGER", 0));
         request.setAttribute("kpiPendingCeo", kpis.getOrDefault("PENDING_CEO", 0));
+        request.setAttribute("kpiAwaitingDest", kpis.getOrDefault("AWAITING_DEST_ACCEPT", 0));
         request.setAttribute("kpiCompleted", kpis.getOrDefault("COMPLETED", 0));
         request.setAttribute("kpiRejected", kpis.getOrDefault("REJECTED", 0));
-        request.setAttribute("kpiCancelled", kpis.getOrDefault("CANCELLED", 0));
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("total", total);
@@ -211,33 +191,13 @@ public class TransferController extends HttpServlet {
 
     private void showEditView(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Workflow moi khong co DRAFT/NEEDS_REVISION - redirect ve detail.
         int id = parseInt(request.getParameter("id"), 0);
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        if (!"DRAFT".equals(t.getStatus()) && !"NEEDS_REVISION".equals(t.getStatus())) {
+        if (id > 0) {
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
+        } else {
+            response.sendRedirect(request.getContextPath() + "/transfers");
         }
-        HttpSession session = request.getSession(false);
-        User user = (User) session.getAttribute("loggedUser");
-        if (t.getCreatedBy() != user.getId()) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        request.setAttribute("transfer", t);
-        request.setAttribute("isRevision", "NEEDS_REVISION".equals(t.getStatus()));
-        request.setAttribute("warehouses", warehouseDAO.findAll());
-        request.setAttribute("generators", generatorDAO.findAllActive());
-        request.setAttribute("allSerials", inventoryDAO.findAllInStock());
-        request.setAttribute("activePage", "transfer-edit");
-        request.getRequestDispatcher("/view/warehouse/transfer/transfer-edit.jsp").forward(request, response);
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
@@ -259,11 +219,25 @@ public class TransferController extends HttpServlet {
 
         boolean isOwner = (t.getCreatedBy() == user.getId());
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        boolean isManager = perms != null && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
-        if (!isManager && !isOwner) {
+        int scopedWarehouseId = com.quanlymayphatdien.g1.utils.WarehouseAccessUtil.getScopedWarehouseId(session);
+        boolean isCeo = perms != null && perms.contains("transfers.approve_ceo");
+        boolean isDestStaff = perms != null && perms.contains("transfers.approve_dest")
+                && scopedWarehouseId == t.getDestWarehouseId();
+
+        if (!isCeo && !isDestStaff && !isOwner) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
+
+        boolean canCeApprove = isCeo && "PENDING_CEO".equals(t.getStatus());
+        boolean canCeReject = isCeo && "PENDING_CEO".equals(t.getStatus());
+        boolean canDestAccept = isDestStaff && "AWAITING_DEST_ACCEPT".equals(t.getStatus());
+        boolean canDestReject = isDestStaff && "AWAITING_DEST_ACCEPT".equals(t.getStatus());
+
+        request.setAttribute("canCeApprove", canCeApprove);
+        request.setAttribute("canCeReject", canCeReject);
+        request.setAttribute("canDestAccept", canDestAccept);
+        request.setAttribute("canDestReject", canDestReject);
 
         String tab = request.getParameter("tab");
         String currentTab = "history".equals(tab) ? "history" : "info";
@@ -416,7 +390,7 @@ public class TransferController extends HttpServlet {
         t.setTransferCode(transferDAO.generateTransferCode());
         t.setSourceWarehouseId(sourceWh);
         t.setDestWarehouseId(destWh);
-        t.setStatus("DRAFT");
+        t.setStatus("PENDING_CEO");
         t.setCreatedBy(user.getId());
         t.setNote(note);
 
@@ -441,484 +415,27 @@ public class TransferController extends HttpServlet {
         log.setAction("CREATE");
         log.setEntityId(newId);
         log.setEntityName(t.getTransferCode());
-        log.setDetails("Tao phieu luan chuyen (DRAFT)");
+        log.setDetails("Tao phieu luan chuyen (PENDING_CEO)");
         activityLogDAO.insert(log);
 
+        List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 1000);
+        for (User ceo : ceos) {
+            NotificationService.send(
+                    ceo.getId(),
+                    "Phieu luan chuyen moi cho duyet",
+                    "Nhan vien " + user.getName() + " da tao phieu luan chuyen " + t.getTransferCode() + " can CEO duyet.",
+                    request.getContextPath() + "/transfers?action=detail&id=" + newId,
+                    "transfer",
+                    newId
+            );
+        }
+
         HttpSession session = request.getSession();
-        session.setAttribute("toastMessage", "Tao phieu thanh cong. Vui long kiem tra lai va gui duyet.");
+        session.setAttribute("toastMessage", "Tao phieu thanh cong. Phieu da duoc gui cho CEO duyet.");
         session.setAttribute("toastType", "success");
-        response.sendRedirect(request.getContextPath() + "/transfers");
-    }
-
-    private void handleCreateAndSubmit(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int sourceWh = parseInt(request.getParameter("sourceWarehouseId"), 0);
-        int destWh = parseInt(request.getParameter("destWarehouseId"), 0);
-        String note = request.getParameter("note");
-        String[] serials = request.getParameterValues("serialNumber");
-        String[] detailNotes = request.getParameterValues("detailNote");
-
-        List<String> errors = new ArrayList<>();
-        if (sourceWh <= 0) {
-            errors.add("Vui long chon kho nguon");
-        }
-        if (destWh <= 0) {
-            errors.add("Vui long chon kho dich");
-        }
-        if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) {
-            errors.add("Kho nguon va kho dich phai khac nhau");
-        }
-        if (note != null && note.length() > MAX_NOTE_LENGTH) {
-            errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
-        }
-        if (serials == null || serials.length == 0) {
-            errors.add("Phai co it nhat 1 dong chi tiet");
-        }
-
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
-        List<TransferDetail> details = new ArrayList<>();
-        if (serials != null) {
-            for (int i = 0; i < serials.length; i++) {
-                String serial = serials[i];
-                if (serial == null) {
-                    continue;
-                }
-                serial = serial.trim();
-                if (serial.isEmpty()) {
-                    continue;
-                }
-
-                int rowNum = i + 1;
-                if (serial.length() > MAX_SERIAL_LENGTH) {
-                    errors.add("Dong " + rowNum + ": serial khong vuot qua " + MAX_SERIAL_LENGTH + " ky tu");
-                    continue;
-                }
-                if (!seenSerials.add(serial)) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" bi trung trong phieu");
-                    continue;
-                }
-
-                Inventory inv = inventoryDAO.findBySerialNumber(serial);
-                if (inv == null) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" khong ton tai trong he thong");
-                    continue;
-                }
-                if (!InventoryDAO.STATUS_IN_STOCK.equals(inv.getStatus())) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" khong o trang thai IN_STOCK");
-                    continue;
-                }
-                if (sourceWh > 0 && inv.getWarehouseId() != sourceWh) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" khong thuoc kho nguon");
-                    continue;
-                }
-
-                String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-                if (dNote != null && dNote.length() > MAX_DETAIL_NOTE_LENGTH) {
-                    errors.add("Dong " + rowNum + ": ghi chu khong vuot qua " + MAX_DETAIL_NOTE_LENGTH + " ky tu");
-                    continue;
-                }
-
-                TransferDetail d = new TransferDetail();
-                d.setGeneratorId(inv.getGeneratorId());
-                d.setQuantity(1);
-                d.setSerialNumber(serial);
-                d.setNote(dNote);
-                details.add(d);
-            }
-        }
-        if (details.isEmpty()) {
-            errors.add("Phai co it nhat 1 dong chi tiet hop le");
-        }
-
-        if (!errors.isEmpty()) {
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("toastMessage", String.join("; ", errors));
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("allSerials", inventoryDAO.findByFilters(null, null, InventoryDAO.STATUS_IN_STOCK, null, 1, 10000));
-            request.setAttribute("activePage", "transfer-create");
-            request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
-            return;
-        }
-
-        Transfer t = new Transfer();
-        t.setTransferCode(transferDAO.generateTransferCode());
-        t.setSourceWarehouseId(sourceWh);
-        t.setDestWarehouseId(destWh);
-        t.setStatus("DRAFT");
-        t.setCreatedBy(user.getId());
-        t.setNote(note);
-
-        int newId = transferDAO.insert(t);
-        if (newId <= 0) {
-            request.setAttribute("toastMessage", "Khong the tao phieu");
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("allSerials", inventoryDAO.findByFilters(null, null, InventoryDAO.STATUS_IN_STOCK, null, 1, 10000));
-            request.setAttribute("activePage", "transfer-create");
-            request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
-            return;
-        }
-        for (TransferDetail d : details) {
-            d.setTransferId(newId);
-            detailDAO.insert(d);
-        }
-
-        ActivityLog createLog = new ActivityLog();
-        createLog.setUserId(user.getId());
-        createLog.setEntityType("transfer");
-        createLog.setAction("CREATE");
-        createLog.setEntityId(newId);
-        createLog.setEntityName(t.getTransferCode());
-        createLog.setDetails("Tao phieu luan chuyen");
-        activityLogDAO.insert(createLog);
-
-        boolean ok = transferDAO.submitForReview(newId, user.getId());
-        if (ok) {
-            ActivityLog submitLog = new ActivityLog();
-            submitLog.setUserId(user.getId());
-            submitLog.setEntityType("transfer");
-            submitLog.setAction("SUBMIT");
-            submitLog.setEntityId(newId);
-            submitLog.setEntityName(t.getTransferCode());
-            submitLog.setDetails("Gui phieu luan chuyen cho Manager duyet");
-            activityLogDAO.insert(submitLog);
-
-            List<User> managers = userDAO.findUsersWithRoles("warehouse_manager", null, null, 1, 1000);
-            for (User mgr : managers) {
-                NotificationService.send(
-                        mgr.getId(),
-                        "Phieu luan chuyen moi cho duyet",
-                        "Nhan vien " + user.getName() + " da tao phieu luan chuyen " + t.getTransferCode() + " can ban duyet.",
-                        request.getContextPath() + "/transfers?action=detail&id=" + newId,
-                        "transfer",
-                        newId
-                );
-            }
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Tao va gui phieu cho Manager duyet thanh cong");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Tao phieu thanh cong nhung khong the gui (trang thai khong hop le)");
-            session.setAttribute("toastType", "warning");
-        }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + newId);
     }
 
-    private void handleEditSubmit(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer existing = transferDAO.findById(id);
-        if (existing == null
-                || (!"DRAFT".equals(existing.getStatus()) && !"NEEDS_REVISION".equals(existing.getStatus()))
-                || existing.getCreatedBy() != user.getId()) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-
-        int sourceWh = parseInt(request.getParameter("sourceWarehouseId"), 0);
-        int destWh = parseInt(request.getParameter("destWarehouseId"), 0);
-        String note = request.getParameter("note");
-        String[] serials = request.getParameterValues("serialNumber");
-        String[] detailNotes = request.getParameterValues("detailNote");
-
-        List<String> errors = new ArrayList<>();
-        if (sourceWh <= 0) {
-            errors.add("Vui long chon kho nguon");
-        }
-        if (destWh <= 0) {
-            errors.add("Vui long chon kho dich");
-        }
-        if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) {
-            errors.add("Kho nguon va kho dich phai khac nhau");
-        }
-
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
-        List<TransferDetail> details = new ArrayList<>();
-        if (serials != null) {
-            for (int i = 0; i < serials.length; i++) {
-                String serial = serials[i];
-                if (serial == null) {
-                    continue;
-                }
-                serial = serial.trim();
-                if (serial.isEmpty()) {
-                    continue;
-                }
-
-                int rowNum = i + 1;
-                if (serial.length() > MAX_SERIAL_LENGTH) {
-                    continue;
-                }
-                if (!seenSerials.add(serial)) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" bi trung trong phieu");
-                    continue;
-                }
-
-                Inventory inv = inventoryDAO.findBySerialNumber(serial);
-                if (inv == null) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" khong ton tai trong he thong");
-                    continue;
-                }
-                if (!InventoryDAO.STATUS_IN_STOCK.equals(inv.getStatus())) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" khong o trang thai IN_STOCK");
-                    continue;
-                }
-                if (sourceWh > 0 && inv.getWarehouseId() != sourceWh) {
-                    errors.add("Dong " + rowNum + ": serial \"" + serial + "\" khong thuoc kho nguon");
-                    continue;
-                }
-
-                String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-                TransferDetail d = new TransferDetail();
-                d.setGeneratorId(inv.getGeneratorId());
-                d.setQuantity(1);
-                d.setSerialNumber(serial);
-                d.setNote(dNote);
-                details.add(d);
-            }
-        }
-        if (details.isEmpty()) {
-            errors.add("Phai co it nhat 1 dong chi tiet hop le");
-        }
-        if (!errors.isEmpty()) {
-            request.setAttribute("toastMessage", String.join("; ", errors));
-            request.setAttribute("toastType", "danger");
-            showEditView(request, response);
-            return;
-        }
-
-        Transfer t = new Transfer();
-        t.setTransferId(id);
-        t.setSourceWarehouseId(sourceWh);
-        t.setDestWarehouseId(destWh);
-        t.setNote(note);
-
-        boolean headerOk = transferDAO.updateHeader(t);
-        if (headerOk) {
-            detailDAO.deleteByTransferId(id);
-            for (TransferDetail d : details) {
-                d.setTransferId(id);
-                detailDAO.insert(d);
-            }
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("UPDATE");
-            log.setEntityId(id);
-            log.setEntityName(existing.getTransferCode());
-            log.setDetails("Sua phieu luan chuyen (DRAFT)");
-            activityLogDAO.insert(log);
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Cap nhat phieu thanh cong");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-        } else {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-        }
-    }
-
-    private void handleSubmit(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null || t.getCreatedBy() != user.getId()) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.submitForReview(id, user.getId());
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("SUBMIT");
-            log.setEntityId(id);
-            log.setEntityName(t.getTransferCode());
-            log.setDetails("Gui phieu luan chuyen cho Manager duyet");
-            activityLogDAO.insert(log);
-
-            List<User> managers = userDAO.findUsersWithRoles("warehouse_manager", null, null, 1, 1000);
-            for (User mgr : managers) {
-                NotificationService.send(
-                        mgr.getId(),
-                        "Phieu luan chuyen moi cho duyet",
-                        "Nhan vien " + user.getName() + " da tao phieu luan chuyen " + t.getTransferCode() + " can ban duyet.",
-                        request.getContextPath() + "/transfers?action=detail&id=" + id,
-                        "transfer",
-                        id
-                );
-            }
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da gui phieu cho Manager duyet");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the gui phieu (trang thai khong hop le)");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-    }
-
-    private void handleCancel(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null || t.getCreatedBy() != user.getId()) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.staffCancel(id, user.getId());
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("CANCEL");
-            log.setEntityId(id);
-            log.setEntityName(t.getTransferCode());
-            log.setDetails("Staff tu huy phieu luan chuyen");
-            activityLogDAO.insert(log);
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da huy phieu");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the huy phieu (trang thai khong hop le hoac khong phai cua ban)");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-    }
-
-    private void handleManagerApprove(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.managerApproveForward(id, user.getId());
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("MANAGER_APPROVE");
-            log.setEntityId(id);
-            log.setEntityName(t.getTransferCode());
-            log.setDetails("Manager duyet lan 1, trinh len CEO");
-            activityLogDAO.insert(log);
-
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "Quan ly da duyet phieu luan chuyen",
-                    "Phieu luan chuyen " + t.getTransferCode() + " da duoc Manager " + user.getName() + " duyet va trinh CEO.",
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
-            List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 100);
-            for (User ceo : ceos) {
-                NotificationService.send(
-                        ceo.getId(),
-                        "Phieu luan chuyen cho CEO duyet",
-                        "Manager " + user.getName() + " da trinh len phieu luan chuyen " + t.getTransferCode() + " can CEO duyet.",
-                        request.getContextPath() + "/transfers?action=detail&id=" + id,
-                        "transfer",
-                        id
-                );
-            }
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da duyet phieu va trinh len CEO");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the duyet phieu (trang thai khong hop le)");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-    }
-
-    private void handleManagerReject(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        String note = request.getParameter("managerNote");
-        if (note != null) {
-            note = note.trim();
-        }
-        if (note == null || note.isEmpty()) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Vui long nhap ly do tu choi");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.reject(id, user.getId(), "manager", note);
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("MANAGER_REJECT");
-            log.setEntityId(id);
-            log.setEntityName(t.getTransferCode());
-            log.setDetails("Manager tu choi: " + note);
-            activityLogDAO.insert(log);
-
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "Quan ly tu choi phieu luan chuyen",
-                    "Phieu " + t.getTransferCode() + " bi Manager tu choi. Ly do: " + note,
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da tu choi phieu");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the tu choi phieu");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-    }
 
     private void handleCeoApprove(HttpServletRequest request, HttpServletResponse response, User user)
             throws ServletException, IOException {
@@ -932,44 +449,24 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
-        boolean ok = transferDAO.ceoApproveReturnToManager(id, user.getId());
+        String note = request.getParameter("ceoNote");
+        boolean ok = transferDAO.ceApproveForward(id, user.getId(), note);
         if (ok) {
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
             log.setEntityType("transfer");
-            log.setAction("CEO_APPROVE");
+            log.setAction("CE_APPROVE");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("CEO duyet, tra ve Manager xac nhan cuoi");
+            log.setDetails("CEO duyet phieu luan chuyen (PENDING_CEO -> AWAITING_DEST_ACCEPT)");
             activityLogDAO.insert(log);
 
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "CEO da duyet phieu luan chuyen",
-                    "Phieu luan chuyen " + t.getTransferCode() + " da duoc CEO " + user.getName() + " duyet, can Manager xac nhan cuoi de thuc hien.",
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
-            List<User> managers = userDAO.findUsersWithRoles("warehouse_manager", null, null, 1, 100);
-            for (User mgr : managers) {
-                NotificationService.send(
-                        mgr.getId(),
-                        "Phieu luan chuyen can Manager xac nhan cuoi",
-                        "CEO da duyet phieu luan chuyen " + t.getTransferCode() + ", can Manager xac nhan cuoi de thuc hien chuyen kho.",
-                        request.getContextPath() + "/transfers?action=detail&id=" + id,
-                        "transfer",
-                        id
-                );
-            }
-
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da duyet phieu, tra ve Manager xac nhan cuoi");
+            session.setAttribute("toastMessage", "CEO da duyet phieu. Kho dich can xac nhan.");
             session.setAttribute("toastType", "success");
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the duyet phieu");
+            session.setAttribute("toastMessage", "Khong the duyet (trang thai khong hop le)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
@@ -978,26 +475,22 @@ public class TransferController extends HttpServlet {
     private void handleCeoReject(HttpServletRequest request, HttpServletResponse response, User user)
             throws ServletException, IOException {
         int id = parseInt(request.getParameter("id"), 0);
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
         String note = request.getParameter("ceoNote");
         if (note != null) {
             note = note.trim();
+            if (note.isEmpty()) {
+                note = null;
+            }
         }
-        if (note == null || note.isEmpty()) {
+        if (note == null) {
             HttpSession session = request.getSession();
             session.setAttribute("toastMessage", "Vui long nhap ly do tu choi");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
         Transfer t = transferDAO.findById(id);
@@ -1005,38 +498,29 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
-        boolean ok = transferDAO.reject(id, user.getId(), "ceo", note);
+        boolean ok = transferDAO.ceReject(id, user.getId(), note);
         if (ok) {
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
             log.setEntityType("transfer");
-            log.setAction("CEO_REJECT");
+            log.setAction("CE_REJECT");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
             log.setDetails("CEO tu choi: " + note);
             activityLogDAO.insert(log);
 
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "CEO tu choi phieu luan chuyen",
-                    "Phieu " + t.getTransferCode() + " bi CEO tu choi. Ly do: " + note,
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
             HttpSession session = request.getSession();
             session.setAttribute("toastMessage", "Da tu choi phieu");
             session.setAttribute("toastType", "success");
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the tu choi phieu");
+            session.setAttribute("toastMessage", "Khong the tu choi (trang thai khong hop le)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
     }
 
-    private void handleFinalApprove(HttpServletRequest request, HttpServletResponse response, User user)
+    private void handleDestAccept(HttpServletRequest request, HttpServletResponse response, User user)
             throws ServletException, IOException {
         int id = parseInt(request.getParameter("id"), 0);
         if (id <= 0) {
@@ -1048,216 +532,81 @@ public class TransferController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/transfers");
             return;
         }
-
-        String error = transferDAO.executeTransfer(id, user.getId());
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(request.getSession(false));
+        if (scopedWarehouseId != t.getDestWarehouseId()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        String error = transferDAO.destAccept(id, user.getId());
         if (error == null) {
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
             log.setEntityType("transfer");
-            log.setAction("FINAL_APPROVE");
+            log.setAction("DEST_ACCEPT");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("Manager xac nhan cuoi, phieu da duoc chuyen kho tu dong");
+            log.setDetails("Kho dich chap nhan phieu luan chuyen. Ton kho da duoc dieu chuyen.");
             activityLogDAO.insert(log);
 
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "Phieu luan chuyen da hoan tat",
-                    "Phieu luan chuyen " + t.getTransferCode() + " da duoc Manager " + user.getName() + " xac nhan va chuyen kho thanh cong.",
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Phieu da hoan tat, kho da duoc cap nhat");
+            session.setAttribute("toastMessage", "Chap nhan phieu thanh cong. Ton kho da duoc dieu chuyen.");
             session.setAttribute("toastType", "success");
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the hoan tat: " + error);
+            session.setAttribute("toastMessage", error);
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
     }
 
-    private void handleFinalReject(HttpServletRequest request, HttpServletResponse response, User user)
+    private void handleDestReject(HttpServletRequest request, HttpServletResponse response, User user)
             throws ServletException, IOException {
         int id = parseInt(request.getParameter("id"), 0);
-        String note = request.getParameter("managerNote");
+        if (id <= 0) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
+        Transfer t = transferDAO.findById(id);
+        if (t == null) {
+            response.sendRedirect(request.getContextPath() + "/transfers");
+            return;
+        }
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(request.getSession(false));
+        if (scopedWarehouseId != t.getDestWarehouseId()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+        String note = request.getParameter("destNote");
         if (note != null) {
             note = note.trim();
+            if (note.isEmpty()) {
+                note = null;
+            }
         }
-        if (note == null || note.isEmpty()) {
+        if (note == null) {
             HttpSession session = request.getSession();
             session.setAttribute("toastMessage", "Vui long nhap ly do tu choi");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
         }
-        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.reject(id, user.getId(), "manager", note);
+        boolean ok = transferDAO.destReject(id, user.getId(), note);
         if (ok) {
             ActivityLog log = new ActivityLog();
             log.setUserId(user.getId());
             log.setEntityType("transfer");
-            log.setAction("MANAGER_REJECT_R2");
+            log.setAction("DEST_REJECT");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("Manager tu choi lan 2: " + note);
+            log.setDetails("Kho dich tu choi: " + note);
             activityLogDAO.insert(log);
-
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "Quan ly tu choi phieu luan chuyen (xac nhan cuoi)",
-                    "Phieu " + t.getTransferCode() + " bi Manager tu choi o buoc xac nhan cuoi. Ly do: " + note,
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
 
             HttpSession session = request.getSession();
             session.setAttribute("toastMessage", "Da tu choi phieu");
             session.setAttribute("toastType", "success");
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the tu choi phieu");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-    }
-
-    private void handleManagerRequestRevision(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        String note = request.getParameter("managerNote");
-        if (note != null) {
-            note = note.trim();
-        }
-        if (note == null || note.isEmpty()) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Vui long nhap ly do yeu cau chinh sua");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.requestRevisionByManager(id, user.getId(), note);
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("REQUEST_REVISION");
-            log.setEntityId(id);
-            log.setEntityName(t.getTransferCode());
-            log.setDetails("Manager yeu cau chinh sua (vong 1): " + note);
-            activityLogDAO.insert(log);
-
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "Quan ly yeu cau chinh sua phieu luan chuyen",
-                    "Phieu " + t.getTransferCode() + " bi Manager yeu cau chinh sua. Ly do: " + note,
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da gui yeu cau chinh sua cho nhan vien");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the yeu cau chinh sua (trang thai khong hop le)");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-    }
-
-    private void handleCeoRequestRevision(HttpServletRequest request, HttpServletResponse response, User user)
-            throws ServletException, IOException {
-        int id = parseInt(request.getParameter("id"), 0);
-        String note = request.getParameter("ceoNote");
-        if (note != null) {
-            note = note.trim();
-        }
-        if (note == null || note.isEmpty()) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Vui long nhap ly do yeu cau chinh sua");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (note.length() > MAX_REJECT_NOTE_LENGTH) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Ly do qua dai (toi da " + MAX_REJECT_NOTE_LENGTH + " ky tu)");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
-            return;
-        }
-        if (id <= 0) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        Transfer t = transferDAO.findById(id);
-        if (t == null) {
-            response.sendRedirect(request.getContextPath() + "/transfers");
-            return;
-        }
-        boolean ok = transferDAO.requestRevisionByCeo(id, user.getId(), note);
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("transfer");
-            log.setAction("REQUEST_REVISION");
-            log.setEntityId(id);
-            log.setEntityName(t.getTransferCode());
-            log.setDetails("CEO yeu cau chinh sua: " + note);
-            activityLogDAO.insert(log);
-
-            NotificationService.send(
-                    t.getCreatedBy(),
-                    "CEO yeu cau chinh sua phieu luan chuyen",
-                    "Phieu " + t.getTransferCode() + " bi CEO yeu cau chinh sua. Ly do: " + note,
-                    request.getContextPath() + "/transfers?action=detail&id=" + id,
-                    "transfer",
-                    id
-            );
-
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da gui yeu cau chinh sua cho nhan vien");
-            session.setAttribute("toastType", "success");
-        } else {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the yeu cau chinh sua (trang thai khong hop le)");
+            session.setAttribute("toastMessage", "Khong the tu choi (trang thai khong hop le)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);

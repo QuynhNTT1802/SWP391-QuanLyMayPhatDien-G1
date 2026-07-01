@@ -4,6 +4,8 @@ import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.StockCardDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.StockCard;
+import com.quanlymayphatdien.g1.entity.Warehouse;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -46,12 +48,23 @@ public class StockCardController extends HttpServlet {
 
     private void listStockCards(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
         Integer warehouseId = parseIntOrNull(request.getParameter("warehouseId"));
         Integer generatorId = parseIntOrNull(request.getParameter("generatorId"));
         String typeFilter = request.getParameter("type");
         String search = request.getParameter("search");
         String fromDate = request.getParameter("fromDate");
         String toDate = request.getParameter("toDate");
+
+        if (scopedWarehouseId > 0) {
+            if (warehouseId != null && warehouseId != scopedWarehouseId) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+            warehouseId = scopedWarehouseId;
+        }
 
         int page = 1;
         int pageSize = 10;
@@ -74,9 +87,21 @@ public class StockCardController extends HttpServlet {
             page = totalPages;
         }
 
-        List<StockCard> list = scDAO.findWithFilters(warehouseId, generatorId, typeFilter, search, fromDate, toDate, page, pageSize);
+List<StockCard> list = scDAO.findWithFilters(warehouseId, generatorId, typeFilter, search, fromDate, toDate, page, pageSize);
         request.setAttribute("stockCards", list);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+
+        List<Warehouse> warehouses;
+        if (scopedWarehouseId > 0) {
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            warehouses = scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList();
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+            if (scoped != null) {
+                request.setAttribute("scopedWarehouseName", scoped.getName());
+            }
+        } else {
+            warehouses = warehouseDAO.findAll();
+        }
+        request.setAttribute("warehouses", warehouses);
         request.setAttribute("generators", generatorDAO.findAll());
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("generatorId", generatorId);
@@ -94,10 +119,17 @@ public class StockCardController extends HttpServlet {
 
     private void viewByGenerator(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
         Integer warehouseId = parseIntOrNull(request.getParameter("warehouseId"));
         Integer generatorId = parseIntOrNull(request.getParameter("generatorId"));
         if (warehouseId == null || generatorId == null) {
             response.sendRedirect(request.getContextPath() + "/stock-card");
+            return;
+        }
+        if (scopedWarehouseId > 0 && warehouseId != scopedWarehouseId) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         String typeFilter = request.getParameter("type");
