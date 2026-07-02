@@ -7,6 +7,12 @@ package com.quanlymayphatdien.g1.controller.report;
 
 import com.quanlymayphatdien.g1.dal.ReportDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
+import com.quanlymayphatdien.g1.entity.InventoryCheckReportItem;
+import com.quanlymayphatdien.g1.entity.InventoryReportItem;
+import com.quanlymayphatdien.g1.entity.PurchaseOrder;
+import com.quanlymayphatdien.g1.entity.Receipt;
+import com.quanlymayphatdien.g1.entity.SaleOrder;
+import com.quanlymayphatdien.g1.utils.ReportExcelSupport;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -15,7 +21,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.OutputStream;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  *
