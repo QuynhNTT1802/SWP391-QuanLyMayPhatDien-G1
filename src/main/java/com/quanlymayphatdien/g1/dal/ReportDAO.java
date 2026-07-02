@@ -178,4 +178,33 @@ public class ReportDAO extends DBContext{
         }
         return countWithParams(sql, params);
     }
+    
+    public List<InventoryCheckReportItem> getInventoryCheckReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
+                + " ic.status, u.name AS created_by_name,"
+                + " ic.started_at, ic.completed_at,"
+                + " icd.generator_id, g.model AS generator_model,"
+                + " icd.system_quantity, icd.actual_quantity,"
+                + " (COALESCE(icd.system_quantity, 0) - COALESCE(icd.actual_quantity, 0)) AS discrepancy"
+                + " FROM inventory_check ic"
+                + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
+                + " JOIN generator g ON icd.generator_id = g.id"
+                + " LEFT JOIN warehouse w ON ic.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN user u ON ic.created_by = u.id"
+                + " WHERE DATE(ic.created_at) >= ? AND DATE(ic.created_at) <= ?"
+                + (warehouseId != null ? " AND ic.warehouse_id = ?" : "")
+                + " ORDER BY ic.created_at DESC, ic.check_code"
+                + " LIMIT ? OFFSET ?";
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        return queryInventoryCheckReport(sql, params);
+    }
 }
