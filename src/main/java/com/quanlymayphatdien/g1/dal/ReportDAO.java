@@ -233,4 +233,19 @@ public class ReportDAO extends DBContext{
         }
         return queryInventoryCheckReport(sql, params);
     }
+    
+    public int countPurchaseReport(Integer warehouseId, int month, int year) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT COUNT(*) FROM purchase_order po"
+                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
+                + (warehouseId != null ? " AND po.warehouse_id = ?" : "");
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        return countWithParams(sql, params);
+    }
 }
