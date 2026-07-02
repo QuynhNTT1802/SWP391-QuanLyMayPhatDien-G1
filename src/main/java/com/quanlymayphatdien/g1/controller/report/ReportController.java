@@ -5,6 +5,8 @@
 
 package com.quanlymayphatdien.g1.controller.report;
 
+import com.quanlymayphatdien.g1.dal.ReportDAO;
+import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -12,6 +14,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import java.util.Set;
 
 /**
  *
@@ -19,65 +23,150 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @WebServlet(name="ReportController", urlPatterns={"/reports"})
 public class ReportController extends HttpServlet {
-   
-    /** 
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code> methods.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ReportController</title>");  
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ReportController at " + request.getContextPath () + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+    private final ReportDAO reportDAO = new ReportDAO();
+    private final WarehouseDAO warehouseDAO = new WarehouseDAO();
+    
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            resp.sendRedirect(req.getContextPath() + "/authen?action=login");
+            return;
         }
-    } 
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /** 
-     * Handles the HTTP <code>GET</code> method.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-        processRequest(request, response);
-    } 
+        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+        if (perms == null || !perms.contains("reports.view")) {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
 
-    /** 
-     * Handles the HTTP <code>POST</code> method.
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-    throws ServletException, IOException {
-        processRequest(request, response);
+        String action = req.getParameter("action");
+        if ("export".equals(action)) {
+            if (perms == null || !perms.contains("reports.export")) {
+                resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+            handleExport(req, resp);
+        } else {
+            showReport(req, resp);
+        }
     }
+    
+    private void showReport(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        String type = req.getParameter("type");
+        if (type == null || type.isEmpty()) {
+            type = "inventory";
+        }
 
-    /** 
-     * Returns a short description of the servlet.
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try {
+            month = Integer.parseInt(req.getParameter("month"));
+        } catch (Exception e) {
+        }
+        try {
+            year = Integer.parseInt(req.getParameter("year"));
+        } catch (Exception e) {
+        }
 
+        Integer warehouseId = null;
+        try {
+            warehouseId = Integer.parseInt(req.getParameter("warehouseId"));
+        } catch (Exception e) {
+        }
+
+        int page = 1, pageSize = 15;
+        try {
+            page = Integer.parseInt(req.getParameter("page"));
+            if (page < 1) {
+                page = 1;
+            }
+        } catch (Exception e) {
+        }
+        try {
+            pageSize = Integer.parseInt(req.getParameter("pageSize"));
+        } catch (Exception e) {
+        }
+
+        int totalItems = 0;
+        int totalPages = 1;
+
+        String view = "/view/report/report.jsp";
+        req.setAttribute("reportType", type);
+        req.setAttribute("month", month);
+        req.setAttribute("year", year);
+        req.setAttribute("selWarehouseId", warehouseId);
+        req.setAttribute("warehouses", warehouseDAO.findAll());
+
+        switch (type) {
+            case "inventory": {
+                totalItems = reportDAO.countInventoryReport(warehouseId, month, year);
+                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                List<InventoryReportItem> items = reportDAO.getInventoryReport(warehouseId, month, year, page, pageSize);
+                req.setAttribute("inventoryItems", items);
+                break;
+            }
+            case "import": {
+                totalItems = reportDAO.countImportReport(warehouseId, month, year);
+                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                List<Receipt> items = reportDAO.getImportReport(warehouseId, month, year, page, pageSize);
+                req.setAttribute("receiptItems", items);
+                break;
+            }
+            case "export": {
+                totalItems = reportDAO.countExportReport(warehouseId, month, year);
+                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                List<Receipt> items = reportDAO.getExportReport(warehouseId, month, year, page, pageSize);
+                req.setAttribute("receiptItems", items);
+                break;
+            }
+            case "inventory-check": {
+                totalItems = reportDAO.countInventoryCheckReport(warehouseId, month, year);
+                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                List<InventoryCheckReportItem> items = reportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize);
+                req.setAttribute("checkItems", items);
+                break;
+            }
+            case "purchase": {
+                totalItems = reportDAO.countPurchaseReport(warehouseId, month, year);
+                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                List<PurchaseOrder> items = reportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize);
+                req.setAttribute("poItems", items);
+                break;
+            }
+            case "sales": {
+                totalItems = reportDAO.countSalesReport(month, year);
+                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+                if (page > totalPages) {
+                    page = totalPages;
+                }
+                List<SaleOrder> items = reportDAO.getSalesReport(month, year, page, pageSize);
+                req.setAttribute("saleItems", items);
+                break;
+            }
+        }
+
+        req.setAttribute("currentPage", page);
+        req.setAttribute("totalPages", totalPages);
+        req.setAttribute("totalItems", totalItems);
+
+        req.getRequestDispatcher(view).forward(req, resp);
+    }
 }
