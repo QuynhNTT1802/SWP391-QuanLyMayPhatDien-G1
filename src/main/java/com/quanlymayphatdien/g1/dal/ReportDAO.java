@@ -285,4 +285,8 @@ public class ReportDAO extends DBContext{
     public List<SaleOrder> getSalesReport(int month, int year, int page, int pageSize) {
         return querySaleOrders(buildSalesSql(false), month, year, page, pageSize);
     }
+    
+    public List<SaleOrder> getAllSalesReport(int month, int year) {
+        return querySaleOrders(buildSalesSql(true), month, year, -1, -1);
+    }
 }
