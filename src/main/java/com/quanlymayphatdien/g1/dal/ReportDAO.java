@@ -162,4 +162,20 @@ public class ReportDAO extends DBContext{
         String order = " ORDER BY r.created_at DESC";
         return select + from + where + order;
     }
+    
+    public int countInventoryCheckReport(Integer warehouseId, int month, int year) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT COUNT(*) FROM inventory_check ic"
+                + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
+                + " WHERE DATE(ic.created_at) >= ? AND DATE(ic.created_at) <= ?"
+                + (warehouseId != null ? " AND ic.warehouse_id = ?" : "");
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        return countWithParams(sql, params);
+    }
 }
