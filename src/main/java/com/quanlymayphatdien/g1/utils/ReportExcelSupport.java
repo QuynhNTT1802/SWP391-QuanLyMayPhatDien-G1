@@ -311,4 +311,30 @@ public class ReportExcelSupport {
 
         rowNum++;
     }
+    
+    private static CellStyle createHeaderStyle(XSSFWorkbook wb) {
+        XSSFFont font = wb.createFont();
+        font.setFontName("Times New Roman");
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        font.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+
+        CellStyle style = wb.createCellStyle();
+        style.setFont(font);
+        style.setFillForegroundColor(HEADER_BG);
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setBorderBottom(BorderStyle.THIN);
+        return style;
+    }
+
+    private static CellStyle createDataStyle(XSSFWorkbook wb) {
+        XSSFFont font = wb.createFont();
+        font.setFontName("Times New Roman");
+        font.setFontHeightInPoints((short) 11);
+
+        CellStyle style = wb.createCellStyle();
+        style.setFont(font);
+        return style;
+    }
 }
