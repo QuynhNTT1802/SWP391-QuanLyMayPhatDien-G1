@@ -205,10 +205,6 @@ public class GeneratorManagementController extends HttpServlet {
         request.setAttribute("conditions", catDAO.findByType("condition"));
         request.setAttribute("origins", catDAO.findByType("origin"));
 
-        request.setAttribute("prefillModel", request.getParameter("prefillModel"));
-        request.setAttribute("returnUrl", request.getParameter("returnUrl"));
-        request.setAttribute("rowStt", request.getParameter("rowStt"));
-
         request.getRequestDispatcher("/view/generator/generator-create.jsp").forward(request, response);
     }
 
@@ -262,25 +258,6 @@ public class GeneratorManagementController extends HttpServlet {
 
                 String details = "Tạo máy phát điện: " + model.trim() + ", Công suất: " + powerStr + "kVA";
                 logActivity(request, "generator", newId, model.trim(), "CREATE", details);
-
-                String returnUrl = request.getParameter("returnUrl");
-                if (returnUrl != null && !returnUrl.isEmpty()
-                        && (returnUrl.contains("/proposal")
-                        || returnUrl.contains("importConfirm"))) {
-                    String separator = (returnUrl.contains("?")
-                            || returnUrl.contains("%3F")
-                            || returnUrl.contains("%3f")) ? "&" : "?";
-                    String rowStt = request.getParameter("rowStt");
-                    StringBuilder redirectUrl = new StringBuilder(returnUrl)
-                            .append(separator)
-                            .append("newGeneratorId=").append(newId)
-                            .append("&newGeneratorModel=").append(java.net.URLEncoder.encode(model.trim(), "UTF-8"));
-                    if (rowStt != null && !rowStt.isEmpty()) {
-                        redirectUrl.append("&rowStt=").append(java.net.URLEncoder.encode(rowStt, "UTF-8"));
-                    }
-                    response.sendRedirect(redirectUrl.toString());
-                    return;
-                }
             } else {
                 request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
             }

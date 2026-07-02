@@ -79,7 +79,6 @@
                                     <th>Khách hàng</th>
                                     <th>Ngày duyệt</th>
                                     <th>Tổng tiền</th>
-                                    <th>Chi tiết</th>
                                     <th class="col-actions">Thao tác</th>
                                 </tr>
                             </thead>
@@ -91,12 +90,6 @@
                                         <td><fmt:formatDate value="${o.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td style="font-weight:600;color:var(--accent);">
                                             <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="₫"/>
-                                        </td>
-                                        <td>
-                                            <a href="${pageContext.request.contextPath}/order?action=detail&id=${o.orderId}" class="btn" style="font-size:12px;padding:4px 10px;" title="Xem chi tiết đơn hàng">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                Chi tiết
-                                            </a>
                                         </td>
                                         <td class="col-actions">
                                             <a href="${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}" class="btn btn-primary" style="font-size:12px;padding:4px 10px;">

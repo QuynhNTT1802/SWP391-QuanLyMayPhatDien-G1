@@ -218,9 +218,13 @@
 
                     <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
                         <a class="btn" href="${pageContext.request.contextPath}/transfers">Huỷ bỏ</a>
-                        <button type="button" class="btn btn-primary" onclick="submitForm('create')">
+                        <button type="button" class="btn" onclick="submitForm('create')">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                            Lưu phiếu (DRAFT)
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="submitForm('create_and_submit')">
                             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                            Tạo &amp; Gửi CEO duyệt
+                            Tạo &amp; Gửi duyệt (Manager)
                         </button>
                     </div>
                 </form>

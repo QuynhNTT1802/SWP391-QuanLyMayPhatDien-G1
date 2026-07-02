@@ -8,11 +8,10 @@
   var WH_LABEL = { 'HN-01': 'HN-01 H\u00e0 N\u1ed9i', 'HCM-03': 'HCM-03 TP.HCM', 'DN-02': 'DN-02 \u0110\u00e0 N\u1eb5ng', 'ALL': 'To\u00e0n h\u1ec7 th\u1ed1ng' }
   var FIELD_LABEL = {
     name: 'H\u1ecd v\u00e0 t\u00ean', phone: 'S\u1ed1 \u0111i\u1ec7n tho\u1ea1i', address: '\u0110\u1ecba ch\u1ec9', status: 'Tr\u1ea1ng th\u00e1i',
-    role: 'Vai tr\u00f2', warehouse: 'Kho ph\u1ee5 tr\u00e1ch', permissions: 'Ghi \u0111\u00e8 quy\u1ec1n'
+    role: 'Vai tr\u00f2', permissions: 'Ghi \u0111\u00e8 quy\u1ec1n'
   }
 
   var form = document.getElementById('editForm')
-  var whSelect = form.elements['warehouseId']
   function getSelectedRoleName() {
     var sel = document.querySelector('.role-card.selected .role-card-name')
     return sel ? sel.textContent.trim() : ''
@@ -30,10 +29,9 @@
     address: USER.address,
     status: USER.status,
     role: getSelectedRoleName(),
-    warehouse: whSelect ? whSelect.value : '',
     permissions: getPermissionSnapshot()
   }
-  var current = { name: USER.name, phone: USER.phone, address: USER.address, status: USER.status, role: original.role, warehouse: original.warehouse, permissions: original.permissions }
+  var current = { name: USER.name, phone: USER.phone, address: USER.address, status: USER.status, role: original.role, permissions: original.permissions }
 
   ;[].slice.call(document.querySelectorAll('.role-card')).forEach(function (card) {
     card.addEventListener('click', function (e) {
@@ -68,10 +66,6 @@
     var el = form.elements[name]
     if (el) el.addEventListener('input', function () { current[name] = el.value; diffField(name); updateUI() })
   })
-
-  if (whSelect) {
-    whSelect.addEventListener('change', function () { current.warehouse = whSelect.value; updateUI() })
-  }
 
   ;[].slice.call(document.querySelectorAll('input[name^="perOverride_"]')).forEach(function (radio) {
     radio.addEventListener('change', function () {
@@ -161,14 +155,7 @@
   function formatValue(field, value) {
     if (field === 'role') return value || '\u2014'
     if (field === 'status') return STATUS_LABEL[value] || value
-    if (field === 'warehouse') {
-      if (!value) return 'Ch\u01b0a ph\u00e2n kho'
-      if (whSelect) {
-        var opt = whSelect.querySelector('option[value="' + value + '"]')
-        if (opt) return opt.textContent.trim()
-      }
-      return WH_LABEL[value] || value
-    }
+    if (field === 'warehouse') return WH_LABEL[value] || value
     return value || '\u2014'
   }
 

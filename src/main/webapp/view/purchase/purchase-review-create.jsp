@@ -24,8 +24,7 @@
             .agg-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
             .agg-table th, .agg-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; }
             .agg-table th { background: var(--surface-2); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; }
-            .qty-input { width: 80px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--fg); }
-            .qty-input:read-only { background: var(--surface-2); color: var(--muted); cursor: not-allowed; border-style: dashed; }
+            .qty-input { width: 80px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; }
             .note-input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; }
             .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
             .alert { padding: 14px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
@@ -177,7 +176,7 @@
                                                                         <div style="font-size:11px;color:var(--muted);"><c:out value="${d.generatorCode}"/></div></td>
                                                                     <td><c:out value="${d.brandName}"/></td>
                                                                     <td><span class="mono">${d.quantity}</span></td>
-                                                                    <td><input type="number" name="finalQuantity" value="${d.quantity}" min="0" class="qty-input" data-proposed="${d.quantity}" readonly tabindex="-1" title="SL mua cuối = SL đề xuất gốc"/></td>
+                                                                    <td><input type="number" name="finalQuantity" value="${d.quantity}" min="0" class="qty-input" data-proposed="${d.quantity}"/></td>
                                                                     <td>
                                                                         <c:choose>
                                                                             <c:when test="${not empty d.unitPrice}">
@@ -401,20 +400,37 @@
                 if (reviewForm) {
                     reviewForm.addEventListener('submit', function (e) {
                         const missingPriceRows = [];
+                        const noNoteRows = [];
                         let firstErrorRow = null;
                         detailRows.forEach(function (row) {
                             const qtyInp = row.querySelector('input[name="finalQuantity"]');
                             const priceInp = row.querySelector('input[name="unitPrice"]');
+                            const noteInp = row.querySelector('input[name="detailNote"]');
                             if (!qtyInp) return;
+                            const v = parseInt(qtyInp.value, 10) || 0;
+                            const proposed = parseInt(qtyInp.getAttribute('data-proposed'), 10) || 0;
                             const priceVal = priceInp ? priceInp.value.trim() : '';
                             if (!priceVal || parsePrice(priceVal) <= 0) {
                                 missingPriceRows.push(row);
+                                if (!firstErrorRow) firstErrorRow = row;
+                            }
+                            const needWarn = v <= 0 || (proposed > 0 && v < proposed);
+                            if (needWarn && (!noteInp.value || noteInp.value.trim() === '')) {
+                                noNoteRows.push(row);
                                 if (!firstErrorRow) firstErrorRow = row;
                             }
                         });
                         if (missingPriceRows.length > 0) {
                             e.preventDefault();
                             alert('Có ' + missingPriceRows.length + ' dòng máy chưa có đơn giá (ô viền đỏ).\nVui lòng nhập đơn giá trước khi tạo phiếu mua.');
+                            if (firstErrorRow) {
+                                firstErrorRow.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            }
+                            return;
+                        }
+                        if (noNoteRows.length > 0) {
+                            e.preventDefault();
+                            alert('Có ' + noNoteRows.length + ' dòng máy có SL mua cuối = 0 hoặc nhỏ hơn SL đề xuất mà chưa nhập ghi chú.\nVui lòng bổ sung ghi chú cho các dòng này.');
                             if (firstErrorRow) {
                                 firstErrorRow.scrollIntoView({behavior: 'smooth', block: 'center'});
                             }

@@ -495,39 +495,6 @@ public class GeneratorDAO extends DBContext implements I_DAO<Generator> {
         return list;
     }
 
-    public List<Generator> findByModelLike(String keyword, int limit) {
-        List<Generator> list = new ArrayList<>();
-        if (keyword == null || keyword.trim().isEmpty()) {
-            List<Generator> all = findAllActive();
-            int max = Math.min(limit, all.size());
-            for (int i = 0; i < max; i++) {
-                Generator g = all.get(i);
-                g.setCategories(getCategoriesByGeneratorId(g.getId()));
-                list.add(g);
-            }
-            return list;
-        }
-        String sql = "SELECT TOP " + limit + " * FROM generator "
-                + "WHERE LOWER(model) LIKE LOWER(?) AND status = 'active' "
-                + "ORDER BY model";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, "%" + keyword.trim() + "%");
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                Generator g = getFromResultSet(resultSet);
-                g.setCategories(getCategoriesByGeneratorId(g.getId()));
-                list.add(g);
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } finally {
-            closeResources();
-        }
-        return list;
-    }
-
     public List<Generator> findInStockByWarehouse(int warehouseId) {
         List<Generator> list = new ArrayList<>();
         String sql = "SELECT DISTINCT g.* FROM generator g "

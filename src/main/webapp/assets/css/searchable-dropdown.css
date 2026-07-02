@@ -113,20 +113,6 @@
     display: inline-flex;
 }
 
-/* Nut "Tao khach hang moi" duoi o chon KH */
-.cust-newbtn-row {
-    margin-top: 12px;
-}
-.cust-newbtn-row .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.cust-newbtn-row .btn .icon {
-    width: 16px;
-    height: 16px;
-}
-
 /* --- Side panel overlay --- */
 .side-panel-overlay {
     position: fixed;
@@ -251,6 +237,14 @@
     min-width: 0;
 }
 
+.cust-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
 .cust-card-name {
     font-family: var(--font-ui);
     font-size: 15px;
@@ -266,23 +260,17 @@
     font-size: 12px;
     color: var(--muted);
     display: flex;
-    gap: 4px 14px;
+    gap: 4px 10px;
     flex-wrap: wrap;
     align-items: center;
     line-height: 1.4;
 }
 
-.cust-card-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-}
-.cust-card-meta svg {
-    width: 12px;
-    height: 12px;
-    opacity: 0.6;
-    flex-shrink: 0;
+.cust-card-meta-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .cust-card-icon {
@@ -290,18 +278,30 @@
     opacity: 0;
     transition: 0.2s;
     transform: translateX(-8px);
-    flex-shrink: 0;
 }
 .cust-card:hover .cust-card-icon {
     opacity: 1;
     transform: translateX(0);
 }
-.cust-card-icon svg {
-    width: 20px;
-    height: 20px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
+
+/* --- Badge trang thai --- */
+.cust-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.badge-active {
+    background: #d1fae5;
+    color: #059669;
+}
+.badge-locked {
+    background: var(--danger-soft);
+    color: var(--danger);
 }
 
 /* --- Empty/loading state --- */

@@ -50,18 +50,11 @@
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, serial, ghi chú" autocomplete="off" />
                         </div>
-                        <select class="filter-select" name="warehouseId" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                            <c:choose>
-                                <c:when test="${not empty scopedWarehouseId}">
-                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="">Kho: Tất cả</option>
-                                    <c:forEach var="w" items="${warehouses}">
-                                        <option value="${w.warehouseId}" <c:if test="${warehouseId == w.warehouseId}">selected</c:if>>${w.name}</option>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
+                        <select class="filter-select" name="warehouseId" onchange="this.form.submit()">
+                            <option value="">Kho: Tất cả</option>
+                            <c:forEach var="w" items="${warehouses}">
+                                <option value="${w.warehouseId}" <c:if test="${warehouseId == w.warehouseId}">selected</c:if>>${w.name}</option>
+                            </c:forEach>
                         </select>
                         <select class="filter-select" name="generatorId">
                             <option value="">Sản phẩm: Tất cả</option>
