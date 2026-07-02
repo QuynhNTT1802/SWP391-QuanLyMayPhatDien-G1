@@ -248,4 +248,8 @@ public class ReportDAO extends DBContext{
         }
         return countWithParams(sql, params);
     }
+    
+    public List<PurchaseOrder> getPurchaseReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+        return queryPurchaseOrders(buildPurchaseSql(warehouseId, false), warehouseId, month, year, page, pageSize);
+    }
 }
