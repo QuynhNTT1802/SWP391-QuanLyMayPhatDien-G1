@@ -676,4 +676,29 @@ public class ReportDAO extends DBContext{
         params.add(lastDay);
         return queryFlat(sql, params);
     }
+    
+    private List<Object[]> queryFlat(String sql, List<Object> params) {
+        List<Object[]> result = new ArrayList<>();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            int colCount = resultSet.getMetaData().getColumnCount();
+            while (resultSet.next()) {
+                Object[] row = new Object[colCount];
+                for (int i = 0; i < colCount; i++) {
+                    row[i] = resultSet.getObject(i + 1);
+                }
+                result.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return result;
+    }
 }
