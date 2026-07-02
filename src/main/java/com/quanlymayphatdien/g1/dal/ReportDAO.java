@@ -289,4 +289,17 @@ public class ReportDAO extends DBContext{
     public List<SaleOrder> getAllSalesReport(int month, int year) {
         return querySaleOrders(buildSalesSql(true), month, year, -1, -1);
     }
+    
+    private String buildSalesSql(boolean allRows) {
+        return "SELECT so.*, c.name AS customer_name, u.name AS created_by_name,"
+                + " GROUP_CONCAT(CONCAT(g.model, '|', od.quantity, '|', od.unit_price) SEPARATOR '; ') AS detail_info"
+                + " FROM sale_order so"
+                + " LEFT JOIN customer c ON so.customer_id = c.id"
+                + " LEFT JOIN user u ON so.created_by = u.id"
+                + " LEFT JOIN order_detail od ON od.order_id = so.order_id"
+                + " LEFT JOIN generator g ON od.generator_id = g.id"
+                + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
+                + " GROUP BY so.order_id"
+                + " ORDER BY so.created_at DESC";
+    }
 }
