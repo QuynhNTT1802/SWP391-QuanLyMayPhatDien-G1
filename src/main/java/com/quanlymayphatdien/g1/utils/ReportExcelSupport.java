@@ -253,4 +253,62 @@ public class ReportExcelSupport {
         wb.createSheet(sheetName);
         return wb;
     }
+    
+    private static void addHeader(XSSFWorkbook wb, XSSFSheet sheet, String title,
+            int month, int year, String warehouseName) {
+        XSSFFont titleFont = wb.createFont();
+        titleFont.setFontName("Times New Roman");
+        titleFont.setBold(true);
+        titleFont.setFontHeightInPoints((short) 14);
+
+        XSSFFont infoFont = wb.createFont();
+        infoFont.setFontName("Times New Roman");
+        infoFont.setBold(true);
+        infoFont.setFontHeightInPoints((short) 11);
+        infoFont.setColor(new XSSFColor(new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+
+        CellStyle titleStyle = wb.createCellStyle();
+        titleStyle.setFont(titleFont);
+        titleStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        CellStyle infoStyle = wb.createCellStyle();
+        infoStyle.setFont(infoFont);
+        infoStyle.setFillForegroundColor(HEADER_BG);
+        infoStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        infoStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        int lastCol = sheet.getRow(0) != null ? sheet.getRow(0).getLastCellNum() - 1 : 8;
+        if (lastCol < 1) {
+            lastCol = 8;
+        }
+
+        int rowNum = 0;
+        Row tRow = sheet.createRow(rowNum);
+        tRow.createCell(0).setCellValue("KHO QUẢN LÝ MÁY PHÁT ĐIỆN G1");
+        tRow.getCell(0).setCellStyle(titleStyle);
+        sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, lastCol));
+        rowNum++;
+
+        Row dRow = sheet.createRow(rowNum);
+        dRow.createCell(0).setCellValue("Ngày báo cáo: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        dRow.getCell(0).setCellStyle(infoStyle);
+        sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, lastCol));
+        rowNum++;
+
+        Row pRow = sheet.createRow(rowNum);
+        pRow.createCell(0).setCellValue("Kì báo cáo: Tháng " + month + "/" + year);
+        pRow.getCell(0).setCellStyle(infoStyle);
+        sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, lastCol));
+        rowNum++;
+
+        if (warehouseName != null && !warehouseName.isEmpty()) {
+            Row wRow = sheet.createRow(rowNum);
+            wRow.createCell(0).setCellValue("Kho: " + warehouseName);
+            wRow.getCell(0).setCellStyle(infoStyle);
+            sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, lastCol));
+            rowNum++;
+        }
+
+        rowNum++;
+    }
 }
