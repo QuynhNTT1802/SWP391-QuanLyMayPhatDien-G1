@@ -4,7 +4,12 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
+import com.quanlymayphatdien.g1.entity.InventoryCheckReportItem;
 import com.quanlymayphatdien.g1.entity.InventoryReportItem;
+import com.quanlymayphatdien.g1.entity.PurchaseOrder;
+import com.quanlymayphatdien.g1.entity.Receipt;
+import com.quanlymayphatdien.g1.entity.SaleOrder;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
