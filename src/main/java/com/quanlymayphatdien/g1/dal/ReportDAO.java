@@ -608,4 +608,30 @@ public class ReportDAO extends DBContext{
         }
         return queryFlat(sql, params);
     }
+    
+    public List<Object[]> getExportExcelData(Integer warehouseId, int month, int year) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT r.receipt_code, DATE_FORMAT(r.created_at, '%d/%m/%Y'), w.name,"
+                + " c.name, g.model, i2.serial_number, u.name"
+                + " FROM receipt r"
+                + " JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
+                + " JOIN user u ON r.created_by = u.id"
+                + " LEFT JOIN sale_order so ON r.order_id = so.order_id"
+                + " LEFT JOIN customer c ON so.customer_id = c.id"
+                + " JOIN receipt_detail rd ON rd.receipt_id = r.receipt_id"
+                + " JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
+                + " JOIN generator g ON i2.generator_id = g.id"
+                + " WHERE r.receipt_type = 'EXPORT' AND r.status = 'COMPLETED'"
+                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + " ORDER BY r.created_at DESC";
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        return queryFlat(sql, params);
+    }
 }
