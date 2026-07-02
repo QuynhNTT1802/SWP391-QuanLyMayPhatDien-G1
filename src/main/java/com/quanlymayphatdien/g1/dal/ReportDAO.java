@@ -37,4 +37,11 @@ public class ReportDAO extends DBContext{
     public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
         return queryInventoryReport(buildInventorySql(warehouseId), warehouseId, month, year, page, pageSize);
     }
+    
+    public List<InventoryReportItem> getAllInventoryReport(Integer warehouseId, int month, int year) {
+        return queryInventoryReport(buildInventorySql(warehouseId) + " ORDER BY w.name, g.model",
+                warehouseId, month, year, -1, -1);
+    }
+    
+    
 }
