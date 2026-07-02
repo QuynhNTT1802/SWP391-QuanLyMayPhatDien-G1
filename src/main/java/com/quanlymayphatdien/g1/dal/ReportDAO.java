@@ -302,4 +302,23 @@ public class ReportDAO extends DBContext{
                 + " GROUP BY so.order_id"
                 + " ORDER BY so.created_at DESC";
     }
+    
+    private int countWithParams(String sql, List<Object> params) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
 }
