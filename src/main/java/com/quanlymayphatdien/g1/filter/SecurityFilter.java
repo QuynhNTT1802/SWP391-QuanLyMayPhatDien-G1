@@ -84,17 +84,13 @@ public class SecurityFilter implements Filter {
                     Map.of(
                             "create", "receipts.create",
                             "edit", "receipts.create",
-                            "update", "receipts.create",
-                            "approve", "receipts.approve",
-                            "reject", "receipts.reject"),
+                            "update", "receipts.create"),
                     "receipts.view"),
             Rule.action("/export-receipt",
                     Map.of(
                             "create", "receipts.create",
                             "edit", "receipts.create",
-                            "update", "receipts.create",
-                            "approve", "receipts.approve",
-                            "reject", "receipts.reject"),
+                            "update", "receipts.create"),
                     "receipts.view"),
             Rule.action("/order",
                     Map.of(
@@ -122,7 +118,15 @@ public class SecurityFilter implements Filter {
                             "update", "inventory_check.update",
                             "complete", "inventory_check.complete",
                             "exportReport", "inventory_check.view"),
-                    "inventory_check.view")
+                    "inventory_check.view"),
+            Rule.action("/transfers",
+                    Map.of(
+                            "create", "transfers.create",
+                            "ce_approve", "transfers.approve_ceo",
+                            "ce_reject", "transfers.approve_ceo",
+                            "dest_accept", "transfers.approve_dest",
+                            "dest_reject", "transfers.approve_dest"),
+                    "transfers.view")
     );
 
     @Override
