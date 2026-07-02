@@ -618,7 +618,7 @@
         var whSelect = document.querySelector('select[name="warehouseId"]');
         var whId = whSelect ? whSelect.value : '';
         if (!whId) {
-            var whHidden = document.querySelector('form#createForm input[name="warehouseId"]');
+            var whHidden = document.querySelector('input[name="warehouseId"][type="hidden"]');
             if (whHidden) whId = whHidden.value;
         }
         if (!whId) {
