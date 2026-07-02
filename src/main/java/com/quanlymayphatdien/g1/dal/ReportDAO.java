@@ -321,4 +321,55 @@ public class ReportDAO extends DBContext{
         }
         return 0;
     }
+    
+    private List<InventoryReportItem> queryInventoryReport(String baseSql, Integer warehouseId,
+            int month, int year, int page, int pageSize) {
+        List<InventoryReportItem> list = new ArrayList<>();
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String prevMonth = LocalDate.of(year, month, 1).minusMonths(1).toString();
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        StringBuilder sql = new StringBuilder(baseSql);
+        List<Object> params = new ArrayList<>();
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+            params.add(warehouseId);
+        }
+        params.add(prevMonth);
+        params.add(firstDay);
+        params.add(lastDay);
+        params.add(firstDay);
+        params.add(lastDay);
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(pageSize);
+            params.add((page - 1) * pageSize);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                InventoryReportItem item = new InventoryReportItem();
+                item.setWarehouseId(resultSet.getInt("warehouse_id"));
+                item.setWarehouseName(resultSet.getString("warehouse_name"));
+                item.setGeneratorId(resultSet.getInt("generator_id"));
+                item.setModel(resultSet.getString("model"));
+                item.setBrand(resultSet.getString("brand"));
+                item.setOpenQuantity(resultSet.getInt("open_qty"));
+                item.setImportQuantity(resultSet.getInt("import_qty"));
+                item.setExportQuantity(resultSet.getInt("export_qty"));
+                item.setCloseQuantity(resultSet.getInt("close_qty"));
+                list.add(item);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 }
