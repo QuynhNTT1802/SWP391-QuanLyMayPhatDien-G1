@@ -73,14 +73,8 @@
                                 Chỉnh sửa
                             </a>
                         </c:if>
-                        <c:if test="${receipt.status == 'DRAFT' && isOwner}">
-                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail('discard')">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                Huỷ phiếu nháp
-                            </button>
-                        </c:if>
                         <c:if test="${receipt.status == 'PENDING' && isOwner}">
-                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail('cancel')">
+                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail()">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                 Rút phiếu
                             </button>
@@ -527,27 +521,20 @@
             });
 
             var detailCancelLock = false;
-            function confirmCancelDetail(mode) {
+            function confirmCancelDetail() {
                 var ctx = window.APP_CTX;
                 var receiptId = ${receipt.receiptId};
                 if (!receiptId || !window.ExportScannerActions) return;
                 if (detailCancelLock) return;
-                var title = mode === 'discard' ? 'Huỷ phiếu nháp' : 'Rút phiếu đang chờ duyệt';
-                var body = mode === 'discard'
-                    ? 'Phiếu nháp sẽ bị huỷ và tất cả serial sẽ được trả về kho. Hành động này không thể hoàn tác.'
-                    : 'Phiếu đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt sẽ nhận thông báo.';
-                var label = mode === 'discard' ? 'Huỷ phiếu nháp' : 'Rút phiếu';
                 window.ExportScannerActions.confirmAction({
                     modalId: 'cancelDetailModal',
-                    title: title,
-                    body: body,
-                    confirmLabel: label,
+                    title: 'Rút phiếu đang chờ duyệt',
+                    body: 'Phiếu đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt sẽ nhận thông báo.',
+                    confirmLabel: 'Rút phiếu',
                     danger: true
                 }).then(function () {
                     detailCancelLock = true;
-                    return (mode === 'discard'
-                            ? window.ExportScannerActions.discardDraft(receiptId)
-                            : window.ExportScannerActions.cancelPending(receiptId));
+                    return window.ExportScannerActions.cancelPending(receiptId);
                 }).then(function (data) {
                     detailCancelLock = false;
                     if (!data || !data.success) {
