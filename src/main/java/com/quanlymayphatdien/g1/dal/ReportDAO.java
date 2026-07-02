@@ -102,4 +102,8 @@ public class ReportDAO extends DBContext{
     public List<Receipt> getImportReport(Integer warehouseId, int month, int year, int page, int pageSize) {
         return queryReceipts(buildReceiptSql("IMPORT", warehouseId, false), warehouseId, month, year, page, pageSize);
     }
+    
+    public List<Receipt> getAllImportReport(Integer warehouseId, int month, int year) {
+        return queryReceipts(buildReceiptSql("IMPORT", warehouseId, true), warehouseId, month, year, -1, -1);
+    }
 }
