@@ -114,4 +114,21 @@ public class ReportDAO extends DBContext{
     public List<Receipt> getAllExportReport(Integer warehouseId, int month, int year) {
         return queryReceipts(buildReceiptSql("EXPORT", warehouseId, true), warehouseId, month, year, -1, -1);
     }
+    
+    private int countReceiptByType(String type, Integer warehouseId, int month, int year) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT COUNT(*) FROM receipt r"
+                + " WHERE r.receipt_type = ? AND r.status = 'COMPLETED'"
+                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "");
+        List<Object> params = new ArrayList<>();
+        params.add(type);
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        return countWithParams(sql, params);
+    }
 }
