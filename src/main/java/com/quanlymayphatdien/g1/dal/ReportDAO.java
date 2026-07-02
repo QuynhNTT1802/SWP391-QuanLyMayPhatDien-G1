@@ -529,4 +529,54 @@ public class ReportDAO extends DBContext{
         }
         return list;
     }
+    
+    private List<SaleOrder> querySaleOrders(String baseSql, int month, int year, int page, int pageSize) {
+        List<SaleOrder> list = new ArrayList<>();
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        StringBuilder sql = new StringBuilder(baseSql);
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(pageSize);
+            params.add((page - 1) * pageSize);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                SaleOrder so = new SaleOrder();
+                so.setOrderId(resultSet.getInt("order_id"));
+                so.setOrderCode(resultSet.getString("order_code"));
+                so.setCustomerId(resultSet.getInt("customer_id"));
+                so.setCreatedByName(resultSet.getString("created_by_name"));
+                so.setStatus(resultSet.getString("status"));
+                so.setTotalAmount(resultSet.getDouble("total_amount"));
+                if (resultSet.getTimestamp("created_at") != null) {
+                    so.setCreatedAt(resultSet.getTimestamp("created_at"));
+                }
+                if (resultSet.getTimestamp("order_date") != null) {
+                    so.setOrderDate(resultSet.getTimestamp("order_date"));
+                }
+                try {
+                    com.quanlymayphatdien.g1.entity.Customer c = new com.quanlymayphatdien.g1.entity.Customer();
+                    c.setName(resultSet.getString("customer_name"));
+                    so.setCustomer(c);
+                } catch (Exception e) {
+                }
+                list.add(so);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 }
