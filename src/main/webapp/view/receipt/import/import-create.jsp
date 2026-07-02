@@ -103,10 +103,6 @@
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <a class="btn" href="${pageContext.request.contextPath}/import-receipt">Huỷ</a>
-                        <button type="submit" name="submitMode" value="draft" form="receiptForm" class="btn" title="Lưu nháp để chỉnh sửa tiếp">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            Lưu nháp
-                        </button>
                         <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                             Gửi phiếu
@@ -648,10 +644,6 @@
 
     function validateReceiptForm() {
         var submitter = (typeof event !== 'undefined' && event && event.submitter) ? event.submitter : null;
-        var isDraft = submitter && submitter.value === 'draft';
-        if (isDraft) {
-            return true;
-        }
         var valid = true;
         var firstInvalid = null;
         var isPoMode = !!document.querySelector('tr.po-locked-row');
@@ -838,7 +830,7 @@
 
     function submitImportConfirm() {
         if (document.querySelector('tr.po-locked-row')) {
-            toast('Đang ở chế độ PO, hãy dùng nút Lưu nháp hoặc Gửi phiếu.', 'info');
+            toast('Đang ở chế độ PO, hãy dùng nút Gửi phiếu.', 'info');
             return;
         }
         var checkedCount = document.querySelectorAll('.excel-row-cb:checked').length;

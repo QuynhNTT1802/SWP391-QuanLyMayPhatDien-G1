@@ -29,7 +29,7 @@ public class DBContext {
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
+    }s
 
     public void closeResources() {
         try {
