@@ -58,8 +58,6 @@ public class CategoryController extends HttpServlet {
         TYPE_LABELS.put("customer_type", "Loại khách hàng");
         TYPE_LABELS.put("order_status", "Trạng thái đơn");
         TYPE_LABELS.put("liquidation_reason", "Lý do thanh lý");
-        TYPE_LABELS.put("manager_reject_reason", "Lý do quản lý từ chối");
-        TYPE_LABELS.put("manager_request_edit_reason", "Lý do quản lý yêu cầu sửa");
         TYPE_LABELS.put("ceo_reject_reason", "Lý do CEO từ chối");
         TYPE_LABELS.put("ceo_request_edit_reason", "Lý do CEO yêu cầu sửa");
     }
