@@ -90,4 +90,8 @@ public class ReportDAO extends DBContext{
                 + "  GROUP BY warehouse_id, generator_id"
                 + " ) exp_t ON exp_t.warehouse_id = t.warehouse_id AND exp_t.generator_id = t.generator_id";
     }
+    
+    public int countImportReport(Integer warehouseId, int month, int year) {
+        return countReceiptByType("IMPORT", warehouseId, month, year);
+    }
 }
