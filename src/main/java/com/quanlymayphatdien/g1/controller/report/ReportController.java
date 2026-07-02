@@ -169,4 +169,87 @@ public class ReportController extends HttpServlet {
 
         req.getRequestDispatcher(view).forward(req, resp);
     }
+    
+    private void handleExport(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+        String type = req.getParameter("type");
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try {
+            month = Integer.parseInt(req.getParameter("month"));
+        } catch (Exception e) {
+        }
+        try {
+            year = Integer.parseInt(req.getParameter("year"));
+        } catch (Exception e) {
+        }
+
+        Integer warehouseId = null;
+        try {
+            warehouseId = Integer.parseInt(req.getParameter("warehouseId"));
+        } catch (Exception e) {
+        }
+
+        String warehouseName = "";
+        if (warehouseId != null) {
+            var wh = warehouseDAO.findById(warehouseId);
+            if (wh != null) {
+                warehouseName = wh.getName();
+            }
+        }
+
+        XSSFWorkbook workbook = null;
+        String filename = "BaoCao.xlsx";
+
+        switch (type) {
+            case "inventory": {
+                var data = reportDAO.getAllInventoryReport(warehouseId, month, year);
+                workbook = ReportExcelSupport.exportInventory(data, month, year, warehouseName);
+                filename = "BaoCaoTonKho_T" + month + "_" + year + ".xlsx";
+                break;
+            }
+            case "import": {
+                var data = reportDAO.getImportExcelData(warehouseId, month, year);
+                workbook = ReportExcelSupport.exportImport(data, month, year, warehouseName);
+                filename = "BaoCaoNhap_T" + month + "_" + year + ".xlsx";
+                break;
+            }
+            case "export": {
+                var data = reportDAO.getExportExcelData(warehouseId, month, year);
+                workbook = ReportExcelSupport.exportExport(data, month, year, warehouseName);
+                filename = "BaoCaoXuat_T" + month + "_" + year + ".xlsx";
+                break;
+            }
+            case "inventory-check": {
+                var data = reportDAO.getAllInventoryCheckReport(warehouseId, month, year);
+                workbook = ReportExcelSupport.exportInventoryCheck(data, month, year, warehouseName);
+                filename = "BaoCaoKiemKe_T" + month + "_" + year + ".xlsx";
+                break;
+            }
+            case "purchase": {
+                var data = reportDAO.getPurchaseExcelData(warehouseId, month, year);
+                workbook = ReportExcelSupport.exportPurchase(data, month, year, warehouseName);
+                filename = "BaoCaoMua_T" + month + "_" + year + ".xlsx";
+                break;
+            }
+            case "sales": {
+                var data = reportDAO.getSalesExcelData(month, year);
+                workbook = ReportExcelSupport.exportSales(data, month, year);
+                filename = "BaoCaoBan_T" + month + "_" + year + ".xlsx";
+                break;
+            }
+        }
+
+        if (workbook == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        resp.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        resp.setHeader("Content-Disposition", "attachment; filename=" + filename);
+        try (OutputStream out = resp.getOutputStream()) {
+            workbook.write(out);
+        }
+        workbook.close();
+    }
 }
