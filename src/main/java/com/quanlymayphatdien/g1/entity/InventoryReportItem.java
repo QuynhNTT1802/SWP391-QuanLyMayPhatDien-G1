@@ -14,80 +14,80 @@ public class InventoryReportItem {
     private int generatorId;
     private String model;
     private String brand;
-    private int openQty;
-    private int importQty;
-    private int exportQty;
-    private int closeQty;
+    private int openQuantity;
+    private int importQuantity;
+    private int exportQuantity;
+    private int closeQuantity;
 
     public int getWarehouseId() {
         return warehouseId;
-    }
-
-    public void setWarehouseId(int v) {
-        warehouseId = v;
     }
 
     public String getWarehouseName() {
         return warehouseName;
     }
 
-    public void setWarehouseName(String v) {
-        warehouseName = v;
-    }
-
     public int getGeneratorId() {
         return generatorId;
-    }
-
-    public void setGeneratorId(int v) {
-        generatorId = v;
     }
 
     public String getModel() {
         return model;
     }
 
-    public void setModel(String v) {
-        model = v;
-    }
-
     public String getBrand() {
         return brand;
     }
 
-    public void setBrand(String v) {
-        brand = v;
+    public int getOpenQuantity() {
+        return openQuantity;
     }
 
-    public int getOpenQty() {
-        return openQty;
+    public int getImportQuantity() {
+        return importQuantity;
     }
 
-    public void setOpenQty(int v) {
-        openQty = v;
+    public int getExportQuantity() {
+        return exportQuantity;
     }
 
-    public int getImportQty() {
-        return importQty;
+    public int getCloseQuantity() {
+        return closeQuantity;
     }
 
-    public void setImportQty(int v) {
-        importQty = v;
+    public void setWarehouseId(int warehouseId) {
+        this.warehouseId = warehouseId;
     }
 
-    public int getExportQty() {
-        return exportQty;
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
     }
 
-    public void setExportQty(int v) {
-        exportQty = v;
+    public void setGeneratorId(int generatorId) {
+        this.generatorId = generatorId;
     }
 
-    public int getCloseQty() {
-        return closeQty;
+    public void setModel(String model) {
+        this.model = model;
     }
 
-    public void setCloseQty(int v) {
-        closeQty = v;
+    public void setBrand(String brand) {
+        this.brand = brand;
     }
+
+    public void setOpenQuantity(int openQuantity) {
+        this.openQuantity = openQuantity;
+    }
+
+    public void setImportQuantity(int importQuantity) {
+        this.importQuantity = importQuantity;
+    }
+
+    public void setExportQuantity(int exportQuantity) {
+        this.exportQuantity = exportQuantity;
+    }
+
+    public void setCloseQuantity(int closeQuantity) {
+        this.closeQuantity = closeQuantity;
+    }    
 }
