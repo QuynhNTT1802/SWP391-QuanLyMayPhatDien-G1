@@ -281,4 +281,8 @@ public class ReportDAO extends DBContext{
         params.add(lastDay);
         return countWithParams(sql, params);
     }
+    
+    public List<SaleOrder> getSalesReport(int month, int year, int page, int pageSize) {
+        return querySaleOrders(buildSalesSql(false), month, year, page, pageSize);
+    }
 }
