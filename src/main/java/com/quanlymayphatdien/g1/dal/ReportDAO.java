@@ -372,4 +372,42 @@ public class ReportDAO extends DBContext{
         }
         return list;
     }
+    
+    private List<InventoryCheckReportItem> queryInventoryCheckReport(String sql, List<Object> params) {
+        List<InventoryCheckReportItem> list = new ArrayList<>();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                InventoryCheckReportItem item = new InventoryCheckReportItem();
+                item.setCheckId(resultSet.getInt("check_id"));
+                item.setCheckCode(resultSet.getString("check_code"));
+                item.setWarehouseId(resultSet.getInt("warehouse_id"));
+                item.setWarehouseName(resultSet.getString("warehouse_name"));
+                item.setStatus(resultSet.getString("status"));
+                item.setCreatedByName(resultSet.getString("created_by_name"));
+                if (resultSet.getTimestamp("started_at") != null) {
+                    item.setStartedAt(resultSet.getTimestamp("started_at").toLocalDateTime());
+                }
+                if (resultSet.getTimestamp("completed_at") != null) {
+                    item.setCompletedAt(resultSet.getTimestamp("completed_at").toLocalDateTime());
+                }
+                item.setGeneratorId(resultSet.getInt("generator_id"));
+                item.setGeneratorModel(resultSet.getString("generator_model"));
+                item.setSystemQuantity(resultSet.getInt("system_quantity"));
+                item.setActualQuantity(resultSet.getInt("actual_quantity"));
+                item.setDiscrepancy(resultSet.getInt("discrepancy"));
+                list.add(item);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 }
