@@ -4,6 +4,7 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
+import com.quanlymayphatdien.g1.entity.InventoryReportItem;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,5 +32,9 @@ public class ReportDAO extends DBContext{
             params.add(warehouseId);
         }
         return countWithParams(sql, params);
+    }
+    
+    public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+        return queryInventoryReport(buildInventorySql(warehouseId), warehouseId, month, year, page, pageSize);
     }
 }
