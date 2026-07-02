@@ -131,4 +131,35 @@ public class ReportDAO extends DBContext{
         }
         return countWithParams(sql, params);
     }
+    
+    private String buildReceiptSql(String type, Integer warehouseId, boolean allRows) {
+        String select = "SELECT r.*, w.name AS warehouse_name, u.name AS created_by_name,";
+        String from = " FROM receipt r"
+                + " LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN user u ON r.created_by = u.id";
+        String groupBy = "";
+        if ("IMPORT".equals(type)) {
+            select += " po.po_code AS purchase_order_code,"
+                    + " (SELECT GROUP_CONCAT(CONCAT(g.model, '|', i2.serial_number) SEPARATOR '; ')"
+                    + "  FROM receipt_detail rd"
+                    + "  JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
+                    + "  JOIN generator g ON i2.generator_id = g.id"
+                    + "  WHERE rd.receipt_id = r.receipt_id) AS detail_info";
+            from += " LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id";
+        } else {
+            select += " so.order_code, c.name AS customer_name,"
+                    + " (SELECT GROUP_CONCAT(CONCAT(g.model, '|', i2.serial_number) SEPARATOR '; ')"
+                    + "  FROM receipt_detail rd"
+                    + "  JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
+                    + "  JOIN generator g ON i2.generator_id = g.id"
+                    + "  WHERE rd.receipt_id = r.receipt_id) AS detail_info";
+            from += " LEFT JOIN sale_order so ON r.order_id = so.order_id"
+                    + " LEFT JOIN customer c ON so.customer_id = c.id";
+        }
+        String where = " WHERE r.receipt_type = '" + type + "' AND r.status = 'COMPLETED'"
+                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "");
+        String order = " ORDER BY r.created_at DESC";
+        return select + from + where + order;
+    }
 }
