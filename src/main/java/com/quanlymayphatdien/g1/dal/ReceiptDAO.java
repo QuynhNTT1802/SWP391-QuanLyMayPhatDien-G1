@@ -205,8 +205,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id,\n"
-                + "    warehouse_id, created_by, status, note, reason_id, created_at)\n"
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "    warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at)\n"
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -232,6 +232,16 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 statement.setNull(9, Types.INTEGER);
             }
             statement.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                statement.setInt(11, r.getApprovedBy());
+            } else {
+                statement.setNull(11, Types.INTEGER);
+            }
+            if (r.getApprovedAt() != null) {
+                statement.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+            } else {
+                statement.setNull(12, Types.TIMESTAMP);
+            }
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -254,8 +264,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
-                + "warehouse_id, created_by, status, note, reason_id, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getReceiptCode());
             ps.setString(2, r.getReceiptType());
@@ -279,6 +289,16 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 ps.setNull(9, Types.INTEGER);
             }
             ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                ps.setInt(11, r.getApprovedBy());
+            } else {
+                ps.setNull(11, Types.INTEGER);
+            }
+            if (r.getApprovedAt() != null) {
+                ps.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+            } else {
+                ps.setNull(12, Types.TIMESTAMP);
+            }
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -462,6 +482,100 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Ghi stock_card theo generator cho mot phieu nhap (IMPORT) moi tao.
+     * Moi generator_id se tao mot stock_card voi quantity_change = +size(group)
+     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
+     *
+     * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
+     * de dam bao atomic.
+     */
+    public void writeStockCardsForImport(Connection conn, int receiptId, String receiptCode,
+                                         int warehouseId, int createdBy,
+                                         List<ReceiptDetail> details) throws SQLException {
+        if (details == null || details.isEmpty()) return;
+        StockCardDAO scDAO = new StockCardDAO();
+        Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+        for (ReceiptDetail d : details) {
+            if (d.getGeneratorId() > 0) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+        }
+        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+            int genId = entry.getKey();
+            int totalQty = entry.getValue().size();
+            int qtyAfter = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+                qtyPs.setInt(1, warehouseId);
+                qtyPs.setInt(2, genId);
+                try (ResultSet qtyRs = qtyPs.executeQuery()) {
+                    if (qtyRs.next()) {
+                        qtyAfter = qtyRs.getInt(1);
+                    }
+                }
+            }
+            StockCard sc = new StockCard();
+            sc.setWarehouseId(warehouseId);
+            sc.setGeneratorId(genId);
+            sc.setReceiptId(receiptId);
+            sc.setTransactionType("IMPORT");
+            sc.setQuantityChange(totalQty);
+            sc.setQuantityAfter(qtyAfter);
+            sc.setReferenceNote("Phiếu " + receiptCode);
+            sc.setCreatedAt(LocalDateTime.now());
+            sc.setCreatedBy(createdBy);
+            scDAO.insert(conn, sc);
+        }
+    }
+
+    /**
+     * Ghi stock_card theo generator cho mot phieu xuat (EXPORT) moi tao.
+     * Moi generator_id se tao mot stock_card voi quantity_change = -size(group)
+     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
+     *
+     * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
+     * de dam bao atomic.
+     */
+    public void writeStockCardsForExport(Connection conn, int receiptId, String receiptCode,
+                                         int warehouseId, int createdBy,
+                                         List<ReceiptDetail> details) throws SQLException {
+        if (details == null || details.isEmpty()) return;
+        StockCardDAO scDAO = new StockCardDAO();
+        Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+        for (ReceiptDetail d : details) {
+            if (d.getGeneratorId() > 0) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+        }
+        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+            int genId = entry.getKey();
+            int totalQty = entry.getValue().size();
+            int qtyAfter = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+                qtyPs.setInt(1, warehouseId);
+                qtyPs.setInt(2, genId);
+                try (ResultSet qtyRs = qtyPs.executeQuery()) {
+                    if (qtyRs.next()) {
+                        qtyAfter = qtyRs.getInt(1);
+                    }
+                }
+            }
+            StockCard sc = new StockCard();
+            sc.setWarehouseId(warehouseId);
+            sc.setGeneratorId(genId);
+            sc.setReceiptId(receiptId);
+            sc.setTransactionType("EXPORT");
+            sc.setQuantityChange(-totalQty);
+            sc.setQuantityAfter(qtyAfter);
+            sc.setReferenceNote("Phiếu " + receiptCode);
+            sc.setCreatedAt(LocalDateTime.now());
+            sc.setCreatedBy(createdBy);
+            scDAO.insert(conn, sc);
         }
     }
 

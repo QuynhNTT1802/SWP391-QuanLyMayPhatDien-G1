@@ -86,10 +86,20 @@
                                     </div>
                                     <div class="field">
                                         <label>Trạng thái</label>
-                                        <select name="status">
-                                            <option value="active" ${role.status == 'active' ? 'selected' : ''}>Hoạt động</option>
-                                            <option value="inactive" ${role.status == 'inactive' ? 'selected' : ''}>Khóa</option>
-                                        </select>
+                                        <c:choose>
+                                            <c:when test="${role.roleName == 'admin'}">
+                                                <select name="status" disabled>
+                                                    <option value="active" selected>Hoạt động</option>
+                                                </select>
+                                                <input type="hidden" name="status" value="active" />
+                                            </c:when>
+                                            <c:otherwise>
+                                                <select name="status">
+                                                    <option value="active" ${role.status == 'active' ? 'selected' : ''}>Hoạt động</option>
+                                                    <option value="inactive" ${role.status == 'inactive' ? 'selected' : ''}>Khóa</option>
+                                                </select>
+                                            </c:otherwise>
+                                        </c:choose>
                                     </div>
                                 </div>
                                 <div class="field">

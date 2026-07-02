@@ -193,6 +193,6 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-<script src="${pageContext.request.contextPath}/assets/js/supplier-js.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/supplier-js.js" charset="UTF-8"></script>
 </body>
 </html>
