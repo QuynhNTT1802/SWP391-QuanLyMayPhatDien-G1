@@ -294,14 +294,10 @@
                                                                     <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                                     <span class="label">Sửa</span>
                                                                 </a>
-                                                                <button class="dropdown-item danger" type="button" onclick="confirmCancelList(${r.receiptId}, 'discard', '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')">
-                                                                    <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                                                    <span class="label">Xoá nháp</span>
-                                                                </button>
                                                             </c:if>
                                                             <c:if test="${r.status == 'PENDING' && r.createdBy == sessionScope.loggedUser.id && empty r.liquidationCode}">
                                                                 <div class="dropdown-divider"></div>
-                                                                <button class="dropdown-item danger" type="button" onclick="confirmCancelList(${r.receiptId}, 'cancel', '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')">
+                                                                <button class="dropdown-item danger" type="button" onclick="confirmCancelList(${r.receiptId}, '<c:out value="${fn:escapeXml(r.receiptCode)}"/>')">
                                                                     <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                                                     <span class="label">Rút phiếu</span>
                                                                 </button>
@@ -525,26 +521,19 @@
             }
 
             var listCancelLock = false;
-            function confirmCancelList(receiptId, mode, code) {
+            function confirmCancelList(receiptId, code) {
                 var ctx = window.APP_CTX;
                 if (!receiptId || !window.ExportScannerActions) return;
                 if (listCancelLock) return;
-                var title = mode === 'discard' ? 'Xoá phiếu nháp' : 'Rút phiếu đang chờ duyệt';
-                var body = mode === 'discard'
-                    ? 'Phiếu nháp <strong>' + code + '</strong> sẽ bị huỷ và tất cả serial sẽ trả về kho.'
-                    : 'Phiếu <strong>' + code + '</strong> đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt nhận thông báo.';
-                var label = mode === 'discard' ? 'Xoá nháp' : 'Rút phiếu';
                 window.ExportScannerActions.confirmAction({
                     modalId: 'cancelListModal',
-                    title: title,
-                    body: body,
-                    confirmLabel: label,
+                    title: 'Rút phiếu đang chờ duyệt',
+                    body: 'Phiếu <strong>' + code + '</strong> đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt nhận thông báo.',
+                    confirmLabel: 'Rút phiếu',
                     danger: true
                 }).then(function () {
                     listCancelLock = true;
-                    return (mode === 'discard'
-                            ? window.ExportScannerActions.discardDraft(receiptId)
-                            : window.ExportScannerActions.cancelPending(receiptId));
+                    return window.ExportScannerActions.cancelPending(receiptId);
                 }).then(function (data) {
                     listCancelLock = false;
                     if (!data || !data.success) {
