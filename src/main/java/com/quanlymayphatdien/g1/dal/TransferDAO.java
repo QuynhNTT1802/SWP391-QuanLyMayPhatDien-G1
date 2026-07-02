@@ -35,12 +35,14 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "  ws.name AS source_warehouse_name, "
                 + "  wd.name AS dest_warehouse_name, "
                 + "  u1.name AS created_by_name, "
+                + "  u2.name AS manager_reviewed_by_name, "
                 + "  u3.name AS ceo_reviewed_by_name, "
                 + "  u4.name AS final_reviewed_by_name "
                 + "FROM transfer t "
                 + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
                 + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
                 + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
                 + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
                 + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
                 + "ORDER BY t.created_at DESC";
@@ -61,19 +63,21 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
     }
 
     public List<Transfer> findWithPagination(int limit, int offset, String search,
-            String status, Integer filterUserId, Integer scopedWarehouseId, int currentUserId) {
+            String status, Integer filterUserId) {
         List<Transfer> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT t.*, "
                 + "  ws.name AS source_warehouse_name, "
                 + "  wd.name AS dest_warehouse_name, "
                 + "  u1.name AS created_by_name, "
+                + "  u2.name AS manager_reviewed_by_name, "
                 + "  u3.name AS ceo_reviewed_by_name, "
                 + "  u4.name AS final_reviewed_by_name "
                 + "FROM transfer t "
                 + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
                 + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
                 + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
                 + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
                 + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
                 + "WHERE 1=1 ");
@@ -82,12 +86,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             sql.append("AND t.status = ? ");
             params.add(status);
         }
-        if (scopedWarehouseId != null && scopedWarehouseId > 0) {
-            sql.append("AND (t.source_warehouse_id = ? OR t.dest_warehouse_id = ? OR t.created_by = ?) ");
-            params.add(scopedWarehouseId);
-            params.add(scopedWarehouseId);
-            params.add(currentUserId);
-        } else if (filterUserId != null) {
+        if (filterUserId != null) {
             sql.append("AND t.created_by = ? ");
             params.add(filterUserId);
         }
@@ -117,20 +116,14 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return list;
     }
 
-    public int countTotal(String search, String status, Integer filterUserId,
-                          Integer scopedWarehouseId, int currentUserId) {
+    public int countTotal(String search, String status, Integer filterUserId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM transfer t WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
             sql.append("AND t.status = ? ");
             params.add(status);
         }
-        if (scopedWarehouseId != null && scopedWarehouseId > 0) {
-            sql.append("AND (t.source_warehouse_id = ? OR t.dest_warehouse_id = ? OR t.created_by = ?) ");
-            params.add(scopedWarehouseId);
-            params.add(scopedWarehouseId);
-            params.add(currentUserId);
-        } else if (filterUserId != null) {
+        if (filterUserId != null) {
             sql.append("AND t.created_by = ? ");
             params.add(filterUserId);
         }
@@ -157,16 +150,11 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return 0;
     }
 
-    public Map<String, Integer> getKpiCounts(Integer filterUserId, Integer scopedWarehouseId, int currentUserId) {
+    public Map<String, Integer> getKpiCounts(Integer filterUserId) {
         Map<String, Integer> result = new LinkedHashMap<>();
         StringBuilder sql = new StringBuilder("SELECT status, COUNT(*) AS cnt FROM transfer t WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
-        if (scopedWarehouseId != null && scopedWarehouseId > 0) {
-            sql.append("AND (t.source_warehouse_id = ? OR t.dest_warehouse_id = ? OR t.created_by = ?) ");
-            params.add(scopedWarehouseId);
-            params.add(scopedWarehouseId);
-            params.add(currentUserId);
-        } else if (filterUserId != null) {
+        if (filterUserId != null) {
             sql.append("AND t.created_by = ? ");
             params.add(filterUserId);
         }
@@ -187,8 +175,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         } finally {
             closeResources();
         }
-        for (String s : new String[]{"PENDING_CEO", "AWAITING_DEST_ACCEPT",
-            "COMPLETED", "REJECTED"}) {
+        for (String s : new String[]{"DRAFT", "PENDING_MANAGER", "PENDING_CEO",
+            "COMPLETED", "REJECTED", "CANCELLED"}) {
             result.putIfAbsent(s, 0);
         }
         return result;
@@ -199,12 +187,14 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "  ws.name AS source_warehouse_name, "
                 + "  wd.name AS dest_warehouse_name, "
                 + "  u1.name AS created_by_name, "
+                + "  u2.name AS manager_reviewed_by_name, "
                 + "  u3.name AS ceo_reviewed_by_name, "
                 + "  u4.name AS final_reviewed_by_name "
                 + "FROM transfer t "
                 + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
                 + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
                 + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
                 + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
                 + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
                 + "WHERE t.transfer_id = ?";
@@ -238,7 +228,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             statement.setString(1, t.getTransferCode());
             statement.setInt(2, t.getSourceWarehouseId());
             statement.setInt(3, t.getDestWarehouseId());
-            statement.setString(4, t.getStatus() == null ? "PENDING_CEO" : t.getStatus());
+            statement.setString(4, t.getStatus() == null ? "DRAFT" : t.getStatus());
             statement.setInt(5, t.getCreatedBy());
             if (t.getNote() != null && !t.getNote().trim().isEmpty()) {
                 statement.setString(6, t.getNote().trim());
@@ -262,24 +252,155 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return -1;
     }
 
+    public boolean updateHeader(Transfer t) {
+        String sql = "UPDATE transfer SET source_warehouse_id = ?, dest_warehouse_id = ?, "
+                + "note = ?, updated_at = ? WHERE transfer_id = ? AND status = 'DRAFT'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getSourceWarehouseId());
+            statement.setInt(2, t.getDestWarehouseId());
+            if (t.getNote() != null && !t.getNote().trim().isEmpty()) {
+                statement.setString(3, t.getNote().trim());
+            } else {
+                statement.setNull(3, Types.VARCHAR);
+            }
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(5, t.getTransferId());
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
     @Override
     public boolean update(Transfer t) {
-        return false;
+        return updateHeader(t);
     }
 
     @Override
     public boolean delete(Transfer t) {
+        String sql = "DELETE FROM transfer WHERE transfer_id = ? AND status = 'DRAFT'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, t.getTransferId());
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
         return false;
     }
 
-    public boolean ceApproveForward(int transferId, int ceoId, String note) {
-        String sql = "UPDATE transfer SET status = 'AWAITING_DEST_ACCEPT', "
-                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_note = ?, updated_at = ? "
+    public boolean submitForReview(int transferId, int userId) {
+        String sql = "UPDATE transfer SET status = 'PENDING_MANAGER', updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'DRAFT' AND created_by = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, transferId);
+            statement.setInt(3, userId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean managerApproveForward(int transferId, int managerId) {
+        String sql = "UPDATE transfer SET status = 'PENDING_CEO', "
+                + "manager_reviewed_by = ?, manager_reviewed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
+                + "AND ceo_reviewed_at IS NULL AND final_reviewed_at IS NULL";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, managerId);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(4, transferId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean ceoApproveReturnToManager(int transferId, int ceoId) {
+        String sql = "UPDATE transfer SET status = 'PENDING_MANAGER', "
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ? "
                 + "WHERE transfer_id = ? AND status = 'PENDING_CEO' AND final_reviewed_at IS NULL";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, ceoId);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(4, transferId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean staffCancel(int transferId, int userId) {
+        String sql = "UPDATE transfer SET status = 'CANCELLED', updated_at = ? "
+                + "WHERE transfer_id = ? AND created_by = ? "
+                + "AND status IN ('DRAFT', 'PENDING_MANAGER') AND ceo_reviewed_at IS NULL";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, transferId);
+            statement.setInt(3, userId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean reject(int transferId, int reviewerId, String role, String note) {
+        String noteCol = "manager".equals(role) ? "manager_note" : "ceo_note";
+        String reviewerCol = "manager".equals(role) ? "manager_reviewed_by" : "ceo_reviewed_by";
+        String reviewerAtCol = "manager".equals(role) ? "manager_reviewed_at" : "ceo_reviewed_at";
+
+        String whereClause;
+        if ("manager".equals(role)) {
+            whereClause = "AND status = 'PENDING_MANAGER' AND final_reviewed_at IS NULL";
+        } else {
+            whereClause = "AND status = 'PENDING_CEO'";
+        }
+
+        String sql = "UPDATE transfer SET status = 'REJECTED', "
+                + reviewerCol + " = ?, " + reviewerAtCol + " = ?, "
+                + noteCol + " = ?, updated_at = ? "
+                + "WHERE transfer_id = ? " + whereClause;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, reviewerId);
             statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             if (note != null && !note.trim().isEmpty()) {
                 statement.setString(3, note.trim());
@@ -298,55 +419,18 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return false;
     }
 
-    public boolean ceReject(int transferId, int ceoId, String note) {
-        String sql = "UPDATE transfer SET status = 'REJECTED', "
-                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_note = ?, updated_at = ? "
-                + "WHERE transfer_id = ? AND status = 'PENDING_CEO' AND final_reviewed_at IS NULL";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, ceoId);
-            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            if (note != null && !note.trim().isEmpty()) {
-                statement.setString(3, note.trim());
-            } else {
-                statement.setNull(3, Types.VARCHAR);
-            }
-            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setInt(5, transferId);
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        } finally {
-            closeResources();
-        }
-        return false;
-    }
-
-    /**
-     * Nhan vien kho dich accept (AWAITING_DEST_ACCEPT -> COMPLETED).
-     * Thuc thi viec dieu chuyen ton kho (executeTransfer).
-     */
-    public String destAccept(int transferId, int destUserId) {
-        return executeTransfer(transferId, destUserId);
-    }
-
-    public boolean destReject(int transferId, int destUserId, String note) {
-        String sql = "UPDATE transfer SET status = 'REJECTED', "
+    public boolean setStatusCompleted(int transferId, int finalReviewerId) {
+        String sql = "UPDATE transfer SET status = 'COMPLETED', "
                 + "final_reviewed_by = ?, final_reviewed_at = ?, "
-                + "ceo_note = ?, updated_at = ? "
-                + "WHERE transfer_id = ? AND status = 'AWAITING_DEST_ACCEPT'";
+                + "executed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
+                + "AND ceo_reviewed_at IS NOT NULL AND final_reviewed_at IS NULL";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setInt(1, destUserId);
+            statement.setInt(1, finalReviewerId);
             statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            if (note != null && !note.trim().isEmpty()) {
-                statement.setString(3, note.trim());
-            } else {
-                statement.setNull(3, Types.VARCHAR);
-            }
+            statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
             statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
             statement.setInt(5, transferId);
             return statement.executeUpdate() > 0;
@@ -548,7 +632,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                     "UPDATE transfer SET status = 'COMPLETED', "
                     + "final_reviewed_by = ?, final_reviewed_at = ?, "
                     + "executed_at = ?, updated_at = ? "
-                    + "WHERE transfer_id = ? AND status = 'AWAITING_DEST_ACCEPT' "
+                    + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
                     + "AND ceo_reviewed_at IS NOT NULL AND final_reviewed_at IS NULL")) {
                 compPs.setInt(1, finalReviewerId);
                 compPs.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
@@ -598,6 +682,10 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         t.setCreatedBy(rs.getInt("created_by"));
         t.setManagerNote(rs.getString("manager_note"));
         t.setCeoNote(rs.getString("ceo_note"));
+        Timestamp mra = rs.getTimestamp("manager_reviewed_at");
+        if (mra != null) {
+            t.setManagerReviewedAt(mra.toLocalDateTime());
+        }
         Timestamp cra = rs.getTimestamp("ceo_reviewed_at");
         if (cra != null) {
             t.setCeoReviewedAt(cra.toLocalDateTime());
@@ -617,6 +705,10 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         Timestamp ua = rs.getTimestamp("updated_at");
         if (ua != null) {
             t.setUpdatedAt(ua.toLocalDateTime());
+        }
+        int mrb = rs.getInt("manager_reviewed_by");
+        if (!rs.wasNull()) {
+            t.setManagerReviewedBy(mrb);
         }
         int crb = rs.getInt("ceo_reviewed_by");
         if (!rs.wasNull()) {
@@ -638,7 +730,10 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             t.setCreatedByName(rs.getString("created_by_name"));
         } catch (SQLException ignored) {
         }
-        t.setManagerReviewedByName(null);
+        try {
+            t.setManagerReviewedByName(rs.getString("manager_reviewed_by_name"));
+        } catch (SQLException ignored) {
+        }
         try {
             t.setCeoReviewedByName(rs.getString("ceo_reviewed_by_name"));
         } catch (SQLException ignored) {
@@ -649,5 +744,61 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         }
         t.setNote(rs.getString("note"));
         return t;
+    }
+
+    public boolean requestRevisionByManager(int transferId, int managerId, String note) {
+        String sql = "UPDATE transfer SET status = 'NEEDS_REVISION', "
+                + "manager_reviewed_by = ?, manager_reviewed_at = ?, "
+                + "manager_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_MANAGER' "
+                + "AND ceo_reviewed_at IS NULL AND final_reviewed_at IS NULL";
+        try {
+            Connection c = getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setInt(1, managerId);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                ps.setString(3, note.trim());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(5, transferId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean requestRevisionByCeo(int transferId, int ceoId, String note) {
+        String sql = "UPDATE transfer SET status = 'NEEDS_REVISION', "
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, "
+                + "ceo_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_CEO' "
+                + "AND final_reviewed_at IS NULL";
+        try {
+            Connection c = getConnection();
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setInt(1, ceoId);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                ps.setString(3, note.trim());
+            } else {
+                ps.setNull(3, Types.VARCHAR);
+            }
+            ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(5, transferId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
     }
 }

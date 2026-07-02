@@ -76,7 +76,7 @@ public class OrderController extends HttpServlet {
         } catch (Exception e) {
             SystemLogger.error(LogModule.ORDER, "OrderController.doGet", e.getMessage(), e);
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            setMsg(request.getSession(), "Lỗi hệ thống: " + e.getMessage(), "danger");
+            request.getSession().setAttribute("message", "Lỗi hệ thống: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
     }
@@ -122,7 +122,7 @@ public class OrderController extends HttpServlet {
         } catch (Exception e) {
             SystemLogger.error(LogModule.ORDER, "OrderController.doPost", e.getMessage(), e);
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            setMsg(request.getSession(), "Lỗi xử lý dữ liệu: " + e.getMessage(), "danger");
+            request.getSession().setAttribute("message", "Lỗi xử lý dữ liệu: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
     }
@@ -342,17 +342,6 @@ public class OrderController extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
-
-        int totalQty = 0;
-        int totalRows = 0;
-        if (details != null) {
-            totalRows = details.size();
-            for (OrderDetail d : details) {
-                totalQty += d.getQuantity();
-            }
-        }
-        request.setAttribute("totalQty", totalQty);
-        request.setAttribute("totalRows", totalRows);
         request.setAttribute("userPermissions", perms);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
@@ -396,7 +385,7 @@ public class OrderController extends HttpServlet {
             throws ServletException, IOException, ParseException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.create")) {
-            setMsg(request.getSession(), "Bạn không có quyền tạo đơn hàng.", "danger");
+            request.getSession().setAttribute("message", "Bạn không có quyền tạo đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -435,7 +424,8 @@ public class OrderController extends HttpServlet {
         String custNote = request.getParameter("customerNote");
         Customer customer = null;
         if (custPhone == null || custPhone.trim().isEmpty()) {
-            setMsg(session, "Vui lòng nhập số điện thoại khách hàng.", "danger");
+            session.setAttribute("message", "Vui lòng nhập số điện thoại khách hàng.");
+            session.setAttribute("messageType", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=create");
             return;
         }
@@ -457,7 +447,8 @@ public class OrderController extends HttpServlet {
             customer.setCreatedBy(user.getId());
             int newCustId = customerDAO.insert(customer);
             if (newCustId <= 0) {
-                setMsg(request.getSession(), "Lỗi tạo khách hàng mới. Vui lòng thử lại.", "danger");
+                request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
+                request.getSession().setAttribute("messageType", "danger");
                 response.sendRedirect(request.getContextPath() + "/order?action=create");
                 return;
             }
@@ -514,13 +505,15 @@ public class OrderController extends HttpServlet {
                 }
 
                 if (inputPrice <= 0) {
-                    setMsg(session, "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.", "danger");
+                    session.setAttribute("message", "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
+                    session.setAttribute("messageType", "danger");
                     response.sendRedirect(request.getContextPath() + "/order?action=create");
                     return;
                 }
 
                 if (qty <= 0) {
-                    setMsg(session, "Số lượng dòng máy thứ " + (i + 1) + " phải lớn hơn 0.", "danger");
+                    session.setAttribute("message", "Số lượng dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
+                    session.setAttribute("messageType", "danger");
                     response.sendRedirect(request.getContextPath() + "/order?action=create");
                     return;
                 }
@@ -529,8 +522,9 @@ public class OrderController extends HttpServlet {
                 if (gen != null) {
                     int inStock = inventoryDao.countInStockByGenerator(genId);
                     if (qty > inStock) {
-                        setMsg(session, "Số lượng dòng máy thứ " + (i + 1)
-                                + " (" + qty + ") vượt quá tồn kho (" + inStock + ").", "danger");
+                        session.setAttribute("message", "Số lượng dòng máy thứ " + (i + 1)
+                                + " (" + qty + ") vượt quá tồn kho (" + inStock + ").");
+                        session.setAttribute("messageType", "danger");
                         response.sendRedirect(request.getContextPath() + "/order?action=create");
                         return;
                     }
@@ -548,7 +542,8 @@ public class OrderController extends HttpServlet {
         }
 
         if (detailsList.isEmpty()) {
-            setMsg(session, "Vui lòng chọn ít nhất 1 máy cho đơn hàng.", "danger");
+            session.setAttribute("message", "Vui lòng chọn ít nhất 1 máy cho đơn hàng.");
+            session.setAttribute("messageType", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=create");
             return;
         }
@@ -562,10 +557,12 @@ public class OrderController extends HttpServlet {
                 d.setOrderId(newId);
                 orderdetaildao.insert(d);
             }
-            setMsg(session, "Tạo đơn hàng thành công! Mã đơn: " + order.getOrderCode(), "success");
+            session.setAttribute("message", "Tạo đơn hàng thành công! Mã đơn: " + order.getOrderCode());
+            session.setAttribute("messageType", "success");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         } else {
-            setMsg(session, "Tạo đơn hàng thất bại.", "danger");
+            session.setAttribute("message", "Tạo đơn hàng thất bại.");
+            session.setAttribute("messageType", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=create");
         }
     }
@@ -574,7 +571,7 @@ public class OrderController extends HttpServlet {
             throws ServletException, IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.update")) {
-            setMsg(request.getSession(), "Bạn không có quyền sửa đơn hàng.", "danger");
+            request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -616,7 +613,7 @@ public class OrderController extends HttpServlet {
             request.setAttribute("stockMap", stockMap);
             request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
         } else {
-            setMsg(request.getSession(), "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).", "danger");
+            request.getSession().setAttribute("message", "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
     }
@@ -625,7 +622,7 @@ public class OrderController extends HttpServlet {
             throws ServletException, IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.update")) {
-            setMsg(request.getSession(), "Bạn không có quyền sửa đơn hàng.", "danger");
+            request.getSession().setAttribute("message", "Bạn không có quyền sửa đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -664,7 +661,7 @@ public class OrderController extends HttpServlet {
                     }
 
                     if (inputPrice <= 0) {
-                        setMsg(request.getSession(), "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.", "danger");
+                        request.getSession().setAttribute("message", "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.");
                         response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
                         return;
                     }
@@ -684,14 +681,14 @@ public class OrderController extends HttpServlet {
             }
 
             if (newDetails.isEmpty()) {
-                setMsg(request.getSession(), "Vui lòng chọn ít nhất 1 máy cho đơn hàng.", "danger");
+                request.getSession().setAttribute("message", "Vui lòng chọn ít nhất 1 máy cho đơn hàng.");
                 response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
                 return;
             }
 
             SaleOrder order = saleorderdao.findById(orderId);
             if (order == null) {
-                setMsg(request.getSession(), "Không tìm thấy phiếu.", "danger");
+                request.getSession().setAttribute("message", "Không tìm thấy phiếu.");
                 response.sendRedirect(request.getContextPath() + "/order?action=list");
                 return;
             }
@@ -707,7 +704,7 @@ public class OrderController extends HttpServlet {
             String custNote = request.getParameter("customerNote");
 
             if (custPhone == null || custPhone.trim().isEmpty()) {
-                setMsg(request.getSession(), "Vui lòng nhập số điện thoại khách hàng.", "danger");
+                request.getSession().setAttribute("message", "Vui lòng nhập số điện thoại khách hàng.");
                 response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
                 return;
             }
@@ -730,7 +727,7 @@ public class OrderController extends HttpServlet {
                 customer.setCreatedBy(user.getId());
                 int newCustId = customerDAO.insert(customer);
                 if (newCustId <= 0) {
-                    setMsg(request.getSession(), "Lỗi tạo khách hàng mới. Vui lòng thử lại.", "danger");
+                    request.getSession().setAttribute("message", "Lỗi tạo khách hàng mới. Vui lòng thử lại.");
                     response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
                     return;
                 }
@@ -758,16 +755,16 @@ public class OrderController extends HttpServlet {
             boolean ok = saleorderdao.updateWithDetails(order, newDetails);
 
             if (ok) {
-                setMsg(request.getSession(), "Cập nhật đơn hàng thành công.", "success");
+                request.getSession().setAttribute("message", "Cập nhật đơn hàng thành công.");
             } else {
-                setMsg(request.getSession(),
-                        "Phiếu đã được duyệt hoặc thay đổi trạng thái. Vui lòng tải lại.", "danger");
+                request.getSession().setAttribute("message",
+                        "Phiếu đã được duyệt hoặc thay đổi trạng thái. Vui lòng tải lại.");
             }
 
         } catch (Exception e) {
             SystemLogger.error(LogModule.ORDER, "OrderController.updateOrder", e.getMessage(), e);
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            setMsg(request.getSession(), "Lỗi: " + e.getMessage(), "danger");
+            request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
@@ -776,7 +773,7 @@ public class OrderController extends HttpServlet {
             throws IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.approve")) {
-            setMsg(request.getSession(), "Bạn không có quyền duyệt đơn hàng.", "danger");
+            request.getSession().setAttribute("message", "Bạn không có quyền duyệt đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -786,7 +783,7 @@ public class OrderController extends HttpServlet {
         OrderDetailDAO orderdetaildao = new OrderDetailDAO();
         GeneratorDAO generatorDao = new GeneratorDAO();
 
-        
+        // Kiểm tra tồn kho trước khi duyệt (trừ số lượng đã được duyệt ở các đơn khác)
         List<OrderDetail> details = orderdetaildao.findGeneratorById(id);
         if (details != null && !details.isEmpty()) {
             java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
@@ -799,11 +796,11 @@ public class OrderController extends HttpServlet {
                 if (d.getQuantity() > available) {
                     String genName = generatorDao.findById(d.getGeneratorId()) != null
                             ? generatorDao.findById(d.getGeneratorId()).getModel() : ("#" + d.getGeneratorId());
-                    setMsg(request.getSession(),
+                    request.getSession().setAttribute("message",
                             "Không thể duyệt: máy \"" + genName + "\" cần " + d.getQuantity()
                                     + " nhưng tồn kho khả dụng chỉ có " + available
                                     + " (đã có " + reserved + " được duyệt ở đơn khác)."
-                                    + " Vui lòng giảm số lượng hoặc nhập thêm hàng.", "danger");
+                                    + " Vui lòng giảm số lượng hoặc nhập thêm hàng.");
                     response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
                     return;
                 }
@@ -813,9 +810,9 @@ public class OrderController extends HttpServlet {
         boolean success = saleorderdao.approveOrder(id, user.getId());
 
         if (success) {
-            setMsg(request.getSession(), "Đã duyệt đơn hàng.", "success");
+            request.getSession().setAttribute("message", "Đã duyệt đơn hàng.");
         } else {
-            setMsg(request.getSession(), "Duyệt thất bại (đơn không ở trạng thái chờ).", "danger");
+            request.getSession().setAttribute("message", "Duyệt thất bại (đơn không ở trạng thái chờ).");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
@@ -824,7 +821,7 @@ public class OrderController extends HttpServlet {
             throws ServletException, IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.reject")) {
-            setMsg(request.getSession(), "Bạn không có quyền từ chối đơn hàng.", "danger");
+            request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -837,7 +834,7 @@ public class OrderController extends HttpServlet {
             throws IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.reject")) {
-            setMsg(request.getSession(), "Bạn không có quyền từ chối đơn hàng.", "danger");
+            request.getSession().setAttribute("message", "Bạn không có quyền từ chối đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -847,7 +844,7 @@ public class OrderController extends HttpServlet {
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
         if (reason == null || reason.trim().isEmpty()) {
-            setMsg(request.getSession(), "Vui lòng nhập lý do từ chối.", "danger");
+            request.getSession().setAttribute("message", "Vui lòng nhập lý do từ chối.");
             response.sendRedirect(request.getContextPath() + "/order?action=reject&id=" + id);
             return;
         }
@@ -855,9 +852,9 @@ public class OrderController extends HttpServlet {
         boolean success = saleorderdao.rejectOrder(id, user.getId(), reason);
 
         if (success) {
-            setMsg(request.getSession(), "Đã từ chối đơn hàng.", "success");
+            request.getSession().setAttribute("message", "Đã từ chối đơn hàng.");
         } else {
-            setMsg(request.getSession(), "Từ chối thất bại.", "danger");
+            request.getSession().setAttribute("message", "Từ chối thất bại.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
@@ -868,7 +865,7 @@ public class OrderController extends HttpServlet {
 
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.cancel")) {
-            setMsg(session, "Bạn không có quyền hủy đơn hàng.", "danger");
+            session.setAttribute("message", "Bạn không có quyền hủy đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
@@ -880,11 +877,11 @@ public class OrderController extends HttpServlet {
         int result = saleorderdao.cancelOrder(id, user.getId());
 
         if (result == 1) {
-            setMsg(session, "Đã hủy đơn hàng.", "success");
+            session.setAttribute("message", "Đã hủy đơn hàng.");
         } else if (result == -1) {
-            setMsg(session, "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.", "danger");
+            session.setAttribute("message", "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.");
         } else {
-            setMsg(session, "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt hoặc đã duyệt (chưa xuất kho).", "danger");
+            session.setAttribute("message", "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt hoặc đã duyệt (chưa xuất kho).");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
@@ -895,20 +892,18 @@ public class OrderController extends HttpServlet {
 
         Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.approve")) {
-            setMsg(session, "Bạn không có quyền yêu cầu chỉnh sửa đơn hàng.", "danger");
+            session.setAttribute("message", "Bạn không có quyền yêu cầu chỉnh sửa đơn hàng.");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
         }
 
         int id = Integer.parseInt(request.getParameter("id"));
         String reason = request.getParameter("reason");
-        User user = (User) request.getAttribute("loggedUser") != null
-                ? (User) request.getAttribute("loggedUser")
-                : (User) session.getAttribute("loggedUser");
+        User user = (User) session.getAttribute("loggedUser");
         SaleOrderDAO saleorderdao = new SaleOrderDAO();
 
         if (reason == null || reason.trim().isEmpty()) {
-            setMsg(session, "Vui lòng nhập lý do yêu cầu chỉnh sửa.", "danger");
+            session.setAttribute("message", "Vui lòng nhập lý do yêu cầu chỉnh sửa.");
             response.sendRedirect(request.getContextPath() + "/order?action=detail&id=" + id);
             return;
         }
@@ -916,15 +911,10 @@ public class OrderController extends HttpServlet {
         boolean success = saleorderdao.requestRevisionOrder(id, user.getId(), reason);
 
         if (success) {
-            setMsg(session, "Đã gửi yêu cầu chỉnh sửa đơn hàng.", "success");
+            session.setAttribute("message", "Đã gửi yêu cầu chỉnh sửa đơn hàng.");
         } else {
-            setMsg(session, "Yêu cầu chỉnh sửa thất bại.", "danger");
+            session.setAttribute("message", "Yêu cầu chỉnh sửa thất bại.");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
-    }
-
-    private void setMsg(HttpSession session, String message, String type) {
-        session.setAttribute("message", message);
-        session.setAttribute("messageType", type);
     }
 }

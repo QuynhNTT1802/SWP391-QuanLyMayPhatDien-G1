@@ -216,19 +216,26 @@
                                                 <td><strong><c:out value="${p.period}"/></strong></td>
                                                 <td><c:out value="${p.warehouseName}"/></td>
                                                 <td>
-                                                    <c:set var="deadlineDate" value="${periodDeadlines[p.period]}" />
                                                     <c:choose>
-                                                        <c:when test="${deadlineDate == null}">
+                                                        <c:when test="${p.period == currentPeriod}">
                                                             <span style="font-size:11px; color:var(--muted);">—</span>
                                                         </c:when>
                                                         <c:otherwise>
-                                                            <c:set var="deadlineStr" value="${deadlineDate.toString()}" />
+                                                            <c:set var="deadlineDate" value="${periodDeadlines[p.period]}" />
                                                             <c:choose>
-                                                                <c:when test="${deadlineDate.isBefore(currentDate)}">
-                                                                    <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--danger); font-weight:600;" title="Đã quá deadline">${deadlineStr}</span>
+                                                                <c:when test="${deadlineDate == null}">
+                                                                    <span style="font-size:11px; color:var(--muted);">—</span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);" title="Deadline gom/duyệt">${deadlineStr}</span>
+                                                                    <c:set var="deadlineStr" value="${deadlineDate.toString()}" />
+                                                                    <c:choose>
+                                                                        <c:when test="${deadlineDate.isBefore(currentDate)}">
+                                                                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--danger); font-weight:600;" title="Đã quá deadline">${deadlineStr}</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);" title="Deadline gom/duyệt">${deadlineStr}</span>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </c:otherwise>

@@ -52,31 +52,24 @@
                 </div>
 
                 <c:if test="${not empty sessionScope.toastMessage}">
-                    <div class="toast toast-info">
+                    <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
                         <c:out value="${sessionScope.toastMessage}"/>
                     </div>
                     <c:remove var="toastMessage" scope="session"/>
                 </c:if>
 
-                <form method="get" action="${pageContext.request.contextPath}/inventory-check" class="filter-form">
+                <form method="get" action="${pageContext.request.contextPath}/inventory-check" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                     <input type="hidden" name="action" value="list" />
                     <input type="hidden" name="page" value="1" />
                     <div class="search-input">
                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                         <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu..." autocomplete="off" />
                     </div>
-                    <select class="filter-select" name="warehouseId" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                        <c:choose>
-                            <c:when test="${not empty scopedWarehouseId}">
-                                <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                            </c:when>
-                            <c:otherwise>
-                                <option value="">Kho: Tất cả</option>
-                                <c:forEach var="wh" items="${warehouses}">
-                                    <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                                </c:forEach>
-                            </c:otherwise>
-                        </c:choose>
+                    <select class="filter-select" name="warehouseId" onchange="this.form.submit()">
+                        <option value="">Kho: Tất cả</option>
+                        <c:forEach var="wh" items="${warehouses}">
+                            <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
+                        </c:forEach>
                     </select>
                     <select class="filter-select" name="status" onchange="this.form.submit()">
                         <option value="">Trạng thái: Tất cả</option>
@@ -92,11 +85,11 @@
                     </c:if>
                 </form>
 
-                <div class="table-card">
+                <div class="table-card" style="margin-top:16px;">
                     <table class="users">
                         <thead>
                             <tr>
-                                <th class="col-40">#</th>
+                                <th style="width:40px;">#</th>
                                 <th>Mã phiếu</th>
                                 <th>Trạng thái</th>
                                 <th>Người thực hiện</th>
@@ -115,7 +108,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <c:forEach var="c" items="${checkList}" varStatus="st">
-                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" class="clickable-row">
+                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" style="cursor:pointer;">
                                             <td>${fromIndex + st.index}</td>
                                             <td><strong><c:out value="${c.checkCode}"/></strong></td>
                                             <td>

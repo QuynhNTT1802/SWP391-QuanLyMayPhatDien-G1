@@ -13,9 +13,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css?v=20260703">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
 </head>
 <body>
 <div class="app">
@@ -77,8 +75,8 @@
 
                     <div class="form-section">
                         <div class="form-section-head">
-                            <div class="form-section-num">02 — THÔNG TIN ĐƠN</div>
-                            <h3 class="form-section-title">Lý do thanh lý và khách hàng nhận</h3>
+                            <div class="form-section-num">02 — LÝ DO &amp; CHỌN MÁY</div>
+                            <h3 class="form-section-title">Lý do thanh lý và máy phát điện</h3>
                         </div>
 
                         <div class="form-grid">
@@ -91,39 +89,6 @@
                                     </c:forEach>
                                 </select>
                             </div>
-
-                            <div class="field">
-                                <div class="field-label-row">
-                                    <label class="field-label">Khách hàng nhận <span class="req">*</span></label>
-                                    <button type="button" class="link-add" onclick="openNewCustomerModal()">
-                                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                        Tạo khách hàng mới
-                                    </button>
-                                </div>
-                                <div class="sd" id="customerDropdown"
-                                     data-endpoint="${pageContext.request.contextPath}/liquidations?action=search_customer&q=">
-                                    <div class="cust-trigger-wrap">
-                                        <button type="button" class="cust-trigger" id="custTrigger"
-                                                onclick="openCustomerPanel()" aria-haspopup="dialog">
-                                            <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
-                                        </button>
-                                        <button type="button" class="cust-clear-btn" id="custClearBtn"
-                                                onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M18 6L6 18M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <input type="hidden" name="customerId" id="sdHiddenId" value="" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <div class="form-section-head">
-                            <div class="form-section-num">03 — CHỌN MÁY &amp; BÁO GIÁ</div>
-                            <h3 class="form-section-title">Máy phát điện và giá thanh lý đề xuất</h3>
                         </div>
 
                         <div class="liq-pick">
@@ -148,7 +113,6 @@
                                                     <th>Tình trạng</th>
                                                     <th class="col-date">Ngày nhập</th>
                                                     <th class="col-price">Giá gốc</th>
-                                                    <th class="col-price">Giá thanh lý <span class="req">*</span></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -174,12 +138,6 @@
                                                         </td>
                                                         <td class="col-date row-date"><c:out value="${r.createdAtStr}"/></td>
                                                         <td class="col-price row-price"><fmt:formatNumber value="${r.unitPrice}" type="number" maxFractionDigits="0"/> đ</td>
-                                                        <td class="col-price">
-                                                            <div class="liq-price-wrap">
-                                                                <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice" placeholder="Nhập giá..." disabled/>
-                                                                <span class="liq-price-suffix">đ</span>
-                                                            </div>
-                                                        </td>
                                                     </tr>
                                                 </c:forEach>
 
@@ -189,7 +147,7 @@
                                                         <td class="col-cb"></td>
                                                         <td class="row-serial"><c:out value="${lk.serialNumber}"/></td>
                                                         <td class="row-model"><c:out value="${lk.model}"/></td>
-                                                        <td colspan="4">
+                                                        <td colspan="3">
                                                             <a class="locked-pill" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${lk.liquidationId}" target="_blank">Trong đơn <c:out value="${lk.liquidationCode}"/></a>
                                                         </td>
                                                     </tr>
@@ -204,13 +162,12 @@
                                 <div class="bar-summary">
                                     <div class="bar-count">Đã chọn <strong id="barSelectedCount">0</strong> máy<span id="barModelCount" style="color:var(--muted);font-weight:500;"></span></div>
                                     <div class="bar-total">Tổng giá gốc: <span class="total-val" id="formTotalVal">0 đ</span></div>
-                                    <div class="bar-total">Tổng giá thanh lý: <span class="total-val" id="formLiqTotalVal">0 đ</span></div>
                                 </div>
                                 <div class="bar-actions">
                                     <a class="btn" href="${pageContext.request.contextPath}/liquidations">Huỷ bỏ</a>
                                     <button type="submit" form="liquidationForm" class="btn btn-primary">
                                         <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                        Lưu &amp; Gửi Sếp duyệt
+                                        Lưu &amp; Đề xuất
                                     </button>
                                 </div>
                             </div>
@@ -233,12 +190,11 @@
         function fmt(n) { return Number(n || 0).toLocaleString('vi-VN'); }
 
         function recalc() {
-            var count = 0, total = 0, liqTotal = 0, good = 0;
+            var count = 0, total = 0, good = 0;
             var models = {};
             checkboxes.forEach(function (cb) {
                 var row = cb.closest('.pick-trow');
                 var genHidden = row ? row.querySelector('.gen-hidden') : null;
-                var priceInput = row ? row.querySelector('.liq-price-input') : null;
                 if (cb.checked) {
                     count++;
                     total += parseFloat(cb.getAttribute('data-price') || '0') || 0;
@@ -247,22 +203,16 @@
                     if (row) row.classList.add('is-checked');
                     if (row) row.classList.toggle('cond-warn-selected', cb.getAttribute('data-condition') === 'GOOD');
                     if (genHidden) genHidden.disabled = false; // bật để submit kèm serial
-                    if (priceInput) {
-                        priceInput.disabled = false; // bật để submit kèm giá
-                        liqTotal += parseFloat((priceInput.value || '').replace(/[^0-9]/g, '')) || 0;
-                    }
                 } else {
                     if (row) row.classList.remove('is-checked');
                     if (row) row.classList.remove('cond-warn-selected');
                     if (genHidden) genHidden.disabled = true;  // tắt để không submit
-                    if (priceInput) priceInput.disabled = true; // tắt để không submit
                 }
             });
             document.getElementById('barSelectedCount').textContent = count;
             var modelCount = Object.keys(models).length;
             document.getElementById('barModelCount').textContent = modelCount > 0 ? ' · ' + modelCount + ' model' : '';
             document.getElementById('formTotalVal').textContent = fmt(total) + ' đ';
-            document.getElementById('formLiqTotalVal').textContent = fmt(liqTotal) + ' đ';
 
             var warnEl = document.getElementById('condWarn');
             if (warnEl) {
@@ -276,15 +226,6 @@
         }
 
         checkboxes.forEach(function (cb) { cb.addEventListener('change', recalc); });
-
-        // Format giá thanh lý: tự chèn dấu phẩy phân cách nghìn khi gõ + cập nhật tổng.
-        function formatPriceInput(el) {
-            var digits = (el.value || '').replace(/[^0-9]/g, '');
-            el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
-        }
-        document.querySelectorAll('.liq-price-input').forEach(function (el) {
-            el.addEventListener('input', function () { formatPriceInput(el); recalc(); });
-        });
 
         // Checkbox header: chọn/bỏ tất cả các dòng đang hiển thị
         var pickAll = document.getElementById('pickAll');
@@ -313,37 +254,15 @@
             });
         }
 
-        // Chặn submit nếu chưa chọn máy / thiếu giá / chưa chọn khách hàng
+        // Chặn submit nếu chưa chọn máy nào
         var form = document.getElementById('liquidationForm');
         if (form) {
             form.addEventListener('submit', function (e) {
-                var checked = checkboxes.filter(function (cb) { return cb.checked; });
-                if (checked.length === 0) {
+                var anyChecked = checkboxes.some(function (cb) { return cb.checked; });
+                if (!anyChecked) {
                     e.preventDefault();
                     alert('Phải chọn ít nhất 1 máy phát điện.');
-                    return;
                 }
-                var missingPrice = checked.some(function (cb) {
-                    var row = cb.closest('.pick-trow');
-                    var priceInput = row ? row.querySelector('.liq-price-input') : null;
-                    var v = priceInput ? (priceInput.value || '').replace(/[^0-9]/g, '') : '';
-                    return !v || Number(v) <= 0;
-                });
-                if (missingPrice) {
-                    e.preventDefault();
-                    alert('Phải nhập giá thanh lý (lớn hơn 0) cho tất cả máy đã chọn.');
-                    return;
-                }
-                var custId = (document.getElementById('sdHiddenId') || {}).value;
-                if (!custId || !custId.trim()) {
-                    e.preventDefault();
-                    alert('Phải chọn khách hàng hoặc tạo khách hàng mới trước khi gửi Sếp duyệt.');
-                    return;
-                }
-                // Bỏ dấu phẩy ở các ô giá để backend nhận số thuần
-                document.querySelectorAll('.liq-price-input').forEach(function (el) {
-                    el.value = (el.value || '').replace(/[^0-9]/g, '');
-                });
             });
         }
 
@@ -363,217 +282,6 @@
     </c:if>
 </script>
 <div class="toast-host" id="toastHost"></div>
-
-<!-- Side panel chọn khách hàng (dùng searchable-dropdown.js) -->
-<div class="side-panel-overlay" id="custPanelOverlay" onclick="closeCustomerPanel()"></div>
-<div class="side-panel" id="custSidePanel">
-    <div class="side-panel-head">
-        <h3 class="side-panel-title">Chọn Khách Hàng</h3>
-        <button type="button" class="side-panel-close" onclick="closeCustomerPanel()">&times;</button>
-    </div>
-    <div class="side-panel-body">
-        <div style="display:flex; gap: 8px; margin-bottom: 20px;">
-            <input type="text" id="custSearchInput" class="serial-search-box" placeholder="Tìm nhanh theo tên, SĐT, email..."/>
-            <select id="custSortOrder" class="serial-search-box" style="width:auto;min-width:120px;">
-                <option value="name_asc">Tên A-Z</option>
-                <option value="name_desc">Tên Z-A</option>
-                <option value="newest">Mới nhất</option>
-            </select>
-        </div>
-        <div id="custLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
-            </svg><br>Đang tải...
-        </div>
-        <div class="cust-list-wrap" id="custList"></div>
-    </div>
-</div>
-
-<!-- Modal tạo khách hàng mới -->
-<div class="modal-host" id="ncModalOverlay">
-    <div class="modal modal-lg">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <h3 style="margin:0;">Thêm khách hàng mới</h3>
-            <button type="button" class="side-panel-close" onclick="closeNewCustomerModal()" title="Đóng">&times;</button>
-        </div>
-        <p style="font-size:13px;color:var(--muted);margin:0 0 4px;">Nhập thông tin khách hàng để tạo nhanh và gán vào đơn.</p>
-        <div class="modal-error" id="ncError" style="display:none;"></div>
-        <div class="modal-grid">
-            <div class="field">
-                <label class="field-label">Họ và tên <span class="req">*</span></label>
-                <input type="text" id="ncName" class="input" placeholder="VD: Nguyễn Văn A" autocomplete="off" />
-                <span class="field-error" id="ncNameErr">Vui lòng nhập họ và tên.</span>
-            </div>
-            <div class="field">
-                <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                <input type="tel" id="ncPhone" class="input mono" placeholder="VD: 0912345678" inputmode="numeric" maxlength="11" autocomplete="off" />
-                <span class="field-error" id="ncPhoneErr">SĐT phải gồm 10–11 chữ số.</span>
-            </div>
-            <div class="field">
-                <label class="field-label">Email</label>
-                <input type="email" id="ncEmail" class="input mono" placeholder="email@example.com" autocomplete="off" />
-                <span class="field-error" id="ncEmailErr">Email không hợp lệ.</span>
-            </div>
-            <div class="field">
-                <label class="field-label">Loại khách hàng</label>
-                <select id="ncTypeId" class="select" onchange="ncOnTypeChange()">
-                    <option value="">-- Chọn loại --</option>
-                    <c:forEach var="ct" items="${customerTypes}">
-                        <option value="${ct.id}" data-name="${ct.name}"><c:out value="${ct.name}"/></option>
-                    </c:forEach>
-                </select>
-            </div>
-            <div class="field">
-                <label class="field-label">Tên công ty <span class="req nc-company-req" style="display:none;">*</span></label>
-                <input type="text" id="ncCompanyName" class="input" placeholder="VD: Công ty TNHH ABC" autocomplete="off" />
-                <span class="field-error" id="ncCompanyErr">Vui lòng nhập tên công ty.</span>
-            </div>
-            <div class="field span-2">
-                <label class="field-label">Địa chỉ</label>
-                <textarea id="ncAddress" class="textarea" rows="2" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM"></textarea>
-            </div>
-        </div>
-        <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-            <button type="button" class="btn" onclick="closeNewCustomerModal()">Huỷ</button>
-            <button type="button" class="btn btn-primary" id="ncSaveBtn" onclick="saveNewCustomer()">Lưu khách hàng</button>
-        </div>
-    </div>
-</div>
-
-<script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
-<script>
-    // ===== Helper chọn khách hàng (đồng bộ với liquidation-detail.jsp) =====
-    function openModal(id) { document.getElementById(id).classList.add('show'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-    document.querySelectorAll('.modal-host').forEach(function (m) {
-        m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-    });
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-host.show').forEach(function(m) { m.classList.remove('show'); });
-        }
-    });
-
-    function clearCustomerSelectionLocal() {
-        var hid = document.getElementById('sdHiddenId');
-        if (hid) hid.value = '';
-        var label = document.getElementById('custTriggerLabel');
-        if (label) { label.textContent = '-- Click để chọn khách hàng --'; label.classList.remove('has-value'); }
-    }
-    // searchable-dropdown.js đã expose window.clearCustomerSelection; nếu thiếu thì dùng bản local.
-    if (typeof window.clearCustomerSelection !== 'function') {
-        window.clearCustomerSelection = clearCustomerSelectionLocal;
-    }
-
-    // ===== Modal tạo khách hàng mới (tái dùng action create_customer) =====
-    function openNewCustomerModal() {
-        ['ncName','ncPhone','ncEmail','ncAddress','ncCompanyName'].forEach(function(id){
-            document.getElementById(id).value = '';
-        });
-        document.getElementById('ncTypeId').selectedIndex = 0;
-        ncClearInvalid();
-        ncOnTypeChange();
-        hideNcError();
-        document.getElementById('ncModalOverlay').classList.add('show');
-        document.getElementById('ncName').focus();
-    }
-    function closeNewCustomerModal() {
-        document.getElementById('ncModalOverlay').classList.remove('show');
-    }
-    function showNcError(msg) {
-        var el = document.getElementById('ncError');
-        el.textContent = msg; el.style.display = 'block';
-    }
-    function hideNcError() {
-        var el = document.getElementById('ncError');
-        el.style.display = 'none';
-    }
-
-    function ncOnTypeChange() {
-        var sel = document.getElementById('ncTypeId');
-        var opt = sel.options[sel.selectedIndex];
-        var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
-        var isCompany = name.indexOf('doanh nghi') >= 0 || name.indexOf('công ty') >= 0;
-        var req = document.querySelector('.nc-company-req');
-        if (req) req.style.display = isCompany ? '' : 'none';
-    }
-
-    function ncSetInvalid(inputId, invalid) {
-        var el = document.getElementById(inputId);
-        if (!el) return;
-        var field = el.closest('.field');
-        if (field) field.classList.toggle('invalid', !!invalid);
-    }
-    function ncClearInvalid() {
-        ['ncName','ncPhone','ncEmail','ncCompanyName'].forEach(function(id){ ncSetInvalid(id, false); });
-    }
-
-    function saveNewCustomer() {
-        var name = document.getElementById('ncName').value.trim();
-        var phone = document.getElementById('ncPhone').value.trim();
-        var email = document.getElementById('ncEmail').value.trim();
-        var company = document.getElementById('ncCompanyName').value.trim();
-        var sel = document.getElementById('ncTypeId');
-        var typeName = (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].getAttribute('data-name') || '').toLowerCase();
-        var isCompany = typeName.indexOf('doanh nghi') >= 0 || typeName.indexOf('công ty') >= 0;
-
-        ncClearInvalid();
-        hideNcError();
-
-        var firstBad = null;
-        var phoneRe = /^[0-9]{10,11}$/;
-        var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!name) { ncSetInvalid('ncName', true); firstBad = firstBad || 'ncName'; }
-        if (!phone || !phoneRe.test(phone)) { ncSetInvalid('ncPhone', true); firstBad = firstBad || 'ncPhone'; }
-        if (email && !emailRe.test(email)) { ncSetInvalid('ncEmail', true); firstBad = firstBad || 'ncEmail'; }
-        if (isCompany && !company) { ncSetInvalid('ncCompanyName', true); firstBad = firstBad || 'ncCompanyName'; }
-
-        if (firstBad) {
-            document.getElementById(firstBad).focus();
-            return;
-        }
-
-        var btn = document.getElementById('ncSaveBtn');
-        btn.disabled = true; btn.textContent = 'Đang lưu...';
-
-        var fd = new FormData();
-        fd.append('action', 'create_customer');
-        fd.append('custName', name);
-        fd.append('custPhone', phone);
-        fd.append('custEmail', email);
-        fd.append('custAddress', document.getElementById('ncAddress').value.trim());
-        fd.append('custCompanyName', company);
-        fd.append('custTypeId', sel.value);
-
-        fetch('${pageContext.request.contextPath}/liquidations', { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                btn.disabled = false; btn.textContent = 'Lưu khách hàng';
-                if (data.success) {
-                    applyChosenCustomer(data);
-                    closeNewCustomerModal();
-                    if (typeof closeCustomerPanel === 'function') closeCustomerPanel();
-                    if (data.existing) {
-                        alert('SĐT này đã tồn tại — đã tự động chọn khách hàng: ' + data.name);
-                    }
-                } else {
-                    showNcError(data.error || 'Lỗi không xác định');
-                }
-            }).catch(function() {
-                btn.disabled = false; btn.textContent = 'Lưu khách hàng';
-                showNcError('Lỗi kết nối máy chủ');
-            });
-    }
-
-    // Điền KH vừa tạo/chọn vào form + cập nhật nhãn trigger
-    function applyChosenCustomer(c) {
-        var hid = document.getElementById('sdHiddenId');
-        if (hid) hid.value = c.id;
-        var label = document.getElementById('custTriggerLabel');
-        if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
-    }
-</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 </body>
 </html>
