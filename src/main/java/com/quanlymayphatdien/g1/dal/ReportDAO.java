@@ -634,4 +634,27 @@ public class ReportDAO extends DBContext{
         }
         return queryFlat(sql, params);
     }
+    
+    public List<Object[]> getPurchaseExcelData(Integer warehouseId, int month, int year) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT po.po_code, w.name, po.period,"
+                + " g.model, pod.final_quantity, u.name,"
+                + " DATE_FORMAT(po.created_at, '%d/%m/%Y'), po.status"
+                + " FROM purchase_order po"
+                + " JOIN warehouse w ON po.warehouse_id = w.warehouse_id"
+                + " JOIN user u ON po.created_by = u.id"
+                + " JOIN purchase_order_detail pod ON pod.po_id = po.po_id"
+                + " JOIN generator g ON pod.generator_id = g.id"
+                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
+                + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
+                + " ORDER BY po.created_at DESC";
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        return queryFlat(sql, params);
+    }
 }
