@@ -270,4 +270,15 @@ public class ReportDAO extends DBContext{
                 + " GROUP BY po.po_id"
                 + " ORDER BY po.created_at DESC";
     }
+    
+    public int countSalesReport(int month, int year) {
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String sql = "SELECT COUNT(*) FROM sale_order so"
+                + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?";
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        return countWithParams(sql, params);
+    }
 }
