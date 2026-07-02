@@ -256,4 +256,18 @@ public class ReportDAO extends DBContext{
     public List<PurchaseOrder> getAllPurchaseReport(Integer warehouseId, int month, int year) {
         return queryPurchaseOrders(buildPurchaseSql(warehouseId, true), warehouseId, month, year, -1, -1);
     }
+    
+    private String buildPurchaseSql(Integer warehouseId, boolean allRows) {
+        return "SELECT po.*, w.name AS warehouse_name, u.name AS created_by_name,"
+                + " GROUP_CONCAT(CONCAT(g.model, '|', pod.final_quantity, '|', COALESCE(pod.unit_price, 0)) SEPARATOR '; ') AS detail_info"
+                + " FROM purchase_order po"
+                + " LEFT JOIN warehouse w ON po.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN user u ON po.created_by = u.id"
+                + " LEFT JOIN purchase_order_detail pod ON pod.po_id = po.po_id"
+                + " LEFT JOIN generator g ON pod.generator_id = g.id"
+                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
+                + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
+                + " GROUP BY po.po_id"
+                + " ORDER BY po.created_at DESC";
+    }
 }
