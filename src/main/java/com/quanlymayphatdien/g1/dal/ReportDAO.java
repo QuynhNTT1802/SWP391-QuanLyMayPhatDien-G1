@@ -475,4 +475,58 @@ public class ReportDAO extends DBContext{
         }
         return list;
     }
+    
+    private List<PurchaseOrder> queryPurchaseOrders(String baseSql, Integer warehouseId,
+            int month, int year, int page, int pageSize) {
+        List<PurchaseOrder> list = new ArrayList<>();
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        StringBuilder sql = new StringBuilder(baseSql);
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(pageSize);
+            params.add((page - 1) * pageSize);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                PurchaseOrder po = new PurchaseOrder();
+                po.setPoId(resultSet.getInt("po_id"));
+                po.setPoCode(resultSet.getString("po_code"));
+                po.setPeriod(resultSet.getString("period"));
+                if (resultSet.getDate("period_start") != null) {
+                    po.setPeriodStart(resultSet.getDate("period_start").toLocalDate());
+                }
+                if (resultSet.getDate("period_end") != null) {
+                    po.setPeriodEnd(resultSet.getDate("period_end").toLocalDate());
+                }
+                po.setWarehouseId(resultSet.getInt("warehouse_id"));
+                po.setWarehouseName(resultSet.getString("warehouse_name"));
+                po.setCreatedBy(resultSet.getInt("created_by"));
+                po.setCreatedByName(resultSet.getString("created_by_name"));
+                po.setStatus(resultSet.getString("status"));
+                po.setTotalQuantity(resultSet.getInt("total_quantity"));
+                if (resultSet.getTimestamp("created_at") != null) {
+                    po.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                }
+                list.add(po);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 }
