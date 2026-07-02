@@ -93,4 +93,38 @@ public class ReportExcelSupport {
         }
         return wb;
     }
+    
+    public static XSSFWorkbook exportExport(List<Object[]> data, int month, int year, String warehouseName) {
+        XSSFWorkbook wb = createWorkbook("Phiếu xuất");
+        XSSFSheet sheet = wb.getSheetAt(0);
+        addHeader(wb, sheet, "BÁO CÁO XUẤT KHO", month, year, warehouseName);
+
+        CellStyle headerStyle = createHeaderStyle(wb);
+        CellStyle dataStyle = createDataStyle(wb);
+
+        String[] headers = {"STT", "Mã phiếu xuất", "Ngày xuất", "Kho", "Khách hàng", "Mã máy", "Serial", "Người tạo", "Ghi chú"};
+        int rowNum = sheet.getLastRowNum() + 1;
+        Row headerRow = sheet.createRow(rowNum++);
+        for (int i = 0; i < headers.length; i++) {
+            Cell c = headerRow.createCell(i);
+            c.setCellValue(headers[i]);
+            c.setCellStyle(headerStyle);
+        }
+
+        int idx = 1;
+        for (Object[] row : data) {
+            Row r = sheet.createRow(rowNum++);
+            r.createCell(0).setCellValue(idx++);
+            r.getCell(0).setCellStyle(dataStyle);
+            for (int i = 0; i < row.length; i++) {
+                r.createCell(i + 1).setCellValue(row[i] != null ? row[i].toString() : "");
+                r.getCell(i + 1).setCellStyle(dataStyle);
+            }
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+        return wb;
+    }
 }
