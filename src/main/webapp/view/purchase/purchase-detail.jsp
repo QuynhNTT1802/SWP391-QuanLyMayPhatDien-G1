@@ -175,18 +175,12 @@
 
                     <c:if test="${po.status == 'DRAFT' && canCreatePo}">
                         <div class="action-bar-top">
-                            <form method="post" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo" style="display:inline;">
-                                <input type="hidden" name="id" value="${po.poId}"/>
-                                <button type="submit" class="btn btn-primary">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    Gửi duyệt
-                                </button>
-                            </form>
+                            <button type="button" class="btn btn-primary" onclick="openModal('sendToCeoModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                Gửi duyệt
+                            </button>
                             <c:if test="${isOwnerPo}">
-                                <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel" id="cancelForm" style="display:none;">
-                                    <input type="hidden" name="id" value="${po.poId}"/>
-                                </form>
-                                <button type="button" class="btn btn-danger" onclick="if(confirm('Bạn có chắc muốn hủy phiếu mua này?')) document.getElementById('cancelForm').submit();">
+                                <button type="button" class="btn btn-danger" onclick="openModal('cancelModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Hủy phiếu
                                 </button>
@@ -196,10 +190,7 @@
 
                     <c:if test="${po.status == 'PENDING_CEO' && canApprovePo}">
                         <div class="action-bar-top">
-                            <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve" id="approveForm" style="display:none;">
-                                <input type="hidden" name="id" value="${po.poId}"/>
-                            </form>
-                            <button type="button" class="btn btn-primary" onclick="if(confirm('Xác nhận duyệt phiếu mua này?')) document.getElementById('approveForm').submit();">
+                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                 Duyệt
                             </button>
@@ -583,6 +574,52 @@
                     </form>
                 </div>
             </div>
+
+            <div class="modal-host" id="approveModal">
+                <div class="modal-card">
+                    <h3>Duyệt phiếu mua</h3>
+                    <div class="modal-sub">Phiếu mua sẽ chuyển sang trạng thái "Đã duyệt". Kho sẽ có thể tạo phiếu nhập từ phiếu mua này.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=approve">
+                        <input type="hidden" name="id" value="${po.poId}"/>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${po.status == 'DRAFT' && canCreatePo}">
+            <div class="modal-host" id="sendToCeoModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt phiếu mua</h3>
+                    <div class="modal-sub">Phiếu mua sẽ chuyển sang trạng thái "Chờ CEO duyệt". Sau khi gửi, bạn sẽ không thể chỉnh sửa phiếu mua này nữa.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo">
+                        <input type="hidden" name="id" value="${po.poId}"/>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('sendToCeoModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <c:if test="${isOwnerPo}">
+                <div class="modal-host" id="cancelModal">
+                    <div class="modal-card">
+                        <h3>Huỷ phiếu mua</h3>
+                        <div class="modal-sub">Phiếu mua nháp sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                        <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel">
+                            <input type="hidden" name="id" value="${po.poId}"/>
+                            <div class="modal-actions">
+                                <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
+                                <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </c:if>
         </c:if>
 
         <div class="toast-host" id="toastHost"></div>

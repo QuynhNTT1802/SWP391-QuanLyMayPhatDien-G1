@@ -262,28 +262,18 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Chỉnh sửa
                                 </a>
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                    <input type="hidden" name="submitType" value="submit" />
-                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt phiếu đề xuất này?')">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                        Gửi duyệt
-                                    </button>
-                                </form>
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                    <button type="submit" class="btn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất nháp này?')">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                        Huỷ phiếu
-                                    </button>
-                                </form>
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:inline;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Xác nhận xoá phiếu đề xuất nháp này?')">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                                        Xoá
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-primary" onclick="openModal('submitReviewModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt
+                                </button>
+                                <button type="button" class="btn" onclick="openModal('cancelDraftModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    Huỷ phiếu
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                    Xoá
+                                </button>
                             </c:if>
 
                             <c:if test="${proposal.status == 'NEEDS_REVISION' && isOwner}">
@@ -291,14 +281,10 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Chỉnh sửa
                                 </a>
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                    <input type="hidden" name="submitType" value="submit" />
-                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt lại?')">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                        Gửi duyệt lại
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt lại
+                                </button>
                             </c:if>
 
                             <c:if test="${proposal.status == 'NEEDS_REVISION' && proposal.revisionRequestedByRole == 'CEO' && canApprove}">
@@ -306,21 +292,14 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Sửa đề xuất (yêu cầu từ CEO)
                                 </a>
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update" style="display:inline;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                    <input type="hidden" name="submitType" value="submit" />
-                                    <button type="submit" class="btn btn-primary" onclick="return confirm('Xác nhận gửi duyệt lại sau khi Sale Manager chỉnh sửa?')">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                        Gửi duyệt lại
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt lại
+                                </button>
                             </c:if>
 
                             <c:if test="${proposal.status == 'PENDING' && canApprove && isWithinDeadline}">
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve" id="approveForm" style="display:none;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                </form>
-                                <button type="button" class="btn btn-primary" onclick="if(confirm('Xác nhận duyệt phiếu đề xuất này?')) document.getElementById('approveForm').submit();">
+                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Duyệt
                                 </button>
@@ -341,13 +320,10 @@
                             </c:if>
 
                             <c:if test="${proposal.status == 'PENDING' && canCancelProp && isWithinDeadline}">
-                                <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel" style="display:inline;">
-                                    <input type="hidden" name="id" value="${proposal.proposalId}" />
-                                    <button type="submit" class="btn" onclick="return confirm('Xác nhận huỷ phiếu đề xuất này?')">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                        Huỷ phiếu
-                                    </button>
-                                </form>
+                                <button type="button" class="btn" onclick="openModal('cancelModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                                    Huỷ phiếu
+                                </button>
                             </c:if>
 
                             <c:if test="${proposal.status == 'PENDING' && !isWithinDeadline && (canApprove || canReject)}">
@@ -706,6 +682,100 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
                             <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canApprove && isWithinDeadline}">
+            <div class="modal-host" id="approveModal">
+                <div class="modal-card">
+                    <h3>Duyệt phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu đề xuất sẽ chuyển sang trạng thái "Đã duyệt" và có thể được gom vào phiếu mua.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=approve">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${proposal.status == 'PENDING' && !hasLockedPO && canCancelProp && isWithinDeadline}">
+            <div class="modal-host" id="cancelModal">
+                <div class="modal-card">
+                    <h3>Huỷ phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu đề xuất sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${proposal.status == 'DRAFT' && isOwner && !hasLockedPO}">
+            <div class="modal-host" id="submitReviewModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" và Sale Manager sẽ nhận được để xem xét.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <input type="hidden" name="submitType" value="submit" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('submitReviewModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="cancelDraftModal">
+                <div class="modal-card">
+                    <h3>Huỷ phiếu nháp</h3>
+                    <div class="modal-sub">Phiếu nháp sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('cancelDraftModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="modal-host" id="deleteModal">
+                <div class="modal-card">
+                    <h3>Xoá phiếu nháp</h3>
+                    <div class="modal-sub">Phiếu nháp sẽ bị xoá hoàn toàn khỏi hệ thống. Hành động này không thể hoàn tác.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('deleteModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận xoá</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${proposal.status == 'NEEDS_REVISION' && isOwner && !hasLockedPO}">
+            <div class="modal-host" id="resubmitModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt lại</h3>
+                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" để Sale Manager xem xét lại sau khi đã chỉnh sửa.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update">
+                        <input type="hidden" name="id" value="${proposal.proposalId}" />
+                        <input type="hidden" name="submitType" value="submit" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('resubmitModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt lại</button>
                         </div>
                     </form>
                 </div>

@@ -197,7 +197,9 @@
                                             <tr data-id="${p.proposalId}">
                                                 <c:if test="${canCreatePo}">
                                                     <td class="col-check">
-                                                        <c:set var="canTick" value="${p.status == 'APPROVED' && empty p.poCode}"/>
+                                                        <c:set var="dl" value="${periodDeadlines[p.period]}" />
+                                                        <c:set var="withinDeadline" value="${p.period != currentPeriod && dl != null && !dl.isBefore(currentDate)}"/>
+                                                        <c:set var="canTick" value="${p.status == 'APPROVED' && empty p.poCode && withinDeadline}"/>
                                                         <input type="checkbox" class="checkbox row-check" name="proposalIds" value="${p.proposalId}" data-period="${p.period}" data-warehouse="${p.warehouseId}" <c:if test="${!canTick}">disabled</c:if>/>
                                                     </td>
                                                 </c:if>

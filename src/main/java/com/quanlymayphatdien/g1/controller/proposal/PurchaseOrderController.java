@@ -243,8 +243,29 @@ public class PurchaseOrderController extends HttpServlet {
         PurchaseOrderDAO poDao = new PurchaseOrderDAO();
         List<Map<String, Object>> aggregations = poDao.aggregateByProposalIds(proposalIds, warehouseId);
 
+        java.util.Map<Integer, java.util.Map<String, Object>> aggByGen = new java.util.LinkedHashMap<>();
+        for (java.util.Map<String, Object> row : aggregations) {
+            int gid = ((Number) row.get("generatorId")).intValue();
+            java.util.Map<String, Object> existing = aggByGen.get(gid);
+            if (existing == null) {
+                java.util.Map<String, Object> newRow = new java.util.LinkedHashMap<>(row);
+                newRow.remove("proposalDetailId");
+                newRow.remove("proposalId");
+                aggByGen.put(gid, newRow);
+            } else {
+                int sumQty = ((Number) existing.get("totalProposed")).intValue()
+                        + ((Number) row.get("totalProposed")).intValue();
+                existing.put("totalProposed", sumQty);
+                int minStock = Math.min(
+                        ((Number) existing.get("currentStock")).intValue(),
+                        ((Number) row.get("currentStock")).intValue());
+                existing.put("currentStock", minStock);
+            }
+        }
+        List<java.util.Map<String, Object>> aggregatedDisplay = new java.util.ArrayList<>(aggByGen.values());
+
         request.setAttribute("proposals", proposals);
-        request.setAttribute("aggregations", aggregations);
+        request.setAttribute("aggregations", aggregatedDisplay);
         request.setAttribute("selectedPeriod", period);
         request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
@@ -345,46 +366,67 @@ public class PurchaseOrderController extends HttpServlet {
 
             List<PurchaseOrderDetail> details = new ArrayList<>();
             int totalQty = 0;
+
+            java.util.Map<Integer, int[]> qtyByGen = new java.util.LinkedHashMap<>();
+            java.util.Map<Integer, String> noteByGen = new java.util.LinkedHashMap<>();
+            java.util.Map<Integer, java.math.BigDecimal> priceByGen = new java.util.LinkedHashMap<>();
+
             for (int i = 0; i < genIds.length; i++) {
                 int gid = parseInt(genIds[i]);
+                if (gid <= 0) continue;
                 int qty = (finalQtys != null && i < finalQtys.length) ? parseInt(finalQtys[i]) : 0;
                 int pdId = (proposalDetailIdArr != null && i < proposalDetailIdArr.length)
                         ? parseInt(proposalDetailIdArr[i]) : 0;
-                if (gid <= 0 || qty <= 0) {
-                    continue;
+                if (qty <= 0) continue;
+
+                int[] cur = qtyByGen.get(gid);
+                if (cur == null) {
+                    cur = new int[]{0, pdId};
+                    qtyByGen.put(gid, cur);
                 }
+                cur[0] += qty;
+                if (cur[1] <= 0 && pdId > 0) {
+                    cur[1] = pdId;
+                }
+
                 String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
+                if (dNote != null && !dNote.trim().isEmpty() && !noteByGen.containsKey(gid)) {
+                    noteByGen.put(gid, dNote.trim());
+                }
+
+                if (unitPrices != null && i < unitPrices.length) {
+                    String up = unitPrices[i];
+                    if (up != null && !up.trim().isEmpty() && !priceByGen.containsKey(gid)) {
+                        try {
+                            priceByGen.put(gid, new java.math.BigDecimal(up.trim().replaceAll("[^0-9.]", "")));
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+
+            for (java.util.Map.Entry<Integer, int[]> entry : qtyByGen.entrySet()) {
+                int gid = entry.getKey();
+                int qty = entry.getValue()[0];
+                int firstPdId = entry.getValue()[1];
+
                 int proposed = 0, stock = 0;
                 for (Map<String, Object> a : aggs) {
-                    boolean matched;
-                    if (pdId > 0) {
-                        Object pdIdObj = a.get("proposalDetailId");
-                        matched = pdIdObj != null && ((Number) pdIdObj).intValue() == pdId;
-                    } else {
-                        Object genIdObj = a.get("generatorId");
-                        matched = genIdObj != null && ((Number) genIdObj).intValue() == gid;
-                    }
-                    if (matched) {
-                        Object tpObj = a.get("totalProposed");
-                        Object csObj = a.get("currentStock");
-                        proposed = tpObj != null ? ((Number) tpObj).intValue() : 0;
-                        stock = csObj != null ? ((Number) csObj).intValue() : 0;
-                        break;
-                    }
+                    Object genIdObj = a.get("generatorId");
+                    if (genIdObj == null || ((Number) genIdObj).intValue() != gid) continue;
+                    Object tpObj = a.get("totalProposed");
+                    Object csObj = a.get("currentStock");
+                    if (tpObj != null) proposed += ((Number) tpObj).intValue();
+                    if (csObj != null && stock == 0) stock = ((Number) csObj).intValue();
                 }
+
                 PurchaseOrderDetail d = new PurchaseOrderDetail();
-                d.setProposalDetailId(pdId > 0 ? pdId : null);
+                d.setProposalDetailId(firstPdId > 0 ? firstPdId : null);
                 d.setGeneratorId(gid);
                 d.setProposedQuantity(proposed);
                 d.setCurrentStock(stock);
                 d.setFinalQuantity(qty);
-                d.setNote(dNote);
-                if (unitPrices != null && i < unitPrices.length) {
-                    String up = unitPrices[i];
-                    if (up != null && !up.trim().isEmpty()) {
-                        try { d.setUnitPrice(new java.math.BigDecimal(up.trim().replaceAll("[^0-9.]", ""))); } catch (Exception ignored) {}
-                    }
-                }
+                d.setNote(noteByGen.get(gid));
+                d.setUnitPrice(priceByGen.get(gid));
                 details.add(d);
                 totalQty += qty;
             }
