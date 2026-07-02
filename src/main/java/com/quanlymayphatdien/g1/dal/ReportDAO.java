@@ -410,4 +410,69 @@ public class ReportDAO extends DBContext{
         }
         return list;
     }
+    
+    private List<Receipt> queryReceipts(String baseSql, Integer warehouseId,
+            int month, int year, int page, int pageSize) {
+        List<Receipt> list = new ArrayList<>();
+        String firstDay = String.format("%04d-%02d-01", year, month);
+        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        StringBuilder sql = new StringBuilder(baseSql);
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay);
+        params.add(lastDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+        }
+        if (page > 0 && pageSize > 0) {
+            sql.append(" LIMIT ? OFFSET ?");
+            params.add(pageSize);
+            params.add((page - 1) * pageSize);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Receipt r = new Receipt();
+                r.setReceiptId(resultSet.getInt("receipt_id"));
+                r.setReceiptCode(resultSet.getString("receipt_code"));
+                r.setReceiptType(resultSet.getString("receipt_type"));
+                r.setWarehouseId(resultSet.getInt("warehouse_id"));
+                r.setWarehouseName(resultSet.getString("warehouse_name"));
+                r.setCreatedBy(resultSet.getInt("created_by"));
+                r.setCreatedByName(resultSet.getString("created_by_name"));
+                r.setStatus(resultSet.getString("status"));
+                r.setNote(resultSet.getString("note"));
+                try {
+                    r.setOrderId((Integer) resultSet.getObject("order_id"));
+                } catch (Exception e) {
+                }
+                try {
+                    r.setPurchaseOrderId((Integer) resultSet.getObject("purchase_order_id"));
+                } catch (Exception e) {
+                }
+                if (resultSet.getTimestamp("created_at") != null) {
+                    r.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+                }
+                try {
+                    r.setOrderCode(resultSet.getString("order_code"));
+                } catch (Exception e) {
+                }
+                try {
+                    r.setCustomerName(resultSet.getString("customer_name"));
+                } catch (Exception e) {
+                }
+                r.setPurchaseOrderCode(resultSet.getString("purchase_order_code"));
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 }
