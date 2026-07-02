@@ -247,4 +247,10 @@ public class ReportExcelSupport {
         }
         return wb;
     }
+    
+    private static XSSFWorkbook createWorkbook(String sheetName) {
+        XSSFWorkbook wb = new XSSFWorkbook();
+        wb.createSheet(sheetName);
+        return wb;
+    }
 }
