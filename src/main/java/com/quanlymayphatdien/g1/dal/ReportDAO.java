@@ -98,4 +98,8 @@ public class ReportDAO extends DBContext{
     public int countExportReport(Integer warehouseId, int month, int year) {
         return countReceiptByType("EXPORT", warehouseId, month, year);
     }
+    
+    public List<Receipt> getImportReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+        return queryReceipts(buildReceiptSql("IMPORT", warehouseId, false), warehouseId, month, year, page, pageSize);
+    }
 }
