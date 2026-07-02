@@ -156,7 +156,6 @@
                     </table>
                 </c:when>
 
-                <%-- KIỂM KÊ --%>
                 <c:when test="${reportType == 'inventory-check'}">
                     <table class="report-table">
                         <thead>
@@ -199,7 +198,6 @@
                     </table>
                 </c:when>
 
-                <%-- MUA --%>
                 <c:when test="${reportType == 'purchase'}">
                     <table class="report-table">
                         <thead>
@@ -234,7 +232,6 @@
                     </table>
                 </c:when>
 
-                <%-- BÁN --%>
                 <c:when test="${reportType == 'sales'}">
                     <table class="report-table">
                         <thead>
@@ -269,7 +266,6 @@
             </c:choose>
         </div>
 
-        <%-- PHÂN TRANG --%>
         <c:if test="${totalPages > 1}">
             <div class="pagination">
                 <c:if test="${currentPage > 1}">
