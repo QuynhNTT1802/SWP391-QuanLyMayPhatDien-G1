@@ -65,7 +65,7 @@ public class InventoryCheckExcelSupport {
         Row dateRow = sheet.createRow(rowNum);
         dateRow.createCell(0).setCellValue("Ngày báo cáo: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         dateRow.getCell(0).setCellStyle(infoStyle);
-        sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, COL_COUNT - 1));
+sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, COL_COUNT - 1));
         rowNum++;
 
         Row whRow = sheet.createRow(rowNum);

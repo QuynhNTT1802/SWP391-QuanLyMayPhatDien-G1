@@ -86,49 +86,27 @@
             <c:if test="${not empty transfer}">
             <c:set var="t" value="${transfer}"/>
             <c:set var="status" value="${t.status}"/>
-            <c:set var="isMgrRound1" value="${status == 'PENDING_MANAGER' && empty t.ceoReviewedAt}"/>
-            <c:set var="isMgrRound2" value="${status == 'PENDING_MANAGER' && not empty t.ceoReviewedAt}"/>
 
             <c:choose>
-                <c:when test="${status == 'DRAFT'}">
-                    <c:set var="statusLabel" value="Nháp"/>
-                    <c:set var="statusBg" value="#e2e3e5"/>
-                    <c:set var="statusFg" value="#383d41"/>
-                </c:when>
-                <c:when test="${status == 'PENDING_MANAGER' && isMgrRound1}">
-                    <c:set var="statusLabel" value="Chờ Manager duyệt lần 1"/>
-                    <c:set var="statusBg" value="#cce5ff"/>
-                    <c:set var="statusFg" value="#004085"/>
-                </c:when>
-                <c:when test="${status == 'PENDING_MANAGER' && isMgrRound2}">
-                    <c:set var="statusLabel" value="Chờ Manager xác nhận cuối"/>
-                    <c:set var="statusBg" value="#cce5ff"/>
-                    <c:set var="statusFg" value="#004085"/>
-                </c:when>
                 <c:when test="${status == 'PENDING_CEO'}">
                     <c:set var="statusLabel" value="Chờ CEO duyệt"/>
                     <c:set var="statusBg" value="#e2d5f3"/>
                     <c:set var="statusFg" value="#5a2a82"/>
+                </c:when>
+                <c:when test="${status == 'AWAITING_DEST_ACCEPT'}">
+                    <c:set var="statusLabel" value="Chờ kho đích xác nhận"/>
+                    <c:set var="statusBg" value="#cce5ff"/>
+                    <c:set var="statusFg" value="#004085"/>
                 </c:when>
                 <c:when test="${status == 'COMPLETED'}">
                     <c:set var="statusLabel" value="Hoàn tất"/>
                     <c:set var="statusBg" value="#d4edda"/>
                     <c:set var="statusFg" value="#155724"/>
                 </c:when>
-                <c:when test="${status == 'NEEDS_REVISION'}">
-                    <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
-                    <c:set var="statusBg" value="#ffe0b2"/>
-                    <c:set var="statusFg" value="#b15c00"/>
-                </c:when>
                 <c:when test="${status == 'REJECTED'}">
                     <c:set var="statusLabel" value="Bị từ chối"/>
                     <c:set var="statusBg" value="#f8d7da"/>
                     <c:set var="statusFg" value="#721c24"/>
-                </c:when>
-                <c:when test="${status == 'CANCELLED'}">
-                    <c:set var="statusLabel" value="Đã hủy"/>
-                    <c:set var="statusBg" value="#fff3cd"/>
-                    <c:set var="statusFg" value="#856404"/>
                 </c:when>
                 <c:otherwise>
                     <c:set var="statusLabel" value="${status}"/>
@@ -177,73 +155,29 @@
                 </c:if>
             </c:if>
 
-            <c:if test="${status == 'DRAFT' || status == 'PENDING_MANAGER' || status == 'PENDING_CEO' || status == 'NEEDS_REVISION'}">
+            <c:if test="${canCeApprove or canCeReject}">
                 <div class="action-bar-top">
-                    <c:if test="${isOwner && status == 'DRAFT'}">
-                        <a class="btn" href="${pageContext.request.contextPath}/transfers?action=edit_view&id=${t.transferId}">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                            Sửa phiếu
-                        </a>
-                        <form method="post" action="${pageContext.request.contextPath}/transfers?action=submit" style="display:inline;">
-                            <input type="hidden" name="id" value="${t.transferId}"/>
-                            <button type="submit" class="btn btn-primary">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                Gửi duyệt (Manager)
-                            </button>
-                        </form>
-                    </c:if>
-
-                    <c:if test="${isOwner && (status == 'DRAFT' || isMgrRound1)}">
-                        <form method="post" action="${pageContext.request.contextPath}/transfers?action=cancel" style="display:inline;" onsubmit="return confirm('Hủy phiếu này?');">
-                            <input type="hidden" name="id" value="${t.transferId}"/>
-                            <button type="submit" class="btn btn-outline-warn">Hủy phiếu</button>
-                        </form>
-                    </c:if>
-
-                    <c:if test="${isMgrRound1}">
-                        <form method="post" action="${pageContext.request.contextPath}/transfers?action=approve_manager" style="display:inline;">
-                            <input type="hidden" name="id" value="${t.transferId}"/>
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Duyệt phiếu và chuyển CEO?');">Duyệt → CEO</button>
-                        </form>
-                        <button type="button" class="btn" onclick="openRequestRevisionModal('request_revision_manager', 'Yêu cầu chỉnh sửa (Manager)', 'managerNote')">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                            Yêu cầu chỉnh sửa
+                    <form method="post" action="${pageContext.request.contextPath}/transfers?action=ce_approve" style="display:inline;">
+                        <input type="hidden" name="id" value="${t.transferId}"/>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('CEO duyệt - chuyển sang kho đích xác nhận?');">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Duyệt (CEO)
                         </button>
-                        <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('reject_manager', 'Từ chối phiếu (Manager)', 'managerNote')">Từ chối</button>
-                    </c:if>
-
-                    <c:if test="${isMgrRound2}">
-                        <form method="post" action="${pageContext.request.contextPath}/transfers?action=final_approve" style="display:inline;">
-                            <input type="hidden" name="id" value="${t.transferId}"/>
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận cuối và THỰC HIỆN chuyển kho?');">Xác nhận cuối &amp; Chuyển kho</button>
-                        </form>
-                        <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('final_reject', 'Từ chối xác nhận cuối', 'managerNote')">Từ chối (Hủy phiếu)</button>
-                    </c:if>
-
-                    <c:if test="${status == 'PENDING_CEO'}">
-                        <form method="post" action="${pageContext.request.contextPath}/transfers?action=approve_ceo" style="display:inline;">
-                            <input type="hidden" name="id" value="${t.transferId}"/>
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Duyệt phiếu và trả về Manager xác nhận cuối?');">Duyệt → Manager</button>
-                        </form>
-                        <button type="button" class="btn" onclick="openRequestRevisionModal('request_revision_ceo', 'Yêu cầu chỉnh sửa (CEO)', 'ceoNote')">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                            Yêu cầu chỉnh sửa
-                        </button>
-                        <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('reject_ceo', 'Từ chối phiếu (CEO)', 'ceoNote')">Từ chối</button>
-                    </c:if>
+                    </form>
+                    <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('ce_reject', 'Từ chối phiếu (CEO)', 'ceoNote')">Từ chối (CEO)</button>
                 </div>
             </c:if>
 
-            <c:if test="${status == 'NEEDS_REVISION' && isOwner}">
-                <div class="reject-note-box" style="background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 25%, transparent); color: var(--warn);">
-                    <strong>Yêu cầu chỉnh sửa từ người duyệt</strong>
-                    <span><c:out value="${not empty t.managerNote ? t.managerNote : t.ceoNote}"/></span>
-                </div>
+            <c:if test="${canDestAccept or canDestReject}">
                 <div class="action-bar-top">
-                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/transfers?action=edit_view&id=${t.transferId}">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                        Sửa phiếu &amp; gửi lại
-                    </a>
+                    <form method="post" action="${pageContext.request.contextPath}/transfers?action=dest_accept" style="display:inline;">
+                        <input type="hidden" name="id" value="${t.transferId}"/>
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận nhận hàng từ kho nguồn? Tồn kho sẽ được chuyển sang kho đích.');">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Chấp nhận (Kho đích)
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('dest_reject', 'Từ chối nhận hàng (Kho đích)', 'destNote')">Từ chối (Kho đích)</button>
                 </div>
             </c:if>
 
@@ -274,16 +208,11 @@
                             <select name="logAction" class="filter-select">
                                 <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
                                 <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu</option>
-                                <option value="SUBMIT" ${logAction == 'SUBMIT' ? 'selected' : ''}>Gửi duyệt</option>
                                 <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
-                                <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy phiếu</option>
-                                <option value="MANAGER_APPROVE" ${logAction == 'MANAGER_APPROVE' ? 'selected' : ''}>Manager duyệt lần 1</option>
-                                <option value="MANAGER_REJECT" ${logAction == 'MANAGER_REJECT' ? 'selected' : ''}>Manager từ chối lần 1</option>
-                                <option value="CEO_APPROVE" ${logAction == 'CEO_APPROVE' ? 'selected' : ''}>CEO duyệt</option>
-                                <option value="CEO_REJECT" ${logAction == 'CEO_REJECT' ? 'selected' : ''}>CEO từ chối</option>
-                                <option value="FINAL_APPROVE" ${logAction == 'FINAL_APPROVE' ? 'selected' : ''}>Xác nhận cuối</option>
-                                <option value="MANAGER_REJECT_R2" ${logAction == 'MANAGER_REJECT_R2' ? 'selected' : ''}>Từ chối xác nhận cuối</option>
-                                <option value="REQUEST_REVISION" ${logAction == 'REQUEST_REVISION' ? 'selected' : ''}>Yêu cầu sửa</option>
+                                <option value="CE_APPROVE" ${logAction == 'CE_APPROVE' ? 'selected' : ''}>CEO duyệt</option>
+                                <option value="CE_REJECT" ${logAction == 'CE_REJECT' ? 'selected' : ''}>CEO từ chối</option>
+                                <option value="DEST_ACCEPT" ${logAction == 'DEST_ACCEPT' ? 'selected' : ''}>Kho đích chấp nhận</option>
+                                <option value="DEST_REJECT" ${logAction == 'DEST_REJECT' ? 'selected' : ''}>Kho đích từ chối</option>
                             </select>
                             <div class="date-range">
                                 <label class="date-label">Từ</label>
@@ -540,21 +469,6 @@
     </div>
 </div>
 
-<div class="modal-host" id="requestRevisionModal">
-    <div class="modal-card">
-        <h3 id="revisionModalTitle">Yêu cầu chỉnh sửa</h3>
-        <form method="POST" action="${pageContext.request.contextPath}/transfers" id="revisionForm">
-            <input type="hidden" name="id" value="${transfer.transferId}" />
-            <input type="hidden" name="action" id="revisionFormAction" value="" />
-            <textarea name="REPLACE_NOTE" id="revisionFormNote" required maxlength="500" rows="4" placeholder="Nhập lý do yêu cầu chỉnh sửa..."></textarea>
-            <div class="modal-actions">
-                <button type="button" class="btn" onclick="closeModal('requestRevisionModal')">Huỷ</button>
-                <button type="submit" class="btn btn-primary" id="revisionFormSubmit">Gửi yêu cầu</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
@@ -568,15 +482,6 @@
         ta.value = '';
         ta.setAttribute('name', noteFieldName);
         openModal('rejectModal');
-    }
-
-    function openRequestRevisionModal(action, title, noteFieldName) {
-        document.getElementById('revisionModalTitle').innerText = title;
-        document.getElementById('revisionFormAction').value = action;
-        var ta = document.getElementById('revisionFormNote');
-        ta.value = '';
-        ta.setAttribute('name', noteFieldName);
-        openModal('requestRevisionModal');
     }
 
     document.querySelectorAll('.modal-host').forEach(function (m) {

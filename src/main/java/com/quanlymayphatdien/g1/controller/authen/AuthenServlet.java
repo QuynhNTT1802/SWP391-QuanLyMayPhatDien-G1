@@ -170,6 +170,9 @@ public class AuthenServlet extends HttpServlet {
             Set<String> perms = perDAO.getEffectPermissions(user.getId());
             session.setAttribute("userPermissions", perms);
 
+            int scopedWarehouseId = new UserDAO().getScopedWarehouseId(user.getId());
+            session.setAttribute("scopedWarehouseId", scopedWarehouseId);
+
             response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             return true;
         } catch (Exception e) {
@@ -216,6 +219,9 @@ public class AuthenServlet extends HttpServlet {
             PermissionDAO perDAO = new PermissionDAO();
             Set<String> perms = perDAO.getEffectPermissions(user.getId());
             session.setAttribute("userPermissions", perms);
+
+            int scopedWarehouseId = new UserDAO().getScopedWarehouseId(user.getId());
+            session.setAttribute("scopedWarehouseId", scopedWarehouseId);
 
             if (remember != null) {
                 String token = username + ":" + BCryptUtils.hash(username + System.currentTimeMillis());
