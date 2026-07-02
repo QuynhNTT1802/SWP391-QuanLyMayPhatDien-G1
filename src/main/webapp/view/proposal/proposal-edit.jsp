@@ -438,9 +438,7 @@
                 return true;
             }
             function confirmDelete() {
-                if (confirm('Bạn có chắc chắn muốn XOÁ phiếu nháp "<c:out value="${proposal.proposalCode}"/>"?\n\nHành động này không thể hoàn tác.')) {
-                    document.getElementById('deleteForm').submit();
-                }
+                document.getElementById('deleteForm').submit();
             }
         </script>
     </body>
