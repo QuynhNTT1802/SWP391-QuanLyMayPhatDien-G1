@@ -570,7 +570,7 @@
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn có chắc muốn duyệt phiếu mua này?');">Xác nhận duyệt</button>
+                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
                         </div>
                     </form>
                 </div>
