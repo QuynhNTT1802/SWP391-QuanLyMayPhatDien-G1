@@ -453,6 +453,45 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
 
+    /**
+     * Giai phong nhieu reservation cung luc (RESERVED_EXPORT -> IN_STOCK) trong
+     * cung connection. Tra ve so dong thuc su update.
+     */
+    public int releaseReservations(Connection conn, java.util.List<Integer> inventoryIds) throws SQLException {
+        if (inventoryIds == null || inventoryIds.isEmpty()) {
+            return 0;
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(inventoryIds.size(), "?"));
+        String sql = "UPDATE inventory SET status = ? WHERE status = ? AND inventory_id IN (" + placeholders + ")";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, STATUS_IN_STOCK);
+            ps.setString(2, STATUS_RESERVED_EXPORT);
+            for (int i = 0; i < inventoryIds.size(); i++) {
+                ps.setInt(i + 3, inventoryIds.get(i));
+            }
+            return ps.executeUpdate();
+        }
+    }
+
+
+    /**
+     * Lay danh sach inventory_id theo receipt_id (tu receipt_detail).
+     */
+    public java.util.List<Integer> getInventoryIdsByReceiptId(Connection conn, int receiptId) throws SQLException {
+        java.util.List<Integer> ids = new java.util.ArrayList<>();
+        String sql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, receiptId);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("inventory_id"));
+                }
+            }
+        }
+        return ids;
+    }
+
+
     public boolean completeImport(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

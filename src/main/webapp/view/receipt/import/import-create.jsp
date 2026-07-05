@@ -143,12 +143,30 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label>Kho *</label>
-                                <select id="warehouseSelect" name="warehouseId" required onchange="onWarehouseChange()">
-                                    <option value="">-- Chọn kho trước --</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}">${wh.name}</option>
-                                    </c:forEach>
-                                </select>
+                                <c:choose>
+                                    <c:when test="${fromPurchaseOrder}">
+                                        <div class="readonly-field" style="display:flex; align-items:center; gap:8px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--fg); font-size: 13px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                            <c:set var="warehouseName" value=""/>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <c:if test="${wh.warehouseId == receipt.warehouseId}">
+                                                    <c:set var="warehouseName" value="${wh.name}"/>
+                                                </c:if>
+                                            </c:forEach>
+                                            <strong><c:out value="${warehouseName}"/></strong>
+                                            <span style="color: var(--muted); font-size: 11px; margin-left: 4px;">(đã khóa theo PO)</span>
+                                        </div>
+                                        <input type="hidden" name="warehouseId" value="${receipt.warehouseId}"/>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <select id="warehouseSelect" name="warehouseId" required onchange="onWarehouseChange()">
+                                            <option value="">-- Chọn kho trước --</option>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <option value="${wh.warehouseId}">${wh.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:otherwise>
+                                </c:choose>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <div class="form-field">
@@ -187,12 +205,30 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                                     Tải mẫu Excel
                                 </a>
-                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="Nhập hàng loạt từ Excel (.xlsx)">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l5-5-5 5M12 3v12"/></svg>
                                     Nhập từ Excel
                                 </button>
+                                <c:if test="${fromPurchaseOrder}">
+                                    <span class="po-lock-badge" style="background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        Đã khóa từ PO ${purchaseOrder.poCode}
+                                    </span>
+                                </c:if>
                             </div>
                         </div>
+                        <c:if test="${fromPurchaseOrder}">
+                            <div class="alert alert-info" style="margin-bottom: 14px;">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                <div class="alert-body">
+                                    <div class="alert-title">Phiếu nhập từ Purchase Order - danh sách máy đã được cố định</div>
+                                    <div>
+                                        Bạn <strong>chỉ cần nhập serial</strong> cho từng máy. Không thể thay đổi kho, máy, thêm hoặc xoá dòng.
+                                        Tổng cần nhập: <strong>${expectedRows} serial</strong>.
+                                    </div>
+                                </div>
+                            </div>
+                        </c:if>
                         <div id="warehouseWarn" class="alert alert-info" style="display:none;">
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <div class="alert-body">
@@ -211,31 +247,165 @@
                                 </tr>
                             </thead>
                             <tbody id="detailBody">
-                                <tr>
-                                    <td class="col-num"><span class="row-num">1</span></td>
-                                    <td>
-                                        <select name="generatorId" required disabled onchange="onGeneratorChange(this)">
-                                            <option value="">-- Chọn kho trước --</option>
-                                        </select>
-                                        <span class="stock-info" data-stock-info></span>
-                                        <span class="field-error" style="display:none;"></span>
-                                    </td>
-                                    <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
-                                    <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
-                                    <td class="col-del">
-                                        <button type="button" class="row-del-btn" disabled onclick="removeRow(this)" title="Xoá dòng">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                        </button>
-                                    </td>
-                                </tr>
+                                <c:choose>
+                                    <c:when test="${fromPurchaseOrder and not empty poRowList}">
+                                        <c:forEach var="row" items="${poRowList}" varStatus="st">
+                                            <tr class="po-locked-row">
+                                                <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
+                                                <td>
+                                                    <input type="hidden" name="manualGeneratorId" value="${row.generatorId}"/>
+                                                    <strong><c:out value="${row.generatorCode}"/></strong>
+                                                    <c:if test="${not empty row.brandName}">
+                                                        <span class="stock-info">${row.brandName}</span>
+                                                    </c:if>
+                                                    <c:if test="${empty row.generatorCode}">
+                                                        <span class="stock-info">Mã máy #${row.generatorId}</span>
+                                                    </c:if>
+                                                    <span class="po-lock-tag" style="margin-left: 6px; font-size: 10px; padding: 2px 6px; background: var(--accent-soft); color: var(--accent); border-radius: 99px; font-weight: 600;">KHÓA</span>
+                                                </td>
+                                                <td><input type="text" name="manualSerialNumber" placeholder="Nhập S/N"
+                                                       value="<c:out value='${not empty poSerialList ? poSerialList[st.index] : (not empty preservedManualRows and st.index lt fn:length(preservedManualRows) ? preservedManualRows[st.index].serialNumber : "")}'/>"
+                                                       required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                                <td><input type="text" name="manualDetailNote" placeholder="Ghi chú"
+                                                       value="<c:out value='${row.note}'/>" /></td>
+                                                <td class="col-del">
+                                                    <span class="po-no-delete" style="color: var(--muted); font-size: 11px;">PO</span>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <tr>
+                                            <td class="col-num"><span class="row-num">1</span></td>
+                                            <td>
+                                                <select name="manualGeneratorId" required disabled onchange="onGeneratorChange(this)">
+                                                    <option value="">-- Chọn kho trước --</option>
+                                                </select>
+                                                <span class="stock-info" data-stock-info></span>
+                                                <span class="field-error" style="display:none;"></span>
+                                            </td>
+                                            <td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
+                                            <td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>
+                                            <td class="col-del">
+                                                <button type="button" class="row-del-btn" disabled onclick="removeRow(this)" title="Xoá dòng">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </c:otherwise>
+                                </c:choose>
                             </tbody>
                         </table>
 
-                        <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
+                        <button type="button" class="btn add-row-btn" id="addRowBtn"<c:if test="${fromPurchaseOrder}"> style="display:none;"</c:if> disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
+                        <c:if test="${fromPurchaseOrder}">
+                            <div id="poCounter" style="margin-top: 12px; padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius-sm); font-size: 13px; color: var(--muted);">
+                                Đã nhập serial: <strong id="poFilledCount" style="color: var(--accent);">0</strong> / <strong>${expectedRows}</strong>
+                            </div>
+                        </c:if>
                     </section>
+
+                    <c:if test="${not empty validRows or not empty invalidRows}">
+                        <section class="section excel-preview-section" style="padding: 18px 22px; margin-top: 16px;">
+                            <div class="section-head">
+                                <div>
+                                    <div class="section-num">03 — XEM TRƯỚC TỪ EXCEL</div>
+                                    <h3 class="section-title">
+                                        Dữ liệu đọc từ file Excel
+                                        <span style="font-weight: 500; font-size: 12px; color: var(--muted); margin-left: 8px;">
+                                            Hợp lệ: <strong style="color:#065f46;">${fn:length(validRows)}</strong>
+                                            &nbsp;|&nbsp; Lỗi: <strong style="color:#991b1b;">${fn:length(invalidRows)}</strong>
+                                        </span>
+                                    </h3>
+                                </div>
+                            </div>
+
+                            <c:if test="${not empty invalidRows}">
+                                <div class="alert alert-warn" style="margin-bottom: 14px;">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                    <div class="alert-body">
+                                        <div class="alert-title">Có ${fn:length(invalidRows)} dòng lỗi (sẽ bị bỏ qua)</div>
+                                        <ul style="margin: 4px 0 0 18px; padding: 0;">
+                                            <c:forEach var="row" items="${invalidRows}">
+                                                <li>Dòng ${row.rowNum}: ${row.model} / ${row.serial} - <strong style="color:#991b1b;">${row['_errors']}</strong></li>
+                                            </c:forEach>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </c:if>
+
+                            <c:if test="${empty validRows}">
+                                <div class="alert alert-error">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    <div class="alert-body">
+                                        <div class="alert-title">Không có dòng hợp lệ nào trong file Excel</div>
+                                        <div>Hãy sửa file và upload lại.</div>
+                                    </div>
+                                </div>
+                            </c:if>
+
+                            <c:if test="${not empty validRows}">
+                                <div class="info-box" style="background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px;">
+                                    <strong>Lưu ý:</strong> Tick chọn các dòng muốn nhập. Khi bấm "Tạo phiếu nhập", các dòng tick sẽ được thêm vào phiếu nháp.
+                                    Các dòng manual trong bảng phía trên cũng sẽ được thêm.
+                                </div>
+                                <table class="detail-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-num" style="width: 36px;">
+                                                <input type="checkbox" id="checkAllExcel" checked
+                                                       onclick="document.querySelectorAll('.excel-row-cb').forEach(c => c.checked = this.checked)"/>
+                                            </th>
+                                            <th class="col-num">#</th>
+                                            <th class="col-gen">Máy phát</th>
+                                            <th class="col-serial">Serial</th>
+                                            <th class="col-note">Ghi chú</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:forEach var="row" items="${validRows}" varStatus="st">
+                                            <tr>
+                                                <td class="col-num" style="text-align:center; padding-top:14px;">
+                                                    <input type="checkbox" class="excel-row-cb row-cb-excel"
+                                                           name="rowIndex" value="${st.index}" checked
+                                                           onchange="syncExcelHiddenInputs()"/>
+                                                </td>
+                                                <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
+                                                <td>
+                                                    <strong>${row.generatorModel}</strong>
+                                                    <span class="stock-info">${row.brand}</span>
+                                                    <input type="hidden" class="excel-gen" name="generatorId" value="${row.generatorId}"
+                                                           disabled="disabled"/>
+                                                </td>
+                                                <td>
+                                                    <span class="mono">${row.serial}</span>
+                                                    <input type="hidden" class="excel-serial" name="serialNumber" value="${row.serial}"
+                                                           disabled="disabled"/>
+                                                </td>
+                                                <td>
+                                                    <input type="text" class="excel-note" name="detailNote" value="${row.note}"
+                                                           placeholder="(không có)" disabled="disabled"/>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                </table>
+
+                                <div class="btn-row" style="display:flex; gap:10px; margin-top: 14px;">
+                                    <button type="button" class="btn btn-primary" onclick="submitImportConfirm()">
+                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                                        Tạo phiếu nháp từ <span id="selectedCount">${fn:length(validRows)}</span> dòng Excel đã chọn
+                                    </button>
+                                    <button type="button" class="btn" onclick="document.getElementById('excelFileInput').click()">
+                                        Upload lại file khác
+                                    </button>
+                                </div>
+                            </c:if>
+                        </section>
+                    </c:if>
                 </div>
             </form>
 
@@ -244,6 +414,7 @@
                 <input type="hidden" name="warehouseId" id="excelWarehouseId"/>
                 <input type="hidden" name="reasonId" id="excelReasonId"/>
                 <input type="hidden" name="note" id="excelNote"/>
+                <input type="hidden" name="poId" id="excelPoId" value="<c:out value='${receipt.purchaseOrderId}'/>"/>
                 <input type="file" name="excelFile" id="excelFileInput" accept=".xlsx"
                        onchange="submitExcelUpload(this)"/>
             </form>
@@ -281,10 +452,20 @@
     var ctx = window.APP_CTX;
     var generatorCache = [];
     var prefillDetails = [];
+    var preservedManualRows = [];
+
     <c:if test="${not empty receipt.details}">
     prefillDetails = [
         <c:forEach var="d" items="${receipt.details}" varStatus="st">
         <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
+        </c:forEach>
+    ];
+    </c:if>
+
+    <c:if test="${not empty preservedManualRows}">
+    preservedManualRows = [
+        <c:forEach var="row" items="${preservedManualRows}" varStatus="st">
+        <c:if test="${st.index > 0}">,</c:if>{generatorId: '<c:out value="${row.generatorId}"/>', serialNumber: '<c:out value="${row.serialNumber}"/>', note: '<c:out value="${row.detailNote}"/>'}
         </c:forEach>
     ];
     </c:if>
@@ -347,27 +528,45 @@
     }
 
     function refreshAllGeneratorSelects() {
-        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+        document.querySelectorAll('#detailBody tr select[name="manualGeneratorId"]').forEach(function (sel) {
             renderGeneratorOptions(sel);
         });
     }
 
     function applyPrefill() {
-        if (!prefillDetails || prefillDetails.length === 0) return;
         var tbody = document.getElementById('detailBody');
+        if (!tbody) return;
+
+        if (tbody.querySelector('tr.po-locked-row')) {
+            return;
+        }
+
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-        prefillDetails.forEach(function (p) {
-            var tr = buildEmptyRow(p.generatorId);
-            var noteInput = tr.querySelector('input[name="detailNote"]');
-            if (noteInput && p.note) noteInput.value = p.note;
-            tbody.appendChild(tr);
-        });
+
+        var source = [];
+        if (preservedManualRows && preservedManualRows.length > 0) {
+            source = preservedManualRows;
+        } else if (prefillDetails && prefillDetails.length > 0) {
+            source = prefillDetails;
+        }
+        if (source.length === 0) {
+            tbody.appendChild(buildEmptyRow());
+        } else {
+            source.forEach(function (p) {
+                var tr = buildEmptyRow(p.generatorId);
+                var noteInput = tr.querySelector('input[name="manualDetailNote"]');
+                if (noteInput && p.note) noteInput.value = p.note;
+                var serialInput = tr.querySelector('input[name="manualSerialNumber"]');
+                if (serialInput && p.serialNumber) serialInput.value = p.serialNumber;
+                tbody.appendChild(tr);
+            });
+        }
         updateRowNumbers();
     }
 
     function disableAllRows(disabled) {
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            row.querySelectorAll('select[name="generatorId"], input[name="serialNumber"]').forEach(function (el) {
+            row.querySelectorAll('select[name="manualGeneratorId"], input[name="manualSerialNumber"]').forEach(function (el) {
                 el.disabled = disabled;
             });
             var btn = row.querySelector('.row-del-btn');
@@ -384,11 +583,11 @@
     function buildEmptyRow(presetGenId) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
-                + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
+                + '<td><select name="manualGeneratorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
-        var sel = tr.querySelector('select[name="generatorId"]');
+        var sel = tr.querySelector('select[name="manualGeneratorId"]');
         if (presetGenId) {
             sel.setAttribute('data-current', presetGenId);
         }
@@ -397,12 +596,20 @@
     }
 
     function addRow() {
+        if (document.querySelector('tr.po-locked-row')) {
+            toast('Đang nhập từ PO, không thể thêm dòng mới. Hãy nhập serial vào các dòng có sẵn.', 'danger');
+            return;
+        }
         var tbody = document.getElementById('detailBody');
         tbody.appendChild(buildEmptyRow());
         updateRowNumbers();
     }
 
     function removeRow(btn) {
+        if (document.querySelector('tr.po-locked-row')) {
+            toast('Đang nhập từ PO, không thể xoá dòng.', 'danger');
+            return;
+        }
         var tbody = document.getElementById('detailBody');
         if (tbody.querySelectorAll('tr').length <= 1) return;
         btn.closest('tr').remove();
@@ -413,6 +620,17 @@
         document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
             el.textContent = i + 1;
         });
+        updatePoCounter();
+    }
+
+    function updatePoCounter() {
+        var counter = document.getElementById('poFilledCount');
+        if (!counter) return;
+        var filled = 0;
+        document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+            if (inp.value && inp.value.trim().length > 0) filled++;
+        });
+        counter.textContent = filled;
     }
 
     function validateField(el) {
@@ -436,16 +654,34 @@
         }
         var valid = true;
         var firstInvalid = null;
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+
         document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
+            if (isPoMode && el.tagName === 'SELECT' && el.name === 'manualGeneratorId') {
+                return;
+            }
             if (!validateField(el)) {
                 valid = false;
                 if (firstInvalid === null) firstInvalid = el;
             }
         });
-        if (document.querySelectorAll('#detailBody tr').length === 0) {
-            toast('Vui lòng thêm ít nhất 1 dòng chi tiết', 'danger');
-            valid = false;
+
+        if (isPoMode) {
+            var missingSerial = 0;
+            document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+                if (!inp.value || !inp.value.trim()) missingSerial++;
+            });
+            if (missingSerial > 0) {
+                toast('Còn ' + missingSerial + ' dòng chưa nhập serial. Hãy nhập đủ serial cho tất cả các máy trong PO.', 'danger');
+                valid = false;
+            }
+        } else {
+            if (document.querySelectorAll('#detailBody tr').length === 0) {
+                toast('Vui lòng thêm ít nhất 1 dòng chi tiết', 'danger');
+                valid = false;
+            }
         }
+
         if (!valid) {
             toast('Vui lòng điền đầy đủ các trường bắt buộc', 'danger');
             if (firstInvalid) firstInvalid.focus();
@@ -454,31 +690,168 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        <c:if test="${not empty receipt and receipt.warehouseId > 0}">
+        <c:if test="${not fromPurchaseOrder}">
+        <c:if test="${preservedWarehouseId != null and preservedWarehouseId > 0}">
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect) {
+            whSelect.value = '${preservedWarehouseId}';
+            onWarehouseChange();
+        }
+        </c:if>
+        <c:if test="${empty preservedWarehouseId and not empty receipt and receipt.warehouseId > 0}">
         var whSelect = document.getElementById('warehouseSelect');
         if (whSelect) {
             whSelect.value = '${receipt.warehouseId}';
             onWarehouseChange();
         }
         </c:if>
+        </c:if>
+
+        <c:if test="${fromPurchaseOrder}">
+        updatePoCounter();
+        document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+            inp.addEventListener('input', updatePoCounter);
+        });
+        </c:if>
+
+        <c:if test="${preservedReasonId != null}">
+        var reasonSel = document.querySelector('select[name="reasonId"]');
+        if (reasonSel) reasonSel.value = '${preservedReasonId}';
+        </c:if>
+
+        <c:if test="${preservedNote != null}">
+        var noteEl = document.querySelector('textarea[name="note"]');
+        if (noteEl) noteEl.value = '<c:out value="${preservedNote}"/>';
+        </c:if>
+
+        syncExcelHiddenInputs();
     });
 
     function submitExcelUpload(input) {
         if (!input.files || !input.files[0]) {
             return;
         }
-        var whId = document.getElementById('warehouseSelect').value;
+        var whIdInput = document.querySelector('input[name="warehouseId"]');
+        var whSelect = document.getElementById('warehouseSelect');
+        var whId = whIdInput ? whIdInput.value : (whSelect ? whSelect.value : '');
         if (!whId) {
             toast('Vui lòng chọn kho trước khi nhập Excel', 'danger');
             input.value = '';
             return;
         }
+
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+        if (!isPoMode) {
+            document.getElementById('excelWarehouseId').value = whId;
+            var reasonEl = document.querySelector('select[name="reasonId"]');
+            if (reasonEl) document.getElementById('excelReasonId').value = reasonEl.value;
+            var noteEl = document.querySelector('textarea[name="note"]');
+            if (noteEl) document.getElementById('excelNote').value = noteEl.value;
+            document.getElementById('excelUploadForm').submit();
+            return;
+        }
+
         var reasonEl = document.querySelector('select[name="reasonId"]');
         var noteEl = document.querySelector('textarea[name="note"]');
-        document.getElementById('excelWarehouseId').value = whId;
-        document.getElementById('excelReasonId').value = reasonEl ? reasonEl.value : '';
-        document.getElementById('excelNote').value = noteEl ? noteEl.value : '';
-        document.getElementById('excelUploadForm').submit();
+        var existingPoId = document.querySelector('input[name="poId"]');
+
+        var formData = new FormData();
+        formData.append('excelFile', input.files[0]);
+        formData.append('warehouseId', whId);
+        formData.append('reasonId', reasonEl ? reasonEl.value : '');
+        formData.append('note', noteEl ? noteEl.value : '');
+        if (existingPoId) formData.append('poId', existingPoId.value || '');
+
+        document.querySelectorAll('#detailBody tr').forEach(function (tr) {
+            var g = tr.querySelector('select[name="manualGeneratorId"]');
+            var s = tr.querySelector('input[name="manualSerialNumber"]');
+            var n = tr.querySelector('input[name="manualDetailNote"]');
+            if (g) formData.append('manualGeneratorId', g.value || '');
+            if (s) formData.append('manualSerialNumber', s.value || '');
+            if (n) formData.append('manualDetailNote', n.value || '');
+        });
+
+        var btn = document.getElementById('btnImportExcel');
+        if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+
+        fetch(ctx + '/import-receipt?action=importPreview&ajax=1', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function (data) {
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+            input.value = '';
+            if (!data || !data.success) {
+                toast((data && data.message) ? data.message : 'Lỗi khi đọc file', 'danger');
+                return;
+            }
+            applySerialsToPoRows(data.serials || []);
+            if (typeof updatePoCounter === 'function') updatePoCounter();
+            toast(data.message || ('Đã đọc ' + data.serials.length + ' serial'), 'success');
+        })
+        .catch(function (err) {
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+            input.value = '';
+            console.error(err);
+            toast('Lỗi kết nối: ' + err.message, 'danger');
+        });
+    }
+
+    function applySerialsToPoRows(serials) {
+        var rows = document.querySelectorAll('tr.po-locked-row');
+        if (rows.length === 0) return;
+        for (var i = 0; i < rows.length; i++) {
+            var input = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (!input) continue;
+            input.value = (i < serials.length && serials[i] != null) ? serials[i] : '';
+        }
+    }
+
+    function addHidden(form, name, value) {
+        if (value === undefined || value === null) value = '';
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+    }
+
+    function syncExcelHiddenInputs() {
+        var checked = document.querySelectorAll('.excel-row-cb:checked').length;
+        var span = document.getElementById('selectedCount');
+        if (span) span.textContent = checked;
+
+        document.querySelectorAll('.excel-row-cb').forEach(function (cb) {
+            var row = cb.closest('tr');
+            if (!row) return;
+            var enabled = cb.checked;
+            row.querySelectorAll('input.excel-gen, input.excel-serial, input.excel-note').forEach(function (inp) {
+                inp.disabled = !enabled;
+            });
+        });
+    }
+
+    function submitImportConfirm() {
+        if (document.querySelector('tr.po-locked-row')) {
+            toast('Đang ở chế độ PO, hãy dùng nút Lưu nháp hoặc Gửi phiếu.', 'info');
+            return;
+        }
+        var checkedCount = document.querySelectorAll('.excel-row-cb:checked').length;
+        if (checkedCount === 0) {
+            toast('Vui lòng tick chọn ít nhất 1 dòng Excel để nhập', 'danger');
+            return;
+        }
+        if (!confirm('Tạo phiếu nháp với ' + checkedCount + ' dòng Excel đã chọn (cộng với các dòng manual)? Bạn có thể chỉnh sửa trước khi gửi duyệt.')) {
+            return;
+        }
+        var form = document.getElementById('receiptForm');
+        form.action = ctx + '/import-receipt?action=importConfirm';
+        form.submit();
     }
 </script>
 </body>
