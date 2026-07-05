@@ -219,14 +219,14 @@
                                             <tr data-current="${d.generatorId}">
                                                 <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
                                                 <td>
-                                                    <select name="generatorId" required onchange="onGeneratorChange(this)">
+                                                    <select name="manualGeneratorId" required onchange="onGeneratorChange(this)">
                                                         <option value="">-- Chọn máy --</option>
                                                     </select>
                                                     <span class="stock-info" data-stock-info></span>
                                                     <span class="field-error"></span>
                                                 </td>
-                                                <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                                <td><input type="text" name="detailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
+                                                <td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                <td><input type="text" name="manualDetailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
@@ -239,14 +239,14 @@
                                         <tr>
                                             <td class="col-num"><span class="row-num">1</span></td>
                                             <td>
-                                                <select name="generatorId" required onchange="onGeneratorChange(this)">
+                                                <select name="manualGeneratorId" required onchange="onGeneratorChange(this)">
                                                     <option value="">-- Chọn máy --</option>
                                                 </select>
                                                 <span class="stock-info" data-stock-info></span>
                                                 <span class="field-error"></span>
                                             </td>
-                                            <td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
-                                            <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
+                                            <td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                            <td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
@@ -342,14 +342,14 @@
             .then(function (data) {
                 generatorCache = data || [];
                 refreshAllGeneratorSelects();
-                document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+                document.querySelectorAll('#detailBody tr select[name="manualGeneratorId"]').forEach(function (sel) {
                     if (sel.value) onGeneratorChange(sel);
                 });
             });
     }
 
     function refreshAllGeneratorSelects() {
-        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+        document.querySelectorAll('#detailBody tr select[name="manualGeneratorId"]').forEach(function (sel) {
             renderGeneratorOptions(sel);
         });
     }
@@ -361,11 +361,11 @@
     function buildEmptyRow() {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
-                + '<td><select name="generatorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="serialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>'
+                + '<td><select name="manualGeneratorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
-        renderGeneratorOptions(tr.querySelector('select[name="generatorId"]'));
+        renderGeneratorOptions(tr.querySelector('select[name="manualGeneratorId"]'));
         return tr;
     }
 
