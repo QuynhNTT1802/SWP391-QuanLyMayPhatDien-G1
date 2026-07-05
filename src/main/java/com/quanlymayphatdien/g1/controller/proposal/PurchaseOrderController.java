@@ -756,19 +756,6 @@ public class PurchaseOrderController extends HttpServlet {
             return;
         }
 
-        PurchaseOrderDAO checkDao = new PurchaseOrderDAO();
-        PurchaseOrder poCheck = checkDao.findById(id);
-        if (poCheck != null && poCheck.getPeriod() != null
-                && !PeriodUtils.isWithinDeadline(poCheck.getPeriod())) {
-            session.setAttribute("toastMessage",
-                    "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
-                            + " tháng sau) cho period " + poCheck.getPeriod()
-                            + ". Không thể yêu cầu chỉnh sửa.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-            return;
-        }
-
         boolean ok = new PurchaseOrderDAO().requestProposalRevision(id, user.getId(), reason.trim());
         if (ok) {
             ActivityLog log = new ActivityLog();

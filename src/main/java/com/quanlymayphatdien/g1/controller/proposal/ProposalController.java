@@ -512,6 +512,7 @@ public class ProposalController extends HttpServlet {
         String submitType = request.getParameter("submitType");
         boolean hasDetailForm = request.getParameterValues("generatorId") != null;
         if (!"draft".equals(submitType) && existing.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(existing.getPeriod())
                 && !PeriodUtils.isWithinDeadline(existing.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
@@ -701,6 +702,7 @@ public class ProposalController extends HttpServlet {
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal pCheck = dao.findById(id);
         if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
@@ -749,6 +751,7 @@ public class ProposalController extends HttpServlet {
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal pCheck = dao.findById(id);
         if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
@@ -797,6 +800,7 @@ public class ProposalController extends HttpServlet {
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal pCheck = dao.findById(id);
         if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
@@ -838,6 +842,7 @@ public class ProposalController extends HttpServlet {
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal pCheck = dao.findById(id);
         if (pCheck != null && pCheck.getPeriod() != null
+                && !PeriodUtils.isCurrentPeriod(pCheck.getPeriod())
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()

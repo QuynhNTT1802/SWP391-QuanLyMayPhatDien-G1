@@ -102,12 +102,12 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     "UPDATE import_proposal SET purchase_order_id = NULL WHERE purchase_order_id = ?");
             statement.setInt(1, t.getPoId());
             statement.executeUpdate();
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "DELETE FROM purchase_order_detail WHERE po_id = ?");
             statement.setInt(1, t.getPoId());
             statement.executeUpdate();
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "DELETE FROM purchase_order WHERE po_id = ? AND status = ?");
             statement.setInt(1, t.getPoId());
@@ -908,7 +908,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 connection.rollback();
                 return false;
             }
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
                     + "WHERE purchase_order_id = ? AND status = ?");
@@ -941,7 +941,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 connection.rollback();
                 return false;
             }
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
                     + "WHERE purchase_order_id = ?");
@@ -974,7 +974,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 connection.rollback();
                 return false;
             }
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ?, reject_reason = ? "
                     + "WHERE purchase_order_id = ?");
@@ -1017,7 +1017,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 connection.rollback();
                 return false;
             }
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET purchase_order_id = NULL, status = ?, "
                     + "reject_reason = ?, rejected_by = ?, rejected_at = NOW(), "
@@ -1060,7 +1060,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 connection.rollback();
                 return false;
             }
-            closeResources();
+            statement.close();
             if ("REBUILD".equals(mode)) {
                 statement = connection.prepareStatement(
                         "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
@@ -1099,7 +1099,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement.setInt(1, poId);
             statement.setString(2, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
             statement.executeUpdate();
-            closeResources();
+            statement.close();
             statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ? "
                     + "WHERE po_id = ? AND status = ?");
