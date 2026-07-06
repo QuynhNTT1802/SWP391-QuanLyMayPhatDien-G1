@@ -17,39 +17,23 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
     <style>
-        /* ----- Inventory-style table ----- */
-        table.inv { width: 100%; border-collapse: collapse; font-size: 13px; }
-        table.inv th, table.inv td { text-align: start; padding: 10px 16px; border-bottom: 1px solid var(--border); }
-        table.inv th { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); border-top: 1px solid var(--border); }
-        table.inv tbody tr:hover { background: var(--surface-2); }
+        table.rpt { width: 100%; border-collapse: collapse; font-size: 13px; }
+        table.rpt th, table.rpt td { text-align: start; padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        table.rpt th { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); border-top: 1px solid var(--border); }
+        table.rpt tbody tr:hover { background: var(--surface-2); }
+        table.rpt tfoot td { padding: 10px 12px; background: var(--surface-2); border-top: 2px solid var(--border-strong); font-weight: 600; }
         td.num, th.num { text-align: end; font-family: var(--font-mono); }
-        td.loss { color: var(--danger); font-weight: 500; }
-        .rate-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
-        .rate-good { background: var(--accent-soft); color: var(--accent); }
-        .rate-mid { background: var(--warn-soft); color: var(--warn); }
-        .rate-bad { background: var(--danger-soft); color: var(--danger); }
-
-        /* ----- Dòng TỔNG ----- */
-        table.inv tfoot td { padding: 12px 16px; background: var(--surface-2); border-top: 2px solid var(--border-strong); border-bottom: 0; font-weight: 600; }
-        table.inv tfoot td.label-total { text-transform: uppercase; letter-spacing: 0.04em; font-size: 11.5px; color: var(--muted); }
-        table.inv tfoot td.loss { color: var(--danger); }
-
-        /* ----- Section-head có filter gắn kèm ----- */
-        .section-head--filter { align-items: center; gap: 12px; flex-wrap: wrap; }
+        .empty-cell { text-align: center; color: var(--muted); padding: 22px; }
         .report-filter { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .report-filter .rf-field { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: border-color .12s ease, box-shadow .12s ease; }
         .report-filter .rf-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
         .report-filter .rf-sep { color: var(--muted-2); font-size: 12px; }
-        .report-filter input[type="date"], .report-filter > select { font-size: 12.5px; font-family: var(--font-ui); color: var(--fg); }
-        .report-filter .rf-field input[type="date"] { border: none; background: transparent; padding: 2px 0; outline: none; cursor: pointer; width: 116px; }
-        .report-filter > select { padding: 7px 28px 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; min-width: 130px; transition: border-color .12s ease, box-shadow .12s ease; }
+        .report-filter input[type="date"] { font-size: 12.5px; font-family: var(--font-ui); color: var(--fg); border: none; background: transparent; padding: 2px 0; outline: none; cursor: pointer; width: 116px; }
+        .report-filter > select { font-size: 12.5px; font-family: var(--font-ui); color: var(--fg); padding: 7px 28px 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; min-width: 130px; transition: border-color .12s ease, box-shadow .12s ease; }
         .report-filter > select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
         .report-filter .btn { padding: 6px 12px; }
-        @media (max-width: 900px) {
-            .section-head--filter { align-items: stretch; }
-            .report-filter { width: 100%; }
-        }
-        .empty-cell { text-align: center; color: var(--muted); padding: 22px; }
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+        .fixed-col { position: sticky; left: 0; background: inherit; }
         .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
         [data-theme="light"] .theme-toggle .icon-moon { display: block; }
         [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
@@ -75,7 +59,6 @@
                 <div class="left">
                     <div class="eyebrow">Kho</div>
                     <h2 class="page-title">Báo cáo thanh lý</h2>
-                    <div class="page-sub">Bảng thống kê tổn thất và thu hồi vốn thiết bị thanh lý</div>
                 </div>
             </div>
 
@@ -86,8 +69,7 @@
                 </div>
             </c:if>
 
-            <div class="section-head section-head--filter">
-                <h2>Thống kê theo ${fn:toLowerCase(groupLabel)}</h2>
+            <div class="section-head">
                 <form class="report-filter" method="get" action="${pageContext.request.contextPath}/liquidations/report">
                     <span class="rf-field">
                         <input type="date" name="fromDate" value="${fromDate}" max="${toDate}" title="Từ ngày"/>
@@ -100,12 +82,6 @@
                             <option value="${w.warehouseId}" ${selectedWarehouseId == w.warehouseId ? 'selected' : ''}>${w.name}</option>
                         </c:forEach>
                     </select>
-                    <select name="groupBy" title="Nhóm theo">
-                        <option value="reason" ${groupBy == 'reason' ? 'selected' : ''}>Nhóm theo: Lý do</option>
-                        <option value="warehouse" ${groupBy == 'warehouse' ? 'selected' : ''}>Nhóm theo: Kho</option>
-                        <option value="model" ${groupBy == 'model' ? 'selected' : ''}>Nhóm theo: Model</option>
-                        <option value="month" ${groupBy == 'month' ? 'selected' : ''}>Nhóm theo: Tháng</option>
-                    </select>
                     <button type="submit" class="btn btn-primary">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                         Lọc
@@ -117,56 +93,69 @@
                 </form>
             </div>
 
-            <section class="card" style="overflow:hidden">
-                <table class="inv">
+            <section class="card" style="overflow: auto;">
+                <table class="rpt">
                     <thead>
                         <tr>
-                            <th>${groupLabel}</th>
+                            <th>#</th>
+                            <th>Mã đơn</th>
+                            <th>Ngày thanh lý</th>
+                            <th>Kho</th>
+                            <th>Lý do</th>
                             <th class="num">Số máy</th>
-                            <th class="num">Nguyên giá</th>
-                            <th class="num">Thu hồi</th>
-                            <th class="num">Tổn thất</th>
-                            <th>Tỷ lệ thu hồi</th>
+                            <th class="num">Giá nhập</th>
+                            <th class="num">Giá thanh lý</th>
+                            <th class="num">Chênh lệch</th>
+                            <th>Khách hàng</th>
+                            <th>Người tạo</th>
+                            <th>Người duyệt</th>
                         </tr>
                     </thead>
                     <tbody>
                         <c:choose>
                             <c:when test="${empty rows}">
-                                <tr><td colspan="6" class="empty-cell">Không có dữ liệu thanh lý trong khoảng thời gian này.</td></tr>
+                                <tr><td colspan="12" class="empty-cell">Không có dữ liệu thanh lý trong khoảng thời gian này.</td></tr>
                             </c:when>
                             <c:otherwise>
-                                <c:forEach var="r" items="${rows}">
-                                    <%-- % thu hồi từng dòng: thu hồi / nguyên giá --%>
-                                    <c:set var="rate" value="${r.totalOriginal > 0 ? (r.totalLiquidation * 100 / r.totalOriginal) : 0}"/>
+                                <c:forEach var="r" items="${rows}" varStatus="vs">
                                     <tr>
-                                        <td>${empty r.label ? '—' : r.label}</td>
+                                        <td>${vs.count}</td>
+                                        <td><a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${r.liquidationId}">${r.liquidationCode}</a></td>
+                                        <td>${r.reviewedAtStr}</td>
+                                        <td>${r.warehouseName}</td>
+                                        <td>${r.reasonName}</td>
                                         <td class="num">${r.machineCount}</td>
                                         <td class="num"><fmt:formatNumber value="${r.totalOriginal}" type="number" maxFractionDigits="0"/></td>
                                         <td class="num"><fmt:formatNumber value="${r.totalLiquidation}" type="number" maxFractionDigits="0"/></td>
-                                        <td class="num loss"><fmt:formatNumber value="${r.totalLoss}" type="number" maxFractionDigits="0"/></td>
-                                        <td>
-                                            <span class="rate-pill ${rate >= 50 ? 'rate-good' : (rate >= 25 ? 'rate-mid' : 'rate-bad')}">
-                                                <fmt:formatNumber value="${rate}" maxFractionDigits="1"/>%
-                                            </span>
-                                        </td>
+                                        <td class="num"><fmt:formatNumber value="${r.totalLoss}" type="number" maxFractionDigits="0"/></td>
+                                        <td>${empty r.customerName ? '—' : r.customerName}</td>
+                                        <td>${empty r.creatorName ? '—' : r.creatorName}</td>
+                                        <td>${empty r.ceoName ? '—' : r.ceoName}</td>
                                     </tr>
                                 </c:forEach>
                             </c:otherwise>
                         </c:choose>
                     </tbody>
                     <c:if test="${not empty rows}">
+                        <c:set var="totalMachine" value="0"/>
+                        <c:set var="totalOrig" value="0"/>
+                        <c:set var="totalLiq" value="0"/>
+                        <c:set var="totalLoss" value="0"/>
+                        <c:forEach var="r" items="${rows}">
+                            <c:set var="totalMachine" value="${totalMachine + r.machineCount}"/>
+                            <c:set var="totalOrig" value="${totalOrig + r.totalOriginal}"/>
+                            <c:set var="totalLiq" value="${totalLiq + r.totalLiquidation}"/>
+                            <c:set var="totalLoss" value="${totalLoss + r.totalLoss}"/>
+                        </c:forEach>
                         <tfoot>
                             <tr>
-                                <td class="label-total">Tổng (${summary.orderCount} đơn)</td>
-                                <td class="num">${summary.machineCount}</td>
-                                <td class="num"><fmt:formatNumber value="${summary.totalOriginal}" type="number" maxFractionDigits="0"/></td>
-                                <td class="num"><fmt:formatNumber value="${summary.totalLiquidation}" type="number" maxFractionDigits="0"/></td>
-                                <td class="num loss"><fmt:formatNumber value="${summary.totalLoss}" type="number" maxFractionDigits="0"/></td>
-                                <td>
-                                    <span class="rate-pill ${summary.recoveryRate >= 50 ? 'rate-good' : (summary.recoveryRate >= 25 ? 'rate-mid' : 'rate-bad')}">
-                                        <fmt:formatNumber value="${summary.recoveryRate}" maxFractionDigits="1"/>%
-                                    </span>
-                                </td>
+                                <td></td>
+                                <td colspan="4">Tổng (${fn:length(rows)} đơn)</td>
+                                <td class="num">${totalMachine}</td>
+                                <td class="num"><fmt:formatNumber value="${totalOrig}" type="number" maxFractionDigits="0"/></td>
+                                <td class="num"><fmt:formatNumber value="${totalLiq}" type="number" maxFractionDigits="0"/></td>
+                                <td class="num"><fmt:formatNumber value="${totalLoss}" type="number" maxFractionDigits="0"/></td>
+                                <td colspan="3"></td>
                             </tr>
                         </tfoot>
                     </c:if>

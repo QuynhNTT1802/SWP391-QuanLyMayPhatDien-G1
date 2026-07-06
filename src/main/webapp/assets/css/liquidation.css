@@ -870,11 +870,6 @@
     border-color: color-mix(in srgb, var(--info) 32%, transparent);
     background: var(--info-soft);
 }
-.act-badge.act-approve_manager {
-    color: var(--info);
-    border-color: color-mix(in srgb, var(--info) 32%, transparent);
-    background: var(--info-soft);
-}
 .act-badge.act-approve_ceo {
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 32%, transparent);
