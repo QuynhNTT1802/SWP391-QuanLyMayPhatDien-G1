@@ -77,12 +77,7 @@
                 </div>
                 <select class="filter-select" name="status" onchange="this.form.submit()">
                     <option value="">Trạng thái: Tất cả</option>
-                    <c:if test="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.create') or sessionScope.userPermissions.contains('liquidations.approve_manager'))}">
-                        <option value="PENDING_MANAGER" ${statusFilter == 'PENDING_MANAGER' ? 'selected' : ''}>Chờ Quản lý duyệt</option>
-                        <option value="MANAGER_REQUEST_EDIT" ${statusFilter == 'MANAGER_REQUEST_EDIT' ? 'selected' : ''}>Quản lý yêu cầu sửa</option>
-                        <option value="REJECTED_BY_MANAGER" ${statusFilter == 'REJECTED_BY_MANAGER' ? 'selected' : ''}>Quản lý từ chối</option>
-                    </c:if>
-                    <c:if test="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.create') or sessionScope.userPermissions.contains('liquidations.approve_ceo') or sessionScope.userPermissions.contains('liquidations.approve_manager'))}">
+                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
                         <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ Sếp duyệt</option>
                         <option value="CEO_REQUEST_EDIT" ${statusFilter == 'CEO_REQUEST_EDIT' ? 'selected' : ''}>Sếp yêu cầu sửa</option>
                         <option value="REJECTED_BY_CEO" ${statusFilter == 'REJECTED_BY_CEO' ? 'selected' : ''}>Sếp từ chối</option>
@@ -178,9 +173,6 @@
                                         <td class="mono">${liq.createdAt}</td>
                                         <td>
                                             <c:choose>
-                                                <c:when test="${liq.status == 'PENDING_MANAGER'}">
-                                                    <span class="pill liq-pending-mgr"><span class="pdot"></span>Chờ QL duyệt</span>
-                                                </c:when>
                                                 <c:when test="${liq.status == 'PENDING_CEO'}">
                                                     <span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span>
                                                 </c:when>
@@ -190,14 +182,8 @@
                                                 <c:when test="${liq.status == 'COMPLETED'}">
                                                     <span class="pill liq-approved"><span class="pdot"></span>Đã xuất kho</span>
                                                 </c:when>
-                                                <c:when test="${liq.status == 'MANAGER_REQUEST_EDIT'}">
-                                                    <span class="pill liq-edit" title="Quản lý yêu cầu sửa: ${not empty liq.managerFeedbackName ? liq.managerFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Yêu cầu sửa</span>
-                                                </c:when>
                                                 <c:when test="${liq.status == 'CEO_REQUEST_EDIT'}">
                                                     <span class="pill liq-edit" title="Sếp yêu cầu sửa: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Yêu cầu sửa</span>
-                                                </c:when>
-                                                <c:when test="${liq.status == 'REJECTED_BY_MANAGER'}">
-                                                    <span class="pill liq-rejected" title="Quản lý từ chối: ${not empty liq.managerFeedbackName ? liq.managerFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Đã hủy</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'REJECTED_BY_CEO'}">
                                                     <span class="pill liq-rejected" title="Sếp từ chối: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Đã hủy</span>
@@ -215,7 +201,7 @@
                                                 <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liq.liquidationId}" class="icon-mini" title="Xem chi tiết">
                                                     <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 </a>
-                                                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create') and (liq.status == 'MANAGER_REQUEST_EDIT' or liq.status == 'CEO_REQUEST_EDIT')}">
+                                                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create') and liq.status == 'CEO_REQUEST_EDIT'}">
                                                     <a href="${pageContext.request.contextPath}/liquidations?action=edit_view&id=${liq.liquidationId}" class="icon-mini" title="Sửa đơn">
                                                         <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                                     </a>
@@ -315,8 +301,23 @@
     window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
     window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
     </c:if>
+    <c:if test="${not empty param.error}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${param.error}"/>';
+    window.SESSION_DATA.type = 'danger';
+    </c:if>
+    <c:if test="${not empty param.success}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${param.success}"/>';
+    window.SESSION_DATA.type = 'success';
+    </c:if>
 </script>
 <div class="toast-host" id="toastHost"></div>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script>
+    if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+    }
+</script>
 </body>
 </html>
