@@ -15,7 +15,7 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
     @Override
     public List<Supplier> findAll() {
         List<Supplier> list = new ArrayList<>();
-        String sql = "SELECT * FROM supplier ORDER BY created_at DESC";
+        String sql = "SELECT * FROM supplier WHERE status = 'active' ORDER BY created_at DESC";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -25,8 +25,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return list;
     }
@@ -43,8 +41,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return null;
     }
@@ -117,8 +113,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return false;
     }
@@ -133,8 +127,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return false;
     }
@@ -149,8 +141,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return false;
     }
@@ -165,8 +155,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return false;
     }
@@ -187,8 +175,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
                 sql.append("AND (");
                 for (int t = 0; t < tokens.length; t++) {
                     if (t > 0) sql.append(" OR ");
-                    String p = "%" + escapeLike(tokens[t]) + "%";
-                    sql.append("(name LIKE ? ESCAPE '\\\\' OR phone LIKE ? ESCAPE '\\\\')");
+                    String p = "%" + tokens[t] + "%";
+                    sql.append("(name LIKE ? OR phone LIKE ?)");
                     params.add(p);
                     params.add(p);
                 }
@@ -240,8 +228,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
                 sql.append("AND (");
                 for (int t = 0; t < tokens.length; t++) {
                     if (t > 0) sql.append(" OR ");
-                    String p = "%" + escapeLike(tokens[t]) + "%";
-                    sql.append("(name LIKE ? ESCAPE '\\\\' OR phone LIKE ? ESCAPE '\\\\')");
+                    String p = "%" + tokens[t] + "%";
+                    sql.append("(name LIKE ? OR phone LIKE ?)");
                     params.add(p);
                     params.add(p);
                 }
@@ -287,12 +275,9 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return 0;
     }
-
 
     public List<Supplier> findByNameExact(String name) {
         List<Supplier> list = new ArrayList<>();
@@ -329,8 +314,8 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
                 sql.append("AND (");
                 for (int t = 0; t < tokens.length; t++) {
                     if (t > 0) sql.append(" AND ");
-                    String p = "%" + escapeLike(tokens[t]) + "%";
-                    sql.append("name LIKE ? ESCAPE '\\\\'");
+                    String p = "%" + tokens[t] + "%";
+                    sql.append("name LIKE ? ");
                     params.add(p);
                 }
                 sql.append(") ");
@@ -362,7 +347,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
         return list;
     }
 
-
     public boolean isPhoneExists(String phone, Integer excludeId) {
         String sql = "SELECT COUNT(*) FROM supplier WHERE phone = ?";
         if (excludeId != null) {
@@ -381,8 +365,6 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-        } finally {
-            closeResources();
         }
         return false;
     }
@@ -417,12 +399,4 @@ public class SupplierDAO extends DBContext implements I_DAO<Supplier> {
         return s;
     }
 
-
-    private String escapeLike(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
-
-   }
 }
