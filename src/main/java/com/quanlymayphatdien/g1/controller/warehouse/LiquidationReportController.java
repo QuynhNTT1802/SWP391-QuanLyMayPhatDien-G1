@@ -70,13 +70,34 @@ public class LiquidationReportController extends HttpServlet {
             return;
         }
 
-        List<Map<String, Object>> rows = liquidationDAO.getReportFlatTable(fromDate, toDate, warehouseId);
+        int page = 1, pageSize = 25;
+        String pageStr = request.getParameter("page");
+        if (pageStr != null) {
+            try { page = Integer.parseInt(pageStr.trim()); } catch (NumberFormatException e) { page = 1; }
+        }
+        if (page < 1) page = 1;
+        int offset = (page - 1) * pageSize;
+
+        int totalItems = liquidationDAO.countReportFlatTable(fromDate, toDate, warehouseId);
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (totalPages < 1) totalPages = 1;
+        if (page > totalPages) page = totalPages;
+
+        List<Map<String, Object>> rows = liquidationDAO.getReportFlatTable(fromDate, toDate, warehouseId, pageSize, offset);
+
+        int fromIndex = totalItems > 0 ? (page - 1) * pageSize + 1 : 0;
+        int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("rows", rows);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("fromDate", fromDate.toString());
         request.setAttribute("toDate", toDate.toString());
         request.setAttribute("selectedWarehouseId", warehouseId);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
         request.setAttribute("activePage", "liquidation-report");
         request.getRequestDispatcher("/view/liquidation/liquidation-report.jsp").forward(request, response);
     }

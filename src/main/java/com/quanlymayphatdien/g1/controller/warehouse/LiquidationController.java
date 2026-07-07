@@ -188,6 +188,11 @@ public class LiquidationController extends HttpServlet {
             request.setAttribute("lockedRows", lockedRows);
         }
 
+        User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+        request.setAttribute("currentUserName", loggedUser != null ? loggedUser.getName() : "");
+        request.setAttribute("currentDateStr", java.time.LocalDate.now()
+            .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
         request.getRequestDispatcher("/view/liquidation/liquidation-create.jsp").forward(request, response);
     }
 

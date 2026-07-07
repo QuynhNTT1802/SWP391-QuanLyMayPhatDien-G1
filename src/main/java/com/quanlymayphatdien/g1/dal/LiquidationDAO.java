@@ -667,7 +667,38 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return -1;
     }
 
+    public int countReportFlatTable(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(*) FROM (SELECT l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN user cr ON l.created_by = cr.id "
+                + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + where
+                + " GROUP BY l.liquidation_id) t";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countReportFlatTable", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
     public List<Map<String, Object>> getReportFlatTable(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        return getReportFlatTable(from, to, warehouseId, 0, Integer.MAX_VALUE);
+    }
+
+    public List<Map<String, Object>> getReportFlatTable(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, int limit, int offset) {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
@@ -685,7 +716,10 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN user cr ON l.created_by = cr.id "
                 + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
                 + where
-                + " GROUP BY l.liquidation_id ORDER BY l.ceo_reviewed_at DESC";
+                + " GROUP BY l.liquidation_id ORDER BY l.ceo_reviewed_at DESC"
+                + " LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
