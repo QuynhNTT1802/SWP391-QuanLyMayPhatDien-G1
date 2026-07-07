@@ -285,12 +285,12 @@ public class LiquidationController extends HttpServlet {
 
         java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts(filterUserId);
         int kpiPendingCeo = kpis.getOrDefault("PENDING_CEO", 0);
-        int kpiApproved = kpis.getOrDefault("APPROVED_BY_CEO", 0);
+        int kpiCompleted = kpis.getOrDefault("COMPLETED", 0);
         int kpiRequestEdit = kpis.getOrDefault("CEO_REQUEST_EDIT", 0);
-        int kpiRejected = kpis.getOrDefault("REJECTED_BY_CEO", 0);
+        int kpiRejected = kpis.getOrDefault("CANCELLED", 0);
 
         request.setAttribute("kpiPendingCeo", kpiPendingCeo);
-        request.setAttribute("kpiApproved", kpiApproved);
+        request.setAttribute("kpiCompleted", kpiCompleted);
         request.setAttribute("kpiRequestEdit", kpiRequestEdit);
         request.setAttribute("kpiRejected", kpiRejected);
 
@@ -814,7 +814,7 @@ public class LiquidationController extends HttpServlet {
         r.setApprovedBy(user.getId());
         r.setApprovedAt(java.time.LocalDateTime.now());
         r.setStatus("COMPLETED");
-        r.setNote("Phieu xuat cho don thanh ly ID: " + liquidationId);
+        r.setNote("Phiếu xuất cho đơn thanh lý ID: " + liquidationId);
         r.setReasonId(l.getReasonId());
 
         // Transaction: tao receipt + insert receipt_detail + chuyen inventory PENDING_LIQUIDATION -> LIQUIDATED
@@ -837,7 +837,7 @@ public class LiquidationController extends HttpServlet {
                 ReceiptDetail rd = new ReceiptDetail();
                 rd.setReceiptId(newReceiptId);
                 rd.setInventoryId(e.getKey());
-                rd.setNote("Thanh ly gia: " + d.getLiquidationPrice());
+                rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
                 rdList.add(rd);
 
                 inventoryDAO.updateStatusBySerial(conn, d.getSerialNumber(), InventoryDAO.STATUS_LIQUIDATED);
@@ -864,13 +864,13 @@ public class LiquidationController extends HttpServlet {
         log.setAction("AUTO_CREATE");
         log.setEntityId(newReceiptId);
         log.setEntityName(r.getReceiptCode());
-        log.setDetails("He thong tu dong tao phieu xuat kho cho duyet sau khi CEO duyet don thanh ly " + l.getLiquidationCode());
+        log.setDetails("Hệ thống tự động tạo phiếu xuất kho cho duyệt sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
         activityLogDAO.insert(log);
 
         NotificationService.send(
                 l.getCreatedBy(),
                 "CEO đã duyệt đơn thanh lý",
-                "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.",
+                "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt. Phiếu xuất kho đã được tạo tự động.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
@@ -882,7 +882,7 @@ public class LiquidationController extends HttpServlet {
         liqLog.setAction("CEO_APPROVE");
         liqLog.setEntityId(liquidationId);
         liqLog.setEntityName(l.getLiquidationCode());
-        liqLog.setDetails("CEO duyet don thanh ly va tu dong sinh Phieu Xuat Kho cho duyet: " + r.getReceiptCode());
+        liqLog.setDetails("CEO duyệt đơn thanh lý và tự động sinh <a href=\"" + request.getContextPath() + "/export-receipt?action=detail&id=" + newReceiptId + "\">Phiếu Xuất Kho " + r.getReceiptCode() + "</a> cho duyệt");
         activityLogDAO.insert(liqLog);
 
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
@@ -934,7 +934,7 @@ public class LiquidationController extends HttpServlet {
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
         log.setEntityType("liquidation");
-        log.setAction(isPermanent ? "REJECTED_BY_CEO" : "CEO_REQUEST_EDIT");
+        log.setAction(isPermanent ? "CANCELLED" : "CEO_REQUEST_EDIT");
         log.setEntityId(liquidationId);
         log.setEntityName(l.getLiquidationCode());
         log.setDetails(isPermanent ? "CEO từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "CEO yêu cầu sửa đơn thanh lý");
@@ -1014,13 +1014,33 @@ public class LiquidationController extends HttpServlet {
         }
         List<String> newSerialList = new ArrayList<>(uniqueSerials);
 
+        // Load old details + validate giá thanh lý không đổi
+        List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
+        Map<String, BigDecimal> oldPriceBySerial = new HashMap<>();
+        for (LiquidationDetail oldD : oldDetails) {
+            if (oldD.getLiquidationPrice() != null)
+                oldPriceBySerial.put(oldD.getSerialNumber(), oldD.getLiquidationPrice());
+        }
+        boolean allSame = true;
+        for (int i = 0; i < serialNumbers.length; i++) {
+            BigDecimal oldP = oldPriceBySerial.get(serialNumbers[i]);
+            if (oldP == null || oldP.compareTo(parsedPrices[i]) != 0) {
+                allSame = false;
+                break;
+            }
+        }
+        if (allSame) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=edit_view&id=" + liquidationId
+                    + "&error=" + java.net.URLEncoder.encode("Giá thanh lý không thay đổi so với giá cũ. Vui lòng điều chỉnh giá trước khi gửi lại.", "UTF-8"));
+            return;
+        }
+
         Connection conn = null;
         try {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
 
             // Trả lại trạng thái cũ (PENDING_LIQUIDATION -> IN_STOCK) cho serials cũ
-            List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
             List<String> oldSerials = new ArrayList<>();
             for (LiquidationDetail oldD : oldDetails) {
                 oldSerials.add(oldD.getSerialNumber());

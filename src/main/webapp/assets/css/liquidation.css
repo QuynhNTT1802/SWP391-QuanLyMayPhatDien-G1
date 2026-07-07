@@ -65,12 +65,14 @@
 }
 .pill.liq-edit .pdot { background: var(--warn); }
 
-.pill.liq-rejected {
+.pill.liq-cancelled,
+.status-pill.liq-cancelled {
     color: var(--danger);
     border-color: color-mix(in srgb, var(--danger) 30%, transparent);
     background: var(--danger-soft);
 }
-.pill.liq-rejected .pdot { background: var(--danger); }
+.pill.liq-cancelled .pdot,
+.status-pill.liq-cancelled .pdot { background: var(--danger); }
 
 .pill.liq-muted {
     color: var(--muted);

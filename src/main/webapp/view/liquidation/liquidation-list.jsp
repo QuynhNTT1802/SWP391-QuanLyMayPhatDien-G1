@@ -73,7 +73,7 @@
                 </c:if>
                 <div class="stat">
                     <div class="lbl">Đã xuất</div>
-                    <div class="val">${kpiApproved}</div>
+                    <div class="val">${kpiCompleted}</div>
                 </div>
             </div>
 
@@ -89,9 +89,8 @@
                     <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
                         <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ Sếp duyệt</option>
                         <option value="CEO_REQUEST_EDIT" ${statusFilter == 'CEO_REQUEST_EDIT' ? 'selected' : ''}>Sếp yêu cầu sửa</option>
-                        <option value="REJECTED_BY_CEO" ${statusFilter == 'REJECTED_BY_CEO' ? 'selected' : ''}>Sếp từ chối</option>
+                        <option value="CANCELLED" ${statusFilter == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
                     </c:if>
-                    <option value="APPROVED_BY_CEO" ${statusFilter == 'APPROVED_BY_CEO' ? 'selected' : ''}>Đã duyệt · chờ xuất kho</option>
                     <option value="COMPLETED" ${statusFilter == 'COMPLETED' ? 'selected' : ''}>Đã xuất kho</option>
                 </select>
                 <div class="spacer"></div>
@@ -186,7 +185,7 @@
                                                     <span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'APPROVED_BY_CEO'}">
-                                                    <span class="pill liq-pending-mgr" title="Sếp đã duyệt — chờ Quản lý kho duyệt phiếu xuất"><span class="pdot"></span>Chờ xuất kho</span>
+                                                    <span class="pill liq-pending-mgr" title="Sếp đã duyệt"><span class="pdot"></span>Đã duyệt</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'COMPLETED'}">
                                                     <span class="pill liq-approved"><span class="pdot"></span>Đã xuất kho</span>
@@ -194,11 +193,8 @@
                                                 <c:when test="${liq.status == 'CEO_REQUEST_EDIT'}">
                                                     <span class="pill liq-edit" title="Sếp yêu cầu sửa: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Yêu cầu sửa</span>
                                                 </c:when>
-                                                <c:when test="${liq.status == 'REJECTED_BY_CEO'}">
-                                                    <span class="pill liq-rejected" title="Sếp từ chối: ${not empty liq.ceoFeedbackName ? liq.ceoFeedbackName : 'Không có lý do'}"><span class="pdot"></span>Đã hủy</span>
-                                                </c:when>
                                                 <c:when test="${liq.status == 'CANCELLED'}">
-                                                    <span class="pill liq-rejected"><span class="pdot"></span>Đã huỷ đơn</span>
+                                                    <span class="pill liq-cancelled"><span class="pdot"></span>Đã hủy</span>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <span class="pill liq-muted"><span class="pdot"></span>${liq.status}</span>
