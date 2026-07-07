@@ -122,7 +122,7 @@ sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, 0, COL_COUNT - 1));
             Cell c1 = row.createCell(1); c1.setCellValue(sc.getReceiptCode() != null ? sc.getReceiptCode() : ""); c1.setCellStyle(dataStyle);
             Cell c2 = row.createCell(2); c2.setCellValue(sc.getTransactionType() != null ? sc.getTransactionType() : ""); c2.setCellStyle(dataStyle);
             Cell c3 = row.createCell(3); c3.setCellValue(sc.getQuantityChange()); c3.setCellStyle(dataStyle);
-Cell c4 = row.createCell(4); c4.setCellValue(sc.getQuantityAfter()); c4.setCellStyle(dataStyle);
+            Cell c4 = row.createCell(4); c4.setCellValue(sc.getQuantityAfter()); c4.setCellStyle(dataStyle);
             Cell c5 = row.createCell(5); c5.setCellValue(sc.getSerialList() != null ? sc.getSerialList() : ""); c5.setCellStyle(dataStyle);
             Cell c6 = row.createCell(6); c6.setCellValue(sc.getCreatedByName() != null ? sc.getCreatedByName() : ""); c6.setCellStyle(dataStyle);
             Cell c7 = row.createCell(7); c7.setCellValue(sc.getCreatedAt() != null
