@@ -1,5 +1,6 @@
 package com.quanlymayphatdien.g1.controller.warehouse;
 
+import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.dal.LiquidationDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.Warehouse;
@@ -55,8 +56,15 @@ public class LiquidationReportController extends HttpServlet {
 
         Integer warehouseId = parseInt(request.getParameter("warehouseId"));
 
+        // Data for KPI cards + analytics tables
+        Map<String, Object> summary = liquidationDAO.getReportSummary(fromDate, toDate, warehouseId);
+        List<Map<String, Object>> byReason = liquidationDAO.getReportByReason(fromDate, toDate, warehouseId);
+        List<Map<String, Object>> byWarehouse = liquidationDAO.getReportByWarehouse(fromDate, toDate, warehouseId);
+        List<Map<String, Object>> monthlyTrend = liquidationDAO.getReportMonthlyTrend(fromDate, toDate, warehouseId);
+        String monthlyTrendJson = new Gson().toJson(monthlyTrend);
+
         if ("export".equals(request.getParameter("action"))) {
-            List<Map<String, Object>> rows = liquidationDAO.getReportFlatTable(fromDate, toDate, warehouseId);
+            List<Map<String, Object>> rows = liquidationDAO.getReportDetailList(fromDate, toDate, warehouseId);
             String warehouseName = resolveWarehouseName(warehouseId);
             XSSFWorkbook workbook = LiquidationReportExcelSupport.exportReport(
                     fromDate, toDate, warehouseName, rows);
@@ -78,22 +86,28 @@ public class LiquidationReportController extends HttpServlet {
         if (page < 1) page = 1;
         int offset = (page - 1) * pageSize;
 
-        int totalItems = liquidationDAO.countReportFlatTable(fromDate, toDate, warehouseId);
+        int totalItems = liquidationDAO.countReportDetailList(fromDate, toDate, warehouseId);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<Map<String, Object>> rows = liquidationDAO.getReportFlatTable(fromDate, toDate, warehouseId, pageSize, offset);
+        List<Map<String, Object>> rows = liquidationDAO.getReportDetailList(fromDate, toDate, warehouseId, pageSize, offset);
 
         int fromIndex = totalItems > 0 ? (page - 1) * pageSize + 1 : 0;
         int toIndex = Math.min(page * pageSize, totalItems);
 
+        request.setAttribute("summary", summary);
+        request.setAttribute("byReason", byReason);
+        request.setAttribute("byWarehouse", byWarehouse);
+        request.setAttribute("monthlyTrend", monthlyTrend);
+        request.setAttribute("monthlyTrendJson", monthlyTrendJson);
         request.setAttribute("rows", rows);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("fromDate", fromDate.toString());
         request.setAttribute("toDate", toDate.toString());
         request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("currentPage", page);
+        request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("fromIndex", fromIndex);

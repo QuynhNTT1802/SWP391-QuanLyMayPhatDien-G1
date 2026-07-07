@@ -74,14 +74,14 @@ public class LiquidationReportExcelSupport {
         String wh = warehouseName != null && !warehouseName.isEmpty() ? warehouseName : "Tất cả kho";
 
         String[] headers = {"STT", "Mã đơn", "Ngày thanh lý", "Kho", "Lý do",
-                "Số máy", "Giá nhập (VNĐ)", "Giá thanh lý (VNĐ)", "Chênh lệch (VNĐ)",
-                "Khách hàng", "Người tạo", "Người duyệt"};
+                "Serial Number", "Model", "Giá nhập (VNĐ)", "Giá thanh lý (VNĐ)", "Chênh lệch (VNĐ)",
+                "Khách hàng", "Người duyệt"};
 
-        XSSFSheet sheet = wb.createSheet("Báo cáo thanh lý");
+        XSSFSheet sheet = wb.createSheet("Báo cáo thanh lý chi tiết");
 
         int r = 0;
         Row titleRow = sheet.createRow(r);
-        titleRow.createCell(0).setCellValue("BÁO CÁO THANH LÝ");
+        titleRow.createCell(0).setCellValue("BÁO CÁO THANH LÝ CHI TIẾT");
         titleRow.getCell(0).setCellStyle(titleStyle);
         sheet.addMergedRegion(new CellRangeAddress(r, r, 0, headers.length - 1));
 
@@ -108,7 +108,7 @@ public class LiquidationReportExcelSupport {
             c.setCellStyle(headerStyle);
         }
 
-        int sumMachine = 0;
+        int machineCountTotal = rows.size();
         BigDecimal sumOrig = BigDecimal.ZERO;
         BigDecimal sumLiq = BigDecimal.ZERO;
         BigDecimal sumLoss = BigDecimal.ZERO;
@@ -124,17 +124,16 @@ public class LiquidationReportExcelSupport {
             cellStr(row, 2, (String) m.get("reviewedAtStr"), dataStyle);
             cellStr(row, 3, (String) m.get("warehouseName"), dataStyle);
             cellStr(row, 4, (String) m.get("reasonName"), dataStyle);
-            cellInt(row, 5, num(m.get("machineCount")), dataStyle);
-            cellMoney(row, 6, bd(m.get("totalOriginal")), moneyStyle);
-            cellMoney(row, 7, bd(m.get("totalLiquidation")), moneyStyle);
-            cellMoney(row, 8, bd(m.get("totalLoss")), moneyStyle);
-            cellStr(row, 9, (String) m.get("customerName"), dataStyle);
-            cellStr(row, 10, (String) m.get("creatorName"), dataStyle);
+            cellStr(row, 5, (String) m.get("serialNumber"), dataStyle);
+            cellStr(row, 6, (String) m.get("modelName"), dataStyle);
+            cellMoney(row, 7, bd(m.get("originalPrice")), moneyStyle);
+            cellMoney(row, 8, bd(m.get("liquidationPrice")), moneyStyle);
+            cellMoney(row, 9, bd(m.get("totalLoss")), moneyStyle);
+            cellStr(row, 10, (String) m.get("customerName"), dataStyle);
             cellStr(row, 11, (String) m.get("ceoName"), dataStyle);
 
-            sumMachine += num(m.get("machineCount"));
-            sumOrig = sumOrig.add(bd(m.get("totalOriginal")));
-            sumLiq = sumLiq.add(bd(m.get("totalLiquidation")));
+            sumOrig = sumOrig.add(bd(m.get("originalPrice")));
+            sumLiq = sumLiq.add(bd(m.get("liquidationPrice")));
             sumLoss = sumLoss.add(bd(m.get("totalLoss")));
         }
 
@@ -142,18 +141,17 @@ public class LiquidationReportExcelSupport {
         Row total = sheet.createRow(r);
         total.createCell(0).setCellStyle(totalStyle);
         Cell totalLabel = total.createCell(1);
-        totalLabel.setCellValue("Tổng (" + rows.size() + " đơn)");
+        totalLabel.setCellValue("Tổng (" + machineCountTotal + " máy)");
         totalLabel.setCellStyle(totalStyle);
-        sheet.addMergedRegion(new CellRangeAddress(r, r, 1, 4));
-        for (int i = 2; i <= 4; i++) {
+        sheet.addMergedRegion(new CellRangeAddress(r, r, 1, 6));
+        for (int i = 2; i <= 6; i++) {
             Cell c = total.createCell(i);
             c.setCellStyle(totalStyle);
         }
-        cellInt(total, 5, sumMachine, totalStyle);
-        cellMoney(total, 6, sumOrig, totalStyle);
-        cellMoney(total, 7, sumLiq, totalStyle);
-        cellMoney(total, 8, sumLoss, totalStyle);
-        for (int i = 9; i <= 11; i++) {
+        cellMoney(total, 7, sumOrig, totalStyle);
+        cellMoney(total, 8, sumLiq, totalStyle);
+        cellMoney(total, 9, sumLoss, totalStyle);
+        for (int i = 10; i <= 11; i++) {
             Cell c = total.createCell(i);
             c.setCellStyle(totalStyle);
         }
@@ -161,6 +159,7 @@ public class LiquidationReportExcelSupport {
         for (int i = 0; i < headers.length; i++) {
             sheet.autoSizeColumn(i);
         }
+        sheet.setColumnWidth(0, 1500);
 
         return wb;
     }
@@ -168,12 +167,6 @@ public class LiquidationReportExcelSupport {
     private static void cellStr(Row row, int col, String val, CellStyle s) {
         Cell c = row.createCell(col);
         c.setCellValue(val != null ? val : "");
-        c.setCellStyle(s);
-    }
-
-    private static void cellInt(Row row, int col, int val, CellStyle s) {
-        Cell c = row.createCell(col);
-        c.setCellValue(val);
         c.setCellStyle(s);
     }
 
@@ -185,9 +178,5 @@ public class LiquidationReportExcelSupport {
 
     private static BigDecimal bd(Object o) {
         return o instanceof BigDecimal ? (BigDecimal) o : BigDecimal.ZERO;
-    }
-
-    private static int num(Object o) {
-        return o instanceof Number ? ((Number) o).intValue() : 0;
     }
 }

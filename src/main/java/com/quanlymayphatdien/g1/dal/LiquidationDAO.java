@@ -253,7 +253,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     }
 
     public boolean updateCeoReject(int liquidationId, int ceoId, int feedbackId, boolean isPermanent) {
-        String status = isPermanent ? "REJECTED_BY_CEO" : "CEO_REQUEST_EDIT";
+        String status = isPermanent ? "CANCELLED" : "CEO_REQUEST_EDIT";
         String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_feedback_id = ?, updated_at = ? WHERE liquidation_id = ?";
         try {
             connection = getConnection();
@@ -318,22 +318,6 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCustomer", e.getMessage(), e);
-        } finally {
-            closeResources();
-        }
-        return false;
-    }
-
-    public boolean updateCancel(int liquidationId) {
-        String sql = "UPDATE liquidation SET status = 'CANCELLED', updated_at = ? WHERE liquidation_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setObject(1, LocalDateTime.now());
-            statement.setInt(2, liquidationId);
-            return statement.executeUpdate() > 0;
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCancel", e.getMessage(), e);
         } finally {
             closeResources();
         }
@@ -406,7 +390,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 totalOriginal = resultSet.getBigDecimal("total_original");
                 totalLiquidation = resultSet.getBigDecimal("total_liquidation");
             }
-            java.math.BigDecimal loss = totalOriginal.subtract(totalLiquidation);
+            java.math.BigDecimal loss = totalLiquidation.subtract(totalOriginal);
             double recoveryRate = totalOriginal.signum() > 0
                     ? totalLiquidation.multiply(new java.math.BigDecimal(100))
                             .divide(totalOriginal, 1, java.math.RoundingMode.HALF_UP).doubleValue()
@@ -450,7 +434,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 list.add(r);
             }
         } catch (Exception e) {
@@ -489,7 +473,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 r.put("recoveryRate", rate);
                 list.add(r);
             }
@@ -565,7 +549,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 list.add(r);
             }
         } catch (Exception e) {
@@ -577,12 +561,16 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     }
 
     // Chi tiết từng máy đã thanh lý (mỗi dòng = 1 máy) để xuất sheet "Chi tiết".
-    // Cùng phạm vi lọc với các query báo cáo khác (APPROVED_BY_CEO, theo ngày + kho).
+    // Cùng phạm vi lọc với các query báo cáo khác (COMPLETED, theo ngày + kho).
     public List<Map<String, Object>> getReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        return getReportDetailList(from, to, warehouseId, Integer.MAX_VALUE, 0);
+    }
+
+    public List<Map<String, Object>> getReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, int limit, int offset) {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
-        String sql = "SELECT l.liquidation_code, ld.serial_number, g.model AS model_name, "
+        String sql = "SELECT l.liquidation_id, l.liquidation_code, ld.serial_number, g.model AS model_name, "
                 + "w.name AS warehouse_name, c.name AS reason_name, "
                 + "ld.original_price, ld.liquidation_price, "
                 + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at "
@@ -594,7 +582,10 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
                 + where
-                + " ORDER BY l.ceo_reviewed_at DESC, l.liquidation_code, ld.serial_number";
+                + " ORDER BY l.ceo_reviewed_at DESC, l.liquidation_code, ld.serial_number"
+                + " LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -611,6 +602,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 if (liq == null) {
                     liq = java.math.BigDecimal.ZERO;
                 }
+                r.put("liquidationId", resultSet.getInt("liquidation_id"));
                 r.put("liquidationCode", resultSet.getString("liquidation_code"));
                 r.put("serialNumber", resultSet.getString("serial_number"));
                 r.put("modelName", resultSet.getString("model_name"));
@@ -618,7 +610,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("reasonName", resultSet.getString("reason_name"));
                 r.put("originalPrice", orig);
                 r.put("liquidationPrice", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 r.put("customerName", resultSet.getString("customer_name"));
                 r.put("ceoName", resultSet.getString("ceo_name"));
                 java.time.LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", java.time.LocalDateTime.class);
@@ -631,6 +623,31 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             closeResources();
         }
         return list;
+    }
+
+    public int countReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(*) FROM liquidation l "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN generator g ON ld.generator_id = g.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countReportDetailList", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
     }
 
     @Override
@@ -742,7 +759,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 r.put("customerName", resultSet.getString("customer_name"));
                 r.put("creatorName", resultSet.getString("creator_name"));
                 r.put("ceoName", resultSet.getString("ceo_name"));
