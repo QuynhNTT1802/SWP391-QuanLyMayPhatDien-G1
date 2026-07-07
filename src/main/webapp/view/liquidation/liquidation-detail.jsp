@@ -162,6 +162,22 @@
         #editPickTable .edit-gen-hidden { display: none; }
         /* ===== EDIT MODE: pick table font ===== */
         #editPickTable { font-size: 13px; }
+
+        .section-action-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface-2); flex-wrap: wrap; }
+        .action-bar-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--fg); }
+        .action-bar-right { display: flex; align-items: center; gap: 8px; }
+
+        .customer-info-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface-2); margin-top: 10px; }
+        .cic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .cic-name { font-size: 14px; font-weight: 700; color: var(--fg); line-height: 1.4; }
+        .cic-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .cic-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 12px; font-family: var(--font-ui); color: var(--muted); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; line-height: 1.4; }
+        .cic-btn:hover { color: var(--fg); border-color: var(--accent); }
+        .cic-btn-remove { padding: 4px; border: none; color: var(--muted-2); }
+        .cic-btn-remove:hover { color: var(--danger); }
+        .cic-details { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
+        .cic-detail-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+        .cic-detail-item svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 </head>
 <body>
@@ -222,20 +238,7 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                         Làm mới
                     </button>
-                    <c:if test="${isCeo and st == 'PENDING_CEO'}">
-                        <button type="button" class="btn btn-primary" onclick="openConfirmApproveModal()">
-                            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            Duyệt &amp; Xuất kho
-                        </button>
-                        <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Yêu cầu sửa
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">
-                            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            Từ chối đơn
-                        </button>
-                    </c:if>
+
                 </div>
             </div>
 
@@ -303,25 +306,11 @@
                                         <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
                                     </div>
                                     <div class="info-field">
-                                        <label>Chênh lệch giá</label>
-                                        <c:choose>
-                                            <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
-                                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
-                                                <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
-                                            </c:when>
-                                            <c:otherwise>
-                                                <input class="info-input mono" type="text" disabled value="—">
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                                <div class="form-grid cols-2" style="margin-top:14px;">
-                                    <div class="info-field">
-                                        <label>Tổng giá gốc (VNĐ)</label>
+                                        <label>Giá nhập (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                     <div class="info-field">
-                                        <label>Tổng giá thanh lý (VNĐ)</label>
+                                        <label>Giá thanh lý (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                 </div>
@@ -354,25 +343,11 @@
                                         <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
                                     </div>
                                     <div class="info-field">
-                                        <label>Chênh lệch giá</label>
-                                        <c:choose>
-                                            <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
-                                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
-                                                <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
-                                            </c:when>
-                                            <c:otherwise>
-                                                <input class="info-input mono" type="text" disabled value="—">
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                                <div class="form-grid cols-2" style="margin-top:14px;">
-                                    <div class="info-field">
-                                        <label>Tổng giá gốc (VNĐ)</label>
+                                        <label>Giá nhập (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                     <div class="info-field">
-                                        <label>Tổng giá thanh lý (VNĐ)</label>
+                                        <label>Giá thanh lý (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                 </div>
@@ -413,27 +388,32 @@
                                         </button>
                                     </div>
                                 </div>
+                                <div id="customerCardContainer" class="customer-info-card" style="display:none;"></div>
                             </c:when>
                             <c:when test="${not empty liquidation.customerName}">
-                                <div class="cust-banner">
-                                    <div class="cust-banner-avatar">${fn:substring(liquidation.customerName,0,1)}</div>
-                                    <div class="cust-banner-main">
-                                        <div class="cust-banner-name">${liquidation.customerName}</div>
-                                        <div class="cust-banner-tag">Khách hàng nhận máy thanh lý</div>
+                                <div class="customer-info-card">
+                                    <div class="cic-header">
+                                        <span class="cic-name"><c:out value='${liquidation.customerName}'/></span>
                                     </div>
-                                </div>
-                                <div class="form-grid cols-4" style="margin-top:16px;">
-                                    <div class="info-field">
-                                        <label>Số điện thoại</label>
-                                        <input class="info-input mono" type="text" disabled value="<c:out value='${not empty liquidation.customerPhone ? liquidation.customerPhone : "—"}'/>">
-                                    </div>
-                                    <div class="info-field">
-                                        <label>Email</label>
-                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.customerEmail ? liquidation.customerEmail : "—"}'/>">
-                                    </div>
-                                    <div class="info-field" style="grid-column: span 2;">
-                                        <label>Địa chỉ</label>
-                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.customerAddress ? liquidation.customerAddress : "—"}'/>">
+                                    <div class="cic-details">
+                                        <c:if test="${not empty liquidation.customerPhone}">
+                                            <span class="cic-detail-item">
+                                                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                                <c:out value='${liquidation.customerPhone}'/>
+                                            </span>
+                                        </c:if>
+                                        <c:if test="${not empty liquidation.customerEmail}">
+                                            <span class="cic-detail-item">
+                                                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                <c:out value='${liquidation.customerEmail}'/>
+                                            </span>
+                                        </c:if>
+                                        <c:if test="${not empty liquidation.customerAddress}">
+                                            <span class="cic-detail-item">
+                                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                <c:out value='${liquidation.customerAddress}'/>
+                                            </span>
+                                        </c:if>
                                     </div>
                                 </div>
                             </c:when>
@@ -588,11 +568,25 @@
                                 </div>
 
                                 <c:if test="${isCeo and st == 'PENDING_CEO'}">
-                                    <div class="liq-action-bar" style="padding:14px 16px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                        <div class="hint" style="flex:1; font-size:12.5px; color:var(--muted);">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở trên trước khi ra quyết định.</div>
-                                        <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>
-                                        <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
-                                        </c:if>
+                                    <div class="section-action-bar">
+                                        <div class="action-bar-left">
+                                            Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở trên trước khi ra quyết định.
+                                        </div>
+                                        <div class="action-bar-right">
+                                            <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">
+                                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                                Duyệt &amp; Xuất kho
+                                            </button>
+                                            <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
+                                                <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                Yêu cầu sửa
+                                            </button>
+                                            <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">
+                                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                Từ chối đơn
+                                            </button>
+                                            <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
+                                        </div>
                                     </div>
                                 </c:if>
                             </c:otherwise>
@@ -613,7 +607,7 @@
                                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                         <input type="text" id="historySearch" placeholder="Tìm theo người làm, ghi chú..." autocomplete="off"/>
                                     </div>
-                                    <select id="historyFilter" class="filter-select">
+                                    <select id="historyFilter" class="history-filter">
                                         <option value="">Tất cả hành động</option>
                                         <option value="CREATE">Tạo đơn</option>
                                         <option value="EDIT_SUBMIT">Đã sửa &amp; gửi lại</option>
@@ -1039,7 +1033,71 @@
         set('customerCompany', c.companyName);
         var label = document.getElementById('custTriggerLabel');
         if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
+        refreshCustomerCard();
     }
+
+    // ===== Customer info card =====
+    function htmlEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function refreshCustomerCard() {
+        var container = document.getElementById('customerCardContainer');
+        if (!container) return;
+        var hid = document.getElementById('sdHiddenId');
+        var custId = hid ? hid.value : '';
+        if (!custId || !custId.trim()) {
+            container.style.display = 'none';
+            return;
+        }
+        var name = document.getElementById('inpCustName');
+        var phone = document.getElementById('inpCustPhone');
+        var email = document.getElementById('inpCustEmail');
+        var address = document.getElementById('inpCustAddress');
+        var company = document.getElementById('customerCompany');
+        var nameVal = name ? name.value : '';
+        var phoneVal = phone ? phone.value : '';
+        var emailVal = email ? email.value : '';
+        var addressVal = address ? address.value : '';
+        var companyVal = company ? company.value : '';
+        var html = '<div class="cic-header">';
+        html += '<span class="cic-name">' + htmlEsc(nameVal || '') + '</span>';
+        html += '<div class="cic-actions">';
+        html += '<button type="button" class="cic-btn-remove" onclick="clearCustomerSelection();refreshCustomerCard();" title="Hủy chọn khách hàng" aria-label="Hủy chọn">';
+        html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+        html += '</button>';
+        html += '</div></div>';
+        html += '<div class="cic-details">';
+        if (phoneVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' + htmlEsc(phoneVal) + '</span>';
+        if (companyVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>' + htmlEsc(companyVal) + '</span>';
+        if (emailVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + htmlEsc(emailVal) + '</span>';
+        if (addressVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + htmlEsc(addressVal) + '</span>';
+        html += '</div>';
+        container.innerHTML = html;
+        container.style.display = '';
+    }
+
+    // ===== Override clearCustomerSelection to refresh card =====
+    var origClearCustomerSelection = window.clearCustomerSelection;
+    window.clearCustomerSelection = function() {
+        if (typeof origClearCustomerSelection === 'function') origClearCustomerSelection();
+        refreshCustomerCard();
+    };
+
+    // ===== Watch customer selection from searchable-dropdown.js =====
+    (function() {
+        var list = document.getElementById('custList');
+        if (list) {
+            list.addEventListener('click', function(e) {
+                if (e.target.closest('.cust-card')) {
+                    setTimeout(refreshCustomerCard, 0);
+                }
+            });
+        }
+    })();
+
+    // ===== Init on page load =====
+    refreshCustomerCard();
 
     // ===== EDIT MODE: machine picker logic =====
     (function() {

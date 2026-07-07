@@ -160,6 +160,30 @@
                         </tfoot>
                     </c:if>
                 </table>
+
+                <c:if test="${totalPages > 1}">
+                    <c:set var="filterParams" value="fromDate=${fromDate}&toDate=${toDate}"/>
+                    <c:if test="${not empty selectedWarehouseId}">
+                        <c:set var="filterParams" value="${filterParams}&warehouseId=${selectedWarehouseId}"/>
+                    </c:if>
+                    <div class="pagination">
+                        <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                        <div class="controls">
+                            <c:if test="${currentPage > 1}">
+                                <a href="?${filterParams}&page=${currentPage - 1}" class="page-btn">‹</a>
+                            </c:if>
+                            <c:forEach begin="1" end="${totalPages}" var="p">
+                                <c:choose>
+                                    <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                    <c:otherwise><a href="?${filterParams}&page=${p}" class="page-btn">${p}</a></c:otherwise>
+                                </c:choose>
+                            </c:forEach>
+                            <c:if test="${currentPage < totalPages}">
+                                <a href="?${filterParams}&page=${currentPage + 1}" class="page-btn">›</a>
+                            </c:if>
+                        </div>
+                    </div>
+                </c:if>
             </section>
         </main>
     </div>

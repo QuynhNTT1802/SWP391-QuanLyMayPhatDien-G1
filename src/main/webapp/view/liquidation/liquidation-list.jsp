@@ -13,6 +13,15 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
+    <style>
+        .liquidation-list .table-card table.users { min-width: 900px; }
+        .liquidation-list table.users th,
+        .liquidation-list table.users td { padding: 9px 10px; }
+        @media (max-width: 1100px) {
+            .liquidation-list table.users th:nth-child(4),
+            .liquidation-list table.users td:nth-child(4) { display: none; }
+        }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -31,7 +40,7 @@
                 </c:if>
             </div>
         </header>
-        <main>
+        <main class="liquidation-list">
             <div class="page-head">
                 <div class="left">
                     <div class="eyebrow">Kho</div>

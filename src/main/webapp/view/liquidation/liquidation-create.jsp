@@ -87,6 +87,37 @@
             .table-toolbar { flex-direction: column; align-items: stretch; }
             .search-input { min-width: 0; }
         }
+
+        /* ===== HEADER BAR ===== */
+        .header-bar { display: flex; gap: 20px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 18px; }
+        .header-bar .left { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 10px; }
+        .header-bar .right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; align-content: flex-start; }
+        .header-bar .right .btn { min-height: 34px; padding: 6px 12px; line-height: 1.4; box-sizing: border-box; white-space: nowrap; }
+        .header-bar .right .btn .icon { width: 15px; height: 15px; flex-shrink: 0; }
+
+        .code-tag { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; background: var(--surface); color: var(--fg); width: fit-content; }
+        .code-tag .ct-label { color: var(--muted); font-weight: 500; }
+        .page-main-title { font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.02em; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .code-tag .ct-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); display: inline-block; }
+        .code-copy { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; padding: 1px 4px; border-radius: var(--radius-sm); transition: background .12s ease; }
+        .code-copy:hover { background: var(--surface-2); }
+
+        .section-action-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface-2); flex-wrap: wrap; }
+        .action-bar-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--fg); }
+        .action-bar-right { display: flex; align-items: center; gap: 8px; }
+
+        .customer-info-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface-2); margin-top: 10px; }
+        .cic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .cic-name { font-size: 14px; font-weight: 700; color: var(--fg); line-height: 1.4; }
+        .cic-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .cic-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 12px; font-family: var(--font-ui); color: var(--muted); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; line-height: 1.4; }
+        .cic-btn:hover { color: var(--fg); border-color: var(--accent); }
+        .cic-btn-remove { padding: 4px; border: none; color: var(--muted); background: none; cursor: pointer; }
+        .cic-btn-remove:hover { color: var(--danger); }
+        .cic-btn-remove svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .cic-details { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
+        .cic-detail-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+        .cic-detail-item svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 </head>
 <body>
@@ -119,23 +150,23 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại
                     </a>
-                    <button type="submit" form="liquidationForm" class="btn btn-primary">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                        Lưu &amp; Gửi Sếp duyệt
+                    <button type="button" class="btn" onclick="location.reload()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        Làm mới
                     </button>
                 </div>
             </div>
 
-            <%-- ===== SECTION 1: LỌC KHO + THÔNG TIN CHUNG (GET) ===== --%>
-            <form id="filterForm" method="GET" action="${pageContext.request.contextPath}/liquidations">
+            <form id="liquidationForm" action="${pageContext.request.contextPath}/liquidations" method="POST">
                 <input type="hidden" name="action" value="create" />
+
                 <div class="section">
                     <div class="section-head"><h3>Thông tin chung</h3></div>
                     <div class="section-body">
                         <div class="form-grid cols-4">
                             <div class="info-field">
                                 <label>Kho hàng <span style="color:var(--danger)">*</span></label>
-                                <select class="info-input" name="warehouseId" id="warehouseId" required onchange="document.getElementById('filterForm').submit();">
+                                <select class="info-input" name="warehouseId" id="warehouseId" required onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId='+this.value">
                                     <option value="">-- Chọn kho hàng --</option>
                                     <c:forEach var="w" items="${warehouses}">
                                         <option value="${w.warehouseId}" ${selectedWarehouseId == w.warehouseId ? 'selected' : ''}>${w.name}</option>
@@ -144,7 +175,7 @@
                             </div>
                             <div class="info-field">
                                 <label>Lý do thanh lý <span style="color:var(--danger)">*</span></label>
-                                <select class="info-input" name="reasonId" form="liquidationForm" required>
+                                <select class="info-input" name="reasonId" required>
                                     <option value="">-- Chọn lý do --</option>
                                     <c:forEach var="r" items="${reasons}">
                                         <option value="${r.id}" ${selectedReasonId == r.id ? 'selected' : ''}>${r.name}</option>
@@ -152,154 +183,182 @@
                                 </select>
                             </div>
                             <div class="info-field">
-                                <label>Tình trạng máy</label>
-                                <select class="info-input" name="cond" id="condFilter" onchange="document.getElementById('filterForm').submit();" ${empty selectedWarehouseId ? 'disabled' : ''}>
-                                    <option value="all" ${condFilter == 'all' ? 'selected' : ''}>Tất cả (${condCountAll})</option>
-                                    <option value="DAMAGED" ${condFilter == 'DAMAGED' ? 'selected' : ''}>Hỏng (${condCountDamaged})</option>
-                                    <option value="POOR" ${condFilter == 'POOR' ? 'selected' : ''}>Kém (${condCountPoor})</option>
-                                    <option value="GOOD" ${condFilter == 'GOOD' ? 'selected' : ''}>Tốt (${condCountGood})</option>
-                                </select>
+                                <label>Ngày tạo</label>
+                                <input class="info-input mono" type="text" disabled value="${currentDateStr}">
+                            </div>
+                            <div class="info-field">
+                                <label>Người tạo</label>
+                                <input class="info-input" type="text" disabled value="${currentUserName}">
                             </div>
                             <div class="info-field">
                                 <label>Số máy khả dụng</label>
                                 <input class="info-input mono" type="text" disabled value="${empty selectedWarehouseId ? '—' : (empty pickRows ? '0' : fn:length(pickRows))} máy">
                             </div>
+                            <div class="info-field">
+                                <label>Giá nhập (VNĐ)</label>
+                                <input class="info-input mono" type="text" id="gridTotalImport" disabled value="0 ₫">
+                            </div>
+                            <div class="info-field">
+                                <label>Giá thanh lý (VNĐ)</label>
+                                <input class="info-input mono" type="text" id="gridTotalLiq" disabled value="0 ₫">
+                            </div>
+                            <div class="info-field">
+                                <label>&nbsp;</label>
+                                <input class="info-input" type="text" disabled value="" style="opacity:0;">
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </form>
-
-            <%-- ===== SECTION 2: KHÁCH HÀNG + CHỌN MÁY & BÁO GIÁ (POST) ===== --%>
-            <form id="liquidationForm" action="${pageContext.request.contextPath}/liquidations" method="POST">
-                <input type="hidden" name="action" value="create" />
-                <input type="hidden" name="warehouseId" value="${selectedWarehouseId}" />
-
-                <div class="section">
-                    <div class="section-head"><h3>Khách hàng nhận</h3></div>
-                    <div class="section-body">
+                        <div class="cust-subhead" style="margin-top:22px; padding-top:16px; border-top:1px solid var(--border);">
+                            <h4 style="font-size:13px; font-weight:700; margin:0 0 14px;">Khách hàng nhận</h4>
+                        </div>
                         <p class="kv-hint" style="margin:0 0 12px;font-size:13px;color:var(--muted);">Chọn khách hàng có sẵn hoặc tạo khách hàng mới để gán vào đơn thanh lý.</p>
-                        <div class="sd" id="customerDropdown"
-                             data-endpoint="${pageContext.request.contextPath}/liquidations?action=search_customer&q=">
-                            <div class="cust-trigger-wrap">
-                                <button type="button" class="cust-trigger" id="custTrigger"
-                                        onclick="openCustomerPanel()" aria-haspopup="dialog">
-                                    <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
-                                </button>
-                                <button type="button" class="cust-clear-btn" id="custClearBtn"
-                                        onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M18 6L6 18M6 6l12 12"/>
-                                    </svg>
-                                </button>
+                        <div id="custPickerArea">
+                            <div class="sd" id="customerDropdown"
+                                 data-endpoint="${pageContext.request.contextPath}/liquidations?action=search_customer&q=">
+                                <div class="cust-trigger-wrap">
+                                    <button type="button" class="cust-trigger" id="custTrigger"
+                                            onclick="openCustomerPanel()" aria-haspopup="dialog">
+                                        <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
+                                    </button>
+                                    <button type="button" class="cust-clear-btn" id="custClearBtn"
+                                            onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 6L6 18M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="customerId" id="sdHiddenId" value="" />
+                                <input type="hidden" id="inpCustName" value="" />
+                                <input type="hidden" id="inpCustPhone" value="" />
+                                <input type="hidden" id="inpCustEmail" value="" />
+                                <input type="hidden" id="inpCustAddress" value="" />
+                                <input type="hidden" id="customerCompany" value="" />
                             </div>
-                            <input type="hidden" name="customerId" id="sdHiddenId" value="" />
+                            <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()" style="margin-top:10px;">
+                                <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                Tạo khách hàng mới
+                            </button>
                         </div>
-                        <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()" style="margin-top:10px;">
-                            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                            Tạo khách hàng mới
-                        </button>
+                        <div id="customerCardContainer" class="customer-info-card" style="display:none;"></div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <div class="section-head"><h3>Chọn máy &amp; báo giá</h3></div>
-                    <div class="table-toolbar">
-                        <div class="search-input">
-                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input type="text" id="serialSearchInput" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                    <div class="section-head"><h3>Danh sách máy phát điện</h3></div>
+                    <div class="section-body">
+                        <div class="table-toolbar">
+                            <div class="search-input">
+                                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                <input type="text" id="serialSearchInput" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                            </div>
+                            <select class="info-input" id="condFilter" style="width:auto;min-width:160px;" ${empty selectedWarehouseId ? 'disabled' : ''}
+                                    onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond='+this.value">
+                                <option value="all" ${condFilter == 'all' ? 'selected' : ''}>Tất cả (${condCountAll})</option>
+                                <option value="DAMAGED" ${condFilter == 'DAMAGED' ? 'selected' : ''}>Hỏng (${condCountDamaged})</option>
+                                <option value="POOR" ${condFilter == 'POOR' ? 'selected' : ''}>Kém (${condCountPoor})</option>
+                                <option value="GOOD" ${condFilter == 'GOOD' ? 'selected' : ''}>Tốt (${condCountGood})</option>
+                            </select>
+                            <div class="spacer"></div>
+                            <button type="button" class="btn" onclick="selectAllVisible()">Chọn tất cả</button>
+                            <button type="button" class="btn" onclick="deselectAll()">Bỏ chọn</button>
                         </div>
-                        <div class="spacer"></div>
-                        <button type="button" class="btn" onclick="selectAllVisible()">Chọn tất cả</button>
-                        <button type="button" class="btn" onclick="deselectAll()">Bỏ chọn</button>
+                        <c:choose>
+                            <c:when test="${empty selectedWarehouseId}">
+                                <div class="empty-state">
+                                    <div class="icon-wrap">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                    </div>
+                                    <strong>Chọn kho hàng trước</strong>
+                                    <span>Vui lòng chọn kho ở mục Thông tin chung để xem máy có sẵn.</span>
+                                </div>
+                            </c:when>
+                            <c:when test="${empty pickRows and empty lockedRows}">
+                                <div class="empty-state">
+                                    <div class="icon-wrap">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    </div>
+                                    <strong>Không có máy khả dụng</strong>
+                                    <span>Kho này chưa có máy phát điện đã kiểm kê trong tình trạng đã chọn.</span>
+                                </div>
+                            </c:when>
+                            <c:otherwise>
+                                <table class="product-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-cb"><input type="checkbox" id="pickAll"/></th>
+                                            <th>Serial</th>
+                                            <th>Model</th>
+                                            <th>Tình trạng</th>
+                                            <th class="col-date">Ngày nhập</th>
+                                            <th class="col-price">Giá nhập</th>
+                                            <th class="col-price">Giá thanh lý <span style="color:var(--danger)">*</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pickBody">
+                                        <c:forEach var="r" items="${pickRows}">
+                                            <tr class="pick-trow" data-model="<c:out value='${r.model}'/>">
+                                                <td class="col-cb">
+                                                    <input type="checkbox" class="pick-cb" name="serialNumber"
+                                                           value="<c:out value='${r.serialNumber}'/>"
+                                                           data-gen="${r.generatorId}"
+                                                           data-price="${r.unitPrice}"
+                                                           data-condition="${r.condition}"/>
+                                                    <input type="hidden" class="gen-hidden" name="generatorId" value="${r.generatorId}" disabled/>
+                                                </td>
+                                                <td class="row-serial"><c:out value="${r.serialNumber}"/></td>
+                                                <td class="row-model"><c:out value="${r.model}"/></td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${r.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                        <c:when test="${r.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                        <c:when test="${r.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                        <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
+                                                <td class="col-date"><c:out value="${r.createdAtStr}"/></td>
+                                                <td class="col-price row-price"><fmt:formatNumber value="${r.unitPrice}" type="number" maxFractionDigits="0"/> đ</td>
+                                                <td class="col-price">
+                                                    <div class="liq-price-wrap">
+                                                        <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice" placeholder="Nhập giá..." disabled/>
+                                                        <span class="liq-price-suffix">đ</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                        <c:forEach var="lk" items="${lockedRows}">
+                                            <tr class="is-locked">
+                                                <td class="col-cb"></td>
+                                                <td class="row-serial"><c:out value="${lk.serialNumber}"/></td>
+                                                <td class="row-model"><c:out value="${lk.model}"/></td>
+                                                <td colspan="4">
+                                                    <a class="locked-pill" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${lk.liquidationId}" target="_blank">Trong đơn <c:out value="${lk.liquidationCode}"/></a>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="2">Đã chọn <strong id="barSelectedCount">0</strong> máy<span id="barModelCount" style="color:var(--muted);font-weight:500;"></span></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td class="col-price">Tổng giá nhập:</td>
+                                            <td class="col-price"><span class="total-val" id="formTotalVal">0 đ</span></td>
+                                            <td class="col-price">Tổng thanh lý: <span class="total-val" id="formLiqTotalVal">0 đ</span></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <div id="condWarn" class="liq-cond-warn"></div>
+                            </c:otherwise>
+                        </c:choose>
+                        <div class="section-action-bar">
+                            <div class="action-bar-left"></div>
+                            <div class="action-bar-right">
+                                <button type="submit" class="btn btn-primary">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                    Lưu &amp; Gửi Sếp duyệt
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <c:choose>
-                        <c:when test="${empty selectedWarehouseId}">
-                            <div class="empty-state">
-                                <div class="icon-wrap">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                                </div>
-                                <strong>Chọn kho hàng trước</strong>
-                                <span>Vui lòng chọn kho ở mục Thông tin chung để xem máy có sẵn.</span>
-                            </div>
-                        </c:when>
-                        <c:when test="${empty pickRows and empty lockedRows}">
-                            <div class="empty-state">
-                                <div class="icon-wrap">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                </div>
-                                <strong>Không có máy khả dụng</strong>
-                                <span>Kho này chưa có máy phát điện đã kiểm kê trong tình trạng đã chọn.</span>
-                            </div>
-                        </c:when>
-                        <c:otherwise>
-                            <table class="product-table">
-                                <thead>
-                                    <tr>
-                                        <th class="col-cb"><input type="checkbox" id="pickAll"/></th>
-                                        <th>Serial</th>
-                                        <th>Model</th>
-                                        <th>Tình trạng</th>
-                                        <th class="col-date">Ngày nhập</th>
-                                        <th class="col-price">Giá nhập</th>
-                                        <th class="col-price">Giá thanh lý <span style="color:var(--danger)">*</span></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pickBody">
-                                    <c:forEach var="r" items="${pickRows}">
-                                        <tr class="pick-trow" data-model="<c:out value='${r.model}'/>">
-                                            <td class="col-cb">
-                                                <input type="checkbox" class="pick-cb" name="serialNumber"
-                                                       value="<c:out value='${r.serialNumber}'/>"
-                                                       data-gen="${r.generatorId}"
-                                                       data-price="${r.unitPrice}"
-                                                       data-condition="${r.condition}"/>
-                                                <input type="hidden" class="gen-hidden" name="generatorId" value="${r.generatorId}" disabled/>
-                                            </td>
-                                            <td class="row-serial"><c:out value="${r.serialNumber}"/></td>
-                                            <td class="row-model"><c:out value="${r.model}"/></td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${r.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
-                                                    <c:when test="${r.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
-                                                    <c:when test="${r.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
-                                                    <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td class="col-date"><c:out value="${r.createdAtStr}"/></td>
-                                            <td class="col-price row-price"><fmt:formatNumber value="${r.unitPrice}" type="number" maxFractionDigits="0"/> đ</td>
-                                            <td class="col-price">
-                                                <div class="liq-price-wrap">
-                                                    <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice" placeholder="Nhập giá..." disabled/>
-                                                    <span class="liq-price-suffix">đ</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                    <c:forEach var="lk" items="${lockedRows}">
-                                        <tr class="is-locked">
-                                            <td class="col-cb"></td>
-                                            <td class="row-serial"><c:out value="${lk.serialNumber}"/></td>
-                                            <td class="row-model"><c:out value="${lk.model}"/></td>
-                                            <td colspan="4">
-                                                <a class="locked-pill" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${lk.liquidationId}" target="_blank">Trong đơn <c:out value="${lk.liquidationCode}"/></a>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="2">Đã chọn <strong id="barSelectedCount">0</strong> máy<span id="barModelCount" style="color:var(--muted);font-weight:500;"></span></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td class="col-price">Tổng giá nhập:</td>
-                                        <td class="col-price"><span class="total-val" id="formTotalVal">0 đ</span></td>
-                                        <td class="col-price">Tổng thanh lý: <span class="total-val" id="formLiqTotalVal">0 đ</span></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <div id="condWarn" class="liq-cond-warn"></div>
-                        </c:otherwise>
-                    </c:choose>
                 </div>
             </form>
         </main>
@@ -347,6 +406,10 @@
             document.getElementById('barModelCount').textContent = modelCount > 0 ? ' · ' + modelCount + ' model' : '';
             document.getElementById('formTotalVal').textContent = fmt(total) + ' đ';
             document.getElementById('formLiqTotalVal').textContent = fmt(liqTotal) + ' đ';
+            var gi = document.getElementById('gridTotalImport');
+            var gl = document.getElementById('gridTotalLiq');
+            if (gi) gi.value = fmt(total) + ' ₫';
+            if (gl) gl.value = fmt(liqTotal) + ' ₫';
 
             var warnEl = document.getElementById('condWarn');
             if (warnEl) {
@@ -544,15 +607,67 @@
         }
     });
 
-    function clearCustomerSelectionLocal() {
+    function htmlEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function refreshCustomerCard() {
+        var container = document.getElementById('customerCardContainer');
+        var picker = document.getElementById('custPickerArea');
+        if (!container) return;
         var hid = document.getElementById('sdHiddenId');
-        if (hid) hid.value = '';
-        var label = document.getElementById('custTriggerLabel');
-        if (label) { label.textContent = '-- Click để chọn khách hàng --'; label.classList.remove('has-value'); }
+        var custId = hid ? hid.value : '';
+        if (!custId || !custId.trim()) {
+            container.style.display = 'none';
+            if (picker) picker.style.display = '';
+            return;
+        }
+        if (picker) picker.style.display = 'none';
+        var nameEl = document.getElementById('inpCustName');
+        var phoneEl = document.getElementById('inpCustPhone');
+        var emailEl = document.getElementById('inpCustEmail');
+        var addressEl = document.getElementById('inpCustAddress');
+        var companyEl = document.getElementById('customerCompany');
+        var nameVal = nameEl ? nameEl.value : '';
+        var phoneVal = phoneEl ? phoneEl.value : '';
+        var emailVal = emailEl ? emailEl.value : '';
+        var addressVal = addressEl ? addressEl.value : '';
+        var companyVal = companyEl ? companyEl.value : '';
+        var html = '<div class="cic-header">';
+        html += '<span class="cic-name">' + htmlEsc(nameVal || '') + '</span>';
+        html += '<div class="cic-actions">';
+        html += '<button type="button" class="cic-btn-remove" onclick="clearCustomerSelection();refreshCustomerCard();" title="Hủy chọn khách hàng" aria-label="Hủy chọn">';
+        html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+        html += '</button>';
+        html += '</div></div>';
+        html += '<div class="cic-details">';
+        if (phoneVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' + htmlEsc(phoneVal) + '</span>';
+        if (companyVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>' + htmlEsc(companyVal) + '</span>';
+        if (emailVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + htmlEsc(emailVal) + '</span>';
+        if (addressVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + htmlEsc(addressVal) + '</span>';
+        html += '</div>';
+        container.innerHTML = html;
+        container.style.display = '';
     }
-    if (typeof window.clearCustomerSelection !== 'function') {
-        window.clearCustomerSelection = clearCustomerSelectionLocal;
-    }
+
+    var origClearSelection = window.clearCustomerSelection;
+    window.clearCustomerSelection = function() {
+        if (typeof origClearSelection === 'function') origClearSelection();
+        refreshCustomerCard();
+    };
+
+    (function() {
+        var list = document.getElementById('custList');
+        if (list) {
+            list.addEventListener('click', function(e) {
+                if (e.target.closest('.cust-card')) {
+                    setTimeout(refreshCustomerCard, 0);
+                }
+            });
+        }
+    })();
+
+    refreshCustomerCard();
 
     function openNewCustomerModal() {
         ['ncName','ncPhone','ncEmail','ncAddress','ncCompanyName'].forEach(function(id){
@@ -658,6 +773,7 @@
         if (hid) hid.value = c.id;
         var label = document.getElementById('custTriggerLabel');
         if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
+        refreshCustomerCard();
     }
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
