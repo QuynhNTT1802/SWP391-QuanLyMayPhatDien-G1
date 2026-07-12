@@ -65,24 +65,56 @@ public class LiquidationReportController extends HttpServlet {
         Integer warehouseId = parseInt(request.getParameter("warehouseId"));
 
         Map<String, Object> summary = liquidationDAO.getReportSummary(fromDate, toDate, warehouseId);
-        List<Map<String, Object>> byReason = liquidationDAO.getReportByReason(fromDate, toDate, warehouseId);
-        List<Map<String, Object>> byWarehouse = liquidationDAO.getReportByWarehouse(fromDate, toDate, warehouseId);
-        List<Map<String, Object>> byModel = liquidationDAO.getReportByModel(fromDate, toDate, warehouseId, TOP_MODEL_LIMIT);
-        List<Map<String, Object>> monthly = liquidationDAO.getReportMonthlyTrend(fromDate, toDate, warehouseId);
-
         String warehouseName = resolveWarehouseName(warehouseId);
 
+        // Xuất Excel: vẫn xuất đầy đủ các sheet (lý do / kho / model / tháng / chi tiết).
         if ("export".equals(request.getParameter("action"))) {
+            List<Map<String, Object>> byReason = liquidationDAO.getReportByReason(fromDate, toDate, warehouseId);
+            List<Map<String, Object>> byWarehouse = liquidationDAO.getReportByWarehouse(fromDate, toDate, warehouseId);
+            List<Map<String, Object>> byModel = liquidationDAO.getReportByModel(fromDate, toDate, warehouseId, TOP_MODEL_LIMIT);
+            List<Map<String, Object>> monthly = liquidationDAO.getReportMonthlyTrend(fromDate, toDate, warehouseId);
+            List<Map<String, Object>> detailList = liquidationDAO.getReportDetailList(fromDate, toDate, warehouseId);
             exportExcel(response, fromDate, toDate, warehouseName,
-                    summary, byReason, byWarehouse, byModel, monthly);
+                    summary, byReason, byWarehouse, byModel, monthly, detailList);
             return;
         }
 
+        // Bảng thống kê 1 chiều: chọn chiều nhóm qua dropdown "Nhóm theo".
+        String groupBy = request.getParameter("groupBy");
+        List<Map<String, Object>> rows;
+        String groupLabel;
+        switch (groupBy == null ? "" : groupBy) {
+            case "warehouse":
+                groupBy = "warehouse";
+                groupLabel = "Kho";
+                rows = liquidationDAO.getReportByWarehouse(fromDate, toDate, warehouseId);
+                normalizeLabel(rows, "warehouseName");
+                break;
+            case "model":
+                groupBy = "model";
+                groupLabel = "Model";
+                rows = liquidationDAO.getReportByModel(fromDate, toDate, warehouseId, TOP_MODEL_LIMIT);
+                normalizeLabel(rows, "modelName");
+                break;
+            case "month":
+                groupBy = "month";
+                groupLabel = "Tháng";
+                rows = liquidationDAO.getReportMonthlyTrend(fromDate, toDate, warehouseId);
+                normalizeLabel(rows, "month");
+                break;
+            case "reason":
+            default:
+                groupBy = "reason";
+                groupLabel = "Lý do";
+                rows = liquidationDAO.getReportByReason(fromDate, toDate, warehouseId);
+                normalizeLabel(rows, "reasonName");
+                break;
+        }
+
         request.setAttribute("summary", summary);
-        request.setAttribute("byReason", byReason);
-        request.setAttribute("byWarehouse", byWarehouse);
-        request.setAttribute("byModel", byModel);
-        request.setAttribute("monthly", monthly);
+        request.setAttribute("rows", rows);
+        request.setAttribute("groupBy", groupBy);
+        request.setAttribute("groupLabel", groupLabel);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("fromDate", fromDate.toString());
         request.setAttribute("toDate", toDate.toString());
@@ -97,9 +129,10 @@ public class LiquidationReportController extends HttpServlet {
             List<Map<String, Object>> byReason,
             List<Map<String, Object>> byWarehouse,
             List<Map<String, Object>> byModel,
-            List<Map<String, Object>> monthly) throws IOException {
+            List<Map<String, Object>> monthly,
+            List<Map<String, Object>> detailList) throws IOException {
         XSSFWorkbook workbook = LiquidationReportExcelSupport.exportReport(
-                fromDate, toDate, warehouseName, summary, byReason, byWarehouse, byModel, monthly);
+                fromDate, toDate, warehouseName, summary, byReason, byWarehouse, byModel, monthly, detailList);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
                 "attachment; filename=BaoCaoThanhLy_" + fromDate + "_" + toDate + ".xlsx");
@@ -107,6 +140,14 @@ public class LiquidationReportController extends HttpServlet {
             workbook.write(out);
         }
         workbook.close();
+    }
+
+    // Đưa cột nhãn của mỗi chiều (reasonName/warehouseName/modelName/month) về 1 key "label"
+    // để JSP dùng chung 1 vòng lặp bất kể nhóm theo gì.
+    private void normalizeLabel(List<Map<String, Object>> rows, String sourceKey) {
+        for (Map<String, Object> r : rows) {
+            r.put("label", r.get(sourceKey));
+        }
     }
 
     private String resolveWarehouseName(Integer warehouseId) {

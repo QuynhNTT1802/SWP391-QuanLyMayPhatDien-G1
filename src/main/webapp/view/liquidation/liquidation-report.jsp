@@ -17,39 +17,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
     <style>
-        /* ----- KPI cards (dashboard style) ----- */
-        .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; }
-        .kpi .label { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; margin-bottom: 10px; }
-        .kpi .label .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-        .kpi .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg); }
-        .kpi .value .unit { font-size: 13px; font-weight: 500; color: var(--muted); margin-inline-start: 4px; }
-        .kpi .value.neg { color: var(--danger); }
-        .kpi .delta { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-        .delta .change { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font-mono); font-weight: 500; padding: 1px 6px; border-radius: 3px; font-size: 11.5px; }
-        .change.up { color: var(--accent); background: var(--accent-soft); }
-        .change.down { color: var(--danger); background: var(--danger-soft); }
-        .change.flat { color: var(--muted); background: var(--surface-2); }
-        .kpi .spark { margin-top: 12px; height: 32px; width: 100%; }
-
-        /* ----- Layout ----- */
-        .grid-2 { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 12px; }
-        .chart { width: 100%; height: 240px; }
-        .chart-legend { display: flex; align-items: center; gap: 20px; margin-top: 4px; padding: 0 4px; font-size: 12px; color: var(--muted); }
-        .legend-item { display: inline-flex; align-items: center; gap: 6px; }
-        .legend-swatch { width: 10px; height: 2px; border-radius: 2px; }
-
-        /* ----- Rank list (top model / theo lý do) ----- */
-        .rank-list { display: flex; flex-direction: column; }
-        .rank { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border); }
-        .rank:last-child { border-bottom: 0; }
-        .rank-no { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--muted); }
-        .rank:nth-child(1) .rank-no { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
-        .rank-body { min-width: 0; line-height: 1.3; }
-        .rank-title { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .rank-sub { font-size: 11.5px; color: var(--muted); font-family: var(--font-mono); }
-        .rank-amount { text-align: end; font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--danger); }
-
         /* ----- Inventory-style table ----- */
         table.inv { width: 100%; border-collapse: collapse; font-size: 13px; }
         table.inv th, table.inv td { text-align: start; padding: 10px 16px; border-bottom: 1px solid var(--border); }
@@ -61,6 +28,11 @@
         .rate-good { background: var(--accent-soft); color: var(--accent); }
         .rate-mid { background: var(--warn-soft); color: var(--warn); }
         .rate-bad { background: var(--danger-soft); color: var(--danger); }
+
+        /* ----- Dòng TỔNG ----- */
+        table.inv tfoot td { padding: 12px 16px; background: var(--surface-2); border-top: 2px solid var(--border-strong); border-bottom: 0; font-weight: 600; }
+        table.inv tfoot td.label-total { text-transform: uppercase; letter-spacing: 0.04em; font-size: 11.5px; color: var(--muted); }
+        table.inv tfoot td.loss { color: var(--danger); }
 
         /* ----- Section-head có filter gắn kèm ----- */
         .section-head--filter { align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -78,11 +50,6 @@
             .report-filter { width: 100%; }
         }
         .empty-cell { text-align: center; color: var(--muted); padding: 22px; }
-
-        @media (max-width: 1280px) {
-            .kpis { grid-template-columns: repeat(2, 1fr); }
-            .grid-2 { grid-template-columns: 1fr; }
-        }
         .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
         [data-theme="light"] .theme-toggle .icon-moon { display: block; }
         [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
@@ -108,7 +75,7 @@
                 <div class="left">
                     <div class="eyebrow">Kho</div>
                     <h2 class="page-title">Báo cáo thanh lý</h2>
-                    <div class="page-sub">Phân tích tổn thất, thu hồi vốn và xu hướng thanh lý thiết bị</div>
+                    <div class="page-sub">Bảng thống kê tổn thất và thu hồi vốn thiết bị thanh lý</div>
                 </div>
             </div>
 
@@ -119,101 +86,8 @@
                 </div>
             </c:if>
 
-            <%-- ===== Tính max + giá trị tháng cuối/trước cho sparkline & delta (dữ liệu thật) ===== --%>
-            <c:set var="nM" value="${fn:length(monthly)}"/>
-            <c:set var="maxLiq" value="0"/><c:set var="maxOrig" value="0"/>
-            <c:set var="maxLoss" value="0"/><c:set var="maxCnt" value="0"/>
-            <c:set var="lastLiq" value="0"/><c:set var="prevLiq" value="0"/>
-            <c:set var="lastLoss" value="0"/><c:set var="prevLoss" value="0"/>
-            <c:forEach var="m" items="${monthly}" varStatus="st">
-                <c:if test="${m.totalLiquidation > maxLiq}"><c:set var="maxLiq" value="${m.totalLiquidation}"/></c:if>
-                <c:if test="${m.totalOriginal > maxOrig}"><c:set var="maxOrig" value="${m.totalOriginal}"/></c:if>
-                <c:if test="${m.totalLoss > maxLoss}"><c:set var="maxLoss" value="${m.totalLoss}"/></c:if>
-                <c:if test="${m.orderCount > maxCnt}"><c:set var="maxCnt" value="${m.orderCount}"/></c:if>
-                <c:if test="${st.index == nM - 1}"><c:set var="lastLiq" value="${m.totalLiquidation}"/><c:set var="lastLoss" value="${m.totalLoss}"/></c:if>
-                <c:if test="${st.index == nM - 2}"><c:set var="prevLiq" value="${m.totalLiquidation}"/><c:set var="prevLoss" value="${m.totalLoss}"/></c:if>
-            </c:forEach>
-
-            <%-- ===== Build điểm sparkline + line chart trong 1 vòng lặp =====
-                 Line kép: đường nguyên giá (trên) + thu hồi (dưới), cùng scale theo maxOrig.
-                 origPts/liqPts: 2 đường. liqPtsRev: đường thu hồi đảo chiều để khép vùng tổn thất. --%>
-            <c:set var="sLiq" value=""/><c:set var="sOrig" value=""/>
-            <c:set var="sLoss" value=""/><c:set var="sCnt" value=""/>
-            <c:set var="origPts" value=""/>
-            <c:set var="liqPts" value=""/>
-            <c:set var="liqPtsRev" value=""/>
-            <c:forEach var="m" items="${monthly}" varStatus="st">
-                <c:set var="sx" value="${nM > 1 ? (120 * st.index / (nM - 1)) : 60}"/>
-                <c:set var="lx" value="${nM > 1 ? (40 + 660 * st.index / (nM - 1)) : 370}"/>
-                <c:set var="yOrig" value="${maxOrig > 0 ? 220 - (190 * m.totalOriginal / maxOrig) : 220}"/>
-                <c:set var="yLiq" value="${maxOrig > 0 ? 220 - (190 * m.totalLiquidation / maxOrig) : 220}"/>
-                <c:set var="sLiq" value="${sLiq} ${sx},${maxLiq > 0 ? 28 - (24 * m.totalLiquidation / maxLiq) : 28}"/>
-                <c:set var="sOrig" value="${sOrig} ${sx},${maxOrig > 0 ? 28 - (24 * m.totalOriginal / maxOrig) : 28}"/>
-                <c:set var="sLoss" value="${sLoss} ${sx},${maxLoss > 0 ? 28 - (24 * m.totalLoss / maxLoss) : 28}"/>
-                <c:set var="sCnt" value="${sCnt} ${sx},${maxCnt > 0 ? 28 - (24 * m.orderCount / maxCnt) : 28}"/>
-                <c:set var="origPts" value="${origPts} ${lx},${yOrig}"/>
-                <c:set var="liqPts" value="${liqPts} ${lx},${yLiq}"/>
-                <c:set var="liqPtsRev" value=" ${lx},${yLiq}${liqPtsRev}"/>
-            </c:forEach>
-
-            <%-- ===== KPI ROW ===== --%>
-            <section>
-                <div class="kpis">
-                    <div class="kpi">
-                        <div class="label">Số máy đã thanh lý <span class="dot"></span></div>
-                        <div class="value">${summary.machineCount}<span class="unit">máy</span></div>
-                        <div class="delta"><span class="change flat">${summary.orderCount} đơn</span> đã duyệt trong kỳ</div>
-                        <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                            <polyline points="${sCnt}" fill="none" stroke="var(--fg-soft)" stroke-width="1.6"/>
-                        </svg>
-                    </div>
-
-                    <div class="kpi">
-                        <div class="label">Tổng nguyên giá</div>
-                        <div class="value"><fmt:formatNumber value="${summary.totalOriginal / 1000000}" maxFractionDigits="1"/><span class="unit">tr ₫</span></div>
-                        <div class="delta">Giá trị sổ sách thiết bị thanh lý</div>
-                        <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                            <polyline points="${sOrig}" fill="none" stroke="var(--fg-soft)" stroke-width="1.6"/>
-                        </svg>
-                    </div>
-
-                    <div class="kpi">
-                        <div class="label">Giá trị thu hồi</div>
-                        <div class="value"><fmt:formatNumber value="${summary.totalLiquidation / 1000000}" maxFractionDigits="1"/><span class="unit">tr ₫</span></div>
-                        <div class="delta">
-                            <c:choose>
-                                <c:when test="${prevLiq > 0 && lastLiq >= prevLiq}"><span class="change up">▲ <fmt:formatNumber value="${(lastLiq - prevLiq) * 100 / prevLiq}" maxFractionDigits="1"/>%</span></c:when>
-                                <c:when test="${prevLiq > 0}"><span class="change down">▼ <fmt:formatNumber value="${(prevLiq - lastLiq) * 100 / prevLiq}" maxFractionDigits="1"/>%</span></c:when>
-                                <c:otherwise><span class="change flat">Tỷ lệ ${summary.recoveryRate}%</span></c:otherwise>
-                            </c:choose>
-                            so tháng trước
-                        </div>
-                        <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                            <polyline points="${sLiq}" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
-                            <polyline points="${sLiq} 120,32 0,32" fill="var(--accent)" opacity="0.12"/>
-                        </svg>
-                    </div>
-
-                    <div class="kpi">
-                        <div class="label">Tổn thất</div>
-                        <div class="value neg"><fmt:formatNumber value="${summary.totalLoss / 1000000}" maxFractionDigits="1"/><span class="unit">tr ₫</span></div>
-                        <div class="delta">
-                            <c:choose>
-                                <c:when test="${prevLoss > 0 && lastLoss > prevLoss}"><span class="change down">▲ <fmt:formatNumber value="${(lastLoss - prevLoss) * 100 / prevLoss}" maxFractionDigits="1"/>%</span></c:when>
-                                <c:when test="${prevLoss > 0}"><span class="change up">▼ <fmt:formatNumber value="${(prevLoss - lastLoss) * 100 / prevLoss}" maxFractionDigits="1"/>%</span></c:when>
-                                <c:otherwise><span class="change flat">Chênh nguyên giá</span></c:otherwise>
-                            </c:choose>
-                            so tháng trước
-                        </div>
-                        <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                            <polyline points="${sLoss}" fill="none" stroke="var(--danger)" stroke-width="1.6"/>
-                        </svg>
-                    </div>
-                </div>
-            </section>
-
             <div class="section-head section-head--filter">
-                <h2>Xu hướng giá trị thu hồi</h2>
+                <h2>Thống kê theo ${fn:toLowerCase(groupLabel)}</h2>
                 <form class="report-filter" method="get" action="${pageContext.request.contextPath}/liquidations/report">
                     <span class="rf-field">
                         <input type="date" name="fromDate" value="${fromDate}" max="${toDate}" title="Từ ngày"/>
@@ -226,6 +100,12 @@
                             <option value="${w.warehouseId}" ${selectedWarehouseId == w.warehouseId ? 'selected' : ''}>${w.name}</option>
                         </c:forEach>
                     </select>
+                    <select name="groupBy" title="Nhóm theo">
+                        <option value="reason" ${groupBy == 'reason' ? 'selected' : ''}>Nhóm theo: Lý do</option>
+                        <option value="warehouse" ${groupBy == 'warehouse' ? 'selected' : ''}>Nhóm theo: Kho</option>
+                        <option value="model" ${groupBy == 'model' ? 'selected' : ''}>Nhóm theo: Model</option>
+                        <option value="month" ${groupBy == 'month' ? 'selected' : ''}>Nhóm theo: Tháng</option>
+                    </select>
                     <button type="submit" class="btn btn-primary">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
                         Lọc
@@ -237,141 +117,36 @@
                 </form>
             </div>
 
-            <section class="grid-2">
-                <%-- ----- Line chart kép + vùng tổn thất ----- --%>
-                <div class="card">
-                    <div class="card-head">
-                        <div>
-                            <h3>Nguyên giá vs Thu hồi theo tháng</h3>
-                            <div class="sub" style="margin-top:2px">Vùng tô = tổn thất · Đơn vị: triệu ₫</div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <c:choose>
-                            <c:when test="${empty monthly}">
-                                <div class="empty-cell">Chưa có dữ liệu thanh lý trong khoảng thời gian này.</div>
-                            </c:when>
-                            <c:otherwise>
-                                <svg class="chart" viewBox="0 0 720 240" preserveAspectRatio="none">
-                                    <g stroke="var(--border)" stroke-width="1">
-                                        <line x1="40" y1="20" x2="710" y2="20"/>
-                                        <line x1="40" y1="73" x2="710" y2="73" stroke-dasharray="2,3"/>
-                                        <line x1="40" y1="126" x2="710" y2="126" stroke-dasharray="2,3"/>
-                                        <line x1="40" y1="173" x2="710" y2="173" stroke-dasharray="2,3"/>
-                                        <line x1="40" y1="220" x2="710" y2="220"/>
-                                    </g>
-                                    <g font-family="var(--font-mono)" font-size="10" fill="var(--muted)" text-anchor="end">
-                                        <text x="34" y="24"><fmt:formatNumber value="${maxOrig / 1000000}" maxFractionDigits="0"/></text>
-                                        <text x="34" y="224">0</text>
-                                    </g>
-                                    <%-- Vùng tổn thất: nguyên giá (xuôi) -> thu hồi (ngược) --%>
-                                    <polygon points="${origPts}${liqPtsRev}" fill="var(--danger)" opacity="0.12"/>
-                                    <%-- Đường thu hồi (dưới) --%>
-                                    <polyline points="${liqPts}" fill="none" stroke="var(--accent)" stroke-width="2"/>
-                                    <%-- Đường nguyên giá (trên) --%>
-                                    <polyline points="${origPts}" fill="none" stroke="var(--fg-soft)" stroke-width="2" stroke-dasharray="4,3"/>
-                                    <g font-family="var(--font-mono)" font-size="10" fill="var(--muted)" text-anchor="middle">
-                                        <c:forEach var="m" items="${monthly}" varStatus="st">
-                                            <text x="${nM > 1 ? (40 + 660 * st.index / (nM - 1)) : 370}" y="236">${m.month}</text>
-                                        </c:forEach>
-                                    </g>
-                                </svg>
-                                <div class="chart-legend">
-                                    <span class="legend-item"><span class="legend-swatch" style="background:var(--fg-soft); border-top:1px dashed var(--fg-soft)"></span>Nguyên giá</span>
-                                    <span class="legend-item"><span class="legend-swatch" style="background:var(--accent)"></span>Thu hồi</span>
-                                    <span class="legend-item"><span class="legend-swatch" style="background:var(--danger); opacity:0.4; height:8px; border-radius:2px"></span>Tổn thất</span>
-                                    <span class="legend-item" style="margin-inline-start:auto">Tỷ lệ thu hồi <span class="mono" style="color:var(--accent)">${summary.recoveryRate}%</span></span>
-                                </div>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                </div>
-
-                <%-- ----- Top model ----- --%>
-                <div class="card">
-                    <div class="card-head"><h3>Top model bị thanh lý</h3></div>
-                    <div class="card-body">
-                        <c:choose>
-                            <c:when test="${empty byModel}">
-                                <div class="empty-cell">Không có dữ liệu</div>
-                            </c:when>
-                            <c:otherwise>
-                                <div class="rank-list">
-                                    <c:forEach var="r" items="${byModel}" varStatus="st">
-                                        <div class="rank">
-                                            <div class="rank-no">${st.count}</div>
-                                            <div class="rank-body">
-                                                <div class="rank-title">${r.modelName}</div>
-                                                <div class="rank-sub">${r.machineCount} máy</div>
-                                            </div>
-                                            <div class="rank-amount">−<fmt:formatNumber value="${r.totalLoss / 1000000}" maxFractionDigits="1"/> tr</div>
-                                        </div>
-                                    </c:forEach>
-                                </div>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-                </div>
-            </section>
-
-            <div class="section-head">
-                <h2>Phân tích theo lý do thanh lý</h2>
-                <span class="meta">${fn:length(byReason)} nhóm lý do</span>
-            </div>
-            <section class="card" style="overflow:hidden">
-                <table class="inv">
-                    <thead>
-                        <tr><th>Lý do</th><th class="num">Số máy</th><th class="num">Nguyên giá</th><th class="num">Thu hồi</th><th class="num">Tổn thất</th></tr>
-                    </thead>
-                    <tbody>
-                        <c:choose>
-                            <c:when test="${empty byReason}">
-                                <tr><td colspan="5" class="empty-cell">Không có dữ liệu</td></tr>
-                            </c:when>
-                            <c:otherwise>
-                                <c:forEach var="r" items="${byReason}">
-                                    <tr>
-                                        <td>${r.reasonName}</td>
-                                        <td class="num">${r.machineCount}</td>
-                                        <td class="num"><fmt:formatNumber value="${r.totalOriginal}" type="number" maxFractionDigits="0"/></td>
-                                        <td class="num"><fmt:formatNumber value="${r.totalLiquidation}" type="number" maxFractionDigits="0"/></td>
-                                        <td class="num loss"><fmt:formatNumber value="${r.totalLoss}" type="number" maxFractionDigits="0"/></td>
-                                    </tr>
-                                </c:forEach>
-                            </c:otherwise>
-                        </c:choose>
-                    </tbody>
-                </table>
-            </section>
-
-            <div class="section-head">
-                <h2>Chi tiết theo kho</h2>
-                <span class="meta">${fn:length(byWarehouse)} kho</span>
-            </div>
             <section class="card" style="overflow:hidden">
                 <table class="inv">
                     <thead>
                         <tr>
-                            <th>Kho</th><th class="num">Số máy</th><th class="num">Nguyên giá</th>
-                            <th class="num">Thu hồi</th><th class="num">Tổn thất</th><th>Tỷ lệ thu hồi</th>
+                            <th>${groupLabel}</th>
+                            <th class="num">Số máy</th>
+                            <th class="num">Nguyên giá</th>
+                            <th class="num">Thu hồi</th>
+                            <th class="num">Tổn thất</th>
+                            <th>Tỷ lệ thu hồi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <c:choose>
-                            <c:when test="${empty byWarehouse}">
-                                <tr><td colspan="6" class="empty-cell">Không có dữ liệu</td></tr>
+                            <c:when test="${empty rows}">
+                                <tr><td colspan="6" class="empty-cell">Không có dữ liệu thanh lý trong khoảng thời gian này.</td></tr>
                             </c:when>
                             <c:otherwise>
-                                <c:forEach var="r" items="${byWarehouse}">
+                                <c:forEach var="r" items="${rows}">
+                                    <%-- % thu hồi từng dòng: thu hồi / nguyên giá --%>
+                                    <c:set var="rate" value="${r.totalOriginal > 0 ? (r.totalLiquidation * 100 / r.totalOriginal) : 0}"/>
                                     <tr>
-                                        <td>${r.warehouseName}</td>
+                                        <td>${empty r.label ? '—' : r.label}</td>
                                         <td class="num">${r.machineCount}</td>
                                         <td class="num"><fmt:formatNumber value="${r.totalOriginal}" type="number" maxFractionDigits="0"/></td>
                                         <td class="num"><fmt:formatNumber value="${r.totalLiquidation}" type="number" maxFractionDigits="0"/></td>
                                         <td class="num loss"><fmt:formatNumber value="${r.totalLoss}" type="number" maxFractionDigits="0"/></td>
                                         <td>
-                                            <span class="rate-pill ${r.recoveryRate >= 50 ? 'rate-good' : (r.recoveryRate >= 25 ? 'rate-mid' : 'rate-bad')}">
-                                                <fmt:formatNumber value="${r.recoveryRate}" maxFractionDigits="1"/>%
+                                            <span class="rate-pill ${rate >= 50 ? 'rate-good' : (rate >= 25 ? 'rate-mid' : 'rate-bad')}">
+                                                <fmt:formatNumber value="${rate}" maxFractionDigits="1"/>%
                                             </span>
                                         </td>
                                     </tr>
@@ -379,6 +154,22 @@
                             </c:otherwise>
                         </c:choose>
                     </tbody>
+                    <c:if test="${not empty rows}">
+                        <tfoot>
+                            <tr>
+                                <td class="label-total">Tổng (${summary.orderCount} đơn)</td>
+                                <td class="num">${summary.machineCount}</td>
+                                <td class="num"><fmt:formatNumber value="${summary.totalOriginal}" type="number" maxFractionDigits="0"/></td>
+                                <td class="num"><fmt:formatNumber value="${summary.totalLiquidation}" type="number" maxFractionDigits="0"/></td>
+                                <td class="num loss"><fmt:formatNumber value="${summary.totalLoss}" type="number" maxFractionDigits="0"/></td>
+                                <td>
+                                    <span class="rate-pill ${summary.recoveryRate >= 50 ? 'rate-good' : (summary.recoveryRate >= 25 ? 'rate-mid' : 'rate-bad')}">
+                                        <fmt:formatNumber value="${summary.recoveryRate}" maxFractionDigits="1"/>%
+                                    </span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </c:if>
                 </table>
             </section>
         </main>

@@ -52,13 +52,13 @@
                 </div>
 
                 <c:if test="${not empty sessionScope.toastMessage}">
-                    <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                    <div class="toast toast-info">
                         <c:out value="${sessionScope.toastMessage}"/>
                     </div>
                     <c:remove var="toastMessage" scope="session"/>
                 </c:if>
 
-                <form method="get" action="${pageContext.request.contextPath}/inventory-check" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                <form method="get" action="${pageContext.request.contextPath}/inventory-check" class="filter-form">
                     <input type="hidden" name="action" value="list" />
                     <input type="hidden" name="page" value="1" />
                     <div class="search-input">
@@ -92,11 +92,11 @@
                     </c:if>
                 </form>
 
-                <div class="table-card" style="margin-top:16px;">
+                <div class="table-card">
                     <table class="users">
                         <thead>
                             <tr>
-                                <th style="width:40px;">#</th>
+                                <th class="col-40">#</th>
                                 <th>Mã phiếu</th>
                                 <th>Trạng thái</th>
                                 <th>Người thực hiện</th>
@@ -115,7 +115,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <c:forEach var="c" items="${checkList}" varStatus="st">
-                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" style="cursor:pointer;">
+                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" class="clickable-row">
                                             <td>${fromIndex + st.index}</td>
                                             <td><strong><c:out value="${c.checkCode}"/></strong></td>
                                             <td>

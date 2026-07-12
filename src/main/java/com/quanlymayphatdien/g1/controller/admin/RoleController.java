@@ -230,6 +230,9 @@ public class RoleController extends HttpServlet {
             if (name != null && !name.equalsIgnoreCase("admin")) {
                 errors.add("Không thể đổi tên vai trò Quản trị viên");
             }
+            if ("inactive".equals(status)) {
+                errors.add("Không thể khóa vai trò Quản trị viên");
+            }
         }
 
         if (name != null && !name.trim().isEmpty() && errors.isEmpty()) {

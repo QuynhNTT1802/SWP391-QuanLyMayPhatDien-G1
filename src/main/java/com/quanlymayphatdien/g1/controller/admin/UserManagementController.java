@@ -333,6 +333,22 @@ public class UserManagementController extends HttpServlet {
                 List<Role> beforeRoles = roleDAO.getRolesByUserId(userId);
                 List<String[]> beforeOverrides = perDAO.getUserOverrides(userId);
 
+                // Không cho phép khoá tài khoản Quản trị viên qua form chỉnh sửa.
+                boolean isAdmin = false;
+                if (beforeRoles != null) {
+                    for (Role role : beforeRoles) {
+                        if ("admin".equals(role.getRoleName())) {
+                            isAdmin = true;
+                            break;
+                        }
+                    }
+                }
+                if (isAdmin && status != null && !"active".equals(status)) {
+                    request.getSession().setAttribute("message", "Không thể khóa Quản trị viên");
+                    response.sendRedirect(request.getContextPath() + "/admin/users?action=update&id=" + userId);
+                    return;
+                }
+
                 List<String> fieldChanges = new ArrayList<>();
                 if (!equalsStr(beforeName, name)) {
                     fieldChanges.add("name: \"" + safe(beforeName) + "\" → \"" + safe(name) + "\"");
