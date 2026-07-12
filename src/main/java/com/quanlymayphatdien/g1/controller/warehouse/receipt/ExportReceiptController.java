@@ -924,7 +924,7 @@ public class ExportReceiptController extends HttpServlet {
                 r.setReceiptType(TYPE);
                 r.setWarehouseId(warehouseId);
                 r.setCreatedBy(loggedUser.getId());
-                r.setNote("Tao tu quet barcode");
+                r.setNote("Tạo từ quét barcode");
                 r.setStatus(GlobalUtils.RECEIPT_STATUS_DRAFT);
                 receiptId = receiptDAO.insert(r);
                 if (receiptId <= 0) {
@@ -989,7 +989,7 @@ public class ExportReceiptController extends HttpServlet {
             log.setAction("SCAN_EXPORT");
             log.setEntityId(receiptId);
             log.setEntityName("scan:" + serial);
-            log.setDetails("Quet barcode xuat serial " + serial);
+            log.setDetails("Quét barcode xuất serial " + serial);
             activityLogDAO.insert(log);
         }
 
@@ -1095,8 +1095,8 @@ public class ExportReceiptController extends HttpServlet {
             body.put("remaining", remaining);
             body.put("emptyReceipt", remaining == 0);
             body.put("message", remaining == 0
-                    ? "Da giai phong serial. Phieu dang trong, hay bam 'Huy phieu' de xoa phieu."
-                    : "Da giai phong serial");
+                    ? "Đã giải phóng serial. Phiếu đang trống, hãy bấm 'Hủy phiếu' để xóa phiếu."
+                    : "Đã giải phóng serial");
 
             ActivityLog log = new ActivityLog();
             log.setUserId(loggedUser.getId());
@@ -1104,7 +1104,7 @@ public class ExportReceiptController extends HttpServlet {
             log.setAction("REMOVE_SCANNED_SERIAL");
             log.setEntityId(receiptId);
             log.setEntityName(existing.getReceiptCode());
-            log.setDetails("Xoa dong serial, giai phong reservation inventory_id=" + inventoryId);
+            log.setDetails("Xóa dòng serial, giải phóng reservation inventory_id=" + inventoryId);
             activityLogDAO.insert(log);
         }
 
@@ -1194,7 +1194,7 @@ public class ExportReceiptController extends HttpServlet {
         if (ok) {
             body.put("success", true);
             body.put("released", released);
-            body.put("message", "Da huy phieu nhap, giai phong " + released + " serial");
+            body.put("message", "Đã hủy phiếu nhập, giải phóng " + released + " serial");
 
             ActivityLog log = new ActivityLog();
             log.setUserId(loggedUser.getId());
@@ -1202,11 +1202,11 @@ public class ExportReceiptController extends HttpServlet {
             log.setAction("DISCARD_DRAFT");
             log.setEntityId(receiptId);
             log.setEntityName(existing.getReceiptCode());
-            log.setDetails("Huy phieu nhap, giai phong " + released + " reservation");
+            log.setDetails("Hủy phiếu nhập, giải phóng " + released + " reservation");
             activityLogDAO.insert(log);
 
             if (existing.getCreatedBy() != loggedUser.getId()) {
-                session.setAttribute("toastMessage", "Da huy phieu nhap");
+                session.setAttribute("toastMessage", "Đã hủy phiếu nhập");
                 session.setAttribute("toastType", "success");
             }
         }
@@ -1298,7 +1298,7 @@ public class ExportReceiptController extends HttpServlet {
         if (ok) {
             body.put("success", true);
             body.put("released", released);
-            body.put("message", "Da rut phieu, giai phong " + released + " serial");
+            body.put("message", "Đã rút phiếu, giải phóng " + released + " serial");
 
             ActivityLog log = new ActivityLog();
             log.setUserId(loggedUser.getId());
@@ -1306,7 +1306,7 @@ public class ExportReceiptController extends HttpServlet {
             log.setAction("CANCEL_PENDING");
             log.setEntityId(receiptId);
             log.setEntityName(existing.getReceiptCode());
-            log.setDetails("Rut phieu dang cho duyet, giai phong " + released + " reservation");
+            log.setDetails("Rút phiếu đang chờ duyệt, giải phóng " + released + " reservation");
             activityLogDAO.insert(log);
 
             List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
