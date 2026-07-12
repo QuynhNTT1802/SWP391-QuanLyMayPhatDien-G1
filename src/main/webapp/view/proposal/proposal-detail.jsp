@@ -553,10 +553,7 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                                     Gửi duyệt
                                 </button>
-                                <button type="button" class="btn" onclick="openModal('cancelDraftModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                    Huỷ phiếu
-                                </button>
+                                
                                 <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                                     Xoá
@@ -603,12 +600,7 @@
                                 </button>
                             </c:if>
 
-                            <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
-                                <button type="button" class="btn" onclick="openModal('cancelModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Huỷ phiếu
-                                </button>
-                            </c:if>
+                         
                         </div>
                     </div>
 

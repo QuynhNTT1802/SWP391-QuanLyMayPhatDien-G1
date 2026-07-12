@@ -188,6 +188,11 @@ public class LiquidationController extends HttpServlet {
             request.setAttribute("lockedRows", lockedRows);
         }
 
+        User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+        request.setAttribute("currentUserName", loggedUser != null ? loggedUser.getName() : "");
+        request.setAttribute("currentDateStr", java.time.LocalDate.now()
+            .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+
         request.getRequestDispatcher("/view/liquidation/liquidation-create.jsp").forward(request, response);
     }
 
@@ -267,7 +272,7 @@ public class LiquidationController extends HttpServlet {
         User currentUser = session != null ? (User) session.getAttribute("loggedUser") : null;
 
         Integer filterUserId = null;
-        if (perms != null && !perms.contains("liquidations.approve_manager") && !perms.contains("liquidations.approve_ceo")) {
+        if (perms != null && !perms.contains("liquidations.approve_ceo")) {
             if (currentUser != null) {
                 filterUserId = currentUser.getId();
             }
@@ -280,12 +285,12 @@ public class LiquidationController extends HttpServlet {
 
         java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts(filterUserId);
         int kpiPendingCeo = kpis.getOrDefault("PENDING_CEO", 0);
-        int kpiApproved = kpis.getOrDefault("APPROVED_BY_CEO", 0);
-        int kpiRequestEdit = kpis.getOrDefault("MANAGER_REQUEST_EDIT", 0) + kpis.getOrDefault("CEO_REQUEST_EDIT", 0);
-        int kpiRejected = kpis.getOrDefault("REJECTED_BY_MANAGER", 0) + kpis.getOrDefault("REJECTED_BY_CEO", 0);
+        int kpiCompleted = kpis.getOrDefault("COMPLETED", 0);
+        int kpiRequestEdit = kpis.getOrDefault("CEO_REQUEST_EDIT", 0);
+        int kpiRejected = kpis.getOrDefault("CANCELLED", 0);
 
         request.setAttribute("kpiPendingCeo", kpiPendingCeo);
-        request.setAttribute("kpiApproved", kpiApproved);
+        request.setAttribute("kpiCompleted", kpiCompleted);
         request.setAttribute("kpiRequestEdit", kpiRequestEdit);
         request.setAttribute("kpiRejected", kpiRejected);
 
@@ -318,12 +323,8 @@ public class LiquidationController extends HttpServlet {
         List<LiquidationDetail> details = detailDAO.findByLiquidationId(id);
         request.setAttribute("details", details);
 
-        List<Category> managerRejectFeedbacks = categoryDAO.findByType("manager_reject_reason");
-        List<Category> managerEditFeedbacks = categoryDAO.findByType("manager_request_edit_reason");
         List<Category> ceoRejectFeedbacks = categoryDAO.findByType("ceo_reject_reason");
         List<Category> ceoEditFeedbacks = categoryDAO.findByType("ceo_request_edit_reason");
-        request.setAttribute("managerRejectFeedbacks", managerRejectFeedbacks);
-        request.setAttribute("managerEditFeedbacks", managerEditFeedbacks);
         request.setAttribute("ceoRejectFeedbacks", ceoRejectFeedbacks);
         request.setAttribute("ceoEditFeedbacks", ceoEditFeedbacks);
 
@@ -332,10 +333,8 @@ public class LiquidationController extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session != null) {
             Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-            boolean isManager = perms != null && perms.contains("liquidations.approve_manager");
             boolean isCeo = perms != null && perms.contains("liquidations.approve_ceo");
             boolean isStaff = perms != null && perms.contains("liquidations.create");
-            request.setAttribute("isManager", isManager);
             request.setAttribute("isCeo", isCeo);
             request.setAttribute("isStaff", isStaff);
         }
@@ -349,7 +348,7 @@ public class LiquidationController extends HttpServlet {
 
         // === EDIT MODE DATA (inline editing on detail page, replacing separate edit page) ===
         String st = l.getStatus();
-        boolean isEditMode = "CEO_REQUEST_EDIT".equals(st) || "MANAGER_REQUEST_EDIT".equals(st);
+        boolean isEditMode = "CEO_REQUEST_EDIT".equals(st);
         request.setAttribute("isEditMode", isEditMode);
 
         if (isEditMode) {
@@ -484,14 +483,6 @@ public class LiquidationController extends HttpServlet {
                     }
                     handleEditSubmit(request, response, currentUser);
                     break;
-                case "approve_manager":
-                    if (!perms.contains("liquidations.approve_manager")) {
-                        request.setAttribute("requiredPerm", "liquidations.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
-                    handleManagerApprove(request, response, currentUser);
-                    break;
                 case "approve_ceo":
                     if (!perms.contains("liquidations.approve_ceo")) {
                         request.setAttribute("requiredPerm", "liquidations.approve_ceo");
@@ -499,22 +490,6 @@ public class LiquidationController extends HttpServlet {
                         return;
                     }
                     handleCEOApprove(request, response, currentUser);
-                    break;
-                case "reject_manager":
-                    if (!perms.contains("liquidations.approve_manager")) {
-                        request.setAttribute("requiredPerm", "liquidations.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
-                    handleManagerReject(request, response, currentUser, true);
-                    break;
-                case "request_edit_manager":
-                    if (!perms.contains("liquidations.approve_manager")) {
-                        request.setAttribute("requiredPerm", "liquidations.approve_manager");
-                        request.getRequestDispatcher("/view/error/403.jsp").forward(request, response);
-                        return;
-                    }
-                    handleManagerReject(request, response, currentUser, false);
                     break;
                 case "reject_ceo":
                     if (!perms.contains("liquidations.approve_ceo")) {
@@ -692,8 +667,6 @@ public class LiquidationController extends HttpServlet {
             l.setWarehouseId(warehouseId);
             l.setStatus("PENDING_CEO");
             l.setCustomerId(resolvedCustomerId);
-            l.setManagerReviewedBy(user.getId());
-            l.setManagerReviewedAt(java.time.LocalDateTime.now());
 
             int insertedId = liquidationDAO.insert(l);
             if (insertedId <= 0) {
@@ -806,118 +779,6 @@ public class LiquidationController extends HttpServlet {
         return newId > 0 ? newId : null;
     }
 
-    private void handleManagerApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
-        int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
-        String[] detailIds = request.getParameterValues("detailId");
-        String[] liquidationPrices = request.getParameterValues("liquidationPrice");
-        String customerIdStr = request.getParameter("customerId");
-
-        if (detailIds != null) {
-            if (liquidationPrices == null || liquidationPrices.length != detailIds.length) {
-                response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
-                        + "&error=" + encode("Dữ liệu giá thanh lý không hợp lệ", "UTF-8"));
-                return;
-            }
-            for (int i = 0; i < detailIds.length; i++) {
-                String priceStr = liquidationPrices[i] == null ? "" : liquidationPrices[i].trim();
-                if (priceStr.isEmpty()) {
-                    continue;
-                }
-                LiquidationDetail d = new LiquidationDetail();
-                d.setLiquidationDetailId(Integer.parseInt(detailIds[i]));
-                d.setLiquidationPrice(new BigDecimal(priceStr));
-                detailDAO.update(d);
-            }
-        }
-
-        Integer resolvedCustomerId = null;
-        if (customerIdStr != null && !customerIdStr.trim().isEmpty()) {
-            try {
-                resolvedCustomerId = Integer.parseInt(customerIdStr.trim());
-            } catch (NumberFormatException ignore) {
-            }
-        }
-
-        // Nếu chưa chọn KH có sẵn nhưng nhập KH mới (tên + SĐT) → tạo/khớp khách hàng
-        if (resolvedCustomerId == null) {
-            String custName = request.getParameter("customerName");
-            String custPhone = request.getParameter("customerPhone");
-            if (custName != null && !custName.trim().isEmpty()
-                    && custPhone != null && !custPhone.trim().isEmpty()) {
-                if (customerDAO.isPhoneExists(custPhone.trim(), null)) {
-                    Customer existing = customerDAO.findByPhone(custPhone.trim());
-                    if (existing != null) {
-                        resolvedCustomerId = existing.getId();
-                    }
-                }
-                if (resolvedCustomerId == null) {
-                    Customer c = new Customer();
-                    c.setName(custName.trim());
-                    c.setPhone(custPhone.trim());
-                    String email = request.getParameter("customerEmail");
-                    String address = request.getParameter("customerAddress");
-                    String company = request.getParameter("customerCompany");
-                    String typeIdStr = request.getParameter("customerTypeId");
-                    c.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : null);
-                    c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
-                    c.setCompanyName(company != null && !company.trim().isEmpty() ? company.trim() : null);
-                    if (typeIdStr != null && !typeIdStr.trim().isEmpty()) {
-                        try {
-                            c.setCustomerTypeId(Integer.parseInt(typeIdStr.trim()));
-                        } catch (NumberFormatException ignore) {
-                        }
-                    }
-                    c.setStatus("active");
-                    c.setCreatedBy(user.getId());
-                    int newId = customerDAO.insert(c);
-                    if (newId > 0) {
-                        resolvedCustomerId = newId;
-                    }
-                }
-            }
-        }
-
-        if (resolvedCustomerId == null) {
-            throw new Exception("Quản lý kho phải chọn hoặc nhập Khách hàng (Tên + SĐT) trước khi gửi Sếp duyệt.");
-        }
-        liquidationDAO.updateCustomer(liquidationId, resolvedCustomerId);
-
-        liquidationDAO.updateStatus(liquidationId, "PENDING_CEO", user.getId(), "manager", null);
-
-        Liquidation l = liquidationDAO.findById(liquidationId);
-
-        NotificationService.send(
-                l.getCreatedBy(),
-                "Quản lý đã duyệt đơn thanh lý",
-                "Đơn thanh lý " + l.getLiquidationCode() + " đã được quản lý " + user.getName() + " duyệt.",
-                request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
-                "liquidation",
-                liquidationId
-        );
-
-        List<User> ceos = userDAO.findUsersByPermission("liquidations", "approve_ceo");
-        for (User ceo : ceos) {
-            NotificationService.send(
-                    ceo.getId(),
-                    "Đơn thanh lý chờ CEO duyệt",
-                    "Quản lý " + user.getName() + " đã trình lên đơn thanh lý " + l.getLiquidationCode() + " cần CEO duyệt.",
-                    request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
-                    "liquidation",
-                    liquidationId
-            );
-        }
-        ActivityLog log = new ActivityLog();
-        log.setUserId(user.getId());
-        log.setEntityType("liquidation");
-        log.setAction("MANAGER_APPROVE");
-        log.setEntityId(liquidationId);
-        log.setEntityName(l.getLiquidationCode());
-        log.setDetails("Quản lý kho cập nhật giá, thêm khách hàng và trình lên CEO");
-        activityLogDAO.insert(log);
-
-        response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-    }
-
     private void handleCEOApprove(HttpServletRequest request, HttpServletResponse response, User user) throws Exception {
         int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
         Liquidation l = liquidationDAO.findById(liquidationId);
@@ -929,7 +790,7 @@ public class LiquidationController extends HttpServlet {
         List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
         if (details.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
-                    + "&error=" + encode("Don thanh ly khong co dong chi tiet", "UTF-8"));
+                    + "&error=" + encode("Đơn thanh lý không có dòng chi tiết", "UTF-8"));
             return;
         }
 
@@ -939,7 +800,7 @@ public class LiquidationController extends HttpServlet {
             Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber());
             if (inv == null) {
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
-                        + "&error=" + encode("Khong tim thay serial: " + d.getSerialNumber(), "UTF-8"));
+                        + "&error=" + encode("Không tìm thấy serial: " + d.getSerialNumber(), "UTF-8"));
                 return;
             }
             inventoryMap.put(inv.getInventoryId(), d);
@@ -953,7 +814,7 @@ public class LiquidationController extends HttpServlet {
         r.setApprovedBy(user.getId());
         r.setApprovedAt(java.time.LocalDateTime.now());
         r.setStatus("COMPLETED");
-        r.setNote("Phieu xuat cho don thanh ly ID: " + liquidationId);
+        r.setNote("Phiếu xuất cho đơn thanh lý ID: " + liquidationId);
         r.setReasonId(l.getReasonId());
 
         // Transaction: tao receipt + insert receipt_detail + chuyen inventory PENDING_LIQUIDATION -> LIQUIDATED
@@ -966,7 +827,7 @@ public class LiquidationController extends HttpServlet {
             if (newReceiptId <= 0) {
                 conn.rollback();
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
-                        + "&error=" + encode("Khong tao duoc phieu xuat", "UTF-8"));
+                        + "&error=" + encode("Không tạo được phiếu xuất", "UTF-8"));
                 return;
             }
 
@@ -976,7 +837,7 @@ public class LiquidationController extends HttpServlet {
                 ReceiptDetail rd = new ReceiptDetail();
                 rd.setReceiptId(newReceiptId);
                 rd.setInventoryId(e.getKey());
-                rd.setNote("Thanh ly gia: " + d.getLiquidationPrice());
+                rd.setNote("Thanh lý giá: " + d.getLiquidationPrice());
                 rdList.add(rd);
 
                 inventoryDAO.updateStatusBySerial(conn, d.getSerialNumber(), InventoryDAO.STATUS_LIQUIDATED);
@@ -995,7 +856,7 @@ public class LiquidationController extends HttpServlet {
             }
         }
 
-        liquidationDAO.updateStatus(liquidationId, "COMPLETED", user.getId(), "ceo", newReceiptId);
+        liquidationDAO.updateStatus(liquidationId, "COMPLETED", user.getId(), newReceiptId);
 
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
@@ -1003,13 +864,13 @@ public class LiquidationController extends HttpServlet {
         log.setAction("AUTO_CREATE");
         log.setEntityId(newReceiptId);
         log.setEntityName(r.getReceiptCode());
-        log.setDetails("He thong tu dong tao phieu xuat kho cho duyet sau khi CEO duyet don thanh ly " + l.getLiquidationCode());
+        log.setDetails("Hệ thống tự động tạo phiếu xuất kho cho duyệt sau khi CEO duyệt đơn thanh lý " + l.getLiquidationCode());
         activityLogDAO.insert(log);
 
         NotificationService.send(
                 l.getCreatedBy(),
                 "CEO đã duyệt đơn thanh lý",
-                "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt và chuyển sang chờ xuất kho.",
+                "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt. Phiếu xuất kho đã được tạo tự động.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
@@ -1021,7 +882,7 @@ public class LiquidationController extends HttpServlet {
         liqLog.setAction("CEO_APPROVE");
         liqLog.setEntityId(liquidationId);
         liqLog.setEntityName(l.getLiquidationCode());
-        liqLog.setDetails("CEO duyet don thanh ly va tu dong sinh Phieu Xuat Kho cho duyet: " + r.getReceiptCode());
+        liqLog.setDetails("CEO duyệt đơn thanh lý và tự động sinh <a href=\"" + request.getContextPath() + "/export-receipt?action=detail&id=" + newReceiptId + "\">Phiếu Xuất Kho " + r.getReceiptCode() + "</a> cho duyệt");
         activityLogDAO.insert(liqLog);
 
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
@@ -1073,65 +934,10 @@ public class LiquidationController extends HttpServlet {
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
         log.setEntityType("liquidation");
-        log.setAction(isPermanent ? "REJECTED_BY_CEO" : "CEO_REQUEST_EDIT");
+        log.setAction(isPermanent ? "CANCELLED" : "CEO_REQUEST_EDIT");
         log.setEntityId(liquidationId);
         log.setEntityName(l.getLiquidationCode());
         log.setDetails(isPermanent ? "CEO từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "CEO yêu cầu sửa đơn thanh lý");
-        activityLogDAO.insert(log);
-
-        response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
-    }
-
-    private void handleManagerReject(HttpServletRequest request, HttpServletResponse response, User user, boolean isPermanent) throws Exception {
-        int liquidationId = Integer.parseInt(request.getParameter("liquidationId"));
-        int feedbackId = Integer.parseInt(request.getParameter("managerFeedbackId"));
-
-        liquidationDAO.updateManagerReject(liquidationId, user.getId(), feedbackId, isPermanent);
-
-        Liquidation l = liquidationDAO.findById(liquidationId);
-        if (l == null) {
-            response.sendRedirect(request.getContextPath() + "/liquidations");
-            return;
-        }
-        if (isPermanent) {
-            List<LiquidationDetail> details = detailDAO.findByLiquidationId(liquidationId);
-            List<String> serials = new ArrayList<>();
-            for (LiquidationDetail d : details) {
-                serials.add(d.getSerialNumber());
-            }
-            if (!serials.isEmpty()) {
-                Connection conn = null;
-                try {
-                    conn = inventoryDAO.getConnection();
-                    conn.setAutoCommit(false);
-                    inventoryDAO.updateStatusBatch(conn, serials, InventoryDAO.STATUS_IN_STOCK);
-                    conn.commit();
-                } catch (Exception ex) {
-                    if (conn != null) try { conn.rollback(); } catch (Exception ignored) {}
-                    throw ex;
-                } finally {
-                    if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (Exception ignored) {}
-                }
-            }
-        }
-
-        NotificationService.send(
-                l.getCreatedBy(),
-                isPermanent ? "Quản lý từ chối đơn thanh lý" : "Quản lý yêu cầu sửa đơn thanh lý",
-                isPermanent
-                        ? "Đơn " + l.getLiquidationCode() + " đã bị Quản lý kho từ chối và huỷ."
-                        : "Đơn " + l.getLiquidationCode() + " bị Quản lý kho yêu cầu sửa lại.",
-                request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
-                "liquidation",
-                liquidationId
-        );
-        ActivityLog log = new ActivityLog();
-        log.setUserId(user.getId());
-        log.setEntityType("liquidation");
-        log.setAction(isPermanent ? "REJECTED_BY_MANAGER" : "MANAGER_REQUEST_EDIT");
-        log.setEntityId(liquidationId);
-        log.setEntityName(l.getLiquidationCode());
-        log.setDetails(isPermanent ? "Quản lý từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "Quản lý yêu cầu sửa đơn thanh lý");
         activityLogDAO.insert(log);
 
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
@@ -1161,7 +967,7 @@ public class LiquidationController extends HttpServlet {
         String[] liquidationPrices = request.getParameterValues("liquidationPrice");
 
         Liquidation l = liquidationDAO.findById(liquidationId);
-        if (l == null || (!"MANAGER_REQUEST_EDIT".equals(l.getStatus()) && !"CEO_REQUEST_EDIT".equals(l.getStatus()))) {
+        if (l == null || !"CEO_REQUEST_EDIT".equals(l.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/liquidations");
             return;
         }
@@ -1208,13 +1014,33 @@ public class LiquidationController extends HttpServlet {
         }
         List<String> newSerialList = new ArrayList<>(uniqueSerials);
 
+        // Load old details + validate giá thanh lý không đổi
+        List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
+        Map<String, BigDecimal> oldPriceBySerial = new HashMap<>();
+        for (LiquidationDetail oldD : oldDetails) {
+            if (oldD.getLiquidationPrice() != null)
+                oldPriceBySerial.put(oldD.getSerialNumber(), oldD.getLiquidationPrice());
+        }
+        boolean allSame = true;
+        for (int i = 0; i < serialNumbers.length; i++) {
+            BigDecimal oldP = oldPriceBySerial.get(serialNumbers[i]);
+            if (oldP == null || oldP.compareTo(parsedPrices[i]) != 0) {
+                allSame = false;
+                break;
+            }
+        }
+        if (allSame) {
+            response.sendRedirect(request.getContextPath() + "/liquidations?action=edit_view&id=" + liquidationId
+                    + "&error=" + java.net.URLEncoder.encode("Giá thanh lý không thay đổi so với giá cũ. Vui lòng điều chỉnh giá trước khi gửi lại.", "UTF-8"));
+            return;
+        }
+
         Connection conn = null;
         try {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
 
             // Trả lại trạng thái cũ (PENDING_LIQUIDATION -> IN_STOCK) cho serials cũ
-            List<LiquidationDetail> oldDetails = detailDAO.findByLiquidationId(liquidationId);
             List<String> oldSerials = new ArrayList<>();
             for (LiquidationDetail oldD : oldDetails) {
                 oldSerials.add(oldD.getSerialNumber());
@@ -1234,7 +1060,7 @@ public class LiquidationController extends HttpServlet {
                 return;
             }
 
-            String targetStatus = "CEO_REQUEST_EDIT".equals(l.getStatus()) ? "PENDING_CEO" : "PENDING_MANAGER";
+            String targetStatus = "PENDING_CEO";
             boolean updated = liquidationDAO.updateReasonAndStatus(conn, liquidationId, reasonId, targetStatus);
             if (!updated) {
                 conn.rollback();
@@ -1278,18 +1104,12 @@ public class LiquidationController extends HttpServlet {
 
             conn.commit();
 
-            boolean wasCeoEdit = "CEO_REQUEST_EDIT".equals(l.getStatus());
-            String targetAction = wasCeoEdit ? "approve_ceo" : "approve_manager";
-            String notifTitle = wasCeoEdit
-                    ? "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa lại — chờ Sếp duyệt"
-                    : "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa lại — chờ Quản lý duyệt";
-            String notifMsg = "Nhân viên " + user.getName() + " đã cập nhật lại đơn thanh lý theo yêu cầu sửa.";
-            List<User> reviewers = userDAO.findUsersByPermission("liquidations", targetAction);
+            List<User> reviewers = userDAO.findUsersByPermission("liquidations", "approve_ceo");
             for (User rv : reviewers) {
                 NotificationService.send(
                         rv.getId(),
-                        notifTitle,
-                        notifMsg,
+                        "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa lại — chờ Sếp duyệt",
+                        "Người dùng đã cập nhật lại đơn thanh lý theo yêu cầu sửa.",
                         request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                         "liquidation",
                         liquidationId

@@ -105,8 +105,6 @@ public class SecurityFilter implements Filter {
                     Map.of(
                             "create", "liquidations.create",
                             "edit_submit", "liquidations.create",
-                            "approve_manager", "liquidations.approve_manager",
-                            "reject_manager", "liquidations.approve_manager",
                             "approve_ceo", "liquidations.approve_ceo",
                             "reject_ceo", "liquidations.approve_ceo"),
                     "liquidations.view"),
