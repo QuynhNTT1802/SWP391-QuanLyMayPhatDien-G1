@@ -769,8 +769,13 @@
     }
 
     function applyChosenCustomer(c) {
-        var hid = document.getElementById('sdHiddenId');
-        if (hid) hid.value = c.id;
+        var set = function(id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
+        set('sdHiddenId', c.id);
+        set('inpCustName', c.name);
+        set('inpCustPhone', c.phone);
+        set('inpCustEmail', c.email);
+        set('inpCustAddress', c.address);
+        set('customerCompany', c.companyName);
         var label = document.getElementById('custTriggerLabel');
         if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
         refreshCustomerCard();
