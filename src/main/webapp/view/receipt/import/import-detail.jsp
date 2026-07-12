@@ -65,12 +65,6 @@
                     <div class="top-actions">
                         <jsp:include page="../../common/admin/bell.jsp"/>
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                        <c:if test="${receipt.status == 'NEEDS_REVISION' && isOwner}">
-                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/import-receipt?action=edit&id=${receipt.receiptId}">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Chỉnh sửa
-                            </a>
-                        </c:if>
                     </div>
                 </header>
 
@@ -92,11 +86,6 @@
                             <c:set var="statusLabel" value="Chờ duyệt"/>
                             <c:set var="statusBg" value="#fff3cd"/>
                             <c:set var="statusFg" value="#856404"/>
-                        </c:when>
-                        <c:when test="${receipt.status == 'NEEDS_REVISION'}">
-                            <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
-                            <c:set var="statusBg" value="#ffe0b2"/>
-                            <c:set var="statusFg" value="#b15c00"/>
                         </c:when>
                         <c:when test="${receipt.status == 'COMPLETED'}">
                             <c:set var="statusLabel" value="Hoàn thành"/>

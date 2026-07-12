@@ -158,17 +158,41 @@
         </a>
     </c:if>
 
-    <c:if test="${not empty perms and perms.contains('liquidations.approve_ceo')}">
-        <div class="nav-parent ${activePage == 'liquidation-report' ? 'open' : ''}" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+    <c:if test="${not empty perms and (perms.contains('liquidations.approve_ceo') or perms.contains('receipts.view') or perms.contains('inventory.view') or perms.contains('stock_card.view'))}">
+        <div class="nav-parent ${activePage == 'liquidation-report' or activePage == 'receipt-report' or activePage == 'inventory-report' or activePage == 'stock-card-report' ? 'open' : ''}" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
             Báo cáo
             <span class="arrow"></span>
         </div>
-        <div class="nav-children ${activePage == 'liquidation-report' ? 'open' : ''}">
-            <a href="${pageContext.request.contextPath}/liquidations/report" class="${activePage == 'liquidation-report' ? 'active' : ''}">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                Báo cáo thanh lý
-            </a>
+        <div class="nav-children ${activePage == 'liquidation-report' or activePage == 'receipt-report' or activePage == 'inventory-report' or activePage == 'stock-card-report' ? 'open' : ''}">
+            <c:if test="${not empty perms and perms.contains('receipts.view')}">
+                <a href="${pageContext.request.contextPath}/receipts/report?type=IMPORT" class="${activePage == 'receipt-report' and receiptType == 'IMPORT' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    Báo cáo nhập kho
+                </a>
+                <a href="${pageContext.request.contextPath}/receipts/report?type=EXPORT" class="${activePage == 'receipt-report' and receiptType == 'EXPORT' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                    Báo cáo xuất kho
+                </a>
+            </c:if>
+            <c:if test="${not empty perms and perms.contains('inventory.view')}">
+                <a href="${pageContext.request.contextPath}/inventory/report" class="${activePage == 'inventory-report' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+                    Báo cáo tồn kho
+                </a>
+            </c:if>
+            <c:if test="${not empty perms and perms.contains('stock_card.view')}">
+                <a href="${pageContext.request.contextPath}/stock-card/report" class="${activePage == 'stock-card-report' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    Báo cáo thẻ kho
+                </a>
+            </c:if>
+            <c:if test="${not empty perms and perms.contains('liquidations.approve_ceo')}">
+                <a href="${pageContext.request.contextPath}/liquidations/report" class="${activePage == 'liquidation-report' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    Báo cáo thanh lý
+                </a>
+            </c:if>
         </div>
     </c:if>
 
