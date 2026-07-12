@@ -67,12 +67,6 @@
                     <div class="top-actions">
                         <jsp:include page="../../common/admin/bell.jsp"/>
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                        <c:if test="${(receipt.status == 'NEEDS_REVISION' || receipt.status == 'DRAFT') && isOwner}">
-                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/export-receipt?action=edit&id=${receipt.receiptId}">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Chỉnh sửa
-                            </a>
-                        </c:if>
                     </div>
                 </header>
 
@@ -90,20 +84,10 @@
                     </c:if>
 
                     <c:choose>
-                        <c:when test="${receipt.status == 'DRAFT'}">
-                            <c:set var="statusLabel" value="Bản nháp"/>
-                            <c:set var="statusBg" value="#d1ecf1"/>
-                            <c:set var="statusFg" value="#0c5460"/>
-                        </c:when>
                         <c:when test="${receipt.status == 'PENDING'}">
                             <c:set var="statusLabel" value="Chờ duyệt"/>
                             <c:set var="statusBg" value="#fff3cd"/>
                             <c:set var="statusFg" value="#856404"/>
-                        </c:when>
-                        <c:when test="${receipt.status == 'NEEDS_REVISION'}">
-                            <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
-                            <c:set var="statusBg" value="#ffe0b2"/>
-                            <c:set var="statusFg" value="#b15c00"/>
                         </c:when>
                         <c:when test="${receipt.status == 'COMPLETED'}">
                             <c:set var="statusLabel" value="Hoàn thành"/>
@@ -182,8 +166,6 @@
                                         <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
                                         <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
                                         <option value="REVISION" ${logAction == 'REVISION' ? 'selected' : ''}>Yêu cầu sửa</option>
-                                        <option value="DRAFT_UPDATE" ${logAction == 'DRAFT_UPDATE' ? 'selected' : ''}>Lưu nháp</option>
-                                        <option value="SUBMIT_DRAFT" ${logAction == 'SUBMIT_DRAFT' ? 'selected' : ''}>Gửi duyệt</option>
                                     </select>
                                     <div class="date-range">
                                         <label class="date-label">Từ</label>
@@ -247,8 +229,6 @@
                                                             <c:when test="${log.action == 'APPROVE'}">approve</c:when>
                                                             <c:when test="${log.action == 'REJECT'}">reject</c:when>
                                                             <c:when test="${log.action == 'REVISION'}">revision</c:when>
-                                                            <c:when test="${log.action == 'DRAFT_UPDATE'}">draft_update</c:when>
-                                                            <c:when test="${log.action == 'SUBMIT_DRAFT'}">submit_draft</c:when>
                                                             <c:otherwise>default</c:otherwise>
                                                         </c:choose>">
                                                         <c:choose>
@@ -258,8 +238,6 @@
                                                             <c:when test="${log.action == 'APPROVE'}">Duyệt</c:when>
                                                             <c:when test="${log.action == 'REJECT'}">Từ chối</c:when>
                                                             <c:when test="${log.action == 'REVISION'}">Yêu cầu sửa</c:when>
-                                                            <c:when test="${log.action == 'DRAFT_UPDATE'}">Lưu nháp</c:when>
-                                                            <c:when test="${log.action == 'SUBMIT_DRAFT'}">Gửi duyệt</c:when>
                                                             <c:otherwise>${log.action}</c:otherwise>
                                                         </c:choose></span>
                                                     </td>

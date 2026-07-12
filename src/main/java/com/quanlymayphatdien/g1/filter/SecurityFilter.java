@@ -79,7 +79,9 @@ public class SecurityFilter implements Filter {
             Rule.exact("/warehouse", "warehouses.view"),
             Rule.exact("/inventory", "inventory.view"),
             Rule.exact("/inventory/list", "inventory.view"),
+            Rule.exact("/inventory/report", "inventory.view"),
             Rule.exact("/stock-card", "stock_card.view"),
+            Rule.exact("/stock-card/report", "stock_card.view"),
             Rule.action("/import-receipt",
                     Map.of(
                             "create", "receipts.create",
@@ -92,6 +94,7 @@ public class SecurityFilter implements Filter {
                             "edit", "receipts.create",
                             "update", "receipts.create"),
                     "receipts.view"),
+            Rule.exact("/receipts/report", "receipts.view"),
             Rule.action("/order",
                     Map.of(
                             "create", "orders.create",
