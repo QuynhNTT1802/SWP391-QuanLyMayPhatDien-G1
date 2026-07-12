@@ -154,14 +154,44 @@
             appearance: auto;
             padding-right: 8px;
         }
-        /* ===== EDIT MODE: checkbox in pick table ===== */
-        #editPickTable .edit-pick-cb {
+        /* ===== EDIT MODE: product-table styles ===== */
+        .product-table .col-cb { width: 36px; text-align: center; }
+        .product-table .col-date { white-space: nowrap; }
+        .product-table .col-price { text-align: right; white-space: nowrap; }
+        .product-table .row-serial { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; }
+        .product-table .row-model { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+        .product-table .row-price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+        .product-table #editPickAll { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--accent); }
+        .product-table .pick-trow.is-checked { background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+        .product-table .pick-trow.is-checked:hover { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+        .pick-cb {
             width: 16px; height: 16px; margin: 0; cursor: pointer;
             accent-color: var(--accent);
         }
-        #editPickTable .edit-gen-hidden { display: none; }
-        /* ===== EDIT MODE: pick table font ===== */
-        #editPickTable { font-size: 13px; }
+        .gen-hidden { display: none; }
+
+        .section-action-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface-2); flex-wrap: wrap; }
+        .action-bar-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--fg); }
+        .action-bar-right { display: flex; align-items: center; gap: 8px; }
+        .action-bar-left .bar-count { font-size: 13px; color: var(--fg); font-weight: 600; }
+        .action-bar-left .bar-count strong { font-family: var(--font-mono); color: var(--accent); }
+        .action-bar-left .bar-total { font-size: 12px; color: var(--muted); }
+        .action-bar-left .bar-total .total-val { font-family: var(--font-mono); color: var(--fg); font-weight: 700; }
+        .liq-price-wrap { display: inline-flex; align-items: center; gap: 4px; }
+        .liq-price-wrap .liq-price-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .customer-info-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface-2); margin-top: 10px; }
+        .cic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .cic-name { font-size: 14px; font-weight: 700; color: var(--fg); line-height: 1.4; }
+        .cic-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+        .cic-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 12px; font-family: var(--font-ui); color: var(--muted); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; line-height: 1.4; }
+        .cic-btn:hover { color: var(--fg); border-color: var(--accent); }
+        .cic-btn-remove { padding: 4px; border: none; color: var(--muted); background: none; cursor: pointer; }
+        .cic-btn-remove:hover { color: var(--danger); }
+        .cic-btn-remove svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+        .cic-details { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
+        .cic-detail-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+        .cic-detail-item svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 </head>
 <body>
@@ -187,18 +217,16 @@
             <%-- ===== Tính nhãn + class pill trạng thái ===== --%>
             <c:set var="st" value="${liquidation.status}"/>
             <c:choose>
-                <c:when test="${st == 'PENDING_MANAGER'}"><c:set var="statusLabel" value="Chờ Quản lý duyệt"/><c:set var="statusPillClass" value="status-pending"/></c:when>
                 <c:when test="${st == 'PENDING_CEO'}"><c:set var="statusLabel" value="Chờ Sếp duyệt"/><c:set var="statusPillClass" value="status-pending"/></c:when>
-                <c:when test="${st == 'APPROVED_BY_CEO'}"><c:set var="statusLabel" value="Đã duyệt · chờ xuất kho"/><c:set var="statusPillClass" value="status-info"/></c:when>
+                <c:when test="${st == 'APPROVED_BY_CEO'}"><c:set var="statusLabel" value="Đã duyệt"/><c:set var="statusPillClass" value="status-approved"/></c:when>
                 <c:when test="${st == 'COMPLETED'}"><c:set var="statusLabel" value="Đã xuất kho"/><c:set var="statusPillClass" value="status-approved"/></c:when>
-                <c:when test="${st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT'}"><c:set var="statusLabel" value="Bị yêu cầu sửa"/><c:set var="statusPillClass" value="status-revision"/></c:when>
-                <c:when test="${st == 'REJECTED_BY_MANAGER' or st == 'REJECTED_BY_CEO'}"><c:set var="statusLabel" value="Đã hủy"/><c:set var="statusPillClass" value="status-rejected"/></c:when>
-                <c:otherwise><c:set var="statusLabel" value="Đã huỷ đơn"/><c:set var="statusPillClass" value="status-cancelled"/></c:otherwise>
+                <c:when test="${st == 'CEO_REQUEST_EDIT'}"><c:set var="statusLabel" value="Bị yêu cầu sửa"/><c:set var="statusPillClass" value="status-revision"/></c:when>
+                <c:when test="${st == 'CANCELLED'}"><c:set var="statusLabel" value="Đã hủy"/><c:set var="statusPillClass" value="liq-cancelled"/></c:when>
+                <c:otherwise><c:set var="statusLabel" value="Không xác định"/><c:set var="statusPillClass" value="status-cancelled"/></c:otherwise>
             </c:choose>
 
-            <c:set var="isMgrEdit" value="${st == 'MANAGER_REQUEST_EDIT'}"/>
+            <c:set var="isEditMode" value="${st == 'CEO_REQUEST_EDIT'}"/>
             <c:set var="isCeoEdit" value="${st == 'CEO_REQUEST_EDIT'}"/>
-            <c:set var="canMgrEdit" value="${isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT')}"/>
 
             <%-- ===== HEADER BAR ===== --%>
             <div class="header-bar">
@@ -210,9 +238,6 @@
                     <h2 class="page-main-title">
                         #${liquidation.liquidationCode}
                         <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
-                        <c:if test="${isEditMode and isStaff}">
-                            <span class="status-pill status-revision"><span class="pdot"></span> Đang chỉnh sửa</span>
-                        </c:if>
                     </h2>
                 </div>
                 <div class="right">
@@ -224,34 +249,15 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                         Làm mới
                     </button>
-                    <c:if test="${isCeo and st == 'PENDING_CEO'}">
-                        <button type="button" class="btn btn-primary" onclick="openConfirmApproveModal()">
-                            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            Duyệt &amp; Xuất kho
-                        </button>
-                        <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Yêu cầu sửa
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">
-                            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            Từ chối đơn
-                        </button>
-                    </c:if>
+
                 </div>
             </div>
 
             <%-- ===== ALERT phản hồi ===== --%>
-            <c:if test="${(st == 'CEO_REQUEST_EDIT' or st == 'REJECTED_BY_CEO' or st == 'CANCELLED') and not empty liquidation.ceoFeedbackName}">
-                <div class="alert ${st == 'REJECTED_BY_CEO' ? 'alert-danger' : 'alert-warn'}">
+            <c:if test="${(st == 'CEO_REQUEST_EDIT' or st == 'CANCELLED') and not empty liquidation.ceoFeedbackName}">
+                <div class="alert ${st == 'CANCELLED' ? 'alert-danger' : 'alert-warn'}">
                     <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     <span><strong>Phản hồi từ Sếp (CEO):</strong> ${liquidation.ceoFeedbackName}</span>
-                </div>
-            </c:if>
-            <c:if test="${(st == 'MANAGER_REQUEST_EDIT' or st == 'REJECTED_BY_MANAGER' or st == 'CANCELLED') and not empty liquidation.managerFeedbackName}">
-                <div class="alert ${st == 'REJECTED_BY_MANAGER' ? 'alert-danger' : 'alert-warn'}">
-                    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <span><strong>Phản hồi từ Quản lý kho:</strong> ${liquidation.managerFeedbackName}</span>
                 </div>
             </c:if>
             <%-- ===== FORM: edit mode vs normal mode ===== --%>
@@ -277,8 +283,13 @@
                             <c:when test="${usingEditForm}">
                                 <div class="form-grid cols-4">
                                     <div class="info-field">
-                                        <label>Mã đơn</label>
-                                        <input class="info-input mono" type="text" disabled value="${liquidation.liquidationCode}">
+                                        <label>Kho hàng <span style="color:var(--danger)">*</span></label>
+                                        <select class="info-input" id="editWarehouseSelect" onchange="changeEditWarehouse(this.value);">
+                                            <c:forEach var="w" items="${warehouses}">
+                                                <option value="${w.warehouseId}" ${w.warehouseId == selectedWarehouseId ? 'selected' : ''}>${w.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                        <input type="hidden" name="warehouseId" id="editWarehouseId" value="${selectedWarehouseId}" />
                                     </div>
                                     <div class="info-field">
                                         <label>Lý do thanh lý <span style="color:var(--danger)">*</span></label>
@@ -290,15 +301,6 @@
                                         </select>
                                     </div>
                                     <div class="info-field">
-                                        <label>Kho hàng <span style="color:var(--danger)">*</span></label>
-                                        <select class="info-input" id="editWarehouseSelect" onchange="changeEditWarehouse(this.value);">
-                                            <c:forEach var="w" items="${warehouses}">
-                                                <option value="${w.warehouseId}" ${w.warehouseId == selectedWarehouseId ? 'selected' : ''}>${w.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                        <input type="hidden" name="warehouseId" id="editWarehouseId" value="${selectedWarehouseId}" />
-                                    </div>
-                                    <div class="info-field">
                                         <label>Ngày tạo</label>
                                         <input class="info-input mono" type="text" disabled value="${liquidation.createdAt}">
                                     </div>
@@ -307,34 +309,20 @@
                                         <input class="info-input" type="text" disabled value="<c:out value='${liquidation.createdByName}'/>">
                                     </div>
                                     <div class="info-field">
-                                        <label>Quản lý duyệt</label>
-                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.managerReviewedByName ? liquidation.managerReviewedByName : "—"}'/>">
-                                    </div>
-                                    <div class="info-field">
                                         <label>Số máy</label>
                                         <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
                                     </div>
                                     <div class="info-field">
-                                        <label>Chênh lệch giá</label>
-                                        <c:choose>
-                                            <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
-                                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
-                                                <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
-                                            </c:when>
-                                            <c:otherwise>
-                                                <input class="info-input mono" type="text" disabled value="—">
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                                <div class="form-grid cols-2" style="margin-top:14px;">
-                                    <div class="info-field">
-                                        <label>Tổng giá gốc (VNĐ)</label>
+                                        <label>Giá nhập (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                     <div class="info-field">
-                                        <label>Tổng giá thanh lý (VNĐ)</label>
+                                        <label>Giá thanh lý (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
+                                    </div>
+                                    <div class="info-field">
+                                        <label>&nbsp;</label>
+                                        <input class="info-input" type="text" disabled value="" style="opacity:0;">
                                     </div>
                                 </div>
                             </c:when>
@@ -362,33 +350,15 @@
                                         <input class="info-input" type="text" disabled value="<c:out value='${liquidation.createdByName}'/>">
                                     </div>
                                     <div class="info-field">
-                                        <label>Quản lý duyệt</label>
-                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.managerReviewedByName ? liquidation.managerReviewedByName : "—"}'/>">
-                                    </div>
-                                    <div class="info-field">
                                         <label>Số máy</label>
                                         <input class="info-input mono" type="text" disabled value="${empty liquidation.detailCount ? 0 : liquidation.detailCount} máy">
                                     </div>
                                     <div class="info-field">
-                                        <label>Chênh lệch giá</label>
-                                        <c:choose>
-                                            <c:when test="${not empty liquidation.totalOriginalPrice and not empty liquidation.totalLiquidationPrice and liquidation.totalOriginalPrice > 0 and liquidation.totalLiquidationPrice > 0}">
-                                                <c:set var="diffPct" value="${(liquidation.totalLiquidationPrice - liquidation.totalOriginalPrice) * 100 / liquidation.totalOriginalPrice}"/>
-                                                <input class="info-input mono ${diffPct < 0 ? 'neg' : ''}" type="text" disabled value="<fmt:formatNumber value='${diffPct}' maxFractionDigits='1'/>%">
-                                            </c:when>
-                                            <c:otherwise>
-                                                <input class="info-input mono" type="text" disabled value="—">
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                </div>
-                                <div class="form-grid cols-2" style="margin-top:14px;">
-                                    <div class="info-field">
-                                        <label>Tổng giá gốc (VNĐ)</label>
+                                        <label>Giá nhập (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalOriginalPrice}'><fmt:formatNumber value='${liquidation.totalOriginalPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                     <div class="info-field">
-                                        <label>Tổng giá thanh lý (VNĐ)</label>
+                                        <label>Giá thanh lý (VNĐ)</label>
                                         <input class="info-input mono" type="text" disabled value="<c:choose><c:when test='${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}'><fmt:formatNumber value='${liquidation.totalLiquidationPrice}' pattern='#,##0'/> ₫</c:when><c:otherwise>—</c:otherwise></c:choose>">
                                     </div>
                                 </div>
@@ -400,11 +370,11 @@
                             <h4 style="font-size:13px; font-weight:700; margin:0 0 14px;">Khách hàng nhận</h4>
                         </div>
                         <c:choose>
-                            <c:when test="${usingEditForm or canMgrEdit}">
-                                <p class="kv-hint" style="margin-top:0;">Chọn khách hàng có sẵn hoặc nhập khách hàng mới để làm cơ sở tạo phiếu xuất.</p>
-                                <div id="managerCustomerArea">
+                            <c:when test="${usingEditForm}">
+                                <p class="kv-hint" style="margin:0 0 12px;font-size:13px;color:var(--muted);">Chọn khách hàng có sẵn hoặc tạo khách hàng mới để gán vào đơn thanh lý.</p>
+                                <div id="custPickerArea">
                                     <div class="sd" id="customerDropdown"
-                                         data-endpoint="${pageContext.request.contextPath}/warehouse/customers?action=search&q=">
+                                         data-endpoint="${pageContext.request.contextPath}/liquidations?action=search_customer&q=">
                                         <div class="cust-trigger-wrap">
                                             <button type="button" class="cust-trigger" id="custTrigger"
                                                     onclick="openCustomerPanel()" aria-haspopup="dialog">
@@ -422,34 +392,37 @@
                                         <input type="hidden" id="inpCustAddress" value="<c:out value='${liquidation.customerAddress}'/>" />
                                         <input type="hidden" id="customerCompany" value="" />
                                     </div>
-                                    <div class="cust-newbtn-row">
-                                        <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()">
-                                            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                            Tạo khách hàng mới
-                                        </button>
-                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()" style="margin-top:10px;">
+                                        <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                        Tạo khách hàng mới
+                                    </button>
                                 </div>
+                                <div id="customerCardContainer" class="customer-info-card" style="display:none;"></div>
                             </c:when>
                             <c:when test="${not empty liquidation.customerName}">
-                                <div class="cust-banner">
-                                    <div class="cust-banner-avatar">${fn:substring(liquidation.customerName,0,1)}</div>
-                                    <div class="cust-banner-main">
-                                        <div class="cust-banner-name">${liquidation.customerName}</div>
-                                        <div class="cust-banner-tag">Khách hàng nhận máy thanh lý</div>
+                                <div class="customer-info-card">
+                                    <div class="cic-header">
+                                        <span class="cic-name"><c:out value='${liquidation.customerName}'/></span>
                                     </div>
-                                </div>
-                                <div class="form-grid cols-4" style="margin-top:16px;">
-                                    <div class="info-field">
-                                        <label>Số điện thoại</label>
-                                        <input class="info-input mono" type="text" disabled value="<c:out value='${not empty liquidation.customerPhone ? liquidation.customerPhone : "—"}'/>">
-                                    </div>
-                                    <div class="info-field">
-                                        <label>Email</label>
-                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.customerEmail ? liquidation.customerEmail : "—"}'/>">
-                                    </div>
-                                    <div class="info-field" style="grid-column: span 2;">
-                                        <label>Địa chỉ</label>
-                                        <input class="info-input" type="text" disabled value="<c:out value='${not empty liquidation.customerAddress ? liquidation.customerAddress : "—"}'/>">
+                                    <div class="cic-details">
+                                        <c:if test="${not empty liquidation.customerPhone}">
+                                            <span class="cic-detail-item">
+                                                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                                <c:out value='${liquidation.customerPhone}'/>
+                                            </span>
+                                        </c:if>
+                                        <c:if test="${not empty liquidation.customerEmail}">
+                                            <span class="cic-detail-item">
+                                                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                <c:out value='${liquidation.customerEmail}'/>
+                                            </span>
+                                        </c:if>
+                                        <c:if test="${not empty liquidation.customerAddress}">
+                                            <span class="cic-detail-item">
+                                                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                <c:out value='${liquidation.customerAddress}'/>
+                                            </span>
+                                        </c:if>
                                     </div>
                                 </div>
                             </c:when>
@@ -460,7 +433,7 @@
                                     </div>
                                     <div class="cust-empty-text">
                                         <strong>Chưa có khách hàng nhận</strong>
-                                        <span>Khách hàng sẽ được Quản lý kho gán khi duyệt đơn thanh lý.</span>
+                                        <span>Khách hàng sẽ được thêm khi tạo đơn thanh lý.</span>
                                     </div>
                                 </div>
                             </c:otherwise>
@@ -488,12 +461,17 @@
                         <c:choose>
                             <%-- EDIT MODE: checkbox table with machine picker --%>
                             <c:when test="${usingEditForm}">
-                                <div class="liq-pick-tools">
-                                    <input type="text" id="editSerialSearch" class="serial-search-box" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
-                                    <span class="hint" style="font-size:12px;color:var(--muted);align-self:center;">Chọn máy cần thanh lý và nhập giá</span>
-                                </div>
-                                <div style="overflow-x:auto;">
-                                    <table class="pick-table" id="editPickTable">
+                                <div class="section-body">
+                                    <div class="table-toolbar">
+                                        <div class="search-input">
+                                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                            <input type="text" id="editSerialSearch" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                                        </div>
+                                        <div class="spacer"></div>
+                                        <button type="button" class="btn" onclick="(function(){var a=document.getElementById('editPickAll');if(a){a.checked=true;a.dispatchEvent(new Event('change'));}})()">Chọn tất cả</button>
+                                        <button type="button" class="btn" onclick="(function(){var a=document.getElementById('editPickAll');if(a){a.checked=false;a.dispatchEvent(new Event('change'));}})()">Bỏ chọn</button>
+                                    </div>
+                                    <table class="product-table" id="editPickTable">
                                         <thead>
                                             <tr>
                                                 <th class="col-cb"><input type="checkbox" id="editPickAll"/></th>
@@ -502,20 +480,21 @@
                                                 <th>Tình trạng</th>
                                                 <th class="col-date">Ngày nhập</th>
                                                 <th class="col-price">Giá gốc</th>
-                                                <th class="col-price">Giá thanh lý <span class="req">*</span></th>
+                                                <th class="col-price">Giá thanh lý <span style="color:var(--danger)">*</span></th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <c:forEach var="r" items="${pickRows}">
                                                 <tr class="pick-trow ${r.selected ? 'is-checked' : ''}" data-model="<c:out value='${r.model}'/>">
                                                     <td class="col-cb">
-                                                        <input type="checkbox" class="edit-pick-cb" name="serialNumber"
+                                                        <input type="checkbox" class="pick-cb" name="serialNumber"
                                                                value="<c:out value='${r.serialNumber}'/>"
                                                                data-gen="${r.generatorId}"
                                                                data-price="${r.unitPrice}"
                                                                data-condition="${r.condition}"
+                                                               data-old-liq-price="${r.liquidationPrice}"
                                                                ${r.selected ? 'checked' : ''}/>
-                                                        <input type="hidden" class="edit-gen-hidden" name="generatorId" value="${r.generatorId}" ${r.selected ? '' : 'disabled'}/>
+                                                        <input type="hidden" class="gen-hidden" name="generatorId" value="${r.generatorId}" ${r.selected ? '' : 'disabled'}/>
                                                     </td>
                                                     <td class="row-serial"><c:out value="${r.serialNumber}"/></td>
                                                     <td class="row-model"><c:out value="${r.model}"/></td>
@@ -541,19 +520,19 @@
                                             </c:forEach>
                                         </tbody>
                                     </table>
-                                </div>
-                                <div class="liq-pick-bar">
-                                    <div class="bar-summary">
-                                        <div class="bar-count">Đã chọn <strong id="editBarSelectedCount">0</strong> máy</div>
-                                        <div class="bar-total">Tổng giá gốc: <span class="total-val" id="editFormTotalVal">0 đ</span></div>
-                                        <div class="bar-total">Tổng giá thanh lý: <span class="total-val" id="editFormLiqTotalVal">0 đ</span></div>
-                                    </div>
-                                    <div class="bar-actions">
-                                        <a class="btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}">Huỷ bỏ</a>
-                                        <button type="submit" form="editForm" class="btn btn-primary">
-                                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                                            Lưu &amp; Gửi lại
-                                        </button>
+                                    <div class="section-action-bar">
+                                        <div class="action-bar-left">
+                                            <span class="bar-count">Đã chọn <strong id="editBarSelectedCount">0</strong> máy</span>
+                                            <span class="bar-total">Tổng giá gốc: <span class="total-val" id="editFormTotalVal">0 đ</span></span>
+                                            <span class="bar-total">Tổng giá thanh lý: <span class="total-val" id="editFormLiqTotalVal">0 đ</span></span>
+                                        </div>
+                                        <div class="action-bar-right">
+                                            <a class="btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}">Huỷ bỏ</a>
+                                            <button type="submit" form="editForm" class="btn btn-primary">
+                                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                                                Lưu &amp; Gửi lại
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </c:when>
@@ -585,18 +564,8 @@
                                                     <td class="text-right mono"><fmt:formatNumber value="${d.originalPrice}" type="number" maxFractionDigits="0"/></td>
                                                     <td class="text-right">
                                                         <input type="hidden" name="detailId" value="${d.liquidationDetailId}" />
-                                                        <c:choose>
-                                                            <c:when test="${canMgrEdit}">
-                                                                <div class="liq-price-wrap">
-                                                                    <input type="text" inputmode="numeric" class="liq-price-input" name="liquidationPrice" value="<fmt:formatNumber value='${d.liquidationPrice}' type='number' maxFractionDigits='0' groupingUsed='true'/>" placeholder="Điền giá đề xuất..." required />
-                                                                    <span class="liq-price-suffix">đ</span>
-                                                                </div>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <strong class="mono"><fmt:formatNumber value="${d.liquidationPrice}" type="number" maxFractionDigits="0"/></strong>
-                                                                <input type="hidden" name="liquidationPrice" value="${d.liquidationPrice}" />
-                                                            </c:otherwise>
-                                                        </c:choose>
+                                                        <strong class="mono"><fmt:formatNumber value="${d.liquidationPrice}" type="number" maxFractionDigits="0"/></strong>
+                                                        <input type="hidden" name="liquidationPrice" value="${d.liquidationPrice}" />
                                                     </td>
                                                     <td><span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span></td>
                                                 </tr>
@@ -613,16 +582,26 @@
                                     </table>
                                 </div>
 
-                                <c:if test="${(isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')) or (isCeo and st == 'PENDING_CEO')}">
-                                    <div class="liq-action-bar" style="padding:14px 16px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                                        <div class="hint" style="flex:1; font-size:12.5px; color:var(--muted);">Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở trên trước khi ra quyết định.</div>
-                                        <c:if test="${isManager and (st == 'PENDING_MANAGER' or st == 'CEO_REQUEST_EDIT' or st == 'MANAGER_REQUEST_EDIT')}">
-                                            <button type="submit" name="action" value="approve_manager" id="hiddenManagerSubmit" class="btn btn-primary">Lưu &amp; Gửi lại</button>
-                                        </c:if>
-                                        <c:if test="${isCeo and st == 'PENDING_CEO'}">
-                                            <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">Duyệt &amp; Xuất Kho</button>
+                                <c:if test="${isCeo and st == 'PENDING_CEO'}">
+                                    <div class="section-action-bar">
+                                        <div class="action-bar-left">
+                                            Hãy xem kỹ các chi tiết thiết bị và giá đề xuất ở trên trước khi ra quyết định.
+                                        </div>
+                                        <div class="action-bar-right">
+                                            <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">
+                                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                                Duyệt &amp; Xuất kho
+                                            </button>
+                                            <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
+                                                <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                Yêu cầu sửa
+                                            </button>
+                                            <button type="button" class="btn btn-danger" onclick="openFeedbackModal('reject_ceo', 'Từ chối đơn thanh lý', 'ceoFeedbackId', 'btn-danger', 'select_ceo_reject')">
+                                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                Từ chối đơn
+                                            </button>
                                             <button type="submit" name="action" value="approve_ceo" id="hiddenApproveCeoBtn" style="display:none;"></button>
-                                        </c:if>
+                                        </div>
                                     </div>
                                 </c:if>
                             </c:otherwise>
@@ -643,19 +622,14 @@
                                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                         <input type="text" id="historySearch" placeholder="Tìm theo người làm, ghi chú..." autocomplete="off"/>
                                     </div>
-                                    <select id="historyFilter" class="filter-select">
+                                    <select id="historyFilter" class="history-filter">
                                         <option value="">Tất cả hành động</option>
                                         <option value="CREATE">Tạo đơn</option>
                                         <option value="EDIT_SUBMIT">Đã sửa &amp; gửi lại</option>
-                                        <option value="MANAGER_APPROVE">Quản lý duyệt</option>
-                                        <option value="MANAGER_REQUEST_EDIT">Quản lý yêu cầu sửa</option>
-                                        <option value="REJECTED_BY_MANAGER">Quản lý từ chối</option>
                                         <option value="CEO_APPROVE">Sếp duyệt</option>
                                         <option value="CEO_REQUEST_EDIT">Sếp yêu cầu sửa</option>
-                                        <option value="REJECTED_BY_CEO">Sếp từ chối</option>
-                                        <option value="CANCELLED">Đã huỷ đơn</option>
+                                        <option value="CANCELLED">Đã hủy</option>
                                         <option value="EXPORT_APPROVE">Đã xuất kho</option>
-                                        <option value="AUTO_CREATE">Tự động tạo</option>
                                     </select>
                                 </div>
                                 <div class="result-summary">
@@ -674,10 +648,9 @@
                                         <c:forEach var="log" items="${liquidationHistory}">
                                             <c:set var="actClass">
                                                 <c:choose>
-                                                    <c:when test="${log.action == 'MANAGER_APPROVE' or log.action == 'CEO_APPROVE' or log.action == 'EXPORT_APPROVE'}">approve</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_REQUEST_EDIT' or log.action == 'CEO_REQUEST_EDIT'}">revision</c:when>
-                                                    <c:when test="${log.action == 'REJECTED_BY_MANAGER' or log.action == 'REJECTED_BY_CEO'}">reject</c:when>
-                                                    <c:when test="${log.action == 'CANCELLED'}">cancel</c:when>
+                                                    <c:when test="${log.action == 'CEO_APPROVE' or log.action == 'EXPORT_APPROVE'}">approve</c:when>
+                                                    <c:when test="${log.action == 'CEO_REQUEST_EDIT'}">revision</c:when>
+                                                    <c:when test="${log.action == 'CANCELLED'}">reject</c:when>
                                                     <c:when test="${log.action == 'EDIT_SUBMIT'}">update</c:when>
                                                     <c:when test="${log.action == 'CREATE' or log.action == 'AUTO_CREATE'}">create</c:when>
                                                     <c:otherwise>cancel</c:otherwise>
@@ -690,13 +663,9 @@
                                                         <c:choose>
                                                             <c:when test="${log.action == 'CREATE'}">Tạo đơn</c:when>
                                                             <c:when test="${log.action == 'AUTO_CREATE'}">Tự động tạo</c:when>
-                                                            <c:when test="${log.action == 'MANAGER_APPROVE'}">Quản lý duyệt</c:when>
-                                                            <c:when test="${log.action == 'MANAGER_REQUEST_EDIT'}">Quản lý yêu cầu sửa</c:when>
-                                                            <c:when test="${log.action == 'REJECTED_BY_MANAGER'}">Quản lý từ chối</c:when>
                                                             <c:when test="${log.action == 'CEO_APPROVE'}">Sếp duyệt</c:when>
                                                             <c:when test="${log.action == 'CEO_REQUEST_EDIT'}">Sếp yêu cầu sửa</c:when>
-                                                            <c:when test="${log.action == 'REJECTED_BY_CEO'}">Sếp từ chối</c:when>
-                                                            <c:when test="${log.action == 'CANCELLED'}">Đã huỷ đơn</c:when>
+                                                            <c:when test="${log.action == 'CANCELLED'}">Đã hủy</c:when>
                                                             <c:when test="${log.action == 'EDIT_SUBMIT'}">Đã sửa &amp; gửi lại</c:when>
                                                             <c:when test="${log.action == 'EXPORT_APPROVE'}">Đã xuất kho</c:when>
                                                             <c:otherwise>${log.action}</c:otherwise>
@@ -704,7 +673,12 @@
                                                     </span>
                                                 </td>
                                                 <td><strong>${log.username}</strong> <span style="color:var(--muted);font-size:11px;">#${log.userId}</span></td>
-                                                <td style="color:var(--muted);font-size:0.9rem;line-height:1.5;">${log.details}</td>
+                                                <td style="color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                                    <c:choose>
+                                                        <c:when test="${log.action == 'CEO_APPROVE'}">${log.details}</c:when>
+                                                        <c:otherwise><c:out value="${log.details}"/></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                             </tr>
                                         </c:forEach>
                                         <tr id="historyEmptyRow" style="display:none;">
@@ -740,14 +714,6 @@
         <form method="POST" action="${pageContext.request.contextPath}/liquidations">
             <input type="hidden" name="liquidationId" value="${liquidation.liquidationId}" />
             <input type="hidden" name="action" id="feedbackModalAction" value="" />
-            <select id="select_manager_reject" class="fb-select feedback-select" style="display:none;">
-                <option value="">-- Chọn lý do --</option>
-                <c:forEach var="fb" items="${managerRejectFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
-            </select>
-            <select id="select_manager_edit" class="fb-select feedback-select" style="display:none;">
-                <option value="">-- Chọn lý do --</option>
-                <c:forEach var="fb" items="${managerEditFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
-            </select>
             <select id="select_ceo_reject" class="fb-select feedback-select" style="display:none;">
                 <option value="">-- Chọn lý do --</option>
                 <c:forEach var="fb" items="${ceoRejectFeedbacks}"><option value="${fb.id}">${fb.name}</option></c:forEach>
@@ -852,11 +818,26 @@
     window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
     window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
     </c:if>
+    <c:if test="${not empty param.error}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${param.error}"/>';
+    window.SESSION_DATA.type = 'danger';
+    </c:if>
+    <c:if test="${not empty param.success}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${param.success}"/>';
+    window.SESSION_DATA.type = 'success';
+    </c:if>
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script>
+    if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+    }
+</script>
 <%-- __PART5__ --%>
 <script>
     function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
@@ -923,15 +904,6 @@
     var mainForm = document.getElementById('mainForm');
     if (mainForm) {
         mainForm.addEventListener('submit', function(e) {
-            var actionBtn = e.submitter;
-            if (actionBtn && actionBtn.value === 'approve_manager') {
-                var custId = (document.getElementById('sdHiddenId') || {}).value;
-                if (!custId || !custId.trim()) {
-                    e.preventDefault();
-                    alert('Vui lòng chọn khách hàng hoặc tạo khách hàng mới trước khi gửi Sếp duyệt.');
-                    return;
-                }
-            }
             document.querySelectorAll('.liq-price-input').forEach(function (el) {
                 el.value = (el.value || '').replace(/[^0-9]/g, '');
             });
@@ -1077,11 +1049,78 @@
         set('customerCompany', c.companyName);
         var label = document.getElementById('custTriggerLabel');
         if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
+        refreshCustomerCard();
     }
+
+    // ===== Customer info card =====
+    function htmlEsc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function refreshCustomerCard() {
+        var container = document.getElementById('customerCardContainer');
+        var picker = document.getElementById('custPickerArea');
+        if (!container) return;
+        var hid = document.getElementById('sdHiddenId');
+        var custId = hid ? hid.value : '';
+        if (!custId || !custId.trim()) {
+            container.style.display = 'none';
+            if (picker) picker.style.display = '';
+            return;
+        }
+        if (picker) picker.style.display = 'none';
+        var name = document.getElementById('inpCustName');
+        var phone = document.getElementById('inpCustPhone');
+        var email = document.getElementById('inpCustEmail');
+        var address = document.getElementById('inpCustAddress');
+        var company = document.getElementById('customerCompany');
+        var nameVal = name ? name.value : '';
+        var phoneVal = phone ? phone.value : '';
+        var emailVal = email ? email.value : '';
+        var addressVal = address ? address.value : '';
+        var companyVal = company ? company.value : '';
+        var html = '<div class="cic-header">';
+        html += '<span class="cic-name">' + htmlEsc(nameVal || '') + '</span>';
+        html += '<div class="cic-actions">';
+        html += '<button type="button" class="cic-btn-remove" onclick="clearCustomerSelection();refreshCustomerCard();" title="Hủy chọn khách hàng" aria-label="Hủy chọn">';
+        html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+        html += '</button>';
+        html += '</div></div>';
+        html += '<div class="cic-details">';
+        if (phoneVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' + htmlEsc(phoneVal) + '</span>';
+        if (companyVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>' + htmlEsc(companyVal) + '</span>';
+        if (emailVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + htmlEsc(emailVal) + '</span>';
+        if (addressVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + htmlEsc(addressVal) + '</span>';
+        html += '</div>';
+        container.innerHTML = html;
+        container.style.display = '';
+    }
+
+    // ===== Override clearCustomerSelection to refresh card =====
+    var origClearCustomerSelection = window.clearCustomerSelection;
+    window.clearCustomerSelection = function() {
+        if (typeof origClearCustomerSelection === 'function') origClearCustomerSelection();
+        refreshCustomerCard();
+    };
+
+    // ===== Watch customer selection from searchable-dropdown.js =====
+    (function() {
+        var list = document.getElementById('custList');
+        if (list) {
+            list.addEventListener('click', function(e) {
+                if (e.target.closest('.cust-card')) {
+                    setTimeout(refreshCustomerCard, 0);
+                }
+            });
+        }
+    })();
+
+    // ===== Init on page load =====
+    refreshCustomerCard();
 
     // ===== EDIT MODE: machine picker logic =====
     (function() {
-        var cbs = Array.prototype.slice.call(document.querySelectorAll('.edit-pick-cb'));
+        var cbs = Array.prototype.slice.call(document.querySelectorAll('.pick-cb'));
         if (cbs.length === 0) return;
 
         function fmt(n) { return Number(n || 0).toLocaleString('vi-VN'); }
@@ -1090,7 +1129,7 @@
             var count = 0, total = 0, liqTotal = 0;
             cbs.forEach(function(cb) {
                 var row = cb.closest('.pick-trow');
-                var genHidden = row ? row.querySelector('.edit-gen-hidden') : null;
+                var genHidden = row ? row.querySelector('.gen-hidden') : null;
                 var priceInput = row ? row.querySelector('.liq-price-input') : null;
                 if (cb.checked) {
                     count++;
@@ -1157,7 +1196,7 @@
                 var checked = cbs.filter(function(cb) { return cb.checked; });
                 if (checked.length === 0) {
                     e.preventDefault();
-                    alert('Phải chọn ít nhất 1 máy phát điện.');
+                    showToast('Phải chọn ít nhất 1 máy phát điện.', 'danger');
                     return;
                 }
                 var missingPrice = checked.some(function(cb) {
@@ -1168,13 +1207,25 @@
                 });
                 if (missingPrice) {
                     e.preventDefault();
-                    alert('Phải nhập giá thanh lý (lớn hơn 0) cho tất cả máy đã chọn.');
+                    showToast('Phải nhập giá thanh lý (lớn hơn 0) cho tất cả máy đã chọn.', 'danger');
+                    return;
+                }
+                var allSamePrice = checked.every(function(cb) {
+                    var row = cb.closest('.pick-trow');
+                    var priceInput = row ? row.querySelector('.liq-price-input') : null;
+                    var newPrice = priceInput ? (priceInput.value || '').replace(/[^0-9]/g, '') : '';
+                    var oldPrice = cb.getAttribute('data-old-liq-price');
+                    return oldPrice && newPrice && Number(oldPrice) === Number(newPrice);
+                });
+                if (allSamePrice) {
+                    e.preventDefault();
+                    showToast('Giá thanh lý không thay đổi so với giá cũ. Vui lòng điều chỉnh giá trước khi gửi lại.', 'danger');
                     return;
                 }
                 var custId = (document.getElementById('sdHiddenId') || {}).value;
                 if (!custId || !custId.trim()) {
                     e.preventDefault();
-                    alert('Phải chọn khách hàng hoặc tạo khách hàng mới trước khi gửi.');
+                    showToast('Phải chọn khách hàng hoặc tạo khách hàng mới trước khi gửi.', 'danger');
                     return;
                 }
                 document.querySelectorAll('#editPickTable .liq-price-input').forEach(function(el) {
@@ -1189,7 +1240,7 @@
     // ===== EDIT MODE: warehouse change =====
     function changeEditWarehouse(whId) {
         if (!whId) return;
-        var anyChecked = document.querySelectorAll('.edit-pick-cb:checked').length > 0;
+        var anyChecked = document.querySelectorAll('.pick-cb:checked').length > 0;
         if (anyChecked && !confirm('Đổi kho sẽ bỏ các máy đã chọn ở kho hiện tại. Tiếp tục?')) {
             var sel = document.getElementById('editWarehouseSelect');
             sel.value = document.getElementById('editWarehouseId').value;
