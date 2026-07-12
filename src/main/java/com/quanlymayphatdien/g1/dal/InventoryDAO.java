@@ -343,7 +343,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "JOIN liquidation l ON l.liquidation_id = ld.liquidation_id "
                 + "WHERE i.warehouse_id = ? "
                 + "  AND i.status = ? "
-                + "  AND l.status IN ('PENDING_MANAGER','PENDING_CEO','MANAGER_REQUEST_EDIT','CEO_REQUEST_EDIT')";
+                + "  AND l.status IN ('PENDING_CEO','CEO_REQUEST_EDIT')";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);

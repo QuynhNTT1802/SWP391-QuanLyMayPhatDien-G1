@@ -364,6 +364,18 @@
                                         </div>
                                     </div>
                                 </div>
+                                <c:if test="${not empty receipt.liquidationCode}">
+                                    <div style="margin-top: 14px;">
+                                        <div class="info-field">
+                                            <div class="info-label">Đơn thanh lý</div>
+                                            <div class="info-value mono">
+                                                <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${receipt.liquidationId}">
+                                                    <c:out value="${receipt.liquidationCode}"/>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </c:if>
                                 <c:if test="${not empty receipt.note}">
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
