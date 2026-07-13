@@ -57,6 +57,9 @@ public class SupplierController extends HttpServlet {
             case "deactivate":
                 deactivateSupplier(request, response);
                 break;
+            case "search":
+                searchSuppliersJson(request, response);
+                break;
             default:
                 listSuppliers(request, response);
                 break;
@@ -472,5 +475,55 @@ public class SupplierController extends HttpServlet {
         log.setDetails(details);
         log.setCreatedAt(LocalDateTime.now());
         new ActivityLogDAO().insertLog(log);
+    }
+
+    private void searchSuppliersJson(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String keyword = request.getParameter("q");
+        List<Supplier> list = new SupplierDAO().searchByKeyword(keyword, 50);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        for (int i = 0; i < list.size(); i++) {
+            Supplier s = list.get(i);
+            if (i > 0) sb.append(',');
+            sb.append('{')
+              .append("\"id\":").append(s.getId()).append(',')
+              .append("\"name\":").append(jsonStr(s.getName())).append(',')
+              .append("\"phone\":").append(jsonStr(s.getPhone())).append(',')
+              .append("\"email\":").append(jsonStr(s.getEmail())).append(',')
+              .append("\"address\":").append(jsonStr(s.getAddress())).append(',')
+              .append("\"companyName\":").append(jsonStr(s.getCompanyName()))
+              .append('}');
+        }
+        sb.append(']');
+        response.getWriter().write(sb.toString());
+    }
+
+    private String jsonStr(String s) {
+        if (s == null) return "null";
+        StringBuilder sb = new StringBuilder("\"");
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            switch (ch) {
+                case '\\': sb.append("\\\\"); break;
+                case '\"': sb.append("\\\""); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (ch < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) ch));
+                    } else {
+                        sb.append(ch);
+                    }
+            }
+        }
+        sb.append('"');
+        return sb.toString();
     }
 }
