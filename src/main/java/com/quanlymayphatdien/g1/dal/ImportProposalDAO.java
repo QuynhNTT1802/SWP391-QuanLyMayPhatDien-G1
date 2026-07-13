@@ -55,12 +55,14 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
-                + "u_r.name AS rejected_by_name "
+                + "u_r.name AS rejected_by_name, "
+                + "s.name AS supplier_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
+                + "LEFT JOIN supplier s   ON s.id = p.supplier_id "
                 + "ORDER BY p.proposal_date DESC, p.proposal_id DESC";
 
         try {
@@ -84,13 +86,15 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
-                + "u_r.name AS rejected_by_name "
+                + "u_r.name AS rejected_by_name, "
+                + "s.name AS supplier_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN purchase_order po ON po.po_id = p.purchase_order_id "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
+                + "LEFT JOIN supplier s   ON s.id = p.supplier_id "
                 + "WHERE p.proposal_id = ?";
 
         try {
@@ -195,20 +199,25 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     @Override
     public int insert(ImportProposal t) {
-        String sql = "INSERT INTO import_proposal (proposal_code, status, warehouse_id, created_by, "
-                + "proposal_date, period, note) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO import_proposal (proposal_code, status, warehouse_id, supplier_id, created_by, "
+                + "proposal_date, period, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, t.getProposalCode());
             statement.setString(2, t.getStatus());
             statement.setInt(3, t.getWarehouseId());
-            statement.setInt(4, t.getCreatedBy());
-            statement.setTimestamp(5, t.getProposalDate() != null
+            if (t.getSupplierId() != null) {
+                statement.setInt(4, t.getSupplierId());
+            } else {
+                statement.setNull(4, java.sql.Types.INTEGER);
+            }
+            statement.setInt(5, t.getCreatedBy());
+            statement.setTimestamp(6, t.getProposalDate() != null
                     ? Timestamp.valueOf(t.getProposalDate())
                     : Timestamp.valueOf(LocalDateTime.now()));
-            statement.setString(6, PeriodUtils.currentPeriod());
-            statement.setString(7, t.getNote());
+            statement.setString(7, PeriodUtils.currentPeriod());
+            statement.setString(8, t.getNote());
 
             int affected = statement.executeUpdate();
             if (affected > 0) {
@@ -242,6 +251,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         int rejectedBy = rs.getInt("rejected_by");
         p.setRejectedBy(rs.wasNull() ? null : rejectedBy);
 
+        try {
+            int supId = rs.getInt("supplier_id");
+            p.setSupplierId(rs.wasNull() ? null : supId);
+        } catch (SQLException ignored) { p.setSupplierId(null); }
+
         try { p.setRevisionRequestedByRole(rs.getString("revision_requested_by_role")); }
         catch (SQLException ignored) { p.setRevisionRequestedByRole(GlobalUtils.REVISION_REQUESTER_SM); }
 
@@ -267,6 +281,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         p.setCreatedByName(rs.getString("created_by_name"));
         p.setApprovedByName(rs.getString("approved_by_name"));
         p.setRejectedByName(rs.getString("rejected_by_name"));
+        try { p.setSupplierName(rs.getString("supplier_name")); } catch (SQLException ignored) {}
 
         try {
             int poId = rs.getInt("purchase_order_id");
@@ -411,13 +426,15 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "w.name AS warehouse_name, "
                 + "u_c.name AS created_by_name, "
                 + "u_a.name AS approved_by_name, "
-                + "u_r.name AS rejected_by_name "
+                + "u_r.name AS rejected_by_name, "
+                + "s.name AS supplier_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN purchase_order po ON po.po_id = p.purchase_order_id "
                 + "LEFT JOIN warehouse w  ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c     ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
+                + "LEFT JOIN supplier s   ON s.id = p.supplier_id "
                 + "WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -787,16 +804,22 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     @Override
     public boolean update(ImportProposal t) {
-        String sql = "UPDATE import_proposal SET note = ?, status = ?, updated_at = NOW() "
+        String sql = "UPDATE import_proposal SET note = ?, status = ?, "
+                + "supplier_id = ?, updated_at = NOW() "
                 + "WHERE proposal_id = ? AND status IN (?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, t.getNote());
             statement.setString(2, t.getStatus());
-            statement.setInt(3, t.getProposalId());
-            statement.setString(4, GlobalUtils.STATUS_DRAFT);
-            statement.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);
+            if (t.getSupplierId() != null) {
+                statement.setInt(3, t.getSupplierId());
+            } else {
+                statement.setNull(3, java.sql.Types.INTEGER);
+            }
+            statement.setInt(4, t.getProposalId());
+            statement.setString(5, GlobalUtils.STATUS_DRAFT);
+            statement.setString(6, GlobalUtils.STATUS_NEEDS_REVISION);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

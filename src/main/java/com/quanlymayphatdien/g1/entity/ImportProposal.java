@@ -29,11 +29,15 @@ public class ImportProposal {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // NCC duy nhất của phiếu (chính sách: 1 phiếu = 1 NCC)
+    private Integer supplierId;
+
     // field phẳng để hiển thị (không map DB)
     private String warehouseName;
     private String createdByName;
     private String approvedByName;
     private String rejectedByName;
+    private String supplierName;
     private List<ImportProposalDetail> details;
 
     // field transient: đánh dấu phiếu có chứa máy chưa có trong kho (warehouse tự xử lý category)
@@ -224,6 +228,22 @@ public class ImportProposal {
 
     public void setWarehouseName(String warehouseName) {
         this.warehouseName = warehouseName;
+    }
+
+    public Integer getSupplierId() {
+        return supplierId;
+    }
+
+    public void setSupplierId(Integer supplierId) {
+        this.supplierId = supplierId;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
     }
 
     public String getCreatedByName() {

@@ -6,6 +6,24 @@
     java.time.format.DateTimeFormatter __propFmt =
         java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     request.setAttribute("propFmt", __propFmt);
+
+    int __sumQty = 0;
+    java.math.BigDecimal __sumValue = java.math.BigDecimal.ZERO;
+    java.util.List __details = (java.util.List) request.getAttribute("proposal") == null
+            ? null : ((com.quanlymayphatdien.g1.entity.ImportProposal) request.getAttribute("proposal")).getDetails();
+    if (__details != null) {
+        for (Object o : __details) {
+            com.quanlymayphatdien.g1.entity.ImportProposalDetail d =
+                    (com.quanlymayphatdien.g1.entity.ImportProposalDetail) o;
+            __sumQty += d.getQuantity();
+            if (d.getUnitPrice() != null) {
+                __sumValue = __sumValue.add(d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
+            }
+        }
+    }
+    java.text.NumberFormat __moneyFmt = java.text.NumberFormat.getInstance(new java.util.Locale("vi", "VN"));
+    request.setAttribute("sumQty", __sumQty);
+    request.setAttribute("sumValueFmt", __moneyFmt.format(__sumValue));
 %>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -349,21 +367,33 @@
                 border-color:var(--accent);
                 box-shadow:0 0 0 3px var(--accent-soft)
             }
-            table.data-table .row-supplier{
-                width:170px;
-                padding:6px 8px;
-                border:1px solid var(--border);
+            .stock-cell{
+                display:inline-block;
+                min-width:56px;
+                padding:4px 8px;
                 border-radius:var(--radius-sm);
-                background:var(--bg);
-                color:var(--fg);
-                font-size:13px;
-                font-family:inherit;
-                box-sizing:border-box
+                font-family:var(--font-mono);
+                font-size:12.5px;
+                font-weight:600;
+                text-align:center;
+                background:var(--surface-2);
+                border:1px solid var(--border);
+                color:var(--muted)
             }
-            table.data-table .row-supplier:focus{
-                outline:none;
-                border-color:var(--accent);
-                box-shadow:0 0 0 3px var(--accent-soft)
+            .stock-cell.has-stock{
+                background:var(--accent-soft);
+                color:var(--accent);
+                border-color:color-mix(in srgb,var(--accent) 25%,transparent)
+            }
+            .stock-cell.zero-stock{
+                background:var(--warn-soft);
+                color:var(--warn);
+                border-color:color-mix(in srgb,var(--warn) 25%,transparent)
+            }
+            .col-stock{
+                white-space:nowrap;
+                width:100px;
+                text-align:center
             }
 
             .supplier-cell{
@@ -685,6 +715,22 @@
                                         </select>
                                     </div>
                                     <div class="info-field">
+                                        <span class="info-label">Nhà cung cấp <span style="color:var(--danger)">*</span>
+                                            <span style="font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0"> &nbsp;(áp dụng cho cả phiếu)</span>
+                                        </span>
+                                        <div style="display:flex;gap:8px;align-items:center">
+                                            <select class="info-select" id="supplierId" name="supplierId" required style="flex:1">
+                                                <option value="">-- Chọn NCC --</option>
+                                                <c:forEach var="s" items="${suppliers}">
+                                                    <option value="${s.id}" data-phone="${s.phone}" data-email="${s.email}" data-company="${s.companyName}" <c:if test="${s.id == proposal.supplierId}">selected</c:if>><c:out value="${s.name}"/></option>
+                                                </c:forEach>
+                                            </select>
+                                            <c:if test="${canCreateSupplier}">
+                                                <button type="button" class="btn btn-sm" onclick="openNewSupplierModal()" title="Thêm nhà cung cấp mới">+ NCC</button>
+                                            </c:if>
+                                        </div>
+                                    </div>
+                                    <div class="info-field" style="grid-column:1/-1">
                                         <span class="info-label">Ghi chú phiếu</span>
                                         <textarea class="info-input" id="note" name="note" rows="2" placeholder="Ghi chú cho phiếu..."><c:out value="${proposal.note}"/></textarea>
                                     </div>
@@ -713,28 +759,20 @@
                         <div class="section" style="padding:0">
                             <div class="section-head">
                                 <div class="section-head-left"><h3>Danh sách máy phát</h3><span class="sub">${not empty proposal.details ? fn:length(proposal.details) : 0} dòng</span></div>
-                                <div>
+                                <div style="display:flex;gap:8px">
                                     <button type="button" class="btn btn-sm" onclick="document.getElementById('excelUpload').click()">Tải Excel thay thế</button>
+                                    <a class="btn btn-sm btn-ghost" href="${pageContext.request.contextPath}/proposal?action=importExcel">Import từ Excel</a>
                                 </div>
                             </div>
                             <div class="table-scroll">
-                                <table class="data-table" style="min-width:1400px;">
+                                <table class="data-table" style="min-width:780px">
                                     <thead>
                                         <tr>
                                             <th class="col-min">#</th>
-                                            <th class="col-min">Mã máy phát <span style="color:var(--danger)">*</span></th>
-                                            <th>Thương hiệu</th>
-                                            <th>Xuất xứ</th>
-                                            <th>Tình trạng</th>
-                                            <th>Nhiên liệu</th>
-                                            <th>Số pha</th>
-                                            <th>Loại máy phát</th>
-                                            <th class="col-min">Công suất (kVA)</th>
-                                            <th>Tần số</th>
-                                            <th class="col-min">Trọng lượng (kg)</th>
-                                            <th class="col-supplier">Nhà cung cấp</th>
-                                            <th class="col-price text-right">Đơn giá (VNĐ)</th>
+                                            <th>Mẫu máy <span style="color:var(--danger)">*</span></th>
+                                            <th class="col-stock">Tồn kho</th>
                                             <th class="col-qty text-right">Số lượng <span style="color:var(--danger)">*</span></th>
+                                            <th class="col-price text-right">Đơn giá (VNĐ) <span style="color:var(--danger)">*</span></th>
                                             <th class="col-note">Ghi chú dòng</th>
                                             <th class="col-del"></th>
                                         </tr>
@@ -746,33 +784,22 @@
                                                     <tr data-row-id="${d.proposalDetailId}">
                                                         <td class="mono">${st.index + 1}</td>
                                                         <td>
-                                                            <select name="generatorId" class="row-generator" required>
-                                                                <option value="">-- Chọn máy --</option>
-                                                                <c:forEach var="g" items="${generators}">
-                                                                    <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>><c:out value="${g.model}"/></option>
-                                                                </c:forEach>
-                                                            </select>
+                                                            <div style="display:flex;gap:6px;align-items:center;min-width:240px">
+                                                                <select name="generatorId" class="row-generator" required onchange="onGenChange(this)" style="flex:1">
+                                                                    <option value="">-- Chọn máy --</option>
+                                                                    <c:forEach var="g" items="${generators}">
+                                                                        <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>><c:out value="${g.model}"/></option>
+                                                                    </c:forEach>
+                                                                </select>
+                                                                <c:if test="${canCreateGenerator}">
+                                                                    <button type="button" class="btn btn-sm" onclick="openNewGeneratorModal(this)" title="Thêm máy phát mới" style="padding:4px 10px">+</button>
+                                                                </c:if>
+                                                            </div>
                                                         </td>
-                                                        <td><c:out value="${d.brandName}"/></td>
-                                                        <td><c:out value="${d.originName}"/></td>
-                                                        <td><c:out value="${d.conditionName}"/></td>
-                                                        <td><c:out value="${d.fuelName}"/></td>
-                                                        <td><c:out value="${d.phaseName}"/></td>
-                                                        <td><c:out value="${d.genTypeName}"/></td>
-                                                        <td class="mono"><c:out value="${d.powerRating}"/></td>
-                                                        <td><c:out value="${d.frequency}"/></td>
-                                                        <td class="mono"><c:out value="${d.weight}"/></td>
-                                                        <td class="col-supplier">
-                                                            <select name="supplierId" class="row-supplier">
-                                                                <option value="">-- Chọn NCC --</option>
-                                                                <c:forEach var="s" items="${suppliers}">
-                                                                    <option value="${s.id}" <c:if test="${s.id == d.supplierId}">selected</c:if>><c:out value="${s.name}"/></option>
-                                                                </c:forEach>
-                                                            </select>
-                                                        </td>
-                                                        <td><input type="number" name="unitPrice" class="row-unitprice" value="${d.unitPrice != null ? d.unitPrice : ''}" min="0" step="1000" placeholder="0" /></td>
-                                                        <td><input type="number" name="quantity" class="row-qty" value="${d.quantity}" min="1" max="9999" oninput="validateQty(this)" required /></td>
-                                                        <td><input type="text" name="detailNote" class="row-note" value="<c:out value='${d.note}'/>" placeholder="VD: Cần gấp cho dự án X" /></td>
+                                                        <td class="text-center"><span class="stock-cell" data-stock>—</span></td>
+                                                        <td><input type="number" name="quantity" class="row-qty mono" value="${d.quantity}" min="1" max="9999" oninput="validateQty(this);recalcSummary()" required /></td>
+                                                        <td><input type="number" name="unitPrice" class="row-unitprice mono" value="${d.unitPrice != null ? d.unitPrice : ''}" min="0" step="1000" placeholder="0" oninput="recalcSummary()" required /></td>
+                                                        <td><input type="text" name="detailNote" class="row-note" value="<c:out value='${d.note}'/>" placeholder="Ghi chú dòng" /></td>
                                                         <td class="col-del">
                                                             <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                                         </td>
@@ -783,25 +810,22 @@
                                                 <tr>
                                                     <td class="mono">1</td>
                                                     <td>
-                                                        <select name="generatorId" class="row-generator" required>
-                                                            <option value="">-- Chọn máy --</option>
-                                                            <c:forEach var="g" items="${generators}">
-                                                                <option value="${g.id}"><c:out value="${g.model}"/></option>
-                                                            </c:forEach>
-                                                        </select>
+                                                        <div style="display:flex;gap:6px;align-items:center;min-width:240px">
+                                                            <select name="generatorId" class="row-generator" required onchange="onGenChange(this)" style="flex:1">
+                                                                <option value="">-- Chọn máy --</option>
+                                                                <c:forEach var="g" items="${generators}">
+                                                                    <option value="${g.id}"><c:out value="${g.model}"/></option>
+                                                                </c:forEach>
+                                                            </select>
+                                                            <c:if test="${canCreateGenerator}">
+                                                                <button type="button" class="btn btn-sm" onclick="openNewGeneratorModal(this)" title="Thêm máy phát mới" style="padding:4px 10px">+</button>
+                                                            </c:if>
+                                                        </div>
                                                     </td>
-                                                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-                                                    <td class="col-supplier">
-                                                        <select name="supplierId" class="row-supplier">
-                                                            <option value="">-- Chọn NCC --</option>
-                                                            <c:forEach var="s" items="${suppliers}">
-                                                                <option value="${s.id}"><c:out value="${s.name}"/></option>
-                                                            </c:forEach>
-                                                        </select>
-                                                    </td>
-                                                    <td><input type="number" name="unitPrice" class="row-unitprice" min="0" step="1000" placeholder="0" /></td>
-                                                    <td><input type="number" name="quantity" class="row-qty" value="1" min="1" max="9999" oninput="validateQty(this)" required /></td>
-                                                    <td><input type="text" name="detailNote" class="row-note" placeholder="VD: Cần gấp cho dự án X" /></td>
+                                                    <td class="text-center"><span class="stock-cell" data-stock>—</span></td>
+                                                    <td><input type="number" name="quantity" class="row-qty mono" value="1" min="1" max="9999" oninput="validateQty(this);recalcSummary()" required /></td>
+                                                    <td><input type="number" name="unitPrice" class="row-unitprice mono" min="0" step="1000" placeholder="0" oninput="recalcSummary()" required /></td>
+                                                    <td><input type="text" name="detailNote" class="row-note" placeholder="Ghi chú dòng" /></td>
                                                     <td class="col-del">
                                                         <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
                                                     </td>
@@ -811,11 +835,16 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div style="padding:12px 20px;border-top:1px solid var(--border)">
+                            <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:16px;align-items:center;flex-wrap:wrap">
                                 <button type="button" class="btn btn-sm" onclick="addRow()">
                                     <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>
                                     Thêm dòng
                                 </button>
+                                <span style="font-size:12.5px;color:var(--muted);margin-left:auto">
+                                    Tổng: <strong id="sumRows">${not empty proposal.details ? fn:length(proposal.details) : 0}</strong> dòng ·
+                                    <strong id="sumQty">${sumQty}</strong> máy ·
+                                    <strong id="sumValue">${sumValueFmt}</strong> ₫
+                                </span>
                             </div>
                         </div>
 
@@ -840,98 +869,424 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+
+        <div class="modal-host" id="genModalOverlay">
+            <div class="modal" style="max-width:680px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.18);width:100%">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <h3 style="margin:0;font-size:18px;font-weight:700">Thêm máy phát mới</h3>
+                    <button type="button" onclick="closeNewGeneratorModal()" style="background:0 0;border:0;color:var(--muted);cursor:pointer;font-size:24px;line-height:1;padding:4px 8px">×</button>
+                </div>
+                <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Máy phát sẽ được thêm ngay vào dropdown của dòng đang chọn.</p>
+                <div class="modal-error" id="genModalError" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);background:var(--danger-soft);color:var(--danger);border:1px solid;color-mix(in srgb,var(--danger) 25%,transparent);font-size:13px;font-weight:600;margin-bottom:12px"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px">
+                    <div class="field">
+                        <label class="field-label">Mã máy phát (model) <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="ngModel" class="input" placeholder="VD: Honda EU22i" autocomplete="off" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Công suất (kVA) <span style="color:var(--danger)">*</span></label>
+                        <input type="number" id="ngPower" class="input mono" step="0.01" placeholder="VD: 50" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Tần số (Hz)</label>
+                        <input type="text" id="ngFreq" class="input mono" placeholder="VD: 50" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Trọng lượng (kg)</label>
+                        <input type="number" id="ngWeight" class="input mono" step="0.01" placeholder="VD: 120" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Thương hiệu</label>
+                        <select id="ngBrandId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catBrands}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Xuất xứ</label>
+                        <select id="ngOriginId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catOrigins}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Tình trạng</label>
+                        <select id="ngConditionId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catConditions}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Nhiên liệu</label>
+                        <select id="ngFuelTypeId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catFuelTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Số pha</label>
+                        <select id="ngPhaseId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catPhases}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Loại máy phát</label>
+                        <select id="ngGenTypeId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catGenTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+                    <button type="button" class="btn" onclick="closeNewGeneratorModal()">Huỷ</button>
+                    <button type="button" class="btn btn-primary" id="ngSaveBtn" onclick="saveNewGenerator()">Lưu máy phát</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-host" id="supModalOverlay">
+            <div class="modal" style="max-width:680px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.18);width:100%">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <h3 style="margin:0;font-size:18px;font-weight:700">Thêm nhà cung cấp mới</h3>
+                    <button type="button" onclick="closeNewSupplierModal()" style="background:0 0;border:0;color:var(--muted);cursor:pointer;font-size:24px;line-height:1;padding:4px 8px">×</button>
+                </div>
+                <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Nhà cung cấp sẽ được áp dụng cho toàn bộ phiếu.</p>
+                <div class="modal-error" id="supModalError" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);background:var(--danger-soft);color:var(--danger);border:1px solid;color-mix(in srgb,var(--danger) 25%,transparent);font-size:13px;font-weight:600;margin-bottom:12px"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 16px">
+                    <div class="field">
+                        <label class="field-label">Tên nhà cung cấp <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="nsName" class="input" placeholder="VD: Nguyễn Văn B" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Số điện thoại <span style="color:var(--danger)">*</span></label>
+                        <input type="tel" id="nsPhone" class="input mono" placeholder="VD: 0912345678" inputmode="numeric" maxlength="11" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Email</label>
+                        <input type="email" id="nsEmail" class="input mono" placeholder="email@example.com" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field">
+                        <label class="field-label">Loại NCC</label>
+                        <select id="nsTypeId" class="select" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="t" items="${supplierTypeList}"><option value="${t.id}"><c:out value="${t.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div class="field" style="grid-column:1/-1">
+                        <label class="field-label">Tên công ty</label>
+                        <input type="text" id="nsCompanyName" class="input" placeholder="VD: Công ty TNHH ABC" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box" />
+                    </div>
+                    <div class="field" style="grid-column:1/-1">
+                        <label class="field-label">Địa chỉ</label>
+                        <textarea id="nsAddress" class="input" rows="2" placeholder="Địa chỉ NCC" style="font-family:var(--font-ui);font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;width:100%;box-sizing:border-box"></textarea>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+                    <button type="button" class="btn" onclick="closeNewSupplierModal()">Huỷ</button>
+                    <button type="button" class="btn btn-primary" id="nsSaveBtn" onclick="saveNewSupplier()">Lưu NCC</button>
+                </div>
+            </div>
+        </div>
+
         <template id="rowTemplate">
             <tr>
                 <td class="mono"></td>
                 <td>
-                    <select name="generatorId" class="row-generator" required>
-                        <option value="">-- Chọn máy --</option>
-                        <c:forEach var="g" items="${generators}">
-                            <option value="${g.id}"><c:out value="${g.model}"/></option>
-                        </c:forEach>
-                    </select>
+                    <div style="display:flex;gap:6px;align-items:center;min-width:240px">
+                        <select name="generatorId" class="row-generator" required onchange="onGenChange(this)" style="flex:1">
+                            <option value="">-- Chọn máy --</option>
+                            <c:forEach var="g" items="${generators}">
+                                <option value="${g.id}"><c:out value="${g.model}"/></option>
+                            </c:forEach>
+                        </select>
+                        <c:if test="${canCreateGenerator}">
+                            <button type="button" class="btn btn-sm" onclick="openNewGeneratorModal(this)" title="Thêm máy phát mới" style="padding:4px 10px">+</button>
+                        </c:if>
+                    </div>
                 </td>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-                <td class="col-supplier">
-                    <select name="supplierId" class="row-supplier">
-                        <option value="">-- Chọn NCC --</option>
-                        <c:forEach var="s" items="${suppliers}">
-                            <option value="${s.id}"><c:out value="${s.name}"/></option>
-                        </c:forEach>
-                    </select>
-                </td>
-                <td><input type="number" name="unitPrice" class="row-unitprice" min="0" step="1000" placeholder="0" /></td>
-                <td><input type="number" name="quantity" class="row-qty" value="1" min="1" max="9999" oninput="validateQty(this)" required /></td>
-                <td><input type="text" name="detailNote" class="row-note" placeholder="VD: Cần gấp cho dự án X" /></td>
-                <td class="col-del">
-                    <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                </td>
+                <td class="text-center"><span class="stock-cell" data-stock>—</span></td>
+                <td><input type="number" name="quantity" class="row-qty mono" value="1" min="1" max="9999" oninput="validateQty(this);recalcSummary()" required /></td>
+                <td><input type="number" name="unitPrice" class="row-unitprice mono" min="0" step="1000" placeholder="0" oninput="recalcSummary()" required /></td>
+                <td><input type="text" name="detailNote" class="row-note" placeholder="Ghi chú dòng" /></td>
+                <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
             </tr>
         </template>
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script>
+        var STOCK_MAP = {};
+        <c:forEach var="entry" items="${stockByGen}">
+        STOCK_MAP['${entry.key}'] = ${entry.value};
+        </c:forEach>
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script>
-            function validateQty(input) {
-                var v = input.value.replace(/[^0-9]/g, '');
-                var n = parseInt(v);
-                if (isNaN(n) || n < 1)
-                    input.value = 1;
-                else if (n > 9999)
-                    input.value = 9999;
-                else
-                    input.value = n;
-            }
-            function addRow() {
-                var tpl = document.getElementById('rowTemplate');
-                var clone = tpl.content.cloneNode(true);
-                document.getElementById('detailBody').appendChild(clone);
-                updateRowNumbers();
-            }
-            function removeRow(btn) {
-                var tbody = document.getElementById('detailBody');
-                if (tbody.querySelectorAll('tr').length <= 1) {
-                    alert('Phải có ít nhất 1 dòng máy đề xuất.');
-                    return;
-                }
-                btn.closest('tr').remove();
-                updateRowNumbers();
-            }
-            function updateRowNumbers() {
-                document.querySelectorAll('#detailBody tr').forEach(function (tr, i) {
-                    var td = tr.querySelector('td.mono');
-                    if (td)
-                        td.textContent = i + 1;
-                });
-            }
-            function validateForm() {
-                var rows = document.querySelectorAll('#detailBody tr');
-                if (rows.length === 0) {
-                    alert('Vui lòng thêm ít nhất 1 dòng máy đề xuất nhập.');
-                    return false;
-                }
-                var hasValid = false;
-                for (var i = 0; i < rows.length; i++) {
-                    var sel = rows[i].querySelector('.row-generator');
-                    var qtyInput = rows[i].querySelector('.row-qty');
-                    var qty = parseInt(qtyInput.value);
-                    if (sel.value && (isNaN(qty) || qty < 1)) {
-                        alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
-                        qtyInput.focus();
+            (function () {
+                function fmt(n) { return Math.round(n || 0).toLocaleString('vi-VN'); }
+                window.recalcSummary = function () {
+                    var trs = document.querySelectorAll('#detailBody tr');
+                    var rows = 0, qty = 0, total = 0;
+                    trs.forEach(function (tr) {
+                        var sel = tr.querySelector('.row-generator');
+                        if (sel && sel.value) rows++;
+                        var q = parseInt(tr.querySelector('.row-qty').value) || 0;
+                        var p = parseFloat((tr.querySelector('.row-unitprice').value || '').toString().replace(/[^0-9.]/g, '')) || 0;
+                        qty += q;
+                        total += q * p;
+                    });
+                    var sr = document.getElementById('sumRows');
+                    var sq = document.getElementById('sumQty');
+                    var sv = document.getElementById('sumValue');
+                    if (sr) sr.textContent = rows;
+                    if (sq) sq.textContent = qty;
+                    if (sv) sv.textContent = fmt(total);
+                };
+                window.onGenChange = function (sel) {
+                    var tr = sel.closest('tr');
+                    var cell = tr.querySelector('[data-stock]');
+                    if (!sel.value) { cell.textContent = '—'; cell.className = 'stock-cell'; return; }
+                    var stock = STOCK_MAP[sel.value];
+                    if (stock == null || stock === 0) {
+                        cell.textContent = '0';
+                        cell.className = 'stock-cell zero-stock';
+                        cell.title = (stock === 0) ? 'Hiện hết hàng trong kho này. Vẫn có thể đề xuất nhập.' : '';
+                    } else {
+                        cell.textContent = stock + ' máy';
+                        cell.className = 'stock-cell has-stock';
+                        cell.title = 'Tồn kho tại kho đã chọn';
+                    }
+                };
+                window.validateQty = function (input) {
+                    var v = (input.value || '').replace(/[^0-9]/g, '');
+                    var n = parseInt(v);
+                    if (isNaN(n) || n < 1) input.value = 1;
+                    else if (n > 9999) input.value = 9999;
+                    else input.value = n;
+                };
+                window.addRow = function () {
+                    var tpl = document.getElementById('rowTemplate');
+                    var clone = tpl.content.cloneNode(true);
+                    document.getElementById('detailBody').appendChild(clone);
+                    updateRowNumbers();
+                    recalcSummary();
+                };
+                window.removeRow = function (btn) {
+                    var tbody = document.getElementById('detailBody');
+                    if (tbody.querySelectorAll('tr').length <= 1) {
+                        alert('Phải có ít nhất 1 dòng máy đề xuất.');
+                        return;
+                    }
+                    btn.closest('tr').remove();
+                    updateRowNumbers();
+                    recalcSummary();
+                };
+                window.updateRowNumbers = function () {
+                    document.querySelectorAll('#detailBody tr').forEach(function (tr, i) {
+                        var td = tr.querySelector('td.mono');
+                        if (td) td.textContent = i + 1;
+                    });
+                };
+                window.validateForm = function () {
+                    var rows = document.querySelectorAll('#detailBody tr');
+                    if (rows.length === 0) return false;
+                    var sup = document.getElementById('supplierId');
+                    if (sup && !sup.value) {
+                        alert('Vui lòng chọn nhà cung cấp.');
+                        sup.focus();
                         return false;
                     }
-                    if (sel.value)
-                        hasValid = true;
-                }
-                if (!hasValid) {
-                    alert('Vui lòng chọn ít nhất 1 máy phát điện.');
-                    return false;
-                }
-                return true;
-            }
-            function confirmDelete() {
-                document.getElementById('deleteForm').submit();
-            }
+                    var hasValid = false;
+                    for (var i = 0; i < rows.length; i++) {
+                        var sel = rows[i].querySelector('.row-generator');
+                        var qtyInput = rows[i].querySelector('.row-qty');
+                        var upInput = rows[i].querySelector('.row-unitprice');
+                        var qty = parseInt(qtyInput.value);
+                        var up = parseFloat((upInput.value || '').toString().replace(/[^0-9.]/g, ''));
+                        if (sel.value) {
+                            if (!qty || qty < 1) {
+                                alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
+                                qtyInput.focus();
+                                return false;
+                            }
+                            if (!up || up <= 0) {
+                                alert('Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.');
+                                upInput.focus();
+                                return false;
+                            }
+                            hasValid = true;
+                        }
+                    }
+                    if (!hasValid) {
+                        alert('Vui lòng chọn ít nhất 1 máy phát điện.');
+                        return false;
+                    }
+                    return true;
+                };
+                window.confirmDelete = function () {
+                    if (confirm('Xoá phiếu đề xuất này?')) {
+                        document.getElementById('deleteForm').submit();
+                    }
+                };
+
+                document.querySelectorAll('#detailBody tr').forEach(function (tr) {
+                    var sel = tr.querySelector('.row-generator');
+                    if (sel && sel.value) onGenChange(sel);
+                });
+                recalcSummary();
+
+                var _ngSel = null;
+                window.openNewGeneratorModal = function (btn) {
+                    var tr = btn.closest('tr');
+                    _ngSel = tr ? tr.querySelector('.row-generator') : null;
+                    ['ngModel','ngPower','ngFreq','ngWeight','ngBrandId','ngOriginId','ngConditionId','ngFuelTypeId','ngPhaseId','ngGenTypeId']
+                        .forEach(function (id) { var el = document.getElementById(id); if (el) el.value = ''; });
+                    var err = document.getElementById('genModalError');
+                    err.classList.remove('show'); err.textContent = '';
+                    document.getElementById('genModalOverlay').classList.add('show');
+                    setTimeout(function () { document.getElementById('ngModel').focus(); }, 30);
+                };
+                window.closeNewGeneratorModal = function () {
+                    document.getElementById('genModalOverlay').classList.remove('show');
+                    _ngSel = null;
+                };
+                window.saveNewGenerator = function () {
+                    var model = document.getElementById('ngModel').value.trim();
+                    var power = document.getElementById('ngPower').value.trim();
+                    if (!model || !power) {
+                        var err = document.getElementById('genModalError');
+                        err.textContent = 'Vui lòng nhập mã máy phát và công suất.';
+                        err.classList.add('show');
+                        return;
+                    }
+                    var btn = document.getElementById('ngSaveBtn');
+                    btn.disabled = true; btn.textContent = 'Đang lưu...';
+                    var fd = new FormData();
+                    fd.append('action', 'quickCreateGenerator');
+                    fd.append('model', model);
+                    fd.append('powerRating', power);
+                    fd.append('frequency', document.getElementById('ngFreq').value.trim());
+                    fd.append('weight', document.getElementById('ngWeight').value.trim());
+                    fd.append('brandId', document.getElementById('ngBrandId').value);
+                    fd.append('originId', document.getElementById('ngOriginId').value);
+                    fd.append('conditionId', document.getElementById('ngConditionId').value);
+                    fd.append('fuelTypeId', document.getElementById('ngFuelTypeId').value);
+                    fd.append('phaseId', document.getElementById('ngPhaseId').value);
+                    fd.append('genTypeId', document.getElementById('ngGenTypeId').value);
+                    fetch(window.APP_CTX + '/proposal', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            btn.disabled = false; btn.textContent = 'Lưu máy phát';
+                            if (data.ok) {
+                                var sel = _ngSel || document.querySelector('#detailBody tr .row-generator');
+                                if (sel) {
+                                    var exists = false;
+                                    for (var i = 0; i < sel.options.length; i++) {
+                                        if (sel.options[i].value == data.id) { exists = true; break; }
+                                    }
+                                    if (!exists) {
+                                        var opt = document.createElement('option');
+                                        opt.value = data.id; opt.text = data.model;
+                                        sel.appendChild(opt);
+                                    }
+                                    sel.value = data.id;
+                                    onGenChange(sel);
+                                }
+                                closeNewGeneratorModal();
+                                if (typeof toast !== 'undefined') {
+                                    toast(data.existing
+                                        ? 'Mã máy "' + data.model + '" đã có — đã tự chọn.'
+                                        : 'Đã thêm máy phát "' + data.model + '"', data.existing ? 'info' : 'success');
+                                }
+                            } else {
+                                var err = document.getElementById('genModalError');
+                                err.textContent = data.error || 'Lỗi không xác định';
+                                err.classList.add('show');
+                            }
+                        }).catch(function () {
+                            btn.disabled = false; btn.textContent = 'Lưu máy phát';
+                            var err = document.getElementById('genModalError');
+                            err.textContent = 'Lỗi kết nối máy chủ';
+                            err.classList.add('show');
+                        });
+                };
+
+                window.openNewSupplierModal = function () {
+                    ['nsName','nsPhone','nsEmail','nsCompanyName','nsAddress','nsTypeId'].forEach(function (id) {
+                        var el = document.getElementById(id); if (el) el.value = '';
+                    });
+                    var err = document.getElementById('supModalError');
+                    err.classList.remove('show'); err.textContent = '';
+                    document.getElementById('supModalOverlay').classList.add('show');
+                    setTimeout(function () { document.getElementById('nsName').focus(); }, 30);
+                };
+                window.closeNewSupplierModal = function () {
+                    document.getElementById('supModalOverlay').classList.remove('show');
+                };
+                window.saveNewSupplier = function () {
+                    var name = document.getElementById('nsName').value.trim();
+                    var phone = document.getElementById('nsPhone').value.trim();
+                    if (!name || !/^[0-9]{10,11}$/.test(phone)) {
+                        var err = document.getElementById('supModalError');
+                        err.textContent = 'Vui lòng nhập tên và SĐT hợp lệ (10-11 chữ số).';
+                        err.classList.add('show');
+                        return;
+                    }
+                    var btn = document.getElementById('nsSaveBtn');
+                    btn.disabled = true; btn.textContent = 'Đang lưu...';
+                    var fd = new FormData();
+                    fd.append('action', 'quickCreateSupplier');
+                    fd.append('name', name);
+                    fd.append('phone', phone);
+                    fd.append('email', document.getElementById('nsEmail').value.trim());
+                    fd.append('address', document.getElementById('nsAddress').value.trim());
+                    fd.append('companyName', document.getElementById('nsCompanyName').value.trim());
+                    fd.append('supplierTypeId', document.getElementById('nsTypeId').value);
+                    fetch(window.APP_CTX + '/proposal', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            btn.disabled = false; btn.textContent = 'Lưu NCC';
+                            if (data.ok) {
+                                var sel = document.getElementById('supplierId');
+                                var exists = false;
+                                for (var i = 0; i < sel.options.length; i++) {
+                                    if (sel.options[i].value == data.id) { exists = true; break; }
+                                }
+                                if (!exists) {
+                                    var opt = document.createElement('option');
+                                    opt.value = data.id; opt.text = data.name;
+                                    opt.setAttribute('data-phone', data.phone || '');
+                                    opt.setAttribute('data-email', '');
+                                    opt.setAttribute('data-company', '');
+                                    sel.appendChild(opt);
+                                }
+                                sel.value = data.id;
+                                closeNewSupplierModal();
+                                if (typeof toast !== 'undefined') {
+                                    toast(data.existing
+                                        ? 'SĐT đã có NCC: ' + data.name + ' — đã tự chọn.'
+                                        : 'Đã thêm NCC "' + data.name + '"', data.existing ? 'info' : 'success');
+                                }
+                            } else {
+                                var err = document.getElementById('supModalError');
+                                err.textContent = data.error || 'Lỗi không xác định';
+                                err.classList.add('show');
+                            }
+                        }).catch(function () {
+                            btn.disabled = false; btn.textContent = 'Lưu NCC';
+                            var err = document.getElementById('supModalError');
+                            err.textContent = 'Lỗi kết nối máy chủ';
+                            err.classList.add('show');
+                        });
+                };
+
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        closeNewGeneratorModal();
+                        closeNewSupplierModal();
+                    }
+                });
+            })();
         </script>
     </body>
 </html>
