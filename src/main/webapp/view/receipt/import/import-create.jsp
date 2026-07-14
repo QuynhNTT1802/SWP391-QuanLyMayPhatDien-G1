@@ -86,6 +86,37 @@
         .stock-info .stock-label { color: var(--muted); }
         .stock-info .stock-value { color: var(--accent); font-weight: 600; }
 
+        .scanner-box {
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 14px 16px; margin-bottom: 14px;
+            background: var(--accent-soft);
+            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+            border-radius: var(--radius);
+        }
+        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        .scanner-box .scanner-input-wrap { position: relative; }
+        .scanner-box input {
+            width: 100%; padding: 11px 14px;
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--bg); color: var(--fg);
+            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .scanner-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .scanner-box input.success { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+        .scanner-box input.error { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent); }
+        .scanner-box input:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
+        .scanner-box small { color: var(--muted); font-size: 12px; min-height: 16px; }
+        .scanner-box small.success { color: var(--accent); }
+        .scanner-box small.error { color: var(--danger); }
+        .scanner-box.disabled { opacity: 0.55; }
+        tr.po-locked-row.flash { animation: flashRowGreen 0.9s ease-out; }
+        @keyframes flashRowGreen {
+            0% { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+            100% { background-color: transparent; }
+        }
+        tr.manual-row.flash { animation: flashRowGreen 0.9s ease-out; }
+
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -103,7 +134,7 @@
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <a class="btn" href="${pageContext.request.contextPath}/import-receipt">Huỷ</a>
-                        <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
+                        <button type="submit" id="submitBtn" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                             Gửi phiếu
                         </button>
@@ -193,7 +224,36 @@
                     <section class="section">
                         <div class="section-head">
                             <div>
-                                <div class="section-num">02 — CHI TIẾT DÒNG HÀNG</div>
+                                <div class="section-num">02 — QUÉT SERIAL NHẬP KHO</div>
+                                <h3 class="section-title">Quét barcode từng máy một cho đến khi đủ số lượng</h3>
+                            </div>
+                            <div class="section-actions">
+                                <span id="scanCounter" style="background: var(--surface-2); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; color: var(--muted);">
+                                    <c:choose>
+                                        <c:when test="${fromPurchaseOrder}">
+                                            Đã quét: <strong id="scanFilledCount" style="color: var(--accent);">0</strong> / <strong id="scanTotalCount">${expectedRows}</strong>
+                                        </c:when>
+                                        <c:otherwise>
+                                            Đã quét: <strong id="scanFilledCount" style="color: var(--accent);">0</strong> serial
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="scanner-box" id="importScannerBox">
+                            <label>Quét serial để nhập nhanh</label>
+                            <div class="scanner-input-wrap">
+                                <input type="text" id="importScanBox" autocomplete="off"
+                                       placeholder="Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
+                            </div>
+                            <small id="importScanStatus">Sẵn sàng. Mỗi serial quét vào sẽ tự điền vào dòng trống tương ứng bên dưới.</small>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">03 — CHI TIẾT DÒNG HÀNG</div>
                                 <h3 class="section-title">Danh sách máy phát điện</h3>
                             </div>
                             <div class="section-actions" style="display:flex; gap:8px;">
@@ -504,6 +564,7 @@
         if (tbody.querySelectorAll('tr').length <= 1) return;
         btn.closest('tr').remove();
         updateRowNumbers();
+        updatePoCounter();
     }
 
     function updateRowNumbers() {
@@ -515,12 +576,48 @@
 
     function updatePoCounter() {
         var counter = document.getElementById('poFilledCount');
-        if (!counter) return;
+        var poRows = document.querySelectorAll('tr.po-locked-row');
         var filled = 0;
-        document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
-            if (inp.value && inp.value.trim().length > 0) filled++;
+        poRows.forEach(function (r) {
+            var inp = r.querySelector('input[name="manualSerialNumber"]');
+            if (inp && inp.value && inp.value.trim().length > 0) filled++;
         });
-        counter.textContent = filled;
+        if (counter) counter.textContent = filled;
+        var scanFilled = document.getElementById('scanFilledCount');
+        if (scanFilled) {
+            var count = 0;
+            document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
+                if (inp.value && inp.value.trim().length > 0) count++;
+            });
+            scanFilled.textContent = count;
+        }
+        var scanEl = document.getElementById('importScanBox');
+        if (scanEl && poRows.length > 0 && filled >= poRows.length) {
+            disableScanWhenPoFull();
+        }
+        updateSubmitAvailability();
+    }
+
+    function updateSubmitAvailability() {
+        var submitBtn = document.getElementById('submitBtn');
+        if (!submitBtn) return;
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+        if (!isPoMode) {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('title');
+            return;
+        }
+        var rows = document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]');
+        var total = rows.length;
+        var filled = 0;
+        rows.forEach(function (inp) { if (inp.value && inp.value.trim()) filled++; });
+        if (filled === total) {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('title');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.title = 'Đã nhập ' + filled + '/' + total + ' serial. Hãy quét tiếp đến khi đủ.';
+        }
     }
 
     function validateField(el) {
@@ -595,10 +692,16 @@
 
         <c:if test="${fromPurchaseOrder}">
         updatePoCounter();
-        document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
-            inp.addEventListener('input', updatePoCounter);
-        });
         </c:if>
+        // Lắng nghe thay đổi trên MỌI ô serial (cả PO và non-PO) để cập nhật counter + submit
+        document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+                updatePoCounter();
+                maybeReenableScanOnEdit();
+            });
+        });
+        // Khi xoá dòng thì update lại
+        document.getElementById('detailBody').addEventListener('DOMSubtreeModified', updatePoCounter);
 
         <c:if test="${preservedReasonId != null}">
         var reasonSel = document.querySelector('select[name="reasonId"]');
@@ -609,7 +712,281 @@
         var noteEl = document.querySelector('textarea[name="note"]');
         if (noteEl) noteEl.value = '<c:out value="${preservedNote}"/>';
         </c:if>
+
+        initImportScanner();
+        updateSubmitAvailability();
     });
+
+    // ========== Scanner nhập kho ==========
+    var importScannerLock = false;
+
+    function initImportScanner() {
+        var scanInput = document.getElementById('importScanBox');
+        var scanBox = document.getElementById('importScannerBox');
+        if (!scanInput) return;
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        var refreshScannerState = function () {
+            var wh = whSelect ? whSelect.value : '';
+            if (!wh) {
+                scanBox.classList.add('disabled');
+                scanInput.disabled = true;
+                scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
+            } else {
+                scanBox.classList.remove('disabled');
+                scanInput.disabled = false;
+                scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+            }
+        };
+        refreshScannerState();
+        if (whSelect && whSelect.tagName === 'SELECT') {
+            whSelect.addEventListener('change', refreshScannerState);
+        }
+
+        scanInput.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (importScannerLock) return;
+            var serial = scanInput.value.trim();
+            if (!serial) return;
+            handleImportScan(serial);
+        });
+
+        scanInput.addEventListener('input', function () {
+            scanInput.classList.remove('success', 'error');
+        });
+
+        // Auto-focus scan box ngay từ đầu
+        setTimeout(function () {
+            if (!scanInput.disabled) scanInput.focus();
+        }, 100);
+    }
+
+    function setImportScanStatus(msg, type) {
+        var el = document.getElementById('importScanStatus');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('success', 'error');
+        if (type) el.classList.add(type);
+    }
+
+    function flashImportScan(type) {
+        var inp = document.getElementById('importScanBox');
+        if (!inp) return;
+        inp.classList.remove('success', 'error');
+        inp.classList.add(type);
+        setTimeout(function () { inp.classList.remove(type); }, 900);
+    }
+
+    function flashRowSuccess(row) {
+        if (!row) return;
+        row.classList.remove('flash');
+        // restart animation
+        void row.offsetWidth;
+        row.classList.add('flash');
+    }
+
+    function handleImportScan(serial) {
+        importScannerLock = true;
+        serial = (serial || '').trim();
+        if (!serial) {
+            importScannerLock = false;
+            return;
+        }
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        var whId = whSelect ? whSelect.value : '';
+        if (!whId) {
+            importScannerLock = false;
+            setImportScanStatus('Vui lòng chọn kho trước khi quét.', 'error');
+            flashImportScan('error');
+            return;
+        }
+
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+
+        // 1. Check duplicate trong bảng
+        var dupFound = null;
+        document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
+            if (inp.value.trim() === serial) dupFound = inp;
+        });
+        if (dupFound) {
+            importScannerLock = false;
+            setImportScanStatus('Serial "' + serial + '" đã quét trong phiếu này.', 'error');
+            flashImportScan('error');
+            focusScanBox();
+            return;
+        }
+
+        if (isPoMode) {
+            // PO mode: chi can quet QR dien vao dong trong tiep theo,
+            // khong can check serial co ton tai trong he thong hay khong.
+            // Hang di theo PO da co san generator_id, nguoi dung chi can
+            // quet den khi du so dong theo PO la xong.
+            var poRows = document.querySelectorAll('tr.po-locked-row');
+            var targetRow = findPoTargetRow();
+            if (!targetRow) {
+                importScannerLock = false;
+                setImportScanStatus('Đã quét đủ ' + poRows.length + ' serial theo PO. Bấm "Gửi phiếu" để hoàn tất.', 'success');
+                flashImportScan('success');
+                disableScanWhenPoFull();
+                var scanEl0 = document.getElementById('importScanBox');
+                if (scanEl0) scanEl0.value = '';
+                focusScanBox();
+                return;
+            }
+            var snInput = targetRow.querySelector('input[name="manualSerialNumber"]');
+            snInput.value = serial;
+            flashRowSuccess(targetRow);
+            flashImportScan('success');
+            updatePoCounter();
+
+            var filledNow = 0;
+            poRows.forEach(function (r) {
+                var inp = r.querySelector('input[name="manualSerialNumber"]');
+                if (inp && inp.value.trim()) filledNow++;
+            });
+            setImportScanStatus('✓ Đã quét ' + filledNow + '/' + poRows.length + ' serial.', 'success');
+
+            var scanEl = document.getElementById('importScanBox');
+            if (scanEl) scanEl.value = '';
+            if (filledNow >= poRows.length) {
+                disableScanWhenPoFull();
+            }
+            importScannerLock = false;
+            focusScanBox();
+            return;
+        }
+
+        // 2. Non-PO mode: van giu nguyen flow AJAX lookup nhu cu
+        var url = ctx + '/inventory-lookup?action=scan&serial=' + encodeURIComponent(serial)
+                + '&warehouseId=' + encodeURIComponent(whId);
+        fetch(url).then(function (r) { return r.json(); })
+            .then(function (data) {
+                importScannerLock = false;
+
+                if (!data || !data.found) {
+                    setImportScanStatus('Serial "' + serial + '" không tồn tại trong hệ thống.', 'error');
+                    flashImportScan('error');
+                    focusScanBox();
+                    return;
+                }
+                if (data.blocked) {
+                    setImportScanStatus('Serial "' + serial + '" đang bị chặn / đang sử dụng.', 'error');
+                    flashImportScan('error');
+                    focusScanBox();
+                    return;
+                }
+
+                // Non-PO mode: tìm dòng trống hoặc tạo dòng mới
+                var emptyRow = findEmptyManualRow();
+                var targetTr;
+                if (emptyRow) {
+                    targetTr = emptyRow;
+                } else {
+                    targetTr = buildEmptyRow();
+                    document.getElementById('detailBody').appendChild(targetTr);
+                    updateRowNumbers();
+                }
+                var genSel = targetTr.querySelector('select[name="manualGeneratorId"]');
+                var snInput2 = targetTr.querySelector('input[name="manualSerialNumber"]');
+                if (genSel) {
+                    // Đảm bảo generator từ serial quét có trong cache để dropdown hiển thị
+                    var foundInCache = false;
+                    for (var i = 0; i < generatorCache.length; i++) {
+                        if (String(generatorCache[i].id) === String(data.generatorId)) { foundInCache = true; break; }
+                    }
+                    if (!foundInCache) {
+                        generatorCache.push({
+                            id: data.generatorId,
+                            model: data.generatorModel || ('#' + data.generatorId),
+                            brand: data.generatorBrand || '',
+                            stockQty: 0
+                        });
+                    }
+                    genSel.setAttribute('data-current', data.generatorId);
+                    renderGeneratorOptions(genSel);
+                    genSel.value = data.generatorId;
+                    onGeneratorChange(genSel);
+                }
+                if (snInput2) {
+                    snInput2.value = serial;
+                }
+                flashRowSuccess(targetTr);
+                flashImportScan('success');
+                setImportScanStatus('✓ Đã thêm serial "' + serial + '" (model "' + (data.generatorModel || '') + '").', 'success');
+                updatePoCounter();
+
+                var scanEl = document.getElementById('importScanBox');
+                if (scanEl) scanEl.value = '';
+                focusScanBox();
+            })
+            .catch(function (err) {
+                importScannerLock = false;
+                console.error(err);
+                setImportScanStatus('Lỗi kết nối: ' + err.message, 'error');
+                flashImportScan('error');
+                focusScanBox();
+            });
+    }
+
+    function focusScanBox() {
+        var scanEl = document.getElementById('importScanBox');
+        if (scanEl && !scanEl.disabled) {
+            scanEl.focus();
+        }
+    }
+
+    function findPoTargetRow() {
+        var rows = document.querySelectorAll('tr.po-locked-row');
+        for (var i = 0; i < rows.length; i++) {
+            var snInput = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (!snInput) continue;
+            if (!snInput.value.trim()) {
+                return rows[i];
+            }
+        }
+        return null;
+    }
+
+    function disableScanWhenPoFull() {
+        var scanEl = document.getElementById('importScanBox');
+        if (!scanEl) return;
+        var scanBox = document.getElementById('importScannerBox');
+        scanEl.disabled = true;
+        scanEl.placeholder = 'Đã đủ serial theo PO. Bấm "Gửi phiếu" để hoàn tất.';
+        if (scanBox) scanBox.classList.add('disabled');
+    }
+
+    function maybeReenableScanOnEdit() {
+        var scanEl = document.getElementById('importScanBox');
+        if (!scanEl || !scanEl.disabled) return;
+        if (!document.querySelector('tr.po-locked-row')) return;
+        var poRows = document.querySelectorAll('tr.po-locked-row');
+        var emptyExists = false;
+        poRows.forEach(function (r) {
+            var inp = r.querySelector('input[name="manualSerialNumber"]');
+            if (inp && !inp.value.trim()) emptyExists = true;
+        });
+        if (emptyExists) {
+            scanEl.disabled = false;
+            scanEl.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+            var scanBox = document.getElementById('importScannerBox');
+            if (scanBox) scanBox.classList.remove('disabled');
+            setImportScanStatus('Đã mở lại ô quét. Bạn có thể tiếp tục quét serial.', 'success');
+        }
+    }
+
+    function findEmptyManualRow() {
+        var rows = document.querySelectorAll('#detailBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            var snInput = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (snInput && !snInput.value.trim()) {
+                return rows[i];
+            }
+        }
+        return null;
+    }
 
     function submitExcelUpload(input) {
         if (!input.files || !input.files[0]) {
@@ -682,6 +1059,7 @@
             if (!input) continue;
             input.value = (i < serials.length && serials[i] != null) ? serials[i] : '';
         }
+        updatePoCounter();
     }
 
     function applySerialsToManualRows(generatorIds, serials) {
@@ -699,6 +1077,7 @@
         }
         updateRowNumbers();
         if (typeof updateOrderCounter === 'function') updateOrderCounter();
+        updatePoCounter();
     }
 </script>
 </body>
