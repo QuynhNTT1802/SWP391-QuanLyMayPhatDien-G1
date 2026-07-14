@@ -12,21 +12,37 @@ function htmlEsc(s) {
 }
 
 function validateQty(input) {
-    var v = (input.value || '').replace(/[^0-9]/g, '');
-    var n = parseInt(v);
-    if (isNaN(n) || n < 1) input.value = 1;
-    else if (n > 9999) input.value = 9999;
-    else input.value = n;
+    updateTotal();
+}
+
+function finalizeQty(input) {
+    var cleaned = (input.value || '').replace(/[^0-9]/g, '');
+    if (cleaned.length > 4) cleaned = cleaned.slice(0, 4);
+    var n = parseInt(cleaned, 10);
+    if (isNaN(n) || n < 1) {
+        toast('Số lượng phải lớn hơn 0.', 'danger');
+        input.value = '1';
+    } else {
+        input.value = cleaned;
+    }
+    updateTotal();
 }
 
 function validateUnitPrice(input) {
-    var cleaned = input.value.replace(/[^\d]/g, '');
+    var cleaned = (input.value || '').replace(/[^\d]/g, '');
     if (input.value && cleaned === '') {
-        alert('Đơn giá chỉ được nhập số!');
+        toast('Đơn giá chỉ được nhập số!', 'danger');
         input.value = '0';
-        return;
+    } else if (cleaned !== input.value) {
+        input.value = cleaned;
     }
-    input.value = cleaned;
+    updateTotal();
+}
+
+function finalizeUnitPrice(input) {
+    var n = parseInt((input.value || '').replace(/[^\d]/g, ''), 10);
+    if (isNaN(n)) return;
+    updateTotal();
 }
 
 function formatPriceDisplay(input) {
@@ -89,29 +105,37 @@ function removeRow(btn) {
 function validateForm() {
     var wh = document.getElementById('warehouseId').value;
     var sup = document.getElementById('sdHiddenId').value;
-    if (!wh) { alert('Vui lòng chọn kho nhập.'); return false; }
-    if (!sup) { alert('Vui lòng chọn nhà cung cấp.'); return false; }
+    if (!wh) { toast('Vui lòng chọn kho nhập.', 'danger'); return false; }
+    if (!sup) { toast('Vui lòng chọn nhà cung cấp.', 'danger'); return false; }
 
     var dataRows = document.querySelectorAll('#detailBody tr');
     var hasValid = false;
+    var firstBad = null;
     for (var i = 0; i < dataRows.length; i++) {
         var tr = dataRows[i];
         var sel = tr.querySelector('.gen-select');
-        var qty = parseInt(tr.querySelector('.qty-input').value);
-        var upStr = (tr.querySelector('.unit-price-input').value || '').replace(/[^\d]/g, '');
+        var qtyEl = tr.querySelector('.qty-input');
+        var upEl  = tr.querySelector('.unit-price-input');
+        var qty = parseInt((qtyEl.value || '').replace(/[^0-9]/g, ''), 10);
+        var upStr = (upEl.value || '').replace(/[^\d]/g, '');
+        var up = parseInt(upStr, 10);
         if (sel && sel.value) {
             if (!qty || qty < 1) {
-                alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.');
-                return false;
+                if (!firstBad) firstBad = { el: qtyEl, msg: 'Số lượng ở dòng ' + (i + 1) + ' phải lớn hơn 0.' };
+            } else if (!upStr || up <= 0) {
+                if (!firstBad) firstBad = { el: upEl, msg: 'Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.' };
+            } else {
+                hasValid = true;
             }
-            if (!upStr || parseFloat(upStr) <= 0) {
-                alert('Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.');
-                return false;
-            }
-            hasValid = true;
         }
     }
-    if (!hasValid) { alert('Vui lòng chọn ít nhất 1 máy phát điện.'); return false; }
+    if (firstBad) {
+        toast(firstBad.msg, 'danger');
+        firstBad.el.focus();
+        if (typeof firstBad.el.select === 'function') firstBad.el.select();
+        return false;
+    }
+    if (!hasValid) { toast('Vui lòng chọn ít nhất 1 máy phát điện.', 'danger'); return false; }
 
     document.querySelectorAll('.unit-price-input').forEach(function (el) {
         el.value = el.value.replace(/[^\d]/g, '');

@@ -3,6 +3,7 @@ package com.quanlymayphatdien.g1.dal;
 import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
+
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.sql.Connection;
 import java.sql.Date;
@@ -1163,13 +1164,15 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     public List<ImportProposal> findProposalsByPo(int poId) {
         List<ImportProposal> list = new ArrayList<>();
         String sql = "SELECT p.*, po.po_code AS po_code, w.name AS warehouse_name, "
-                + "u_c.name AS created_by_name, u_a.name AS approved_by_name, u_r.name AS rejected_by_name "
+                + "u_c.name AS created_by_name, u_a.name AS approved_by_name, u_r.name AS rejected_by_name, "
+                + "s.name AS supplier_name "
                 + "FROM import_proposal p "
                 + "LEFT JOIN purchase_order po ON po.po_id = p.purchase_order_id "
                 + "LEFT JOIN warehouse w ON w.warehouse_id = p.warehouse_id "
                 + "LEFT JOIN user u_c ON u_c.id = p.created_by "
                 + "LEFT JOIN user u_a ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r ON u_r.id = p.rejected_by "
+                + "LEFT JOIN supplier s ON s.id = p.supplier_id "
                 + "WHERE p.purchase_order_id = ? "
                 + "ORDER BY p.proposal_id ASC";
         try {
@@ -1192,7 +1195,11 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 p.setPeriod(resultSet.getString("period"));
                 int poIdVal = resultSet.getInt("purchase_order_id");
                 p.setPurchaseOrderId(resultSet.wasNull() ? null : poIdVal);
+                p.setSupplierName(resultSet.getString("supplier_name"));
                 list.add(p);
+            }
+            for (ImportProposal p : list) {
+                p.setDetails(new ImportProposalDetailDAO().findByProposalId(p.getProposalId()));
             }
         } catch (SQLException e) {
             e.printStackTrace();

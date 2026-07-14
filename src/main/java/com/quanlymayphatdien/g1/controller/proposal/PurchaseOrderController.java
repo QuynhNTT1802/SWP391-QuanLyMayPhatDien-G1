@@ -509,7 +509,9 @@ public class PurchaseOrderController extends HttpServlet {
         }
 
         String tab = request.getParameter("tab");
-        String currentTab = "history".equals(tab) ? "history" : "info";
+        String currentTab = "info";
+        if ("history".equals(tab)) currentTab = "history";
+        else if ("proposals".equals(tab)) currentTab = "proposals";
         request.setAttribute("currentTab", currentTab);
 
         if ("history".equals(currentTab)) {
