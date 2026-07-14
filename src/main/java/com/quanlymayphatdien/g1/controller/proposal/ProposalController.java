@@ -286,6 +286,14 @@ public class ProposalController extends HttpServlet {
             return;
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
+        if (warehouseId <= 0) {
+            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> warehouses =
+                    new WarehouseDAO().findAll();
+            if (warehouses != null && !warehouses.isEmpty()) {
+                warehouseId = warehouses.get(0).getWarehouseId();
+            }
+        }
+        request.setAttribute("selectedWarehouseId", warehouseId);
         loadProposalFormAttributes(request, warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
@@ -345,7 +353,11 @@ public class ProposalController extends HttpServlet {
             return;
         }
         request.setAttribute("proposal", p);
-        loadProposalFormAttributes(request, p.getWarehouseId());
+        int formWarehouseId = parseInt(request.getParameter("warehouseId"));
+        if (formWarehouseId <= 0) {
+            formWarehouseId = p.getWarehouseId();
+        }
+        loadProposalFormAttributes(request, formWarehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-edit.jsp").forward(request, response);
     }
 
@@ -535,7 +547,7 @@ public class ProposalController extends HttpServlet {
             return;
         }
 
-        List<ImportProposalDetail> details = parseDetailsFromRequest(request, newId, headerSupplierId);
+        List<ImportProposalDetail> details = parseDetailsFromRequest(request, newId, headerSupplierId, warehouseId);
         if (!details.isEmpty()) {
             dao.insertDetailsBatch(details);
         }
@@ -611,7 +623,11 @@ public class ProposalController extends HttpServlet {
 
         if (hasDetailForm) {
             dao.deleteDetails(id);
-            List<ImportProposalDetail> details = parseDetailsFromRequest(request, id, headerSupplierId);
+            int editWarehouseId = parseInt(request.getParameter("warehouseId"));
+            if (editWarehouseId <= 0) {
+                editWarehouseId = existing.getWarehouseId();
+            }
+            List<ImportProposalDetail> details = parseDetailsFromRequest(request, id, headerSupplierId, editWarehouseId);
             if (!details.isEmpty()) {
                 dao.insertDetailsBatch(details);
             }
@@ -684,7 +700,8 @@ public class ProposalController extends HttpServlet {
             d.setProposalId(id);
             d.setGeneratorId(g.getId());
             d.setQuantity(qty);
-            d.setCurrentStock(0);
+            d.setCurrentStock(
+                    new InventoryDAO().countInStockByGeneratorAndWarehouse(g.getId(), existing.getWarehouseId()));
             d.setNote(lineNote != null ? lineNote : "");
             String supplierName = row.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
             if (supplierName != null && !supplierName.trim().isEmpty()) {
@@ -1191,7 +1208,9 @@ public class ProposalController extends HttpServlet {
                     d.setSupplierId(resolvedSupplierId);
                 }
                 d.setQuantity(qty);
-                d.setCurrentStock(0);
+                d.setCurrentStock(warehouseId > 0 && generatorResolved
+                        ? new InventoryDAO().countInStockByGeneratorAndWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)
+                        : 0);
                 d.setUnitPrice(unitPrice);
                 d.setNote(lineNote);
                 sessionDetailRows.add(enriched);
@@ -1539,7 +1558,9 @@ public class ProposalController extends HttpServlet {
             d.setGeneratorId(genId);
             d.setSupplierId(supId);
             d.setQuantity(qty);
-            d.setCurrentStock(0);
+            d.setCurrentStock(warehouseId > 0
+                    ? new InventoryDAO().countInStockByGeneratorAndWarehouse(genId, warehouseId)
+                    : 0);
             d.setUnitPrice(up);
             d.setNote(dNote);
             details.add(d);
@@ -1678,7 +1699,7 @@ public class ProposalController extends HttpServlet {
         }
     }
 
-    private List<ImportProposalDetail> parseDetailsFromRequest(HttpServletRequest request, int proposalId, Integer headerSupplierId) {
+    private List<ImportProposalDetail> parseDetailsFromRequest(HttpServletRequest request, int proposalId, Integer headerSupplierId, int warehouseId) {
         List<ImportProposalDetail> details = new ArrayList<>();
         String[] genIds = request.getParameterValues("generatorId");
         String[] quantities = request.getParameterValues("quantity");
@@ -1687,6 +1708,7 @@ public class ProposalController extends HttpServlet {
         if (genIds == null) {
             return details;
         }
+        InventoryDAO invDAO = new InventoryDAO();
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             if (idStr == null || idStr.trim().isEmpty()) {
@@ -1720,7 +1742,9 @@ public class ProposalController extends HttpServlet {
             d.setGeneratorId(genId);
             d.setSupplierId(headerSupplierId);
             d.setQuantity(qty);
-            d.setCurrentStock(0);
+            d.setCurrentStock(warehouseId > 0
+                    ? invDAO.countInStockByGeneratorAndWarehouse(genId, warehouseId)
+                    : 0);
             d.setUnitPrice(up);
             d.setNote(note);
             details.add(d);

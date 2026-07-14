@@ -64,10 +64,11 @@
 
                         <div class="field">
                             <label class="field-label" for="warehouseId">Kho nhập <span class="req">*</span></label>
-                            <select class="select" id="warehouseId" name="warehouseId" required>
+                            <select class="select" id="warehouseId" name="warehouseId" required
+                                    onchange="if(this.value){location.href='${pageContext.request.contextPath}/proposal?action=create&amp;warehouseId='+this.value;}">
                                 <option value="">-- Chọn kho --</option>
                                 <c:forEach var="w" items="${warehouses}">
-                                    <option value="${w.warehouseId}"><c:out value="${w.name}"/></option>
+                                    <option value="${w.warehouseId}" <c:if test="${w.warehouseId == selectedWarehouseId}">selected</c:if>><c:out value="${w.name}"/></option>
                                 </c:forEach>
                             </select>
                         </div>
