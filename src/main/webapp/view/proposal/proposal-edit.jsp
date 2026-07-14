@@ -247,8 +247,8 @@
                                                     </select>
                                                 </td>
                                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
-                                                <td><input type="number" name="quantity" class="qty-input" value="${d.quantity}" min="1" max="9999" step="1" oninput="validateQty(this);updateTotal()" required /></td>
-                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#,##0'/>" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required /></td>
+                                                <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="${d.quantity}" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
+                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#,##0'/>" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                                 <td><input type="text" name="detailNote" class="row-note-input" value="<c:out value='${d.note}'/>" placeholder="Ghi chú dòng" /></td>
                                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                             </tr>
@@ -266,8 +266,8 @@
                                                 </select>
                                             </td>
                                             <td class="col-stock"><span class="row-stock mono">—</span></td>
-                                            <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this);updateTotal()" required /></td>
-                                            <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required /></td>
+                                            <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
+                                            <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                             <td><input type="text" name="detailNote" class="row-note-input" placeholder="Ghi chú dòng" /></td>
                                             <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                         </tr>
@@ -293,8 +293,8 @@
                                     </select>
                                 </td>
                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
-                                <td><input type="number" name="quantity" class="qty-input" value="1" min="1" max="9999" step="1" oninput="validateQty(this);updateTotal()" required /></td>
-                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required /></td>
+                                <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
+                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                 <td><input type="text" name="detailNote" class="row-note-input" placeholder="Ghi chú dòng" /></td>
                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                             </tr>
@@ -498,16 +498,31 @@ function getStock(gid) { return STOCK_MAP[gid] || 0; }
 function htmlEsc(s) { if (s == null) return ''; return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
 function validateQty(input) {
-    var v = (input.value || '').replace(/[^0-9]/g, '');
-    var n = parseInt(v);
-    if (isNaN(n) || n < 1) input.value = 1;
-    else if (n > 9999) input.value = 9999;
-    else input.value = n;
+    var cleaned = (input.value || '').replace(/[^0-9]/g, '');
+    if (cleaned.length > 4) cleaned = cleaned.slice(0, 4);
+    if (input.value !== cleaned) input.value = cleaned;
+    updateTotal();
+}
+function finalizeQty(input) {
+    var n = parseInt(input.value, 10);
+    if (isNaN(n)) return;
+    if (n > 9999) input.value = '9999';
+    updateTotal();
 }
 function validateUnitPrice(input) {
-    var cleaned = input.value.replace(/[^\d]/g, '');
-    if (input.value && cleaned === '') { alert('Đơn giá chỉ được nhập số!'); input.value = '0'; return; }
-    input.value = cleaned;
+    var cleaned = (input.value || '').replace(/[^\d]/g, '');
+    if (input.value && cleaned === '') {
+        toast('Đơn giá chỉ được nhập số!', 'danger');
+        input.value = '0';
+    } else if (cleaned !== input.value) {
+        input.value = cleaned;
+    }
+    updateTotal();
+}
+function finalizeUnitPrice(input) {
+    var n = parseInt((input.value || '').replace(/[^\d]/g, ''), 10);
+    if (isNaN(n)) return;
+    updateTotal();
 }
 function formatPriceDisplay(input) {
     var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
@@ -553,22 +568,38 @@ function removeRow(btn) {
     updateTotal();
 }
 function validateForm() {
+    var wh = document.getElementById('warehouseId').value;
     var sup = document.getElementById('sdHiddenId').value;
-    if (!sup) { alert('Vui lòng chọn nhà cung cấp.'); return false; }
+    if (!wh) { toast('Vui lòng chọn kho nhập.', 'danger'); return false; }
+    if (!sup) { toast('Vui lòng chọn nhà cung cấp.', 'danger'); return false; }
     var dataRows = document.querySelectorAll('#detailBody tr');
     var hasValid = false;
+    var firstBad = null;
     for (var i = 0; i < dataRows.length; i++) {
         var tr = dataRows[i];
         var sel = tr.querySelector('.gen-select');
-        var qty = parseInt(tr.querySelector('.qty-input').value);
-        var upStr = (tr.querySelector('.unit-price-input').value || '').replace(/[^\d]/g, '');
-        if (sel.value) {
-            if (!qty || qty < 1) { alert('Số lượng ở dòng ' + (i + 1) + ' phải là số nguyên dương.'); return false; }
-            if (!upStr || parseFloat(upStr) <= 0) { alert('Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.'); return false; }
-            hasValid = true;
+        var qtyEl = tr.querySelector('.qty-input');
+        var upEl  = tr.querySelector('.unit-price-input');
+        var qty = parseInt((qtyEl.value || '').replace(/[^0-9]/g, ''), 10);
+        var upStr = (upEl.value || '').replace(/[^\d]/g, '');
+        var up = parseInt(upStr, 10);
+        if (sel && sel.value) {
+            if (!qty || qty < 1) {
+                if (!firstBad) firstBad = { el: qtyEl, msg: 'Số lượng ở dòng ' + (i + 1) + ' phải lớn hơn 0.' };
+            } else if (!upStr || up <= 0) {
+                if (!firstBad) firstBad = { el: upEl, msg: 'Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.' };
+            } else {
+                hasValid = true;
+            }
         }
     }
-    if (!hasValid) { alert('Vui lòng chọn ít nhất 1 máy phát điện.'); return false; }
+    if (firstBad) {
+        toast(firstBad.msg, 'danger');
+        firstBad.el.focus();
+        if (typeof firstBad.el.select === 'function') firstBad.el.select();
+        return false;
+    }
+    if (!hasValid) { toast('Vui lòng chọn ít nhất 1 máy phát điện.', 'danger'); return false; }
     document.querySelectorAll('.unit-price-input').forEach(function (el) { el.value = el.value.replace(/[^\d]/g, ''); });
     return true;
 }
