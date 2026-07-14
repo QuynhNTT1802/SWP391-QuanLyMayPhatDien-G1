@@ -965,9 +965,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         if (warehouseId <= 0) {
             return map;
         }
-        String sql = "SELECT generator_id, COUNT(*) AS cnt FROM inventory "
-                + "WHERE warehouse_id = ? AND status = 'IN_STOCK' "
-                + "GROUP BY generator_id";
+        String sql = "SELECT i.generator_id, COUNT(*) AS cnt FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND w.status = 'active' "
+                + "GROUP BY i.generator_id";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, warehouseId);
             try (ResultSet rs = ps.executeQuery()) {
