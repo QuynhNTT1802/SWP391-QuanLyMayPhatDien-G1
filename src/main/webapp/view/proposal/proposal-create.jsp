@@ -40,11 +40,16 @@
                         Quay lại danh sách
                     </a>
 
-                    <c:if test="${not empty sessionScope.toastMessage}">
-                        <div class="alert alert-error"><c:out value="${sessionScope.toastMessage}"/></div>
-                        <c:remove var="toastMessage" scope="session"/>
-                        <c:remove var="toastType" scope="session"/>
-                    </c:if>
+                    <script>
+                        <c:if test="${not empty sessionScope.toastMessage}">
+                            window.SESSION_DATA = {
+                                message: '<c:out value="${sessionScope.toastMessage}"/>',
+                                type: '<c:out value="${sessionScope.toastType}"/>'
+                            };
+                            <c:remove var="toastMessage" scope="session"/>
+                            <c:remove var="toastType" scope="session"/>
+                        </c:if>
+                    </script>
 
                     <div class="page-head">
                         <div class="eyebrow">Đề xuất nhập kho · Tạo mới</div>
@@ -382,10 +387,44 @@
             STOCK_MAP['${entry.key}'] = ${entry.value};
             </c:forEach>
         </script>
-        <script src="${pageContext.request.contextPath}/assets/js/toast.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/theme.js" charset="UTF-8"></script>
+        <script>
+var MSG = {};
+MSG.QTY_ZERO = 'Số lượng phải lớn hơn 0.';
+MSG.QTY_ONLY_NUM = 'Số lượng chỉ được nhập số!';
+MSG.DG_ONLY_NUM = 'Đơn giá chỉ được nhập số!';
+MSG.SEL_WAREHOUSE = 'Vui lòng chọn kho nhập.';
+MSG.SEL_SUPPLIER = 'Vui lòng chọn nhà cung cấp.';
+MSG.SEL_ONE_GEN = 'Vui lòng chọn ít nhất 1 máy phát điện.';
+MSG.QTY_ROW = 'Số lượng ở dòng ';
+MSG.DG_ROW = 'Đơn giá ở dòng ';
+MSG.GT_ZERO = ' phải lớn hơn 0.';
+MSG.ERR_MODEL_INFO = 'Vui lòng nhập mã máy phát và công suất.';
+MSG.ERR_CONTACT = 'Vui lòng nhập tên và SĐT hợp lệ (10-11 chữ số).';
+MSG.SAVING = 'Đang lưu...';
+MSG.SAVE_GEN = 'Lưu máy phát';
+MSG.SAVE_SUP = 'Lưu NCC';
+MSG.ERR = 'Lỗi';
+MSG.CONN_ERR = 'Lỗi kết nối';
+MSG.EXIST_GEN_PREFIX = 'Mã "';
+MSG.EXIST_GEN_SUFFIX = '" đã có — đã thêm vào dropdown.';
+MSG.ADDED_GEN_PREFIX = 'Đã thêm máy phát "';
+MSG.ADDED_GEN_SUFFIX = '"';
+MSG.EXIST_SUP_PREFIX = 'SĐT đã có NCC: ';
+MSG.EXIST_SUP_SUFFIX = ' — đã tự chọn.';
+MSG.ADDED_SUP_PREFIX = 'Đã thêm NCC "';
+MSG.ADDED_SUP_SUFFIX = '"';
+</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js" charset="UTF-8"></script>
-        <script src="${pageContext.request.contextPath}/assets/js/proposal-create.js" charset="UTF-8"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/proposal-create.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+                    showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                }
+            });
+        </script>
     </body>
 </html>

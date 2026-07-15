@@ -12,6 +12,11 @@ function htmlEsc(s) {
 }
 
 function validateQty(input) {
+    var cleaned = (input.value || '').replace(/[^\d]/g, '');
+    if (input.value !== cleaned) {
+        toast(MSG.QTY_ONLY_NUM, 'danger');
+        input.value = '1';
+    }
     updateTotal();
 }
 
@@ -20,7 +25,6 @@ function finalizeQty(input) {
     if (cleaned.length > 4) cleaned = cleaned.slice(0, 4);
     var n = parseInt(cleaned, 10);
     if (isNaN(n) || n < 1) {
-        toast('Số lượng phải lớn hơn 0.', 'danger');
         input.value = '1';
     } else {
         input.value = cleaned;
@@ -29,12 +33,20 @@ function finalizeQty(input) {
 }
 
 function validateUnitPrice(input) {
-    var cleaned = (input.value || '').replace(/[^\d]/g, '');
-    if (input.value && cleaned === '') {
-        toast('Đơn giá chỉ được nhập số!', 'danger');
-        input.value = '0';
-    } else if (cleaned !== input.value) {
-        input.value = cleaned;
+    var raw = input.value || '';
+    if (/[^\d.]/.test(raw)) {
+        toast(MSG.DG_ONLY_NUM, 'danger');
+        input.value = '1';
+        return;
+    }
+    var cleaned = raw.replace(/\./g, '');
+    var n = parseInt(cleaned, 10);
+    if (isNaN(n)) return;
+    if (cleaned.length >= 4 && input.selectionStart === raw.length) {
+        var formatted = n.toLocaleString('vi-VN');
+        if (raw !== formatted) {
+            input.value = formatted;
+        }
     }
     updateTotal();
 }
@@ -42,6 +54,7 @@ function validateUnitPrice(input) {
 function finalizeUnitPrice(input) {
     var n = parseInt((input.value || '').replace(/[^\d]/g, ''), 10);
     if (isNaN(n)) return;
+    input.value = n > 0 ? n.toLocaleString('vi-VN') : '0';
     updateTotal();
 }
 
@@ -105,8 +118,8 @@ function removeRow(btn) {
 function validateForm() {
     var wh = document.getElementById('warehouseId').value;
     var sup = document.getElementById('sdHiddenId').value;
-    if (!wh) { toast('Vui lòng chọn kho nhập.', 'danger'); return false; }
-    if (!sup) { toast('Vui lòng chọn nhà cung cấp.', 'danger'); return false; }
+    if (!wh) { toast(MSG.SEL_WAREHOUSE, 'danger'); return false; }
+    if (!sup) { toast(MSG.SEL_SUPPLIER, 'danger'); return false; }
 
     var dataRows = document.querySelectorAll('#detailBody tr');
     var hasValid = false;
@@ -121,9 +134,9 @@ function validateForm() {
         var up = parseInt(upStr, 10);
         if (sel && sel.value) {
             if (!qty || qty < 1) {
-                if (!firstBad) firstBad = { el: qtyEl, msg: 'Số lượng ở dòng ' + (i + 1) + ' phải lớn hơn 0.' };
+                if (!firstBad) firstBad = { el: qtyEl, msg: MSG.QTY_ROW + (i + 1) + MSG.GT_ZERO };
             } else if (!upStr || up <= 0) {
-                if (!firstBad) firstBad = { el: upEl, msg: 'Đơn giá ở dòng ' + (i + 1) + ' phải lớn hơn 0.' };
+                if (!firstBad) firstBad = { el: upEl, msg: MSG.DG_ROW + (i + 1) + MSG.GT_ZERO };
             } else {
                 hasValid = true;
             }
@@ -135,7 +148,7 @@ function validateForm() {
         if (typeof firstBad.el.select === 'function') firstBad.el.select();
         return false;
     }
-    if (!hasValid) { toast('Vui lòng chọn ít nhất 1 máy phát điện.', 'danger'); return false; }
+    if (!hasValid) { toast(MSG.SEL_ONE_GEN, 'danger'); return false; }
 
     document.querySelectorAll('.unit-price-input').forEach(function (el) {
         el.value = el.value.replace(/[^\d]/g, '');
@@ -210,13 +223,13 @@ function saveNewGenerator() {
     var power = document.getElementById('ngPower').value.trim();
     if (!model || !power) {
         var err = document.getElementById('genModalError');
-        err.textContent = 'Vui lòng nhập mã máy phát và công suất.';
+        err.textContent = MSG.ERR_MODEL_INFO;
         err.classList.add('show');
         return;
     }
     var btn = document.getElementById('ngSaveBtn');
     btn.disabled = true;
-    btn.textContent = 'Đang lưu...';
+    btn.textContent = MSG.SAVING;
     var fd = new FormData();
     fd.append('action', 'quickCreateGenerator');
     fd.append('model', model);
@@ -233,10 +246,10 @@ function saveNewGenerator() {
         .then(function (r) { return r.json(); })
         .then(function (data) {
             btn.disabled = false;
-            btn.textContent = 'Lưu máy phát';
+            btn.textContent = MSG.SAVE_GEN;
             if (!data.ok) {
                 var err = document.getElementById('genModalError');
-                err.textContent = data.error || 'Lỗi';
+                err.textContent = data.error || MSG.ERR;
                 err.classList.add('show');
                 return;
             }
@@ -255,16 +268,16 @@ function saveNewGenerator() {
             closeNewGeneratorModal();
             if (typeof toast !== 'undefined') {
                 toast(
-                    data.existing ? 'Mã "' + data.model + '" đã có — đã thêm vào dropdown.' : 'Đã thêm máy phát "' + data.model + '"',
+                    data.existing ? MSG.EXIST_GEN_PREFIX + data.model + MSG.EXIST_GEN_SUFFIX : MSG.ADDED_GEN_PREFIX + data.model + MSG.ADDED_GEN_SUFFIX,
                     data.existing ? 'info' : 'success'
                 );
             }
         })
         .catch(function () {
             btn.disabled = false;
-            btn.textContent = 'Lưu máy phát';
+            btn.textContent = MSG.SAVE_GEN;
             var err = document.getElementById('genModalError');
-            err.textContent = 'Lỗi kết nối';
+            err.textContent = MSG.CONN_ERR;
             err.classList.add('show');
         });
 }
@@ -289,13 +302,13 @@ function saveNewSupplier() {
     var phone = document.getElementById('nsPhone').value.trim();
     if (!name || !/^[0-9]{10,11}$/.test(phone)) {
         var err = document.getElementById('supModalError');
-        err.textContent = 'Vui lòng nhập tên và SĐT hợp lệ (10-11 chữ số).';
+        err.textContent = MSG.ERR_CONTACT;
         err.classList.add('show');
         return;
     }
     var btn = document.getElementById('nsSaveBtn');
     btn.disabled = true;
-    btn.textContent = 'Đang lưu...';
+    btn.textContent = MSG.SAVING;
     var fd = new FormData();
     fd.append('action', 'quickCreateSupplier');
     fd.append('name', name);
@@ -308,10 +321,10 @@ function saveNewSupplier() {
         .then(function (r) { return r.json(); })
         .then(function (data) {
             btn.disabled = false;
-            btn.textContent = 'Lưu NCC';
+            btn.textContent = MSG.SAVE_SUP;
             if (!data.ok) {
                 var err = document.getElementById('supModalError');
-                err.textContent = data.error || 'Lỗi';
+                err.textContent = data.error || MSG.ERR;
                 err.classList.add('show');
                 return;
             }
@@ -326,16 +339,16 @@ function saveNewSupplier() {
             refreshSupplierCard();
             if (typeof toast !== 'undefined') {
                 toast(
-                    data.existing ? 'SĐT đã có NCC: ' + data.name + ' — đã tự chọn.' : 'Đã thêm NCC "' + data.name + '"',
+                    data.existing ? MSG.EXIST_SUP_PREFIX + data.name + MSG.EXIST_SUP_SUFFIX : MSG.ADDED_SUP_PREFIX + data.name + MSG.ADDED_SUP_SUFFIX,
                     data.existing ? 'info' : 'success'
                 );
             }
         })
         .catch(function () {
             btn.disabled = false;
-            btn.textContent = 'Lưu NCC';
+            btn.textContent = MSG.SAVE_SUP;
             var err = document.getElementById('supModalError');
-            err.textContent = 'Lỗi kết nối';
+            err.textContent = MSG.CONN_ERR;
             err.classList.add('show');
         });
 }

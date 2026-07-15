@@ -28,6 +28,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,6 +38,8 @@ import java.util.Set;
 
 @WebServlet(name = "OrderController", urlPatterns = {"/order"})
 public class OrderController extends HttpServlet {
+
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -563,6 +567,19 @@ public class OrderController extends HttpServlet {
                 orderdetaildao.insert(d);
             }
             setMsg(session, "Tạo đơn hàng thành công! Mã đơn: " + order.getOrderCode(), "success");
+
+            List<User> approvers = userDAO.findUsersByPermission("orders", "approve");
+            for (User u : approvers) {
+                NotificationService.send(
+                    u.getId(),
+                    "Đơn hàng " + order.getOrderCode() + " chờ duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo đơn hàng cần duyệt.",
+                    request.getContextPath() + "/order?action=detail&id=" + newId,
+                    "order",
+                    newId
+                );
+            }
+
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         } else {
             setMsg(session, "Tạo đơn hàng thất bại.", "danger");
@@ -810,10 +827,23 @@ public class OrderController extends HttpServlet {
             }
         }
 
+        SaleOrder order = saleorderdao.findById(id);
         boolean success = saleorderdao.approveOrder(id, user.getId());
 
         if (success) {
             setMsg(request.getSession(), "Đã duyệt đơn hàng.", "success");
+
+            int creatorId = order != null ? order.getCreatedBy() : 0;
+            if (creatorId > 0) {
+                NotificationService.send(
+                    creatorId,
+                    "Đơn hàng " + order.getOrderCode() + " đã được duyệt",
+                    "Đơn hàng " + order.getOrderCode() + " đã được " + user.getName() + " duyệt.",
+                    request.getContextPath() + "/order?action=detail&id=" + id,
+                    "order",
+                    id
+                );
+            }
         } else {
             setMsg(request.getSession(), "Duyệt thất bại (đơn không ở trạng thái chờ).", "danger");
         }
@@ -852,10 +882,23 @@ public class OrderController extends HttpServlet {
             return;
         }
 
+        SaleOrder order = saleorderdao.findById(id);
         boolean success = saleorderdao.rejectOrder(id, user.getId(), reason);
 
         if (success) {
             setMsg(request.getSession(), "Đã từ chối đơn hàng.", "success");
+
+            int creatorId = order != null ? order.getCreatedBy() : 0;
+            if (creatorId > 0) {
+                NotificationService.send(
+                    creatorId,
+                    "Đơn hàng " + order.getOrderCode() + " bị từ chối",
+                    "Đơn hàng " + order.getOrderCode() + " bị " + user.getName() + " từ chối (lý do: " + reason + ").",
+                    request.getContextPath() + "/order?action=detail&id=" + id,
+                    "order",
+                    id
+                );
+            }
         } else {
             setMsg(request.getSession(), "Từ chối thất bại.", "danger");
         }
