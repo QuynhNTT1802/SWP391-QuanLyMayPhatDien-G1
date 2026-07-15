@@ -230,3 +230,35 @@
 .cic-details { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
 .cic-detail-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); }
 .cic-detail-item svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Toast notification */
+.toast-host {
+    position: fixed;
+    top: 76px;
+    inset-inline-end: 24px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.toast {
+    background: var(--fg);
+    color: var(--bg);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-ui);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastIn .25s ease;
+}
+.toast.success { background: var(--accent); color: var(--bg); }
+.toast.danger  { background: var(--danger);  color: var(--bg); }
+.toast svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+@keyframes toastIn {
+    from { transform: translateX(calc(100% + 32px)); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}

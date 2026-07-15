@@ -20,6 +20,8 @@ import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -45,6 +47,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 @WebServlet(name = "ProposalController", urlPatterns = {"/proposal"})
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024)
 public class ProposalController extends HttpServlet {
+
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -558,6 +562,21 @@ public class ProposalController extends HttpServlet {
 
         session.setAttribute("toastMessage", "Tạo phiếu đề xuất thành công");
         session.setAttribute("toastType", "success");
+
+        if (!"draft".equals(submitType)) {
+            List<User> approvers = userDAO.findUsersByPermission("proposals", "approve");
+            for (User u : approvers) {
+                NotificationService.send(
+                    u.getId(),
+                    "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
+                    request.getContextPath() + "/proposal?action=detail&id=" + newId,
+                    "proposal",
+                    newId
+                );
+            }
+        }
+
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
     }
 
@@ -812,6 +831,18 @@ public class ProposalController extends HttpServlet {
                     p != null ? p.getProposalCode() : null, "Duyệt phiếu đề xuất");
             session.setAttribute("toastMessage", "Đã duyệt phiếu đề xuất");
             session.setAttribute("toastType", "success");
+
+            User actor = (User) session.getAttribute("loggedUser");
+            if (p != null && p.getCreatedBy() > 0) {
+                NotificationService.send(
+                    p.getCreatedBy(),
+                    "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
+                    "Phiếu " + p.getProposalCode() + " đã được " + actor.getName() + " duyệt.",
+                    request.getContextPath() + "/proposal?action=detail&id=" + id,
+                    "proposal",
+                    id
+                );
+            }
         } else {
             session.setAttribute("toastMessage", "Không thể duyệt (phiếu không ở trạng thái chờ duyệt)");
             session.setAttribute("toastType", "danger");
@@ -861,6 +892,18 @@ public class ProposalController extends HttpServlet {
                     p != null ? p.getProposalCode() : null, "Từ chối: " + reason.trim());
             session.setAttribute("toastMessage", "Đã từ chối phiếu đề xuất");
             session.setAttribute("toastType", "success");
+
+            User actor = (User) session.getAttribute("loggedUser");
+            if (p != null && p.getCreatedBy() > 0) {
+                NotificationService.send(
+                    p.getCreatedBy(),
+                    "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
+                    "Phiếu " + p.getProposalCode() + " bị " + actor.getName() + " từ chối (lý do: " + reason.trim() + ").",
+                    request.getContextPath() + "/proposal?action=detail&id=" + id,
+                    "proposal",
+                    id
+                );
+            }
         } else {
             session.setAttribute("toastMessage", "Không thể từ chối (phiếu không ở trạng thái chờ duyệt)");
             session.setAttribute("toastType", "danger");
