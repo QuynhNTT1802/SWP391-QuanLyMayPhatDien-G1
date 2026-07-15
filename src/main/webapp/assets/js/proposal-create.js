@@ -297,6 +297,88 @@ function closeNewSupplierModal() {
     document.getElementById('supModalOverlay').classList.remove('show');
 }
 
+function triggerImportExcel() {
+    var whEl = document.getElementById('warehouseId');
+    var supEl = document.getElementById('sdHiddenId');
+    if (!whEl || !whEl.value) {
+        toast(MSG.SEL_WAREHOUSE, 'danger');
+        return;
+    }
+    if (!supEl || !supEl.value) {
+        toast(MSG.SEL_SUPPLIER, 'danger');
+        return;
+    }
+    document.getElementById('importExcelFile').value = '';
+    document.getElementById('importExcelFile').click();
+}
+
+function uploadExcelFile(input) {
+    if (!input.files || input.files.length === 0) return;
+    var fd = new FormData();
+    fd.append('excelFile', input.files[0]);
+    fd.append('warehouseId', document.getElementById('warehouseId').value);
+    fd.append('supplierId', document.getElementById('sdHiddenId').value);
+    fd.append('note', (document.getElementById('note') || {}).value || '');
+    fd.append('ajax', '1');
+    fetch(window.APP_CTX + '/proposal?action=importExcel', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (!data.success) {
+            toast(data.message || 'Lỗi không xác định', 'danger');
+            return;
+        }
+        if (data.invalidCount > 0) {
+            toast(data.message, 'danger');
+            return;
+        }
+        if (data.rows && data.rows.length > 0) {
+            applyExcelRows(data.rows);
+        }
+        toast(data.message, 'success');
+    })
+    .catch(function () {
+        toast('Lỗi kết nối hoặc server không phản hồi dữ liệu hợp lệ.', 'danger');
+    });
+}
+
+function applyExcelRows(rows) {
+    var tbody = document.getElementById('detailBody');
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    var added = 0;
+    rows.forEach(function (row) {
+        if (row.error) return;
+        var clone = document.getElementById('rowTemplate').content.cloneNode(true);
+        var tr = clone.querySelector('tr');
+        var sel = tr.querySelector('.gen-select');
+        if (sel && row.generatorId) {
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value == row.generatorId) {
+                    sel.value = row.generatorId;
+                    break;
+                }
+            }
+        }
+        var qtyInput = tr.querySelector('.qty-input');
+        if (qtyInput && row.quantity) qtyInput.value = row.quantity;
+        var upInput = tr.querySelector('.unit-price-input');
+        if (upInput && row.unitPrice) {
+            var n = parseInt(row.unitPrice) || 0;
+            upInput.value = n > 0 ? n.toLocaleString('vi-VN') : '0';
+        }
+        tbody.appendChild(tr);
+        if (sel) updateStockCell(sel);
+        added++;
+    });
+    if (added > 0) {
+        updateRowNumbers();
+        updateTotal();
+    }
+}
+
 function saveNewSupplier() {
     var name = document.getElementById('nsName').value.trim();
     var phone = document.getElementById('nsPhone').value.trim();

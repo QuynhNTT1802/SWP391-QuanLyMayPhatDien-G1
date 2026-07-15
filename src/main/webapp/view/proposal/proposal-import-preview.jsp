@@ -637,21 +637,25 @@
                         Quay lại tải file
                     </a>
                     <c:if test="${not empty sessionScope.toastMessage}">
-                        <div class="alert ${sessionScope.toastType == 'danger' ? 'alert-error' : (sessionScope.toastType == 'success' ? 'alert-success' : 'alert-warn')}">
-                            <span><c:out value="${sessionScope.toastMessage}"/></span>
-                        </div>
+                        <script>
+                            window.SESSION_DATA = window.SESSION_DATA || {};
+                            window.SESSION_DATA.message = '<c:out value="${sessionScope.toastMessage}"/>';
+                            window.SESSION_DATA.type = '<c:out value="${sessionScope.toastType != null ? sessionScope.toastType : 'info'}"/>';
+                        </script>
                         <c:remove var="toastMessage" scope="session"/>
                         <c:remove var="toastType" scope="session"/>
                     </c:if>
                     <c:if test="${not empty requestScope.toastMessage}">
-                        <div class="alert ${requestScope.toastType == 'danger' ? 'alert-error' : (requestScope.toastType == 'success' ? 'alert-success' : 'alert-warn')}">
-                            <span><c:out value="${requestScope.toastMessage}"/></span>
-                        </div>
+                        <script>
+                            window.SESSION_DATA = window.SESSION_DATA || {};
+                            window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+                            window.SESSION_DATA.type = '<c:out value="${requestScope.toastType != null ? requestScope.toastType : 'info'}"/>';
+                        </script>
                     </c:if>
                     <div class="page-head">
                         <div class="eyebrow">Đề xuất nhập kho · Xem trước</div>
                         <h1 class="title">Kiểm tra dữ liệu trước khi lưu</h1>
-                        <div class="lede">Hệ thống đã tách dòng hợp lệ, dòng cảnh báo máy mới, dòng cần chọn nhà cung cấp và dòng lỗi.</div>
+                        <div class="lede">Hệ thống đã tách dòng hợp lệ và dòng lỗi. Bạn có thể sửa số lượng/đơn giá trực tiếp trong bảng bên dưới.</div>
                     </div>
                     <div class="section">
                         <div class="section-head">
@@ -684,14 +688,8 @@
                         <c:if test="${not empty validRows}">
                             <span class="pill ok"><span class="pill-num"><c:out value="${fn:length(validRows)}"/></span> dòng hợp lệ</span>
                         </c:if>
-                        <c:if test="${not empty warningRows}">
-                            <span class="pill warn"><span class="pill-num"><c:out value="${fn:length(warningRows)}"/></span> máy phát mới - cần thêm</span>
-                        </c:if>
-                        <c:if test="${not empty unresolvedSupplierRows}">
-                            <span class="pill bad"><span class="pill-num"><c:out value="${fn:length(unresolvedSupplierRows)}"/></span> chưa chọn được NCC</span>
-                        </c:if>
                         <c:if test="${not empty invalidRows}">
-                            <span class="pill bad" id="invalidCountPill"><span class="pill-num"><c:out value="${fn:length(invalidRows)}"/></span> dòng lỗi - cần tải lại Excel</span>
+                            <span class="pill bad" id="invalidCountPill"><span class="pill-num"><c:out value="${fn:length(invalidRows)}"/></span> dòng lỗi</span>
                         </c:if>
                     </div>
                     <form id="confirmForm" method="POST" action="${pageContext.request.contextPath}/proposal?action=importConfirm">
@@ -706,129 +704,19 @@
                                 để tải lại file Excel.
                             </div>
                         </c:if>
-                        <c:if test="${not empty unresolvedSupplierRows}">
-                            <div class="alert alert-error" id="unresolvedAlert" style="margin-bottom:12px">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                <span>Có <strong>${fn:length(unresolvedSupplierRows)}</strong> dòng chưa chọn được nhà cung cấp. Bạn cần xử lý từng dòng trong bảng bên dưới trước khi lưu.</span>
-                            </div>
-                        </c:if>
                         <c:if test="${not empty validRows}">
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Dòng hợp lệ</h3><span class="sub">${fn:length(validRows)} dòng</span></div></div>
                                 <div class="table-scroll">
-                                    <table class="data-table">
-                                        <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th></tr></thead>
-                                        <tbody>
+                                    <table class="data-table valid-rows-table">
+                                        <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th class="col-qty text-right">Số lượng</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th></tr></thead>
+                                        <tbody class="valid-rows-tbody">
                                             <c:forEach var="row" items="${validRows}">
-                                                <tr data-id="<c:out value='${row.gid}'/>" data-supplier-id="<c:out value='${row.supplierId}'/>">
+                                                <tr data-id="<c:out value='${row.gid}'/>" data-stt="<c:out value='${row.stt}'/>">
                                                     <td class="mono"><c:out value="${row['stt']}"/></td>
                                                     <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
-                                                    <td><c:out value="${row['Thương hiệu']}"/></td>
-                                                    <td><c:out value="${row['Xuất xứ']}"/></td>
-                                                    <td><c:out value="${row['Tình trạng']}"/></td>
-                                                    <td><c:out value="${row['Nhiên liệu']}"/></td>
-                                                    <td><c:out value="${row['Số pha']}"/></td>
-                                                    <td><c:out value="${row['Loại máy phát']}"/></td>
-                                                    <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
-                                                    <td><c:out value="${row['Tần số']}"/></td>
-                                                    <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
-                                                    <td class="col-supplier">
-                                                        <span class="supplier-cell">
-                                                            <c:out value="${row.supplierNameResolved}"/>
-                                                        </span>
-                                                    </td>
-                                                    <td><input type="number" class="row-unitprice" min="0" step="1000" value="<c:out value='${row.gunitPrice}'/>" /></td>
                                                     <td><input type="number" class="row-qty" min="1" max="9999" value="<c:out value='${row.gqty}'/>" /></td>
-                                                    <td><input type="text" class="row-note" value="<c:out value='${row.gline}'/>" /></td>
-                                                </tr>
-                                            </c:forEach>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </c:if>
-                        <c:if test="${not empty warningRows}">
-                            <div class="section" style="padding:0">
-                                <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3 style="color:var(--warn);">Máy phát mới - cần thêm vào kho trước</h3><span class="sub">${fn:length(warningRows)} dòng · thêm máy phát để có thể lưu phiếu</span></div></div>
-                                <div class="alert alert-warn" style="margin:14px 18px 0;">
-                                    <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                    <span>Có <strong>${fn:length(warningRows)}</strong> mã máy phát chưa có trong kho. Bạn cần <strong>thêm từng máy phát</strong> trước khi lưu phiếu đề xuất. Nhấn <strong>"Thêm máy phát"</strong> ở mỗi dòng, hệ thống sẽ tự quay lại trang này sau khi thêm xong.</span>
-                                </div>
-                                <div class="table-scroll">
-                                    <table class="data-table">
-                                        <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th><th style="width:170px" class="text-right">Hành động</th></tr></thead>
-                                        <tbody>
-                                            <c:forEach var="row" items="${warningRows}">
-                                                <tr class="warning-card-row" data-stt="<c:out value='${row.stt}'/>" data-gmodel="<c:out value='${row.gmodel}'/>">
-                                                    <td class="mono"><c:out value="${row['stt']}"/></td>
-                                                    <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
-                                                    <td><c:out value="${row['Thương hiệu']}"/></td>
-                                                    <td><c:out value="${row['Xuất xứ']}"/></td>
-                                                    <td><c:out value="${row['Tình trạng']}"/></td>
-                                                    <td><c:out value="${row['Nhiên liệu']}"/></td>
-                                                    <td><c:out value="${row['Số pha']}"/></td>
-                                                    <td><c:out value="${row['Loại máy phát']}"/></td>
-                                                    <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
-                                                    <td><c:out value="${row['Tần số']}"/></td>
-                                                    <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
-                                                    <td class="col-supplier">
-                                                        <span class="supplier-cell">
-                                                            <c:out value="${row.supplierNameResolved}"/>
-                                                        </span>
-                                                    </td>
-                                                    <td class="mono text-right"><c:out value="${row['gunitPrice']}"/></td>
-                                                    <td class="mono text-right"><c:out value="${row['gqty']}"/></td>
-                                                    <td><c:out value="${row['gline']}"/></td>
-                                                    <td style="text-align:right; white-space:nowrap">
-                                                        <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateGenerator&amp;model=${java.net.URLEncoder.encode(row.gmodel, 'UTF-8')}&amp;stt=${row.stt}">Tạo mới</a>
-                                                        <button type="button" class="btn btn-primary" data-row-stt="<c:out value='${row.stt}'/>" data-row-gmodel="<c:out value='${row.gmodel}'/>" onclick="openGeneratorPanel(this.dataset.rowStt, this.dataset.rowGmodel, this.closest('tr'))">Chọn từ DS</button>
-                                                    </td>
-                                                </tr>
-                                            </c:forEach>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </c:if>
-                        <c:if test="${not empty unresolvedSupplierRows}">
-                            <div class="section" style="padding:0">
-                                <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Cần chọn nhà cung cấp</h3><span class="sub">${fn:length(unresolvedSupplierRows)} dòng</span></div></div>
-                                <div class="table-scroll">
-                                    <table class="data-table">
-                                        <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th style="min-width:140px">Tên NCC đã gõ</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th><th style="min-width:140px">Lý do</th><th style="width:200px" class="text-right">Hành động</th></tr></thead>
-                                        <tbody>
-                                            <c:forEach var="row" items="${unresolvedSupplierRows}" varStatus="st">
-                                                <tr class="unresolved-card-row" data-row-index="<c:out value='${st.index}'/>" data-gid="<c:out value='${row.gid}'/>" data-gmodel="<c:out value='${row.gmodel}'/>" data-gname="<c:out value='${row.gname}'/>">
-                                                    <td class="mono"><c:out value="${row['stt']}"/></td>
-                                                    <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
-                                                    <td><c:out value="${row['Thương hiệu']}"/></td>
-                                                    <td><c:out value="${row['Xuất xứ']}"/></td>
-                                                    <td><c:out value="${row['Tình trạng']}"/></td>
-                                                    <td><c:out value="${row['Nhiên liệu']}"/></td>
-                                                    <td><c:out value="${row['Số pha']}"/></td>
-                                                    <td><c:out value="${row['Loại máy phát']}"/></td>
-                                                    <td class="mono"><c:out value="${row['Công suất (kVA)']}"/></td>
-                                                    <td><c:out value="${row['Tần số']}"/></td>
-                                                    <td class="mono"><c:out value="${row['Trọng lượng (kg)']}"/></td>
-                                                    <td style="max-width:160px"><c:out value="${row['supplierQuery']}"/></td>
-                                                    <td class="mono text-right"><c:out value="${row['gunitPrice']}"/></td>
-                                                    <td class="mono text-right"><c:out value="${row['gqty']}"/></td>
-                                                    <td><c:out value="${row['gline']}"/></td>
-                                                    <td>
-                                                        <c:choose>
-                                                            <c:when test="${row['supplierMultiple'] == 'true'}">
-                                                                Có <strong>${row['supplierMultipleCount']}</strong> NCC trùng tên.
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                Không tìm thấy NCC.
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </td>
-                                                    <td style="text-align:right; white-space:nowrap">
-                                                        <c:set var="_returnUrl" value="${pageContext.request.contextPath}/proposal?action=importConfirm" />
-                                                        <a class="btn" href="${pageContext.request.contextPath}/proposal?action=redirectCreateSupplier&amp;supplierQuery=${java.net.URLEncoder.encode(row.supplierQuery, 'UTF-8')}&amp;returnUrl=${java.net.URLEncoder.encode(_returnUrl, 'UTF-8')}&amp;gid=${row.gid}" target="_self">Tạo NCC mới</a>
-                                                        <button type="button" class="btn btn-primary" data-gid="<c:out value='${row.gid}'/>" data-query="<c:out value='${row.supplierQuery}'/>" onclick="openSupplierPanel(this.dataset.gid, this.dataset.query, this.closest('tr'))">Chọn từ DS</button>
-                                                    </td>
+                                                    <td><input type="number" class="row-unitprice" min="1" step="1000" value="<c:out value='${row.gunitPrice}'/>" /></td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
@@ -840,28 +728,25 @@
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px">
                                     <div class="section-head-left">
-                                        <h3 style="color:var(--danger);">Dòng lỗi — bắt buộc tải lại file Excel</h3>
-                                        <span class="sub">${fn:length(invalidRows)} dòng · sửa file Excel gốc rồi upload lại để tiếp tục</span>
+                                        <h3 style="color:var(--danger);">Dòng lỗi — cần sửa trước khi lưu</h3>
+                                        <span class="sub">${fn:length(invalidRows)} dòng · bạn có thể sửa số lượng/đơn giá trực tiếp bên dưới hoặc thêm máy phát rồi upload lại</span>
                                     </div>
                                 </div>
                                 <div class="alert alert-error" style="margin:14px 18px 0;">
                                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                    <span>Hệ thống phát hiện <strong>${fn:length(invalidRows)}</strong> dòng có lỗi validate
-                                        (sai thông số kỹ thuật, số lượng, đơn giá hoặc nhà cung cấp).
-                                        Bạn cần <strong>sửa file Excel gốc</strong> và tải lại — hệ thống
-                                        <strong>không cho phép lưu</strong> khi còn dòng lỗi.</span>
+                                    <span>Hệ thống phát hiện <strong>${fn:length(invalidRows)}</strong> dòng có lỗi validate.
+                                        Bạn có thể <strong>sửa số lượng/đơn giá trực tiếp</strong> trong bảng bên dưới — hệ thống sẽ tự chuyển dòng sang mục "Hợp lệ" khi đạt yêu cầu.</span>
                                 </div>
                                 <div class="table-scroll">
                                     <table class="data-table invalid-row-table">
-                                        <thead><tr><th class="col-min">#</th><th>Mã máy phát</th><th class="col-qty text-right">Số lượng</th><th class="col-price text-right">Đơn giá (VNĐ)</th><th>Tên nhà cung cấp</th><th>Lỗi</th></tr></thead>
+                                        <thead><tr><th class="col-min">#</th><th>Mã máy phát</th><th class="col-qty text-right">Số lượng</th><th class="col-price text-right">Đơn giá (VNĐ)</th><th>Lỗi</th></tr></thead>
                                         <tbody>
                                             <c:forEach var="row" items="${invalidRows}">
-                                                <tr class="invalid-row">
+                                                <tr class="invalid-row" data-row-stt="<c:out value='${row.stt}'/>" data-row-gmodel="<c:out value='${row.gmodel}'/>">
                                                     <td class="mono"><c:out value="${row['stt']}"/></td>
                                                     <td class="model-cell"><c:out value="${row['Mã máy phát']}"/></td>
-                                                    <td class="mono text-right"><c:out value="${row['Số lượng']}"/></td>
-                                                    <td class="mono text-right"><c:out value="${row['Đơn giá đề xuất (VNĐ)']}"/></td>
-                                                    <td><c:out value="${row['Tên nhà cung cấp']}"/></td>
+                                                    <td><input type="number" class="row-qty row-edit-invalid" min="1" max="9999" value="<c:out value='${row["Số lượng"]}'/>" /></td>
+                                                    <td><input type="number" class="row-unitprice row-edit-invalid" min="1" step="1000" value="<c:out value='${row["Đơn giá đề xuất (VNĐ)"]}'/>" /></td>
                                                     <td><div class="error-msg"><c:out value="${row['gerrors']}"/></div></td>
                                                 </tr>
                                             </c:forEach>
@@ -870,7 +755,7 @@
                                 </div>
                             </div>
                         </c:if>
-                        <c:if test="${empty validRows and empty warningRows and empty unresolvedSupplierRows}">
+                        <c:if test="${empty validRows and empty invalidRows}">
                             <div class="section"><div class="section-body text-center" style="color:var(--muted)">Không có dòng nào để lưu. Vui lòng quay lại trang tạo đề xuất và tải lại file Excel.</div></div>
                         </c:if>
                         <div class="actions">
@@ -879,7 +764,7 @@
                                 Tải lại file Excel khác
                             </a>
                             <a class="btn" href="${pageContext.request.contextPath}/proposal?action=list">Hủy</a>
-                           
+
                             <button type="button" class="btn btn-primary" id="btnPending" disabled>Gửi duyệt</button>
                         </div>
                     </form>
@@ -888,80 +773,33 @@
         </div>
 
 
-        <div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSupplierPanel()"></div>
-        <div class="side-panel" id="sidePanel">
-            <div class="side-panel-head">
-                <h3 class="side-panel-title">Chọn nhà cung cấp</h3>
-                <button class="side-panel-close" onclick="closeSupplierPanel()" aria-label="Đóng">×</button>
-            </div>
-            <div class="side-panel-body">
-                <div style="display:flex; gap:8px; margin-bottom:16px;">
-                    <input type="text" id="supplierSearchInput" class="supplier-search-box" placeholder="Tìm theo tên nhà cung cấp..." autocomplete="off" style="margin-bottom:0;"/>
-                </div>
-                <div id="supplierLoading" class="loading-msg" style="display:none;">
-                    <svg class="spin-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    <div>Đang tải dữ liệu...</div>
-                </div>
-                <div class="supplier-list-wrap" id="supplierList"></div>
-            </div>
-        </div>
-
-        <div class="side-panel-overlay" id="generatorSidePanelOverlay" onclick="closeGeneratorPanel()"></div>
-        <div class="side-panel" id="generatorSidePanel">
-            <div class="side-panel-head">
-                <h3 class="side-panel-title">Chọn máy phát điện</h3>
-                <button class="side-panel-close" onclick="closeGeneratorPanel()" aria-label="Đóng">×</button>
-            </div>
-            <div class="side-panel-body">
-                <div style="display:flex; gap:8px; margin-bottom:16px;">
-                    <input type="text" id="generatorSearchInput" class="supplier-search-box" placeholder="Tìm theo mã máy phát (model)..." autocomplete="off" style="margin-bottom:0;"/>
-                </div>
-                <div id="generatorLoading" class="loading-msg" style="display:none;">
-                    <svg class="spin-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    <div>Đang tải dữ liệu...</div>
-                </div>
-                <div class="supplier-list-wrap" id="generatorList"></div>
-            </div>
-        </div>
-
         <script>
             (function () {
                 var form = document.getElementById('confirmForm');
                 var submitTypeInput = document.getElementById('submitType');
-                var btnDraft = document.getElementById('btnDraft');
                 var btnPending = document.getElementById('btnPending');
-                var rows = document.querySelectorAll('tr[data-id]');
-                var unresolvedCount = document.querySelectorAll('tr.unresolved-card-row').length;
-                var warningCount = document.querySelectorAll('tr.warning-card-row').length;
-                var invalidCount = document.querySelectorAll('tr.invalid-row').length;
 
                 function refreshSubmitState() {
-                    var disabled = rows.length === 0 || unresolvedCount > 0 || warningCount > 0 || invalidCount > 0;
-                    if (btnDraft)
-                        btnDraft.disabled = disabled;
-                    if (btnPending)
-                        btnPending.disabled = disabled;
+                    var validCount = document.querySelectorAll('tr[data-id]').length;
+                    var invalidCount = document.querySelectorAll('tr.invalid-row').length;
+                    var disabled = validCount === 0 || invalidCount > 0;
+                    if (btnPending) btnPending.disabled = disabled;
                 }
                 refreshSubmitState();
 
                 function buildPayload() {
-                    form.querySelectorAll('input[name="generatorId"], input[name="quantity"], input[name="detailNote"], input[name="supplierId"], input[name="unitPrice"]').forEach(function (e) {
+                    form.querySelectorAll('input[name="generatorId"], input[name="quantity"], input[name="unitPrice"]').forEach(function (e) {
                         e.remove();
                     });
                     var count = 0;
-                    rows.forEach(function (tr) {
+                    document.querySelectorAll('tr[data-id]').forEach(function (tr) {
                         var id = tr.getAttribute('data-id');
-                        if (!id)
-                            return;
-                        var supplierId = tr.getAttribute('data-supplier-id');
+                        if (!id) return;
                         var qty = tr.querySelector('.row-qty');
-                        var note = tr.querySelector('.row-note');
                         var unitPriceInput = tr.querySelector('.row-unitprice');
                         var q = qty ? parseInt(qty.value) : 1;
-                        if (isNaN(q) || q < 1)
-                            q = 1;
-                        if (q > 9999)
-                            q = 9999;
+                        if (isNaN(q) || q < 1) q = 1;
+                        if (q > 9999) q = 9999;
                         var up = unitPriceInput ? unitPriceInput.value.replace(/[,.]/g, '') : '';
                         var idInput = document.createElement('input');
                         idInput.type = 'hidden';
@@ -973,13 +811,6 @@
                         qtyInput.name = 'quantity';
                         qtyInput.value = String(q);
                         form.appendChild(qtyInput);
-                        if (supplierId) {
-                            var supInput = document.createElement('input');
-                            supInput.type = 'hidden';
-                            supInput.name = 'supplierId';
-                            supInput.value = supplierId;
-                            form.appendChild(supInput);
-                        }
                         if (up) {
                             var upInput = document.createElement('input');
                             upInput.type = 'hidden';
@@ -987,29 +818,14 @@
                             upInput.value = up;
                             form.appendChild(upInput);
                         }
-                        if (note) {
-                            var noteInput = document.createElement('input');
-                            noteInput.type = 'hidden';
-                            noteInput.name = 'detailNote';
-                            noteInput.value = note.value || '';
-                            form.appendChild(noteInput);
-                        }
                         count++;
                     });
                     return count;
                 }
 
                 function submitForm(value) {
-                    if (invalidCount > 0) {
-                        alert('Vẫn còn ' + invalidCount + ' dòng lỗi. Vui lòng sửa file Excel gốc và tải lại.');
-                        return;
-                    }
-                    if (warningCount > 0) {
-                        alert('Vẫn còn ' + warningCount + ' mã máy phát chưa có trong kho. Vui lòng bấm "Thêm máy phát" cho từng dòng trước khi lưu.');
-                        return;
-                    }
-                    if (unresolvedCount > 0) {
-                        alert('Vẫn còn ' + unresolvedCount + ' dòng chưa chọn nhà cung cấp. Vui lòng xử lý trước khi lưu.');
+                    if (document.querySelectorAll('tr.invalid-row').length > 0) {
+                        alert('Vẫn còn dòng lỗi. Vui lòng sửa số lượng/đơn giá hoặc thêm máy phát rồi upload lại Excel.');
                         return;
                     }
                     var count = buildPayload();
@@ -1021,157 +837,55 @@
                     form.submit();
                 }
 
-                if (btnDraft)
-                    btnDraft.addEventListener('click', function () {
-                        submitForm('draft');
-                    });
                 if (btnPending)
-                    btnPending.addEventListener('click', function () {
-                        submitForm('pending');
-                    });
+                    btnPending.addEventListener('click', function () { submitForm('pending'); });
 
-
-                var newSupplierId = new URLSearchParams(window.location.search).get('newSupplierId');
-                var newSupplierName = new URLSearchParams(window.location.search).get('newSupplierName');
-                if (newSupplierId && newSupplierName) {
-                    var gidStr = new URLSearchParams(window.location.search).get('assignedGid');
-                    if (gidStr == null) {
-                        gidStr = new URLSearchParams(window.location.search).get('gid');
-                    }
-                    if (gidStr != null && gidStr !== '') {
-                        fetch('${pageContext.request.contextPath}/proposal?action=assignSupplier', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                            body: 'gid=' + encodeURIComponent(gidStr) + '&supplierId=' + encodeURIComponent(newSupplierId)
-                        }).then(function (r) {
-                            return r.json();
-                        }).then(function (data) {
-                            if (data && data.ok) {
-                                window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                            }
-                        }).catch(function () {
-                            window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                        });
-                    }
+                // AJAX: khi user edit qty/price trong dòng invalid → revalidate
+                function revalidateInvalidRow(tr) {
+                    var stt = tr.getAttribute('data-row-stt');
+                    var model = tr.getAttribute('data-row-gmodel') || (tr.querySelector('.model-cell') ? tr.querySelector('.model-cell').textContent.trim() : '');
+                    var qtyInput = tr.querySelector('.row-qty');
+                    var upInput = tr.querySelector('.row-unitprice');
+                    if (!stt || !model) return;
+                    var fd = new URLSearchParams();
+                    fd.append('action', 'revalidateImport');
+                    fd.append('stt', stt);
+                    fd.append('model', model);
+                    fd.append('qty', qtyInput.value);
+                    fd.append('unitPrice', upInput.value);
+                    fd.append('supplier', '');
+                    fetch('${pageContext.request.contextPath}/proposal', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: fd.toString()
+                    }).then(function (r) { return r.json(); })
+                      .then(function (data) {
+                        if (data.failed && data.failed[stt]) {
+                            var errCell = tr.querySelector('.error-msg');
+                            if (errCell) errCell.textContent = data.failed[stt];
+                            tr.classList.remove('is-fixed');
+                        } else if (data.fixed && data.fixed.indexOf(parseInt(stt)) >= 0) {
+                            moveInvalidRowToValid(tr);
+                        }
+                    }).catch(function () {});
                 }
+
+                function moveInvalidRowToValid(tr) {
+                    var stt = tr.getAttribute('data-row-stt');
+                    var model = tr.getAttribute('data-row-gmodel') || '';
+                    var qty = tr.querySelector('.row-qty').value;
+                    var up = tr.querySelector('.row-unitprice').value;
+                    // Lấy gid từ row map trong JSP (đã được lưu vào data attribute? nếu chưa thì phải fetch lại)
+                    // Đơn giản: gọi lại importConfirm để re-render toàn bộ
+                    window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
+                }
+
+                document.querySelectorAll('.row-edit-invalid').forEach(function (el) {
+                    el.addEventListener('change', function () { revalidateInvalidRow(el.closest('tr')); });
+                    el.addEventListener('blur', function () { revalidateInvalidRow(el.closest('tr')); });
+                });
             })();
 
-
-            var currentRowIndex = null;
-            var currentUnresolvedRow = null;
-
-            function openSupplierPanel(rowIndex, query, tr) {
-                closeGeneratorPanel();
-                currentRowIndex = rowIndex;
-                currentUnresolvedRow = tr || null;
-                var searchInput = document.getElementById('supplierSearchInput');
-                document.getElementById('sidePanelOverlay').classList.add('show');
-                document.getElementById('sidePanel').classList.add('show');
-                document.getElementById('supplierList').innerHTML = '';
-                document.getElementById('supplierLoading').style.display = 'block';
-                setTimeout(function () {
-                    searchInput.focus();
-                }, 280);
-                loadSuppliers(function () {
-                    searchInput.value = query || '';
-                    searchInput.dispatchEvent(new Event('input'));
-                });
-            }
-
-            function closeSupplierPanel() {
-                document.getElementById('sidePanelOverlay').classList.remove('show');
-                document.getElementById('sidePanel').classList.remove('show');
-                currentRowIndex = null;
-                currentUnresolvedRow = null;
-            }
-
-            function loadSuppliers(callback) {
-                document.getElementById('supplierLoading').style.display = 'block';
-                var qInput = document.getElementById('supplierSearchInput');
-                fetch('${pageContext.request.contextPath}/proposal?action=searchSupplier&q='
-                        + encodeURIComponent(qInput ? qInput.value : ''))
-                        .then(function (r) {
-                            return r.json();
-                        })
-                        .then(function (data) {
-                            document.getElementById('supplierLoading').style.display = 'none';
-                            var listWrap = document.getElementById('supplierList');
-                            listWrap.innerHTML = '';
-                            if (!data || data.length === 0) {
-                                listWrap.innerHTML = '<div class="empty-msg">Không tìm thấy nhà cung cấp nào.</div>';
-                                if (callback)
-                                    callback();
-                                return;
-                            }
-                            data.forEach(function (s) {
-                                var card = document.createElement('div');
-                                card.className = 'supplier-card';
-                                card.setAttribute('data-name', (s.name || '').toLowerCase());
-                                var metaHtml = '';
-                                if (s.phone) {
-                                    metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
-                                            + escapeHtml(s.phone) + '</span>';
-                                }
-                                if (s.email) {
-                                    metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
-                                            + escapeHtml(s.email) + '</span>';
-                                }
-                                if (s.company) {
-                                    metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>'
-                                            + escapeHtml(s.company) + '</span>';
-                                }
-                                card.innerHTML = ''
-                                        + '<div class="supplier-card-left">'
-                                        + '<div class="supplier-card-name">' + escapeHtml(s.name) + '</div>'
-                                        + '<div class="supplier-card-meta">' + metaHtml + '</div>'
-                                        + '</div>'
-                                        + '<div class="supplier-card-icon">'
-                                        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
-                                        + '</div>';
-                                card.onclick = function () {
-                                    pickSupplier(s);
-                                };
-                                listWrap.appendChild(card);
-                            });
-                            if (callback)
-                                callback();
-                        })
-                        .catch(function (err) {
-                            document.getElementById('supplierLoading').style.display = 'none';
-                            document.getElementById('supplierList').innerHTML = '<div class="empty-msg" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
-                            if (callback)
-                                callback();
-                        });
-            }
-
-            function pickSupplier(supplier) {
-                if (currentRowIndex == null)
-                    return;
-                var body = 'gid=' + encodeURIComponent(currentRowIndex) + '&supplierId=' + encodeURIComponent(supplier.id);
-                if (!currentRowIndex && currentUnresolvedRow) {
-                    var ri = currentUnresolvedRow.getAttribute('data-row-index');
-                    if (ri)
-                        body += '&rowIndex=' + encodeURIComponent(ri);
-                }
-                fetch('${pageContext.request.contextPath}/proposal?action=assignSupplier', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: body
-                })
-                        .then(function (r) {
-                            return r.json();
-                        })
-                        .then(function (data) {
-                            if (data && data.ok) {
-                                window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                            } else {
-                                alert('Không thể gán nhà cung cấp: ' + (data && data.error ? data.error : 'unknown'));
-                            }
-                        })
-                        .catch(function () {
-                            alert('Lỗi kết nối khi gán nhà cung cấp');
-                        });
-            }
 
             function escapeHtml(s) {
                 if (!s)
@@ -1183,183 +897,16 @@
                         .replace(/"/g, '&quot;')
                         .replace(/'/g, '&#39;');
             }
-
-            var searchDebounce = null;
-            document.getElementById('supplierSearchInput').addEventListener('input', function () {
-                var q = this.value.toLowerCase().trim();
-                var cards = document.querySelectorAll('.supplier-card');
-                var words = q ? q.split(/\s+/) : [];
-                cards.forEach(function (c) {
-                    if (!q) {
-                        c.style.display = '';
-                        return;
-                    }
-                    var haystack = (c.getAttribute('data-name') || '');
-                    var all = true;
-                    for (var i = 0; i < words.length; i++) {
-                        if (haystack.indexOf(words[i]) < 0) {
-                            all = false;
-                            break;
-                        }
-                    }
-                    c.style.display = all ? '' : 'none';
-                });
-                if (searchDebounce)
-                    clearTimeout(searchDebounce);
-                var self = this;
-                searchDebounce = setTimeout(function () {
-                    loadSuppliers();
-                }, 300);
-            });
-
-            // ESC để đóng panel
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    closeSupplierPanel();
-                    closeGeneratorPanel();
+        </script>
+        <div class="toast-host" id="toastHost"></div>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+                    showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
                 }
             });
-
-            // === Side panel: Chọn máy phát điện (cho warning rows) ===
-            var currentGeneratorRowStt = null;
-
-            function openGeneratorPanel(rowStt, gmodel, tr) {
-                closeSupplierPanel();
-                currentGeneratorRowStt = rowStt;
-                var searchInput = document.getElementById('generatorSearchInput');
-                document.getElementById('generatorSidePanelOverlay').classList.add('show');
-                document.getElementById('generatorSidePanel').classList.add('show');
-                document.getElementById('generatorList').innerHTML = '';
-                document.getElementById('generatorLoading').style.display = 'block';
-                setTimeout(function () {
-                    searchInput.focus();
-                }, 280);
-                loadGenerators(function () {
-                    searchInput.value = gmodel || '';
-                    searchInput.dispatchEvent(new Event('input'));
-                });
-            }
-
-            function closeGeneratorPanel() {
-                document.getElementById('generatorSidePanelOverlay').classList.remove('show');
-                document.getElementById('generatorSidePanel').classList.remove('show');
-                currentGeneratorRowStt = null;
-            }
-
-            function loadGenerators(callback) {
-                document.getElementById('generatorLoading').style.display = 'block';
-                var qInput = document.getElementById('generatorSearchInput');
-                fetch('${pageContext.request.contextPath}/proposal?action=searchGenerator&q='
-                        + encodeURIComponent(qInput ? qInput.value : ''))
-                        .then(function (r) {
-                            return r.json();
-                        })
-                        .then(function (data) {
-                            document.getElementById('generatorLoading').style.display = 'none';
-                            var listWrap = document.getElementById('generatorList');
-                            listWrap.innerHTML = '';
-                            if (!data || data.length === 0) {
-                                listWrap.innerHTML = '<div class="empty-msg">Không tìm thấy máy phát điện nào.</div>';
-                                if (callback)
-                                    callback();
-                                return;
-                            }
-                            data.forEach(function (g) {
-                                var card = document.createElement('div');
-                                card.className = 'supplier-card';
-                                card.setAttribute('data-model', (g.model || '').toLowerCase());
-                                var metaHtml = '';
-                                if (g.brand) {
-                                    metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>'
-                                            + escapeHtml(g.brand) + '</span>';
-                                }
-                                if (g.powerRating) {
-                                    metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'
-                                            + escapeHtml(g.powerRating) + ' kVA</span>';
-                                }
-                                if (g.status) {
-                                    metaHtml += '<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>'
-                                            + escapeHtml(g.status === 'active' ? 'Hoạt động' : g.status) + '</span>';
-                                }
-                                card.innerHTML = ''
-                                        + '<div class="supplier-card-left">'
-                                        + '<div class="supplier-card-name">' + escapeHtml(g.model) + '</div>'
-                                        + '<div class="supplier-card-meta">' + metaHtml + '</div>'
-                                        + '</div>'
-                                        + '<div class="supplier-card-icon">'
-                                        + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>'
-                                        + '</div>';
-                                card.onclick = function () {
-                                    pickGenerator(g);
-                                };
-                                listWrap.appendChild(card);
-                            });
-                            if (callback)
-                                callback();
-                        })
-                        .catch(function () {
-                            document.getElementById('generatorLoading').style.display = 'none';
-                            document.getElementById('generatorList').innerHTML = '<div class="empty-msg" style="color:var(--danger)">Lỗi kết nối khi tải dữ liệu</div>';
-                            if (callback)
-                                callback();
-                        });
-            }
-
-            function pickGenerator(generator) {
-                if (currentGeneratorRowStt == null)
-                    return;
-                var body = 'stt=' + encodeURIComponent(currentGeneratorRowStt)
-                        + '&generatorId=' + encodeURIComponent(generator.id);
-                fetch('${pageContext.request.contextPath}/proposal?action=assignGenerator', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                    body: body
-                })
-                        .then(function (r) {
-                            return r.json();
-                        })
-                        .then(function (data) {
-                            if (data && data.ok) {
-                                window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
-                            } else {
-                                alert('Không thể gán máy phát: ' + (data && data.error ? data.error : 'unknown'));
-                            }
-                        })
-                        .catch(function () {
-                            alert('Lỗi kết nối khi gán máy phát điện');
-                        });
-            }
-
-            var generatorSearchDebounce = null;
-            var generatorSearchInput = document.getElementById('generatorSearchInput');
-            if (generatorSearchInput) {
-                generatorSearchInput.addEventListener('input', function () {
-                    var q = this.value.toLowerCase().trim();
-                    var cards = document.querySelectorAll('#generatorList .supplier-card');
-                    var words = q ? q.split(/\s+/) : [];
-                    cards.forEach(function (c) {
-                        if (!q) {
-                            c.style.display = '';
-                            return;
-                        }
-                        var haystack = (c.getAttribute('data-model') || '');
-                        var all = true;
-                        for (var i = 0; i < words.length; i++) {
-                            if (haystack.indexOf(words[i]) < 0) {
-                                all = false;
-                                break;
-                            }
-                        }
-                        c.style.display = all ? '' : 'none';
-                    });
-                    if (generatorSearchDebounce)
-                        clearTimeout(generatorSearchDebounce);
-                    var self = this;
-                    generatorSearchDebounce = setTimeout(function () {
-                        loadGenerators();
-                    }, 300);
-                });
-            }
         </script>
     </body>
 </html>
