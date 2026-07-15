@@ -169,12 +169,6 @@ public class ProposalController extends HttpServlet {
                 case "importConfirm":
                     importProposalConfirm(request, response);
                     break;
-                case "assignSupplier":
-                    assignSupplierAjax(request, response);
-                    return;
-                case "assignGenerator":
-                    assignGeneratorAjax(request, response);
-                    return;
                 case "revalidateImport":
                     revalidateImport(request, response);
                     return;
@@ -703,13 +697,11 @@ public class ProposalController extends HttpServlet {
         }
 
         GeneratorDAO genDAO = new GeneratorDAO();
-        SupplierDAO supDAO = new SupplierDAO();
         List<ImportProposalDetail> details = new ArrayList<>();
         int errors = 0;
         for (Map<String, String> row : rows) {
             String model = row.get(ProposalExcelSupport.HEADER_MODEL);
             String qtyStr = row.get(ProposalExcelSupport.HEADER_QUANTITY);
-            String lineNote = row.get(ProposalExcelSupport.HEADER_NOTE);
             if (model == null || model.trim().isEmpty()) continue;
             Generator g = genDAO.findByModel(model.trim());
             if (g == null) { errors++; continue; }
@@ -721,14 +713,6 @@ public class ProposalController extends HttpServlet {
             d.setQuantity(qty);
             d.setCurrentStock(
                     new InventoryDAO().countInStockByGeneratorAndWarehouse(g.getId(), existing.getWarehouseId()));
-            d.setNote(lineNote != null ? lineNote : "");
-            String supplierName = row.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
-            if (supplierName != null && !supplierName.trim().isEmpty()) {
-                java.util.List<Supplier> matched = supDAO.findByNameExact(supplierName.trim());
-                if (matched.size() == 1) {
-                    d.setSupplierId(matched.get(0).getId());
-                }
-            }
             String priceStr = row.get(ProposalExcelSupport.HEADER_UNIT_PRICE);
             if (priceStr != null && !priceStr.trim().isEmpty()) {
                 String cleaned = priceStr.trim().replaceAll("[^0-9.]", "");
@@ -1096,6 +1080,7 @@ public class ProposalController extends HttpServlet {
 
         String warehouseIdRaw = request.getParameter("warehouseId");
         String note = request.getParameter("note");
+        Integer headerSupplierId = parseHeaderSupplierId(request);
         int warehouseId = parseInt(warehouseIdRaw);
 
         Part filePart = null;
@@ -1121,31 +1106,22 @@ public class ProposalController extends HttpServlet {
         }
 
         GeneratorDAO genDAO = new GeneratorDAO();
-        SupplierDAO supDAO = new SupplierDAO();
         List<Map<String, String>> validRows = new ArrayList<>();
-        List<Map<String, String>> warningRows = new ArrayList<>();
         List<Map<String, String>> invalidRows = new ArrayList<>();
-        List<Map<String, String>> unresolvedSupplierRows = new ArrayList<>();
         List<Map<String, String>> sessionDetailRows = new ArrayList<>();
         List<Map<String, String>> allRows = new ArrayList<>();
         int stt = 1;
         for (Map<String, String> row : rows) {
             String model = row.get(ProposalExcelSupport.HEADER_MODEL);
             String qtyStr = row.get(ProposalExcelSupport.HEADER_QUANTITY);
-            String lineNote = row.get(ProposalExcelSupport.HEADER_NOTE);
-            String supplierNameRaw = row.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
             String unitPriceStr = row.get(ProposalExcelSupport.HEADER_UNIT_PRICE);
 
             Map<String, String> enriched = new LinkedHashMap<>(row);
             enriched.put("stt", String.valueOf(stt));
-            enriched.put("gline", lineNote != null ? lineNote : "");
+            enriched.put("gline", "");
 
             List<String> errors = new ArrayList<>();
-            List<String> warnings = new ArrayList<>();
             boolean generatorResolved = false;
-            boolean supplierResolved = false;
-            Integer resolvedSupplierId = null;
-            String resolvedSupplierName = null;
             BigDecimal unitPrice = null;
 
             if (model == null || model.trim().isEmpty()) {
@@ -1157,16 +1133,9 @@ public class ProposalController extends HttpServlet {
                     generatorResolved = true;
                     enriched.put("gid", String.valueOf(g.getId()));
                     enriched.put("gname", g.getModel());
-                    List<String> specDiffs = compareGeneratorSpecs(g, row);
-                    if (!specDiffs.isEmpty()) {
-                        errors.add("Thông số kỹ thuật trong Excel khác với máy '"
-                                + g.getModel() + "' đã có trong kho: "
-                                + String.join("; ", specDiffs)
-                                + ". Vui lòng sửa file Excel và tải lại.");
-                    }
                 } else {
                     enriched.put("gname", model.trim());
-                    warnings.add("Máy phát mới chưa có trong hệ thống: " + model.trim() + ".");
+                    errors.add("Máy phát '" + model.trim() + "' chưa có trong hệ thống. Vui lòng thêm máy phát trước khi import.");
                 }
             }
 
@@ -1203,40 +1172,9 @@ public class ProposalController extends HttpServlet {
             }
             enriched.put("gunitPrice", unitPrice != null ? unitPrice.toPlainString() : "");
 
-            String supplierQuery = supplierNameRaw == null ? "" : supplierNameRaw.trim();
-            if (supplierQuery.isEmpty()) {
-                errors.add("Tên nhà cung cấp không được trống");
-            } else {
-                enriched.put("supplierQuery", supplierQuery);
-                List<Supplier> found = supDAO.findByNameExact(supplierQuery);
-                if (found.size() == 1) {
-                    resolvedSupplierId = found.get(0).getId();
-                    resolvedSupplierName = found.get(0).getName();
-                    supplierResolved = true;
-                    enriched.put("supplierId", String.valueOf(resolvedSupplierId));
-                    enriched.put("supplierNameResolved", resolvedSupplierName);
-                } else if (found.size() >= 2) {
-                    enriched.put("supplierMultiple", "true");
-                    enriched.put("supplierMultipleCount", String.valueOf(found.size()));
-                    for (Supplier s : found) {
-                        enriched.put("supplier_candidate_" + s.getId(), s.getName());
-                    }
-                } else {
-                    enriched.put("supplierMultiple", "false");
-                }
-            }
-
             if (!errors.isEmpty()) {
                 enriched.put("gerrors", String.join("; ", errors));
                 invalidRows.add(enriched);
-            } else if (!supplierResolved) {
-                if (!warnings.isEmpty()) {
-                    enriched.put("gwarnings", String.join("; ", warnings));
-                }
-                unresolvedSupplierRows.add(enriched);
-            } else if (!warnings.isEmpty()) {
-                enriched.put("gwarnings", String.join("; ", warnings));
-                warningRows.add(enriched);
             } else {
                 validRows.add(enriched);
             }
@@ -1247,15 +1185,13 @@ public class ProposalController extends HttpServlet {
                 if (generatorResolved) {
                     d.setGeneratorId(Integer.parseInt(enriched.get("gid")));
                 }
-                if (supplierResolved && resolvedSupplierId != null) {
-                    d.setSupplierId(resolvedSupplierId);
-                }
+                d.setSupplierId(headerSupplierId);
                 d.setQuantity(qty);
                 d.setCurrentStock(warehouseId > 0 && generatorResolved
                         ? new InventoryDAO().countInStockByGeneratorAndWarehouse(Integer.parseInt(enriched.get("gid")), warehouseId)
                         : 0);
                 d.setUnitPrice(unitPrice);
-                d.setNote(lineNote);
+                d.setNote(null);
                 sessionDetailRows.add(enriched);
                 enriched.put("__sessionIndex", String.valueOf(sessionDetailRows.size() - 1));
             } else {
@@ -1264,27 +1200,63 @@ public class ProposalController extends HttpServlet {
             stt++;
         }
 
-        HttpSession sessionRef = request.getSession();
-        List<Map<String, String>> pendingRows = new ArrayList<>();
-        for (Map<String, String> enriched : sessionDetailRows) {
-            Map<String, String> r = new LinkedHashMap<>(enriched);
-            r.remove("__sessionIndex");
-            pendingRows.add(r);
-        }
-        sessionRef.setAttribute("pendingImportRows", pendingRows);
-        sessionRef.setAttribute("pendingImportAllRows", allRows);
-        sessionRef.setAttribute("pendingImportWarehouseId", warehouseId);
-        sessionRef.setAttribute("pendingImportNote", note);
+        if (isAjaxRequest(request)) {
+            response.setContentType("application/json;charset=UTF-8");
+            try {
+                StringBuilder json = new StringBuilder("{");
+                json.append("\"success\":true,");
+                int validCount = validRows.size();
+                int invalidCount = invalidRows.size();
+                json.append("\"validCount\":").append(validCount).append(",");
+                json.append("\"invalidCount\":").append(invalidCount).append(",");
+                json.append("\"message\":\"Đã đọc ").append(allRows.size()).append(" dòng từ Excel")
+                    .append(invalidCount > 0 ? " (" + invalidCount + " dòng lỗi)" : "")
+                    .append("\",");
+                json.append("\"rows\":[");
+                boolean first = true;
+                for (Map<String, String> row : allRows) {
+                    if (!first) json.append(",");
+                    first = false;
+                    String errors = row.get("gerrors");
+                    json.append("{");
+                    String sttVal = row.get("stt");
+                    json.append("\"stt\":").append(sttVal != null ? sttVal : "null").append(",");
+                    String gid = row.get("gid");
+                    json.append("\"generatorId\":").append(gid != null && !gid.isEmpty() ? gid : "null").append(",");
+                    json.append("\"gmodel\":\"").append(escapeJson(row.get("gmodel") != null ? row.get("gmodel") : "")).append("\",");
+                    json.append("\"quantity\":").append(row.get("gqty") != null ? row.get("gqty") : "null").append(",");
+                    String up = row.get("gunitPrice");
+                    json.append("\"unitPrice\":\"").append(up != null ? escapeJson(up) : "").append("\",");
+                    json.append("\"error\":").append(errors != null && !errors.isEmpty() ? "\"" + escapeJson(errors) + "\"" : "null");
+                    json.append("}");
+                }
+                json.append("]}");
+                response.getWriter().write(json.toString());
+            } catch (Exception e) {
+                response.getWriter().write("{\"success\":false,\"message\":\"Lỗi xử lý dữ liệu: " + escapeJson(e.getMessage()) + "\",\"validCount\":0,\"invalidCount\":0,\"rows\":[]}");
+            }
+        } else {
+            HttpSession sessionRef = request.getSession();
+            List<Map<String, String>> pendingRows = new ArrayList<>();
+            for (Map<String, String> enriched : sessionDetailRows) {
+                Map<String, String> r = new LinkedHashMap<>(enriched);
+                r.remove("__sessionIndex");
+                pendingRows.add(r);
+            }
+            sessionRef.setAttribute("pendingImportRows", pendingRows);
+            sessionRef.setAttribute("pendingImportAllRows", allRows);
+            sessionRef.setAttribute("pendingImportWarehouseId", warehouseId);
+            sessionRef.setAttribute("pendingImportSupplierId", headerSupplierId);
+            sessionRef.setAttribute("pendingImportNote", note);
 
-        request.setAttribute("validRows", validRows);
-        request.setAttribute("warningRows", warningRows);
-        request.setAttribute("invalidRows", invalidRows);
-        request.setAttribute("unresolvedSupplierRows", unresolvedSupplierRows);
-        request.setAttribute("currentWarehouseId", warehouseId);
-        request.setAttribute("currentNote", note != null ? note : "");
-        request.setAttribute("warehouses", new WarehouseDAO().findAll());
-        request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
-                .forward(request, response);
+            request.setAttribute("validRows", validRows);
+            request.setAttribute("invalidRows", invalidRows);
+            request.setAttribute("currentWarehouseId", warehouseId);
+            request.setAttribute("currentNote", note != null ? note : "");
+            request.setAttribute("warehouses", new WarehouseDAO().findAll());
+            request.getRequestDispatcher("/view/proposal/proposal-import-preview.jsp")
+                    .forward(request, response);
+        }
     }
 
     private void reShowImportPreview(HttpServletRequest request, HttpServletResponse response)
@@ -1298,7 +1270,7 @@ public class ProposalController extends HttpServlet {
         @SuppressWarnings("unchecked")
         List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
         if (pendingRows == null || pendingRows.isEmpty()) {
-            
+
             List<Map<String, String>> emptyInvalid = new ArrayList<>();
             @SuppressWarnings("unchecked")
             List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
@@ -1311,9 +1283,7 @@ public class ProposalController extends HttpServlet {
                 }
             }
             request.setAttribute("validRows", new ArrayList<>());
-            request.setAttribute("warningRows", new ArrayList<>());
             request.setAttribute("invalidRows", emptyInvalid);
-            request.setAttribute("unresolvedSupplierRows", new ArrayList<>());
             request.setAttribute("currentWarehouseId", 0);
             request.setAttribute("currentNote", "");
             request.setAttribute("warehouses", new WarehouseDAO().findAll());
@@ -1333,40 +1303,11 @@ public class ProposalController extends HttpServlet {
             session.setAttribute("toastType", "success");
         }
 
-        String newSupplierIdStr = request.getParameter("newSupplierId");
-        String assignedGidStr = request.getParameter("assignedGid");
-        if (assignedGidStr == null || assignedGidStr.isEmpty()) {
-            assignedGidStr = request.getParameter("gid");
-        }
-
-       
-        if (newSupplierIdStr != null && !newSupplierIdStr.isEmpty()
-                && assignedGidStr != null && !assignedGidStr.isEmpty()) {
-            try {
-                int newId = Integer.parseInt(newSupplierIdStr);
-                String targetGid = assignedGidStr;
-                Supplier newSup = new SupplierDAO().findById(newId);
-                if (newSup != null) {
-                for (Map<String, String> p : pendingRows) {
-                    if (targetGid.equals(p.get("gid"))) {
-                        p.put("supplierId", String.valueOf(newId));
-                        p.put("supplierNameResolved", newSup.getName());
-                        p.put("supplierQuery", newSup.getName());
-                    }
-                }
-                }
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        SupplierDAO supDAO = new SupplierDAO();
         GeneratorDAO genDAO = new GeneratorDAO();
         List<Map<String, String>> validRows = new ArrayList<>();
-        List<Map<String, String>> warningRows = new ArrayList<>();
         List<Map<String, String>> invalidRows = new ArrayList<>();
-        List<Map<String, String>> unresolvedSupplierRows = new ArrayList<>();
 
-       
+        // Re-resolve generator id nếu vừa thêm máy mới
         for (Map<String, String> enriched : pendingRows) {
             String gmodel = enriched.get("gmodel");
             String currentGid = enriched.get("gid");
@@ -1376,98 +1317,22 @@ public class ProposalController extends HttpServlet {
                 if (g != null) {
                     enriched.put("gid", String.valueOf(g.getId()));
                     enriched.put("gname", g.getModel());
-                    enriched.remove("gwarnings");
-                }
-            }
-        }
-
-        
-        @SuppressWarnings("unchecked")
-        List<Map<String, String>> allRowsForSync = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
-        if (allRowsForSync != null) {
-            for (Map<String, String> r : allRowsForSync) {
-                String gmodel = r.get("gmodel");
-                String currentGid = r.get("gid");
-                if ((currentGid == null || currentGid.isEmpty())
-                        && gmodel != null && !gmodel.trim().isEmpty()) {
-                    Generator g = genDAO.findByModel(gmodel.trim());
-                    if (g != null) {
-                        r.put("gid", String.valueOf(g.getId()));
-                        r.put("gname", g.getModel());
-                        r.remove("gwarnings");
-                    }
+                    enriched.remove("gerrors");
                 }
             }
         }
 
         for (Map<String, String> enriched : pendingRows) {
-            String supplierNameRaw = enriched.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
-            Map<String, String> copy = new LinkedHashMap<>(enriched);
-            String supplierQuery = supplierNameRaw == null ? "" : supplierNameRaw.trim();
-            copy.put("supplierQuery", supplierQuery);
-
-            Integer resolvedSupplierId = null;
-            String resolvedSupplierName = null;
-            boolean supplierResolved = false;
-
-            
-            String sidStr = copy.get("supplierId");
-            if (sidStr != null && !sidStr.isEmpty()) {
-                try {
-                    resolvedSupplierId = Integer.parseInt(sidStr);
-                    resolvedSupplierName = copy.get("supplierNameResolved");
-                    if (resolvedSupplierId != null && resolvedSupplierId > 0) {
-                        supplierResolved = true;
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-            }
-
-            if (!supplierResolved && !supplierQuery.isEmpty()) {
-                List<Supplier> found = supDAO.findByNameExact(supplierQuery);
-                if (found.size() == 1) {
-                    resolvedSupplierId = found.get(0).getId();
-                    resolvedSupplierName = found.get(0).getName();
-                    supplierResolved = true;
-                    copy.put("supplierId", String.valueOf(resolvedSupplierId));
-                    copy.put("supplierNameResolved", resolvedSupplierName);
-                } else if (found.size() >= 2) {
-                    copy.put("supplierMultiple", "true");
-                    copy.put("supplierMultipleCount", String.valueOf(found.size()));
-                } else {
-                    copy.put("supplierMultiple", "false");
-                }
-            }
-
-            String errors = copy.get("gerrors");
-            String warnings = copy.get("gwarnings");
+            String errors = enriched.get("gerrors");
             if (errors != null && !errors.isEmpty()) {
-                invalidRows.add(copy);
-            } else if (!supplierResolved) {
-                unresolvedSupplierRows.add(copy);
-            } else if (warnings != null && !warnings.isEmpty()) {
-                warningRows.add(copy);
+                invalidRows.add(new LinkedHashMap<>(enriched));
             } else {
-                validRows.add(copy);
-            }
-        }
-
-        
-        @SuppressWarnings("unchecked")
-        List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
-        if (allRows != null) {
-            for (Map<String, String> r : allRows) {
-                String errs = r.get("gerrors");
-                if (errs != null && !errs.isEmpty()) {
-                    invalidRows.add(r);
-                }
+                validRows.add(new LinkedHashMap<>(enriched));
             }
         }
 
         request.setAttribute("validRows", validRows);
-        request.setAttribute("warningRows", warningRows);
         request.setAttribute("invalidRows", invalidRows);
-        request.setAttribute("unresolvedSupplierRows", unresolvedSupplierRows);
         request.setAttribute("currentWarehouseId", warehouseId != null ? warehouseId : 0);
         request.setAttribute("currentNote", note != null ? note : "");
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
@@ -1505,8 +1370,14 @@ public class ProposalController extends HttpServlet {
         String[] generatorIds = request.getParameterValues("generatorId");
         String[] quantities = request.getParameterValues("quantity");
         String[] detailNotes = request.getParameterValues("detailNote");
-        String[] supplierIds = request.getParameterValues("supplierId");
         String[] unitPrices = request.getParameterValues("unitPrice");
+        Integer headerSupplierId = parseHeaderSupplierId(request);
+        if (headerSupplierId == null) {
+            Object fromSession = session.getAttribute("pendingImportSupplierId");
+            if (fromSession instanceof Integer) {
+                headerSupplierId = (Integer) fromSession;
+            }
+        }
 
         if (generatorIds == null || generatorIds.length == 0) {
             session.setAttribute("toastMessage", "Bạn chưa chọn dòng nào để lưu");
@@ -1514,22 +1385,16 @@ public class ProposalController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/proposal?action=create");
             return;
         }
-
-        for (int i = 0; i < generatorIds.length; i++) {
-            if (generatorIds[i] == null || generatorIds[i].trim().isEmpty()) {
-                continue;
-            }
-            if (supplierIds == null || i >= supplierIds.length
-                    || supplierIds[i] == null || supplierIds[i].trim().isEmpty()) {
-                session.setAttribute("toastMessage", "Có dòng chưa chọn nhà cung cấp, vui lòng kiểm tra lại");
-                session.setAttribute("toastType", "danger");
-                response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
-                return;
-            }
+        if (headerSupplierId == null) {
+            session.setAttribute("toastMessage", "Vui lòng chọn nhà cung cấp cho cả phiếu");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=create&warehouseId=" + warehouseId);
+            return;
         }
 
         ImportProposal p = new ImportProposal();
         p.setWarehouseId(warehouseId);
+        p.setSupplierId(headerSupplierId);
         p.setNote(note);
         String status;
         if ("draft".equals(submitType)) {
@@ -1574,14 +1439,6 @@ public class ProposalController extends HttpServlet {
                 continue;
             }
             String dNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-            Integer supId = null;
-            if (supplierIds != null && i < supplierIds.length
-                    && supplierIds[i] != null && !supplierIds[i].trim().isEmpty()) {
-                supId = parseInt(supplierIds[i]);
-                if (supId <= 0) {
-                    supId = null;
-                }
-            }
             String upStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : null;
             if (upStr == null || upStr.trim().isEmpty()) {
                 continue;
@@ -1599,7 +1456,7 @@ public class ProposalController extends HttpServlet {
             ImportProposalDetail d = new ImportProposalDetail();
             d.setProposalId(newId);
             d.setGeneratorId(genId);
-            d.setSupplierId(supId);
+            d.setSupplierId(headerSupplierId);
             d.setQuantity(qty);
             d.setCurrentStock(warehouseId > 0
                     ? new InventoryDAO().countInStockByGeneratorAndWarehouse(genId, warehouseId)
@@ -1622,6 +1479,7 @@ public class ProposalController extends HttpServlet {
         session.removeAttribute("pendingImportRows");
         session.removeAttribute("pendingImportAllRows");
         session.removeAttribute("pendingImportWarehouseId");
+        session.removeAttribute("pendingImportSupplierId");
         session.removeAttribute("pendingImportNote");
 
         logActivity(user.getId(), "import_proposal", "CREATE", newId,
@@ -1687,44 +1545,6 @@ public class ProposalController extends HttpServlet {
         return u != null ? u.getId() : 0;
     }
 
-    
-    private List<String> compareGeneratorSpecs(Generator g, Map<String, String> row) {
-        List<String> diffs = new ArrayList<>();
-        if (g == null || row == null) {
-            return diffs;
-        }
-        String excelPower = row.get(ProposalExcelSupport.HEADER_POWER);
-        if (excelPower != null && !excelPower.trim().isEmpty() && g.getPowerRating() != null) {
-            try {
-                BigDecimal ep = new BigDecimal(excelPower.trim().replace(",", ""));
-                if (ep.compareTo(g.getPowerRating()) != 0) {
-                    diffs.add("Công suất: Excel " + ep.toPlainString()
-                            + " kVA vs DB " + g.getPowerRating().toPlainString() + " kVA");
-                }
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        String excelFreq = row.get(ProposalExcelSupport.HEADER_FREQUENCY);
-        if (excelFreq != null && !excelFreq.trim().isEmpty()
-                && g.getFrequency() != null && !g.getFrequency().trim().isEmpty()) {
-            if (!excelFreq.trim().equalsIgnoreCase(g.getFrequency().trim())) {
-                diffs.add("Tần số: Excel " + excelFreq.trim()
-                        + " vs DB " + g.getFrequency().trim());
-            }
-        }
-        String excelWeight = row.get(ProposalExcelSupport.HEADER_WEIGHT);
-        if (excelWeight != null && !excelWeight.trim().isEmpty() && g.getWeight() != null) {
-            try {
-                BigDecimal ew = new BigDecimal(excelWeight.trim().replace(",", ""));
-                if (ew.compareTo(g.getWeight()) != 0) {
-                    diffs.add("Trọng lượng: Excel " + ew.toPlainString()
-                            + " kg vs DB " + g.getWeight().toPlainString() + " kg");
-                }
-            } catch (NumberFormatException ignored) {
-            }
-        }
-        return diffs;
-    }
 
     private int parseId(HttpServletRequest request) {
         try {
@@ -1863,140 +1683,12 @@ public class ProposalController extends HttpServlet {
               .append("\"brand\":\"").append(escapeJson(brand)).append("\",")
               .append("\"powerRating\":\"").append(g.getPowerRating() == null ? "" : g.getPowerRating().toString()).append("\",")
               .append("\"status\":\"").append(escapeJson(g.getStatus())).append("\"")
-              .append("}");
+                            .append("}");
         }
         sb.append("]");
         response.getWriter().write(sb.toString());
     }
 
-    @SuppressWarnings("unchecked")
-    private void assignSupplierAjax(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
-            return;
-        }
-        String gidStr = request.getParameter("gid");
-        String rowIdxStr = request.getParameter("rowIndex");
-        if ((gidStr == null || gidStr.isEmpty()) && (rowIdxStr != null && !rowIdxStr.isEmpty())) {
-            gidStr = rowIdxStr;
-        }
-        String supIdStr = request.getParameter("supplierId");
-        int supId = parseInt(supIdStr);
-        if (gidStr == null || gidStr.isEmpty() || supId <= 0) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"bad_params\"}");
-            return;
-        }
-        List<Map<String, String>> rows =
-                (List<Map<String, String>>) session.getAttribute("pendingImportRows");
-        if (rows == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
-        Supplier s = new SupplierDAO().findById(supId);
-        if (s == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"supplier_not_found\"}");
-            return;
-        }
-        boolean found = false;
-        boolean useRowIndex = rowIdxStr != null && !rowIdxStr.isEmpty();
-        int rowIdx = useRowIndex ? parseInt(rowIdxStr) : -1;
-        for (int i = 0; i < rows.size(); i++) {
-            Map<String, String> p = rows.get(i);
-            if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
-                p.put("supplierId", String.valueOf(s.getId()));
-                p.put("supplierNameResolved", s.getName());
-                p.remove("supplierQuery");
-                p.remove("supplierMultiple");
-                p.remove("supplierMultipleCount");
-                found = true;
-            }
-        }
-        if (!found) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
-        
-        List<Map<String, String>> allRows =
-                (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
-        if (allRows != null) {
-            for (int i = 0; i < allRows.size(); i++) {
-                Map<String, String> p = allRows.get(i);
-                if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
-                    p.put("supplierId", String.valueOf(s.getId()));
-                    p.put("supplierNameResolved", s.getName());
-                    p.remove("supplierQuery");
-                    p.remove("supplierMultiple");
-                    p.remove("supplierMultipleCount");
-                }
-            }
-        }
-
-        response.getWriter().write("{\"ok\":true,\"supplier\":{\"id\":" + s.getId()
-                + ",\"name\":\"" + escapeJson(s.getName()) + "\"}}");
-    }
-
-    @SuppressWarnings("unchecked")
-    private void assignGeneratorAjax(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
-            return;
-        }
-        String sttStr = request.getParameter("stt");
-        String rowIdxStr = request.getParameter("rowIndex");
-        if ((sttStr == null || sttStr.isEmpty()) && (rowIdxStr != null && !rowIdxStr.isEmpty())) {
-            sttStr = rowIdxStr;
-        }
-        String genIdStr = request.getParameter("generatorId");
-        int genId = parseInt(genIdStr);
-        if (sttStr == null || sttStr.isEmpty() || genId <= 0) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"bad_params\"}");
-            return;
-        }
-        List<Map<String, String>> rows =
-                (List<Map<String, String>>) session.getAttribute("pendingImportRows");
-        if (rows == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
-        Generator g = new GeneratorDAO().findById(genId);
-        if (g == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"generator_not_found\"}");
-            return;
-        }
-        boolean found = false;
-        for (Map<String, String> p : rows) {
-            if (sttStr.equals(p.get("stt"))) {
-                p.put("gid", String.valueOf(g.getId()));
-                p.put("gname", g.getModel());
-                p.remove("gwarnings");
-                found = true;
-            }
-        }
-        if (!found) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
-        List<Map<String, String>> allRows =
-                (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
-        if (allRows != null) {
-            for (Map<String, String> p : allRows) {
-                if (sttStr.equals(p.get("stt"))) {
-                    p.put("gid", String.valueOf(g.getId()));
-                    p.put("gname", g.getModel());
-                    p.remove("gwarnings");
-                }
-            }
-        }
-
-        response.getWriter().write("{\"ok\":true,\"generator\":{\"id\":" + g.getId()
-                + ",\"model\":\"" + escapeJson(g.getModel()) + "\"}}");
-    }
 
     @SuppressWarnings("unchecked")
     private void revalidateImport(HttpServletRequest request, HttpServletResponse response)
@@ -2027,7 +1719,6 @@ public class ProposalController extends HttpServlet {
         }
 
         GeneratorDAO genDAO = new GeneratorDAO();
-        SupplierDAO supDAO = new SupplierDAO();
 
         Map<String, String> failedMap = new java.util.LinkedHashMap<>();
         List<Integer> fixedList = new ArrayList<>();
@@ -2037,7 +1728,7 @@ public class ProposalController extends HttpServlet {
             int stt = parseInt(sttStr);
             if (stt <= 0) continue;
 
-            
+
             Map<String, String> targetRow = null;
             for (Map<String, String> r : allRows) {
                 if (sttStr.equals(r.get("stt"))) {
@@ -2050,21 +1741,17 @@ public class ProposalController extends HttpServlet {
                 continue;
             }
 
-            
+
             String newModel = (modelArr != null && i < modelArr.length) ? modelArr[i] : "";
             String newQty = (qtyArr != null && i < qtyArr.length) ? qtyArr[i] : "";
             String newUp = (upArr != null && i < upArr.length) ? upArr[i] : "";
-            String newSup = (supArr != null && i < supArr.length) ? supArr[i] : "";
 
             targetRow.put(ProposalExcelSupport.HEADER_MODEL, newModel);
             targetRow.put(ProposalExcelSupport.HEADER_QUANTITY, newQty);
             targetRow.put(ProposalExcelSupport.HEADER_UNIT_PRICE, newUp);
-            targetRow.put(ProposalExcelSupport.HEADER_SUPPLIER_NAME, newSup);
 
             // Re-validate (mirrors the logic in importProposalPreview)
             List<String> errors = new ArrayList<>();
-            boolean generatorResolved = false;
-            boolean supplierResolved = false;
 
             // Model
             if (newModel == null || newModel.trim().isEmpty()) {
@@ -2073,16 +1760,15 @@ public class ProposalController extends HttpServlet {
                 targetRow.put("gmodel", newModel.trim());
                 Generator g = genDAO.findByModel(newModel.trim());
                 if (g != null) {
-                    generatorResolved = true;
                     targetRow.put("gid", String.valueOf(g.getId()));
                     targetRow.put("gname", g.getModel());
                 } else {
                     targetRow.put("gname", newModel.trim());
-                    targetRow.put("gwarnings", "Máy phát mới chưa có trong hệ thống: " + newModel.trim() + ".");
+                    errors.add("Máy phát '" + newModel.trim() + "' chưa có trong hệ thống. Vui lòng thêm máy phát trước khi import.");
                 }
             }
 
-            
+
             if (newQty == null || newQty.trim().isEmpty()) {
                 errors.add("Số lượng không được trống");
             } else {
@@ -2101,7 +1787,7 @@ public class ProposalController extends HttpServlet {
                 }
             }
 
-            
+
             if (newUp == null || newUp.trim().isEmpty()) {
                 errors.add("Đơn giá đề xuất không được trống");
             } else {
@@ -2117,41 +1803,13 @@ public class ProposalController extends HttpServlet {
                 }
             }
 
-            // Supplier
-            String supplierQuery = newSup == null ? "" : newSup.trim();
-            if (supplierQuery.isEmpty()) {
-                errors.add("Tên nhà cung cấp không được trống");
-            } else {
-                targetRow.put("supplierQuery", supplierQuery);
-                List<Supplier> found = supDAO.findByNameExact(supplierQuery);
-                if (found.size() == 1) {
-                    supplierResolved = true;
-                    targetRow.put("supplierId", String.valueOf(found.get(0).getId()));
-                    targetRow.put("supplierNameResolved", found.get(0).getName());
-                    targetRow.remove("supplierMultiple");
-                    targetRow.remove("supplierMultipleCount");
-                } else if (found.size() >= 2) {
-                    targetRow.put("supplierMultiple", "true");
-                    targetRow.put("supplierMultipleCount", String.valueOf(found.size()));
-                } else {
-                    targetRow.put("supplierMultiple", "false");
-                }
-            }
-
             if (!errors.isEmpty()) {
                 targetRow.put("gerrors", String.join("; ", errors));
                 targetRow.put("gid", "");
-                targetRow.remove("gwarnings");
                 failedMap.put(sttStr, String.join("; ", errors));
             } else {
                 targetRow.remove("gerrors");
                 fixedList.add(stt);
-                if (!supplierResolved) {
-                    targetRow.remove("gwarnings");
-                    targetRow.put("gwarnings", "Chưa chọn được nhà cung cấp");
-                } else if (generatorResolved) {
-                    targetRow.remove("gwarnings");
-                }
             }
         }
 
@@ -2404,6 +2062,15 @@ public class ProposalController extends HttpServlet {
             return "";
         }
         return URLEncoder.encode(s, StandardCharsets.UTF_8);
+    }
+
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        String xrw = request.getHeader("X-Requested-With");
+        if ("XMLHttpRequest".equals(xrw)) return true;
+        String qs = request.getQueryString();
+        if (qs != null && (qs.contains("ajax=1") || qs.contains("ajax=true"))) return true;
+        String ajax = request.getParameter("ajax");
+        return "1".equals(ajax) || "true".equalsIgnoreCase(ajax);
     }
 
     private String escapeJson(String s) {
