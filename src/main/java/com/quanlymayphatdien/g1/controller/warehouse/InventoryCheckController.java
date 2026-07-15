@@ -206,7 +206,7 @@ public class InventoryCheckController extends HttpServlet {
         if (warehouseId != null) {
             request.setAttribute("selectedWarehouse", warehouseId);
 
-            List<Inventory> listSerials = inventoryDAO.findByWarehouseId(warehouseId);
+            List<Inventory> listSerials = inventoryDAO.findInStockByWarehouse(warehouseId);
 
             Map<Integer, List<Inventory>> groupedByGenerator = new HashMap<>();
             for (Inventory serial : listSerials) {
@@ -506,6 +506,12 @@ public class InventoryCheckController extends HttpServlet {
 
         boolean ok = checkDAO.complete(checkId);
         if (ok) {
+            for (InventoryCheckSerial s : checkDAO.findSerialsByCheckId(checkId)) {
+                if (s.getStatus() != null && !s.getStatus().isEmpty()) {
+                    inventoryDAO.updateConditionBySerial(s.getSerialNumber(), s.getStatus());
+                }
+            }
+
             ActivityLog log = new ActivityLog();
             log.setUserId(loggedUser.getId());
             log.setEntityType("inventory_check");

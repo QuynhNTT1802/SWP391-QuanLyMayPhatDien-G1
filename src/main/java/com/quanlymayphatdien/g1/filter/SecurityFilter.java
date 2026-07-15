@@ -105,8 +105,10 @@ public class SecurityFilter implements Filter {
                     Map.of(
                             "create", "liquidations.create",
                             "edit_submit", "liquidations.create",
+                            "create_customer", "liquidations.create",
                             "approve_ceo", "liquidations.approve_ceo",
-                            "reject_ceo", "liquidations.approve_ceo"),
+                            "reject_ceo", "liquidations.approve_ceo",
+                            "request_edit_ceo", "liquidations.approve_ceo"),
                     "liquidations.view"),
             Rule.action("/inventory-check",
                     Map.of(

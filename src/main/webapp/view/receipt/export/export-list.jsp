@@ -159,6 +159,9 @@
                         <a class="btn" href="${pageContext.request.contextPath}/export-receipt?action=selectOrder">
                             Xem đơn hàng đã duyệt
                         </a>
+                        <a class="btn" href="${pageContext.request.contextPath}/export-receipt?action=selectLiquidation">
+                            Đơn thanh lý đã duyệt
+                        </a>
                         <a class="btn btn-primary" href="${pageContext.request.contextPath}/export-receipt?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Tạo phiếu xuất
