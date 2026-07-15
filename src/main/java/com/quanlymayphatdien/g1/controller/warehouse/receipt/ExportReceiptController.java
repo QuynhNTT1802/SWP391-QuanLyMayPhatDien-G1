@@ -9,6 +9,8 @@ import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
+import com.quanlymayphatdien.g1.dal.LiquidationDAO;
+import com.quanlymayphatdien.g1.dal.LiquidationDetailDAO;
 import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
@@ -19,6 +21,8 @@ import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Inventory;
+import com.quanlymayphatdien.g1.entity.Liquidation;
+import com.quanlymayphatdien.g1.entity.LiquidationDetail;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
@@ -92,6 +96,9 @@ public class ExportReceiptController extends HttpServlet {
                     break;
                 case "selectOrder":
                     selectOrder(request, response);
+                    break;
+                case "selectLiquidation":
+                    selectLiquidation(request, response);
                     break;
                 case "loadGenerators":
                     loadGeneratorsJson(request, response);
@@ -298,6 +305,43 @@ public class ExportReceiptController extends HttpServlet {
                 request.setAttribute("stockWarningGenIds", shortGenIds);
             }
         }
+
+        String liquidationIdStr = request.getParameter("liquidationId");
+        if (liquidationIdStr != null && !liquidationIdStr.isEmpty()) {
+            int liqId = parseId(liquidationIdStr);
+            LiquidationDAO liqDAO = new LiquidationDAO();
+            Liquidation liq = liqDAO.findById(liqId);
+            if (liq != null && "APPROVED".equalsIgnoreCase(liq.getStatus())) {
+                LiquidationDetailDAO liqDetailDAO = new LiquidationDetailDAO();
+                List<LiquidationDetail> liqDetails = liqDetailDAO.findByLiquidationId(liqId);
+                Receipt prefill = new Receipt();
+                prefill.setLiquidationId(liqId);
+                prefill.setReceiptType(TYPE);
+                prefill.setWarehouseId(liq.getWarehouseId());
+                prefill.setReasonId(liq.getReasonId());
+                prefill.setNote("Tạo từ đơn thanh lý " + liq.getLiquidationCode());
+                List<Map<String, Object>> orderRowList = new ArrayList<>();
+                int expectedRows = 0;
+                for (LiquidationDetail ld : liqDetails) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("generatorId", ld.getGeneratorId());
+                    row.put("generatorModel", ld.getGeneratorModelName() != null ? ld.getGeneratorModelName() : "");
+                    row.put("serialNumber", ld.getSerialNumber());
+                    String brand = lookupGeneratorBrand(ld.getGeneratorId());
+                    row.put("brandName", brand);
+                    row.put("note", "Thanh lý: " + ld.getLiquidationPrice());
+                    orderRowList.add(row);
+                    expectedRows++;
+                }
+                prefill.setDetails(new ArrayList<>());
+                request.setAttribute("receipt", prefill);
+                request.setAttribute("liquidation", liq);
+                request.setAttribute("fromLiquidation", Boolean.TRUE);
+                request.setAttribute("expectedRows", expectedRows);
+                request.setAttribute("orderRowList", orderRowList);
+            }
+        }
+
         request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
     }
 
@@ -443,6 +487,36 @@ public class ExportReceiptController extends HttpServlet {
         request.getRequestDispatcher("/view/receipt/export/export-select-order.jsp").forward(request, response);
     }
 
+    private void selectLiquidation(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String search = request.getParameter("search");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+        int page = parsePage(request.getParameter("page"));
+        int pageSize = 10;
+
+        LiquidationDAO liqDAO = new LiquidationDAO();
+        int totalItems = liqDAO.countApprovedAvailableFiltered(search, fromDate, toDate);
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+        if (page > totalPages) {
+            page = totalPages;
+        }
+        List<Liquidation> approvedLiquidations = liqDAO.findApprovedAvailableFiltered(search, fromDate, toDate, page, pageSize);
+        int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
+        int toIndex = Math.min(page * pageSize, totalItems);
+
+        request.setAttribute("approvedLiquidations", approvedLiquidations);
+        request.setAttribute("search", search);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
+        request.setAttribute("activePage", "export-select-liquidation");
+        request.getRequestDispatcher("/view/receipt/export/export-select-liquidation.jsp").forward(request, response);
+    }
+
     private void loadGeneratorsJson(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         int whId = parseId(request.getParameter("warehouseId"));
@@ -547,6 +621,11 @@ public class ExportReceiptController extends HttpServlet {
             validateOrderCompleteness(orderId, details, errors);
         }
 
+        int liquidationId = parseId(request.getParameter("liquidationId"));
+        if (liquidationId > 0) {
+            validateLiquidationCompleteness(liquidationId, details, errors);
+        }
+
         if (!errors.isEmpty()) {
             request.setAttribute("toastType", "danger");
             request.setAttribute("toastMessage", buildErrorMessage(isDraft ? "Lưu nháp thất bại:" : "Lưu phiếu thất bại:", errors));
@@ -584,6 +663,9 @@ public class ExportReceiptController extends HttpServlet {
                     r.setOrderId(Integer.parseInt(oid));
                 } catch (NumberFormatException ignored) {
                 }
+            }
+            if (liquidationId > 0) {
+                r.setLiquidationId(liquidationId);
             }
             if (isDraft) {
                 r.setStatus(GlobalUtils.RECEIPT_STATUS_DRAFT);
@@ -634,6 +716,18 @@ public class ExportReceiptController extends HttpServlet {
                     ps.executeUpdate();
                 }
 
+                if (!isDraft && liquidationId > 0) {
+                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                            "UPDATE inventory SET status = ? "
+                                    + "WHERE inventory_id IN (SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?) "
+                                    + "AND status = ?")) {
+                        ps.setString(1, InventoryDAO.STATUS_SOLD);
+                        ps.setInt(2, receiptId);
+                        ps.setString(3, InventoryDAO.STATUS_PENDING_LIQUIDATION);
+                        ps.executeUpdate();
+                    }
+                }
+
                 java.util.Set<String> existingSerials = new java.util.HashSet<>();
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT i.serial_number FROM receipt_detail rd "
@@ -655,16 +749,28 @@ public class ExportReceiptController extends HttpServlet {
                     if (inv == null) {
                         throw new SQLException("Serial \"" + sn + "\" không tồn tại trong hệ thống");
                     }
-                    if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
-                        throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
-                    }
-                    if (isDraft) {
-                        if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
-                            throw new SQLException("Serial \"" + sn + "\" đã bị reserve bởi phiếu khác");
+                    boolean isLiqExisting = liquidationId > 0;
+                    if (isLiqExisting) {
+                        if (!inventoryDAO.isPendingLiquidationAtWarehouse(conn, inv.getSerialNumber(), warehouseId)) {
+                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
+                        }
+                        if (!isDraft) {
+                            if (inventoryDAO.markAsExportedFromPendingLiquidation(conn, inv.getInventoryId()) <= 0) {
+                                throw new SQLException("Serial \"" + sn + "\" không ở trạng thái PENDING_LIQUIDATION");
+                            }
                         }
                     } else {
-                        if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
-                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK");
+                        if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
+                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
+                        }
+                        if (isDraft) {
+                            if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                                throw new SQLException("Serial \"" + sn + "\" đã bị reserve bởi phiếu khác");
+                            }
+                        } else {
+                            if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
+                                throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK");
+                            }
                         }
                     }
                     d.setReceiptId(receiptId);
@@ -694,6 +800,7 @@ public class ExportReceiptController extends HttpServlet {
                     }
                 }
             } else {
+                boolean isLiqReceipt = liquidationId > 0;
                 for (ReceiptDetail d : details) {
                     if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
                         continue;
@@ -702,16 +809,27 @@ public class ExportReceiptController extends HttpServlet {
                     if (inv == null) {
                         throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
                     }
-                    if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
-                        throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
-                    }
-                    if (isDraft) {
-                        if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
-                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                    if (isLiqReceipt) {
+                        if (!inventoryDAO.isPendingLiquidationAtWarehouse(conn, inv.getSerialNumber(), warehouseId)) {
+                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
+                        }
+                        if (!isDraft) {
+                            if (inventoryDAO.markAsExportedFromPendingLiquidation(conn, inv.getInventoryId()) <= 0) {
+                                throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái PENDING_LIQUIDATION");
+                            }
                         }
                     } else {
-                        if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
-                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
+                        if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
+                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
+                        }
+                        if (isDraft) {
+                            if (!inventoryDAO.reserveForExport(conn, inv.getInventoryId())) {
+                                throw new SQLException("Serial \"" + d.getSerialNumber() + "\" đã bị reserve bởi phiếu khác");
+                            }
+                        } else {
+                            if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
+                                throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
+                            }
                         }
                     }
                     d.setReceiptId(receiptId);
@@ -721,30 +839,6 @@ public class ExportReceiptController extends HttpServlet {
             }
 
             if (!isDraft) {
-                boolean isLiquidation = false;
-                Integer liquidationId = null;
-                try (java.sql.PreparedStatement ps = conn.prepareStatement(
-                        "SELECT liquidation_id, status FROM liquidation WHERE converted_receipt_id = ?")) {
-                    ps.setInt(1, receiptId);
-                    try (java.sql.ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            isLiquidation = true;
-                            liquidationId = rs.getInt("liquidation_id");
-                        }
-                    }
-                }
-                if (isLiquidation && liquidationId != null) {
-                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
-                            "UPDATE inventory SET status = ? "
-                                    + "WHERE status = ? AND inventory_id IN ("
-                                    + "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?)")) {
-                        ps.setString(1, InventoryDAO.STATUS_LIQUIDATED);
-                        ps.setString(2, InventoryDAO.STATUS_SOLD);
-                        ps.setInt(3, receiptId);
-                        ps.executeUpdate();
-                    }
-                }
-
                 java.util.List<ReceiptDetail> allDetails = new java.util.ArrayList<>();
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT rd.*, i.generator_id, i.serial_number FROM receipt_detail rd "
@@ -764,21 +858,16 @@ public class ExportReceiptController extends HttpServlet {
                 receiptDAO.writeStockCardsForExport(conn, receiptId, r.getReceiptCode(),
                         warehouseId, loggedUser.getId(), allDetails);
 
-                if (isLiquidation && liquidationId != null) {
-                    try (java.sql.PreparedStatement ps = conn.prepareStatement(
-                            "UPDATE liquidation SET status = ?, updated_at = ? WHERE liquidation_id = ?")) {
-                        ps.setString(1, GlobalUtils.STATUS_COMPLETED);
-                        ps.setTimestamp(2, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
-                        ps.setInt(3, liquidationId);
-                        ps.executeUpdate();
-                    }
+                if (liquidationId > 0) {
+                    LiquidationDAO liqDAO = new LiquidationDAO();
+                    liqDAO.updateStatus(conn, liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
                     ActivityLog liqLog = new ActivityLog();
                     liqLog.setUserId(loggedUser.getId());
                     liqLog.setEntityType("liquidation");
                     liqLog.setAction("EXPORT_APPROVE");
                     liqLog.setEntityId(liquidationId);
                     liqLog.setEntityName(r.getReceiptCode());
-                    liqLog.setDetails("Hoàn tất xuất kho cho phiếu thanh lý " + r.getReceiptCode() + ".");
+                    liqLog.setDetails("Hoàn tất xuất kho cho đơn thanh lý " + r.getReceiptCode() + ".");
                     activityLogDAO.insert(liqLog);
                 }
             }
@@ -1738,6 +1827,39 @@ public class ExportReceiptController extends HttpServlet {
             if (!checkedGenIds.contains(entry.getKey())) {
                 errors.add("Có dòng không thuộc đơn hàng (generatorId=" + entry.getKey()
                         + ", số lượng=" + entry.getValue() + ")");
+            }
+        }
+    }
+
+    private void validateLiquidationCompleteness(int liquidationId, List<ReceiptDetail> details, List<String> errors) {
+        LiquidationDetailDAO ldDAO = new LiquidationDetailDAO();
+        List<LiquidationDetail> liqDetails = ldDAO.findByLiquidationId(liquidationId);
+        if (liqDetails == null || liqDetails.isEmpty()) {
+            errors.add("Đơn thanh lý không có chi tiết máy");
+            return;
+        }
+
+        Set<String> liqSerials = new HashSet<>();
+        for (LiquidationDetail ld : liqDetails) {
+            liqSerials.add(ld.getSerialNumber());
+        }
+        Set<String> detailSerials = new HashSet<>();
+        if (details != null) {
+            for (ReceiptDetail d : details) {
+                if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
+                    detailSerials.add(d.getSerialNumber().trim());
+                }
+            }
+        }
+
+        for (LiquidationDetail ld : liqDetails) {
+            if (!detailSerials.contains(ld.getSerialNumber())) {
+                errors.add("Thiếu serial " + ld.getSerialNumber() + " (" + ld.getGeneratorModelName() + ") trong phiếu xuất");
+            }
+        }
+        for (String sn : detailSerials) {
+            if (!liqSerials.contains(sn)) {
+                errors.add("Serial " + sn + " không thuộc đơn thanh lý này");
             }
         }
     }

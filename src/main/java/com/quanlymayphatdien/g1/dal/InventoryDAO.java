@@ -16,7 +16,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     public static final String STATUS_IN_STOCK = "IN_STOCK";
     public static final String STATUS_SOLD = "SOLD";
     public static final String STATUS_PENDING_LIQUIDATION = "PENDING_LIQUIDATION";
-    public static final String STATUS_LIQUIDATED = "LIQUIDATED";
     public static final String STATUS_IN_TRANSIT = "IN_TRANSIT";
     public static final String STATUS_PENDING_IMPORT = "PENDING_IMPORT";
     public static final String STATUS_RESERVED_EXPORT = "RESERVED_EXPORT";
@@ -287,21 +286,14 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
      */
     public List<Inventory> findInStockByWarehouse(int warehouseId) {
         List<Inventory> list = new ArrayList<>();
-        // Chỉ lấy máy đã có tình trạng từ phiếu kiểm kê hoàn thành gần nhất (INNER JOIN loại máy chưa kiểm kê).
+        // Lấy tất cả máy IN_STOCK trong kho, đọc condition trực tiếp từ cột inventory.condition.
         // Sắp xếp ưu tiên Hỏng -> Kém -> Tốt để máy cần thanh lý nổi lên trên.
-        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name, latest.status AS condition_status "
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "JOIN (SELECT ics.serial_number, ics.status, "
-                + "             ROW_NUMBER() OVER (PARTITION BY ics.serial_number ORDER BY ic.completed_at DESC, ic.id DESC) AS rn "
-                + "      FROM inventory_check_serial ics "
-                + "      JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
-                + "      JOIN inventory_check ic ON icd.check_id = ic.id "
-                + "      WHERE ic.status = 'completed' AND ics.status IS NOT NULL) latest "
-                + "  ON latest.serial_number = i.serial_number AND latest.rn = 1 "
                 + "WHERE i.warehouse_id = ? AND i.status = ? "
-                + "ORDER BY FIELD(latest.status,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id";
+                + "ORDER BY FIELD(i.condition,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -316,10 +308,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 }
                 try {
                     inv.setWarehouseName(resultSet.getString("warehouse_name"));
-                } catch (SQLException ignored) {
-                }
-                try {
-                    inv.setCondition(resultSet.getString("condition_status"));
                 } catch (SQLException ignored) {
                 }
                 list.add(inv);
@@ -396,15 +384,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         for (int i = 0; i < serials.size(); i++) {
             placeholders.append(i == 0 ? "?" : ",?");
         }
-        String sql = "SELECT latest.serial_number, latest.status FROM ("
-                + "  SELECT ics.serial_number, ics.status, "
-                + "         ROW_NUMBER() OVER (PARTITION BY ics.serial_number ORDER BY ic.completed_at DESC, ic.id DESC) AS rn "
-                + "  FROM inventory_check_serial ics "
-                + "  JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
-                + "  JOIN inventory_check ic ON icd.check_id = ic.id "
-                + "  WHERE ic.status = 'completed' AND ics.status IS NOT NULL "
-                + "    AND ics.serial_number IN (" + placeholders + ")"
-                + ") latest WHERE latest.rn = 1";
+        String sql = "SELECT serial_number, condition FROM inventory WHERE serial_number IN (" + placeholders + ")";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -413,7 +393,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                result.put(resultSet.getString("serial_number"), resultSet.getString("status"));
+                result.put(resultSet.getString("serial_number"), resultSet.getString("condition"));
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -525,7 +505,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     /**
      * Danh dau mot serial IN_STOCK da duoc xuat truc tiep (IN_STOCK -> targetStatus).
      * Dung cho luong tao phieu xuat khong can manager duyet: serial di thang tu IN_STOCK
-     * sang SOLD (hoac LIQUIDATED neu la phieu thanh ly).
+     * sang SOLD.
      * Tra ve true neu update duoc 1 row, false neu serial khong o trang thai IN_STOCK.
      */
     public boolean markAsExported(Connection conn, int inventoryId, String targetStatus) throws SQLException {
@@ -641,6 +621,22 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         try {
             connection = getConnection();
             return updateStatusBySerial(connection, serialNumber, newStatus) > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources();
+        }
+    }
+
+    public boolean updateConditionBySerial(String serialNumber, String condition) {
+        String sql = "UPDATE inventory SET condition = ? WHERE serial_number = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, condition);
+            statement.setString(2, serialNumber);
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -769,6 +765,31 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             closeResources();
         }
         return false;
+    }
+
+    public boolean isPendingLiquidationAtWarehouse(Connection conn, String serialNumber, int warehouseId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ? AND warehouse_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            ps.setInt(2, warehouseId);
+            ps.setString(3, STATUS_PENDING_LIQUIDATION);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    public int markAsExportedFromPendingLiquidation(Connection conn, int inventoryId) throws SQLException {
+        String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, STATUS_SOLD);
+            ps.setInt(2, inventoryId);
+            ps.setString(3, STATUS_PENDING_LIQUIDATION);
+            return ps.executeUpdate();
+        }
     }
 
     /**
@@ -1150,6 +1171,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
         try {
             inv.setWarehouseName(rs.getString("warehouse_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            inv.setCondition(rs.getString("condition"));
         } catch (SQLException ignored) {
         }
         return inv;
