@@ -268,8 +268,8 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft, dateFrom, dateTo));
         request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft, dateFrom, dateTo));
         request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft, dateFrom, dateTo));
-        request.setAttribute("draftCount",     canApprove ? 0 : dao.countByStatus(GlobalUtils.STATUS_DRAFT, loggedUser.getId(), false, dateFrom, dateTo));
 
+ 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }
 
@@ -321,8 +321,7 @@ public class ProposalController extends HttpServlet {
     
     private boolean canEditProposal(ImportProposal p, int currentUserId, boolean canApprove) {
         if (p == null) return false;
-        if (!GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
-                && !GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())) {
+        if (!GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())) {
             return false;
         }
         if (p.getCreatedBy() == currentUserId) return true;
@@ -378,24 +377,6 @@ public class ProposalController extends HttpServlet {
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         User loggedUser = (User) session.getAttribute("loggedUser");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
-        if (GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
-                && canApprove
-                && p.getCreatedBy() != loggedUser.getId()) {
-            session.setAttribute("toastMessage", "Bạn không thể xem phiếu nháp của nhân viên khác.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
-            return;
-        }
-
-        if (GlobalUtils.STATUS_DRAFT.equals(p.getStatus())
-                && !canApprove
-                && p.getCreatedBy() != loggedUser.getId()) {
-            session.setAttribute("toastMessage", "Bạn không thể xem phiếu nháp của nhân viên khác.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
-            return;
-        }
-
         String tab = request.getParameter("tab");
         String currentTab = "history".equals(tab) ? "history" : "info";
         request.setAttribute("currentTab", currentTab);
@@ -509,7 +490,6 @@ public class ProposalController extends HttpServlet {
         }
         User user = (User) session.getAttribute("loggedUser");
 
-        String submitType = request.getParameter("submitType");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         Integer headerSupplierId = parseHeaderSupplierId(request);
 
@@ -530,7 +510,7 @@ public class ProposalController extends HttpServlet {
         p.setWarehouseId(warehouseId);
         p.setSupplierId(headerSupplierId);
         p.setNote(request.getParameter("note"));
-        p.setStatus("draft".equals(submitType) ? GlobalUtils.STATUS_DRAFT : GlobalUtils.STATUS_PENDING);
+        p.setStatus(GlobalUtils.STATUS_PENDING);
         p.setCreatedBy(user.getId());
         p.setProposalDate(LocalDateTime.now());
         p.setPeriod(PeriodUtils.currentPeriod());
@@ -552,23 +532,21 @@ public class ProposalController extends HttpServlet {
 
         logActivity(user.getId(), "import_proposal", "CREATE", newId,
                 p.getProposalCode(),
-                "draft".equals(submitType) ? "Tạo phiếu đề xuất (nháp)" : "Tạo phiếu đề xuất (gửi duyệt)");
+                "Tạo phiếu đề xuất (gửi duyệt)");
 
         session.setAttribute("toastMessage", "Tạo phiếu đề xuất thành công");
         session.setAttribute("toastType", "success");
 
-        if (!"draft".equals(submitType)) {
-            List<User> approvers = userDAO.findUsersByPermission("proposals", "approve");
-            for (User u : approvers) {
-                NotificationService.send(
-                    u.getId(),
-                    "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
-                    "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
-                    request.getContextPath() + "/proposal?action=detail&id=" + newId,
-                    "proposal",
-                    newId
-                );
-            }
+        List<User> approvers = userDAO.findUsersByPermission("proposals", "approve");
+        for (User u : approvers) {
+            NotificationService.send(
+                u.getId(),
+                "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
+                "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
+                request.getContextPath() + "/proposal?action=detail&id=" + newId,
+                "proposal",
+                newId
+            );
         }
 
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
@@ -600,9 +578,8 @@ public class ProposalController extends HttpServlet {
             return;
         }
 
-        String submitType = request.getParameter("submitType");
         boolean hasDetailForm = request.getParameterValues("generatorId") != null;
-        if (!"draft".equals(submitType) && existing.getPeriod() != null
+        if (existing.getPeriod() != null
                 && !PeriodUtils.isCurrentPeriod(existing.getPeriod())
                 && !PeriodUtils.isWithinDeadline(existing.getPeriod())) {
             session.setAttribute("toastMessage",
@@ -626,12 +603,7 @@ public class ProposalController extends HttpServlet {
         p.setProposalId(id);
         p.setNote(hasDetailForm ? request.getParameter("note") : existing.getNote());
         p.setSupplierId(hasDetailForm ? headerSupplierId : existing.getSupplierId());
-        boolean isRevision = GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus());
-        if ("draft".equals(submitType) && !isRevision) {
-            p.setStatus(GlobalUtils.STATUS_DRAFT);
-        } else {
-            p.setStatus(GlobalUtils.STATUS_PENDING);
-        }
+        p.setStatus(GlobalUtils.STATUS_PENDING);
         dao.update(p);
 
         if (hasDetailForm) {
@@ -648,7 +620,7 @@ public class ProposalController extends HttpServlet {
 
         logActivity(currentUserId(request), "import_proposal", "UPDATE", id,
                 existing.getProposalCode(),
-                "draft".equals(submitType) ? "Cập nhật phiếu đề xuất (nháp)" : "Cập nhật và gửi duyệt");
+                "Cập nhật và gửi duyệt");
 
         session.setAttribute("toastMessage", "Cập nhật phiếu đề xuất thành công");
         session.setAttribute("toastType", "success");
@@ -758,9 +730,9 @@ public class ProposalController extends HttpServlet {
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal existing = dao.findById(id);
         if (existing == null
-                || !GlobalUtils.STATUS_DRAFT.equals(existing.getStatus())
+                || !GlobalUtils.STATUS_PENDING.equals(existing.getStatus())
                 || existing.getCreatedBy() != currentUserId(request)) {
-            session.setAttribute("toastMessage", "Không thể xoá phiếu này (đã gửi duyệt hoặc không phải người tạo).");
+            session.setAttribute("toastMessage", "Không thể xoá phiếu này (đã được xử lý hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
@@ -770,7 +742,7 @@ public class ProposalController extends HttpServlet {
         boolean ok = dao.delete(p);
         if (ok) {
             logActivity(currentUserId(request), "import_proposal", "DELETE", id,
-                    existing.getProposalCode(), "Xoá phiếu đề xuất nháp");
+                    existing.getProposalCode(), "Xoá phiếu đề xuất");
             session.setAttribute("toastMessage", "Đã xoá phiếu đề xuất");
             session.setAttribute("toastType", "success");
         } else {
@@ -1358,8 +1330,6 @@ public class ProposalController extends HttpServlet {
 
         int warehouseId = parseInt(request.getParameter("warehouseId"));
         String note = request.getParameter("note");
-        String submitType = request.getParameter("submitType");
-
         if (warehouseId <= 0) {
             session.setAttribute("toastMessage", "Vui lòng chọn kho nhập");
             session.setAttribute("toastType", "danger");
@@ -1396,13 +1366,7 @@ public class ProposalController extends HttpServlet {
         p.setWarehouseId(warehouseId);
         p.setSupplierId(headerSupplierId);
         p.setNote(note);
-        String status;
-        if ("draft".equals(submitType)) {
-            status = GlobalUtils.STATUS_DRAFT;
-        } else {
-            status = GlobalUtils.STATUS_PENDING;
-        }
-        p.setStatus(status);
+        p.setStatus(GlobalUtils.STATUS_PENDING);
         p.setCreatedBy(user.getId());
         p.setProposalDate(LocalDateTime.now());
 
@@ -1484,14 +1448,10 @@ public class ProposalController extends HttpServlet {
 
         logActivity(user.getId(), "import_proposal", "CREATE", newId,
                 p.getProposalCode(),
-                "draft".equals(submitType)
-                        ? "Tạo phiếu đề xuất (nháp) từ Excel — " + details.size() + " dòng"
-                        : "Tạo phiếu đề xuất từ Excel (gửi duyệt) — " + details.size() + " dòng");
+                "Tạo phiếu đề xuất từ Excel (gửi duyệt) — " + details.size() + " dòng");
 
         session.setAttribute("toastMessage",
-                "draft".equals(submitType)
-                        ? "Đã lưu nháp phiếu đề xuất (" + details.size() + " dòng)"
-                        : "Tạo phiếu đề xuất từ Excel thành công (" + details.size() + " dòng)");
+                "Tạo phiếu đề xuất từ Excel thành công (" + details.size() + " dòng)");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
     }

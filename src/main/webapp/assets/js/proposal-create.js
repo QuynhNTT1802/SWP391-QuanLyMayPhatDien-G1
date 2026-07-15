@@ -332,7 +332,9 @@ function uploadExcelFile(input) {
             return;
         }
         if (data.invalidCount > 0) {
-            toast(data.message, 'danger');
+            data.rows.forEach(function (r) {
+                if (r.error) toast('Dong ' + r.stt + ': ' + r.error, 'danger');
+            });
             return;
         }
         if (data.rows && data.rows.length > 0) {
