@@ -70,7 +70,6 @@
         .icon-btn:hover { background:var(--surface-2); color:var(--fg); }
         .icon-btn svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:1.8; }
         .status-badge { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:2px 9px; border-radius:999px; border:1px solid; margin-left:8px; }
-        .status-badge.draft { color:var(--muted); border-color:var(--border); background:var(--surface-2); }
         .status-badge.revision { color:#7c3aed; border-color:color-mix(in srgb,#7c3aed 30%,transparent); background:color-mix(in srgb,#7c3aed 8%,transparent); }
         .revision-reason { background:var(--surface-2); border:1px solid color-mix(in srgb,#7c3aed 30%,transparent); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
         .revision-reason .rr-label { font-weight:700; font-size:11px; color:#7c3aed; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
@@ -116,8 +115,7 @@
                 <h2 class="page-title">
                     Chỉnh sửa phiếu đề xuất
                     <c:choose>
-                        <c:when test="${proposal.status == 'DRAFT'}"><span class="status-badge draft">Nháp</span></c:when>
-                        <c:when test="${proposal.status == 'NEEDS_REVISION'}"><span class="status-badge revision">Cần chỉnh sửa</span></c:when>
+                    <c:when test="${proposal.status == 'NEEDS_REVISION'}"><span class="status-badge revision">Cần chỉnh sửa</span></c:when>
                     </c:choose>
                 </h2>
                 <p class="page-sub">Phiếu <c:out value="${proposal.proposalCode}"/> · Người tạo: <c:out value="${proposal.createdByName}"/></p>
@@ -312,10 +310,6 @@
 
                 <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
                     <a class="btn" href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}">Huỷ</a>
-                    <c:if test="${proposal.status == 'DRAFT'}">
-                        <button type="button" class="btn btn-danger" onclick="confirmDelete()">Xoá phiếu</button>
-                        <button type="submit" name="submitType" value="draft" class="btn">Lưu nháp</button>
-                    </c:if>
                     <button type="submit" name="submitType" value="submit" class="btn btn-primary">
                         <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                         ${proposal.status == 'NEEDS_REVISION' ? 'Gửi duyệt lại' : 'Gửi duyệt'}

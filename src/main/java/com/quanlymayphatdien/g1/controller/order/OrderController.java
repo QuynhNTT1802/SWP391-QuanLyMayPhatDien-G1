@@ -119,6 +119,9 @@ public class OrderController extends HttpServlet {
                 case "requestRevision":
                     requestRevisionOrder(request, response);
                     break;
+                case "quickCreateCustomer":
+                    quickCreateCustomer(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -392,8 +395,81 @@ public class OrderController extends HttpServlet {
         request.setAttribute("phases", phases);
         request.setAttribute("top4Customers", top4Customers);
         request.setAttribute("stockMap", stockMap);
+        request.setAttribute("canCreateCustomer", true);
 
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
+    }
+
+    private void quickCreateCustomer(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
+            return;
+        }
+
+        String name = request.getParameter("name");
+        String phone = request.getParameter("phone");
+        String email = request.getParameter("email");
+        String address = request.getParameter("address");
+        String companyName = request.getParameter("companyName");
+        String typeIdStr = request.getParameter("customerTypeId");
+
+        if (name == null || name.trim().isEmpty()) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập tên khách hàng\"}");
+            return;
+        }
+        if (phone == null || phone.trim().isEmpty()) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập số điện thoại\"}");
+            return;
+        }
+
+        CustomerDAO custDAO = new CustomerDAO();
+        if (custDAO.isPhoneExists(phone.trim(), null)) {
+            Customer existing = custDAO.findByPhone(phone.trim());
+            if (existing != null) {
+                response.getWriter().write("{\"ok\":true,\"existing\":true,\"id\":" + existing.getId()
+                        + ",\"name\":\"" + escapeJson(existing.getName())
+                        + "\",\"phone\":\"" + escapeJson(existing.getPhone())
+                        + "\",\"email\":\"" + escapeJson(existing.getEmail())
+                        + "\",\"address\":\"" + escapeJson(existing.getAddress())
+                        + "\",\"companyName\":\"" + escapeJson(existing.getCompanyName())
+                        + "\",\"customerTypeId\":" + existing.getCustomerTypeId() + "}");
+                return;
+            }
+        }
+
+        Customer c = new Customer();
+        c.setName(name.trim());
+        c.setPhone(phone.trim());
+        c.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : null);
+        c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+        c.setCompanyName(companyName != null && !companyName.trim().isEmpty() ? companyName.trim() : null);
+        if (typeIdStr != null && !typeIdStr.trim().isEmpty()) {
+            try {
+                c.setCustomerTypeId(Integer.parseInt(typeIdStr.trim()));
+            } catch (NumberFormatException ignore) {}
+        }
+        c.setStatus("active");
+        User u = (User) session.getAttribute("loggedUser");
+        if (u != null) {
+            c.setCreatedBy(u.getId());
+        }
+
+        int newId = custDAO.insert(c);
+        if (newId <= 0) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Không thể lưu khách hàng\"}");
+            return;
+        }
+
+        response.getWriter().write("{\"ok\":true,\"existing\":false,\"id\":" + newId
+                + ",\"name\":\"" + escapeJson(name.trim())
+                + "\",\"phone\":\"" + escapeJson(phone.trim())
+                + "\",\"email\":\"" + escapeJson(email != null ? email.trim() : "")
+                + "\",\"address\":\"" + escapeJson(address != null ? address.trim() : "")
+                + "\",\"companyName\":\"" + escapeJson(companyName != null ? companyName.trim() : "")
+                + "\",\"customerTypeId\":" + (typeIdStr != null && !typeIdStr.trim().isEmpty() ? typeIdStr.trim() : "0") + "}");
     }
 
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
@@ -969,5 +1045,14 @@ public class OrderController extends HttpServlet {
     private void setMsg(HttpSession session, String message, String type) {
         session.setAttribute("message", message);
         session.setAttribute("messageType", type);
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

@@ -393,7 +393,7 @@ DROP TABLE IF EXISTS `import_proposal`;
 CREATE TABLE `import_proposal` (
   `proposal_id` int NOT NULL AUTO_INCREMENT,
   `proposal_code` varchar(50) NOT NULL,
-  `status` varchar(50) NOT NULL DEFAULT 'DRAFT',
+  `status` varchar(50) NOT NULL DEFAULT 'PENDING',
   `warehouse_id` int NOT NULL,
   `created_by` int NOT NULL,
   `approved_by` int DEFAULT NULL,

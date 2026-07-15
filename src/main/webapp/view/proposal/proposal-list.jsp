@@ -49,10 +49,6 @@
                 background: #e2e3e5;
                 color: #383d41;
             }
-            .status-draft {
-                background: #e2e3e5;
-                color: #383d41;
-            }
             .status-pending_ceo {
                 background: #fff3cd;
                 color: #856404;
@@ -119,9 +115,6 @@
                     </div>
 
                     <div class="stats-row">
-                        <c:if test="${!canApproveProposal}">
-                            <div class="stat"><div class="lbl">Nháp</div><div class="val">${draftCount}</div></div>
-                        </c:if>
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
                         <div class="stat"><div class="lbl">Đã duyệt bởi Sale Manager</div><div class="val">${approvedCount}</div></div>
                         <div class="stat"><div class="lbl">Từ chối bởi Sale Manager</div><div class="val">${rejectedCount}</div></div>
@@ -150,9 +143,6 @@
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
-                            <c:if test="${!canApproveProposal}">
-                                <option value="DRAFT" <c:if test="${statusFilter == 'DRAFT'}">selected</c:if>>Nháp</option>
-                            </c:if>
                             <option value="PENDING"   <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="PENDING_CEO" <c:if test="${statusFilter == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                             <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt (Sale Manager / CEO)</option>
@@ -249,7 +239,6 @@
                                                 </td>
                                                 <td class="col-status">
                                                     <c:choose>
-                                                        <c:when test="${p.status == 'DRAFT'}"><span class="status-pill status-draft"><span class="pdot"></span>Nháp</span></c:when>
                                                         <c:when test="${p.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${p.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${p.status == 'APPROVED' and not empty p.purchaseOrderId}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt bởi CEO</span></c:when>

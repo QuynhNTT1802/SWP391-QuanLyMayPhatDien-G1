@@ -187,7 +187,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, t.getProposalId());
-            statement.setString(2, GlobalUtils.STATUS_DRAFT);
+            statement.setString(2, GlobalUtils.STATUS_PENDING);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -338,14 +338,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
     public boolean cancelProposal(int proposalId, int cancellerId) {
         String sql = "UPDATE import_proposal SET status = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status IN (?, ?)";
+                + "WHERE proposal_id = ? AND status = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, GlobalUtils.STATUS_CANCELLED);
             statement.setInt(2, proposalId);
-            statement.setString(3, GlobalUtils.STATUS_DRAFT);
-            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            statement.setString(3, GlobalUtils.STATUS_PENDING);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -806,7 +805,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
     public boolean update(ImportProposal t) {
         String sql = "UPDATE import_proposal SET note = ?, status = ?, "
                 + "supplier_id = ?, updated_at = NOW() "
-                + "WHERE proposal_id = ? AND status IN (?, ?)";
+                + "WHERE proposal_id = ? AND status = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -818,8 +817,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 statement.setNull(3, java.sql.Types.INTEGER);
             }
             statement.setInt(4, t.getProposalId());
-            statement.setString(5, GlobalUtils.STATUS_DRAFT);
-            statement.setString(6, GlobalUtils.STATUS_NEEDS_REVISION);
+            statement.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
