@@ -507,6 +507,10 @@
                             <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
                             <c:set var="statusPillClass" value="status-revision"/>
                         </c:when>
+                        <c:when test="${order.status == 'DELETED'}">
+                            <c:set var="statusLabel" value="Đã xoá"/>
+                            <c:set var="statusPillClass" value="status-cancelled"/>
+                        </c:when>
                         <c:otherwise>
                             <c:set var="statusLabel" value="Đã hủy"/>
                             <c:set var="statusPillClass" value="status-cancelled"/>
@@ -517,6 +521,7 @@
                     <c:set var="canRejectNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canRevisionNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canCancelNow" value="${order.status == 'PENDING' && canApproveOrder && canCancelOrder}" />
+                    <c:set var="canDeleteNow" value="${order.status == 'PENDING' && isOwner}" />
 
                     <%-- ============================================================
                          HEADER BAR
@@ -567,6 +572,12 @@
                                 <button type="button" class="btn" onclick="openModal('cancelModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Hủy đơn
+                                </button>
+                            </c:if>
+                            <c:if test="${canDeleteNow}">
+                                <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    Xoá
                                 </button>
                             </c:if>
                         </div>
@@ -932,6 +943,22 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
                             <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${canDeleteNow}">
+            <div class="modal-host" id="deleteModal">
+                <div class="modal-card">
+                    <h3>Xoá đơn hàng</h3>
+                    <div class="modal-sub">Đơn sẽ bị xoá khỏi danh sách của Sale Manager. Bạn vẫn có thể xem lại trong danh sách của mình.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=delete">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('deleteModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận xoá</button>
                         </div>
                     </form>
                 </div>

@@ -57,7 +57,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         return list;
     }
 
-    public List<SaleOrder> searchByNameCode(String search, String status, int userId) {
+    public List<SaleOrder> searchByNameCode(String search, String status, int userId, int loggedUserId) {
         List<SaleOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT so.*, "
@@ -77,6 +77,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + "WHERE 1=1"
         );
         List<Object> param = new ArrayList<>();
+
+        // Soft-delete: only creator sees their own DELETED orders
+        sql.append(" AND (so.status != ? OR so.created_by = ?)");
+        param.add(GlobalUtils.STATUS_DELETED);
+        param.add(loggedUserId);
 
         if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND so.status = ?");
@@ -346,6 +351,26 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
+        } finally {
+            closeResources();
+        }
+    }
+
+    public boolean deleteByCreator(int orderId, int userId) {
+        String sql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
+                + "WHERE order_id = ? AND status = ? AND created_by = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_DELETED);
+            statement.setInt(2, userId);
+            statement.setInt(3, orderId);
+            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            statement.setInt(5, userId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         } finally {
             closeResources();
         }

@@ -122,6 +122,9 @@ public class OrderController extends HttpServlet {
                 case "quickCreateCustomer":
                     quickCreateCustomer(request, response);
                     break;
+                case "delete":
+                    deleteOrder(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -149,7 +152,7 @@ public class OrderController extends HttpServlet {
         int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId);
         int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId);
         int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId);
-        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId);
+        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId, user.getId());
 
         int page = 1;
         int pageSize = 10;
@@ -342,6 +345,16 @@ public class OrderController extends HttpServlet {
             request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         }
 
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        boolean isOwner = loggedUser != null && order.getCreatedBy() == loggedUser.getId();
+
+        // If deleted and not the creator, redirect
+        if (GlobalUtils.STATUS_DELETED.equals(order.getStatus()) && !isOwner) {
+            setMsg(session, "Đơn hàng đã bị xoá.", "danger");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
+
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
         request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
@@ -349,6 +362,7 @@ public class OrderController extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
+        request.setAttribute("isOwner", isOwner);
 
         int totalQty = 0;
         int totalRows = 0;
@@ -470,6 +484,27 @@ public class OrderController extends HttpServlet {
                 + "\",\"address\":\"" + escapeJson(address != null ? address.trim() : "")
                 + "\",\"companyName\":\"" + escapeJson(companyName != null ? companyName.trim() : "")
                 + "\",\"customerTypeId\":" + (typeIdStr != null && !typeIdStr.trim().isEmpty() ? typeIdStr.trim() : "0") + "}");
+    }
+
+    private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        SaleOrderDAO saleorderdao = new SaleOrderDAO();
+        boolean ok = saleorderdao.deleteByCreator(id, user.getId());
+
+        if (ok) {
+            setMsg(session, "Đã xoá đơn hàng.", "success");
+        } else {
+            setMsg(session, "Không thể xoá: đơn không ở trạng thái chờ duyệt hoặc không phải người tạo.", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
