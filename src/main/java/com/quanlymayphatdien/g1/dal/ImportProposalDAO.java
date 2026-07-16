@@ -142,11 +142,15 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return false;
     }
 
-    public int countByStatus(String status, Integer createdBy, String dateFrom, String dateTo) {
+    public int countByStatus(String status, Integer createdBy, String dateFrom, String dateTo, int loggedUserId) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal WHERE status = ?");
         List<Object> params = new ArrayList<>();
         params.add(status);
-        if (createdBy != null) {
+        if (GlobalUtils.STATUS_DELETED.equals(status)) {
+            sql.append(" AND created_by = ?");
+            params.add(loggedUserId);
+        }
+        if (createdBy != null && !GlobalUtils.STATUS_DELETED.equals(status)) {
             sql.append(" AND created_by = ?");
             params.add(createdBy);
         }
@@ -190,6 +194,26 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             return false;
         } finally {
             closeResources();
+        }
+    }
+
+    /**
+     * Soft delete: chuyển status sang DELETED, ghi nhận người huỷ và thời điểm.
+     * Chỉ creator mới được xoá, và chỉ khi phiếu đang ở trạng thái PENDING.
+     */
+    public boolean softDeleteByCreator(int proposalId, int creatorId) {
+        String sql = "UPDATE import_proposal SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
+                + "WHERE proposal_id = ? AND created_by = ? AND status = ?";
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, GlobalUtils.STATUS_DELETED);
+            ps.setInt(2, creatorId);
+            ps.setInt(3, proposalId);
+            ps.setInt(4, creatorId);
+            ps.setString(5, GlobalUtils.STATUS_PENDING);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -266,6 +290,16 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
 
         Timestamp ra = rs.getTimestamp("rejected_at");
         p.setRejectedAt(ra != null ? ra.toLocalDateTime() : null);
+
+        try {
+            int cancelledBy = rs.getInt("cancelled_by");
+            p.setCancelledBy(rs.wasNull() ? null : cancelledBy);
+        } catch (SQLException ignored) { p.setCancelledBy(null); }
+
+        try {
+            Timestamp cat = rs.getTimestamp("cancelled_at");
+            p.setCancelledAt(cat != null ? cat.toLocalDateTime() : null);
+        } catch (SQLException ignored) { p.setCancelledAt(null); }
 
         Timestamp ca = rs.getTimestamp("created_at");
         p.setCreatedAt(ca != null ? ca.toLocalDateTime() : null);
@@ -413,7 +447,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int loggedUserId, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -430,8 +464,10 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 + "LEFT JOIN user u_a     ON u_a.id = p.approved_by "
                 + "LEFT JOIN user u_r     ON u_r.id = p.rejected_by "
                 + "LEFT JOIN supplier s   ON s.id = p.supplier_id "
-                + "WHERE 1=1");
+                + "WHERE (p.status != ? OR p.created_by = ?)");
         List<Object> params = new ArrayList<>();
+        params.add(GlobalUtils.STATUS_DELETED);
+        params.add(loggedUserId);
         if (status != null && !status.isEmpty()) {
             sql.append(" AND p.status = ?");
             params.add(status);
@@ -481,9 +517,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE 1=1");
+    public int countByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int loggedUserId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE (p.status != ? OR p.created_by = ?)");
         List<Object> params = new ArrayList<>();
+        params.add(GlobalUtils.STATUS_DELETED);
+        params.add(loggedUserId);
         if (status != null && !status.isEmpty()) {
             sql.append(" AND p.status = ?");
             params.add(status);

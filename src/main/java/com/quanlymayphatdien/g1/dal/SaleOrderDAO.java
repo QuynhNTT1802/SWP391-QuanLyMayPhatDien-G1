@@ -711,18 +711,22 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
-    public int countOrderByStatus(String status, int userId) {
+    public int countOrderByStatus(String status, int userId, int loggedUserId) {
         String sql = "select count(*)\n"
                 + "from sale_order\n"
                 + "where status = ? ";
-        if (userId > 0) {
+        if (GlobalUtils.STATUS_DELETED.equals(status)) {
+            sql += " AND created_by = ?";
+        } else if (userId > 0) {
             sql += " AND created_by = ?";
         }
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, status);
-            if (userId > 0) {
+            if (GlobalUtils.STATUS_DELETED.equals(status)) {
+                statement.setInt(2, loggedUserId);
+            } else if (userId > 0) {
                 statement.setInt(2, userId);
             }
             resultSet = statement.executeQuery();

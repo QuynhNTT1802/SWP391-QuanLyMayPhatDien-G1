@@ -222,7 +222,7 @@ public class ProposalController extends HttpServlet {
         }
 
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo, loggedUser.getId());
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -231,7 +231,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo, page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo, loggedUser.getId(), page, pageSize);
 
         java.util.Map<String, java.time.LocalDate> periodDeadlines = new java.util.HashMap<>();
         java.util.Set<String> seen = new java.util.HashSet<>();
@@ -263,10 +263,10 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("currentUserId", loggedUser.getId());
         request.setAttribute("userPermissions", perms);
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, dateFrom, dateTo));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, dateFrom, dateTo));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, dateFrom, dateTo));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, dateFrom, dateTo));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
 
  
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
@@ -369,9 +369,18 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         User loggedUser = (User) session.getAttribute("loggedUser");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
+        boolean isCreator = p.getCreatedBy() == loggedUser.getId();
+        boolean isViewingDeleted = GlobalUtils.STATUS_DELETED.equals(p.getStatus()) && isCreator;
+        if (GlobalUtils.STATUS_DELETED.equals(p.getStatus()) && !isCreator) {
+            session.setAttribute("toastMessage", "Phiếu này đã bị xoá và không còn khả dụng.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=list");
+            return;
+        }
         String tab = request.getParameter("tab");
         String currentTab = "history".equals(tab) ? "history" : "info";
         request.setAttribute("currentTab", currentTab);
+        request.setAttribute("isViewingDeleted", isViewingDeleted);
 
         ActivityLogDAO logDAO = new ActivityLogDAO();
         if ("history".equals(currentTab)) {
@@ -431,6 +440,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("proposalDateInput", proposalDateInput);
         request.setAttribute("approvedAtInput", approvedAtInput);
         request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
+        request.setAttribute("isCreator", isCreator);
         request.setAttribute("canApprove", canApprove);
         request.setAttribute("canViewPo", perms != null && perms.contains("purchase_orders.view"));
         request.setAttribute("isWithinDeadline",
@@ -729,9 +739,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
             return;
         }
-        ImportProposal p = new ImportProposal();
-        p.setProposalId(id);
-        boolean ok = dao.delete(p);
+        boolean ok = dao.softDeleteByCreator(id, currentUserId(request));
         if (ok) {
             logActivity(currentUserId(request), "import_proposal", "DELETE", id,
                     existing.getProposalCode(), "Xoá phiếu đề xuất");

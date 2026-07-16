@@ -148,10 +148,10 @@ public class OrderController extends HttpServlet {
         boolean canViewAllOrders = permissions != null && permissions.contains("orders.approve");
         int userId = canViewAllOrders ? 0 : user.getId();
 
-        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId);
-        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId);
-        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId);
-        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId);
+        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId, user.getId());
+        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId, user.getId());
+        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId, user.getId());
+        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId, user.getId());
         List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId, user.getId());
 
         int page = 1;

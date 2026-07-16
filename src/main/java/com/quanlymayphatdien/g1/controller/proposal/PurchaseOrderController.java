@@ -310,7 +310,6 @@ public class PurchaseOrderController extends HttpServlet {
         String period = request.getParameter("period");
         if (period != null) period = period.replace("-", "");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
 
         if (period != null && !PeriodUtils.isWithinDeadline(period)) {
@@ -368,7 +367,7 @@ public class PurchaseOrderController extends HttpServlet {
             po.setPeriodEnd(PeriodUtils.endOf(period));
             po.setWarehouseId(warehouseId);
             po.setCreatedBy(user.getId());
-            po.setStatus("send".equals(submitType) ? GlobalUtils.PO_STATUS_PENDING_CEO : GlobalUtils.PO_STATUS_DRAFT);
+            po.setStatus(GlobalUtils.PO_STATUS_PENDING_CEO);
             po.setNote(note);
 
             List<PurchaseOrderDetail> details = new ArrayList<>();
@@ -455,25 +454,21 @@ public class PurchaseOrderController extends HttpServlet {
                 throw new Exception("Tạo phiếu mua thất bại");
             }
 
-            if ("send".equals(submitType)) {
-                dao.sendToCeo(poId);
-            }
+            dao.sendToCeo(poId);
 
             session.setAttribute("toastMessage", "Tạo phiếu mua thành công");
             session.setAttribute("toastType", "success");
 
-            if ("send".equals(submitType)) {
-                List<User> ceoUsers = userDAO.findUsersByPermission("purchase_orders", "approve_ceo");
-                for (User u : ceoUsers) {
-                    NotificationService.send(
-                        u.getId(),
-                        "Phiếu mua " + po.getPoCode() + " chờ CEO duyệt",
-                        "Nhân viên " + user.getName() + " vừa tạo phiếu mua cần CEO duyệt.",
-                        request.getContextPath() + "/purchase-order?action=detail&id=" + poId,
-                        "purchase_order",
-                        poId
-                    );
-                }
+            List<User> ceoUsers = userDAO.findUsersByPermission("purchase_orders", "approve_ceo");
+            for (User u : ceoUsers) {
+                NotificationService.send(
+                    u.getId(),
+                    "Phiếu mua " + po.getPoCode() + " chờ CEO duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo phiếu mua cần CEO duyệt.",
+                    request.getContextPath() + "/purchase-order?action=detail&id=" + poId,
+                    "purchase_order",
+                    poId
+                );
             }
 
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
