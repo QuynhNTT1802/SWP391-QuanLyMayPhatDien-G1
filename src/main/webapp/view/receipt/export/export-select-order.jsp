@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
 </head>
 <body>
 <div class="app">
@@ -66,7 +67,7 @@
 
             <c:choose>
                 <c:when test="${empty approvedOrders}">
-                    <div style="text-align:center;padding:40px;color:var(--muted);">
+                    <div class="empty-state">
                         Không có đơn hàng nào đã duyệt.
                     </div>
                 </c:when>
@@ -86,10 +87,10 @@
                             <tbody>
                                 <c:forEach var="o" items="${approvedOrders}">
                                     <tr>
-                                        <td><strong style="font-family:monospace;">${o.orderCode}</strong></td>
+                                        <td><strong class="receipt-code">${o.orderCode}</strong></td>
                                         <td>${o.customer.name}</td>
                                         <td><fmt:formatDate value="${o.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                        <td style="font-weight:600;color:var(--accent);">
+                                        <td class="amount-cell">
                                             <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="₫"/>
                                         </td>
                                         <td>
@@ -119,7 +120,7 @@
                             <c:set var="filterParams" value="${filterParams}&toDate=${toDate}" />
                         </c:if>
                         <div class="pagination">
-                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                            <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
                                     <a href="?action=selectOrder&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>

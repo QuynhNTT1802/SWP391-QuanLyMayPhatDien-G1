@@ -24,10 +24,6 @@
         return post('removeScannedSerial', { receiptId: receiptId, inventoryId: inventoryId });
     }
 
-    function discardDraft(receiptId) {
-        return post('discardDraft', { receiptId: receiptId });
-    }
-
     function cancelPending(receiptId) {
         return post('cancelPending', { receiptId: receiptId });
     }
@@ -88,7 +84,6 @@
 
     global.ExportScannerActions = {
         removeScannedSerial: removeScannedSerial,
-        discardDraft: discardDraft,
         cancelPending: cancelPending,
         confirmAction: confirmAction,
         releaseRow: releaseRow

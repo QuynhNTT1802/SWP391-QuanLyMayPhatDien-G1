@@ -16,131 +16,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-        <style>
-            .status-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 600;
-            }
-            .status-draft { background: #e2e3e5; color: #383d41; }
-            .status-pending { background: #fff3cd; color: #856404; }
-            .status-revision { background: #ffe5b4; color: #8a5a00; }
-            .status-completed { background: #d4edda; color: #155724; }
-            .status-cancelled { background: #f8d7da; color: #721c24; }
-            .receipt-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--fg); font-weight: 600; }
-            .amount-cell { font-weight: 600; color: var(--accent); }
-            .col-creator { white-space: nowrap; width: 110px; }
-            .col-status { white-space: nowrap; width: 140px; }
-            .col-date { white-space: nowrap; width: 130px; color: var(--muted); font-size: 13px; }
-            .col-order { max-width: 180px; }
-            .col-order a { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); text-decoration: none; }
-            .col-order a:hover { text-decoration: underline; }
-            .col-order .cust { font-size: 11px; color: var(--muted); margin-top: 2px; }
-            .col-reason { max-width: 200px; white-space: normal; word-wrap: break-word; }
-            .col-actions { white-space: nowrap; }
-            .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            .badge-avail {
-                display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
-                border-radius: 4px; font-size: 9px; font-weight: 700;
-                text-transform: uppercase; margin-bottom: 2px;
-            }
-            .dropdown { position: relative; display: inline-block; }
-            .dropdown-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 4px 10px;
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                background: var(--surface);
-                color: var(--fg);
-                font-size: 12px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all .12s ease;
-                font-family: inherit;
-                white-space: nowrap;
-            }
-            .dropdown-btn:hover {
-                border-color: var(--accent);
-                color: var(--accent);
-            }
-            .dropdown-btn .arrow {
-                transition: transform .2s ease;
-                margin-left: 2px;
-                font-size: 10px;
-            }
-            .dropdown-btn.open .arrow {
-                transform: rotate(180deg);
-            }
-            .dropdown-menu {
-                position: fixed;
-                z-index: 999;
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                box-shadow: 0 4px 20px rgba(0,0,0,.12);
-                padding: 4px;
-                min-width: 170px;
-                opacity: 0;
-                visibility: hidden;
-                transform: translateY(-4px);
-                transition: all .15s ease;
-                pointer-events: none;
-            }
-            .dropdown-menu.open {
-                opacity: 1;
-                visibility: visible;
-                transform: translateY(0);
-                pointer-events: auto;
-            }
-            .dropdown-item {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 7px 10px;
-                border: none;
-                border-radius: 4px;
-                background: transparent;
-                color: var(--fg);
-                font-size: 12.5px;
-                font-weight: 500;
-                cursor: pointer;
-                width: 100%;
-                text-align: left;
-                font-family: inherit;
-                text-decoration: none;
-                transition: background .1s ease;
-                box-sizing: border-box;
-                white-space: nowrap;
-            }
-            .dropdown-item:hover {
-                background: var(--surface-2);
-            }
-            .dropdown-item svg {
-                width: 14px;
-                height: 14px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                flex-shrink: 0;
-            }
-            .dropdown-item .label { flex: 1; }
-            .dropdown-item.approve svg { stroke: #155724; }
-            .dropdown-item.reject svg { stroke: #721c24; }
-            .dropdown-item.revision svg { stroke: #b15c00; }
-            .dropdown-item.danger { color: var(--danger); }
-            .dropdown-item.danger:hover { background: var(--danger-soft); }
-            .dropdown-divider {
-                height: 1px;
-                background: var(--border);
-                margin: 3px 0;
-            }
-        </style>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     </head>
     <body>
         <div class="app">
@@ -241,7 +117,7 @@
                             <tbody id="receiptsBody">
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Không có phiếu nào.</td></tr>
+                                        <tr><td colspan="8"><div class="empty-state" style="padding:20px;">Không có phiếu nào.</div></td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="r" items="${receiptList}">
@@ -251,13 +127,13 @@
                                                 <td class="col-order">
                                                     <c:choose>
                                                         <c:when test="${not empty r.orderCode}">
-                                                            <div class="badge-avail" style="background:#e0e7ff; color:#4338ca;">[Bán hàng]</div><br/>
+                                                            <div class="badge-avail badge-sale">[Bán hàng]</div><br/>
                                                             <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}">${r.orderCode}</a>
                                                             <div class="cust">${r.customerName}</div>
                                                         </c:when>
                                                         <c:when test="${not empty r.liquidationCode}">
-                                                            <div class="badge-avail" style="background:#d1fae5; color:#059669;">[Thanh lý]</div><br/>
-                                                            <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${r.liquidationId}" style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight:600;">${r.liquidationCode}</a>
+                                                            <div class="badge-avail badge-liqui">[Thanh lý]</div><br/>
+                                                            <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${r.liquidationId}" class="code-link">${r.liquidationCode}</a>
                                                             <div class="cust">${r.customerName}</div>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
@@ -266,7 +142,7 @@
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
-                                                            <span class="status-pill" style="background:var(--surface-2); color:var(--fg); border:1px solid var(--border);"><span class="pdot"></span>${r.reasonName}</span>
+                                                            <span class="status-pill status-neutral"><span class="pdot"></span>${r.reasonName}</span>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
@@ -311,7 +187,7 @@
                             <c:set var="filterParams" value="${filterParams}&search=${search}" />
                         </c:if>
                         <div class="pagination">
-                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                            <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
                                     <a href="?action=list&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
@@ -339,17 +215,6 @@
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
-        <style>
-            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
-            .modal-host.show { display: flex; }
-            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
-            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-        </style>
         <script>
             function toggleDropdown(btn) {
                 var menu = btn.nextElementSibling;

@@ -45,4 +45,10 @@ public class GlobalUtils {
     public static final String REVISION_REQUESTER_CEO = "CEO";
 
     public static final int PROPOSAL_DEADLINE_DAY = 5;
+
+    public static final String TRANSFER_STATUS_PENDING_CEO = "PENDING_CEO";
+    public static final String TRANSFER_STATUS_APPROVED = "APPROVED";
+    public static final String TRANSFER_STATUS_EXPORTED = "EXPORTED";
+    public static final String TRANSFER_STATUS_COMPLETED = "COMPLETED";
+    public static final String TRANSFER_STATUS_REJECTED = "REJECTED";
 }

@@ -13,6 +13,7 @@ import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
+import com.quanlymayphatdien.g1.dal.StockCardDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
@@ -23,6 +24,7 @@ import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
+import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
@@ -37,6 +39,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -218,6 +221,93 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
         request.setAttribute("allSerials", loadAllInStockSerials());
         request.setAttribute("activePage", "export-create");
+
+        String transferIdStr = request.getParameter("transferId");
+        if (transferIdStr != null && !transferIdStr.isEmpty()) {
+            int transferId = parseId(transferIdStr);
+            com.quanlymayphatdien.g1.dal.TransferDAO transferDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            com.quanlymayphatdien.g1.entity.Transfer transfer = transferDAO.findById(transferId);
+            if (transfer != null
+                    && com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED.equals(transfer.getStatus())
+                    && transfer.getExportReceiptId() == null) {
+                if (scopedWarehouseId > 0 && scopedWarehouseId != transfer.getSourceWarehouseId()) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+                request.setAttribute("transfer", transfer);
+                request.setAttribute("transferId", transfer.getTransferId());
+                request.setAttribute("transferCode", transfer.getTransferCode());
+                request.setAttribute("fromTransfer", Boolean.TRUE);
+                request.setAttribute("preselectSourceWarehouseId", transfer.getSourceWarehouseId());
+                request.setAttribute("transferDetails", transfer.getDetails());
+
+                Map<Integer, Integer> inStockByGen = new java.util.LinkedHashMap<>();
+                if (transfer.getDetails() != null) {
+                    for (com.quanlymayphatdien.g1.entity.TransferDetail d : transfer.getDetails()) {
+                        int qty = inventoryDAO.findInStockByWarehouseAndGenerator(
+                                transfer.getSourceWarehouseId(), d.getGeneratorId()).size();
+                        inStockByGen.put(d.getGeneratorId(), qty);
+                    }
+                }
+                request.setAttribute("inStockByGenForTransfer", inStockByGen);
+
+                com.quanlymayphatdien.g1.entity.Warehouse src = warehouseDAO.findById(transfer.getSourceWarehouseId());
+                if (src != null) {
+                    java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
+                    whList.add(src);
+                    request.setAttribute("warehouses", whList);
+                }
+
+                // Pre-fill Receipt with one empty ReceiptDetail per required unit
+                // (giống pattern order flow: user sẽ scan serials để fill)
+                Receipt prefill = new Receipt();
+                prefill.setReceiptType(TYPE);
+                prefill.setLinkedTransferId(transferId);
+                prefill.setNote("Xuất kho theo phiếu luân chuyển " + transfer.getTransferCode());
+                java.util.List<ReceiptDetail> prefillDetails = new java.util.ArrayList<>();
+                if (transfer.getDetails() != null) {
+                    for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
+                        int qty = td.getQuantity() > 0 ? td.getQuantity() : 1;
+                        for (int k = 0; k < qty; k++) {
+                            ReceiptDetail rd = new ReceiptDetail();
+                            rd.setGeneratorId(td.getGeneratorId());
+                            rd.setNote(td.getNote() != null ? td.getNote() : "");
+                            prefillDetails.add(rd);
+                        }
+                    }
+                }
+                prefill.setDetails(prefillDetails);
+                request.setAttribute("receipt", prefill);
+
+                Gson gson = new Gson();
+                request.setAttribute("prefillDetailsJson", gson.toJson(prefillDetails));
+
+                // Build expectedRows for the counter banner
+                int totalTransferRows = 0;
+                if (transfer.getDetails() != null) {
+                    for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
+                        totalTransferRows += td.getQuantity() > 0 ? td.getQuantity() : 1;
+                    }
+                }
+                request.setAttribute("expectedTransferRows", totalTransferRows);
+
+                // Build stock warnings for shortage display
+                java.util.List<String> stockWarningsTransfer = new java.util.ArrayList<>();
+                if (transfer.getDetails() != null) {
+                    for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
+                        int reqQty = td.getQuantity() > 0 ? td.getQuantity() : 1;
+                        int haveQty = inStockByGen.containsKey(td.getGeneratorId())
+                                ? inStockByGen.get(td.getGeneratorId()) : 0;
+                        if (haveQty < reqQty) {
+                            int shortage = reqQty - haveQty;
+                            stockWarningsTransfer.add(td.getGeneratorModel() + " cần " + reqQty
+                                    + " máy, chỉ còn " + haveQty + " máy tại kho nguồn. Cần nhập thêm " + shortage + " máy.");
+                        }
+                    }
+                }
+                request.setAttribute("stockWarningsTransfer", stockWarningsTransfer);
+            }
+        }
 
         String orderIdStr = request.getParameter("orderId");
         if (orderIdStr != null && !orderIdStr.isEmpty()) {
@@ -498,6 +588,33 @@ public class ExportReceiptController extends HttpServlet {
             return;
         }
 
+        int transferId = parseId(request.getParameter("transferId"));
+        com.quanlymayphatdien.g1.entity.Transfer transferForExport = null;
+        boolean isTransferExport = false;
+        if (transferId > 0) {
+            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            transferForExport = tDAO.findById(transferId);
+            if (transferForExport == null
+                    || !com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED.equals(transferForExport.getStatus())
+                    || transferForExport.getExportReceiptId() != null) {
+                HttpSession s = request.getSession();
+                s.setAttribute("toastMessage", "Phieu de xuat khong hop le hoac da co phieu xuat");
+                s.setAttribute("toastType", "danger");
+                response.sendRedirect(request.getContextPath()
+                        + "/transfers?action=detail&id=" + transferId);
+                return;
+            }
+            if (warehouseId != transferForExport.getSourceWarehouseId()) {
+                HttpSession s = request.getSession();
+                s.setAttribute("toastMessage", "Kho xuat phai la kho nguon cua phieu luan chuyen");
+                s.setAttribute("toastType", "danger");
+                response.sendRedirect(request.getContextPath()
+                        + "/transfers?action=detail&id=" + transferId);
+                return;
+            }
+            isTransferExport = true;
+        }
+
         int receiptId;
         Receipt r;
         if (existingReceipt != null) {
@@ -517,6 +634,11 @@ public class ExportReceiptController extends HttpServlet {
                     r.setOrderId(Integer.parseInt(oid));
                 } catch (NumberFormatException ignored) {
                 }
+            }
+            if (isTransferExport) {
+                r.setLinkedTransferId(transferId);
+                r.setNote("Xuat kho theo phieu luan chuyen "
+                        + transferForExport.getTransferCode() + (note != null && !note.isEmpty() ? " | " + note : ""));
             }
             r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
             r.setApprovedBy(loggedUser.getId());
@@ -580,7 +702,10 @@ public class ExportReceiptController extends HttpServlet {
                     if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
                         throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
                     }
-                    if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
+                    boolean marked = isTransferExport
+                            ? inventoryDAO.markAsInTransit(conn, inv.getInventoryId())
+                            : inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
+                    if (!marked) {
                         throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK");
                     }
                     d.setReceiptId(receiptId);
@@ -589,23 +714,6 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 if (!toInsert.isEmpty()) {
                     detailDAO.batchInsert(conn, toInsert);
-                }
-
-                java.util.List<Integer> existingInventoryIds = new java.util.ArrayList<>();
-                try (java.sql.PreparedStatement ps = conn.prepareStatement(
-                        "SELECT rd.inventory_id FROM receipt_detail rd "
-                                + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
-                                + "WHERE rd.receipt_id = ? AND i.status = ?")) {
-                    ps.setInt(1, receiptId);
-                    ps.setString(2, InventoryDAO.STATUS_RESERVED_EXPORT);
-                    try (java.sql.ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) existingInventoryIds.add(rs.getInt(1));
-                    }
-                }
-                for (Integer invId : existingInventoryIds) {
-                    if (!inventoryDAO.completeExport(conn, invId, InventoryDAO.STATUS_SOLD)) {
-                        throw new SQLException("Serial inventory_id=" + invId + " không ở trạng thái RESERVED_EXPORT");
-                    }
                 }
             } else {
                 for (ReceiptDetail d : details) {
@@ -619,7 +727,10 @@ public class ExportReceiptController extends HttpServlet {
                     if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
                         throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
                     }
-                    if (!inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD)) {
+                    boolean marked = isTransferExport
+                            ? inventoryDAO.markAsInTransit(conn, inv.getInventoryId())
+                            : inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
+                    if (!marked) {
                         throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
                     }
                     d.setReceiptId(receiptId);
@@ -669,8 +780,13 @@ public class ExportReceiptController extends HttpServlet {
                     }
                 }
             }
-            receiptDAO.writeStockCardsForExport(conn, receiptId, r.getReceiptCode(),
-                    warehouseId, loggedUser.getId(), allDetails);
+            if (isTransferExport) {
+                writeStockCardsForTransfer(conn, receiptId, r.getReceiptCode(),
+                        warehouseId, loggedUser.getId(), allDetails);
+            } else {
+                receiptDAO.writeStockCardsForExport(conn, receiptId, r.getReceiptCode(),
+                        warehouseId, loggedUser.getId(), allDetails);
+            }
 
             if (isLiquidation && liquidationId != null) {
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
@@ -728,9 +844,98 @@ public class ExportReceiptController extends HttpServlet {
         log.setDetails(existingReceipt != null ? "Cập nhật phiếu xuất kho" : "Tạo phiếu xuất kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
 
+        if (isTransferExport && transferForExport != null) {
+            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            if (tDAO.markExportReceiptCreated(transferId, receiptId)) {
+                ActivityLog transferLog = new ActivityLog();
+                transferLog.setUserId(loggedUser.getId());
+                transferLog.setEntityType("transfer");
+                transferLog.setAction("EXPORT_CREATED");
+                transferLog.setEntityId(transferId);
+                transferLog.setEntityName(transferForExport.getTransferCode());
+                transferLog.setDetails("Phieu xuat " + r.getReceiptCode()
+                        + " da duoc tao tu phieu luan chuyen (APPROVED -> EXPORTED)");
+                activityLogDAO.insert(transferLog);
+
+                notifyDestWarehouseStaff(transferForExport, r, loggedUser, request.getContextPath());
+            }
+        }
+
         session.setAttribute("toastMessage", existingReceipt != null ? "Cập nhật phiếu thành công" : "Thêm phiếu thành công");
         session.setAttribute("toastType", "success");
-        response.sendRedirect(request.getContextPath() + "/export-receipt?action=list");
+        if (isTransferExport) {
+            session.setAttribute("toastMessage",
+                    "Tao phieu xuat thanh cong. Kho dich co the tao phieu nhap.");
+            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + transferId);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/export-receipt?action=list");
+        }
+    }
+
+    private void writeStockCardsForTransfer(Connection conn, int receiptId, String receiptCode,
+                                            int sourceWarehouseId, int createdBy,
+                                            List<ReceiptDetail> details) throws SQLException {
+        if (details == null || details.isEmpty()) return;
+        StockCardDAO scDAO = new StockCardDAO();
+        Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+        for (ReceiptDetail d : details) {
+            if (d.getGeneratorId() > 0) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+        }
+        for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+            int genId = entry.getKey();
+            int totalQty = entry.getValue().size();
+            int qtyAfter = 0;
+            try (java.sql.PreparedStatement qtyPs = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'")) {
+                qtyPs.setInt(1, sourceWarehouseId);
+                qtyPs.setInt(2, genId);
+                try (java.sql.ResultSet qtyRs = qtyPs.executeQuery()) {
+                    if (qtyRs.next()) {
+                        qtyAfter = qtyRs.getInt(1);
+                    }
+                }
+            }
+            StockCard sc = new StockCard();
+            sc.setWarehouseId(sourceWarehouseId);
+            sc.setGeneratorId(genId);
+            sc.setReceiptId(receiptId);
+            sc.setTransactionType("TRANSFER_OUT");
+            sc.setQuantityChange(-totalQty);
+            sc.setQuantityAfter(qtyAfter);
+            sc.setReferenceNote("Phieu xuat " + receiptCode + " (luan chuyen)");
+            sc.setCreatedAt(java.time.LocalDateTime.now());
+            sc.setCreatedBy(createdBy);
+            scDAO.insert(conn, sc);
+        }
+    }
+
+    private void notifyDestWarehouseStaff(com.quanlymayphatdien.g1.entity.Transfer transfer,
+                                          Receipt receipt, User sender, String contextPath) {
+        List<User> staff = userDAO.findUsersByPermission("receipts", "view");
+        if (staff == null) return;
+        for (User u : staff) {
+            if (u.getId() == sender.getId()) continue;
+            Integer scopedWh = null;
+            try {
+                scopedWh = new com.quanlymayphatdien.g1.dal.UserDAO().getScopedWarehouseId(u.getId());
+            } catch (Exception ex) {
+                continue;
+            }
+            if (scopedWh != null && scopedWh == transfer.getDestWarehouseId()) {
+                NotificationService.send(
+                        u.getId(),
+                        "Phieu xuat moi tu kho nguon",
+                        "Kho nguon da tao phieu xuat " + receipt.getReceiptCode()
+                                + " tu phieu luan chuyen " + transfer.getTransferCode()
+                                + ". Ban co the tao phieu nhap tai kho dich.",
+                        contextPath + "/transfers?action=detail&id=" + transfer.getTransferId(),
+                        "transfer",
+                        transfer.getTransferId()
+                );
+            }
+        }
     }
 
     /**
@@ -777,15 +982,9 @@ public class ExportReceiptController extends HttpServlet {
 
         java.sql.Connection conn = null;
         boolean ok = false;
-        int released = 0;
         try {
             conn = receiptDAO.getConnection();
             conn.setAutoCommit(false);
-
-            java.util.List<Integer> inventoryIds = inventoryDAO.getInventoryIdsByReceiptId(conn, receiptId);
-            if (!inventoryIds.isEmpty()) {
-                released = inventoryDAO.releaseReservations(conn, inventoryIds);
-            }
 
             try (java.sql.PreparedStatement ps = conn.prepareStatement(
                     "UPDATE receipt SET status = ?, approved_by = NULL, "
@@ -815,8 +1014,7 @@ public class ExportReceiptController extends HttpServlet {
 
         if (ok) {
             body.put("success", true);
-            body.put("released", released);
-            body.put("message", "Đã rút phiếu, giải phóng " + released + " serial");
+            body.put("message", "Đã rút phiếu");
 
             ActivityLog log = new ActivityLog();
             log.setUserId(loggedUser.getId());
@@ -824,7 +1022,7 @@ public class ExportReceiptController extends HttpServlet {
             log.setAction("CANCEL_PENDING");
             log.setEntityId(receiptId);
             log.setEntityName(existing.getReceiptCode());
-            log.setDetails("Rút phiếu đang chờ duyệt, giải phóng " + released + " reservation");
+            log.setDetails("Rút phiếu đang chờ duyệt");
             activityLogDAO.insert(log);
 
             List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
@@ -1032,7 +1230,6 @@ public class ExportReceiptController extends HttpServlet {
 
     /**
      * Kiem tra phieu xuat tao tu order da quet dung va du serial theo tung model.
-     * Ap dung cho ca draft va gui duyet (theo yeu cau nguoi dung).
      * - Thieu may: so luong quet < quantity trong order
      * - Thua may: so luong quet > quantity trong order
      * - Quet nham: generatorId khong thuoc order

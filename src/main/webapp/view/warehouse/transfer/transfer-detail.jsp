@@ -93,8 +93,18 @@
                     <c:set var="statusBg" value="#e2d5f3"/>
                     <c:set var="statusFg" value="#5a2a82"/>
                 </c:when>
+                <c:when test="${status == 'APPROVED'}">
+                    <c:set var="statusLabel" value="Đã duyệt - chờ tạo phiếu xuất"/>
+                    <c:set var="statusBg" value="#d1ecf1"/>
+                    <c:set var="statusFg" value="#0c5460"/>
+                </c:when>
+                <c:when test="${status == 'EXPORTED'}">
+                    <c:set var="statusLabel" value="Đã xuất - chờ phiếu nhập"/>
+                    <c:set var="statusBg" value="#fff3cd"/>
+                    <c:set var="statusFg" value="#856404"/>
+                </c:when>
                 <c:when test="${status == 'AWAITING_DEST_ACCEPT'}">
-                    <c:set var="statusLabel" value="Chờ kho đích xác nhận"/>
+                    <c:set var="statusLabel" value="Chờ kho đích xác nhận (cũ)"/>
                     <c:set var="statusBg" value="#cce5ff"/>
                     <c:set var="statusFg" value="#004085"/>
                 </c:when>
@@ -159,7 +169,7 @@
                 <div class="action-bar-top">
                     <form method="post" action="${pageContext.request.contextPath}/transfers?action=ce_approve" style="display:inline;">
                         <input type="hidden" name="id" value="${t.transferId}"/>
-                        <button type="submit" class="btn btn-primary" onclick="return confirm('CEO duyệt - chuyển sang kho đích xác nhận?');">
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('CEO duyệt cho phép chuyển kho?');">
                             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                             Duyệt (CEO)
                         </button>
@@ -168,16 +178,43 @@
                 </div>
             </c:if>
 
-            <c:if test="${canDestAccept or canDestReject}">
+            <c:if test="${canCreateExport}">
                 <div class="action-bar-top">
-                    <form method="post" action="${pageContext.request.contextPath}/transfers?action=dest_accept" style="display:inline;">
-                        <input type="hidden" name="id" value="${t.transferId}"/>
-                        <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận nhận hàng từ kho nguồn? Tồn kho sẽ được chuyển sang kho đích.');">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                            Chấp nhận (Kho đích)
-                        </button>
-                    </form>
-                    <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('dest_reject', 'Từ chối nhận hàng (Kho đích)', 'destNote')">Từ chối (Kho đích)</button>
+                    <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_export_receipt&amp;transferId=${t.transferId}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
+                        Tạo phiếu xuất (từ kho nguồn)
+                    </a>
+                </div>
+            </c:if>
+
+            <c:if test="${canCreateImport}">
+                <div class="action-bar-top">
+                    <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_import_receipt&amp;transferId=${t.transferId}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
+                        Tạo phiếu nhập (tại kho đích)
+                    </a>
+                </div>
+            </c:if>
+
+            <c:if test="${not empty t.exportReceiptCode or not empty t.importReceiptCode}">
+                <div class="card" style="padding:14px 18px;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);">
+                    <div style="font-weight:700;margin-bottom:8px;">Phiếu liên quan</div>
+                    <c:if test="${not empty t.exportReceiptCode}">
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                            <span style="color:var(--muted);">Phiếu xuất:</span>
+                            <a href="${pageContext.request.contextPath}/export-receipt?action=detail&amp;id=${t.exportReceiptId}" style="font-family:var(--font-mono);font-weight:600;color:var(--accent);">
+                                <c:out value="${t.exportReceiptCode}"/>
+                            </a>
+                        </div>
+                    </c:if>
+                    <c:if test="${not empty t.importReceiptCode}">
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <span style="color:var(--muted);">Phiếu nhập:</span>
+                            <a href="${pageContext.request.contextPath}/import-receipt?action=detail&amp;id=${t.importReceiptId}" style="font-family:var(--font-mono);font-weight:600;color:var(--accent);">
+                                <c:out value="${t.importReceiptCode}"/>
+                            </a>
+                        </div>
+                    </c:if>
                 </div>
             </c:if>
 
@@ -211,8 +248,8 @@
                                 <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
                                 <option value="CE_APPROVE" ${logAction == 'CE_APPROVE' ? 'selected' : ''}>CEO duyệt</option>
                                 <option value="CE_REJECT" ${logAction == 'CE_REJECT' ? 'selected' : ''}>CEO từ chối</option>
-                                <option value="DEST_ACCEPT" ${logAction == 'DEST_ACCEPT' ? 'selected' : ''}>Kho đích chấp nhận</option>
-                                <option value="DEST_REJECT" ${logAction == 'DEST_REJECT' ? 'selected' : ''}>Kho đích từ chối</option>
+                                <option value="EXPORT_CREATED" ${logAction == 'EXPORT_CREATED' ? 'selected' : ''}>Tạo phiếu xuất</option>
+                                <option value="IMPORT_CREATED" ${logAction == 'IMPORT_CREATED' ? 'selected' : ''}>Tạo phiếu nhập</option>
                             </select>
                             <div class="date-range">
                                 <label class="date-label">Từ</label>
@@ -276,8 +313,12 @@
                                                     <c:when test="${log.action == 'CANCEL'}">reject</c:when>
                                                     <c:when test="${log.action == 'MANAGER_APPROVE'}">approve</c:when>
                                                     <c:when test="${log.action == 'MANAGER_REJECT'}">reject</c:when>
+                                                    <c:when test="${log.action == 'CE_APPROVE'}">approve</c:when>
+                                                    <c:when test="${log.action == 'CE_REJECT'}">reject</c:when>
                                                     <c:when test="${log.action == 'CEO_APPROVE'}">approve</c:when>
                                                     <c:when test="${log.action == 'CEO_REJECT'}">reject</c:when>
+                                                    <c:when test="${log.action == 'EXPORT_CREATED'}">update</c:when>
+                                                    <c:when test="${log.action == 'IMPORT_CREATED'}">approve</c:when>
                                                     <c:when test="${log.action == 'FINAL_APPROVE'}">approve</c:when>
                                                     <c:when test="${log.action == 'MANAGER_REJECT_R2'}">reject</c:when>
                                                     <c:when test="${log.action == 'REQUEST_REVISION'}">update</c:when>
@@ -288,10 +329,14 @@
                                                     <c:when test="${log.action == 'SUBMIT'}">Gửi duyệt</c:when>
                                                     <c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when>
                                                     <c:when test="${log.action == 'CANCEL'}">Hủy phiếu</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_APPROVE'}">Manager duyệt lần 1</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_REJECT'}">Manager từ chối lần 1</c:when>
+                                                    <c:when test="${log.action == 'CE_APPROVE'}">CEO duyệt</c:when>
+                                                    <c:when test="${log.action == 'CE_REJECT'}">CEO từ chối</c:when>
+                                                    <c:when test="${log.action == 'EXPORT_CREATED'}">Tạo phiếu xuất</c:when>
+                                                    <c:when test="${log.action == 'IMPORT_CREATED'}">Tạo phiếu nhập</c:when>
                                                     <c:when test="${log.action == 'CEO_APPROVE'}">CEO duyệt</c:when>
                                                     <c:when test="${log.action == 'CEO_REJECT'}">CEO từ chối</c:when>
+                                                    <c:when test="${log.action == 'MANAGER_APPROVE'}">Manager duyệt lần 1</c:when>
+                                                    <c:when test="${log.action == 'MANAGER_REJECT'}">Manager từ chối lần 1</c:when>
                                                     <c:when test="${log.action == 'FINAL_APPROVE'}">Xác nhận cuối</c:when>
                                                     <c:when test="${log.action == 'MANAGER_REJECT_R2'}">Từ chối xác nhận cuối</c:when>
                                                     <c:when test="${log.action == 'REQUEST_REVISION'}">Yêu cầu chỉnh sửa</c:when>

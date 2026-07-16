@@ -145,10 +145,6 @@ public class InventoryReportExcelSupport {
                 return "Đã thanh lý";
             case "IN_TRANSIT":
                 return "Đang vận chuyển";
-            case "PENDING_IMPORT":
-                return "Chờ nhập";
-            case "RESERVED_EXPORT":
-                return "Đã đặt xuất";
             default:
                 return status;
         }
