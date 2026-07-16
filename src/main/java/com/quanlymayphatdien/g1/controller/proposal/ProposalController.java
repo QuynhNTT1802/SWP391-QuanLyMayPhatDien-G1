@@ -195,7 +195,6 @@ public class ProposalController extends HttpServlet {
         boolean canApprove = perms != null && perms.contains("proposals.approve");
      
         Integer createdByFilter = canApprove ? null : loggedUser.getId();
-        boolean excludeDraft = canApprove;
 
         String statusFilter = request.getParameter("status");
         String search = request.getParameter("search");
@@ -223,7 +222,7 @@ public class ProposalController extends HttpServlet {
         }
 
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, dateFrom, dateTo);
+        int total = dao.countByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -232,7 +231,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, excludeDraft, poFilter, dateFrom, dateTo, page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo, page, pageSize);
 
         java.util.Map<String, java.time.LocalDate> periodDeadlines = new java.util.HashMap<>();
         java.util.Set<String> seen = new java.util.HashSet<>();
@@ -264,10 +263,10 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("currentUserId", loggedUser.getId());
         request.setAttribute("userPermissions", perms);
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, excludeDraft, dateFrom, dateTo));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, excludeDraft, dateFrom, dateTo));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, excludeDraft, dateFrom, dateTo));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, excludeDraft, dateFrom, dateTo));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, dateFrom, dateTo));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, dateFrom, dateTo));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, dateFrom, dateTo));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, dateFrom, dateTo));
 
  
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
@@ -284,14 +283,7 @@ public class ProposalController extends HttpServlet {
             return;
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        if (warehouseId <= 0) {
-            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> warehouses =
-                    new WarehouseDAO().findAll();
-            if (warehouses != null && !warehouses.isEmpty()) {
-                warehouseId = warehouses.get(0).getWarehouseId();
-            }
-        }
-        request.setAttribute("selectedWarehouseId", warehouseId);
+request.setAttribute("selectedWarehouseId", warehouseId);
         loadProposalFormAttributes(request, warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }

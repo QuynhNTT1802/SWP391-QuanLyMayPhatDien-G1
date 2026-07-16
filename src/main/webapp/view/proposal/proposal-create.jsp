@@ -62,7 +62,7 @@
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div>
-                                        <div class="form-section-num">Bước 1</div>
+                                        <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
                                         <h3 class="form-section-title">Thông tin chung</h3>
                                     </div>
                                 </div>
@@ -132,8 +132,8 @@
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div>
-                                        <div class="form-section-num">Bước 2</div>
-                                        <h3 class="form-section-title">Danh sách máy phát</h3>
+                                        <div class="form-section-num">02 — DANH SÁCH MÁY PHÁT</div>
+                                        <h3 class="form-section-title">Chi tiết sản phẩm</h3>
                                     </div>
                                     <div class="section-actions-bar">
                                         <a class="btn btn-sm" href="${pageContext.request.contextPath}/proposal?action=downloadTemplate">
@@ -164,6 +164,7 @@
                                             <th class="col-stock">Tồn kho</th>
                                             <th class="col-qty">Số lượng <span class="req">*</span></th>
                                             <th class="col-price">Đơn giá (VNĐ) <span class="req">*</span></th>
+                                            <th class="col-price">Thành tiền</th>
                                             <th class="col-del"></th>
                                         </tr>
                                     </thead>
@@ -181,9 +182,17 @@
                                             <td class="col-stock"><span class="row-stock mono">—</span></td>
                                             <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                             <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                            <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                             <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                         </tr>
                                     </tbody>
+                                    <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="5" class="text-right">Tổng cộng:</td>
+                                            <td class="text-right mono" id="grandTotal">0₫</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
                                 </table>
 
                                 <button type="button" class="btn add-row-btn" onclick="addRow()">
@@ -205,21 +214,10 @@
                                         <td class="col-stock"><span class="row-stock mono">—</span></td>
                                         <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                         <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                        <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                         <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                     </tr>
                                 </template>
-
-                                <div class="summary-row">
-                                    <div class="summary-stats">
-                                        <strong id="sumRows">0</strong> dòng
-                                        <span class="dot">·</span>
-                                        <strong id="sumQty">0</strong> máy
-                                    </div>
-                                    <div class="summary-total">
-                                        <span class="total-label">Thành tiền</span>
-                                        <strong class="total-value" id="sumValue">0 ₫</strong>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 

@@ -130,7 +130,7 @@
                 <div class="form-card">
                     <div class="form-section">
                         <div class="form-section-head">
-                            <div class="form-section-num">Bước 1</div>
+                            <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
                             <h3 class="form-section-title">Thông tin chung</h3>
                         </div>
 
@@ -202,8 +202,8 @@
                                     </button>
                                 </c:if>
                                 <div>
-                                    <div class="form-section-num">Bước 2</div>
-                                    <h3 class="form-section-title">Danh sách máy phát</h3>
+                                    <div class="form-section-num">02 — DANH SÁCH MÁY PHÁT</div>
+                                    <h3 class="form-section-title">Chi tiết sản phẩm</h3>
                                 </div>
                             </div>
                             <div class="section-actions-bar">
@@ -226,6 +226,7 @@
                                     <th class="col-stock">Tồn kho</th>
                                     <th class="col-qty">Số lượng <span class="req">*</span></th>
                                     <th class="col-price">Đơn giá (VNĐ) <span class="req">*</span></th>
+                                    <th class="col-price">Thành tiền</th>
                                     <th class="col-note">Ghi chú dòng</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -246,7 +247,8 @@
                                                 </td>
                                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
                                                 <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="${d.quantity}" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
-                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#,##0'/>" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                                <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                 <td><input type="text" name="detailNote" class="row-note-input" value="<c:out value='${d.note}'/>" placeholder="Ghi chú dòng" /></td>
                                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                             </tr>
@@ -266,12 +268,21 @@
                                             <td class="col-stock"><span class="row-stock mono">—</span></td>
                                             <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                             <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                            <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                             <td><input type="text" name="detailNote" class="row-note-input" placeholder="Ghi chú dòng" /></td>
                                             <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                         </tr>
                                     </c:otherwise>
                                 </c:choose>
                             </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="5" class="text-right">Tổng cộng:</td>
+                                    <td class="text-right mono" id="grandTotal">0₫</td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
 
                         <button type="button" class="btn add-row-btn" onclick="addRow()">
@@ -293,18 +304,11 @@
                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
                                 <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                 <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                 <td><input type="text" name="detailNote" class="row-note-input" placeholder="Ghi chú dòng" /></td>
                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                             </tr>
                         </template>
-
-                        <div class="summary-row">
-                            <span class="pill"><strong id="sumRows">0</strong> dòng</span>
-                            <span class="sep">·</span>
-                            <span class="pill"><strong id="sumQty">0</strong> máy</span>
-                            <span class="sep">·</span>
-                            <span class="pill"><strong id="sumValue">0 ₫</strong></span>
-                        </div>
                     </div>
                 </div>
 
@@ -516,11 +520,12 @@ function validateUnitPrice(input) {
 function finalizeUnitPrice(input) {
     var n = parseInt((input.value || '').replace(/[^\d]/g, ''), 10);
     if (isNaN(n)) return;
+    input.value = n > 0 ? String(n) : '0';
     updateTotal();
 }
 function formatPriceDisplay(input) {
     var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
-    input.value = n > 0 ? n.toLocaleString('vi-VN') : '0';
+    input.value = n > 0 ? String(n) : '0';
 }
 function unformatPrice(input) { input.value = input.value.replace(/[^\d]/g, '') || '0'; }
 
@@ -532,18 +537,16 @@ function updateStockCell(sel) {
     cell.className = s === 0 ? 'row-stock mono zero-stock' : 'row-stock mono has-stock';
 }
 function updateTotal() {
-    var rows = 0, qty = 0, total = 0;
+    var total = 0;
     document.querySelectorAll('#detailBody tr').forEach(function (tr) {
-        var sel = tr.querySelector('.gen-select');
-        if (sel && sel.value) rows++;
         var q = parseInt(tr.querySelector('.qty-input').value) || 0;
         var p = parseInt((tr.querySelector('.unit-price-input').value || '').replace(/[^\d]/g, '')) || 0;
-        qty += q;
-        total += q * p;
+        var subtotal = q * p;
+        var subEl = tr.querySelector('.row-subtotal');
+        if (subEl) subEl.textContent = formatVND(subtotal);
+        total += subtotal;
     });
-    document.getElementById('sumRows').textContent = rows;
-    document.getElementById('sumQty').textContent = qty;
-    document.getElementById('sumValue').textContent = formatVND(total);
+    document.getElementById('grandTotal').textContent = formatVND(total);
 }
 function updateRowNumbers() {
     document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) { el.textContent = i + 1; });
