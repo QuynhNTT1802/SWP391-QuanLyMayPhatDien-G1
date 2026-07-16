@@ -228,23 +228,6 @@
                                 </tr>
                             </thead>
                             <tbody id="detailBody">
-                                <tr>
-                                    <td class="col-num"><span class="row-num">1</span></td>
-                                    <td>
-                                        <select name="generatorId" required disabled onchange="onGeneratorChange(this)">
-                                            <option value="">-- Chọn kho trước --</option>
-                                        </select>
-                                        <div class="col-stock"></div>
-                                        <span class="field-error" style="display:none;"></span>
-                                    </td>
-                                    <td><select name="serialNumber" required disabled onchange="onSerialChange(this)" style="font-family: var(--font-mono); font-size: 12px;"><option value="">-- Chọn máy trước --</option></select><span class="field-error" style="display:none;"></span></td>
-                                    <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
-                                    <td class="col-del">
-                                        <button type="button" class="row-del-btn" disabled onclick="removeRow(this)" title="Xoá dòng">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                        </button>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table>
 
@@ -532,7 +515,6 @@
 
     function removeRow(btn) {
         var tbody = document.getElementById('detailBody');
-        if (tbody.querySelectorAll('tr').length <= 1) return;
         var row = btn.closest('tr');
         var invId = parseInt(row.getAttribute('data-inventory-id') || '0', 10);
         var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
@@ -855,12 +837,23 @@
                 + '&serial=' + encodeURIComponent(serial)
                 + '&warehouseId=' + encodeURIComponent(whId);
 
+        var focusScan = function () {
+            var scanEl = document.getElementById('scanBox');
+            if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+        };
+
         fetch(url)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 exportScannerLocked = false;
                 if (!data || !data.found) {
                     toast((data && data.message) ? data.message : 'Serial không tồn tại trong hệ thống', 'danger');
+                    focusScan();
+                    return;
+                }
+                if (data.inTargetWarehouse === false) {
+                    toast('Serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
+                    focusScan();
                     return;
                 }
 
@@ -873,8 +866,7 @@
                 });
                 if (dupFound) {
                     toast('Serial "' + data.serialNumber + '" đã có trong phiếu, không thể quét trùng.', 'danger');
-                    var scanEl = document.getElementById('scanBox');
-                    if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+                    focusScan();
                     return;
                 }
 
@@ -915,8 +907,7 @@
                 updateRowNumbers();
                 updateOrderCounter();
                 toast('Đã thêm serial ' + data.serialNumber, 'success');
-                var scanEl = document.getElementById('scanBox');
-                if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+                focusScan();
             })
             .catch(function (err) {
                 exportScannerLocked = false;

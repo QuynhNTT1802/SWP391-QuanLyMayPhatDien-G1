@@ -809,6 +809,20 @@ public class ImportReceiptController extends HttpServlet {
         String[] genIds = request.getParameterValues("manualGeneratorId");
         String[] serials = request.getParameterValues("manualSerialNumber");
         String[] detailNotes = request.getParameterValues("manualDetailNote");
+        int selectedGeneratorId = parseId(request.getParameter("selectedGeneratorId"));
+
+        if (!fromPo && parseId(request.getParameter("exportReceiptId")) <= 0 && selectedGeneratorId <= 0) {
+            errors.add("Vui lòng chọn mẫu máy phát điện ở mục 02 trước khi gửi phiếu");
+        }
+
+        if (!fromPo && parseId(request.getParameter("exportReceiptId")) <= 0 && selectedGeneratorId > 0 && genIds != null) {
+            for (int i = 0; i < genIds.length; i++) {
+                if (genIds[i] == null || genIds[i].trim().isEmpty()
+                        || "0".equals(genIds[i].trim())) {
+                    genIds[i] = String.valueOf(selectedGeneratorId);
+                }
+            }
+        }
 
         List<ReceiptDetail> details;
         if (fromPo) {
@@ -832,6 +846,9 @@ public class ImportReceiptController extends HttpServlet {
             request.setAttribute("preservedWarehouseId", warehouseId);
             request.setAttribute("preservedReasonId", reasonId);
             request.setAttribute("preservedNote", note);
+            if (selectedGeneratorId > 0) {
+                request.setAttribute("preservedSelectedGeneratorId", selectedGeneratorId);
+            }
 
             String[] manualGenIds = request.getParameterValues("manualGeneratorId");
             String[] manualSerials = request.getParameterValues("manualSerialNumber");
@@ -840,9 +857,12 @@ public class ImportReceiptController extends HttpServlet {
                 List<Map<String, String>> manualRows = new ArrayList<>();
                 for (int i = 0; i < manualGenIds.length; i++) {
                     String gid = manualGenIds[i] != null ? manualGenIds[i] : "";
+                    if ((gid == null || gid.isEmpty() || "0".equals(gid)) && selectedGeneratorId > 0) {
+                        gid = String.valueOf(selectedGeneratorId);
+                    }
                     String sn = (manualSerials != null && i < manualSerials.length) ? manualSerials[i] : "";
                     String nt = (manualNotes != null && i < manualNotes.length) ? manualNotes[i] : "";
-                    if (gid.isEmpty() && sn.isEmpty() && nt.isEmpty()) continue;
+                    if ((gid == null || gid.isEmpty()) && (sn == null || sn.isEmpty()) && (nt == null || nt.isEmpty())) continue;
                     Map<String, String> r = new LinkedHashMap<>();
                     r.put("generatorId", gid);
                     r.put("serialNumber", sn);
@@ -981,6 +1001,10 @@ public class ImportReceiptController extends HttpServlet {
                         warehouseId, loggedUser.getId(), rdList);
             } else {
                 for (ReceiptDetail d : details) {
+                    if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
+                        throw new SQLException("Serial '" + d.getSerialNumber()
+                                + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ serial trùng).");
+                    }
                     int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
                     if (invId <= 0) {
                         throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
