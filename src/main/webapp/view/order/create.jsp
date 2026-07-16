@@ -642,7 +642,7 @@
             }
             function updateTotal() {
                 var grand = 0;
-                document.querySelectorAll('#detailBody tr').forEach(function (row) {
+                Array.from(document.querySelectorAll('#detailBody tr')).forEach(function (row) {
                     var sel = row.querySelector('.gen-select');
                     var qty = parseInt(row.querySelector('.qty-input').value) || 0;
                     var priceInput = row.querySelector('.unit-price-input');
@@ -669,7 +669,7 @@
                 updateTotal();
             }
             function updateRowNumbers() {
-                document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
+                Array.from(document.querySelectorAll('#detailBody .row-num')).forEach(function (el, i) {
                     el.textContent = i + 1;
                 });
             }
@@ -714,7 +714,7 @@
                 var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
                 var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
                 document.getElementById('customerCompany').required = isCompany;
-                document.querySelectorAll('.company-req').forEach(function (el) {
+                Array.from(document.querySelectorAll('.company-req')).forEach(function (el) {
                     el.style.display = isCompany ? 'inline' : 'none';
                 });
             }

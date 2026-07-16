@@ -1,4 +1,4 @@
-function formatVND(num) {
+﻿function formatVND(num) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num || 0);
 }
 
@@ -33,20 +33,12 @@ function finalizeQty(input) {
 }
 
 function validateUnitPrice(input) {
-    var raw = input.value || '';
-    if (/[^\d.]/.test(raw)) {
+    var cleaned = (input.value || '').replace(/[^\d]/g, '');
+    if (input.value && cleaned === '') {
         toast(MSG.DG_ONLY_NUM, 'danger');
-        input.value = '1';
-        return;
-    }
-    var cleaned = raw.replace(/\./g, '');
-    var n = parseInt(cleaned, 10);
-    if (isNaN(n)) return;
-    if (cleaned.length >= 4 && input.selectionStart === raw.length) {
-        var formatted = n.toLocaleString('vi-VN');
-        if (raw !== formatted) {
-            input.value = formatted;
-        }
+        input.value = '0';
+    } else if (cleaned !== input.value) {
+        input.value = cleaned;
     }
     updateTotal();
 }
@@ -54,13 +46,13 @@ function validateUnitPrice(input) {
 function finalizeUnitPrice(input) {
     var n = parseInt((input.value || '').replace(/[^\d]/g, ''), 10);
     if (isNaN(n)) return;
-    input.value = n > 0 ? n.toLocaleString('vi-VN') : '0';
+    input.value = n > 0 ? String(n) : '0';
     updateTotal();
 }
 
 function formatPriceDisplay(input) {
     var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
-    input.value = n > 0 ? n.toLocaleString('vi-VN') : '0';
+    input.value = n > 0 ? String(n) : '0';
 }
 
 function unformatPrice(input) {
@@ -80,22 +72,19 @@ function updateStockCell(sel) {
 }
 
 function updateTotal() {
-    var rows = 0, qty = 0, total = 0;
-    document.querySelectorAll('#detailBody tr').forEach(function (tr) {
-        var sel = tr.querySelector('.gen-select');
-        if (sel && sel.value) rows++;
+    var total = 0;
+    Array.from(document.querySelectorAll('#detailBody tr')).forEach(function (tr) {
         var q = parseInt(tr.querySelector('.qty-input').value) || 0;
         var p = parseInt((tr.querySelector('.unit-price-input').value || '').replace(/[^\d]/g, '')) || 0;
-        qty += q;
-        total += q * p;
+        var subtotal = q * p;
+        tr.querySelector('.row-subtotal').textContent = formatVND(subtotal);
+        total += subtotal;
     });
-    document.getElementById('sumRows').textContent = rows;
-    document.getElementById('sumQty').textContent = qty;
-    document.getElementById('sumValue').textContent = formatVND(total);
+    document.getElementById('grandTotal').textContent = formatVND(total);
 }
 
 function updateRowNumbers() {
-    document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
+    Array.from(document.querySelectorAll('#detailBody .row-num')).forEach(function (el, i) {
         el.textContent = i + 1;
     });
 }
@@ -150,7 +139,7 @@ function validateForm() {
     }
     if (!hasValid) { toast(MSG.SEL_ONE_GEN, 'danger'); return false; }
 
-    document.querySelectorAll('.unit-price-input').forEach(function (el) {
+    Array.from(document.querySelectorAll('.unit-price-input')).forEach(function (el) {
         el.value = el.value.replace(/[^\d]/g, '');
     });
     return true;
@@ -253,7 +242,7 @@ function saveNewGenerator() {
                 err.classList.add('show');
                 return;
             }
-            document.querySelectorAll('#detailBody .gen-select').forEach(function (sel) {
+            Array.from(document.querySelectorAll('#detailBody .gen-select')).forEach(function (sel) {
                 var exists = false;
                 for (var i = 0; i < sel.options.length; i++) {
                     if (sel.options[i].value == data.id) { exists = true; break; }
@@ -328,7 +317,7 @@ function uploadExcelFile(input) {
     .then(function (r) { return r.json(); })
     .then(function (data) {
         if (!data.success) {
-            toast(data.message || 'Lỗi không xác định', 'danger');
+            toast(data.message || 'Lá»—i khÃ´ng xÃ¡c Ä‘á»‹nh', 'danger');
             return;
         }
         if (data.invalidCount > 0) {
@@ -343,7 +332,7 @@ function uploadExcelFile(input) {
         toast(data.message, 'success');
     })
     .catch(function () {
-        toast('Lỗi kết nối hoặc server không phản hồi dữ liệu hợp lệ.', 'danger');
+        toast('Lá»—i káº¿t ná»‘i hoáº·c server khÃ´ng pháº£n há»“i dá»¯ liá»‡u há»£p lá»‡.', 'danger');
     });
 }
 
@@ -369,7 +358,7 @@ function applyExcelRows(rows) {
         var upInput = tr.querySelector('.unit-price-input');
         if (upInput && row.unitPrice) {
             var n = parseInt(row.unitPrice) || 0;
-            upInput.value = n > 0 ? n.toLocaleString('vi-VN') : '0';
+            upInput.value = n > 0 ? String(n) : '0';
         }
         tbody.appendChild(tr);
         if (sel) updateStockCell(sel);
@@ -444,7 +433,7 @@ window.clearCustomerSelection = function () {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('#detailBody .gen-select').forEach(function (sel) {
+    Array.from(document.querySelectorAll('#detailBody .gen-select')).forEach(function (sel) {
         updateStockCell(sel);
     });
     updateTotal();
@@ -465,3 +454,4 @@ document.addEventListener('keydown', function (e) {
         closeNewSupplierModal();
     }
 });
+
