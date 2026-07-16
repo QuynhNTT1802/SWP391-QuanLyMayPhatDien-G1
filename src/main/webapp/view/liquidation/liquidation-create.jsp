@@ -277,7 +277,7 @@
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                     </div>
                                     <strong>Không có máy khả dụng</strong>
-                                    <span>Kho này chưa có máy phát điện đã kiểm kê trong tình trạng đã chọn.</span>
+                                    <span>Không có máy đủ điều kiện thanh lý.</span>
                                 </div>
                             </c:when>
                             <c:otherwise>
@@ -289,6 +289,7 @@
                                             <th>Model</th>
                                             <th>Tình trạng</th>
                                             <th class="col-date">Ngày nhập</th>
+                                            <th class="col-date">Thời gian tồn</th>
                                             <th class="col-price">Giá nhập</th>
                                             <th class="col-price">Giá thanh lý <span style="color:var(--danger)">*</span></th>
                                         </tr>
@@ -315,6 +316,7 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-date"><c:out value="${r.createdAtStr}"/></td>
+                                                <td class="col-date"><c:out value="${r.ageString}"/></td>
                                                 <td class="col-price row-price"><fmt:formatNumber value="${r.unitPrice}" type="number" maxFractionDigits="0"/> đ</td>
                                                 <td class="col-price">
                                                     <div class="liq-price-wrap">
@@ -329,7 +331,7 @@
                                                 <td class="col-cb"></td>
                                                 <td class="row-serial"><c:out value="${lk.serialNumber}"/></td>
                                                 <td class="row-model"><c:out value="${lk.model}"/></td>
-                                                <td colspan="4">
+                                                <td colspan="5">
                                                     <a class="locked-pill" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${lk.liquidationId}" target="_blank">Trong đơn <c:out value="${lk.liquidationCode}"/></a>
                                                 </td>
                                             </tr>
@@ -338,6 +340,7 @@
                                     <tfoot>
                                         <tr>
                                             <td colspan="2">Đã chọn <strong id="barSelectedCount">0</strong> máy<span id="barModelCount" style="color:var(--muted);font-weight:500;"></span></td>
+                                            <td></td>
                                             <td></td>
                                             <td></td>
                                             <td class="col-price">Tổng giá nhập:</td>
