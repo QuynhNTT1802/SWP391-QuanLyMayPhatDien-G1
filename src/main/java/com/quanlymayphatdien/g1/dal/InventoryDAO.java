@@ -293,7 +293,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
                 + "WHERE i.warehouse_id = ? AND i.status = ? "
-                + "ORDER BY FIELD(i.condition,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id";
+                + "ORDER BY FIELD(i.`condition`,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -320,6 +320,43 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
+    public List<Inventory> findEligibleForLiquidation(int warehouseId, int minMonthsInStock) {
+        List<Inventory> list = new ArrayList<>();
+        String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+                + "FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE i.warehouse_id = ? AND i.status = ? "
+                + "  AND i.`condition` IS NOT NULL "
+                + "  AND (i.`condition` IN ('DAMAGED','POOR') "
+                + "       OR i.created_at <= DATE_SUB(NOW(), INTERVAL ? MONTH)) "
+                + "ORDER BY FIELD(i.`condition`,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setString(2, STATUS_IN_STOCK);
+            statement.setInt(3, minMonthsInStock);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try {
+                    inv.setGeneratorModel(resultSet.getString("generator_model"));
+                } catch (SQLException ignored) {
+                }
+                try {
+                    inv.setWarehouseName(resultSet.getString("warehouse_name"));
+                } catch (SQLException ignored) {
+                }
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
 
     public List<Map<String, Object>> findPendingLiquidationSerialsByWarehouse(int warehouseId) {
         List<Map<String, Object>> result = new ArrayList<>();
@@ -384,7 +421,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         for (int i = 0; i < serials.size(); i++) {
             placeholders.append(i == 0 ? "?" : ",?");
         }
-        String sql = "SELECT serial_number, condition FROM inventory WHERE serial_number IN (" + placeholders + ")";
+        String sql = "SELECT serial_number, `condition` FROM inventory WHERE serial_number IN (" + placeholders + ")";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -630,7 +667,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     public boolean updateConditionBySerial(String serialNumber, String condition) {
-        String sql = "UPDATE inventory SET condition = ? WHERE serial_number = ?";
+        String sql = "UPDATE inventory SET `condition` = ? WHERE serial_number = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -638,7 +675,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             statement.setString(2, serialNumber);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Lỗi updateConditionBySerial (" + serialNumber + "): " + e.getMessage());
             return false;
         } finally {
             closeResources();
