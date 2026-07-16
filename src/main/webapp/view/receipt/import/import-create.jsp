@@ -16,111 +16,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
-    <style>
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .form-field { display: flex; flex-direction: column; gap: 6px; }
-        .form-field.full { grid-column: 1 / -1; }
-        .form-field label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-        .form-field input, .form-field select, .form-field textarea {
-            width: 100%; padding: 9px 12px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
-        }
-        .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
-            outline: none; border-color: var(--accent);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
-        }
-        .form-field textarea { min-height: 70px; resize: vertical; font-family: var(--font-ui); }
-        .form-field input:disabled, .form-field select:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
-        .order-pin { padding: 10px 14px; background: var(--accent-soft); color: var(--accent);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
-        .order-pin .order-cust { color: var(--fg-soft); font-weight: 500; }
-
-        .detail-table { width: 100%; border-collapse: collapse; }
-        .detail-table th { text-align: left; padding: 10px 12px; font-size: 11px;
-            font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border);
-            text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); }
-        .detail-table td { padding: 8px 8px; vertical-align: top; border-bottom: 1px solid var(--border); }
-        .detail-table tbody tr:last-child td { border-bottom: 0; }
-        .detail-table select, .detail-table input {
-            width: 100%; padding: 7px 10px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
-        }
-        .detail-table select:focus, .detail-table input:focus {
-            outline: none; border-color: var(--accent);
-        }
-        .detail-table .col-num { width: 36px; text-align: center; color: var(--muted);
-            font-size: 12px; font-weight: 600; padding-top: 14px; font-family: var(--font-mono); }
-        .detail-table .col-gen { min-width: 200px; }
-        .detail-table .col-serial { min-width: 130px; }
-        .detail-table .col-note { min-width: 130px; }
-        .detail-table .col-del { width: 40px; text-align: center; }
-
-        .row-del-btn { width: 28px; height: 28px; border: 1px solid transparent;
-            background: transparent; color: var(--danger); cursor: pointer;
-            border-radius: var(--radius-sm); display: inline-flex; align-items: center;
-            justify-content: center; margin-top: 4px; }
-        .row-del-btn:hover { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 25%, transparent); }
-        .row-del-btn:disabled { color: var(--muted); cursor: not-allowed; opacity: 0.5; }
-        .add-row-btn { margin-top: 12px; font-size: 13px; }
-        .add-row-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
-            border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; }
-        .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
-            stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
-        .alert .alert-body { flex: 1; line-height: 1.5; }
-        .alert .alert-title { font-weight: 700; margin-bottom: 4px; }
-        .alert ul { margin: 4px 0 0 18px; padding: 0; }
-        .alert-error { background: var(--danger-soft); color: var(--danger);
-            border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
-        .alert-warn { background: var(--warn-soft); color: var(--warn);
-            border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
-        .alert-info { background: var(--accent-soft); color: var(--accent);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
-
-        a.btn { text-decoration: none; }
-        .stock-info { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); display: block; min-height: 14px; }
-        .stock-info .stock-label { color: var(--muted); }
-        .stock-info .stock-value { color: var(--accent); font-weight: 600; }
-
-        .scanner-box {
-            display: flex; flex-direction: column; gap: 8px;
-            padding: 14px 16px; margin-bottom: 14px;
-            background: var(--accent-soft);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-            border-radius: var(--radius);
-        }
-        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-        .scanner-box .scanner-input-wrap { position: relative; }
-        .scanner-box input {
-            width: 100%; padding: 11px 14px;
-            border: 1px solid var(--border); border-radius: var(--radius-sm);
-            background: var(--bg); color: var(--fg);
-            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box;
-            transition: border-color .15s ease, box-shadow .15s ease;
-        }
-        .scanner-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        .scanner-box input.success { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
-        .scanner-box input.error { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent); }
-        .scanner-box input:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
-        .scanner-box small { color: var(--muted); font-size: 12px; min-height: 16px; }
-        .scanner-box small.success { color: var(--accent); }
-        .scanner-box small.error { color: var(--danger); }
-        .scanner-box.disabled { opacity: 0.55; }
-        tr.po-locked-row.flash { animation: flashRowGreen 0.9s ease-out; }
-        @keyframes flashRowGreen {
-            0% { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-            100% { background-color: transparent; }
-        }
-        tr.manual-row.flash { animation: flashRowGreen 0.9s ease-out; }
-
-        @media (max-width: 760px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
 </head>
 <body>
 <div class="app">
@@ -142,7 +38,7 @@
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/import-receipt">
+            <a class="receipt-back-link" href="${pageContext.request.contextPath}/import-receipt">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Huỷ và quay lại danh sách
             </a>
@@ -159,6 +55,20 @@
                 <c:if test="${not empty receipt.purchaseOrderId}">
                     <input type="hidden" name="poId" value="${receipt.purchaseOrderId}" />
                 </c:if>
+                <c:if test="${not empty exportReceiptId}">
+                    <input type="hidden" name="exportReceiptId" value="${exportReceiptId}" />
+                </c:if>
+
+                <c:if test="${not empty fromExportReceipt}">
+                    <div class="alert" style="background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); margin: 16px 0; padding: 12px 16px; border-radius: var(--radius);">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
+                        <div>
+                            <div style="font-weight: 700; margin-bottom: 4px;">Tạo phiếu nhập từ phiếu xuất <c:out value="${exportReceiptCode}"/></div>
+                            <div style="font-size: 12.5px;">Theo phiếu đề xuất luân chuyển <strong><c:out value="${transferCode}"/></strong>. Các serial đã được hệ thống tự động gắn sẵn — bạn chỉ cần kiểm tra và lưu.</div>
+                        </div>
+                    </div>
+                </c:if>
+
                 <div class="content">
                     <section class="section">
                         <div class="section-head">
@@ -182,6 +92,20 @@
                                             </c:forEach>
                                             <strong><c:out value="${warehouseName}"/></strong>
                                             <span style="color: var(--muted); font-size: 11px; margin-left: 4px;">(đã khóa theo PO)</span>
+                                        </div>
+                                        <input type="hidden" name="warehouseId" value="${receipt.warehouseId}"/>
+                                    </c:when>
+                                    <c:when test="${fromExportReceipt}">
+                                        <div class="readonly-field" style="display:flex; align-items:center; gap:8px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--fg); font-size: 13px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                            <c:set var="warehouseName" value=""/>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <c:if test="${wh.warehouseId == receipt.warehouseId}">
+                                                    <c:set var="warehouseName" value="${wh.name}"/>
+                                                </c:if>
+                                            </c:forEach>
+                                            <strong><c:out value="${warehouseName}"/></strong>
+                                            <span style="color: var(--muted); font-size: 11px; margin-left: 4px;">(đã khóa theo phiếu xuất)</span>
                                         </div>
                                         <input type="hidden" name="warehouseId" value="${receipt.warehouseId}"/>
                                     </c:when>
@@ -330,12 +254,19 @@
                                             </tr>
                                         </c:forEach>
                                     </c:when>
-                                    <c:otherwise>
+                                        <c:otherwise>
                                         <tr>
                                             <td class="col-num"><span class="row-num">1</span></td>
                                             <td>
                                                 <select name="manualGeneratorId" required disabled onchange="onGeneratorChange(this)">
-                                                    <option value="">-- Chọn kho trước --</option>
+                                                    <option value="">-- Chọn máy --</option>
+                                                    <c:forEach var="gen" items="${generators}">
+                                                        <c:set var="genLabel" value="${gen.model}"/>
+                                                        <c:if test="${not empty brandMap[gen.id]}">
+                                                            <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
+                                                        </c:if>
+                                                        <option value="${gen.id}">${genLabel}</option>
+                                                    </c:forEach>
                                                 </select>
                                                 <span class="stock-info" data-stock-info></span>
                                                 <span class="field-error" style="display:none;"></span>
@@ -348,7 +279,7 @@
                                                 </button>
                                             </td>
                                         </tr>
-                                    </c:otherwise>
+                                        </c:otherwise>
                                 </c:choose>
                             </tbody>
                         </table>
@@ -400,17 +331,8 @@
 </script>
 <script>
     var ctx = window.APP_CTX;
-    var generatorCache = [];
-    var prefillDetails = [];
-    var preservedManualRows = [];
-
-    <c:if test="${not empty receipt.details}">
-    prefillDetails = [
-        <c:forEach var="d" items="${receipt.details}" varStatus="st">
-        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
-        </c:forEach>
-    ];
-    </c:if>
+    var generatorCache = ${empty generatorsJson ? '[]' : generatorsJson};
+    var prefillDetails = ${empty prefillDetailsJson ? '[]' : prefillDetailsJson};
 
     <c:if test="${not empty preservedManualRows}">
     preservedManualRows = [
@@ -429,9 +351,11 @@
         var html = '<option value="">-- Chọn máy --</option>';
         for (var i = 0; i < generatorCache.length; i++) {
             var g = generatorCache[i];
-            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' — Tồn: ' + (g.stockQty || 0);
+            var stockLabel = (g.stockQty !== null && g.stockQty !== undefined) ? ' — Tồn: ' + g.stockQty : '';
+            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + stockLabel;
             var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
-            html += '<option value="' + g.id + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
+            var stockVal = (g.stockQty !== null && g.stockQty !== undefined) ? g.stockQty : 0;
+            html += '<option value="' + g.id + '" data-stock="' + stockVal + '"' + sel + '>' + label + '</option>';
         }
         selectEl.innerHTML = html;
     }
@@ -470,7 +394,6 @@
             })
             .catch(function (err) {
                 console.error(err);
-                generatorCache = [];
                 disableAllRows(false);
                 refreshAllGeneratorSelects();
                 applyPrefill();
@@ -525,6 +448,44 @@
         var addBtn = document.getElementById('addRowBtn');
         if (addBtn) addBtn.disabled = disabled;
     }
+
+    var TRANSFER_IMPORT_ROWS = ${empty transferRowListJson ? '[]' : transferRowListJson};
+    var isTransferImportMode = ${not empty fromExportReceipt and fromExportReceipt};
+
+    function prefillTransferImportRows() {
+        if (!isTransferImportMode) return;
+        var tbody = document.getElementById('detailBody');
+        tbody.innerHTML = '';
+        TRANSFER_IMPORT_ROWS.forEach(function (p) {
+            var tr = buildEmptyRow(p.generatorId);
+            tbody.appendChild(tr);
+            var genSel = tr.querySelector('select[name="manualGeneratorId"]');
+            if (genSel) {
+                genSel.value = p.generatorId;
+                var evt = new Event('change');
+                genSel.dispatchEvent(evt);
+            }
+            var serialInput = tr.querySelector('input[name="manualSerialNumber"]');
+            if (serialInput) {
+                serialInput.value = p.serialNumber || '';
+                serialInput.readOnly = true;
+            }
+            var noteInput = tr.querySelector('input[name="manualDetailNote"]');
+            if (noteInput && p.note) {
+                noteInput.value = p.note;
+            }
+            var delBtn = tr.querySelector('.row-del-btn');
+            if (delBtn) delBtn.disabled = true;
+        });
+        updateRowNumbers();
+        disableAllRows(true);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (isTransferImportMode) {
+            prefillTransferImportRows();
+        }
+    });
 
     function onGeneratorChange(sel) {
         updateStockInfo(sel);
@@ -688,11 +649,33 @@
             onWarehouseChange();
         }
         </c:if>
+        <c:if test="${empty preservedWarehouseId and (empty receipt or receipt.warehouseId <= 0) and scopedWarehouseId > 0}">
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect) {
+            whSelect.value = '${scopedWarehouseId}';
+            onWarehouseChange();
+        }
+        </c:if>
+        <c:if test="${empty preservedWarehouseId and (empty receipt or receipt.warehouseId <= 0) and (empty scopedWarehouseId or scopedWarehouseId <= 0)}">
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect && whSelect.options.length === 2) {
+            whSelect.value = whSelect.options[1].value;
+            onWarehouseChange();
+        }
+        </c:if>
         </c:if>
 
         <c:if test="${fromPurchaseOrder}">
         updatePoCounter();
         </c:if>
+
+        // Pre-populate generator selects even before warehouse selection
+        <c:if test="${not fromPurchaseOrder}">
+        if (generatorCache.length > 0) {
+            refreshAllGeneratorSelects();
+        }
+        </c:if>
+
         // Lắng nghe thay đổi trên MỌI ô serial (cả PO và non-PO) để cập nhật counter + submit
         document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
             inp.addEventListener('input', function () {

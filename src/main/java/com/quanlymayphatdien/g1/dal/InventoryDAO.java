@@ -18,8 +18,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     public static final String STATUS_PENDING_LIQUIDATION = "PENDING_LIQUIDATION";
     public static final String STATUS_LIQUIDATED = "LIQUIDATED";
     public static final String STATUS_IN_TRANSIT = "IN_TRANSIT";
-    public static final String STATUS_PENDING_IMPORT = "PENDING_IMPORT";
-    public static final String STATUS_RESERVED_EXPORT = "RESERVED_EXPORT";
 
     public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
             String search, int page, int pageSize) {
@@ -466,26 +464,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
 
-    public int insertPendingImport(Connection conn, int generatorId,
-                                    String serialNumber, int warehouseId) throws SQLException {
-        String sql = "INSERT INTO inventory (generator_id, serial_number, warehouse_id, status) "
-                   + "VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, generatorId);
-            ps.setString(2, serialNumber);
-            ps.setInt(3, warehouseId);
-            ps.setString(4, STATUS_PENDING_IMPORT);
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        }
-        return -1;
-    }
-
-
     /**
      * Insert mot serial moi vao inventory voi trang thai IN_STOCK ngay lap tuc.
      * Dung cho luong tao phieu nhap truc tiep (khong can manager duyet).
@@ -511,17 +489,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
 
-    public boolean reserveForExport(Connection conn, int inventoryId) throws SQLException {
-        String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_RESERVED_EXPORT);
-            ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_IN_STOCK);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-
     /**
      * Danh dau mot serial IN_STOCK da duoc xuat truc tiep (IN_STOCK -> targetStatus).
      * Dung cho luong tao phieu xuat khong can manager duyet: serial di thang tu IN_STOCK
@@ -539,35 +506,56 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
 
-    public boolean releaseReservation(Connection conn, int inventoryId) throws SQLException {
+    /**
+     * Danh dau serial IN_STOCK -> IN_TRANSIT (giu nguyen warehouse_id = kho nguon).
+     * Dung cho luong luan chuyen kho moi: phieu xuat ghi nhan serial da xuat khoi kho nguon
+     * nhung chua ve den kho dich.
+     */
+    public boolean markAsInTransit(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_IN_STOCK);
+            ps.setString(1, STATUS_IN_TRANSIT);
             ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_RESERVED_EXPORT);
+            ps.setString(3, STATUS_IN_STOCK);
             return ps.executeUpdate() > 0;
         }
     }
 
 
     /**
-     * Giai phong nhieu reservation cung luc (RESERVED_EXPORT -> IN_STOCK) trong
-     * cung connection. Tra ve so dong thuc su update.
+     * Hoan tat qua trinh luan chuyen: IN_TRANSIT -> IN_STOCK + chuyen warehouse_id
+     * sang kho dich. Luu y: kho dich khong thay doi khi tao phieu xuat, chi khi tao phieu nhap.
      */
-    public int releaseReservations(Connection conn, java.util.List<Integer> inventoryIds) throws SQLException {
-        if (inventoryIds == null || inventoryIds.isEmpty()) {
-            return 0;
-        }
-        String placeholders = String.join(",", java.util.Collections.nCopies(inventoryIds.size(), "?"));
-        String sql = "UPDATE inventory SET status = ? WHERE status = ? AND inventory_id IN (" + placeholders + ")";
+    public boolean completeTransferImport(Connection conn, int inventoryId, int destWarehouseId) throws SQLException {
+        String sql = "UPDATE inventory SET status = ?, warehouse_id = ? "
+                + "WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, STATUS_IN_STOCK);
-            ps.setString(2, STATUS_RESERVED_EXPORT);
-            for (int i = 0; i < inventoryIds.size(); i++) {
-                ps.setInt(i + 3, inventoryIds.get(i));
-            }
-            return ps.executeUpdate();
+            ps.setInt(2, destWarehouseId);
+            ps.setInt(3, inventoryId);
+            ps.setString(4, STATUS_IN_TRANSIT);
+            return ps.executeUpdate() > 0;
         }
+    }
+
+
+    /**
+     * Lay danh sach serial IN_TRANSOT thuoc 1 phieu xuat cu the.
+     * Tra ve List cac inventory_id da IN_TRANSIT ma receipt_detail dang quan ly.
+     */
+    public List<Integer> getInventoryIdsInTransfer(Connection conn, int sourceWarehouseId) throws SQLException {
+        List<Integer> ids = new ArrayList<>();
+        String sql = "SELECT inventory_id FROM inventory WHERE warehouse_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, sourceWarehouseId);
+            ps.setString(2, STATUS_IN_TRANSIT);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt(1));
+                }
+            }
+        }
+        return ids;
     }
 
 
@@ -586,43 +574,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             }
         }
         return ids;
-    }
-
-
-    public boolean completeImport(Connection conn, int inventoryId) throws SQLException {
-        String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_IN_STOCK);
-            ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_PENDING_IMPORT);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    public boolean completeExport(Connection conn, int inventoryId, String targetStatus) throws SQLException {
-        String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, targetStatus);
-            ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_RESERVED_EXPORT);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-
-    public int deletePendingImport(Connection conn, List<Integer> inventoryIds) throws SQLException {
-        if (inventoryIds == null || inventoryIds.isEmpty()) {
-            return 0;
-        }
-        String placeholders = String.join(",", java.util.Collections.nCopies(inventoryIds.size(), "?"));
-        String sql = "DELETE FROM inventory WHERE status = ? AND inventory_id IN (" + placeholders + ")";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_PENDING_IMPORT);
-            for (int i = 0; i < inventoryIds.size(); i++) {
-                ps.setInt(i + 2, inventoryIds.get(i));
-            }
-            return ps.executeUpdate();
-        }
     }
 
     public int updateStatusBySerial(Connection conn, String serialNumber, String newStatus) throws SQLException {
@@ -791,7 +742,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     /**
      * Kiem tra serial co dang bi "khoa" khong the tai su dung.
      * Tra ve true neu serial dang duoc su dung boi 1 receipt con hieu luc
-     * (DRAFT, PENDING, hoac co status khac PENDING_IMPORT nhu IN_STOCK, SOLD...).
+     * (DRAFT, PENDING, hoac co status khac IN_STOCK nhu SOLD, IN_TRANSIT...).
      * Tra ve false neu serial chi ton tai tren receipt DA Huy (CANCELLED)
      * hoac khong ton tai trong he thong.
      */
@@ -804,7 +755,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                    + "     OR (r.status IS NOT NULL AND r.status <> ?))";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, serialNumber);
-            ps.setString(2, STATUS_PENDING_IMPORT);
+            ps.setString(2, STATUS_IN_STOCK);
             ps.setString(3, "CANCELLED");
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

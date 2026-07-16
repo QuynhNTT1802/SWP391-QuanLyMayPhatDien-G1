@@ -17,42 +17,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
-        <style>
-            a.btn, a.back-link { text-decoration: none; }
-            .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
-            .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
-            .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
-            .alert-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
-            .action-bar-top { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
-            .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
-            .filter-active-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 11px; }
-            .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; gap: 8px; color: var(--muted); }
-            .empty-state .icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
-            .empty-state .icon-wrap svg { width: 22px; height: 22px; stroke: var(--muted); }
-            .empty-state strong { color: var(--fg); font-size: 14px; }
-
-            .product-table { width: 100%; border-collapse: collapse; }
-            .product-table th, .product-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
-            .product-table th { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; background: var(--surface-2); letter-spacing: 0.04em; }
-            .product-table td { font-size: 13px; }
-            .product-table tbody tr:hover { background: var(--surface-2); }
-            .product-table tfoot td { background: var(--surface-2); font-weight: 700; }
-            .text-center { text-align: center; }
-            .text-right { text-align: right; }
-
-            .note-soft { font-size: 13px; color: var(--fg-soft); white-space: pre-wrap; line-height: 1.55; padding: 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
-            .info-value .status-pill { white-space: nowrap; }
-
-            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-            .modal-host.show { display: flex; }
-            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
-            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-        </style>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     </head>
     <body>
         <div class="app">
@@ -69,7 +34,7 @@
                 </header>
 
                 <main>
-                    <a class="back-link" href="${pageContext.request.contextPath}/import-receipt">
+                    <a class="receipt-back-link" href="${pageContext.request.contextPath}/import-receipt">
                         <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại danh sách
                     </a>
@@ -84,54 +49,44 @@
                     <c:choose>
                         <c:when test="${receipt.status == 'PENDING'}">
                             <c:set var="statusLabel" value="Chờ duyệt"/>
-                            <c:set var="statusBg" value="#fff3cd"/>
-                            <c:set var="statusFg" value="#856404"/>
                         </c:when>
                         <c:when test="${receipt.status == 'COMPLETED'}">
                             <c:set var="statusLabel" value="Hoàn thành"/>
-                            <c:set var="statusBg" value="#d4edda"/>
-                            <c:set var="statusFg" value="#155724"/>
                         </c:when>
                         <c:when test="${receipt.status == 'CANCELLED'}">
                             <c:set var="statusLabel" value="Đã từ chối"/>
-                            <c:set var="statusBg" value="#f8d7da"/>
-                            <c:set var="statusFg" value="#721c24"/>
                         </c:when>
                         <c:otherwise>
                             <c:set var="statusLabel" value="${receipt.status}"/>
-                            <c:set var="statusBg" value="#e2e3e5"/>
-                            <c:set var="statusFg" value="#383d41"/>
                         </c:otherwise>
                     </c:choose>
 
-                    <div class="hero">
-                        <div class="hero-body">
-                            <h2 class="hero-name">
+                    <div class="receipt-header-bar">
+                        <div class="left">
+                            <span class="receipt-code-tag">
+                                <span class="ct-label">Mã phiếu nhập</span>
                                 <c:out value="${receipt.receiptCode}"/>
-                                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+                            </span>
+                            <h1 class="receipt-page-title">
+                                Phiếu nhập kho #${receipt.receiptId}
+                                <span class="status-pill ${receipt.status == 'PENDING' ? 'status-pending' : receipt.status == 'COMPLETED' ? 'status-completed' : receipt.status == 'CANCELLED' ? 'status-cancelled' : 'status-draft'}">
                                     <span class="pdot"></span>${statusLabel}
                                 </span>
-                            </h2>
-                            <div class="hero-meta">
-                                <span>Phiếu nhập kho</span>
-                                <span class="sep">·</span>
-                                <span class="id">#${receipt.receiptId}</span>
-                                <c:if test="${not empty receipt.createdAt}">
-                                    <span class="sep">·</span>
-                                    <span>Ngày tạo: ${receipt.createdAt}</span>
-                                </c:if>
-                            </div>
-                            <div class="hero-pills">
-                                <span class="pill warehouse"><span class="pdot"></span><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}" style="color:inherit;text-decoration:underline;"><c:out value="${receipt.warehouseName}"/></a></span>
-                                <span class="pill status-active"><span class="pdot"></span>Người tạo: <c:out value="${receipt.createdByName}"/></span>
+                            </h1>
+                            <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);">
+                                <span><strong style="color:var(--fg);">Kho:</strong> <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></span>
+                                <span><strong style="color:var(--fg);">Người tạo:</strong> <c:out value="${receipt.createdByName}"/></span>
                                 <c:if test="${not empty receipt.approvedByName}">
-                                    <span class="pill role-admin"><span class="pdot"></span>Người duyệt: <c:out value="${receipt.approvedByName}"/></span>
+                                    <span><strong style="color:var(--fg);">Người duyệt:</strong> <c:out value="${receipt.approvedByName}"/></span>
+                                </c:if>
+                                <c:if test="${not empty receipt.createdAt}">
+                                    <span><strong style="color:var(--fg);">Ngày tạo:</strong> ${receipt.createdAt}</span>
                                 </c:if>
                             </div>
                         </div>
                     </div>
 
-                    <div class="tab-bar">
+                    <div class="tabs">
                         <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
                             <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                             Thông tin & các máy
@@ -139,6 +94,7 @@
                         <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
                             <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             Lịch sử cập nhật
+                            <c:if test="${not empty totalLogs and totalLogs > 0}"><span class="tab-badge">${totalLogs}</span></c:if>
                         </a>
                     </div>
 
@@ -320,7 +276,7 @@
                                     <div class="info-field">
                                         <div class="info-label">Trạng thái</div>
                                         <div class="info-value">
-                                            <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+                                <span class="status-pill ${receipt.status == 'PENDING' ? 'status-pending' : receipt.status == 'COMPLETED' ? 'status-completed' : 'status-cancelled'}">
                                                 <span class="pdot"></span>${statusLabel}
                                             </span>
                                         </div>
@@ -355,7 +311,7 @@
                                             <c:otherwise>
                                                 <c:forEach var="d" items="${receipt.details}" varStatus="st">
                                                     <tr>
-                                                        <td class="mono" style="font-family:var(--font-mono);">${st.index + 1}</td>
+                                                        <td class="mono">${st.index + 1}</td>
                                                         <td>
                                                             <strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong>
                                                             <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span>

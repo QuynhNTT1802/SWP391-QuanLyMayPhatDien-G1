@@ -30,7 +30,7 @@ import java.util.Map;
  *     "generatorBrand": "...",
  *     "currentWarehouseId": int,
  *     "currentWarehouseName": "...",
- *     "status": "IN_STOCK|PENDING_IMPORT|RESERVED_EXPORT|...",
+ *     "status": "IN_STOCK|SOLD|IN_TRANSIT|LIQUIDATED|...",
  *     "blocked": bool,
  *     "inTargetWarehouse": bool|null
  *   }

@@ -15,15 +15,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-    <style>
-        .po-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--fg); font-weight: 600; }
-        .col-period { white-space: nowrap; width: 100px; }
-        .col-creator { white-space: nowrap; width: 160px; }
-        .col-actions { white-space: nowrap; }
-        .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 16px; }
-        .muted { color: var(--muted); }
-        .empty-state { text-align: center; padding: 40px; color: var(--muted); }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
 </head>
 <body>
 <c:set var="currentAction" value="${not empty param.action ? param.action : 'selectPurchase'}" />
@@ -118,7 +110,7 @@
                             <c:set var="filterParams" value="${filterParams}&toDate=${toDate}" />
                         </c:if>
                         <div class="pagination">
-                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                            <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
                                     <a href="?action=${currentAction}&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
