@@ -20,12 +20,14 @@ public class ImportProposal {
     private int createdBy;
     private Integer approvedBy;
     private Integer rejectedBy;
+    private Integer cancelledBy;
     private String revisionRequestedByRole;
     private LocalDateTime proposalDate;
     private String note;
     private String rejectReason;
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
+    private LocalDateTime cancelledAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -49,7 +51,7 @@ public class ImportProposal {
     public ImportProposal() {
     }
 
-    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, String revisionRequestedByRole, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
+    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, Integer cancelledBy, String revisionRequestedByRole, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime cancelledAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
         this.proposalId = proposalId;
         this.proposalCode = proposalCode;
         this.status = status;
@@ -57,12 +59,14 @@ public class ImportProposal {
         this.createdBy = createdBy;
         this.approvedBy = approvedBy;
         this.rejectedBy = rejectedBy;
+        this.cancelledBy = cancelledBy;
         this.revisionRequestedByRole = revisionRequestedByRole;
         this.proposalDate = proposalDate;
         this.note = note;
         this.rejectReason = rejectReason;
         this.approvedAt = approvedAt;
         this.rejectedAt = rejectedAt;
+        this.cancelledAt = cancelledAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.warehouseName = warehouseName;
@@ -158,6 +162,14 @@ public class ImportProposal {
         this.rejectedBy = rejectedBy;
     }
 
+    public Integer getCancelledBy() {
+        return cancelledBy;
+    }
+
+    public void setCancelledBy(Integer cancelledBy) {
+        this.cancelledBy = cancelledBy;
+    }
+
     public String getRevisionRequestedByRole() {
         return revisionRequestedByRole;
     }
@@ -204,6 +216,14 @@ public class ImportProposal {
 
     public void setRejectedAt(LocalDateTime rejectedAt) {
         this.rejectedAt = rejectedAt;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(LocalDateTime cancelledAt) {
+        this.cancelledAt = cancelledAt;
     }
 
     public LocalDateTime getCreatedAt() {

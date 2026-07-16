@@ -467,6 +467,40 @@
             .action-badge.action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent);  background: var(--danger-soft); }
             .action-badge.action-revision { color: #7c3aed;        border-color: color-mix(in srgb, #7c3aed 32%, transparent);         background: color-mix(in srgb, #7c3aed 8%, transparent); }
             .action-badge.action-cancel   { color: var(--muted);  border-color: var(--border); background: var(--surface-2); }
+            .gen-link { cursor: pointer; color: var(--accent); text-decoration: none; }
+            .gen-link:hover { text-decoration: underline; }
+
+            .gen-modal-backdrop {
+                position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+                display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px;
+            }
+            .gen-modal-backdrop.open { display: flex; }
+            .gen-modal {
+                background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+                width: 100%; max-width: 460px; box-shadow: 0 20px 50px rgba(0,0,0,.18); overflow: hidden;
+            }
+            .gen-modal-header {
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 16px 20px; border-bottom: 1px solid var(--border);
+            }
+            .gen-modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+            .gen-modal-close {
+                background: none; border: none; color: var(--muted); cursor: pointer;
+                font-size: 22px; line-height: 1; padding: 4px 8px; border-radius: var(--radius-sm);
+            }
+            .gen-modal-close:hover { background: var(--surface-2); color: var(--fg); }
+            .gen-modal-body { padding: 18px 20px; }
+            .gen-info-row { display: flex; padding: 7px 0; border-bottom: 1px solid var(--border); }
+            .gen-info-row:last-child { border-bottom: none; }
+            .gen-info-row .lbl {
+                width: 120px; flex-shrink: 0; font-size: 12px; color: var(--muted); font-weight: 600;
+                text-transform: uppercase; letter-spacing: .04em; padding-top: 1px;
+            }
+            .gen-info-row .val { font-size: 13px; color: var(--fg); font-weight: 600; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+            .gen-modal-footer {
+                display: flex; justify-content: flex-end; gap: 8px;
+                padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-2);
+            }
         </style>
     </head>
     <body>
@@ -528,6 +562,10 @@
                          ============================================================ --%>
                     <div class="header-bar">
                         <div class="left">
+                            <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách
+                            </a>
                             <span class="code-tag">
                                 <span class="ct-label">Đơn hàng -</span>
                                 <span><c:out value="${order.orderCode}"/></span>
@@ -538,18 +576,7 @@
                             </h2>
                         </div>
                         <div class="right">
-                            <a class="btn" href="${pageContext.request.contextPath}/order?action=list">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                                Quay lại
-                            </a>
-                            <button type="button" class="btn" onclick="location.reload()">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                                Làm mới
-                            </button>
-                            <button type="button" class="btn" disabled>
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                Lưu
-                            </button>
+
                             <c:if test="${canApproveNow}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -727,7 +754,14 @@
                                                         data-search="<c:out value='${d.generatorId} ${d.generatorModel}'/>"
                                                         data-status="${order.status}">
                                                         <td class="mono"><c:out value="${d.generatorId}"/></td>
-                                                        <td><strong><a href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${d.generatorId}"><c:out value="${d.generatorModel}"/></a></strong></td>
+                                                        <td><strong><a href="javascript:void(0);" class="gen-link"
+                                                               onclick="showGeneratorModal(this)"
+                                                               data-gen-id="${d.generatorId}"
+                                                               data-gen-model="<c:out value='${d.generatorModel}'/>"
+                                                               data-gen-power="<c:out value='${d.generatorPower}'/>"
+                                                               data-gen-freq="<c:out value='${d.generatorFreq}'/>"
+                                                               data-gen-weight="<c:out value='${d.generatorWeight}'/>"
+                                                               data-gen-status="<c:out value='${d.generatorStatus}'/>"><c:out value="${d.generatorModel}"/></a></strong></td>
                                                         <td class="text-right mono"><fmt:formatNumber value="${d.quantity}"/></td>
                                                         <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
                                                         <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
@@ -1001,6 +1035,48 @@
             </div>
         </c:if>
 
+        <div class="gen-modal-backdrop" id="generatorModal" onclick="if (event.target === this) closeGeneratorModal();">
+            <div class="gen-modal" role="dialog" aria-modal="true">
+                <div class="gen-modal-header">
+                    <h3>Thông tin máy phát</h3>
+                    <button type="button" class="gen-modal-close" onclick="closeGeneratorModal()">&times;</button>
+                </div>
+                <div class="gen-modal-body">
+                    <div class="gen-info-row">
+                        <div class="lbl">Mã máy</div>
+                        <div class="val" id="gm-id">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Model</div>
+                        <div class="val" id="gm-model">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Công suất</div>
+                        <div class="val" id="gm-power">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Tần số</div>
+                        <div class="val" id="gm-freq">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Trọng lượng</div>
+                        <div class="val" id="gm-weight">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Trạng thái</div>
+                        <div class="val" id="gm-status">—</div>
+                    </div>
+                </div>
+                <div class="gen-modal-footer">
+                    <button type="button" class="btn" onclick="closeGeneratorModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="gm-detail-link">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div class="toast-host" id="toastHost"></div>
 
         <script>
@@ -1031,12 +1107,36 @@
         <script>
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
+
+            function showGeneratorModal(el) {
+                var id = el.getAttribute('data-gen-id') || '';
+                var model = el.getAttribute('data-gen-model') || '—';
+                var power = el.getAttribute('data-gen-power') || '—';
+                var freq = el.getAttribute('data-gen-freq') || '—';
+                var weight = el.getAttribute('data-gen-weight') || '—';
+                var status = el.getAttribute('data-gen-status') || '—';
+
+                document.getElementById('gm-id').textContent = id || '—';
+                document.getElementById('gm-model').textContent = model;
+                document.getElementById('gm-power').textContent = power ? power + ' kVA' : '—';
+                document.getElementById('gm-freq').textContent = freq ? freq + ' Hz' : '—';
+                document.getElementById('gm-weight').textContent = weight ? weight + ' kg' : '—';
+                var statusText = status === 'active' ? 'Đang hoạt động' : (status === 'locked' ? 'Bị khóa' : status || '—');
+                document.getElementById('gm-status').textContent = statusText;
+                document.getElementById('gm-detail-link').href = window.APP_CTX + '/warehouse/generators?action=view&id=' + id;
+
+                document.getElementById('generatorModal').classList.add('open');
+            }
+            function closeGeneratorModal() {
+                document.getElementById('generatorModal').classList.remove('open');
+            }
             document.querySelectorAll('.modal-host').forEach(function (m) {
                 m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
             });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    closeGeneratorModal();
                 }
             });
 

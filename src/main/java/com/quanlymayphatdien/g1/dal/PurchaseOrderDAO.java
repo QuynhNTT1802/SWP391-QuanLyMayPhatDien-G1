@@ -75,7 +75,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     @Override
     public boolean update(PurchaseOrder t) {
         String sql = "UPDATE purchase_order SET note = ?, status = ?, total_proposals = ?, total_quantity = ? "
-                + "WHERE po_id = ? AND status = ?";
+                + "WHERE po_id = ?";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -84,7 +84,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement.setInt(3, t.getTotalProposals());
             statement.setInt(4, t.getTotalQuantity());
             statement.setInt(5, t.getPoId());
-            statement.setString(6, GlobalUtils.PO_STATUS_DRAFT);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -110,9 +109,8 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement.executeUpdate();
             statement.close();
             statement = connection.prepareStatement(
-                    "DELETE FROM purchase_order WHERE po_id = ? AND status = ?");
+                    "DELETE FROM purchase_order WHERE po_id = ?");
             statement.setInt(1, t.getPoId());
-            statement.setString(2, GlobalUtils.PO_STATUS_DRAFT);
             if (statement.executeUpdate() == 0) {
                 connection.rollback();
                 return false;
@@ -901,14 +899,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             connection.setAutoCommit(false);
             statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ?, sent_to_ceo_at = NOW() "
-                    + "WHERE po_id = ? AND status = ?");
+                    + "WHERE po_id = ?");
             statement.setString(1, GlobalUtils.PO_STATUS_PENDING_CEO);
             statement.setInt(2, poId);
-            statement.setString(3, GlobalUtils.PO_STATUS_DRAFT);
-            if (statement.executeUpdate() == 0) {
-                connection.rollback();
-                return false;
-            }
+            statement.executeUpdate();
             statement.close();
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
@@ -1106,7 +1100,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     + "WHERE po_id = ? AND status = ?");
             statement.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
             statement.setInt(2, poId);
-            statement.setString(3, GlobalUtils.PO_STATUS_DRAFT);
+            statement.setString(3, GlobalUtils.PO_STATUS_PENDING_CEO);
             if (statement.executeUpdate() == 0) {
                 connection.rollback();
                 return false;

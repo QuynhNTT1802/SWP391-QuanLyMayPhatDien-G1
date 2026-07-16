@@ -49,6 +49,10 @@
                 background: #e2e3e5;
                 color: #383d41;
             }
+            .status-deleted {
+                background: #6c757d;
+                color: #ffffff;
+            }
             .status-pending_ceo {
                 background: #fff3cd;
                 color: #856404;
@@ -149,6 +153,7 @@
                             <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối (Sale Manager / CEO)</option>
                             <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
+                            <option value="DELETED" <c:if test="${statusFilter == 'DELETED'}">selected</c:if>>Đã xoá</option>
                         </select>
 
                         <div class="spacer"></div>
@@ -247,6 +252,7 @@
                                                         <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối bởi Sale Manager</span></c:when>
                                                         <c:when test="${p.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
+                                                        <c:when test="${p.status == 'DELETED'}"><span class="status-pill status-deleted"><span class="pdot"></span>Đã xoá</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${p.status}"/></span></c:otherwise>
                                                     </c:choose>
                                                 </td>

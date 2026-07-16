@@ -34,7 +34,6 @@ public class GlobalUtils {
     public static final String RECEIPT_STATUS_DRAFT = "DRAFT";
 
 
-    public static final String PO_STATUS_DRAFT = "DRAFT";
     public static final String PO_STATUS_PENDING_CEO = "PENDING_CEO";
     public static final String PO_STATUS_APPROVED = "APPROVED";
     public static final String PO_STATUS_REJECTED = "REJECTED";
