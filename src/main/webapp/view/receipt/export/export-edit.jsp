@@ -685,12 +685,23 @@
                 + '&serial=' + encodeURIComponent(serial)
                 + '&warehouseId=' + encodeURIComponent(whId);
 
+        var focusScan = function () {
+            var scanEl = document.getElementById('scanBox');
+            if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+        };
+
         fetch(url)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 exportEditScannerLocked = false;
                 if (!data || !data.found) {
                     toast((data && data.message) ? data.message : 'Serial không tồn tại trong hệ thống', 'danger');
+                    focusScan();
+                    return;
+                }
+                if (data.inTargetWarehouse === false) {
+                    toast('Serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
+                    focusScan();
                     return;
                 }
                 var tr = buildEmptyRow();
@@ -725,8 +736,7 @@
                 updateRowNumbers();
                 if (typeof validateInventoryRealtime === 'function') validateInventoryRealtime();
                 toast('Đã thêm serial ' + data.serialNumber, 'success');
-                var scanEl = document.getElementById('scanBox');
-                if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+                focusScan();
             })
             .catch(function (err) {
                 exportEditScannerLocked = false;

@@ -603,6 +603,47 @@
 .scanner-box small.error   { color: var(--danger); }
 .scanner-box.disabled      { opacity: .55; }
 
+/* ---------- Picker mẫu máy phía trên ô quét ---------- */
+.scanner-model-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.scanner-model-picker label {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.scanner-model-picker select {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 14px;
+    font-family: var(--font-base);
+}
+.scanner-model-picker select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.scanner-model-picker .hint {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.locked-gen-label { color: var(--fg); font-size: 13px; }
+.locked-gen-label.locked-gen-empty { color: var(--muted); font-weight: 400; font-style: italic; }
+.locked-gen-label + .po-lock-tag { vertical-align: middle; }
+
 .scanner-row { display: flex; gap: 8px; align-items: stretch; }
 .scanner-row input { flex: 1; }
 .scanner-row .cam-btn {

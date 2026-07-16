@@ -138,6 +138,15 @@ public class InventoryLookupController extends HttpServlet {
             return;
         }
 
+        Integer expectedGenId = null;
+        String expParam = request.getParameter("expectedGeneratorId");
+        if (expParam != null && !expParam.isEmpty()) {
+            try { expectedGenId = Integer.parseInt(expParam); } catch (NumberFormatException ignored) {}
+        }
+        if (expectedGenId != null && inv.getGeneratorId() != expectedGenId) {
+            body.put("mismatch", true);
+        }
+
         body.put("found", true);
         body.put("inventoryId", inv.getInventoryId());
         body.put("generatorId", inv.getGeneratorId());

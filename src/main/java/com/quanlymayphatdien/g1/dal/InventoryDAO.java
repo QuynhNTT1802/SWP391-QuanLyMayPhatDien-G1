@@ -488,6 +488,22 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return -1;
     }
 
+    /**
+     * Kiem tra serial co ton tai trong inventory hay chua (gom ca IN_STOCK, SOLD, IN_TRANSIT...).
+     * Dung trong transaction de tranh insert trung khi tao phieu nhap.
+     */
+    public boolean serialExists(Connection conn, String serialNumber) throws SQLException {
+        if (serialNumber == null || serialNumber.isEmpty()) return false;
+        String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, serialNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1) > 0;
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Danh dau mot serial IN_STOCK da duoc xuat truc tiep (IN_STOCK -> targetStatus).
