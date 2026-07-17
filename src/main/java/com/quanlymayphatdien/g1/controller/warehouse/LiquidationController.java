@@ -770,6 +770,8 @@ public class LiquidationController extends HttpServlet {
             log.setDetails("Quản lý kho tạo đơn thanh lý, báo giá & gửi CEO duyệt: " + l.getLiquidationCode());
             activityLogDAO.insert(log);
 
+            request.getSession().setAttribute("toastMessage", "Tạo đơn thanh lý thành công, chờ CEO duyệt");
+            request.getSession().setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/liquidations");
         } catch (Exception e) {
             if (conn != null) {
@@ -872,6 +874,8 @@ public class LiquidationController extends HttpServlet {
         liqLog.setDetails("CEO duyệt đơn thanh lý, chờ tạo phiếu xuất kho");
         activityLogDAO.insert(liqLog);
 
+        request.getSession().setAttribute("toastMessage", "Đã duyệt đơn thanh lý");
+        request.getSession().setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
@@ -927,6 +931,9 @@ public class LiquidationController extends HttpServlet {
         log.setDetails(isPermanent ? "CEO từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "CEO yêu cầu sửa đơn thanh lý");
         activityLogDAO.insert(log);
 
+        String toastMsg = isPermanent ? "Đã từ chối và huỷ đơn thanh lý" : "Đã yêu cầu sửa đơn thanh lý";
+        request.getSession().setAttribute("toastMessage", toastMsg);
+        request.getSession().setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
     }
 
@@ -1112,6 +1119,8 @@ public class LiquidationController extends HttpServlet {
             log.setDetails("Nhân viên đã cập nhật lại thông tin đơn thanh lý theo yêu cầu");
             activityLogDAO.insert(log);
 
+            request.getSession().setAttribute("toastMessage", "Cập nhật đơn thanh lý thành công");
+            request.getSession().setAttribute("toastType", "success");
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId);
         } catch (Exception e) {
             if (conn != null) {
