@@ -5,6 +5,7 @@ import com.quanlymayphatdien.g1.entity.Inventory;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -1011,6 +1012,32 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             System.out.println(e.getMessage());
         }
         return 0;
+    }
+
+    /**
+     * Returns a map of generator_id -> in-stock count at the given warehouse.
+     * Used by proposal screens to show tồn kho next to each generator row.
+     */
+    public Map<Integer, Integer> countInStockMapByWarehouse(int warehouseId) {
+        Map<Integer, Integer> map = new LinkedHashMap<>();
+        if (warehouseId <= 0) {
+            return map;
+        }
+        String sql = "SELECT i.generator_id, COUNT(*) AS cnt FROM inventory i "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE i.warehouse_id = ? AND i.status = 'IN_STOCK' AND w.status = 'active' "
+                + "GROUP BY i.generator_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, warehouseId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getInt("generator_id"), rs.getInt("cnt"));
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return map;
     }
 
     public int countActiveWarehouses() {

@@ -30,14 +30,9 @@
         set('inpCustEmail', data.email);
         set('inpCustAddress', data.address);
         set('customerCompany', data.companyName);
-        if (data.customerTypeId != null && data.customerTypeId > 0) {
-            var sel = $('customerTypeSelect');
-            if (sel) {
-                sel.value = String(data.customerTypeId);
-                if (typeof onCustomerTypeChange === 'function')
-                    onCustomerTypeChange();
-            }
-        }
+        set('customerTypeId', data.customerTypeId);
+        if (typeof onCustomerTypeChange === 'function')
+            onCustomerTypeChange();
     }
 
     function setTriggerLabel(text) {
@@ -59,18 +54,14 @@
     }
 
     function clearCustomerFields() {
-        var ids = ['inpCustName', 'inpCustPhone', 'inpCustEmail', 'inpCustAddress', 'customerCompany'];
+        var ids = ['inpCustName', 'inpCustPhone', 'inpCustEmail', 'inpCustAddress', 'customerCompany', 'customerTypeId'];
         for (var i = 0; i < ids.length; i++) {
             var el = $(ids[i]);
             if (el)
                 el.value = '';
         }
-        var sel = $('customerTypeSelect');
-        if (sel) {
-            sel.value = '';
-            if (typeof onCustomerTypeChange === 'function')
-                onCustomerTypeChange();
-        }
+        if (typeof onCustomerTypeChange === 'function')
+            onCustomerTypeChange();
         var hidden = $('sdHiddenId');
         if (hidden)
             hidden.value = '';

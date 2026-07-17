@@ -59,7 +59,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
     
     public List<OrderDetail> findGeneratorById(int orderId) {
         List<OrderDetail> list = new ArrayList<>();
-         String sql = "SELECT od.*, g.model FROM order_detail od "
+         String sql = "SELECT od.*, g.model, g.power_rating, g.frequency, g.weight, g.status FROM order_detail od "
                + "JOIN generator g ON od.generator_id = g.id "
                + "WHERE od.order_id = ?";
         try {
@@ -70,6 +70,10 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
             while (resultSet.next()) {
                 OrderDetail d = getFromResultSet(resultSet);
                 d.setGeneratorModel(resultSet.getString("model"));
+                d.setGeneratorPower(resultSet.getString("power_rating"));
+                d.setGeneratorFreq(resultSet.getString("frequency"));
+                d.setGeneratorWeight(resultSet.getString("weight"));
+                d.setGeneratorStatus(resultSet.getString("status"));
                 list.add(d);
             }
         } catch (Exception e) {
