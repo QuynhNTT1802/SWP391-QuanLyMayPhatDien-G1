@@ -785,5 +785,21 @@
     }
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script>
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        var errorMsg = params.get('error');
+        if (errorMsg && typeof showToast === 'function') {
+            showToast(decodeURIComponent(errorMsg), 'danger');
+        }
+        var successMsg = params.get('success');
+        if (successMsg && typeof showToast === 'function') {
+            showToast(decodeURIComponent(successMsg), 'success');
+        }
+        if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+            showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+        }
+    })();
+</script>
 </body>
 </html>
