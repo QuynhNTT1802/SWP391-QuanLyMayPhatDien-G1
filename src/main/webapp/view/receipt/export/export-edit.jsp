@@ -704,6 +704,17 @@
                     focusScan();
                     return;
                 }
+                var dupFound = false;
+                document.querySelectorAll('#detailBody select[name="serialNumber"]').forEach(function (select) {
+                    if (select.value && select.value === data.serialNumber) {
+                        dupFound = true;
+                    }
+                });
+                if (dupFound) {
+                    toast('Serial "' + data.serialNumber + '" đã có trong phiếu, không thể quét trùng.', 'danger');
+                    focusScan();
+                    return;
+                }
                 var tr = buildEmptyRow();
                 if (data.inventoryId) {
                     tr.setAttribute('data-inventory-id', data.inventoryId);

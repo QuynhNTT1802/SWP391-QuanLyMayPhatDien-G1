@@ -86,6 +86,20 @@
                         </div>
                     </div>
 
+                    <c:if test="${receipt.status == 'PENDING' and isManager}">
+                        <div style="display:flex;gap:10px;justify-content:flex-end;margin:16px 0;">
+                            <form method="post" action="${pageContext.request.contextPath}/import-receipt?action=approve">
+                                <input type="hidden" name="id" value="${receipt.receiptId}"/>
+                                <button type="submit" class="btn btn-primary">Duyệt phiếu</button>
+                            </form>
+                            <form method="post" action="${pageContext.request.contextPath}/import-receipt?action=reject" style="display:flex;gap:8px;align-items:center;">
+                                <input type="hidden" name="id" value="${receipt.receiptId}"/>
+                                <input type="text" name="reason" required maxlength="500" placeholder="Lý do từ chối" class="date-input"/>
+                                <button type="submit" class="btn">Từ chối</button>
+                            </form>
+                        </div>
+                    </c:if>
+
                     <div class="tabs">
                         <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
                             <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>

@@ -1,3 +1,4 @@
+
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -297,13 +298,13 @@
                 border-radius: 50%;
                 background: currentColor;
             }
-            .status-draft { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
             .status-pending,
             .status-pending_ceo { background: #fff3cd; color: #856404; border-color: color-mix(in srgb, #856404 25%, transparent); }
             .status-approved { background: #d4edda; color: #155724; border-color: color-mix(in srgb, #155724 25%, transparent); }
             .status-rejected { background: #f8d7da; color: #721c24; border-color: color-mix(in srgb, #721c24 25%, transparent); }
             .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
             .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
+            .status-deleted { background: #6c757d; color: #ffffff; border-color: #565e64; }
 
             
             .empty-state {
@@ -478,12 +479,8 @@
                 </header>
 
                 <main>
-                    <c:choose>
-                        <c:when test="${proposal.status == 'DRAFT'}">
-                            <c:set var="statusLabel" value="Nháp"/>
-                            <c:set var="statusPillClass" value="status-draft"/>
-                        </c:when>
-                        <c:when test="${proposal.status == 'PENDING'}">
+<c:choose>
+                    <c:when test="${proposal.status == 'PENDING'}">
                             <c:set var="statusLabel" value="Chờ duyệt"/>
                             <c:set var="statusPillClass" value="status-pending"/>
                         </c:when>
@@ -507,6 +504,10 @@
                             <c:set var="statusLabel" value="Cần chỉnh sửa"/>
                             <c:set var="statusPillClass" value="status-revision"/>
                         </c:when>
+                        <c:when test="${proposal.status == 'DELETED'}">
+                            <c:set var="statusLabel" value="Đã xoá"/>
+                            <c:set var="statusPillClass" value="status-deleted"/>
+                        </c:when>
                         <c:otherwise>
                             <c:set var="statusLabel" value="Đã hủy"/>
                             <c:set var="statusPillClass" value="status-cancelled"/>
@@ -521,6 +522,10 @@
 
                     <div class="header-bar">
                         <div class="left">
+                            <a class="back-link" href="${pageContext.request.contextPath}/proposal">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách
+                            </a>
                             <span class="code-tag">
                                 <span class="ct-label">Phiếu đề xuất -</span>
                                 <span><c:out value="${proposal.proposalCode}"/></span>
@@ -531,36 +536,9 @@
                             </h2>
                         </div>
                         <div class="right">
-                            <a class="btn" href="${pageContext.request.contextPath}/proposal?action=list">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                                Quay lại
-                            </a>
-                            <button type="button" class="btn" onclick="location.reload()">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                                Làm mới
-                            </button>
-                            <button type="button" class="btn" disabled>
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                Lưu
-                            </button>
 
-                            <c:if test="${!hasLockedPO && proposal.status == 'DRAFT' && isOwner}">
-                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Chỉnh sửa
-                                </a>
-                                <button type="button" class="btn btn-primary" onclick="openModal('submitReviewModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                    Gửi duyệt
-                                </button>
-                                
-                                <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                                    Xoá
-                                </button>
-                            </c:if>
 
-                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && isOwner}">
+                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && isOwner && !isViewingDeleted}">
                                 <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Chỉnh sửa
@@ -571,7 +549,7 @@
                                 </button>
                             </c:if>
 
-                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && proposal.revisionRequestedByRole == 'CEO' && canApprove}">
+                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && proposal.revisionRequestedByRole == 'CEO' && canApprove && !isViewingDeleted}">
                                 <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Sửa đề xuất (yêu cầu từ CEO)
@@ -582,7 +560,14 @@
                                 </button>
                             </c:if>
 
-                            <c:if test="${proposal.status == 'PENDING' && canApprove}">
+                            <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner && !isViewingDeleted}">
+                                <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                                    Xoá
+                                </button>
+                            </c:if>
+
+                            <c:if test="${proposal.status == 'PENDING' && canApprove && !isViewingDeleted}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Xác nhận
@@ -593,7 +578,7 @@
                                 </button>
                             </c:if>
 
-                            <c:if test="${proposal.status == 'PENDING' && canReject}">
+                            <c:if test="${proposal.status == 'PENDING' && canReject && !isViewingDeleted}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
@@ -623,6 +608,20 @@
                     </c:if>
 
                     <c:set var="showDeadlineBanner" value="${not empty proposal.period}" />
+                    <c:if test="${isViewingDeleted}">
+                        <div class="alert alert-warn">
+                            <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                            <span>
+                                <strong>Phiếu này đã bị xoá.</strong>
+                                <c:choose>
+                                    <c:when test="${not empty proposal.cancelledAt}">
+                                        Đã xoá lúc <strong style="font-family:'JetBrains Mono',monospace;">${proposal.cancelledAt.format(propFmt)}</strong>.
+                                    </c:when>
+                                </c:choose>
+                                Phiếu đã được ẩn khỏi danh sách chung, chỉ bạn (người tạo) có thể xem lại ở chế độ chỉ đọc.
+                            </span>
+                        </div>
+                    </c:if>
                     <c:if test="${showDeadlineBanner}">
                         <div class="alert ${isWithinDeadline ? 'alert-info' : 'alert-warn'}">
                             <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -849,7 +848,7 @@
                                     <option value="APPROVE"    ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
                                     <option value="REJECT"     ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
                                     <option value="REVISION"   ${logAction == 'REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa</option>
-                                    <option value="CANCEL"     ${logAction == 'CANCEL' ? 'selected' : ''}>Huỷ</option>
+                                    
                                 </select>
                                 <div class="date-range">
                                     <label class="date-label">Từ</label>
@@ -926,7 +925,7 @@
                                                             <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
                                                             <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
                                                             <c:when test="${h.action == 'REVISION'}">Yêu cầu sửa</c:when>
-                                                            <c:when test="${h.action == 'CANCEL'}">Huỷ</c:when>
+                                                            
                                                             <c:otherwise>${h.action}</c:otherwise>
                                                         </c:choose>
                                                         </span>
@@ -1033,40 +1032,11 @@
             </div>
         </c:if>
 
-        <c:if test="${!hasLockedPO && proposal.status == 'DRAFT' && isOwner}">
-            <div class="modal-host" id="submitReviewModal">
-                <div class="modal-card">
-                    <h3>Gửi duyệt phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" và Sale Manager sẽ nhận được để xem xét.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <input type="hidden" name="submitType" value="submit" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('submitReviewModal')">Đóng</button>
-                            <button type="submit" class="btn btn-primary">Gửi duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal-host" id="cancelDraftModal">
-                <div class="modal-card">
-                    <h3>Huỷ phiếu nháp</h3>
-                    <div class="modal-sub">Phiếu nháp sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelDraftModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
+        <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner && !isViewingDeleted}">
             <div class="modal-host" id="deleteModal">
                 <div class="modal-card">
-                    <h3>Xoá phiếu nháp</h3>
-                    <div class="modal-sub">Phiếu nháp sẽ bị xoá hoàn toàn khỏi hệ thống. Hành động này không thể hoàn tác.</div>
+                    <h3>Xoá phiếu đề xuất</h3>
+                    <div class="modal-sub">Phiếu sẽ được chuyển sang trạng thái <strong>Đã xoá</strong> và ẩn khỏi danh sách chung. Bạn vẫn có thể xem lại ở chế độ chỉ đọc.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <div class="modal-actions">
@@ -1078,7 +1048,7 @@
             </div>
         </c:if>
 
-        <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && (isOwner || (proposal.revisionRequestedByRole == 'CEO' && canApprove))}">
+        <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && !isViewingDeleted && (isOwner || (proposal.revisionRequestedByRole == 'CEO' && canApprove))}">
             <div class="modal-host" id="resubmitModal">
                 <div class="modal-card">
                     <h3>Gửi duyệt lại</h3>

@@ -275,8 +275,9 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
+                + "linked_transfer_id, related_export_receipt_id, "
                 + "warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getReceiptCode());
             ps.setString(2, r.getReceiptType());
@@ -290,25 +291,35 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 ps.setNull(4, Types.INTEGER);
             }
-            ps.setInt(5, r.getWarehouseId());
-            ps.setInt(6, r.getCreatedBy());
-            ps.setString(7, status);
-            ps.setString(8, r.getNote());
-            if (r.getReasonId() != null) {
-                ps.setInt(9, r.getReasonId());
+            if (r.getLinkedTransferId() != null) {
+                ps.setInt(5, r.getLinkedTransferId());
             } else {
-                ps.setNull(9, Types.INTEGER);
+                ps.setNull(5, Types.INTEGER);
             }
-            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
-            if (r.getApprovedBy() != null) {
-                ps.setInt(11, r.getApprovedBy());
+            if (r.getRelatedExportReceiptId() != null) {
+                ps.setInt(6, r.getRelatedExportReceiptId());
+            } else {
+                ps.setNull(6, Types.INTEGER);
+            }
+            ps.setInt(7, r.getWarehouseId());
+            ps.setInt(8, r.getCreatedBy());
+            ps.setString(9, status);
+            ps.setString(10, r.getNote());
+            if (r.getReasonId() != null) {
+                ps.setInt(11, r.getReasonId());
             } else {
                 ps.setNull(11, Types.INTEGER);
             }
-            if (r.getApprovedAt() != null) {
-                ps.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                ps.setInt(13, r.getApprovedBy());
             } else {
-                ps.setNull(12, Types.TIMESTAMP);
+                ps.setNull(13, Types.INTEGER);
+            }
+            if (r.getApprovedAt() != null) {
+                ps.setTimestamp(14, Timestamp.valueOf(r.getApprovedAt()));
+            } else {
+                ps.setNull(14, Types.TIMESTAMP);
             }
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -679,16 +690,125 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
     }
 
+    public List<String> approveReceipt(int receiptId, int approvedBy) {
+        List<String> errors = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            String receiptType = null;
+            String receiptCode = null;
+            int warehouseId = 0;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT receipt_type, receipt_code, warehouse_id, status FROM receipt WHERE receipt_id = ? FOR UPDATE")) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        errors.add("Không tìm thấy phiếu nhập");
+                    } else {
+                        receiptType = rs.getString("receipt_type");
+                        receiptCode = rs.getString("receipt_code");
+                        warehouseId = rs.getInt("warehouse_id");
+                        if (!GlobalUtils.RECEIPT_STATUS_PENDING.equals(rs.getString("status"))) {
+                            errors.add("Phiếu không ở trạng thái chờ duyệt");
+                        }
+                    }
+                }
+            }
+
+            if (!errors.isEmpty()) {
+                conn.rollback();
+                return errors;
+            }
+            if (!"IMPORT".equals(receiptType)) {
+                conn.rollback();
+                errors.add("Chỉ có thể duyệt phiếu nhập");
+                return errors;
+            }
+
+            List<ReceiptDetail> details = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT rd.receipt_id, rd.inventory_id, rd.note, i.serial_number, "
+                    + "i.generator_id, i.status "
+                    + "FROM receipt_detail rd JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                    + "WHERE rd.receipt_id = ?")) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        ReceiptDetail detail = new ReceiptDetail();
+                        detail.setReceiptId(rs.getInt("receipt_id"));
+                        detail.setInventoryId(rs.getInt("inventory_id"));
+                        detail.setGeneratorId(rs.getInt("generator_id"));
+                        detail.setSerialNumber(rs.getString("serial_number"));
+                        detail.setNote(rs.getString("note"));
+                        details.add(detail);
+                        String status = rs.getString("status");
+                        if ("PENDING_IMPORT".equals(status)) {
+                            try (PreparedStatement updateInventory = conn.prepareStatement(
+                                    "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?")) {
+                                updateInventory.setString(1, "IN_STOCK");
+                                updateInventory.setInt(2, detail.getInventoryId());
+                                updateInventory.setString(3, "PENDING_IMPORT");
+                                if (updateInventory.executeUpdate() == 0) {
+                                    errors.add("Không thể cập nhật serial \"" + detail.getSerialNumber() + "\"");
+                                }
+                            }
+                        } else if (!InventoryDAO.STATUS_IN_STOCK.equals(status)) {
+                            errors.add("Serial \"" + detail.getSerialNumber() + "\" không ở trạng thái có thể nhập");
+                        }
+                    }
+                }
+            }
+
+            if (details.isEmpty()) {
+                errors.add("Phiếu không có chi tiết serial hợp lệ");
+            }
+            if (!errors.isEmpty()) {
+                conn.rollback();
+                return errors;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE receipt SET status = ?, approved_by = ?, approved_at = ? "
+                    + "WHERE receipt_id = ? AND status = ?")) {
+                ps.setString(1, GlobalUtils.RECEIPT_STATUS_COMPLETED);
+                ps.setInt(2, approvedBy);
+                ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                ps.setInt(4, receiptId);
+                ps.setString(5, GlobalUtils.RECEIPT_STATUS_PENDING);
+                if (ps.executeUpdate() == 0) {
+                    conn.rollback();
+                    errors.add("Phiếu không còn ở trạng thái chờ duyệt");
+                    return errors;
+                }
+            }
+
+            writeStockCardsForImport(conn, receiptId, receiptCode, warehouseId, approvedBy, details);
+            conn.commit();
+        } catch (SQLException e) {
+            errors.add("Lỗi hệ thống: " + e.getMessage());
+        }
+        return errors;
+    }
+
     public boolean rejectReceipt(int receiptId, int approvedBy, Integer reasonId, String reasonNote) {
         Connection conn = null;
         try {
             conn = getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Lay danh sach inventory_id cua receipt (giu lai de rollback neu can)
             List<Integer> inventoryIds = new ArrayList<>();
-            String selInvSql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(selInvSql)) {
+            String receiptType = null;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT receipt_type FROM receipt WHERE receipt_id = ?")) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        receiptType = rs.getString("receipt_type");
+                    }
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?")) {
                 ps.setInt(1, receiptId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -697,28 +817,46 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 }
             }
 
-            // 2. Update receipt status
-            String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
+            String sql = "UPDATE receipt SET status = ?, approved_by = ?, "
                     + "approved_at = ?, reason_id = ?, reason_note = ? "
-                    + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
+                    + "WHERE receipt_id = ? AND status = ?";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, approvedBy);
-                ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                ps.setString(1, GlobalUtils.RECEIPT_STATUS_CANCELLED);
+                ps.setInt(2, approvedBy);
+                ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
                 if (reasonId != null) {
-                    ps.setInt(3, reasonId);
+                    ps.setInt(4, reasonId);
                 } else {
-                    ps.setNull(3, Types.INTEGER);
+                    ps.setNull(4, Types.INTEGER);
                 }
                 if (reasonNote != null && !reasonNote.trim().isEmpty()) {
-                    ps.setString(4, reasonNote.trim());
+                    ps.setString(5, reasonNote.trim());
                 } else {
-                    ps.setNull(4, Types.VARCHAR);
+                    ps.setNull(5, Types.VARCHAR);
                 }
-                ps.setInt(5, receiptId);
-                int updated = ps.executeUpdate();
-                if (updated == 0) {
+                ps.setInt(6, receiptId);
+                ps.setString(7, GlobalUtils.RECEIPT_STATUS_PENDING);
+                if (ps.executeUpdate() == 0) {
                     conn.rollback();
                     return false;
+                }
+            }
+
+            if ("IMPORT".equals(receiptType)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM receipt_detail WHERE receipt_id = ?")) {
+                    ps.setInt(1, receiptId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM inventory WHERE inventory_id = ? "
+                        + "AND NOT EXISTS (SELECT 1 FROM receipt_detail WHERE inventory_id = ?)")) {
+                    for (Integer inventoryId : inventoryIds) {
+                        ps.setInt(1, inventoryId);
+                        ps.setInt(2, inventoryId);
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
                 }
             }
 
@@ -726,11 +864,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return true;
         } catch (SQLException e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             System.out.println(e.getMessage());
         } finally {
-            closeResources();
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ignored) {
+                }
+            }
         }
         return false;
     }

@@ -17,6 +17,10 @@ public class OrderDetail {
     private Double unitPrice;
     private String note;
     private String generatorModel;
+    private String generatorPower;
+    private String generatorFreq;
+    private String generatorWeight;
+    private String generatorStatus;
 
     public OrderDetail() {
     }
@@ -86,8 +90,38 @@ public class OrderDetail {
     public void setGeneratorModel(String generatorModel) {
         this.generatorModel = generatorModel;
     }
-    
- 
+
+    public String getGeneratorPower() {
+        return generatorPower;
+    }
+
+    public void setGeneratorPower(String generatorPower) {
+        this.generatorPower = generatorPower;
+    }
+
+    public String getGeneratorFreq() {
+        return generatorFreq;
+    }
+
+    public void setGeneratorFreq(String generatorFreq) {
+        this.generatorFreq = generatorFreq;
+    }
+
+    public String getGeneratorWeight() {
+        return generatorWeight;
+    }
+
+    public void setGeneratorWeight(String generatorWeight) {
+        this.generatorWeight = generatorWeight;
+    }
+
+    public String getGeneratorStatus() {
+        return generatorStatus;
+    }
+
+    public void setGeneratorStatus(String generatorStatus) {
+        this.generatorStatus = generatorStatus;
+    }
     
     
 }

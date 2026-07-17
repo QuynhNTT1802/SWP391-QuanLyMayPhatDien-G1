@@ -644,6 +644,19 @@
 .locked-gen-label.locked-gen-empty { color: var(--muted); font-weight: 400; font-style: italic; }
 .locked-gen-label + .po-lock-tag { vertical-align: middle; }
 
+.transfer-row-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+.transfer-row-hint strong {
+    color: var(--fg);
+    font-family: var(--font-mono);
+    font-weight: 600;
+}
+
 .scanner-row { display: flex; gap: 8px; align-items: stretch; }
 .scanner-row input { flex: 1; }
 .scanner-row .cam-btn {

@@ -643,18 +643,8 @@ public class ExportReceiptController extends HttpServlet {
             r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
             r.setApprovedBy(loggedUser.getId());
             r.setApprovedAt(java.time.LocalDateTime.now());
-
-            receiptId = receiptDAO.insert(r);
-            if (receiptId <= 0) {
-                request.setAttribute("toastMessage", "Không thể tạo phiếu, vui lòng thử lại");
-                request.setAttribute("toastType", "danger");
-                request.setAttribute("warehouses", warehouseDAO.findAll());
-                request.setAttribute("generators", new ArrayList<>());
-                request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-                request.setAttribute("allSerials", loadAllInStockSerials());
-                request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
-                return;
-            }
+            // receiptId sẽ được insert bên trong transaction bên dưới
+            receiptId = -1;
         }
 
         java.sql.Connection conn = null;
@@ -662,6 +652,13 @@ public class ExportReceiptController extends HttpServlet {
         try {
             conn = receiptDAO.getConnection();
             conn.setAutoCommit(false);
+
+            if (existingReceipt == null) {
+                receiptId = receiptDAO.insert(conn, r);
+                if (receiptId <= 0) {
+                    throw new java.sql.SQLException("Không thể tạo phiếu, vui lòng thử lại");
+                }
+            }
 
             if (existingReceipt != null) {
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
@@ -812,10 +809,12 @@ public class ExportReceiptController extends HttpServlet {
             if (conn != null) {
                 try { conn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
             }
+            receiptId = (existingReceipt != null) ? existingReceipt.getReceiptId() : -1;
             errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
         } finally {
             if (conn != null) {
                 try { conn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                try { conn.close(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
             }
         }
         if (!ok) {
