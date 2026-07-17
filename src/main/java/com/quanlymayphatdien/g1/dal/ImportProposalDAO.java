@@ -447,7 +447,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
     }
 
-    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int loggedUserId, int page, int pageSize) {
+    public List<ImportProposal> searchByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int loggedUserId, Boolean hasPo, int page, int pageSize) {
         List<ImportProposal> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, "
@@ -471,6 +471,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         if (status != null && !status.isEmpty()) {
             sql.append(" AND p.status = ?");
             params.add(status);
+        }
+        if (hasPo != null) {
+            if (hasPo) {
+                sql.append(" AND p.purchase_order_id IS NOT NULL");
+            } else {
+                sql.append(" AND p.purchase_order_id IS NULL");
+            }
         }
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND p.proposal_code LIKE ?");
@@ -517,7 +524,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         return list;
     }
 
-    public int countByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int loggedUserId) {
+    public int countByFilters(String status, String search, Integer createdBy, Integer poFilter, String dateFrom, String dateTo, int loggedUserId, Boolean hasPo) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM import_proposal p WHERE (p.status != ? OR p.created_by = ?)");
         List<Object> params = new ArrayList<>();
         params.add(GlobalUtils.STATUS_DELETED);
@@ -525,6 +532,13 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         if (status != null && !status.isEmpty()) {
             sql.append(" AND p.status = ?");
             params.add(status);
+        }
+        if (hasPo != null) {
+            if (hasPo) {
+                sql.append(" AND p.purchase_order_id IS NOT NULL");
+            } else {
+                sql.append(" AND p.purchase_order_id IS NULL");
+            }
         }
         if (search != null && !search.trim().isEmpty()) {
             sql.append(" AND p.proposal_code LIKE ?");

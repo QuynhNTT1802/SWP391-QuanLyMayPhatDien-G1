@@ -71,6 +71,9 @@
                 <c:if test="${not empty transferId}">
                     <input type="hidden" name="transferId" value="${transferId}" />
                 </c:if>
+                <c:if test="${not empty receipt.liquidationId}">
+                    <input type="hidden" name="liquidationId" value="${receipt.liquidationId}" />
+                </c:if>
                 <input type="hidden" name="receiptId" id="receiptIdField" value="0" />
 
                 <c:if test="${not empty fromTransfer}">
@@ -94,25 +97,49 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label>Kho *</label>
-                                <select id="warehouseSelect" name="warehouseId" required onchange="onWarehouseChange()">
-                                    <option value="">-- Chọn kho trước --</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}"
-                                                <c:if test="${wh.warehouseId == preselectSourceWarehouseId}">selected</c:if>>
-                                            <c:out value="${wh.name}"/>
-                                        </option>
-                                    </c:forEach>
-                                </select>
+                                <c:choose>
+                                    <c:when test="${fromLiquidation}">
+                                        <input type="hidden" name="warehouseId" value="${receipt.warehouseId}" />
+                                        <select id="warehouseSelect" disabled>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <option value="${wh.warehouseId}" ${wh.warehouseId == receipt.warehouseId ? 'selected' : ''}>${wh.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <select id="warehouseSelect" name="warehouseId" required onchange="onWarehouseChange()">
+                                            <option value="">-- Chọn kho trước --</option>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <option value="${wh.warehouseId}"
+                                                        <c:if test="${wh.warehouseId == preselectSourceWarehouseId}">selected</c:if>>
+                                                    <c:out value="${wh.name}"/>
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:otherwise>
+                                </c:choose>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <div class="form-field">
                                 <label>Lý do *</label>
-                                <select name="reasonId" class="input" required onchange="validateField(this)">
-                                    <option value="">-- Chọn lý do --</option>
-                                    <c:forEach var="r" items="${receiptReasons}">
-                                        <option value="${r.id}">${r.name}</option>
-                                    </c:forEach>
-                                </select>
+                                <c:choose>
+                                    <c:when test="${fromLiquidation}">
+                                        <input type="hidden" name="reasonId" value="${receipt.reasonId}" />
+                                        <select class="input" disabled>
+                                            <c:forEach var="r" items="${receiptReasons}">
+                                                <option value="${r.id}" ${r.id == receipt.reasonId ? 'selected' : ''}>${r.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <select name="reasonId" class="input" required onchange="validateField(this)">
+                                            <option value="">-- Chọn lý do --</option>
+                                            <c:forEach var="r" items="${receiptReasons}">
+                                                <option value="${r.id}">${r.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:otherwise>
+                                </c:choose>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <c:if test="${not empty order}">
@@ -121,6 +148,15 @@
                                     <div class="order-pin">
                                         <strong>${order.orderCode}</strong>
                                         <span class="order-cust">— ${order.customer.name}</span>
+                                    </div>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty liquidation}">
+                                <div class="form-field full">
+                                    <label>Đơn thanh lý nguồn</label>
+                                    <div class="order-pin">
+                                        <strong>${liquidation.liquidationCode}</strong>
+                                        <span class="order-cust">— Kho: ${liquidation.warehouseName}</span>
                                     </div>
                                 </div>
                             </c:if>
@@ -168,6 +204,7 @@
                                 <ul id="realtimeWarnList"></ul>
                             </div>
                         </div>
+                        <c:if test="${not fromLiquidation}">
                         <div class="scanner-box" id="scannerBox">
                             <label>Quét barcode nhanh</label>
                             <div class="scanner-row">
@@ -180,6 +217,7 @@
                             <div id="scannerCamera"></div>
                             <small>Mỗi lần quét, hệ thống tự reserve serial nếu máy đang IN_STOCK tại kho đã chọn.</small>
                         </div>
+                        </c:if>
                         <c:if test="${fromOrder}">
                         <div class="order-req-banner">
                             <div class="req-title">Đơn hàng <strong><c:out value="${order.orderCode}"/></strong> yêu cầu:</div>
@@ -231,10 +269,15 @@
                             </tbody>
                         </table>
 
+                        <c:if test="${not fromLiquidation}">
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
+                        </c:if>
+                        <c:if test="${fromLiquidation}">
+                        <button type="button" class="btn add-row-btn" id="addRowBtn" disabled style="display:none;">Thêm dòng</button>
+                        </c:if>
                     </section>
                 </div>
 
@@ -265,7 +308,23 @@
 <script>
     var ctx = window.APP_CTX;
     var generatorCache = [];
-    var prefillDetails = ${empty prefillDetailsJson ? '[]' : prefillDetailsJson};
+    var prefillDetails = [
+        <c:choose>
+        <c:when test="${fromLiquidation}">
+        <c:forEach var="r" items="${orderRowList}" varStatus="st">
+        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${r.generatorId}, serialNumber: '<c:out value="${r.serialNumber}"/>', model: '<c:out value="${r.generatorModel}"/>', note: '<c:out value="${r.note}"/>'}
+        </c:forEach>
+        </c:when>
+        <c:when test="${not empty prefillDetailsJson}">
+        ${prefillDetailsJson}
+        </c:when>
+        <c:otherwise>
+        <c:forEach var="d" items="${receipt.details}" varStatus="st">
+        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
+        </c:forEach>
+        </c:otherwise>
+        </c:choose>
+    ];
     var stockWarningGenIds = [
         <c:forEach var="genId" items="${stockWarningGenIds}" varStatus="st">
         ${genId}<c:if test="${!st.last}">,</c:if>
@@ -286,6 +345,7 @@
     ];
     var isOrderMode = ${not empty fromOrder and fromOrder};
     var isTransferMode = ${not empty fromTransfer and fromTransfer};
+    var isLiquidationMode = ${not empty fromLiquidation and fromLiquidation};
     var expectedRows = ${empty expectedRows ? 0 : expectedRows};
     var ORDER_REQUIREMENTS = [
         <c:forEach var="req" items="${orderRequirements}" varStatus="st">
@@ -402,7 +462,40 @@
             var genSelect = tr.querySelector('select[name="generatorId"]');
             var serialSelect = tr.querySelector('select[name="serialNumber"]');
             if (genSelect && serialSelect) {
-                populateSerialOptions(serialSelect, parseInt(genSelect.value, 10));
+                if (isLiquidationMode && p.serialNumber) {
+                    genSelect.innerHTML = '';
+                    var genOpt = document.createElement('option');
+                    genOpt.value = p.generatorId;
+                    genOpt.textContent = p.model || ('#' + p.generatorId);
+                    genSelect.appendChild(genOpt);
+                    genSelect.value = p.generatorId;
+                    genSelect.disabled = true;
+                    genSelect.removeAttribute('name');
+                    var genHidden = document.createElement('input');
+                    genHidden.type = 'hidden';
+                    genHidden.name = 'generatorId';
+                    genHidden.value = p.generatorId;
+                    genSelect.parentNode.appendChild(genHidden);
+
+                    serialSelect.innerHTML = '';
+                    var opt = document.createElement('option');
+                    opt.value = p.serialNumber;
+                    opt.textContent = p.serialNumber;
+                    serialSelect.appendChild(opt);
+                    serialSelect.value = p.serialNumber;
+                    serialSelect.disabled = true;
+                    serialSelect.removeAttribute('name');
+                    var snHidden = document.createElement('input');
+                    snHidden.type = 'hidden';
+                    snHidden.name = 'serialNumber';
+                    snHidden.value = p.serialNumber;
+                    serialSelect.parentNode.appendChild(snHidden);
+
+                    var delBtn = tr.querySelector('.row-del-btn');
+                    if (delBtn) delBtn.style.display = 'none';
+                } else {
+                    populateSerialOptions(serialSelect, parseInt(genSelect.value, 10));
+                }
             }
         });
         updateRowNumbers();
@@ -724,9 +817,19 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        if (prefillDetails && prefillDetails.length > 0) {
-            var whId = document.getElementById('warehouseSelect').value;
-            if (whId) {
+        if (isLiquidationMode) {
+            var whSelect = document.getElementById('warehouseSelect');
+            if (whSelect) {
+                generatorCache = [];
+                var whId = parseInt(whSelect.value, 10);
+                whSelect.dataset.whId = whId;
+            }
+            applyPrefill();
+            var addBtn = document.getElementById('addRowBtn');
+            if (addBtn) addBtn.style.display = 'none';
+        } else if (prefillDetails && prefillDetails.length > 0) {
+            var whId2 = document.getElementById('warehouseSelect').value;
+            if (whId2) {
                 onWarehouseChange();
             }
         }
