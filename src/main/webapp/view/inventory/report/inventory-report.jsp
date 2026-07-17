@@ -184,7 +184,6 @@
                             <thead>
                                 <tr>
                                     <th>Kho</th>
-                                    <th class="num">Serial</th>
                                     <th class="num">Trong kho</th>
                                     <th class="num">Model</th>
                                 </tr>
@@ -199,7 +198,6 @@
                                             <tr>
                                                 <td>${r.warehouseName}</td>
                                                 <td class="num">${r.serialCount}</td>
-                                                <td class="num">${r.inStockCount}</td>
                                                 <td class="num">${r.modelCount}</td>
                                             </tr>
                                         </c:forEach>
