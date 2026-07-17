@@ -214,21 +214,21 @@
             </div>
         </header>
         <main class="liqd">
-            <%-- ===== Tính nhãn + class pill trạng thái ===== --%>
+            
             <c:set var="st" value="${liquidation.status}"/>
             <c:choose>
-                <c:when test="${st == 'PENDING_CEO'}"><c:set var="statusLabel" value="Chờ Sếp duyệt"/><c:set var="statusPillClass" value="status-pending"/></c:when>
-                <c:when test="${st == 'APPROVED_BY_CEO'}"><c:set var="statusLabel" value="Đã duyệt"/><c:set var="statusPillClass" value="status-approved"/></c:when>
-                <c:when test="${st == 'COMPLETED'}"><c:set var="statusLabel" value="Đã xuất kho"/><c:set var="statusPillClass" value="status-approved"/></c:when>
-                <c:when test="${st == 'CEO_REQUEST_EDIT'}"><c:set var="statusLabel" value="Bị yêu cầu sửa"/><c:set var="statusPillClass" value="status-revision"/></c:when>
+                <c:when test="${st == 'PENDING_CEO'}"><c:set var="statusLabel" value="Chờ Sếp duyệt"/><c:set var="statusPillClass" value="liq-pending-ceo"/></c:when>
+                <c:when test="${st == 'APPROVED'}"><c:set var="statusLabel" value="Đã duyệt"/><c:set var="statusPillClass" value="liq-pending-mgr"/></c:when>
+                <c:when test="${st == 'COMPLETED'}"><c:set var="statusLabel" value="Đã xuất kho"/><c:set var="statusPillClass" value="liq-approved"/></c:when>
+                <c:when test="${st == 'CEO_REQUEST_EDIT'}"><c:set var="statusLabel" value="Bị yêu cầu sửa"/><c:set var="statusPillClass" value="liq-edit"/></c:when>
                 <c:when test="${st == 'CANCELLED'}"><c:set var="statusLabel" value="Đã hủy"/><c:set var="statusPillClass" value="liq-cancelled"/></c:when>
-                <c:otherwise><c:set var="statusLabel" value="Không xác định"/><c:set var="statusPillClass" value="status-cancelled"/></c:otherwise>
+                <c:otherwise><c:set var="statusLabel" value="Không xác định"/><c:set var="statusPillClass" value="liq-muted"/></c:otherwise>
             </c:choose>
 
             <c:set var="isEditMode" value="${st == 'CEO_REQUEST_EDIT'}"/>
             <c:set var="isCeoEdit" value="${st == 'CEO_REQUEST_EDIT'}"/>
 
-            <%-- ===== HEADER BAR ===== --%>
+         
             <div class="header-bar">
                 <div class="left">
                     <span class="code-tag">
@@ -237,7 +237,7 @@
                     </span>
                     <h2 class="page-main-title">
                         #${liquidation.liquidationCode}
-                        <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
+                        <span class="pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
                     </h2>
                 </div>
                 <div class="right">
@@ -253,14 +253,14 @@
                 </div>
             </div>
 
-            <%-- ===== ALERT phản hồi ===== --%>
+         
             <c:if test="${(st == 'CEO_REQUEST_EDIT' or st == 'CANCELLED') and not empty liquidation.ceoFeedbackName}">
                 <div class="alert ${st == 'CANCELLED' ? 'alert-danger' : 'alert-warn'}">
                     <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     <span><strong>Phản hồi từ Sếp (CEO):</strong> ${liquidation.ceoFeedbackName}</span>
                 </div>
             </c:if>
-            <%-- ===== FORM: edit mode vs normal mode ===== --%>
+            
             <c:set var="usingEditForm" value="${isEditMode and isStaff}" />
             <c:choose>
                 <c:when test="${usingEditForm}">
@@ -274,7 +274,6 @@
                 </c:otherwise>
             </c:choose>
 
-                <%-- ===== SECTION: Thông tin chung ===== --%>
                 <div class="section">
                     <div class="section-head"><h3>Thông tin chung</h3></div>
                     <div class="section-body">
@@ -284,7 +283,7 @@
                                 <div class="form-grid cols-4">
                                     <div class="info-field">
                                         <label>Kho hàng <span style="color:var(--danger)">*</span></label>
-                                        <select class="info-input" id="editWarehouseSelect" onchange="changeEditWarehouse(this.value);">
+                                        <select class="info-input" id="editWarehouseSelect" disabled>
                                             <c:forEach var="w" items="${warehouses}">
                                                 <option value="${w.warehouseId}" ${w.warehouseId == selectedWarehouseId ? 'selected' : ''}>${w.name}</option>
                                             </c:forEach>
@@ -293,12 +292,13 @@
                                     </div>
                                     <div class="info-field">
                                         <label>Lý do thanh lý <span style="color:var(--danger)">*</span></label>
-                                        <select class="info-input" name="reasonId" required>
+                                        <select class="info-input" disabled>
                                             <option value="">-- Chọn lý do --</option>
                                             <c:forEach var="r" items="${reasons}">
                                                 <option value="${r.id}" ${r.id == liquidation.reasonId ? 'selected' : ''}>${r.name}</option>
                                             </c:forEach>
                                         </select>
+                                        <input type="hidden" name="reasonId" value="${liquidation.reasonId}" />
                                     </div>
                                     <div class="info-field">
                                         <label>Ngày tạo</label>
@@ -326,7 +326,7 @@
                                     </div>
                                 </div>
                             </c:when>
-                            <%-- NORMAL/VIEW MODE: read-only --%>
+                     
                             <c:otherwise>
                                 <div class="form-grid cols-4">
                                     <div class="info-field">
@@ -365,39 +365,53 @@
                             </c:otherwise>
                         </c:choose>
 
-                        <%-- ===== Khách hàng nhận ===== --%>
+                      
                         <div class="cust-subhead" style="margin-top:22px; padding-top:16px; border-top:1px solid var(--border);">
                             <h4 style="font-size:13px; font-weight:700; margin:0 0 14px;">Khách hàng nhận</h4>
                         </div>
                         <c:choose>
                             <c:when test="${usingEditForm}">
-                                <p class="kv-hint" style="margin:0 0 12px;font-size:13px;color:var(--muted);">Chọn khách hàng có sẵn hoặc tạo khách hàng mới để gán vào đơn thanh lý.</p>
-                                <div id="custPickerArea">
-                                    <div class="sd" id="customerDropdown"
-                                         data-endpoint="${pageContext.request.contextPath}/liquidations?action=search_customer&q=">
-                                        <div class="cust-trigger-wrap">
-                                            <button type="button" class="cust-trigger" id="custTrigger"
-                                                    onclick="openCustomerPanel()" aria-haspopup="dialog">
-                                                <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
-                                            </button>
-                                            <button type="button" class="cust-clear-btn" id="custClearBtn"
-                                                    onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                                            </button>
+                                <input type="hidden" name="customerId" value="${liquidation.customerId}" />
+                                <c:choose>
+                                    <c:when test="${not empty liquidation.customerName}">
+                                        <div class="customer-info-card">
+                                            <div class="cic-header">
+                                                <span class="cic-name"><c:out value='${liquidation.customerName}'/></span>
+                                            </div>
+                                            <div class="cic-details">
+                                                <c:if test="${not empty liquidation.customerPhone}">
+                                                    <span class="cic-detail-item">
+                                                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                                        <c:out value='${liquidation.customerPhone}'/>
+                                                    </span>
+                                                </c:if>
+                                                <c:if test="${not empty liquidation.customerEmail}">
+                                                    <span class="cic-detail-item">
+                                                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                                        <c:out value='${liquidation.customerEmail}'/>
+                                                    </span>
+                                                </c:if>
+                                                <c:if test="${not empty liquidation.customerAddress}">
+                                                    <span class="cic-detail-item">
+                                                        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                        <c:out value='${liquidation.customerAddress}'/>
+                                                    </span>
+                                                </c:if>
+                                            </div>
                                         </div>
-                                        <input type="hidden" name="customerId" id="sdHiddenId" value="${liquidation.customerId}" />
-                                        <input type="hidden" id="inpCustName" value="<c:out value='${liquidation.customerName}'/>" />
-                                        <input type="hidden" id="inpCustPhone" value="<c:out value='${liquidation.customerPhone}'/>" />
-                                        <input type="hidden" id="inpCustEmail" value="<c:out value='${liquidation.customerEmail}'/>" />
-                                        <input type="hidden" id="inpCustAddress" value="<c:out value='${liquidation.customerAddress}'/>" />
-                                        <input type="hidden" id="customerCompany" value="" />
-                                    </div>
-                                    <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()" style="margin-top:10px;">
-                                        <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                                        Tạo khách hàng mới
-                                    </button>
-                                </div>
-                                <div id="customerCardContainer" class="customer-info-card" style="display:none;"></div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <div class="cust-empty">
+                                            <div class="cust-empty-icon">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                            </div>
+                                            <div class="cust-empty-text">
+                                                <strong>Chưa có khách hàng nhận</strong>
+                                                <span>Khách hàng sẽ được thêm khi tạo đơn thanh lý.</span>
+                                            </div>
+                                        </div>
+                                    </c:otherwise>
+                                </c:choose>
                             </c:when>
                             <c:when test="${not empty liquidation.customerName}">
                                 <div class="customer-info-card">
@@ -441,7 +455,6 @@
                     </div>
                 </div>
 
-                <%-- ===== SECTION: Danh sách máy + tabs ===== --%>
                 <div class="section">
                     <div class="section-head"><h3>Danh sách máy phát điện</h3></div>
                     <div class="tab-bar">
@@ -468,13 +481,11 @@
                                             <input type="text" id="editSerialSearch" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
                                         </div>
                                         <div class="spacer"></div>
-                                        <button type="button" class="btn" onclick="(function(){var a=document.getElementById('editPickAll');if(a){a.checked=true;a.dispatchEvent(new Event('change'));}})()">Chọn tất cả</button>
-                                        <button type="button" class="btn" onclick="(function(){var a=document.getElementById('editPickAll');if(a){a.checked=false;a.dispatchEvent(new Event('change'));}})()">Bỏ chọn</button>
                                     </div>
                                     <table class="product-table" id="editPickTable">
                                         <thead>
                                             <tr>
-                                                <th class="col-cb"><input type="checkbox" id="editPickAll"/></th>
+                                                <th class="col-cb"></th>
                                                 <th>Serial</th>
                                                 <th>Model</th>
                                                 <th>Tình trạng</th>
@@ -487,14 +498,15 @@
                                             <c:forEach var="r" items="${pickRows}">
                                                 <tr class="pick-trow ${r.selected ? 'is-checked' : ''}" data-model="<c:out value='${r.model}'/>">
                                                     <td class="col-cb">
-                                                        <input type="checkbox" class="pick-cb" name="serialNumber"
+                                                        <input type="checkbox" class="pick-cb"
                                                                value="<c:out value='${r.serialNumber}'/>"
                                                                data-gen="${r.generatorId}"
                                                                data-price="${r.unitPrice}"
                                                                data-condition="${r.condition}"
                                                                data-old-liq-price="${r.liquidationPrice}"
-                                                               ${r.selected ? 'checked' : ''}/>
+                                                               ${r.selected ? 'checked' : ''} disabled/>
                                                         <input type="hidden" class="gen-hidden" name="generatorId" value="${r.generatorId}" ${r.selected ? '' : 'disabled'}/>
+                                                        <input type="hidden" name="serialNumber" value="<c:out value='${r.serialNumber}'/>" ${r.selected ? '' : 'disabled'}/>
                                                     </td>
                                                     <td class="row-serial"><c:out value="${r.serialNumber}"/></td>
                                                     <td class="row-model"><c:out value="${r.model}"/></td>
@@ -536,7 +548,7 @@
                                     </div>
                                 </div>
                             </c:when>
-                            <%-- VIEW / MANAGER MODE: read-only table --%>
+                       
                             <c:otherwise>
                                 <div class="table-toolbar">
                                     <div class="search-input">
@@ -567,7 +579,7 @@
                                                         <strong class="mono"><fmt:formatNumber value="${d.liquidationPrice}" type="number" maxFractionDigits="0"/></strong>
                                                         <input type="hidden" name="liquidationPrice" value="${d.liquidationPrice}" />
                                                     </td>
-                                                    <td><span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span></td>
+                                                    <td><span class="pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span></td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>
@@ -590,7 +602,7 @@
                                         <div class="action-bar-right">
                                             <button type="button" class="btn btn-success-solid" onclick="openConfirmApproveModal()">
                                                 <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                                Duyệt &amp; Xuất kho
+                                                Duyệt đơn
                                             </button>
                                             <button type="button" class="btn btn-warn" onclick="openFeedbackModal('request_edit_ceo', 'Sếp yêu cầu sửa', 'ceoFeedbackId', 'btn-warn', 'select_ceo_edit')">
                                                 <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -604,10 +616,20 @@
                                         </div>
                                     </div>
                                 </c:if>
+                                <c:if test="${st == 'COMPLETED' and not empty liquidation.convertedReceiptId}">
+                                    <div class="section-action-bar completed-bar">
+                                        <div class="action-bar-left">
+                                            Đơn đã thanh lý hoàn tất.
+                                            <a href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${liquidation.convertedReceiptId}" class="btn" style="margin-left:8px;">
+                                                Xem phiếu xuất kho
+                                            </a>
+                                        </div>
+                                    </div>
+                                </c:if>
                             </c:otherwise>
                         </c:choose>
                     </div>
-                    <%-- ===== Tab 2: Lịch sử xử lý ===== --%>
+       
                     <div id="tab-history" class="tab-panel">
                         <c:choose>
                             <c:when test="${empty liquidationHistory}">
@@ -696,7 +718,6 @@
     </div>
 </div>
 
-<%-- ===== MODALS ===== --%>
 <div class="modal-host" id="confirmApproveModal">
     <div class="modal">
         <h3>Xác nhận duyệt đơn</h3>
@@ -1220,12 +1241,6 @@
                 if (allSamePrice) {
                     e.preventDefault();
                     showToast('Giá thanh lý không thay đổi so với giá cũ. Vui lòng điều chỉnh giá trước khi gửi lại.', 'danger');
-                    return;
-                }
-                var custId = (document.getElementById('sdHiddenId') || {}).value;
-                if (!custId || !custId.trim()) {
-                    e.preventDefault();
-                    showToast('Phải chọn khách hàng hoặc tạo khách hàng mới trước khi gửi.', 'danger');
                     return;
                 }
                 document.querySelectorAll('#editPickTable .liq-price-input').forEach(function(el) {

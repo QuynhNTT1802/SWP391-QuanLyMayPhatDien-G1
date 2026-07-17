@@ -45,7 +45,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id "
-                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN liquidation liq ON r.liquidation_id = liq.liquidation_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "LEFT JOIN transfer tr ON r.linked_transfer_id = tr.transfer_id "
@@ -70,7 +70,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
-                    + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ? OR po.po_code LIKE ?) ";
+                    + "OR c.name LIKE ? OR u1.name LIKE ? OR liq.liquidation_code LIKE ? OR po.po_code LIKE ?) ";
             String like = "%" + search.trim() + "%";
             inputs.add(like);
             inputs.add(like);
@@ -111,7 +111,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         String sql = "SELECT COUNT(*) FROM receipt r "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN liquidation liq ON r.liquidation_id = liq.liquidation_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
@@ -134,7 +134,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
-                    + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ?) ";
+                    + "OR c.name LIKE ? OR u1.name LIKE ? OR liq.liquidation_code LIKE ?) ";
             String like = "%" + search.trim() + "%";
             inputs.add(like);
             inputs.add(like);
@@ -173,7 +173,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id "
-                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN liquidation liq ON r.liquidation_id = liq.liquidation_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "LEFT JOIN transfer tr ON r.linked_transfer_id = tr.transfer_id "
@@ -204,10 +204,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (status == null || status.trim().isEmpty()) {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
-        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id,\n"
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, liquidation_id,\n"
                 + "    linked_transfer_id, related_export_receipt_id,\n"
                 + "    warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at)\n"
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -223,35 +223,45 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 statement.setNull(4, Types.INTEGER);
             }
-            if (r.getLinkedTransferId() != null) {
-                statement.setInt(5, r.getLinkedTransferId());
+            if (r.getLiquidationId() != null) {
+                statement.setInt(5, r.getLiquidationId());
             } else {
                 statement.setNull(5, Types.INTEGER);
             }
-            if (r.getRelatedExportReceiptId() != null) {
-                statement.setInt(6, r.getRelatedExportReceiptId());
+            if (r.getLinkedTransferId() != null) {
+                statement.setInt(6, r.getLinkedTransferId());
             } else {
                 statement.setNull(6, Types.INTEGER);
             }
-            statement.setInt(7, r.getWarehouseId());
-            statement.setInt(8, r.getCreatedBy());
-            statement.setString(9, status);
-            statement.setString(10, r.getNote());
-            if (r.getReasonId() != null) {
-                statement.setInt(11, r.getReasonId());
+            if (r.getRelatedExportReceiptId() != null) {
+                statement.setInt(7, r.getRelatedExportReceiptId());
             } else {
-                statement.setNull(11, Types.INTEGER);
+                statement.setNull(7, Types.INTEGER);
             }
-            statement.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
-            if (r.getApprovedBy() != null) {
-                statement.setInt(13, r.getApprovedBy());
+            statement.setInt(8, r.getWarehouseId());
+            statement.setInt(9, r.getCreatedBy());
+            statement.setString(10, status);
+            statement.setString(11, r.getNote());
+            if (r.getReasonId() != null) {
+                statement.setInt(12, r.getReasonId());
             } else {
-                statement.setNull(13, Types.INTEGER);
+                statement.setNull(12, Types.INTEGER);
+            }
+            statement.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                statement.setInt(12, r.getApprovedBy());
+            } else {
+                statement.setNull(12, Types.INTEGER);
+            }
+            if (r.getApprovedBy() != null) {
+                statement.setInt(14, r.getApprovedBy());
+            } else {
+                statement.setNull(14, Types.INTEGER);
             }
             if (r.getApprovedAt() != null) {
-                statement.setTimestamp(14, Timestamp.valueOf(r.getApprovedAt()));
+                statement.setTimestamp(15, Timestamp.valueOf(r.getApprovedAt()));
             } else {
-                statement.setNull(14, Types.TIMESTAMP);
+                statement.setNull(15, Types.TIMESTAMP);
             }
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
@@ -274,10 +284,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (status == null || status.trim().isEmpty()) {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
-        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, liquidation_id, "
                 + "linked_transfer_id, related_export_receipt_id, "
                 + "warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getReceiptCode());
             ps.setString(2, r.getReceiptType());
@@ -291,35 +301,40 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 ps.setNull(4, Types.INTEGER);
             }
-            if (r.getLinkedTransferId() != null) {
-                ps.setInt(5, r.getLinkedTransferId());
+            if (r.getLiquidationId() != null) {
+                ps.setInt(5, r.getLiquidationId());
             } else {
                 ps.setNull(5, Types.INTEGER);
             }
-            if (r.getRelatedExportReceiptId() != null) {
-                ps.setInt(6, r.getRelatedExportReceiptId());
+            if (r.getLinkedTransferId() != null) {
+                ps.setInt(6, r.getLinkedTransferId());
             } else {
                 ps.setNull(6, Types.INTEGER);
             }
-            ps.setInt(7, r.getWarehouseId());
-            ps.setInt(8, r.getCreatedBy());
-            ps.setString(9, status);
-            ps.setString(10, r.getNote());
-            if (r.getReasonId() != null) {
-                ps.setInt(11, r.getReasonId());
+            if (r.getRelatedExportReceiptId() != null) {
+                ps.setInt(7, r.getRelatedExportReceiptId());
             } else {
-                ps.setNull(11, Types.INTEGER);
+                ps.setNull(7, Types.INTEGER);
             }
-            ps.setTimestamp(12, Timestamp.valueOf(LocalDateTime.now()));
-            if (r.getApprovedBy() != null) {
-                ps.setInt(13, r.getApprovedBy());
+            ps.setInt(8, r.getWarehouseId());
+            ps.setInt(9, r.getCreatedBy());
+            ps.setString(10, status);
+            ps.setString(11, r.getNote());
+            if (r.getReasonId() != null) {
+                ps.setInt(12, r.getReasonId());
             } else {
-                ps.setNull(13, Types.INTEGER);
+                ps.setNull(12, Types.INTEGER);
+            }
+            ps.setTimestamp(13, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                ps.setInt(14, r.getApprovedBy());
+            } else {
+                ps.setNull(14, Types.INTEGER);
             }
             if (r.getApprovedAt() != null) {
-                ps.setTimestamp(14, Timestamp.valueOf(r.getApprovedAt()));
+                ps.setTimestamp(15, Timestamp.valueOf(r.getApprovedAt()));
             } else {
-                ps.setNull(14, Types.TIMESTAMP);
+                ps.setNull(15, Types.TIMESTAMP);
             }
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -360,7 +375,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             ps.setObject(i + 1, params.get(i));
         }
     }
-
     // Tổng quan: tổng phiếu, tổng máy, số phiếu theo trạng thái (chỉ tính COMPLETED/PENDING/CANCELLED).
     public Map<String, Object> getReportSummary(java.time.LocalDate from, java.time.LocalDate to,
                                                 Integer warehouseId, String receiptType) {

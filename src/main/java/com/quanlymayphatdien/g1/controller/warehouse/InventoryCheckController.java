@@ -206,7 +206,7 @@ public class InventoryCheckController extends HttpServlet {
         if (warehouseId != null) {
             request.setAttribute("selectedWarehouse", warehouseId);
 
-            List<Inventory> listSerials = inventoryDAO.findByWarehouseId(warehouseId);
+            List<Inventory> listSerials = inventoryDAO.findInStockByWarehouse(warehouseId);
 
             Map<Integer, List<Inventory>> groupedByGenerator = new HashMap<>();
             for (Inventory serial : listSerials) {
@@ -461,7 +461,12 @@ public class InventoryCheckController extends HttpServlet {
                 s.setNotes(request.getParameter("serialNote_" + sid));
                 serials.add(s);
             }
-            checkDAO.updateSerialsBatch(serials);
+            boolean serialsOk = checkDAO.updateSerialsBatch(serials);
+            if (!serialsOk) {
+                session.setAttribute("error", "Có lỗi khi lưu tình trạng serial, vui lòng thử lại");
+                response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+                return;
+            }
         }
 
         ActivityLog log = new ActivityLog();
@@ -504,8 +509,31 @@ public class InventoryCheckController extends HttpServlet {
             return;
         }
 
+        int nullStatusCount = checkDAO.countNullStatusByCheckId(checkId);
+        if (nullStatusCount < 0) {
+            session.setAttribute("error",
+                    "Không thể hoàn thành: lỗi khi kiểm tra trạng thái serial, vui lòng thử lại");
+            response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+            return;
+        }
+        if (nullStatusCount > 0) {
+            session.setAttribute("error",
+                    "Không thể hoàn thành: còn " + nullStatusCount + " serial chưa được đánh giá tình trạng (Tốt/Kém/Hỏng)");
+            response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+            return;
+        }
+
         boolean ok = checkDAO.complete(checkId);
         if (ok) {
+            for (InventoryCheckSerial s : checkDAO.findSerialsByCheckId(checkId)) {
+                if (s.getStatus() != null && !s.getStatus().isEmpty()) {
+                    boolean updated = inventoryDAO.updateConditionBySerial(s.getSerialNumber(), s.getStatus());
+                    if (!updated) {
+                        System.out.println("WARNING: Không cập nhật được condition cho serial " + s.getSerialNumber() + " (kiểm kê #" + checkId + ")");
+                    }
+                }
+            }
+
             ActivityLog log = new ActivityLog();
             log.setUserId(loggedUser.getId());
             log.setEntityType("inventory_check");

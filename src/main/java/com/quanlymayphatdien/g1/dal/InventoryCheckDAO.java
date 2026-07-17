@@ -479,7 +479,7 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
     }
 
     public boolean updateSerialsBatch(List<InventoryCheckSerial> serials) {
-        String sql = "UPDATE inventory_check_serial SET status = ?, notes = ? WHERE id = ?";
+        String sql = "UPDATE inventory_check_serial SET `status` = ?, notes = ? WHERE id = ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
             for (InventoryCheckSerial s : serials) {
                 ps.setString(1, s.getStatus());
@@ -488,9 +488,15 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
                 ps.addBatch();
             }
             int[] results = ps.executeBatch();
-            return results.length > 0;
+            for (int r : results) {
+                if (r <= 0) {
+                    System.out.println("WARNING: updateSerialsBatch - có serial không update được");
+                    return false;
+                }
+            }
+            return true;
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Lỗi updateSerialsBatch: " + e.getMessage());
         }
         return false;
     }
@@ -553,7 +559,7 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         } finally {
             closeResources();
         }
-        return 0;
+        return -1;
     }
 
     private InventoryCheckSerial getSerialFromResultSet(ResultSet rs) throws SQLException {

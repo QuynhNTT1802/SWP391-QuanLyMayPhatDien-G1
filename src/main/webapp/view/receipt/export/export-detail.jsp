@@ -259,6 +259,12 @@
                                             <div class="info-value"><c:out value="${receipt.customerName}"/></div>
                                         </div>
                                     </c:if>
+                                    <c:if test="${not empty receipt.liquidationCode}">
+                                        <div class="info-field">
+                                            <div class="info-label">Đơn thanh lý</div>
+                                            <div class="info-value mono"><a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${receipt.liquidationId}"><c:out value="${receipt.liquidationCode}"/></a></div>
+                                        </div>
+                                    </c:if>
                                     <c:if test="${not empty receipt.purchaseOrderCode}">
                                         <div class="info-field">
                                             <div class="info-label">Phiếu mua nguồn</div>

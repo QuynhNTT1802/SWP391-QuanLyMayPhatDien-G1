@@ -248,6 +248,32 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return false;
     }
 
+    public void updateStatus(Connection conn, int liquidationId, String status, Integer reviewerId, Integer receiptId) throws SQLException {
+        String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ?";
+        if (receiptId != null) {
+            sql += ", converted_receipt_id = ?";
+        }
+        sql += " WHERE liquidation_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            LocalDateTime now = LocalDateTime.now();
+            ps.setString(1, status);
+            if (reviewerId != null) {
+                ps.setInt(2, reviewerId);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setObject(3, now);
+            ps.setObject(4, now);
+            if (receiptId != null) {
+                ps.setInt(5, receiptId);
+                ps.setInt(6, liquidationId);
+            } else {
+                ps.setInt(5, liquidationId);
+            }
+            ps.executeUpdate();
+        }
+    }
+
     public boolean updateReject(int liquidationId, int ceoId, int feedbackId) {
         return updateCeoReject(liquidationId, ceoId, feedbackId, false);
     }
@@ -341,14 +367,16 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     // Lọc theo khoảng ngày + kho (tuỳ chọn).
 
     // Build mệnh đề WHERE chung + nạp tham số theo đúng thứ tự.
+    // Dùng mốc receipt.approved_at (ngày xuất kho thực tế) thay vì ceo_reviewed_at.
+    // Các query gọi buildReportWhere phải có JOIN receipt r ON l.converted_receipt_id = r.receipt_id trong FROM.
     private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, List<Object> params) {
         StringBuilder w = new StringBuilder(" WHERE l.status = 'COMPLETED'");
         if (from != null) {
-            w.append(" AND DATE(l.ceo_reviewed_at) >= ?");
+            w.append(" AND DATE(r.approved_at) >= ?");
             params.add(java.sql.Date.valueOf(from));
         }
         if (to != null) {
-            w.append(" AND DATE(l.ceo_reviewed_at) <= ?");
+            w.append(" AND DATE(r.approved_at) <= ?");
             params.add(java.sql.Date.valueOf(to));
         }
         if (warehouseId != null) {
@@ -373,7 +401,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation, "
                 + "COUNT(DISTINCT l.liquidation_id) AS order_count "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
                 + where;
         try {
             connection = getConnection();
@@ -417,7 +447,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT c.name AS reason_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN category c ON l.reason_id = c.id"
                 + where
                 + " GROUP BY l.reason_id, c.name ORDER BY total_original DESC";
@@ -453,7 +485,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT w.name AS warehouse_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id"
                 + where
                 + " GROUP BY l.warehouse_id, w.name ORDER BY total_original DESC";
@@ -493,7 +527,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT g.model AS model_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN generator g ON ld.generator_id = g.id"
                 + where
                 + " GROUP BY ld.generator_id, g.model ORDER BY machine_count DESC, total_original DESC LIMIT ?";
@@ -527,12 +563,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
-        String sql = "SELECT DATE_FORMAT(l.ceo_reviewed_at, '%Y-%m') AS ym, "
+        String sql = "SELECT DATE_FORMAT(r.approved_at, '%Y-%m') AS ym, "
                 + "COUNT(DISTINCT l.liquidation_id) AS order_count, "
                 + "COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
                 + where
                 + " GROUP BY ym ORDER BY ym ASC";
         try {
@@ -573,8 +611,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT l.liquidation_id, l.liquidation_code, ld.serial_number, g.model AS model_name, "
                 + "w.name AS warehouse_name, c.name AS reason_name, "
                 + "ld.original_price, ld.liquidation_price, "
-                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at "
+                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at, r.approved_at AS export_at "
                 + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
                 + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN generator g ON ld.generator_id = g.id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
@@ -582,7 +621,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
                 + where
-                + " ORDER BY l.ceo_reviewed_at DESC, l.liquidation_code, ld.serial_number"
+                + " ORDER BY r.approved_at DESC, l.liquidation_code, ld.serial_number"
                 + " LIMIT ? OFFSET ?";
         params.add(limit);
         params.add(offset);
@@ -613,8 +652,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("totalLoss", liq.subtract(orig));
                 r.put("customerName", resultSet.getString("customer_name"));
                 r.put("ceoName", resultSet.getString("ceo_name"));
-                java.time.LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", java.time.LocalDateTime.class);
+                java.time.LocalDateTime reviewedAt = resultSet.getObject("export_at", java.time.LocalDateTime.class);
                 r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
+                r.put("exportAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
                 list.add(r);
             }
         } catch (Exception e) {
@@ -629,6 +669,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
         String sql = "SELECT COUNT(*) FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
                 + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN generator g ON ld.generator_id = g.id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
@@ -689,6 +730,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String where = buildReportWhere(from, to, warehouseId, params);
         String sql = "SELECT COUNT(*) FROM (SELECT l.liquidation_id "
                 + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
                 + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
                 + "JOIN category c ON l.reason_id = c.id "
@@ -719,13 +761,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
-        String sql = "SELECT l.liquidation_id, l.liquidation_code, l.ceo_reviewed_at, "
+        String sql = "SELECT l.liquidation_id, l.liquidation_code, r.approved_at AS ceo_reviewed_at, "
                 + "w.name AS warehouse_name, c.name AS reason_name, "
                 + "COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation, "
                 + "cu.name AS customer_name, cr.name AS creator_name, ceo.name AS ceo_name "
                 + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
                 + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
                 + "JOIN category c ON l.reason_id = c.id "
@@ -733,7 +776,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN user cr ON l.created_by = cr.id "
                 + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
                 + where
-                + " GROUP BY l.liquidation_id ORDER BY l.ceo_reviewed_at DESC"
+                + " GROUP BY l.liquidation_id ORDER BY r.approved_at DESC"
                 + " LIMIT ? OFFSET ?";
         params.add(limit);
         params.add(offset);
@@ -771,5 +814,101 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             closeResources();
         }
         return list;
+    }
+
+    public List<Liquidation> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
+        List<Liquidation> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, "
+                + "w.name AS warehouse_name, "
+                + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, "
+                + "agg.detail_count, agg.total_original_price, agg.total_liquidation_price "
+                + "FROM liquidation l "
+                + "JOIN user u ON l.created_by = u.id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN category f ON l.ceo_feedback_id = f.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id "
+                + "WHERE l.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (l.liquidation_code LIKE ? OR cu.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY l.ceo_reviewed_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findApprovedAvailableFiltered", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM liquidation l "
+                + "JOIN user u ON l.created_by = u.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "WHERE l.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (l.liquidation_code LIKE ? OR cu.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) <= ? ");
+            params.add(toDate);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countApprovedAvailableFiltered", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
     }
 }
