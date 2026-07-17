@@ -269,8 +269,7 @@
 
                                     <div class="form-actions">
                                         <a href="${pageContext.request.contextPath}/proposal?action=list" class="btn">Hủy</a>
-                                        <button type="submit" name="submitType" value="draft" class="btn">Lưu nháp</button>
-                                        <button type="submit" name="submitType" value="send" class="btn btn-primary">Gửi duyệt</button>
+                                        <button type="submit" class="btn btn-primary">Gửi duyệt</button>
                                     </div>
                                 </c:otherwise>
                             </c:choose>

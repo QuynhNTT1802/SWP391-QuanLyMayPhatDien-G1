@@ -815,6 +815,7 @@ main {
     border-radius: var(--radius);
     font-size: 13px;
     font-weight: 600;
+    font-family: var(--font-ui);
     box-shadow: var(--shadow-md);
     display: flex;
     align-items: center;

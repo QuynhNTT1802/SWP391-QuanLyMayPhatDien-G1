@@ -859,8 +859,8 @@
 
                 // Check duplicate serial in existing rows
                 var dupFound = false;
-                document.querySelectorAll('#detailBody select[name="serialNumber"] option[value]').forEach(function (opt) {
-                    if (opt.value && opt.value === data.serialNumber) {
+                document.querySelectorAll('#detailBody select[name="serialNumber"]').forEach(function (select) {
+                    if (select.value && select.value === data.serialNumber) {
                         dupFound = true;
                     }
                 });

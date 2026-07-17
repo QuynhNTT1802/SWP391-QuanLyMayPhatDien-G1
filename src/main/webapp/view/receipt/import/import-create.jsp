@@ -201,7 +201,7 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                                     Tải mẫu Excel
                                 </a>
-                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
+                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:when test="${not empty fromExportReceipt}">Nhập serial từ Excel (áp dụng cho phiếu luân chuyển)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l5-5-5 5M12 3v12"/></svg>
                                     Nhập từ Excel
                                 </button>
@@ -443,25 +443,57 @@
         if (!isTransferImportMode) return;
         var tbody = document.getElementById('detailBody');
         tbody.innerHTML = '';
+        var cachedModel = null;
         TRANSFER_IMPORT_ROWS.forEach(function (p) {
             var tr = buildEmptyRow(p.generatorId);
             tr.classList.add('transfer-locked-row');
+            tr.setAttribute('data-expected-serial', p.serialNumber || '');
+            tr.setAttribute('data-expected-generator-id', String(p.generatorId || ''));
+            tr.setAttribute('data-inventory-id', p.inventoryId || '');
             tbody.appendChild(tr);
+
             var serialInput = tr.querySelector('input[name="manualSerialNumber"]');
             if (serialInput) {
-                serialInput.value = p.serialNumber || '';
-                serialInput.readOnly = true;
+                serialInput.value = '';
+                serialInput.placeholder = p.serialNumber || 'S/N dự kiến';
+                serialInput.readOnly = false;
+                serialInput.removeAttribute('disabled');
             }
             var noteInput = tr.querySelector('input[name="manualDetailNote"]');
-            if (noteInput && p.note) {
-                noteInput.value = p.note;
-                noteInput.readOnly = true;
+            if (noteInput) {
+                noteInput.value = p.note || '';
+                noteInput.readOnly = false;
             }
             var delBtn = tr.querySelector('.row-del-btn');
             if (delBtn) delBtn.disabled = true;
+
+            // Append hint dưới serial: Mẫu: X • Serial dự kiến: Y
+            if (!cachedModel || String(cachedModel.id) !== String(p.generatorId)) {
+                cachedModel = null;
+                for (var k = 0; k < generatorCache.length; k++) {
+                    if (String(generatorCache[k].id) === String(p.generatorId)) {
+                        cachedModel = generatorCache[k];
+                        break;
+                    }
+                }
+            }
+            var serialCell = tr.querySelector('td:nth-child(3)');
+            if (serialCell) {
+                var hint = document.createElement('small');
+                hint.className = 'transfer-row-hint';
+                var modelText = cachedModel ? cachedModel.model : ('Mẫu #' + p.generatorId);
+                var brandText = (cachedModel && cachedModel.brand) ? (' (' + cachedModel.brand + ')') : '';
+                hint.innerHTML = 'Mẫu: <strong>' + escapeHtml(modelText + brandText) + '</strong>'
+                        + ' • Serial dự kiến: <strong>' + escapeHtml(p.serialNumber || '—') + '</strong>';
+                serialCell.appendChild(hint);
+            }
         });
         updateRowNumbers();
-        disableAllRows(true);
+        // Khoá nhẹ: chỉ khoá nút xoá dòng + nút thêm dòng, KHÔNG khoá input serial/note
+        document.querySelectorAll('tr.transfer-locked-row .row-del-btn').forEach(function (btn) { btn.disabled = true; });
+        var addBtn = document.getElementById('addRowBtn');
+        if (addBtn) addBtn.disabled = true;
+        refreshScannerState();
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -611,6 +643,18 @@
         if (scanEl && poRows.length > 0 && filled >= poRows.length) {
             disableScanWhenPoFull();
         }
+        // Transfer-import: neu da dien het serial thi khoa scanner
+        var transferRows = document.querySelectorAll('tr.transfer-locked-row');
+        if (scanEl && transferRows.length > 0) {
+            var transferFilled = 0;
+            transferRows.forEach(function (r) {
+                var inp = r.querySelector('input[name="manualSerialNumber"]');
+                if (inp && inp.value && inp.value.trim().length > 0) transferFilled++;
+            });
+            if (transferFilled >= transferRows.length) {
+                disableScanWhenTransferFull();
+            }
+        }
         updateSubmitAvailability();
     }
 
@@ -685,7 +729,27 @@
                 valid = false;
             }
         } else if (isTransferMode) {
-            // Transfer-import: serial đã bị khoá và prefill sẵn, không validate thêm.
+            var missingSerialT = 0;
+            document.querySelectorAll('tr.transfer-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+                if (!inp.value || !inp.value.trim()) missingSerialT++;
+            });
+            if (missingSerialT > 0) {
+                toast('Còn ' + missingSerialT + ' dòng chưa nhập serial. Vui lòng quét đủ serial cho từng máy trong phiếu luân chuyển.', 'danger');
+                valid = false;
+            }
+            // Đảm bảo mỗi serial khớp với data-expected-serial của dòng đó
+            var mismatchT = 0;
+            document.querySelectorAll('tr.transfer-locked-row').forEach(function (r) {
+                var expected = (r.getAttribute('data-expected-serial') || '').trim();
+                var sn = r.querySelector('input[name="manualSerialNumber"]');
+                if (!sn) return;
+                var actual = (sn.value || '').trim();
+                if (actual && expected && actual !== expected) mismatchT++;
+            });
+            if (mismatchT > 0) {
+                toast('Có ' + mismatchT + ' serial không khớp với serial dự kiến của phiếu luân chuyển.', 'danger');
+                valid = false;
+            }
         } else {
             var detailRows = document.querySelectorAll('#detailBody tr');
             if (detailRows.length === 0) {
@@ -919,6 +983,93 @@
             return;
         }
 
+        if (isTransferMode) {
+            // Transfer-import mode: moi dong co data-expected-serial co dinh.
+            // Serial quet phai khop voi expected cua 1 dong nao do (chua duoc dien).
+            var targetT = null;
+            var alreadyFilledIn = null;
+            document.querySelectorAll('tr.transfer-locked-row').forEach(function (r) {
+                var expected = (r.getAttribute('data-expected-serial') || '').trim();
+                var snInput = r.querySelector('input[name="manualSerialNumber"]');
+                if (!snInput) return;
+                if (expected === serial) {
+                    if (snInput.value.trim() && snInput.value.trim() !== serial) {
+                        alreadyFilledIn = r;
+                    } else if (!snInput.value.trim()) {
+                        if (!targetT) targetT = r;
+                    }
+                }
+            });
+
+            if (alreadyFilledIn && !targetT) {
+                importScannerLock = false;
+                setImportScanStatus('Serial "' + serial + '" đã được quét ở dòng khác trong phiếu này.', 'error');
+                flashImportScan('error');
+                focusScanBox();
+                return;
+            }
+            if (!targetT) {
+                importScannerLock = false;
+                setImportScanStatus('Serial "' + serial + '" không thuộc danh sách serial dự kiến của phiếu luân chuyển này.', 'error');
+                flashImportScan('error');
+                focusScanBox();
+                return;
+            }
+
+            var expectedGenId = targetT.getAttribute('data-expected-generator-id') || '';
+            var urlT = ctx + '/inventory-lookup?action=scan&serial=' + encodeURIComponent(serial)
+                    + '&expectedGeneratorId=' + encodeURIComponent(expectedGenId);
+            fetch(urlT).then(function (r) { return r.json(); })
+                .then(function (data) {
+                    importScannerLock = false;
+                    if (!data || !data.found) {
+                        setImportScanStatus('Serial "' + serial + '" không tồn tại trong hệ thống.', 'error');
+                        flashImportScan('error');
+                        focusScanBox();
+                        return;
+                    }
+                    if (data.status && data.status !== 'IN_TRANSIT') {
+                        setImportScanStatus('Serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + data.status + '), không thể nhập.', 'error');
+                        flashImportScan('error');
+                        focusScanBox();
+                        return;
+                    }
+                    if (data.mismatch) {
+                        setImportScanStatus('Serial "' + serial + '" thuộc mẫu "' + (data.generatorModel || '') + '", không khớp dòng đang quét.', 'error');
+                        flashImportScan('error');
+                        focusScanBox();
+                        return;
+                    }
+                    var snInputT = targetT.querySelector('input[name="manualSerialNumber"]');
+                    if (snInputT) snInputT.value = serial;
+                    flashRowSuccess(targetT);
+                    flashImportScan('success');
+                    setImportScanStatus('✓ Đã xác nhận serial "' + serial + '".', 'success');
+                    updatePoCounter();
+
+                    var scanElT = document.getElementById('importScanBox');
+                    if (scanElT) scanElT.value = '';
+
+                    var totalT = document.querySelectorAll('tr.transfer-locked-row').length;
+                    var filledT = 0;
+                    document.querySelectorAll('tr.transfer-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+                        if (inp.value && inp.value.trim()) filledT++;
+                    });
+                    if (filledT >= totalT) {
+                        disableScanWhenTransferFull();
+                    }
+                    focusScanBox();
+                })
+                .catch(function (err) {
+                    importScannerLock = false;
+                    console.error(err);
+                    setImportScanStatus('Lỗi kết nối: ' + err.message, 'error');
+                    flashImportScan('error');
+                    focusScanBox();
+                });
+            return;
+        }
+
         if (isPoMode) {
             // PO mode: chi can quet QR dien vao dong trong tiep theo,
             // khong can check serial co ton tai trong he thong hay khong.
@@ -1035,6 +1186,15 @@
         if (scanBox) scanBox.classList.add('disabled');
     }
 
+    function disableScanWhenTransferFull() {
+        var scanEl = document.getElementById('importScanBox');
+        if (!scanEl) return;
+        var scanBox = document.getElementById('importScannerBox');
+        scanEl.disabled = true;
+        scanEl.placeholder = 'Đã quét đủ serial theo phiếu luân chuyển. Bấm "Gửi phiếu" để hoàn tất.';
+        if (scanBox) scanBox.classList.add('disabled');
+    }
+
     function maybeReenableScanOnEdit() {
         var scanEl = document.getElementById('importScanBox');
         if (!scanEl || !scanEl.disabled) return;
@@ -1115,6 +1275,8 @@
             if (isPoMode) {
                 applySerialsToPoRows(data.serials || []);
                 if (typeof updatePoCounter === 'function') updatePoCounter();
+            } else if (isTransferMode) {
+                applySerialsToTransferRows(data.serials || []);
             } else {
                 applySerialsToManualRows(data.generatorIds || [], data.serials || []);
             }
@@ -1135,6 +1297,20 @@
             var input = rows[i].querySelector('input[name="manualSerialNumber"]');
             if (!input) continue;
             input.value = (i < serials.length && serials[i] != null) ? serials[i] : '';
+        }
+        updatePoCounter();
+    }
+
+    function applySerialsToTransferRows(serials) {
+        var rows = document.querySelectorAll('tr.transfer-locked-row');
+        if (rows.length === 0) return;
+        for (var i = 0; i < rows.length; i++) {
+            var input = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (!input) continue;
+            input.value = (i < serials.length && serials[i] != null) ? serials[i] : '';
+        }
+        if (serials.length !== rows.length) {
+            toast('File Excel có ' + serials.length + ' dòng serial nhưng phiếu yêu cầu ' + rows.length + ' dòng. Đã điền theo vị trí.', 'warning');
         }
         updatePoCounter();
     }

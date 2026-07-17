@@ -470,6 +470,94 @@
             .action-badge.action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent);  background: var(--danger-soft); }
             .action-badge.action-revision { color: #7c3aed;        border-color: color-mix(in srgb, #7c3aed 32%, transparent);         background: color-mix(in srgb, #7c3aed 8%, transparent); }
             .action-badge.action-cancel   { color: var(--muted);  border-color: var(--border); background: var(--surface-2); }
+            .proposal-table-wrap { padding: 0; overflow-x: auto; }
+            .proposal-table { width: 100%; border-collapse: collapse; }
+            .proposal-table th, .proposal-table td {
+                padding: 11px 14px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+                vertical-align: middle;
+            }
+            .proposal-table th {
+                font-size: 11px;
+                color: var(--muted);
+                text-transform: uppercase;
+                font-weight: 700;
+                background: var(--surface-2);
+                letter-spacing: 0.04em;
+            }
+            .proposal-table td { font-size: 13px; }
+            .proposal-table tbody tr { cursor: pointer; }
+            .proposal-table tbody tr:hover { background: var(--surface-2); }
+            .proposal-link {
+                font-family: var(--font-mono);
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--accent);
+                text-decoration: none;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 0;
+            }
+            .proposal-link:hover { text-decoration: underline; }
+
+            .proposal-modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,.45);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .proposal-modal-backdrop.open { display: flex; }
+            .proposal-modal {
+                background: var(--surface);
+                border-radius: 8px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 10px 40px rgba(0,0,0,.25);
+                overflow: hidden;
+                animation: modalPop .18s ease-out;
+            }
+            @keyframes modalPop {
+                from { transform: scale(.96); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .proposal-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border);
+            }
+            .proposal-modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+            .proposal-modal-close {
+                background: transparent; border: none; font-size: 22px; line-height: 1;
+                cursor: pointer; color: var(--muted); padding: 0 4px;
+            }
+            .proposal-modal-close:hover { color: var(--fg); }
+            .proposal-modal-body { padding: 16px 18px; }
+            .prow {
+                display: flex;
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px dashed var(--border);
+                font-size: 13.5px;
+            }
+            .prow:last-child { border-bottom: none; }
+            .prow .lbl { flex: 0 0 110px; color: var(--muted); font-weight: 500; }
+            .prow .val { flex: 1; color: var(--fg); word-break: break-word; }
+            .proposal-modal-footer {
+                padding: 12px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                background: var(--surface-2);
+            }
         </style>
     </head>
     <body>
@@ -494,10 +582,6 @@
 
                 <main>
                     <c:choose>
-                        <c:when test="${po.status == 'DRAFT'}">
-                            <c:set var="statusLabel" value="Nháp"/>
-                            <c:set var="statusPillClass" value="status-draft"/>
-                        </c:when>
                         <c:when test="${po.status == 'PENDING_CEO'}">
                             <c:set var="statusLabel" value="Chờ CEO duyệt"/>
                             <c:set var="statusPillClass" value="status-pending_ceo"/>
@@ -523,9 +607,6 @@
                     <c:set var="canApproveNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
                     <c:set var="canRejectNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
                     <c:set var="canRevisionNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
-                    <c:set var="canSendToCeoNow" value="${po.status == 'DRAFT' && canCreatePo}" />
-                    <c:set var="isOwnerPo" value="${sessionScope.loggedUser.id == po.createdBy}" />
-                    <c:set var="canCancelNow" value="${po.status == 'DRAFT' && isOwnerPo}" />
 
                     <%-- ============================================================
                          HEADER BAR
@@ -570,18 +651,6 @@
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
-                                </button>
-                            </c:if>
-                            <c:if test="${canSendToCeoNow}">
-                                <button type="button" class="btn btn-primary" onclick="openModal('sendToCeoModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    Gửi duyệt
-                                </button>
-                            </c:if>
-                            <c:if test="${canCancelNow}">
-                                <button type="button" class="btn btn-danger" onclick="openModal('cancelModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Hủy phiếu
                                 </button>
                             </c:if>
                         </div>
@@ -673,9 +742,14 @@
                         </div>
 
                         <div class="tab-bar">
-                            <a href="#" class="tab ${currentTab != 'history' ? 'active' : ''}" data-tab="generators">
+                            <a href="#" class="tab ${currentTab != 'history' && currentTab != 'proposals' ? 'active' : ''}" data-tab="generators">
                                 <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                                 Danh sách máy
+                            </a>
+                            <a href="#" class="tab ${currentTab == 'proposals' ? 'active' : ''}" data-tab="proposals">
+                                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                Phiếu đề xuất gốc
+                                <span class="tab-badge">${fn:length(sourceProposals)}</span>
                             </a>
                             <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}" data-tab="history">
                                 <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -685,7 +759,7 @@
                         </div>
 
                         <%-- ============ Tab 1: Bảng máy cần mua ============ --%>
-                        <div class="tab-panel ${currentTab != 'history' ? 'active' : ''}" data-panel="generators">
+                        <div class="tab-panel ${currentTab != 'history' && currentTab != 'proposals' ? 'active' : ''}" data-panel="generators">
                             <div class="table-toolbar">
                                 <div class="search-input">
                                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -801,7 +875,53 @@
                             </c:if>
                         </div>
 
-                        <%-- ============ Tab 2: Lịch sử ============ --%>
+                        <%-- ============ Tab 2: Phiếu đề xuất gốc ============ --%>
+                        <div class="tab-panel ${currentTab == 'proposals' ? 'active' : ''}" data-panel="proposals">
+                            <div class="proposal-table-wrap">
+                                <c:choose>
+                                    <c:when test="${empty sourceProposals}">
+                                        <div class="empty-state">
+                                            <div class="icon-wrap">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                            </div>
+                                            <strong>Không có phiếu đề xuất nào</strong>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <table class="proposal-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Phiếu đề xuất</th>
+                                                    <th>Người tạo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="sp" items="${sourceProposals}">
+                                                    <c:set var="totalQty" value="0"/>
+                                                    <c:forEach var="d" items="${sp.details}">
+                                                        <c:set var="totalQty" value="${totalQty + d.quantity}"/>
+                                                    </c:forEach>
+                                                    <tr onclick="showProposalModal(this)"
+                                                        data-proposal-id="${sp.proposalId}"
+                                                        data-proposal-code="${sp.proposalCode}"
+                                                        data-creator="${sp.createdByName}"
+                                                        data-date="${sp.proposalDate.format(poDateFmt)}"
+                                                        data-supplier="${sp.supplierName}"
+                                                        data-status="${sp.status}"
+                                                        data-total-details="${fn:length(sp.details)}"
+                                                        data-total-qty="${totalQty}">
+                                                        <td><button type="button" class="proposal-link">${sp.proposalCode}</button></td>
+                                                        <td style="color:var(--muted);">${sp.createdByName}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+
+                        <%-- ============ Tab 3: Lịch sử ============ --%>
                         <div class="tab-panel ${currentTab == 'history' ? 'active' : ''}" data-panel="history">
                             <form method="get" action="${pageContext.request.contextPath}/purchase-order" class="history-filter-bar">
                                 <input type="hidden" name="action" value="detail"/>
@@ -981,37 +1101,30 @@
             </div>
         </c:if>
 
-        <c:if test="${canSendToCeoNow}">
-            <div class="modal-host" id="sendToCeoModal">
-                <div class="modal-card">
-                    <h3>Gửi duyệt phiếu mua</h3>
-                    <div class="modal-sub">Phiếu mua sẽ chuyển sang trạng thái "Chờ CEO duyệt". Sau khi gửi, bạn sẽ không thể chỉnh sửa phiếu mua này nữa.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=sendToCeo">
-                        <input type="hidden" name="id" value="${po.poId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('sendToCeoModal')">Đóng</button>
-                            <button type="submit" class="btn btn-primary">Gửi duyệt</button>
-                        </div>
-                    </form>
+        <div class="proposal-modal-backdrop" id="proposalModal" onclick="if (event.target === this) closeProposalModal();">
+            <div class="proposal-modal" role="dialog" aria-modal="true">
+                <div class="proposal-modal-header">
+                    <h3>Thông tin phiếu đề xuất</h3>
+                    <button type="button" class="proposal-modal-close" onclick="closeProposalModal()" aria-label="Đóng">&times;</button>
+                </div>
+                <div class="proposal-modal-body">
+                    <div class="prow"><div class="lbl">Mã phiếu</div><div class="val mono" id="pm-code">—</div></div>
+                    <div class="prow"><div class="lbl">Người tạo</div><div class="val" id="pm-creator">—</div></div>
+                    <div class="prow"><div class="lbl">Ngày tạo</div><div class="val" id="pm-date">—</div></div>
+                    <div class="prow"><div class="lbl">Nhà cung cấp</div><div class="val" id="pm-supplier">—</div></div>
+                    <div class="prow"><div class="lbl">Trạng thái</div><div class="val" id="pm-status">—</div></div>
+                    <div class="prow"><div class="lbl">Số dòng</div><div class="val" id="pm-details">—</div></div>
+                    <div class="prow"><div class="lbl">Tổng SL</div><div class="val" id="pm-qty">—</div></div>
+                </div>
+                <div class="proposal-modal-footer">
+                    <button type="button" class="btn" onclick="closeProposalModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="pm-detail-link" target="_blank">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
                 </div>
             </div>
-        </c:if>
-
-        <c:if test="${canCancelNow}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Huỷ phiếu mua</h3>
-                    <div class="modal-sub">Phiếu mua nháp sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=cancel">
-                        <input type="hidden" name="id" value="${po.poId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
+        </div>
 
         <div class="toast-host" id="toastHost"></div>
 
@@ -1053,9 +1166,26 @@
             document.querySelectorAll('.modal-host').forEach(function (m) {
                 m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
             });
+
+            function showProposalModal(el) {
+                document.getElementById('pm-code').textContent = el.getAttribute('data-proposal-code');
+                document.getElementById('pm-creator').textContent = el.getAttribute('data-creator');
+                document.getElementById('pm-date').textContent = el.getAttribute('data-date');
+                document.getElementById('pm-supplier').textContent = el.getAttribute('data-supplier');
+                document.getElementById('pm-status').textContent = el.getAttribute('data-status');
+                document.getElementById('pm-details').textContent = el.getAttribute('data-total-details');
+                document.getElementById('pm-qty').textContent = el.getAttribute('data-total-qty');
+                document.getElementById('pm-detail-link').href = window.APP_CTX + '/proposal?action=detail&id=' + el.getAttribute('data-proposal-id');
+                document.getElementById('proposalModal').classList.add('open');
+            }
+            function closeProposalModal() {
+                document.getElementById('proposalModal').classList.remove('open');
+            }
+
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    closeProposalModal();
                 }
             });
 
