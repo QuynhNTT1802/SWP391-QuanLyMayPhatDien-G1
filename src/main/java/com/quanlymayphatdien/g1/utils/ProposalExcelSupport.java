@@ -29,37 +29,15 @@ public class ProposalExcelSupport {
 
     public static final String HEADER_STT = "STT";
     public static final String HEADER_MODEL = "Mã máy phát";
-    public static final String HEADER_BRAND = "Thương hiệu";
-    public static final String HEADER_ORIGIN = "Xuất xứ";
-    public static final String HEADER_CONDITION = "Tình trạng";
-    public static final String HEADER_FUEL = "Nhiên liệu";
-    public static final String HEADER_PHASE = "Số pha";
-    public static final String HEADER_GEN_TYPE = "Loại máy phát";
-    public static final String HEADER_POWER = "Công suất (kVA)";
-    public static final String HEADER_FREQUENCY = "Tần số";
-    public static final String HEADER_WEIGHT = "Trọng lượng (kg)";
-    public static final String HEADER_SUPPLIER_NAME = "Tên nhà cung cấp";
     public static final String HEADER_UNIT_PRICE = "Đơn giá đề xuất (VNĐ)";
     public static final String HEADER_QUANTITY = "Số lượng";
-    public static final String HEADER_NOTE = "Ghi chú dòng";
 
     public static String[] getDetailHeaders() {
         return new String[]{
             HEADER_STT,
             HEADER_MODEL,
-            HEADER_BRAND,
-            HEADER_ORIGIN,
-            HEADER_CONDITION,
-            HEADER_FUEL,
-            HEADER_PHASE,
-            HEADER_GEN_TYPE,
-            HEADER_POWER,
-            HEADER_FREQUENCY,
-            HEADER_WEIGHT,
-            HEADER_SUPPLIER_NAME,
-            HEADER_UNIT_PRICE,
             HEADER_QUANTITY,
-            HEADER_NOTE
+            HEADER_UNIT_PRICE
         };
     }
 
@@ -98,19 +76,8 @@ public class ProposalExcelSupport {
             int col = 0;
             row.createCell(col++).setCellValue(1);
             row.createCell(col++).setCellValue("EG4500CX");
-            row.createCell(col++).setCellValue("Honda");
-            row.createCell(col++).setCellValue("Nhật Bản");
-            row.createCell(col++).setCellValue("Mới");
-            row.createCell(col++).setCellValue("Xăng");
-            row.createCell(col++).setCellValue("1 pha");
-            row.createCell(col++).setCellValue("Dân dụng");
-            row.createCell(col++).setCellValue(4.5);
-            row.createCell(col++).setCellValue("50Hz");
-            row.createCell(col++).setCellValue(85);
-            row.createCell(col++).setCellValue("Công ty Máy Phát Điện Đông Dương");
-            row.createCell(col++).setCellValue(18_000_000);
             row.createCell(col++).setCellValue(2);
-            row.createCell(col++).setCellValue("");
+            row.createCell(col++).setCellValue(18_000_000);
         }
 
         for (int i = 0; i < headers.length; i++) {
