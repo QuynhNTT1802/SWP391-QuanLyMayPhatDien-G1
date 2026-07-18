@@ -1047,6 +1047,11 @@
 
 
 
+    function confirmCancelCreate() {
+        if (confirm('Huỷ tạo phiếu xuất? Dữ liệu đã nhập sẽ không được lưu.')) {
+            window.location.href = window.APP_CTX + '/export-receipt';
+        }
+    }
     window.addEventListener('beforeunload', function () { stopCamera(); });
 </script>
 </body>

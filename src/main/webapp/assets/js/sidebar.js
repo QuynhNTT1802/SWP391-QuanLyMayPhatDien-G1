@@ -30,10 +30,11 @@
     restoreState();
 
     // Mark active link and ensure its dropdown is open
-    var current = window.location.pathname.split('/').pop() || 'index.html';
+    var currentPath = window.location.pathname;
     nav.querySelectorAll('a[href]').forEach(function(link) {
-      var href = link.getAttribute('href').split('/').pop();
-      if (href === current) {
+      var href = link.getAttribute('href');
+      var hrefPath = href.indexOf('?') > -1 ? href.substring(0, href.indexOf('?')) : href;
+      if (currentPath === hrefPath || currentPath === href) {
         link.classList.add('active');
         var children = link.closest('.nav-children');
         if (children) {

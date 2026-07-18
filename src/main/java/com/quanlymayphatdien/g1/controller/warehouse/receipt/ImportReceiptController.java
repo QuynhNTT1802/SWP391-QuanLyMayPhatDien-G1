@@ -94,6 +94,9 @@ public class ImportReceiptController extends HttpServlet {
                 case "selectPurchase":
                     selectPurchase(request, response);
                     break;
+                case "selectTransfer":
+                    selectTransfer(request, response);
+                    break;
                 case "template":
                     downloadTemplate(request, response);
                     break;
@@ -356,6 +359,24 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("toIndex", toIndex);
         request.setAttribute("activePage", "import-select-purchase");
         request.getRequestDispatcher("/view/receipt/import/import-select-purchase.jsp").forward(request, response);
+    }
+
+    private void selectTransfer(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+
+        Integer scopedWarehouseId = (Integer) session.getAttribute("scopedWarehouseId");
+        if (scopedWarehouseId == null) scopedWarehouseId = 0;
+
+        com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+        java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
+                = tDAO.findReadyForImport(scopedWarehouseId, loggedUser.getId());
+
+        request.setAttribute("transfers", transfers);
+        request.setAttribute("totalItems", transfers.size());
+        request.setAttribute("activePage", "import-select-transfer");
+        request.getRequestDispatcher("/view/receipt/import/import-select-transfer.jsp").forward(request, response);
     }
 
     private void applyPoPrefillToRequest(HttpServletRequest request, PurchaseOrder po, String note) {
