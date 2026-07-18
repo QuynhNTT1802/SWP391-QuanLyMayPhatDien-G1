@@ -32,7 +32,6 @@
             .status-pending_ceo { background: #fff3cd; color: #856404; }
             .status-approved { background: #d4edda; color: #155724; }
             .status-rejected { background: #f8d7da; color: #721c24; }
-            .status-needs_revision { background: #ede9fe; color: #5b21b6; }
             .status-cancelled { background: #e2e3e5; color: #383d41; }
             .po-code, .code-link {
                 font-family: 'JetBrains Mono', monospace;
@@ -112,7 +111,6 @@
                             <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
@@ -121,7 +119,6 @@
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                             </c:if>
 
                             <%-- Sale Manager (có create + view): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa, Đã hủy --%>
@@ -129,7 +126,6 @@
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
@@ -138,7 +134,6 @@
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
                         </select>
@@ -182,7 +177,6 @@
                                                         <c:when test="${po.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo">Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${po.status == 'APPROVED'}"><span class="status-pill status-approved">Đã duyệt bởi CEO</span></c:when>
                                                         <c:when test="${po.status == 'REJECTED'}"><span class="status-pill status-rejected">Từ chối bởi CEO</span></c:when>
-                                                        <c:when test="${po.status == 'NEEDS_REVISION'}"><span class="status-pill status-needs_revision">Cần chỉnh sửa đề xuất</span></c:when>
                                                         <c:when test="${po.status == 'CANCELLED'}"><span class="status-pill status-cancelled">Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><c:out value="${po.status}"/></span></c:otherwise>
                                                     </c:choose>

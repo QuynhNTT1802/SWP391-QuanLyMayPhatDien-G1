@@ -313,7 +313,6 @@
             .status-pending_ceo { background: #fff3cd; color: #856404; border-color: color-mix(in srgb, #856404 25%, transparent); }
             .status-approved { background: #d4edda; color: #155724; border-color: color-mix(in srgb, #155724 25%, transparent); }
             .status-rejected { background: #f8d7da; color: #721c24; border-color: color-mix(in srgb, #721c24 25%, transparent); }
-            .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
             .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
 
             
@@ -468,7 +467,6 @@
             .action-badge.action-update   { color: var(--info);   border-color: color-mix(in srgb, var(--info) 32%, transparent);    background: var(--info-soft); }
             .action-badge.action-approve  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
             .action-badge.action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent);  background: var(--danger-soft); }
-            .action-badge.action-revision { color: #7c3aed;        border-color: color-mix(in srgb, #7c3aed 32%, transparent);         background: color-mix(in srgb, #7c3aed 8%, transparent); }
             .action-badge.action-cancel   { color: var(--muted);  border-color: var(--border); background: var(--surface-2); }
             .proposal-table-wrap { padding: 0; overflow-x: auto; }
             .proposal-table { width: 100%; border-collapse: collapse; }
@@ -590,10 +588,6 @@
                             <c:set var="statusLabel" value="Đã duyệt bởi CEO"/>
                             <c:set var="statusPillClass" value="status-approved"/>
                         </c:when>
-                        <c:when test="${po.status == 'NEEDS_REVISION'}">
-                            <c:set var="statusLabel" value="Cần chỉnh sửa đề xuất"/>
-                            <c:set var="statusPillClass" value="status-revision"/>
-                        </c:when>
                         <c:when test="${po.status == 'REJECTED'}">
                             <c:set var="statusLabel" value="Từ chối bởi CEO"/>
                             <c:set var="statusPillClass" value="status-rejected"/>
@@ -606,11 +600,8 @@
 
                     <c:set var="canApproveNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
                     <c:set var="canRejectNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
-                    <c:set var="canRevisionNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
 
-                    <%-- ============================================================
-                         HEADER BAR
-                         ============================================================ --%>
+                   
                     <div class="header-bar">
                         <div class="left">
                             <a class="back-link" href="${pageContext.request.contextPath}/purchase-order">
@@ -643,20 +634,6 @@
                         </div>
                     </div>
 
-                    <c:if test="${po.status == 'NEEDS_REVISION' && not empty po.rejectReason}">
-                        <div class="alert alert-warn">
-                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span><strong>Lý do CEO yêu cầu chỉnh sửa đề xuất:</strong> <c:out value="${po.rejectReason}"/></span>
-                        </div>
-                        <div class="alert alert-info">
-                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                            <span>Các đề xuất gốc đã được tách khỏi phiếu mua này và chuyển sang trạng thái <strong>Cần chỉnh sửa</strong>. Sale Manager cần sửa các đề xuất rồi gửi duyệt lại.</span>
-                        </div>
-                    </c:if>
-
-                    <%-- ============================================================
-                         KHỐI 1: THÔNG TIN CHUNG
-                         ============================================================ --%>
                     <div class="section">
                         <div class="section-head">
                             <h3>Thông tin chung</h3>
@@ -720,9 +697,7 @@
                         </div>
                     </div>
 
-                    <%-- ============================================================
-                         KHỐI 2: DANH SÁCH MÁY CẦN MUA
-                         ============================================================ --%>
+                    
                     <div class="section">
                         <div class="section-head">
                             <h3>Danh sách máy cần mua</h3>
@@ -745,7 +720,6 @@
                             </a>
                         </div>
 
-                        <%-- ============ Tab 1: Bảng máy cần mua ============ --%>
                         <div class="tab-panel ${currentTab != 'history' && currentTab != 'proposals' ? 'active' : ''}" data-panel="generators">
                             <div class="table-toolbar">
                                 <div class="search-input">
@@ -862,7 +836,7 @@
                             </c:if>
                         </div>
 
-                        <%-- ============ Tab 2: Phiếu đề xuất gốc ============ --%>
+                    
                         <div class="tab-panel ${currentTab == 'proposals' ? 'active' : ''}" data-panel="proposals">
                             <div class="proposal-table-wrap">
                                 <c:choose>
@@ -908,7 +882,7 @@
                             </div>
                         </div>
 
-                        <%-- ============ Tab 3: Lịch sử ============ --%>
+                     
                         <div class="tab-panel ${currentTab == 'history' ? 'active' : ''}" data-panel="history">
                             <form method="get" action="${pageContext.request.contextPath}/purchase-order" class="history-filter-bar">
                                 <input type="hidden" name="action" value="detail"/>
@@ -926,7 +900,6 @@
                                     <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi duyệt</option>
                                     <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
                                     <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
-                                    <option value="REQUEST_REVISION" ${logAction == 'REQUEST_REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa đề xuất</option>
                                     <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
                                     <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy phiếu</option>
                                 </select>
@@ -990,7 +963,6 @@
                                                             <c:when test="${log.action == 'SEND_TO_CEO'}">update</c:when>
                                                             <c:when test="${log.action == 'APPROVE'}">approve</c:when>
                                                             <c:when test="${log.action == 'REJECT'}">reject</c:when>
-                                                            <c:when test="${log.action == 'REQUEST_REVISION'}">revision</c:when>
                                                             <c:when test="${log.action == 'UPDATE'}">update</c:when>
                                                             <c:when test="${log.action == 'CANCEL'}">cancel</c:when>
                                                             <c:otherwise>cancel</c:otherwise>
@@ -1033,9 +1005,7 @@
             </div>
         </div>
 
-        <%-- ============================================================
-             MODALS
-             ============================================================ --%>
+        
         <c:if test="${canApproveNow}">
             <div class="modal-host" id="approveModal">
                 <div class="modal-card">
@@ -1046,23 +1016,6 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
                             <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${canRevisionNow}">
-            <div class="modal-host" id="revisionModal">
-                <div class="modal-card">
-                    <h3>Yêu cầu chỉnh sửa đề xuất</h3>
-                    <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=requestRevision">
-                        <input type="hidden" name="id" value="${po.poId}"/>
-                        <label for="revisionReason">Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                        <textarea id="revisionReason" name="revisionReason" required placeholder="Ví dụ: Ghi chú chưa rõ, chọn nhầm kho, cần đổi nhà cung cấp..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-warn">Gửi yêu cầu cho Sale Manager</button>
                         </div>
                     </form>
                 </div>
