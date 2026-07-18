@@ -20,70 +20,19 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
-        <style>
-            .agg-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            .agg-table th, .agg-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; }
-            .agg-table th { background: var(--surface-2); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; }
-            .qty-input { width: 80px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--fg); }
-            .qty-input:read-only { background: var(--surface-2); color: var(--muted); cursor: not-allowed; border-style: dashed; }
-            .note-input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; }
-            .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-            .alert { padding: 14px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 14px; }
-            .alert-warn { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-            .alert-warn strong { display: block; margin-bottom: 4px; }
-            .po-info { display: flex; gap: 24px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface-2); border-radius: 6px; margin-bottom: 16px; font-size: 13px; }
-            .po-info > div { display: flex; flex-direction: column; }
-            .po-info .lbl { color: var(--muted); font-size: 11px; text-transform: uppercase; }
-            .po-info .val { font-weight: 600; }
-            .section-title { font-size: 14px; font-weight: 600; margin: 20px 0 8px 0; color: var(--text); }
-            .prop-table { width: 100%; border-collapse: collapse; }
-            .prop-table th, .prop-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; font-size: 13px; }
-            .prop-table th { background: var(--surface-2); font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 11px; }
-            .agg-table tfoot td { padding: 12px 10px; border-top: 2px solid var(--border); font-weight: 700; font-size: 14px; background: var(--surface-2); }
-            .qty-warn { color: #dc3545; font-size: 11px; margin-top: 2px; display: none; }
-            .qty-warn.show { display: block; }
-            .creator-section { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
-            .creator-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface-2); cursor: pointer; user-select: none; }
-            .creator-header:hover { background: var(--surface); }
-            .creator-header .toggle-icon { transition: transform .2s; font-size: 12px; color: var(--muted); }
-            .creator-header.open .toggle-icon { transform: rotate(90deg); }
-            .creator-name { font-weight: 700; font-size: 14px; }
-            .creator-count { font-size: 12px; color: var(--muted); margin-left: auto; }
-            .creator-body { display: none; }
-            .creator-body.open { display: block; }
-            .proposal-card { border-top: 1px solid var(--border); }
-            .proposal-card:first-child { border-top: 0; }
-            .proposal-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 32px; cursor: pointer; user-select: none; }
-            .proposal-head:hover { background: var(--surface); }
-            .proposal-head .toggle-icon { transition: transform .2s; font-size: 11px; color: var(--muted); }
-            .proposal-head.open .toggle-icon { transform: rotate(90deg); }
-            .proposal-code { font-weight: 600; font-size: 13px; font-family: 'JetBrains Mono', monospace; }
-            .proposal-date { font-size: 12px; color: var(--muted); }
-            .proposal-body { display: none; }
-            .proposal-body.open { display: block; }
-            .detail-table { width: 100%; border-collapse: collapse; }
-            .detail-table th { text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 700; background: var(--surface); padding: 8px 12px; border-bottom: 1px solid var(--border); }
-            .detail-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-            .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-            .modal-host.show { display: flex; }
-            .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-            .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
-            .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-            .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
-            .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-            .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-        </style>
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-review-create.css">
+    </head>
     </head>
     <body>
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
             <div>
-                <header class="topbar">
-                    <h1>Review tạo phiếu mua</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/purchase-order">Phiếu mua</a> / Tạo mới</span>
-                </header>
+<header class="topbar">
+                <h1>Review tạo phiếu mua</h1>
+                <span class="crumb">/ <a href="${pageContext.request.contextPath}/purchase-order">Phiếu mua</a> / Tạo mới</span>
+                <jsp:include page="../common/admin/bell.jsp"/>
+            </header>
 
                 <main>
                     <div class="page-head">
@@ -286,142 +235,7 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
-        <script>
-            function toggleCreator(el) {
-                el.classList.toggle('open');
-                var body = el.nextElementSibling;
-                if (body) body.classList.toggle('open');
-            }
-            function toggleProposal(el) {
-                el.classList.toggle('open');
-                var body = el.nextElementSibling;
-                if (body) body.classList.toggle('open');
-            }
-            function openModal(id) {
-                var m = document.getElementById(id);
-                if (m) m.classList.add('show');
-            }
-            function closeModal(id) {
-                var m = document.getElementById(id);
-                if (m) m.classList.remove('show');
-            }
-            document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                }
-            });
-        </script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                if (window.SESSION_DATA && window.SESSION_DATA.message) {
-                    if (typeof showToast === 'function') {
-                        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
-                    } else {
-                        alert(window.SESSION_DATA.message);
-                    }
-                }
-
-                const detailRows = document.querySelectorAll('tr[data-gen]');
-                const grandTotalEl = document.getElementById('grandTotal');
-                const grandQtyEl = document.getElementById('grandQty');
-
-                function parsePrice(str) {
-                    if (!str) return 0;
-                    const cleaned = String(str).replace(/[^\d.]/g, '');
-                    const n = parseFloat(cleaned);
-                    return isNaN(n) ? 0 : n;
-                }
-
-                function fmtMoney(n) {
-                    if (!isFinite(n)) n = 0;
-                    return n.toLocaleString('vi-VN');
-                }
-
-                function recalc() {
-                    const perGen = {};
-                    let totalQty = 0;
-                    let totalMoney = 0;
-                    detailRows.forEach(function (row) {
-                        const gen = row.getAttribute('data-gen');
-                        if (!gen) return;
-                        const qtyInp = row.querySelector('input[name="finalQuantity"]');
-                        const priceInp = row.querySelector('input[name="unitPrice"]');
-                        const noteInp = row.querySelector('input[name="detailNote"]');
-                        const v = parseInt(qtyInp ? qtyInp.value : '', 10);
-                        const safeQty = isNaN(v) || v < 0 ? 0 : v;
-                        const price = parsePrice(priceInp ? priceInp.value : '');
-                        const note = (noteInp && noteInp.value || '').trim();
-                        if (!perGen[gen]) perGen[gen] = {qty: 0, money: 0, price: price, note: ''};
-                        perGen[gen].qty += safeQty;
-                        perGen[gen].money += safeQty * price;
-                        if (price > 0) perGen[gen].price = price;
-                        if (note) perGen[gen].note = note;
-                        totalQty += safeQty;
-                        totalMoney += safeQty * price;
-                    });
-                    document.querySelectorAll('.agg-qty').forEach(function (el) {
-                        const g = el.getAttribute('data-gen');
-                        if (perGen[g]) el.textContent = perGen[g].qty;
-                    });
-                    document.querySelectorAll('.agg-price').forEach(function (el) {
-                        const g = el.getAttribute('data-gen');
-                        if (perGen[g] && perGen[g].price > 0) {
-                            el.textContent = fmtMoney(perGen[g].price);
-                        } else {
-                            el.textContent = '—';
-                        }
-                    });
-                    document.querySelectorAll('.agg-row-total').forEach(function (el) {
-                        const g = el.getAttribute('data-gen');
-                        if (perGen[g]) el.textContent = fmtMoney(perGen[g].money);
-                    });
-                    document.querySelectorAll('.agg-note').forEach(function (el) {
-                        const g = el.getAttribute('data-gen');
-                        const n = perGen[g] ? perGen[g].note : '';
-                        el.textContent = n ? n : '—';
-                        el.style.color = n ? '' : 'var(--muted)';
-                    });
-                    if (grandQtyEl) grandQtyEl.textContent = totalQty;
-                    if (grandTotalEl) grandTotalEl.textContent = fmtMoney(totalMoney);
-                }
-
-                detailRows.forEach(function (row) {
-                    ['finalQuantity', 'unitPrice', 'detailNote'].forEach(function (n) {
-                        const inp = row.querySelector('input[name="' + n + '"]');
-                        if (inp && inp.type !== 'hidden') inp.addEventListener('input', recalc);
-                    });
-                });
-                recalc();
-
-                const reviewForm = document.querySelector('form[action*="submitReviewCreate"]');
-                if (reviewForm) {
-                    reviewForm.addEventListener('submit', function (e) {
-                        const missingPriceRows = [];
-                        let firstErrorRow = null;
-                        detailRows.forEach(function (row) {
-                            const qtyInp = row.querySelector('input[name="finalQuantity"]');
-                            const priceInp = row.querySelector('input[name="unitPrice"]');
-                            if (!qtyInp) return;
-                            const priceVal = priceInp ? priceInp.value.trim() : '';
-                            if (!priceVal || parsePrice(priceVal) <= 0) {
-                                missingPriceRows.push(row);
-                                if (!firstErrorRow) firstErrorRow = row;
-                            }
-                        });
-                        if (missingPriceRows.length > 0) {
-                            e.preventDefault();
-                            alert('Có ' + missingPriceRows.length + ' dòng máy chưa có đơn giá (ô viền đỏ).\nVui lòng nhập đơn giá trước khi tạo phiếu mua.');
-                            if (firstErrorRow) {
-                                firstErrorRow.scrollIntoView({behavior: 'smooth', block: 'center'});
-                            }
-                            return;
-                        }
-                    });
-                }
-            });
-        </script>
+        <script src="${pageContext.request.contextPath}/assets/js/purchase-review-create-modal.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/purchase-review-create-recalc.js"></script>
     </body>
 </html>
