@@ -199,7 +199,7 @@ public class OrderController extends HttpServlet {
         request.setAttribute("canRejectOrder", userPermissions != null && userPermissions.contains("orders.reject"));
         request.setAttribute("canCancelOrder", userPermissions != null && userPermissions.contains("orders.cancel"));
 
-        request.getRequestDispatcher("/view/order/list.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/order/order-list.jsp").forward(request, response);
     }
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -375,7 +375,7 @@ public class OrderController extends HttpServlet {
         request.setAttribute("totalQty", totalQty);
         request.setAttribute("totalRows", totalRows);
         request.setAttribute("userPermissions", perms);
-        request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/order/order-detail.jsp").forward(request, response);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
@@ -411,7 +411,7 @@ public class OrderController extends HttpServlet {
         request.setAttribute("stockMap", stockMap);
         request.setAttribute("canCreateCustomer", true);
 
-        request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/order/order-create.jsp").forward(request, response);
     }
 
     private void quickCreateCustomer(HttpServletRequest request, HttpServletResponse response)
@@ -742,7 +742,7 @@ public class OrderController extends HttpServlet {
             request.setAttribute("customerTypes", customerTypes);
             request.setAttribute("top4Customers", top4Customers);
             request.setAttribute("stockMap", stockMap);
-            request.getRequestDispatcher("/view/order/edit.jsp").forward(request, response);
+            request.getRequestDispatcher("/view/order/order-edit.jsp").forward(request, response);
         } else {
             setMsg(request.getSession(), "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
@@ -971,7 +971,7 @@ public class OrderController extends HttpServlet {
         }
         int id = Integer.parseInt(request.getParameter("id"));
         request.setAttribute("orderId", id);
-        request.getRequestDispatcher("/view/order/reject.jsp").forward(request, response);
+        request.getRequestDispatcher("/view/order/order-reject.jsp").forward(request, response);
     }
 
     private void rejectOrder(HttpServletRequest request, HttpServletResponse response)
