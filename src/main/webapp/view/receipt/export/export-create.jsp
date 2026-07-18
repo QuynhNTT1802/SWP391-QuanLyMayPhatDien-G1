@@ -307,6 +307,11 @@
 <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
 <script>
     var ctx = window.APP_CTX;
+    function confirmCancelCreate() {
+        if (confirm('Bạn có chắc muốn huỷ tạo phiếu xuất?')) {
+            location.href = ctx + '/export-receipt';
+        }
+    }
     var generatorCache = [];
     var prefillDetails = [
         <c:choose>

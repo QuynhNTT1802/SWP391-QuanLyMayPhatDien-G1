@@ -140,8 +140,8 @@
                         <div class="label">Tổng số máy xuất <span class="dot" style="background:var(--accent)"></span></div>
                         <div class="value">${summary.totalMachines}</div>
                         <div class="delta">
-                            <span class="sub">Trung bình ${summary.totalReceipts > 0 ? (summary.totalMachines / summary.totalReceipts) : 0} máy / phiếu</span>
-                        </div>
+    <span class="sub">Trung bình ${summary.totalReceipts > 0 ? Math.round(summary.totalMachines / summary.totalReceipts) : 0} máy / phiếu</span>
+</div>
                         <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
                             <polyline id="spk-machines-fill" fill="var(--accent)" opacity="0.12"/>
                             <polyline id="spk-machines" fill="none" stroke="var(--accent)" stroke-width="1.6"/>

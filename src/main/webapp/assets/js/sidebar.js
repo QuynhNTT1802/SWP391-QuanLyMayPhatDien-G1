@@ -31,10 +31,14 @@
 
     // Mark active link and ensure its dropdown is open
     var currentPath = window.location.pathname;
+    var currentSearch = window.location.search;
     nav.querySelectorAll('a[href]').forEach(function(link) {
       var href = link.getAttribute('href');
-      var hrefPath = href.indexOf('?') > -1 ? href.substring(0, href.indexOf('?')) : href;
-      if (currentPath === hrefPath || currentPath === href) {
+      var hPath = href.split('?')[0].replace(/\/+$/, '');
+      var hSearch = href.indexOf('?') !== -1 ? '?' + href.split('?')[1] : '';
+      var cPath = currentPath.split('?')[0].replace(/\/+$/, '');
+      // Link có query param → so khớp chính xác (kể cả query). Link không query → path-only (cho pagination)
+      if (hPath === cPath && (!hSearch || hSearch === currentSearch)) {
         link.classList.add('active');
         var children = link.closest('.nav-children');
         if (children) {
