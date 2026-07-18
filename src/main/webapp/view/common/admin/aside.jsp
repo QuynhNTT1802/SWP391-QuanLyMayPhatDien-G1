@@ -166,11 +166,11 @@
         </div>
         <div class="nav-children ${activePage == 'liquidation-report' or activePage == 'receipt-report' or activePage == 'inventory-report' or activePage == 'stock-card-report' ? 'open' : ''}">
             <c:if test="${not empty perms and perms.contains('receipts.view')}">
-                <a href="${pageContext.request.contextPath}/receipts/report?type=IMPORT" class="${activePage == 'receipt-report' and receiptType == 'IMPORT' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/receipts/report?type=IMPORT" class="${activePage == 'receipt-report' and param.type == 'IMPORT' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                     Báo cáo nhập kho
                 </a>
-                <a href="${pageContext.request.contextPath}/receipts/report?type=EXPORT" class="${activePage == 'receipt-report' and receiptType == 'EXPORT' ? 'active' : ''}">
+                <a href="${pageContext.request.contextPath}/receipts/report?type=EXPORT" class="${activePage == 'receipt-report' and param.type == 'EXPORT' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
                     Báo cáo xuất kho
                 </a>
