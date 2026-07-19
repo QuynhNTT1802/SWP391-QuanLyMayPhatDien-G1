@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chọn đơn hàng — Warehouse OS</title>
+    <title>Chọn đơn thanh lý — Warehouse OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
 </head>
 <body>
 <div class="app">
@@ -22,8 +21,8 @@
 
     <div>
         <header class="topbar">
-            <h1>Đơn hàng đã duyệt</h1>
-            <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Chọn đơn hàng</span>
+            <h1>Đơn thanh lý đã duyệt</h1>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Chọn đơn thanh lý</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
             </div>
@@ -38,16 +37,16 @@
             <div class="page-head">
                 <div class="left">
                     <div class="eyebrow">Kho</div>
-                    <h2 class="page-title">Chọn đơn hàng đã duyệt</h2>
-                    <div class="page-sub">${totalItems} đơn hàng</div>
+                    <h2 class="page-title">Chọn đơn thanh lý đã duyệt</h2>
+                    <div class="page-sub">${totalItems} đơn thanh lý</div>
                 </div>
             </div>
 
             <form method="get" action="${pageContext.request.contextPath}/export-receipt" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;">
-                <input type="hidden" name="action" value="selectOrder" />
+                <input type="hidden" name="action" value="selectLiquidation" />
                 <div class="search-input">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã đơn hoặc tên khách" autocomplete="off" />
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã đơn hoặc lý do" autocomplete="off" />
                 </div>
                 <label style="font-size:13px;color:var(--muted);">Từ:</label>
                 <input type="date" name="fromDate" class="filter-select" value="<c:out value='${fromDate}'/>" />
@@ -58,7 +57,7 @@
                     Tìm kiếm
                 </button>
                 <c:if test="${not empty search or not empty fromDate or not empty toDate}">
-                    <a href="${pageContext.request.contextPath}/export-receipt?action=selectOrder" class="btn">
+                    <a href="${pageContext.request.contextPath}/export-receipt?action=selectLiquidation" class="btn">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         Xoá lọc
                     </a>
@@ -66,9 +65,9 @@
             </form>
 
             <c:choose>
-                <c:when test="${empty approvedOrders}">
-                    <div class="empty-state">
-                        Không có đơn hàng nào đã duyệt.
+                <c:when test="${empty approvedLiquidations}">
+                    <div style="text-align:center;padding:40px;color:var(--muted);">
+                        Không có đơn thanh lý nào đã duyệt.
                     </div>
                 </c:when>
                 <c:otherwise>
@@ -77,23 +76,23 @@
                             <thead>
                                 <tr>
                                     <th>Mã đơn</th>
-                                    <th>Khách hàng</th>
+                                    <th>Kho</th>
                                     <th>Ngày duyệt</th>
-                                    <th>Tổng tiền</th>
+                                    <th>Số máy</th>
+                                    <th>Khách hàng</th>
                                     <th class="col-actions">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <c:forEach var="o" items="${approvedOrders}">
+                                <c:forEach var="l" items="${approvedLiquidations}">
                                     <tr>
-                                        <td><strong class="receipt-code">${o.orderCode}</strong></td>
-                                        <td>${o.customer.name}</td>
-                                        <td><fmt:formatDate value="${o.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                        <td class="amount-cell">
-                                            <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="₫"/>
-                                        </td>
+                                        <td><strong style="font-family:monospace;">${l.liquidationCode}</strong></td>
+                                        <td>${l.warehouseName}</td>
+                                        <td>${l.ceoReviewedAt != null ? l.ceoReviewedAt : ''}</td>
+                                        <td>${empty l.detailCount ? 0 : l.detailCount}</td>
+                                        <td>${l.customerName != null ? l.customerName : '—'}</td>
                                         <td class="col-actions">
-                                            <a href="${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}" class="btn btn-primary" style="font-size:12px;padding:4px 10px;">
+                                            <a href="${pageContext.request.contextPath}/export-receipt?action=create&liquidationId=${l.liquidationId}" class="btn btn-primary" style="font-size:12px;padding:4px 10px;">
                                                 Tạo phiếu xuất
                                             </a>
                                         </td>
@@ -113,19 +112,19 @@
                             <c:set var="filterParams" value="${filterParams}&toDate=${toDate}" />
                         </c:if>
                         <div class="pagination">
-                            <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
+                            <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
                             <div class="controls">
                                 <c:if test="${currentPage > 1}">
-                                    <a href="?action=selectOrder&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
+                                    <a href="?action=selectLiquidation&page=${currentPage - 1}${filterParams}" class="page-btn">‹</a>
                                 </c:if>
                                 <c:forEach begin="1" end="${totalPages}" var="p">
                                     <c:choose>
                                         <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="?action=selectOrder&page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
+                                        <c:otherwise><a href="?action=selectLiquidation&page=${p}${filterParams}" class="page-btn">${p}</a></c:otherwise>
                                     </c:choose>
                                 </c:forEach>
                                 <c:if test="${currentPage < totalPages}">
-                                    <a href="?action=selectOrder&page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
+                                    <a href="?action=selectLiquidation&page=${currentPage + 1}${filterParams}" class="page-btn">›</a>
                                 </c:if>
                             </div>
                         </div>

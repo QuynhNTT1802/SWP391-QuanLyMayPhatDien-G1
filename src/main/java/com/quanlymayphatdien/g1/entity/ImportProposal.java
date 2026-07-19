@@ -20,20 +20,26 @@ public class ImportProposal {
     private int createdBy;
     private Integer approvedBy;
     private Integer rejectedBy;
+    private Integer cancelledBy;
     private String revisionRequestedByRole;
     private LocalDateTime proposalDate;
     private String note;
     private String rejectReason;
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
+    private LocalDateTime cancelledAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // NCC duy nhất của phiếu (chính sách: 1 phiếu = 1 NCC)
+    private Integer supplierId;
 
     // field phẳng để hiển thị (không map DB)
     private String warehouseName;
     private String createdByName;
     private String approvedByName;
     private String rejectedByName;
+    private String supplierName;
     private List<ImportProposalDetail> details;
 
     // field transient: đánh dấu phiếu có chứa máy chưa có trong kho (warehouse tự xử lý category)
@@ -45,7 +51,7 @@ public class ImportProposal {
     public ImportProposal() {
     }
 
-    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, String revisionRequestedByRole, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
+    public ImportProposal(int proposalId, String proposalCode, String status, int warehouseId, int createdBy, Integer approvedBy, Integer rejectedBy, Integer cancelledBy, String revisionRequestedByRole, LocalDateTime proposalDate, String note, String rejectReason, LocalDateTime approvedAt, LocalDateTime rejectedAt, LocalDateTime cancelledAt, LocalDateTime createdAt, LocalDateTime updatedAt, String warehouseName, String createdByName, String approvedByName, String rejectedByName, List<ImportProposalDetail> details, Boolean hasNewGenerator, Integer purchaseOrderId, String period, String poCode) {
         this.proposalId = proposalId;
         this.proposalCode = proposalCode;
         this.status = status;
@@ -53,12 +59,14 @@ public class ImportProposal {
         this.createdBy = createdBy;
         this.approvedBy = approvedBy;
         this.rejectedBy = rejectedBy;
+        this.cancelledBy = cancelledBy;
         this.revisionRequestedByRole = revisionRequestedByRole;
         this.proposalDate = proposalDate;
         this.note = note;
         this.rejectReason = rejectReason;
         this.approvedAt = approvedAt;
         this.rejectedAt = rejectedAt;
+        this.cancelledAt = cancelledAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.warehouseName = warehouseName;
@@ -154,6 +162,14 @@ public class ImportProposal {
         this.rejectedBy = rejectedBy;
     }
 
+    public Integer getCancelledBy() {
+        return cancelledBy;
+    }
+
+    public void setCancelledBy(Integer cancelledBy) {
+        this.cancelledBy = cancelledBy;
+    }
+
     public String getRevisionRequestedByRole() {
         return revisionRequestedByRole;
     }
@@ -202,6 +218,14 @@ public class ImportProposal {
         this.rejectedAt = rejectedAt;
     }
 
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public void setCancelledAt(LocalDateTime cancelledAt) {
+        this.cancelledAt = cancelledAt;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -224,6 +248,22 @@ public class ImportProposal {
 
     public void setWarehouseName(String warehouseName) {
         this.warehouseName = warehouseName;
+    }
+
+    public Integer getSupplierId() {
+        return supplierId;
+    }
+
+    public void setSupplierId(Integer supplierId) {
+        this.supplierId = supplierId;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
     }
 
     public String getCreatedByName() {

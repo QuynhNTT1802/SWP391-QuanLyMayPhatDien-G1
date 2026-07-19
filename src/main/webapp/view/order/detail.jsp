@@ -48,11 +48,107 @@
             .modal-host.show { display: flex; }
             .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
             .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+<<<<<<< HEAD
             .modal-card .modal-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
             .modal-card label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
             .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; min-height: 80px; resize: vertical; }
             .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
             .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+=======
+            .modal-card .modal-sub {
+                font-size: 12.5px;
+                color: var(--muted);
+                margin-bottom: 14px;
+                line-height: 1.5;
+            }
+            .modal-card label {
+                display: block;
+                font-size: 11px;
+                color: var(--muted);
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin-bottom: 6px;
+            }
+            .modal-card textarea {
+                width: 100%;
+                padding: 9px 12px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                background: var(--bg);
+                color: var(--fg);
+                font-size: 13px;
+                font-family: var(--font-ui);
+                box-sizing: border-box;
+                min-height: 80px;
+                resize: vertical;
+            }
+            .modal-card textarea:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+            }
+            .modal-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 16px;
+            }
+
+            .action-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 2px 9px;
+                border-radius: 999px;
+                border: 1px solid;
+                text-transform: uppercase;
+                letter-spacing: 0.02em;
+                font-family: var(--font-ui);
+            }
+            .action-badge.action-create   { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
+            .action-badge.action-update   { color: var(--info);   border-color: color-mix(in srgb, var(--info) 32%, transparent);    background: var(--info-soft); }
+            .action-badge.action-approve  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
+            .action-badge.action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent);  background: var(--danger-soft); }
+            .action-badge.action-revision { color: #7c3aed;        border-color: color-mix(in srgb, #7c3aed 32%, transparent);         background: color-mix(in srgb, #7c3aed 8%, transparent); }
+            .action-badge.action-cancel   { color: var(--muted);  border-color: var(--border); background: var(--surface-2); }
+            .gen-link { cursor: pointer; color: var(--accent); text-decoration: none; }
+            .gen-link:hover { text-decoration: underline; }
+
+            .gen-modal-backdrop {
+                position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+                display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px;
+            }
+            .gen-modal-backdrop.open { display: flex; }
+            .gen-modal {
+                background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+                width: 100%; max-width: 460px; box-shadow: 0 20px 50px rgba(0,0,0,.18); overflow: hidden;
+            }
+            .gen-modal-header {
+                display: flex; justify-content: space-between; align-items: center;
+                padding: 16px 20px; border-bottom: 1px solid var(--border);
+            }
+            .gen-modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+            .gen-modal-close {
+                background: none; border: none; color: var(--muted); cursor: pointer;
+                font-size: 22px; line-height: 1; padding: 4px 8px; border-radius: var(--radius-sm);
+            }
+            .gen-modal-close:hover { background: var(--surface-2); color: var(--fg); }
+            .gen-modal-body { padding: 18px 20px; }
+            .gen-info-row { display: flex; padding: 7px 0; border-bottom: 1px solid var(--border); }
+            .gen-info-row:last-child { border-bottom: none; }
+            .gen-info-row .lbl {
+                width: 120px; flex-shrink: 0; font-size: 12px; color: var(--muted); font-weight: 600;
+                text-transform: uppercase; letter-spacing: .04em; padding-top: 1px;
+            }
+            .gen-info-row .val { font-size: 13px; color: var(--fg); font-weight: 600; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+            .gen-modal-footer {
+                display: flex; justify-content: flex-end; gap: 8px;
+                padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-2);
+            }
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         </style>
     </head>
     <body>
@@ -102,6 +198,10 @@
                             <c:set var="statusBg" value="#ffe0b2"/>
                             <c:set var="statusFg" value="#b15c00"/>
                         </c:when>
+                        <c:when test="${order.status == 'DELETED'}">
+                            <c:set var="statusLabel" value="Đã xoá"/>
+                            <c:set var="statusPillClass" value="status-cancelled"/>
+                        </c:when>
                         <c:otherwise>
                             <c:set var="statusLabel" value="Đã hủy"/>
                             <c:set var="statusBg" value="#e2e3e5"/>
@@ -109,6 +209,7 @@
                         </c:otherwise>
                     </c:choose>
 
+<<<<<<< HEAD
                     <c:set var="heroInitials">
                         <c:choose>
                             <c:when test="${not empty order.customer.name}">
@@ -130,6 +231,30 @@
                                 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
                                     <span class="pdot"></span>${statusLabel}
                                 </span>
+=======
+                    <c:set var="canApproveNow" value="${order.status == 'PENDING' && canApproveOrder}" />
+                    <c:set var="canRejectNow" value="${order.status == 'PENDING' && canApproveOrder}" />
+                    <c:set var="canRevisionNow" value="${order.status == 'PENDING' && canApproveOrder}" />
+                    <c:set var="canCancelNow" value="${order.status == 'PENDING' && canApproveOrder && canCancelOrder}" />
+                    <c:set var="canDeleteNow" value="${order.status == 'PENDING' && isOwner}" />
+
+                    <%-- ============================================================
+                         HEADER BAR
+                         ============================================================ --%>
+                    <div class="header-bar">
+                        <div class="left">
+                            <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách
+                            </a>
+                            <span class="code-tag">
+                                <span class="ct-label">Đơn hàng -</span>
+                                <span><c:out value="${order.orderCode}"/></span>
+                            </span>
+                            <h2 class="page-main-title">
+                                #<c:out value="${order.orderCode}"/>
+                                <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                             </h2>
                             <div class="hero-meta">
                                 <span class="id"><c:out value="${order.orderCode}"/></span>
@@ -146,6 +271,7 @@
                                 <span class="pill warehouse"><span class="pdot"></span>Tổng tiền: <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/></span>
                             </div>
                         </div>
+<<<<<<< HEAD
                     </div>
 
                     <c:if test="${order.status == 'PENDING' && canApproveOrder}">
@@ -163,9 +289,38 @@
                                 Từ chối
                             </button>
                             <c:if test="${canCancelOrder}">
+=======
+                        <div class="right">
+
+                            <c:if test="${canApproveNow}">
+                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Xác nhận
+                                </button>
+                            </c:if>
+                            <c:if test="${canRevisionNow}">
+                                <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Yêu cầu chỉnh sửa
+                                </button>
+                            </c:if>
+                            <c:if test="${canRejectNow}">
+                                <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Từ chối
+                                </button>
+                            </c:if>
+                            <c:if test="${canCancelNow}">
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                 <button type="button" class="btn" onclick="openModal('cancelModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Hủy đơn
+                                </button>
+                            </c:if>
+                            <c:if test="${canDeleteNow}">
+                                <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    Xoá
                                 </button>
                             </c:if>
                         </div>
@@ -200,6 +355,7 @@
                                     <input type="hidden" name="tab" value="history"/>
                                     <input type="hidden" name="page" value="1"/>
 
+<<<<<<< HEAD
                                     <div class="search-input hf-search">
                                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                         <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
@@ -227,6 +383,95 @@
                                             <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             Xóa lọc
                                         </a>
+=======
+                        <div class="tab-bar">
+                            <a href="#" class="tab ${currentTab != 'history' ? 'active' : ''}" data-tab="generators">
+                                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                Sản phẩm đăng ký
+                            </a>
+                            <a href="${pageContext.request.contextPath}/order?action=detail&id=${order.orderId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}" data-tab="history">
+                                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Lịch sử cập nhật
+                                <span class="tab-badge">${totalLogs}</span>
+                            </a>
+                        </div>
+
+                        <%-- ============ Tab 1: Bảng sản phẩm ============ --%>
+                        <div class="tab-panel ${currentTab != 'history' ? 'active' : ''}" data-panel="generators">
+                            <div class="table-toolbar">
+                                <div class="search-input">
+                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input id="ordSearch" placeholder="Tìm kiếm thông tin..." autocomplete="off"/>
+                                </div>
+                                <div class="spacer"></div>
+                                <button type="button" class="btn" title="Xuất file (đang phát triển)">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Xuất file
+                                </button>
+                            </div>
+
+                            <div style="overflow-x:auto;">
+                                <table class="product-table" id="ordTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã máy phát</th>
+                                            <th>Tên sản phẩm</th>
+                                            <th class="text-right">Số lượng</th>
+                                            <th class="text-right">Đơn giá</th>
+                                            <th class="text-right">Thành tiền</th>
+                                            <th>Ghi chú</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:choose>
+                                            <c:when test="${empty details}">
+                                                <tr><td colspan="7">
+                                                    <div class="empty-state">
+                                                        <div class="icon-wrap">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                        </div>
+                                                        <strong>Chưa có sản phẩm nào trong đơn hàng</strong>
+                                                    </div>
+                                                </td></tr>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="d" items="${details}" varStatus="st">
+                                                    <tr data-row-id="${st.index}"
+                                                        data-search="<c:out value='${d.generatorId} ${d.generatorModel}'/>"
+                                                        data-status="${order.status}">
+                                                        <td class="mono"><c:out value="${d.generatorId}"/></td>
+                                                        <td><strong><a href="javascript:void(0);" class="gen-link"
+                                                               onclick="showGeneratorModal(this)"
+                                                               data-gen-id="${d.generatorId}"
+                                                               data-gen-model="<c:out value='${d.generatorModel}'/>"
+                                                               data-gen-power="<c:out value='${d.generatorPower}'/>"
+                                                               data-gen-freq="<c:out value='${d.generatorFreq}'/>"
+                                                               data-gen-weight="<c:out value='${d.generatorWeight}'/>"
+                                                               data-gen-status="<c:out value='${d.generatorStatus}'/>"><c:out value="${d.generatorModel}"/></a></strong></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.quantity}"/></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
+                                                        <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
+                                                        <td><c:out value="${d.note}"/></td>
+                                                        <td>
+                                                            <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </tbody>
+                                    <c:if test="${not empty details}">
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="4" class="text-right" style="padding: 12px 14px;">Tổng cộng:</td>
+                                                <td class="text-right mono" style="padding: 12px 14px; color: var(--accent);">
+                                                    <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                                </td>
+                                                <td colspan="2"></td>
+                                            </tr>
+                                        </tfoot>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                     </c:if>
                                 </form>
 
@@ -486,6 +731,26 @@
                 </div>
             </div>
 
+<<<<<<< HEAD
+=======
+        <c:if test="${canDeleteNow}">
+            <div class="modal-host" id="deleteModal">
+                <div class="modal-card">
+                    <h3>Xoá đơn hàng</h3>
+                    <div class="modal-sub">Đơn sẽ bị xoá khỏi danh sách của Sale Manager. Bạn vẫn có thể xem lại trong danh sách của mình.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=delete">
+                        <input type="hidden" name="id" value="${order.orderId}" />
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('deleteModal')">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Xác nhận xoá</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${canRejectNow}">
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             <div class="modal-host" id="rejectModal">
                 <div class="modal-card">
                     <h3>Từ chối đơn hàng</h3>
@@ -518,6 +783,48 @@
                 </div>
             </div>
         </c:if>
+
+        <div class="gen-modal-backdrop" id="generatorModal" onclick="if (event.target === this) closeGeneratorModal();">
+            <div class="gen-modal" role="dialog" aria-modal="true">
+                <div class="gen-modal-header">
+                    <h3>Thông tin máy phát</h3>
+                    <button type="button" class="gen-modal-close" onclick="closeGeneratorModal()">&times;</button>
+                </div>
+                <div class="gen-modal-body">
+                    <div class="gen-info-row">
+                        <div class="lbl">Mã máy</div>
+                        <div class="val" id="gm-id">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Model</div>
+                        <div class="val" id="gm-model">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Công suất</div>
+                        <div class="val" id="gm-power">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Tần số</div>
+                        <div class="val" id="gm-freq">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Trọng lượng</div>
+                        <div class="val" id="gm-weight">—</div>
+                    </div>
+                    <div class="gen-info-row">
+                        <div class="lbl">Trạng thái</div>
+                        <div class="val" id="gm-status">—</div>
+                    </div>
+                </div>
+                <div class="gen-modal-footer">
+                    <button type="button" class="btn" onclick="closeGeneratorModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="gm-detail-link">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
 
         <div class="toast-host" id="toastHost"></div>
 
@@ -588,13 +895,40 @@
 
             function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
             function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
+
+            function showGeneratorModal(el) {
+                var id = el.getAttribute('data-gen-id') || '';
+                var model = el.getAttribute('data-gen-model') || '—';
+                var power = el.getAttribute('data-gen-power') || '—';
+                var freq = el.getAttribute('data-gen-freq') || '—';
+                var weight = el.getAttribute('data-gen-weight') || '—';
+                var status = el.getAttribute('data-gen-status') || '—';
+
+                document.getElementById('gm-id').textContent = id || '—';
+                document.getElementById('gm-model').textContent = model;
+                document.getElementById('gm-power').textContent = power ? power + ' kVA' : '—';
+                document.getElementById('gm-freq').textContent = freq ? freq + ' Hz' : '—';
+                document.getElementById('gm-weight').textContent = weight ? weight + ' kg' : '—';
+                var statusText = status === 'active' ? 'Đang hoạt động' : (status === 'locked' ? 'Bị khóa' : status || '—');
+                document.getElementById('gm-status').textContent = statusText;
+                document.getElementById('gm-detail-link').href = window.APP_CTX + '/warehouse/generators?action=view&id=' + id;
+
+                document.getElementById('generatorModal').classList.add('open');
+            }
+            function closeGeneratorModal() {
+                document.getElementById('generatorModal').classList.remove('open');
+            }
             document.querySelectorAll('.modal-host').forEach(function (m) {
                 m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
             });
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+<<<<<<< HEAD
                     closeGenModal();
+=======
+                    closeGeneratorModal();
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                 }
             });
         </script>

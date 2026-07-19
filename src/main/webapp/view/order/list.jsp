@@ -309,6 +309,7 @@
                                                         <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
                                                         <c:when test="${order.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                                         <c:when test="${order.status == 'NEEDS_REVISION'}"><span class="status-pill status-needs-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
+                                                        <c:when test="${order.status == 'DELETED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã xoá</span></c:when>
                                                         <c:when test="${order.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><span class="pdot"></span><c:out value="${order.status}"/></span></c:otherwise>
                                                         </c:choose>

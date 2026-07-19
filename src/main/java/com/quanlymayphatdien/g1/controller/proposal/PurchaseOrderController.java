@@ -13,6 +13,8 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -31,6 +33,8 @@ import java.util.Set;
 
 @WebServlet(name = "PurchaseOrderController", urlPatterns = {"/purchase-order"})
 public class PurchaseOrderController extends HttpServlet {
+
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -304,7 +308,6 @@ public class PurchaseOrderController extends HttpServlet {
         String period = request.getParameter("period");
         if (period != null) period = period.replace("-", "");
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-        String submitType = request.getParameter("submitType");
         String note = request.getParameter("note");
 
         if (period != null && !PeriodUtils.isWithinDeadline(period)) {
@@ -361,7 +364,7 @@ public class PurchaseOrderController extends HttpServlet {
             po.setPeriodEnd(PeriodUtils.endOf(period));
             po.setWarehouseId(warehouseId);
             po.setCreatedBy(user.getId());
-            po.setStatus("send".equals(submitType) ? GlobalUtils.PO_STATUS_PENDING_CEO : GlobalUtils.PO_STATUS_DRAFT);
+            po.setStatus(GlobalUtils.PO_STATUS_PENDING_CEO);
             po.setNote(note);
 
             List<PurchaseOrderDetail> details = new ArrayList<>();
@@ -447,11 +450,26 @@ public class PurchaseOrderController extends HttpServlet {
                 throw new Exception("Tạo phiếu mua thất bại");
             }
 
-            if ("send".equals(submitType)) {
-                dao.sendToCeo(poId);
-            }
+            dao.sendToCeo(poId);
 
             session.setAttribute("toastMessage", "Tạo phiếu mua thành công");
+<<<<<<< HEAD
+=======
+            session.setAttribute("toastType", "success");
+
+            List<User> ceoUsers = userDAO.findUsersByPermission("purchase_orders", "approve_ceo");
+            for (User u : ceoUsers) {
+                NotificationService.send(
+                    u.getId(),
+                    "Phiếu mua " + po.getPoCode() + " chờ CEO duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo phiếu mua cần CEO duyệt.",
+                    request.getContextPath() + "/purchase-order?action=detail&id=" + poId,
+                    "purchase_order",
+                    poId
+                );
+            }
+
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
         } catch (Exception e) {
             SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.submitReviewCreate", e.getMessage(), e);
@@ -500,7 +518,9 @@ public class PurchaseOrderController extends HttpServlet {
         }
 
         String tab = request.getParameter("tab");
-        String currentTab = "history".equals(tab) ? "history" : "info";
+        String currentTab = "info";
+        if ("history".equals(tab)) currentTab = "history";
+        else if ("proposals".equals(tab)) currentTab = "proposals";
         request.setAttribute("currentTab", currentTab);
 
         if ("history".equals(currentTab)) {
@@ -707,10 +727,26 @@ public class PurchaseOrderController extends HttpServlet {
             return;
         }
         int id = parseInt(request.getParameter("id"));
-        boolean ok = new PurchaseOrderDAO().sendToCeo(id);
+        PurchaseOrderDAO poDao = new PurchaseOrderDAO();
+        boolean ok = poDao.sendToCeo(id);
         if (ok) {
             session.setAttribute("toastMessage", "Đã gửi CEO duyệt");
             session.setAttribute("toastType", "success");
+
+            PurchaseOrder po = poDao.findById(id);
+            if (po != null) {
+                List<User> ceoUsers = userDAO.findUsersByPermission("purchase_orders", "approve_ceo");
+                for (User u : ceoUsers) {
+                    NotificationService.send(
+                        u.getId(),
+                        "Phiếu mua " + po.getPoCode() + " chờ CEO duyệt",
+                        "Phiếu mua " + po.getPoCode() + " đã được gửi lên CEO duyệt.",
+                        request.getContextPath() + "/purchase-order?action=detail&id=" + id,
+                        "purchase_order",
+                        id
+                    );
+                }
+            }
         } else {
             session.setAttribute("toastMessage", "Không thể gửi");
             session.setAttribute("toastType", "danger");
@@ -730,10 +766,23 @@ public class PurchaseOrderController extends HttpServlet {
         }
         User user = (User) session.getAttribute("loggedUser");
         int id = parseInt(request.getParameter("id"));
-        boolean ok = new PurchaseOrderDAO().approve(id, user.getId());
+        PurchaseOrderDAO poDao = new PurchaseOrderDAO();
+        boolean ok = poDao.approve(id, user.getId());
         if (ok) {
             session.setAttribute("toastMessage", "Đã duyệt phiếu mua");
             session.setAttribute("toastType", "success");
+
+            PurchaseOrder po = poDao.findById(id);
+            if (po != null && po.getCreatedBy() > 0) {
+                NotificationService.send(
+                    po.getCreatedBy(),
+                    "Phiếu mua " + po.getPoCode() + " đã được duyệt",
+                    "Phiếu mua " + po.getPoCode() + " đã được " + user.getName() + " duyệt.",
+                    request.getContextPath() + "/purchase-order?action=detail&id=" + id,
+                    "purchase_order",
+                    id
+                );
+            }
         } else {
             session.setAttribute("toastMessage", "Không thể duyệt");
             session.setAttribute("toastType", "danger");
@@ -760,10 +809,23 @@ public class PurchaseOrderController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=reject&id=" + id);
             return;
         }
-        boolean ok = new PurchaseOrderDAO().reject(id, user.getId(), reason.trim());
+        PurchaseOrderDAO poDao = new PurchaseOrderDAO();
+        boolean ok = poDao.reject(id, user.getId(), reason.trim());
         if (ok) {
             session.setAttribute("toastMessage", "Đã từ chối phiếu mua");
             session.setAttribute("toastType", "success");
+
+            PurchaseOrder po = poDao.findById(id);
+            if (po != null && po.getCreatedBy() > 0) {
+                NotificationService.send(
+                    po.getCreatedBy(),
+                    "Phiếu mua " + po.getPoCode() + " bị từ chối",
+                    "Phiếu mua " + po.getPoCode() + " bị " + user.getName() + " từ chối (lý do: " + reason.trim() + ").",
+                    request.getContextPath() + "/purchase-order?action=detail&id=" + id,
+                    "purchase_order",
+                    id
+                );
+            }
         } else {
             session.setAttribute("toastMessage", "Không thể từ chối");
             session.setAttribute("toastType", "danger");

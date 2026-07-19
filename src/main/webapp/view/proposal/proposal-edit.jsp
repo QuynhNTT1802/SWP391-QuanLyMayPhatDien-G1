@@ -2,13 +2,9 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%
-    java.time.format.DateTimeFormatter __propFmt =
-        java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    request.setAttribute("propFmt", __propFmt);
-%>
 <!doctype html>
 <html lang="vi" data-theme="light">
+<<<<<<< HEAD
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -160,198 +156,361 @@
                             <div class="rr-body">
                                 <div class="rr-label">Lý do ${proposal.revisionRequestedByRole == 'CEO' ? 'CEO' : 'Sale Manager'} yêu cầu chỉnh sửa</div>
                                 <div><c:out value="${proposal.rejectReason}"/></div>
+=======
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chỉnh sửa đề xuất nhập kho — Warehouse OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-create.css">
+    <style>
+        .status-badge { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:2px 9px; border-radius:999px; border:1px solid; margin-left:8px; }
+        .status-badge.revision { color:#7c3aed; border-color:color-mix(in srgb,#7c3aed 30%,transparent); background:color-mix(in srgb,#7c3aed 8%,transparent); }
+        .revision-reason { background:var(--surface-2); border:1px solid color-mix(in srgb,#7c3aed 30%,transparent); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
+        .revision-reason .rr-label { font-weight:700; font-size:11px; color:#7c3aed; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
+        .revision-reason .rr-body { font-size:13px; color:var(--fg); }
+    </style>
+</head>
+<body>
+<div class="app">
+    <jsp:include page="../common/admin/aside.jsp"></jsp:include>
+    <div>
+        <header class="topbar">
+            <h1>Chỉnh sửa đề xuất</h1>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Đề xuất nhập kho</a> / <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}"><c:out value="${proposal.proposalCode}"/></a> / Chỉnh sửa</span>
+            <div class="top-actions">
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                </button>
+                <jsp:include page="../common/admin/bell.jsp"/>
+            </div>
+        </header>
+        <main>
+            <a class="back-link" href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Quay lại chi tiết
+            </a>
+
+            <script>
+                <c:if test="${not empty sessionScope.toastMessage}">
+                window.SESSION_DATA = window.SESSION_DATA || {};
+                window.SESSION_DATA.message = '<c:out value="${sessionScope.toastMessage}"/>';
+                window.SESSION_DATA.type = '<c:out value="${sessionScope.toastType != null ? sessionScope.toastType : 'success'}"/>';
+                    <c:remove var="toastMessage" scope="session"/>
+                    <c:remove var="toastType" scope="session"/>
+                </c:if>
+            </script>
+
+            <c:if test="${proposal.status == 'NEEDS_REVISION' && not empty proposal.rejectReason}">
+                <div class="revision-reason">
+                    <div class="rr-label">Lý do ${proposal.revisionRequestedByRole == 'CEO' ? 'CEO' : 'Sale Manager'} yêu cầu chỉnh sửa</div>
+                    <div class="rr-body"><c:out value="${proposal.rejectReason}"/></div>
+                </div>
+            </c:if>
+
+            <div class="page-head">
+                <div class="eyebrow">Đề xuất nhập kho · Chỉnh sửa</div>
+                <h2 class="page-title">
+                    Chỉnh sửa phiếu đề xuất
+                    <c:choose>
+                    <c:when test="${proposal.status == 'NEEDS_REVISION'}"><span class="status-badge revision">Cần chỉnh sửa</span></c:when>
+                    </c:choose>
+                </h2>
+                <p class="page-sub">Phiếu <c:out value="${proposal.proposalCode}"/> · Người tạo: <c:out value="${proposal.createdByName}"/></p>
+            </div>
+
+            <form id="editForm" method="post" action="${pageContext.request.contextPath}/proposal?action=update" onsubmit="return validateForm()">
+                <input type="hidden" name="id" value="${proposal.proposalId}" />
+
+                <div class="form-card">
+                    <div class="form-section">
+                        <div class="form-section-head">
+                            <div>
+                                <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
+                                <h3 class="form-section-title">Thông tin chung</h3>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                             </div>
                         </div>
-                    </c:if>
 
-                    <div class="page-head">
-                        <div class="eyebrow">Đề xuất nhập kho · Chỉnh sửa</div>
-                        <h1 class="title">
-                            Chỉnh sửa phiếu đề xuất
-                            <c:choose>
-                                <c:when test="${proposal.status == 'DRAFT'}"><span class="status-badge draft">Nháp</span></c:when>
-                                <c:when test="${proposal.status == 'NEEDS_REVISION'}"><span class="status-badge revision">Cần chỉnh sửa</span></c:when>
-                            </c:choose>
-                        </h1>
-                        <div class="lede">Phiếu <c:out value="${proposal.proposalCode}"/> · Người tạo: <c:out value="${proposal.createdByName}"/></div>
+                        <div class="field">
+                            <label class="field-label" for="warehouseId">Kho nhập <span class="req">*</span></label>
+                            <select class="select" id="warehouseId" name="warehouseId" required
+                                    onchange="if (this.value) {
+                                        location.href = '${pageContext.request.contextPath}/proposal?action=edit&amp;id=${proposal.proposalId}&amp;warehouseId=' + this.value;
+                                    }">
+                                <option value="">-- Chọn kho --</option>
+                                <c:forEach var="w" items="${warehouses}">
+                                    <option value="${w.warehouseId}" <c:if test="${w.warehouseId == proposal.warehouseId}">selected</c:if>><c:out value="${w.name}"/></option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <div class="cust-subhead">
+                            <h4>Nhà cung cấp <span class="req">*</span></h4>
+                        </div>
+                        <p class="kv-hint">Chọn nhà cung cấp có sẵn hoặc thêm mới để gán vào phiếu đề xuất.</p>
+
+                        <div id="custPicker">
+                            <div class="sd" id="customerDropdown"
+                                 data-endpoint="${pageContext.request.contextPath}/warehouse/suppliers?action=search&q=">
+                                <div class="cust-trigger-wrap">
+                                    <button type="button" class="cust-trigger" id="custTrigger"
+                                            onclick="openCustomerPanel()" aria-haspopup="dialog">
+                                        <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn nhà cung cấp --</span>
+                                        <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="cust-clear-btn" id="custClearBtn"
+                                            onclick="clearCustomerSelection()" title="Hủy chọn nhà cung cấp" aria-label="Hủy chọn">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M18 6L6 18M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                    <input type="hidden" name="supplierId" id="sdHiddenId" value="${proposal.supplierId != null ? proposal.supplierId : ''}" />
+                                    <input type="hidden" id="inpCustName" value="${proposal.supplierName != null ? proposal.supplierName : ''}" />
+                                    <input type="hidden" id="inpCustPhone" value="${supplierPhone != null ? supplierPhone : ''}" />
+                                    <input type="hidden" id="inpCustEmail" value="${supplierEmail != null ? supplierEmail : ''}" />
+                                    <input type="hidden" id="inpCustAddress" value="${supplierAddress != null ? supplierAddress : ''}" />
+                                    <input type="hidden" id="customerCompany" value="${supplierCompany != null ? supplierCompany : ''}" />
+                            </div>
+
+                            <c:if test="${canCreateSupplier}">
+                                <button type="button" class="btn btn-primary" onclick="openNewSupplierModal()" style="margin-top:10px;">
+                                    <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                    Thêm NCC mới
+                                </button>
+                            </c:if>
+                        </div>
+
+                        <div id="customerCardContainer" class="customer-info-card" style="display:none;"></div>
+
+                        <div class="field" style="margin-top:20px;">
+                            <label class="field-label" for="note">Ghi chú</label>
+                            <textarea class="textarea" id="note" name="note" rows="2" placeholder="VD: Đề xuất nhập máy phát cho kho HCM..."><c:out value="${proposal.note}"/></textarea>
+                        </div>
                     </div>
+                </div>
 
-                    <form id="uploadExcelForm" method="post" action="${pageContext.request.contextPath}/proposal?action=uploadEditExcel&id=${proposal.proposalId}" enctype="multipart/form-data" style="display:none">
-                        <input type="file" name="excelFile" id="excelUpload" accept=".xlsx,.xls" onchange="this.form.submit()" />
-                    </form>
-                    <form id="editForm" method="post" action="${pageContext.request.contextPath}/proposal?action=update" onsubmit="return validateForm()">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-
-                        <div class="section">
-                            <div class="section-head">
-                                <div class="section-head-left"><h3>Thông tin chung</h3></div>
+                <div class="form-card">
+                    <div class="form-section">
+                        <div class="form-section-head">
+                            <div>
+                                <div class="form-section-num">02 — DANH SÁCH MÁY PHÁT</div>
+                                <h3 class="form-section-title">Chi tiết sản phẩm</h3>
                             </div>
-                            <div class="section-body">
-                                <div class="form-grid">
-                                    <div class="info-field">
-                                        <span class="info-label">Kho nhập <span style="color:var(--danger)">*</span></span>
-                                        <select class="info-select" id="warehouseId" name="warehouseId" required>
-                                            <option value="">-- Chọn kho --</option>
-                                            <c:forEach var="w" items="${warehouses}">
-                                                <option value="${w.warehouseId}" <c:if test="${w.warehouseId == proposal.warehouseId}">selected</c:if>><c:out value="${w.name}"/></option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="info-field">
-                                        <span class="info-label">Ghi chú phiếu</span>
-                                        <textarea class="info-input" id="note" name="note" rows="2" placeholder="Ghi chú cho phiếu..."><c:out value="${proposal.note}"/></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="summary-row">
-                            <span class="pill ok"><span class="pill-num">${not empty proposal.details ? fn:length(proposal.details) : 0}</span> dòng máy phát</span>
-                            <c:set var="_totalQty" value="0" />
-                            <c:set var="_totalVal" value="0" />
-                            <c:forEach var="d" items="${proposal.details}">
-                                <c:set var="_totalQty" value="${_totalQty + d.quantity}" />
-                                <c:if test="${not empty d.unitPrice}">
-                                    <c:set var="_totalVal" value="${_totalVal + (d.unitPrice.doubleValue() * d.quantity)}" />
-                                </c:if>
-                            </c:forEach>
-                            <span class="pill"><span class="pill-num"><c:out value="${_totalQty}"/></span> tổng SL</span>
-                            <c:choose>
-                                <c:when test="${_totalVal > 0}">
-                                    <span class="pill"><strong style="font-family:var(--font-mono);">₫<fmt:formatNumber value="${_totalVal}" pattern="#,##0"/></strong> ước tính</span>
-                                </c:when>
-                            </c:choose>
-                        </div>
-
-                        <div class="section" style="padding:0">
-                            <div class="section-head">
-                                <div class="section-head-left"><h3>Danh sách máy phát</h3><span class="sub">${not empty proposal.details ? fn:length(proposal.details) : 0} dòng</span></div>
-                                <div>
-                                    <button type="button" class="btn btn-sm" onclick="document.getElementById('excelUpload').click()">Tải Excel thay thế</button>
-                                </div>
-                            </div>
-                            <div class="table-scroll">
-                                <table class="data-table" style="min-width:1400px;">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-min">#</th>
-                                            <th class="col-min">Mã máy phát <span style="color:var(--danger)">*</span></th>
-                                            <th>Thương hiệu</th>
-                                            <th>Xuất xứ</th>
-                                            <th>Tình trạng</th>
-                                            <th>Nhiên liệu</th>
-                                            <th>Số pha</th>
-                                            <th>Loại máy phát</th>
-                                            <th class="col-min">Công suất (kVA)</th>
-                                            <th>Tần số</th>
-                                            <th class="col-min">Trọng lượng (kg)</th>
-                                            <th class="col-supplier">Nhà cung cấp</th>
-                                            <th class="col-price text-right">Đơn giá (VNĐ)</th>
-                                            <th class="col-qty text-right">Số lượng <span style="color:var(--danger)">*</span></th>
-                                            <th class="col-note">Ghi chú dòng</th>
-                                            <th class="col-del"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="detailBody">
-                                        <c:choose>
-                                            <c:when test="${not empty proposal.details}">
-                                                <c:forEach var="d" items="${proposal.details}" varStatus="st">
-                                                    <tr data-row-id="${d.proposalDetailId}">
-                                                        <td class="mono">${st.index + 1}</td>
-                                                        <td>
-                                                            <select name="generatorId" class="row-generator" required>
-                                                                <option value="">-- Chọn máy --</option>
-                                                                <c:forEach var="g" items="${generators}">
-                                                                    <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>><c:out value="${g.model}"/></option>
-                                                                </c:forEach>
-                                                            </select>
-                                                        </td>
-                                                        <td><c:out value="${d.brandName}"/></td>
-                                                        <td><c:out value="${d.originName}"/></td>
-                                                        <td><c:out value="${d.conditionName}"/></td>
-                                                        <td><c:out value="${d.fuelName}"/></td>
-                                                        <td><c:out value="${d.phaseName}"/></td>
-                                                        <td><c:out value="${d.genTypeName}"/></td>
-                                                        <td class="mono"><c:out value="${d.powerRating}"/></td>
-                                                        <td><c:out value="${d.frequency}"/></td>
-                                                        <td class="mono"><c:out value="${d.weight}"/></td>
-                                                        <td class="col-supplier">
-                                                            <select name="supplierId" class="row-supplier">
-                                                                <option value="">-- Chọn NCC --</option>
-                                                                <c:forEach var="s" items="${suppliers}">
-                                                                    <option value="${s.id}" <c:if test="${s.id == d.supplierId}">selected</c:if>><c:out value="${s.name}"/></option>
-                                                                </c:forEach>
-                                                            </select>
-                                                        </td>
-                                                        <td><input type="number" name="unitPrice" class="row-unitprice" value="${d.unitPrice != null ? d.unitPrice : ''}" min="0" step="1000" placeholder="0" /></td>
-                                                        <td><input type="number" name="quantity" class="row-qty" value="${d.quantity}" min="1" max="9999" oninput="validateQty(this)" required /></td>
-                                                        <td><input type="text" name="detailNote" class="row-note" value="<c:out value='${d.note}'/>" placeholder="VD: Cần gấp cho dự án X" /></td>
-                                                        <td class="col-del">
-                                                            <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                                                        </td>
-                                                    </tr>
-                                                </c:forEach>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <tr>
-                                                    <td class="mono">1</td>
-                                                    <td>
-                                                        <select name="generatorId" class="row-generator" required>
-                                                            <option value="">-- Chọn máy --</option>
-                                                            <c:forEach var="g" items="${generators}">
-                                                                <option value="${g.id}"><c:out value="${g.model}"/></option>
-                                                            </c:forEach>
-                                                        </select>
-                                                    </td>
-                                                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-                                                    <td class="col-supplier">
-                                                        <select name="supplierId" class="row-supplier">
-                                                            <option value="">-- Chọn NCC --</option>
-                                                            <c:forEach var="s" items="${suppliers}">
-                                                                <option value="${s.id}"><c:out value="${s.name}"/></option>
-                                                            </c:forEach>
-                                                        </select>
-                                                    </td>
-                                                    <td><input type="number" name="unitPrice" class="row-unitprice" min="0" step="1000" placeholder="0" /></td>
-                                                    <td><input type="number" name="quantity" class="row-qty" value="1" min="1" max="9999" oninput="validateQty(this)" required /></td>
-                                                    <td><input type="text" name="detailNote" class="row-note" placeholder="VD: Cần gấp cho dự án X" /></td>
-                                                    <td class="col-del">
-                                                        <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                                                    </td>
-                                                </tr>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div style="padding:12px 20px;border-top:1px solid var(--border)">
-                                <button type="button" class="btn btn-sm" onclick="addRow()">
-                                    <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M12 5v14M5 12h14"/></svg>
-                                    Thêm dòng
+                            <div class="section-actions-bar">
+                                <a class="btn btn-sm" href="${pageContext.request.contextPath}/proposal?action=downloadTemplate">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Tải mẫu Excel
+                                </a>
+                                <button type="button" class="btn btn-sm" onclick="triggerImportExcel()">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    Import Excel
                                 </button>
                             </div>
                         </div>
 
-                        <div class="actions">
-                            <a class="btn" href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}">Huỷ</a>
-                            <c:if test="${proposal.status == 'DRAFT'}">
-                                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Xoá phiếu</button>
-                                <button type="submit" name="submitType" value="draft" class="btn">Lưu nháp</button>
-                            </c:if>
-                            <button type="submit" name="submitType" value="submit" class="btn btn-primary">
-                                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                ${proposal.status == 'NEEDS_REVISION' ? 'Gửi duyệt lại' : 'Gửi duyệt'}
-                            </button>
-                        </div>
-                    </form>
+                        <c:if test="${canCreateGenerator}">
+                            <div class="gen-toolbar">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openNewGeneratorModal()">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                    Thêm máy phát mới
+                                </button>
+                            </div>
+                        </c:if>
 
-                    <form id="deleteForm" method="post" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:none;">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                    </form>
-                </main>
+                        <table class="detail-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-num">#</th>
+                                    <th>Mẫu máy <span class="req">*</span></th>
+                                    <th class="col-stock">Tồn kho</th>
+                                    <th class="col-qty">Số lượng <span class="req">*</span></th>
+                                    <th class="col-price">Đơn giá (VNĐ) <span class="req">*</span></th>
+                                    <th class="col-price">Thành tiền</th>
+                                    <th class="col-del"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailBody">
+                                <c:choose>
+                                    <c:when test="${not empty proposal.details}">
+                                        <c:forEach var="d" items="${proposal.details}" varStatus="st">
+                                            <tr>
+                                                <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
+                                                <td>
+                                                    <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
+                                                        <option value="">-- Chọn máy --</option>
+                                                        <c:forEach var="g" items="${generators}">
+                                                            <option value="${g.id}" <c:if test="${g.id == d.generatorId}">selected</c:if>><c:out value="${g.model}"/></option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </td>
+                                                <td class="col-stock"><span class="row-stock mono">—</span></td>
+                                                <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="${d.quantity}" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
+                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                                <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
+                                                <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <tr>
+                                            <td class="col-num"><span class="row-num">1</span></td>
+                                            <td>
+                                                <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
+                                                    <option value="">-- Chọn máy --</option>
+                                                    <c:forEach var="g" items="${generators}">
+                                                        <option value="${g.id}"><c:out value="${g.model}"/></option>
+                                                    </c:forEach>
+                                                </select>
+                                            </td>
+                                            <td class="col-stock"><span class="row-stock mono">—</span></td>
+                                            <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
+                                            <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                            <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
+                                            <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
+                                        </tr>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
+                            <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="5" class="text-right">Tổng cộng:</td>
+                                            <td class="text-right mono" id="grandTotal">0₫</td>
+                                            <td></td>
+                                        </tr>
+                            </tfoot>
+                        </table>
+
+                        <button type="button" class="btn add-row-btn" onclick="addRow()">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                            Thêm dòng
+                        </button>
+
+                        <template id="rowTemplate">
+                            <tr>
+                                <td class="col-num"><span class="row-num"></span></td>
+                                <td>
+                                    <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
+                                        <option value="">-- Chọn máy --</option>
+                                        <c:forEach var="g" items="${generators}">
+                                            <option value="${g.id}"><c:out value="${g.model}"/></option>
+                                        </c:forEach>
+                                    </select>
+                                </td>
+                                <td class="col-stock"><span class="row-stock mono">—</span></td>
+                                <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
+                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                    <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
+                                    <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
+                            </tr>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a class="btn" href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}">Huỷ</a>
+                    <button type="submit" name="submitType" value="submit" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        ${proposal.status == 'NEEDS_REVISION' ? 'Gửi duyệt lại' : 'Gửi duyệt'}
+                    </button>
+                </div>
+            </form>
+
+            <form id="deleteForm" method="post" action="${pageContext.request.contextPath}/proposal?action=delete" style="display:none;">
+                <input type="hidden" name="id" value="${proposal.proposalId}" />
+            </form>
+        </main>
+    </div>
+</div>
+
+<div class="modal-host" id="genModalOverlay">
+    <div class="modal">
+        <div class="modal-head">
+            <h3>Thêm máy phát mới</h3>
+            <button type="button" class="modal-close" onclick="closeNewGeneratorModal()">&times;</button>
+        </div>
+        <p class="modal-sub">Máy phát sẽ được thêm vào dropdown của mọi dòng bên dưới.</p>
+        <div class="modal-error" id="genModalError"></div>
+        <div class="modal-grid">
+            <div>
+                <label class="field-label">Mã máy phát (model) <span class="req">*</span></label>
+                <input class="input" id="ngModel" placeholder="VD: Honda EU22i" />
+            </div>
+            <div>
+                <label class="field-label">Công suất (kVA) <span class="req">*</span></label>
+                <input class="input mono" id="ngPower" type="number" step="0.01" placeholder="VD: 50" />
+            </div>
+            <div>
+                <label class="field-label">Tần số (Hz)</label>
+                <input class="input mono" id="ngFreq" placeholder="VD: 50" />
+            </div>
+            <div>
+                <label class="field-label">Trọng lượng (kg)</label>
+                <input class="input mono" id="ngWeight" type="number" step="0.01" placeholder="VD: 120" />
+            </div>
+            <div>
+                <label class="field-label">Thương hiệu</label>
+                <select class="select" id="ngBrandId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="b" items="${catBrands}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                </select>
+            </div>
+            <div>
+                <label class="field-label">Xuất xứ</label>
+                <select class="select" id="ngOriginId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="b" items="${catOrigins}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                </select>
+            </div>
+            <div>
+                <label class="field-label">Tình trạng</label>
+                <select class="select" id="ngConditionId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="b" items="${catConditions}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                </select>
+            </div>
+            <div>
+                <label class="field-label">Nhiên liệu</label>
+                <select class="select" id="ngFuelTypeId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="b" items="${catFuelTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                </select>
+            </div>
+            <div>
+                <label class="field-label">Số pha</label>
+                <select class="select" id="ngPhaseId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="b" items="${catPhases}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                </select>
+            </div>
+            <div>
+                <label class="field-label">Loại máy phát</label>
+                <select class="select" id="ngGenTypeId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="b" items="${catGenTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                </select>
             </div>
         </div>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeNewGeneratorModal()">Huỷ</button>
+            <button type="button" class="btn btn-primary" id="ngSaveBtn" onclick="saveNewGenerator()">Lưu máy phát</button>
+        </div>
+    </div>
+</div>
 
+<<<<<<< HEAD
         <div class="toast-host" id="toastHost"></div>
         <template id="rowTemplate">
             <tr>
@@ -442,4 +601,145 @@
             }
         </script>
     </body>
+=======
+<div class="modal-host" id="supModalOverlay">
+    <div class="modal">
+        <div class="modal-head">
+            <h3>Thêm nhà cung cấp mới</h3>
+            <button type="button" class="modal-close" onclick="closeNewSupplierModal()">&times;</button>
+        </div>
+        <p class="modal-sub">Nhà cung cấp sẽ được áp dụng cho toàn bộ phiếu.</p>
+        <div class="modal-error" id="supModalError"></div>
+        <div class="modal-grid">
+            <div>
+                <label class="field-label">Tên nhà cung cấp <span class="req">*</span></label>
+                <input class="input" id="nsName" placeholder="VD: Nguyễn Văn B" />
+            </div>
+            <div>
+                <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                <input class="input mono" id="nsPhone" type="tel" placeholder="VD: 0912345678" inputmode="numeric" maxlength="11" />
+            </div>
+            <div>
+                <label class="field-label">Email</label>
+                <input class="input mono" id="nsEmail" type="email" placeholder="email@example.com" />
+            </div>
+            <div>
+                <label class="field-label">Loại NCC</label>
+                <select class="select" id="nsTypeId">
+                    <option value="">-- Chọn --</option>
+                <c:forEach var="t" items="${supplierTypeList}"><option value="${t.id}"><c:out value="${t.name}"/></option></c:forEach>
+                </select>
+            </div>
+            <div class="span-2">
+                <label class="field-label">Tên công ty</label>
+                <input class="input" id="nsCompanyName" placeholder="VD: Công ty TNHH ABC" />
+            </div>
+            <div class="span-2">
+                <label class="field-label">Địa chỉ</label>
+                <textarea class="textarea" id="nsAddress" rows="2" placeholder="Địa chỉ NCC"></textarea>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeNewSupplierModal()">Huỷ</button>
+            <button type="button" class="btn btn-primary" id="nsSaveBtn" onclick="saveNewSupplier()">Lưu NCC</button>
+        </div>
+    </div>
+</div>
+
+<div class="side-panel-overlay" id="custPanelOverlay" onclick="closeCustomerPanel()"></div>
+<div class="side-panel" id="custSidePanel">
+    <div class="side-panel-head">
+        <h3 class="side-panel-title">Chọn nhà cung cấp</h3>
+        <button type="button" class="side-panel-close" onclick="closeCustomerPanel()">&times;</button>
+    </div>
+    <div class="side-panel-body">
+        <div class="sp-search-bar">
+            <input type="text" id="custSearchInput" class="serial-search-box" placeholder="Tìm nhanh theo tên, SĐT, email..." />
+            <select id="custSortOrder" class="serial-search-box sp-sort">
+                <option value="name_asc">Tên A-Z</option>
+                <option value="name_desc">Tên Z-A</option>
+                <option value="newest">Mới nhất</option>
+            </select>
+        </div>
+        <div id="custLoading" class="sp-loading">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
+            </svg><br>Đang tải...
+        </div>
+        <div class="cust-list-wrap" id="custList"></div>
+    </div>
+</div>
+
+<input type="file" id="importExcelFile" name="excelFile"
+       accept=".xlsx,.xls"
+       style="display:none"
+       onchange="uploadExcelFile(this)" />
+
+<div class="toast-host" id="toastHost"></div>
+<script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+<script>
+    var STOCK_MAP = {};
+    <c:forEach var="entry" items="${stockByGen}">
+    STOCK_MAP['${entry.key}'] = ${entry.value};
+    </c:forEach>
+</script>
+<script>
+var MSG = {};
+MSG.QTY_ZERO = 'Số lượng phải lớn hơn 0.';
+MSG.QTY_ONLY_NUM = 'Số lượng chỉ được nhập số!';
+MSG.DG_ONLY_NUM = 'Đơn giá chỉ được nhập số!';
+MSG.SEL_WAREHOUSE = 'Vui lòng chọn kho nhập.';
+MSG.SEL_SUPPLIER = 'Vui lòng chọn nhà cung cấp.';
+MSG.SEL_ONE_GEN = 'Vui lòng chọn ít nhất 1 máy phát điện.';
+MSG.QTY_ROW = 'Số lượng ở dòng ';
+MSG.DG_ROW = 'Đơn giá ở dòng ';
+MSG.GT_ZERO = ' phải lớn hơn 0.';
+MSG.ERR_MODEL_INFO = 'Vui lòng nhập mã máy phát và công suất.';
+MSG.ERR_CONTACT = 'Vui lòng nhập tên và SĐT hợp lệ (10-11 chữ số).';
+MSG.SAVING = 'Đang lưu...';
+MSG.SAVE_GEN = 'Lưu máy phát';
+MSG.SAVE_SUP = 'Lưu NCC';
+MSG.ERR = 'Lỗi';
+MSG.CONN_ERR = 'Lỗi kết nối';
+MSG.EXIST_GEN_PREFIX = 'Mã "';
+MSG.EXIST_GEN_SUFFIX = '" đã có — đã thêm vào dropdown.';
+MSG.ADDED_GEN_PREFIX = 'Đã thêm máy phát "';
+MSG.ADDED_GEN_SUFFIX = '"';
+MSG.EXIST_SUP_PREFIX = 'SĐT đã có NCC: ';
+MSG.EXIST_SUP_SUFFIX = ' — đã tự chọn.';
+MSG.ADDED_SUP_PREFIX = 'Đã thêm NCC "';
+MSG.ADDED_SUP_SUFFIX = '"';
+</script>
+<script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/proposal-create.js"></script>
+<script>
+    (function() {
+        var label = document.getElementById('custTriggerLabel');
+        if (label) {
+            var nameVal = document.getElementById('inpCustName').value || '';
+            var supId = document.getElementById('sdHiddenId').value || '';
+            if (nameVal && supId) {
+                label.textContent = nameVal;
+                label.classList.add('has-value');
+            }
+        }
+        if (typeof refreshSupplierCard === 'function') refreshSupplierCard();
+
+        document.querySelectorAll('.unit-price-input').forEach(function (el) {
+            var intPart = ((el.value || '').trim().split('.')[0] || '').replace(/[^\d]/g, '');
+            el.value = intPart || '0';
+        });
+        if (typeof updateTotal === 'function') updateTotal();
+    })();
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+            showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+        }
+    });
+</script>
+</body>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 </html>
