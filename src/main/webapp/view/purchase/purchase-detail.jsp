@@ -30,7 +30,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
                 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-detail.css">
     </head>
-    </head>
     <body>
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>

@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-reject.css">
 </head>
-</head>
 <body>
     <div class="app">
         <jsp:include page="../common/admin/aside.jsp"></jsp:include>

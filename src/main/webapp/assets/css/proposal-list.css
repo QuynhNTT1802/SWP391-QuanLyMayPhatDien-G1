@@ -55,5 +55,11 @@
 .row-check { cursor: pointer; }
 .row-check:disabled { cursor: not-allowed; opacity: 0.4; }
 .row-check:disabled:checked { background: var(--muted-2); border-color: var(--muted-2); }
+.table-card tbody tr { cursor: pointer; }
+.table-card tbody tr:hover { background: var(--surface-2); }
+.table-card tbody tr.selected { background: var(--info-soft); }
+.table-card tbody tr.selected:hover {
+    background: color-mix(in srgb, var(--info-soft) 80%, var(--info) 20%);
+}
 #groupBtn { display: none; }
 #groupBtn.show { display: inline-flex; }

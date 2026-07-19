@@ -262,7 +262,6 @@
                                     <th>Tổng tiền</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-address">Địa chỉ</th>
-                                    
                                 </tr>
                             </thead>
                             <tbody id="ordersBody">
@@ -316,7 +315,6 @@
                                                         </c:choose>
                                                 </td>
                                                 <td class="col-address"><span class="pill role-staff"><span class="pdot"></span> ${order.customer.address}</span></td>
-                                                
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
@@ -346,6 +344,16 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+
+        <script>
+            <c:if test="${not empty sessionScope.message}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${sessionScope.message}"/>';
+            window.SESSION_DATA.type = '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>';
+                <c:remove var="message" scope="session"/>
+                <c:remove var="messageType" scope="session"/>
+            </c:if>
+        </script>
 
         <div class="customer-modal-backdrop" id="customerModal" onclick="if (event.target === this) closeCustomerModal();">
             <div class="customer-modal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
