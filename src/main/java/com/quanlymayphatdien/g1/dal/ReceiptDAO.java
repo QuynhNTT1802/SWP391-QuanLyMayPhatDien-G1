@@ -36,16 +36,20 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
                 + "so.order_code, liq.liquidation_code, liq.liquidation_id, c.name AS customer_name, cr.name AS reason_name, "
-                + "po.po_code AS purchase_order_code "
+                + "po.po_code AS purchase_order_code, "
+                + "tr.transfer_code AS transfer_code, "
+                + "rexp.receipt_code AS related_export_receipt_code "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id "
-                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN liquidation liq ON r.liquidation_id = liq.liquidation_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
+                + "LEFT JOIN transfer tr ON r.linked_transfer_id = tr.transfer_id "
+                + "LEFT JOIN receipt rexp ON r.related_export_receipt_id = rexp.receipt_id "
                 + "WHERE 1=1 ";
         List<Object> inputs = new ArrayList<>();
         if (typeFilter != null && !typeFilter.isEmpty()) {
@@ -64,10 +68,9 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             sql += "AND r.created_by = ? ";
             inputs.add(createdByFilter);
         }
-        sql += "AND r.status NOT IN ('DRAFT', 'NEEDS_REVISION') ";
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
-                    + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ? OR po.po_code LIKE ?) ";
+                    + "OR c.name LIKE ? OR u1.name LIKE ? OR liq.liquidation_code LIKE ? OR po.po_code LIKE ?) ";
             String like = "%" + search.trim() + "%";
             inputs.add(like);
             inputs.add(like);
@@ -108,7 +111,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         String sql = "SELECT COUNT(*) FROM receipt r "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
-                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN liquidation liq ON r.liquidation_id = liq.liquidation_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
                 + "WHERE 1=1 ";
@@ -129,10 +132,9 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             sql += "AND r.created_by = ? ";
             inputs.add(createdByFilter);
         }
-        sql += "AND r.status NOT IN ('DRAFT', 'NEEDS_REVISION') ";
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
-                    + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ?) ";
+                    + "OR c.name LIKE ? OR u1.name LIKE ? OR liq.liquidation_code LIKE ?) ";
             String like = "%" + search.trim() + "%";
             inputs.add(like);
             inputs.add(like);
@@ -162,16 +164,20 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         String sql = "SELECT r.*, w.name AS warehouse_name, "
                 + "u1.name AS created_by_name, u2.name AS approved_by_name, "
                 + "so.order_code, liq.liquidation_code, liq.liquidation_id, c.name AS customer_name, cr.name AS reason_name, "
-                + "po.po_code AS purchase_order_code "
+                + "po.po_code AS purchase_order_code, "
+                + "tr.transfer_code AS transfer_code, "
+                + "rexp.receipt_code AS related_export_receipt_code "
                 + "FROM receipt r "
                 + "LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN user u1 ON r.created_by = u1.id "
                 + "LEFT JOIN user u2 ON r.approved_by = u2.id "
                 + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
                 + "LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id "
-                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id "
+                + "LEFT JOIN liquidation liq ON r.liquidation_id = liq.liquidation_id "
                 + "LEFT JOIN customer c ON so.customer_id = c.id OR liq.customer_id = c.id "
                 + "LEFT JOIN category cr ON r.reason_id = cr.id "
+                + "LEFT JOIN transfer tr ON r.linked_transfer_id = tr.transfer_id "
+                + "LEFT JOIN receipt rexp ON r.related_export_receipt_id = rexp.receipt_id "
                 + "WHERE r.receipt_id = ?";
         try {
             connection = getConnection();
@@ -198,9 +204,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (status == null || status.trim().isEmpty()) {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
-        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id,\n"
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, liquidation_id,\n"
+                + "    linked_transfer_id, related_export_receipt_id,\n"
                 + "    warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at)\n"
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -216,25 +223,45 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 statement.setNull(4, Types.INTEGER);
             }
-            statement.setInt(5, r.getWarehouseId());
-            statement.setInt(6, r.getCreatedBy());
-            statement.setString(7, status);
-            statement.setString(8, r.getNote());
-            if (r.getReasonId() != null) {
-                statement.setInt(9, r.getReasonId());
+            if (r.getLiquidationId() != null) {
+                statement.setInt(5, r.getLiquidationId());
             } else {
-                statement.setNull(9, Types.INTEGER);
+                statement.setNull(5, Types.INTEGER);
             }
-            statement.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
-            if (r.getApprovedBy() != null) {
-                statement.setInt(11, r.getApprovedBy());
+            if (r.getLinkedTransferId() != null) {
+                statement.setInt(6, r.getLinkedTransferId());
             } else {
-                statement.setNull(11, Types.INTEGER);
+                statement.setNull(6, Types.INTEGER);
+            }
+            if (r.getRelatedExportReceiptId() != null) {
+                statement.setInt(7, r.getRelatedExportReceiptId());
+            } else {
+                statement.setNull(7, Types.INTEGER);
+            }
+            statement.setInt(8, r.getWarehouseId());
+            statement.setInt(9, r.getCreatedBy());
+            statement.setString(10, status);
+            statement.setString(11, r.getNote());
+            if (r.getReasonId() != null) {
+                statement.setInt(12, r.getReasonId());
+            } else {
+                statement.setNull(12, Types.INTEGER);
+            }
+            statement.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                statement.setInt(12, r.getApprovedBy());
+            } else {
+                statement.setNull(12, Types.INTEGER);
+            }
+            if (r.getApprovedBy() != null) {
+                statement.setInt(14, r.getApprovedBy());
+            } else {
+                statement.setNull(14, Types.INTEGER);
             }
             if (r.getApprovedAt() != null) {
-                statement.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+                statement.setTimestamp(15, Timestamp.valueOf(r.getApprovedAt()));
             } else {
-                statement.setNull(12, Types.TIMESTAMP);
+                statement.setNull(15, Types.TIMESTAMP);
             }
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
@@ -257,9 +284,10 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         if (status == null || status.trim().isEmpty()) {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
-        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
+        String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, liquidation_id, "
+                + "linked_transfer_id, related_export_receipt_id, "
                 + "warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getReceiptCode());
             ps.setString(2, r.getReceiptType());
@@ -273,25 +301,40 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 ps.setNull(4, Types.INTEGER);
             }
-            ps.setInt(5, r.getWarehouseId());
-            ps.setInt(6, r.getCreatedBy());
-            ps.setString(7, status);
-            ps.setString(8, r.getNote());
-            if (r.getReasonId() != null) {
-                ps.setInt(9, r.getReasonId());
+            if (r.getLiquidationId() != null) {
+                ps.setInt(5, r.getLiquidationId());
             } else {
-                ps.setNull(9, Types.INTEGER);
+                ps.setNull(5, Types.INTEGER);
             }
-            ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
-            if (r.getApprovedBy() != null) {
-                ps.setInt(11, r.getApprovedBy());
+            if (r.getLinkedTransferId() != null) {
+                ps.setInt(6, r.getLinkedTransferId());
             } else {
-                ps.setNull(11, Types.INTEGER);
+                ps.setNull(6, Types.INTEGER);
+            }
+            if (r.getRelatedExportReceiptId() != null) {
+                ps.setInt(7, r.getRelatedExportReceiptId());
+            } else {
+                ps.setNull(7, Types.INTEGER);
+            }
+            ps.setInt(8, r.getWarehouseId());
+            ps.setInt(9, r.getCreatedBy());
+            ps.setString(10, status);
+            ps.setString(11, r.getNote());
+            if (r.getReasonId() != null) {
+                ps.setInt(12, r.getReasonId());
+            } else {
+                ps.setNull(12, Types.INTEGER);
+            }
+            ps.setTimestamp(13, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                ps.setInt(14, r.getApprovedBy());
+            } else {
+                ps.setNull(14, Types.INTEGER);
             }
             if (r.getApprovedAt() != null) {
-                ps.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+                ps.setTimestamp(15, Timestamp.valueOf(r.getApprovedAt()));
             } else {
-                ps.setNull(12, Types.TIMESTAMP);
+                ps.setNull(15, Types.TIMESTAMP);
             }
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
@@ -306,15 +349,11 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     // ===================== BÁO CÁO NHẬP / XUẤT =====================
-    // Báo cáo lọc theo receipt_type (IMPORT/EXPORT), loại bỏ DRAFT/NEEDS_REVISION
-    // vì hiện tại hệ thống không dùng đến. Mốc thời gian dựa trên approved_at
-    // (giống báo cáo thanh lý), có thể lọc thêm theo kho.
 
     private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to,
                                     Integer warehouseId, List<Object> params, String receiptType) {
         StringBuilder w = new StringBuilder(" WHERE r.receipt_type = ?");
         params.add(receiptType);
-        w.append(" AND r.status NOT IN ('DRAFT', 'NEEDS_REVISION')");
         // He thong khong co workflow duyet that su, dung created_at lam moc thoi gian
         if (from != null) {
             w.append(" AND DATE(r.created_at) >= ?");
@@ -336,7 +375,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             ps.setObject(i + 1, params.get(i));
         }
     }
-
     // Tổng quan: tổng phiếu, tổng máy, số phiếu theo trạng thái (chỉ tính COMPLETED/PENDING/CANCELLED).
     public Map<String, Object> getReportSummary(java.time.LocalDate from, java.time.LocalDate to,
                                                 Integer warehouseId, String receiptType) {
@@ -572,180 +610,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
 
     // ===================== END BÁO CÁO NHẬP / XUẤT =====================
 
-    public List<String> approveReceipt(int receiptId, int approvedBy) {
-        List<String> errors = new ArrayList<>();
-        try {
-            connection = getConnection();
-            connection.setAutoCommit(false);
-            // 1. Update receipt status
-            String updateSql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_COMPLETED + "', "
-                    + "approved_by = ?, approved_at = ? "
-                    + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
-            statement = connection.prepareStatement(updateSql);
-            statement.setInt(1, approvedBy);
-            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setInt(3, receiptId);
-            int updated = statement.executeUpdate();
-            if (updated == 0) {
-                connection.rollback();
-                errors.add("Phi?u kh�ng ? tr?ng th�i ch? duy?t");
-                return errors;
-            }
-            // 2. Lay receipt_detail (join inventory de lay generator_id, serial_number)
-            String detailSql = "SELECT rd.*, i.serial_number, i.generator_id "
-                    + "FROM receipt_detail rd "
-                    + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
-                    + "WHERE rd.receipt_id = ?";
-            statement = connection.prepareStatement(detailSql);
-            statement.setInt(1, receiptId);
-            resultSet = statement.executeQuery();
-            List<ReceiptDetail> details = new ArrayList<>();
-            ReceiptDetailDAO rdDAO = new ReceiptDetailDAO();
-            while (resultSet.next()) {
-                details.add(rdDAO.getFromResultSet(resultSet));
-            }
-
-            String typeSql = "SELECT receipt_type, warehouse_id, receipt_code FROM receipt WHERE receipt_id = ?";
-            statement = connection.prepareStatement(typeSql);
-            statement.setInt(1, receiptId);
-            resultSet = statement.executeQuery();
-            String receiptType = "";
-            int warehouseId = 0;
-            String receiptCode = "";
-            if (resultSet.next()) {
-                receiptType = resultSet.getString("receipt_type");
-                warehouseId = resultSet.getInt("warehouse_id");
-                receiptCode = resultSet.getString("receipt_code");
-            }
-            InventoryDAO invDAO = new InventoryDAO();
-            StockCardDAO scDAO = new StockCardDAO();
-
-            // 4. Validate: IMPORT (inventory phai o PENDING_IMPORT), EXPORT (phai o RESERVED_EXPORT)
-            if ("IMPORT".equals(receiptType)) {
-                String chkSql = "SELECT COUNT(*) FROM receipt_detail rd "
-                        + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
-                        + "WHERE rd.receipt_id = ? AND i.status <> ?";
-                try (PreparedStatement ps = connection.prepareStatement(chkSql)) {
-                    ps.setInt(1, receiptId);
-                    ps.setString(2, InventoryDAO.STATUS_PENDING_IMPORT);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next() && rs.getInt(1) > 0) {
-                            errors.add("Có serial trong phiếu không ở trạng thái PENDING_IMPORT");
-                        }
-                    }
-                }
-            } else if ("EXPORT".equals(receiptType)) {
-                String chkSql = "SELECT COUNT(*) FROM receipt_detail rd "
-                        + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
-                        + "WHERE rd.receipt_id = ? AND i.status <> ?";
-                try (PreparedStatement ps = connection.prepareStatement(chkSql)) {
-                    ps.setInt(1, receiptId);
-                    ps.setString(2, InventoryDAO.STATUS_RESERVED_EXPORT);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next() && rs.getInt(1) > 0) {
-                            errors.add("Có serial trong phiếu không ở trạng thái RESERVED_EXPORT");
-                        }
-                    }
-                }
-            }
-            if (!errors.isEmpty()) {
-                connection.rollback();
-                return errors;
-            }
-
-            // 5. Voi moi inventory: flip status (PENDING_IMPORT -> IN_STOCK cho IMPORT,
-            //                                  RESERVED_EXPORT -> SOLD/LIQUIDATED cho EXPORT)
-            if ("IMPORT".equals(receiptType)) {
-                String updSql = "UPDATE inventory SET status = ? "
-                        + "WHERE inventory_id IN (SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?) "
-                        + "AND status = ?";
-                try (PreparedStatement ps = connection.prepareStatement(updSql)) {
-                    ps.setString(1, InventoryDAO.STATUS_IN_STOCK);
-                    ps.setInt(2, receiptId);
-                    ps.setString(3, InventoryDAO.STATUS_PENDING_IMPORT);
-                    ps.executeUpdate();
-                }
-            } else if ("EXPORT".equals(receiptType)) {
-                boolean isLiquidation = false;
-                String checkLiqSql = "SELECT liquidation_id FROM liquidation WHERE converted_receipt_id = ?";
-                try (PreparedStatement checkLiqPs = connection.prepareStatement(checkLiqSql)) {
-                    checkLiqPs.setInt(1, receiptId);
-                    try (ResultSet liqRs = checkLiqPs.executeQuery()) {
-                        if (liqRs.next()) {
-                            isLiquidation = true;
-                        }
-                    }
-                }
-                String targetStatus = isLiquidation ? InventoryDAO.STATUS_LIQUIDATED : InventoryDAO.STATUS_SOLD;
-                String updSql = "UPDATE inventory SET status = ? "
-                        + "WHERE inventory_id IN (SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?) "
-                        + "AND status = ?";
-                try (PreparedStatement ps = connection.prepareStatement(updSql)) {
-                    ps.setString(1, targetStatus);
-                    ps.setInt(2, receiptId);
-                    ps.setString(3, InventoryDAO.STATUS_RESERVED_EXPORT);
-                    ps.executeUpdate();
-                }
-            }
-
-            // 6. Ghi stock_card theo generator (gom theo generator_id, quantity_change = ±size)
-            Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
-            for (ReceiptDetail d : details) {
-                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
-            }
-            for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
-                int genId = entry.getKey();
-                List<ReceiptDetail> groupDetails = entry.getValue();
-                int totalQty = groupDetails.size();
-                int change = "IMPORT".equals(receiptType) ? totalQty : -totalQty;
-                int qtyAfter = 0;
-                String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
-                try (PreparedStatement qtyPs = connection.prepareStatement(qtySql)) {
-                    qtyPs.setInt(1, warehouseId);
-                    qtyPs.setInt(2, genId);
-                    try (ResultSet qtyRs = qtyPs.executeQuery()) {
-                        if (qtyRs.next()) {
-                            qtyAfter = qtyRs.getInt(1);
-                        }
-                    }
-                }
-                StockCard sc = new StockCard();
-                sc.setWarehouseId(warehouseId);
-                sc.setGeneratorId(genId);
-                sc.setReceiptId(receiptId);
-                sc.setTransactionType(receiptType);
-                sc.setQuantityChange(change);
-                sc.setQuantityAfter(qtyAfter);
-                sc.setReferenceNote("Phi?u " + receiptCode);
-                sc.setCreatedAt(LocalDateTime.now());
-                sc.setCreatedBy(approvedBy);
-                scDAO.insert(connection, sc);
-            }
-
-            connection.commit();
-            return errors;
-        } catch (SQLException e) {
-            try {
-                if (connection != null) {
-                    connection.rollback();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-            errors.add("L?i h? th?ng: " + e.getMessage());
-            return errors;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.setAutoCommit(true);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     /**
      * Ghi stock_card theo generator cho mot phieu nhap (IMPORT) moi tao.
      * Moi generator_id se tao mot stock_card voi quantity_change = +size(group)
@@ -840,16 +704,125 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
     }
 
+    public List<String> approveReceipt(int receiptId, int approvedBy) {
+        List<String> errors = new ArrayList<>();
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+
+            String receiptType = null;
+            String receiptCode = null;
+            int warehouseId = 0;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT receipt_type, receipt_code, warehouse_id, status FROM receipt WHERE receipt_id = ? FOR UPDATE")) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        errors.add("Không tìm thấy phiếu nhập");
+                    } else {
+                        receiptType = rs.getString("receipt_type");
+                        receiptCode = rs.getString("receipt_code");
+                        warehouseId = rs.getInt("warehouse_id");
+                        if (!GlobalUtils.RECEIPT_STATUS_PENDING.equals(rs.getString("status"))) {
+                            errors.add("Phiếu không ở trạng thái chờ duyệt");
+                        }
+                    }
+                }
+            }
+
+            if (!errors.isEmpty()) {
+                conn.rollback();
+                return errors;
+            }
+            if (!"IMPORT".equals(receiptType)) {
+                conn.rollback();
+                errors.add("Chỉ có thể duyệt phiếu nhập");
+                return errors;
+            }
+
+            List<ReceiptDetail> details = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT rd.receipt_id, rd.inventory_id, rd.note, i.serial_number, "
+                    + "i.generator_id, i.status "
+                    + "FROM receipt_detail rd JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                    + "WHERE rd.receipt_id = ?")) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        ReceiptDetail detail = new ReceiptDetail();
+                        detail.setReceiptId(rs.getInt("receipt_id"));
+                        detail.setInventoryId(rs.getInt("inventory_id"));
+                        detail.setGeneratorId(rs.getInt("generator_id"));
+                        detail.setSerialNumber(rs.getString("serial_number"));
+                        detail.setNote(rs.getString("note"));
+                        details.add(detail);
+                        String status = rs.getString("status");
+                        if ("PENDING_IMPORT".equals(status)) {
+                            try (PreparedStatement updateInventory = conn.prepareStatement(
+                                    "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?")) {
+                                updateInventory.setString(1, "IN_STOCK");
+                                updateInventory.setInt(2, detail.getInventoryId());
+                                updateInventory.setString(3, "PENDING_IMPORT");
+                                if (updateInventory.executeUpdate() == 0) {
+                                    errors.add("Không thể cập nhật serial \"" + detail.getSerialNumber() + "\"");
+                                }
+                            }
+                        } else if (!InventoryDAO.STATUS_IN_STOCK.equals(status)) {
+                            errors.add("Serial \"" + detail.getSerialNumber() + "\" không ở trạng thái có thể nhập");
+                        }
+                    }
+                }
+            }
+
+            if (details.isEmpty()) {
+                errors.add("Phiếu không có chi tiết serial hợp lệ");
+            }
+            if (!errors.isEmpty()) {
+                conn.rollback();
+                return errors;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE receipt SET status = ?, approved_by = ?, approved_at = ? "
+                    + "WHERE receipt_id = ? AND status = ?")) {
+                ps.setString(1, GlobalUtils.RECEIPT_STATUS_COMPLETED);
+                ps.setInt(2, approvedBy);
+                ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                ps.setInt(4, receiptId);
+                ps.setString(5, GlobalUtils.RECEIPT_STATUS_PENDING);
+                if (ps.executeUpdate() == 0) {
+                    conn.rollback();
+                    errors.add("Phiếu không còn ở trạng thái chờ duyệt");
+                    return errors;
+                }
+            }
+
+            writeStockCardsForImport(conn, receiptId, receiptCode, warehouseId, approvedBy, details);
+            conn.commit();
+        } catch (SQLException e) {
+            errors.add("Lỗi hệ thống: " + e.getMessage());
+        }
+        return errors;
+    }
+
     public boolean rejectReceipt(int receiptId, int approvedBy, Integer reasonId, String reasonNote) {
         Connection conn = null;
         try {
             conn = getConnection();
             conn.setAutoCommit(false);
 
-            // 1. Lay danh sach inventory_id cua receipt
             List<Integer> inventoryIds = new ArrayList<>();
-            String selInvSql = "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?";
-            try (PreparedStatement ps = conn.prepareStatement(selInvSql)) {
+            String receiptType = null;
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT receipt_type FROM receipt WHERE receipt_id = ?")) {
+                ps.setInt(1, receiptId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        receiptType = rs.getString("receipt_type");
+                    }
+                }
+            }
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?")) {
                 ps.setInt(1, receiptId);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -858,42 +831,46 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 }
             }
 
-            // 2. Xoa inventory rows PENDING_IMPORT (receipt_detail se tu xoa nho ON DELETE CASCADE)
-            if (!inventoryIds.isEmpty()) {
-                String placeholders = String.join(",",
-                        java.util.Collections.nCopies(inventoryIds.size(), "?"));
-                String delInvSql = "DELETE FROM inventory WHERE status = ? AND inventory_id IN (" + placeholders + ")";
-                try (PreparedStatement ps = conn.prepareStatement(delInvSql)) {
-                    ps.setString(1, InventoryDAO.STATUS_PENDING_IMPORT);
-                    for (int i = 0; i < inventoryIds.size(); i++) {
-                        ps.setInt(i + 2, inventoryIds.get(i));
-                    }
-                    ps.executeUpdate();
+            String sql = "UPDATE receipt SET status = ?, approved_by = ?, "
+                    + "approved_at = ?, reason_id = ?, reason_note = ? "
+                    + "WHERE receipt_id = ? AND status = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, GlobalUtils.RECEIPT_STATUS_CANCELLED);
+                ps.setInt(2, approvedBy);
+                ps.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                if (reasonId != null) {
+                    ps.setInt(4, reasonId);
+                } else {
+                    ps.setNull(4, Types.INTEGER);
+                }
+                if (reasonNote != null && !reasonNote.trim().isEmpty()) {
+                    ps.setString(5, reasonNote.trim());
+                } else {
+                    ps.setNull(5, Types.VARCHAR);
+                }
+                ps.setInt(6, receiptId);
+                ps.setString(7, GlobalUtils.RECEIPT_STATUS_PENDING);
+                if (ps.executeUpdate() == 0) {
+                    conn.rollback();
+                    return false;
                 }
             }
 
-            // 3. Update receipt status
-            String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "', approved_by = ?, "
-                    + "approved_at = ?, reason_id = ?, reason_note = ? "
-                    + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-                ps.setInt(1, approvedBy);
-                ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
-                if (reasonId != null) {
-                    ps.setInt(3, reasonId);
-                } else {
-                    ps.setNull(3, Types.INTEGER);
+            if ("IMPORT".equals(receiptType)) {
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM receipt_detail WHERE receipt_id = ?")) {
+                    ps.setInt(1, receiptId);
+                    ps.executeUpdate();
                 }
-                if (reasonNote != null && !reasonNote.trim().isEmpty()) {
-                    ps.setString(4, reasonNote.trim());
-                } else {
-                    ps.setNull(4, Types.VARCHAR);
-                }
-                ps.setInt(5, receiptId);
-                int updated = ps.executeUpdate();
-                if (updated == 0) {
-                    conn.rollback();
-                    return false;
+                try (PreparedStatement ps = conn.prepareStatement(
+                        "DELETE FROM inventory WHERE inventory_id = ? "
+                        + "AND NOT EXISTS (SELECT 1 FROM receipt_detail WHERE inventory_id = ?)")) {
+                    for (Integer inventoryId : inventoryIds) {
+                        ps.setInt(1, inventoryId);
+                        ps.setInt(2, inventoryId);
+                        ps.addBatch();
+                    }
+                    ps.executeBatch();
                 }
             }
 
@@ -901,11 +878,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             return true;
         } catch (SQLException e) {
             if (conn != null) {
-                try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
             }
             System.out.println(e.getMessage());
         } finally {
-            closeResources();
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException ignored) {
+                }
+            }
         }
         return false;
     }
@@ -939,11 +926,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public boolean updateReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId) {
-        return updateReceiptInternalMulti(r, newDetails, userId,
-                GlobalUtils.RECEIPT_STATUS_PENDING, new String[]{GlobalUtils.RECEIPT_STATUS_PENDING});
-    }
-
-    public boolean updateDraftReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId, String newStatus) {
         return updateReceiptInternalMulti(r, newDetails, userId,
                 GlobalUtils.RECEIPT_STATUS_PENDING, new String[]{GlobalUtils.RECEIPT_STATUS_PENDING});
     }
@@ -1023,36 +1005,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 ps.executeUpdate();
             }
 
-            // Cleanup inventory rows cu:
-            //   IMPORT: xoa PENDING_IMPORT rows
-            //   EXPORT: rollback RESERVED_EXPORT -> IN_STOCK (giu nguyen inventory, chi doi status)
-            if (!oldInventoryIds.isEmpty()) {
-                String placeholdersInv = String.join(",",
-                        java.util.Collections.nCopies(oldInventoryIds.size(), "?"));
-                if ("IMPORT".equals(receiptType)) {
-                    String delInvSql = "DELETE FROM inventory WHERE status = ? AND inventory_id IN ("
-                            + placeholdersInv + ")";
-                    try (PreparedStatement ps = conn.prepareStatement(delInvSql)) {
-                        ps.setString(1, InventoryDAO.STATUS_PENDING_IMPORT);
-                        for (int i = 0; i < oldInventoryIds.size(); i++) {
-                            ps.setInt(i + 2, oldInventoryIds.get(i));
-                        }
-                        ps.executeUpdate();
-                    }
-                } else if ("EXPORT".equals(receiptType)) {
-                    String relInvSql = "UPDATE inventory SET status = ? WHERE status = ? AND inventory_id IN ("
-                            + placeholdersInv + ")";
-                    try (PreparedStatement ps = conn.prepareStatement(relInvSql)) {
-                        ps.setString(1, InventoryDAO.STATUS_IN_STOCK);
-                        ps.setString(2, InventoryDAO.STATUS_RESERVED_EXPORT);
-                        for (int i = 0; i < oldInventoryIds.size(); i++) {
-                            ps.setInt(i + 3, oldInventoryIds.get(i));
-                        }
-                        ps.executeUpdate();
-                    }
-                }
-            }
-
             // Insert receipt_detail moi (inventory_id phai duoc set boi controller truoc do)
             try (PreparedStatement ps = conn.prepareStatement(insertDetailSql)) {
                 for (ReceiptDetail d : newDetails) {
@@ -1119,6 +1071,20 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             r.setPurchaseOrderId(null);
         } else {
             r.setPurchaseOrderId(poid);
+        }
+        try {
+            int lt = rs.getInt("linked_transfer_id");
+            if (!rs.wasNull()) {
+                r.setLinkedTransferId(lt);
+            }
+        } catch (SQLException ignored) {
+        }
+        try {
+            int re = rs.getInt("related_export_receipt_id");
+            if (!rs.wasNull()) {
+                r.setRelatedExportReceiptId(re);
+            }
+        } catch (SQLException ignored) {
         }
         r.setWarehouseId(rs.getInt("warehouse_id"));
         r.setCreatedBy(rs.getInt("created_by"));
@@ -1188,6 +1154,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         try {
             r.setReasonName(rs.getString("reason_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            r.setTransferCode(rs.getString("transfer_code"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            r.setRelatedExportReceiptCode(rs.getString("related_export_receipt_code"));
         } catch (SQLException ignored) {
         }
         return r;

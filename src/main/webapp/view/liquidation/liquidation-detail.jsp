@@ -616,19 +616,6 @@
                                         </div>
                                     </div>
                                 </c:if>
-                                <c:if test="${isStaff and st == 'APPROVED' and empty liquidation.convertedReceiptId}">
-                                    <div class="section-action-bar">
-                                        <div class="action-bar-left">
-                                            Đơn đã được CEO duyệt. Tạo phiếu xuất kho để hoàn tất thanh lý.
-                                        </div>
-                                        <div class="action-bar-right">
-                                            <a href="${pageContext.request.contextPath}/export-receipt?action=create&liquidationId=${liquidation.liquidationId}" class="btn btn-success-solid">
-                                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                                Tạo phiếu xuất kho
-                                            </a>
-                                        </div>
-                                    </div>
-                                </c:if>
                                 <c:if test="${st == 'COMPLETED' and not empty liquidation.convertedReceiptId}">
                                     <div class="section-action-bar completed-bar">
                                         <div class="action-bar-left">

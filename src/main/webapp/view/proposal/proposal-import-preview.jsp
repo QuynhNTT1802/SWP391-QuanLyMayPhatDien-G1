@@ -137,21 +137,25 @@
                         Quay lại tải file
                     </a>
                     <c:if test="${not empty sessionScope.toastMessage}">
-                        <div class="alert ${sessionScope.toastType == 'danger' ? 'alert-error' : (sessionScope.toastType == 'success' ? 'alert-success' : 'alert-warn')}">
-                            <span><c:out value="${sessionScope.toastMessage}"/></span>
-                        </div>
+                        <script>
+                            window.SESSION_DATA = window.SESSION_DATA || {};
+                            window.SESSION_DATA.message = '<c:out value="${sessionScope.toastMessage}"/>';
+                            window.SESSION_DATA.type = '<c:out value="${sessionScope.toastType != null ? sessionScope.toastType : 'info'}"/>';
+                        </script>
                         <c:remove var="toastMessage" scope="session"/>
                         <c:remove var="toastType" scope="session"/>
                     </c:if>
                     <c:if test="${not empty requestScope.toastMessage}">
-                        <div class="alert ${requestScope.toastType == 'danger' ? 'alert-error' : (requestScope.toastType == 'success' ? 'alert-success' : 'alert-warn')}">
-                            <span><c:out value="${requestScope.toastMessage}"/></span>
-                        </div>
+                        <script>
+                            window.SESSION_DATA = window.SESSION_DATA || {};
+                            window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+                            window.SESSION_DATA.type = '<c:out value="${requestScope.toastType != null ? requestScope.toastType : 'info'}"/>';
+                        </script>
                     </c:if>
                     <div class="page-head">
                         <div class="eyebrow">Đề xuất nhập kho · Xem trước</div>
                         <h1 class="title">Kiểm tra dữ liệu trước khi lưu</h1>
-                        <div class="lede">Hệ thống đã tách dòng hợp lệ, dòng cảnh báo máy mới, dòng cần chọn nhà cung cấp và dòng lỗi.</div>
+                        <div class="lede">Hệ thống đã tách dòng hợp lệ và dòng lỗi. Bạn có thể sửa số lượng/đơn giá trực tiếp trong bảng bên dưới.</div>
                     </div>
                     <div class="section">
                         <div class="section-head">
@@ -184,6 +188,7 @@
                         <c:if test="${not empty validRows}">
                             <span class="pill ok"><span class="pill-num"><c:out value="${fn:length(validRows)}"/></span> dòng hợp lệ</span>
                         </c:if>
+<<<<<<< HEAD
                         <c:if test="${not empty warningRows}">
                             <span class="pill warn"><span class="pill-num"><c:out value="${fn:length(warningRows)}"/></span> dòng cần lưu ý</span>
                         </c:if>
@@ -192,6 +197,10 @@
                         </c:if>
                         <c:if test="${not empty invalidRows}">
                             <span class="pill bad" id="invalidCountPill"><span class="pill-num"><c:out value="${fn:length(invalidRows)}"/></span> dòng không hợp lệ - cần sửa</span>
+=======
+                        <c:if test="${not empty invalidRows}">
+                            <span class="pill bad" id="invalidCountPill"><span class="pill-num"><c:out value="${fn:length(invalidRows)}"/></span> dòng lỗi</span>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         </c:if>
                     </div>
                     <form id="confirmForm" method="POST" action="${pageContext.request.contextPath}/proposal?action=importConfirm">
@@ -206,16 +215,11 @@
                                 để tải lại file Excel.
                             </div>
                         </c:if>
-                        <c:if test="${not empty unresolvedSupplierRows}">
-                            <div class="alert alert-error" id="unresolvedAlert" style="margin-bottom:12px">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                <span>Có <strong>${fn:length(unresolvedSupplierRows)}</strong> dòng chưa chọn được nhà cung cấp. Bạn cần xử lý từng dòng trong bảng bên dưới trước khi lưu.</span>
-                            </div>
-                        </c:if>
                         <c:if test="${not empty validRows}">
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px"><div class="section-head-left"><h3>Dòng hợp lệ</h3><span class="sub">${fn:length(validRows)} dòng</span></div></div>
                                 <div class="table-scroll">
+<<<<<<< HEAD
                                 <table class="data-table">
                                     <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th>Thương hiệu</th><th>Xuất xứ</th><th>Tình trạng</th><th>Nhiên liệu</th><th>Số pha</th><th>Loại máy phát</th><th class="col-min">Công suất (kVA)</th><th>Tần số</th><th class="col-min">Trọng lượng (kg)</th><th class="col-supplier">Nhà cung cấp</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th><th class="col-qty text-right">Số lượng</th><th class="col-note">Ghi chú dòng</th></tr></thead>
                                     <tbody>
@@ -325,6 +329,21 @@
                                         </c:forEach>
                                     </tbody>
                                 </table>
+=======
+                                    <table class="data-table valid-rows-table">
+                                        <thead><tr><th class="col-min">#</th><th class="col-min">Mã máy phát</th><th class="col-qty text-right">Số lượng</th><th class="col-price text-right">Đơn giá đề xuất (VNĐ)</th></tr></thead>
+                                        <tbody class="valid-rows-tbody">
+                                            <c:forEach var="row" items="${validRows}">
+                                                <tr data-id="<c:out value='${row.gid}'/>" data-stt="<c:out value='${row.stt}'/>">
+                                                    <td class="mono"><c:out value="${row['stt']}"/></td>
+                                                    <td class="model-cell"><c:out value="${row['gmodel']}"/></td>
+                                                    <td><input type="number" class="row-qty" min="1" max="9999" value="<c:out value='${row.gqty}'/>" /></td>
+                                                    <td><input type="number" class="row-unitprice" min="1" step="1000" value="<c:out value='${row.gunitPrice}'/>" /></td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                 </div>
                             </div>
                         </c:if>
@@ -332,6 +351,7 @@
                             <div class="section" style="padding:0">
                                 <div class="section-head" style="padding:14px 18px">
                                     <div class="section-head-left">
+<<<<<<< HEAD
                                         <h3 style="color:var(--danger);">Dòng không hợp lệ - cần sửa</h3>
                                         <span class="sub">${fn:length(invalidRows)} dòng · sửa ô bên dưới rồi nhấn "Kiểm tra lại"</span>
                                     </div>
@@ -378,6 +398,37 @@
                         </c:if>
                         <c:if test="${empty validRows and empty warningRows}">
                             <div class="section"><div class="section-body text-center" style="color:var(--muted)">Không có dòng hợp lệ nào để lưu. Vui lòng quay lại và chỉnh sửa file Excel.</div></div>
+=======
+                                        <h3 style="color:var(--danger);">Dòng lỗi — cần sửa trước khi lưu</h3>
+                                        <span class="sub">${fn:length(invalidRows)} dòng · bạn có thể sửa số lượng/đơn giá trực tiếp bên dưới hoặc thêm máy phát rồi upload lại</span>
+                                    </div>
+                                </div>
+                                <div class="alert alert-error" style="margin:14px 18px 0;">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                    <span>Hệ thống phát hiện <strong>${fn:length(invalidRows)}</strong> dòng có lỗi validate.
+                                        Bạn có thể <strong>sửa số lượng/đơn giá trực tiếp</strong> trong bảng bên dưới — hệ thống sẽ tự chuyển dòng sang mục "Hợp lệ" khi đạt yêu cầu.</span>
+                                </div>
+                                <div class="table-scroll">
+                                    <table class="data-table invalid-row-table">
+                                        <thead><tr><th class="col-min">#</th><th>Mã máy phát</th><th class="col-qty text-right">Số lượng</th><th class="col-price text-right">Đơn giá (VNĐ)</th><th>Lỗi</th></tr></thead>
+                                        <tbody>
+                                            <c:forEach var="row" items="${invalidRows}">
+                                                <tr class="invalid-row" data-row-stt="<c:out value='${row.stt}'/>" data-row-gmodel="<c:out value='${row.gmodel}'/>">
+                                                    <td class="mono"><c:out value="${row['stt']}"/></td>
+                                                    <td class="model-cell"><c:out value="${row['Mã máy phát']}"/></td>
+                                                    <td><input type="number" class="row-qty row-edit-invalid" min="1" max="9999" value="<c:out value='${row["Số lượng"]}'/>" /></td>
+                                                    <td><input type="number" class="row-unitprice row-edit-invalid" min="1" step="1000" value="<c:out value='${row["Đơn giá đề xuất (VNĐ)"]}'/>" /></td>
+                                                    <td><div class="error-msg"><c:out value="${row['gerrors']}"/></div></td>
+                                                </tr>
+                                            </c:forEach>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </c:if>
+                        <c:if test="${empty validRows and empty invalidRows}">
+                            <div class="section"><div class="section-body text-center" style="color:var(--muted)">Không có dòng nào để lưu. Vui lòng quay lại trang tạo đề xuất và tải lại file Excel.</div></div>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         </c:if>
                         <div class="actions">
                             <a class="btn" href="${pageContext.request.contextPath}/proposal?action=create">
@@ -385,7 +436,7 @@
                                 Tải lại file Excel khác
                             </a>
                             <a class="btn" href="${pageContext.request.contextPath}/proposal?action=list">Hủy</a>
-                           
+
                             <button type="button" class="btn btn-primary" id="btnPending" disabled>Gửi duyệt</button>
                         </div>
                     </form>
@@ -393,6 +444,7 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         
         <div class="side-panel-overlay" id="sidePanelOverlay" onclick="closeSupplierPanel()"></div>
         <div class="side-panel" id="sidePanel">
@@ -411,32 +463,49 @@
                 <div class="supplier-list-wrap" id="supplierList"></div>
             </div>
         </div>
+=======
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 
         <script>
             (function () {
                 var form = document.getElementById('confirmForm');
                 var submitTypeInput = document.getElementById('submitType');
-                var btnDraft = document.getElementById('btnDraft');
                 var btnPending = document.getElementById('btnPending');
+<<<<<<< HEAD
                 var rows = document.querySelectorAll('tr[data-id]');
                 var unresolvedCount = document.querySelectorAll('tr.unresolved-card-row').length;
 
                 function refreshSubmitState() {
                     var disabled = rows.length === 0 || unresolvedCount > 0;
                     if (btnDraft) btnDraft.disabled = disabled;
+=======
+
+                function refreshSubmitState() {
+                    var validCount = document.querySelectorAll('tr[data-id]').length;
+                    var invalidCount = document.querySelectorAll('tr.invalid-row').length;
+                    var disabled = validCount === 0 || invalidCount > 0;
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     if (btnPending) btnPending.disabled = disabled;
                 }
                 refreshSubmitState();
 
                 function buildPayload() {
+<<<<<<< HEAD
                     form.querySelectorAll('input[name="generatorId"], input[name="quantity"], input[name="detailNote"], input[name="supplierId"], input[name="unitPrice"]').forEach(function (e) { e.remove(); });
+=======
+                    form.querySelectorAll('input[name="generatorId"], input[name="quantity"], input[name="unitPrice"]').forEach(function (e) {
+                        e.remove();
+                    });
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     var count = 0;
-                    rows.forEach(function (tr) {
+                    document.querySelectorAll('tr[data-id]').forEach(function (tr) {
                         var id = tr.getAttribute('data-id');
                         if (!id) return;
+<<<<<<< HEAD
                         var supplierId = tr.getAttribute('data-supplier-id');
+=======
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         var qty = tr.querySelector('.row-qty');
-                        var note = tr.querySelector('.row-note');
                         var unitPriceInput = tr.querySelector('.row-unitprice');
                         var q = qty ? parseInt(qty.value) : 1;
                         if (isNaN(q) || q < 1) q = 1;
@@ -452,13 +521,6 @@
                         qtyInput.name = 'quantity';
                         qtyInput.value = String(q);
                         form.appendChild(qtyInput);
-                        if (supplierId) {
-                            var supInput = document.createElement('input');
-                            supInput.type = 'hidden';
-                            supInput.name = 'supplierId';
-                            supInput.value = supplierId;
-                            form.appendChild(supInput);
-                        }
                         if (up) {
                             var upInput = document.createElement('input');
                             upInput.type = 'hidden';
@@ -466,21 +528,19 @@
                             upInput.value = up;
                             form.appendChild(upInput);
                         }
-                        if (note) {
-                            var noteInput = document.createElement('input');
-                            noteInput.type = 'hidden';
-                            noteInput.name = 'detailNote';
-                            noteInput.value = note.value || '';
-                            form.appendChild(noteInput);
-                        }
                         count++;
                     });
                     return count;
                 }
 
                 function submitForm(value) {
+<<<<<<< HEAD
                     if (unresolvedCount > 0) {
                         alert('Vẫn còn ' + unresolvedCount + ' dòng chưa chọn nhà cung cấp. Vui lòng xử lý trước khi lưu.');
+=======
+                    if (document.querySelectorAll('tr.invalid-row').length > 0) {
+                        alert('Vẫn còn dòng lỗi. Vui lòng sửa số lượng/đơn giá hoặc thêm máy phát rồi upload lại Excel.');
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         return;
                     }
                     var count = buildPayload();
@@ -489,6 +549,7 @@
                     form.submit();
                 }
 
+<<<<<<< HEAD
                 if (btnDraft) btnDraft.addEventListener('click', function () { submitForm('draft'); });
                 if (btnPending) btnPending.addEventListener('click', function () { submitForm('pending'); });
 
@@ -513,9 +574,58 @@
                             window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
                         });
                     }
+=======
+                if (btnPending)
+                    btnPending.addEventListener('click', function () { submitForm('pending'); });
+
+                // AJAX: khi user edit qty/price trong dòng invalid → revalidate
+                function revalidateInvalidRow(tr) {
+                    var stt = tr.getAttribute('data-row-stt');
+                    var model = tr.getAttribute('data-row-gmodel') || (tr.querySelector('.model-cell') ? tr.querySelector('.model-cell').textContent.trim() : '');
+                    var qtyInput = tr.querySelector('.row-qty');
+                    var upInput = tr.querySelector('.row-unitprice');
+                    if (!stt || !model) return;
+                    var fd = new URLSearchParams();
+                    fd.append('action', 'revalidateImport');
+                    fd.append('stt', stt);
+                    fd.append('model', model);
+                    fd.append('qty', qtyInput.value);
+                    fd.append('unitPrice', upInput.value);
+                    fd.append('supplier', '');
+                    fetch('${pageContext.request.contextPath}/proposal', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: fd.toString()
+                    }).then(function (r) { return r.json(); })
+                      .then(function (data) {
+                        if (data.failed && data.failed[stt]) {
+                            var errCell = tr.querySelector('.error-msg');
+                            if (errCell) errCell.textContent = data.failed[stt];
+                            tr.classList.remove('is-fixed');
+                        } else if (data.fixed && data.fixed.indexOf(parseInt(stt)) >= 0) {
+                            moveInvalidRowToValid(tr);
+                        }
+                    }).catch(function () {});
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                 }
+
+                function moveInvalidRowToValid(tr) {
+                    var stt = tr.getAttribute('data-row-stt');
+                    var model = tr.getAttribute('data-row-gmodel') || '';
+                    var qty = tr.querySelector('.row-qty').value;
+                    var up = tr.querySelector('.row-unitprice').value;
+                    // Lấy gid từ row map trong JSP (đã được lưu vào data attribute? nếu chưa thì phải fetch lại)
+                    // Đơn giản: gọi lại importConfirm để re-render toàn bộ
+                    window.location.href = '${pageContext.request.contextPath}/proposal?action=importConfirm';
+                }
+
+                document.querySelectorAll('.row-edit-invalid').forEach(function (el) {
+                    el.addEventListener('change', function () { revalidateInvalidRow(el.closest('tr')); });
+                    el.addEventListener('blur', function () { revalidateInvalidRow(el.closest('tr')); });
+                });
             })();
 
+<<<<<<< HEAD
            
             var currentRowIndex = null;
             var currentUnresolvedRow = null;
@@ -618,6 +728,8 @@
                     alert('Lỗi kết nối khi gán nhà cung cấp');
                 });
             }
+=======
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 
             function escapeHtml(s) {
                 if (!s) return '';
@@ -628,6 +740,7 @@
                     .replace(/"/g, '&quot;')
                     .replace(/'/g, '&#39;');
             }
+<<<<<<< HEAD
 
             var searchDebounce = null;
             document.getElementById('supplierSearchInput').addEventListener('input', function () {
@@ -750,6 +863,18 @@
                     });
                 });
             }
+=======
+        </script>
+        <div class="toast-host" id="toastHost"></div>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+                    showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                }
+            });
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         </script>
     </body>
 </html>

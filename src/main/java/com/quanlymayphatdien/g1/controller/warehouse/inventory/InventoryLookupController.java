@@ -30,7 +30,7 @@ import java.util.Map;
  *     "generatorBrand": "...",
  *     "currentWarehouseId": int,
  *     "currentWarehouseName": "...",
- *     "status": "IN_STOCK|PENDING_IMPORT|RESERVED_EXPORT|...",
+ *     "status": "IN_STOCK|SOLD|IN_TRANSIT|LIQUIDATED|...",
  *     "blocked": bool,
  *     "inTargetWarehouse": bool|null
  *   }
@@ -136,6 +136,15 @@ public class InventoryLookupController extends HttpServlet {
             body.put("message", "Serial chua ton tai trong he thong");
             new Gson().toJson(body, response.getWriter());
             return;
+        }
+
+        Integer expectedGenId = null;
+        String expParam = request.getParameter("expectedGeneratorId");
+        if (expParam != null && !expParam.isEmpty()) {
+            try { expectedGenId = Integer.parseInt(expParam); } catch (NumberFormatException ignored) {}
+        }
+        if (expectedGenId != null && inv.getGeneratorId() != expectedGenId) {
+            body.put("mismatch", true);
         }
 
         body.put("found", true);

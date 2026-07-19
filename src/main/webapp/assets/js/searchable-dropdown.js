@@ -23,6 +23,7 @@
     }
 
     function fillFormFields(data) {
+<<<<<<< HEAD
         if (!data) return;
         if (data.name != null) $('inpCustName').value = data.name;
         if (data.phone != null) $('inpCustPhone').value = data.phone;
@@ -36,6 +37,23 @@
                 if (typeof onCustomerTypeChange === 'function') onCustomerTypeChange();
             }
         }
+=======
+        if (!data)
+            return;
+        var set = function (id, val) {
+            var el = $(id);
+            if (el && val != null)
+                el.value = val;
+        };
+        set('inpCustName', data.name);
+        set('inpCustPhone', data.phone);
+        set('inpCustEmail', data.email);
+        set('inpCustAddress', data.address);
+        set('customerCompany', data.companyName);
+        set('customerTypeId', data.customerTypeId);
+        if (typeof onCustomerTypeChange === 'function')
+            onCustomerTypeChange();
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
     }
 
     function setTriggerLabel(text) {
@@ -54,16 +72,21 @@
     }
 
     function clearCustomerFields() {
-        var ids = ['inpCustName', 'inpCustPhone', 'inpCustEmail', 'inpCustAddress', 'customerCompany'];
+        var ids = ['inpCustName', 'inpCustPhone', 'inpCustEmail', 'inpCustAddress', 'customerCompany', 'customerTypeId'];
         for (var i = 0; i < ids.length; i++) {
             var el = $(ids[i]);
             if (el) el.value = '';
         }
+<<<<<<< HEAD
         var sel = $('customerTypeSelect');
         if (sel) {
             sel.value = '';
             if (typeof onCustomerTypeChange === 'function') onCustomerTypeChange();
         }
+=======
+        if (typeof onCustomerTypeChange === 'function')
+            onCustomerTypeChange();
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         var hidden = $('sdHiddenId');
         if (hidden) hidden.value = '';
     }

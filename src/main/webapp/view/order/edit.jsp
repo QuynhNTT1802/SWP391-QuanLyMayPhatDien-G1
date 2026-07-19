@@ -17,6 +17,18 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
         <style>
+            /* ── Customer postcard (bưu thiếp) ── */
+            .customer-info-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface-2); margin-top: 10px; }
+            .cic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+            .cic-name { font-size: 14px; font-weight: 700; color: var(--fg); line-height: 1.4; }
+            .cic-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+            .cic-btn-remove { padding: 4px; border: none; color: var(--muted); background: none; cursor: pointer; }
+            .cic-btn-remove:hover { color: var(--danger); }
+            .cic-btn-remove svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+            .cic-details { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
+            .cic-detail-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+            .cic-detail-item svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
             .detail-table {
                 width: 100%;
                 border-collapse: collapse;
@@ -195,68 +207,46 @@
                                     <h3 class="form-section-title">Người nhận hàng</h3>
                                 </div>
 
-                                <div class="sd" id="customerDropdown"
-                                     data-endpoint="${pageContext.request.contextPath}/warehouse/customers?action=search&q=">
-                                    <div class="cust-trigger-wrap">
-                                        <button type="button" class="cust-trigger" id="custTrigger"
-                                                onclick="openCustomerPanel()" aria-haspopup="dialog">
-                                            <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
-                                            <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                        </button>
-                                        <button type="button" class="cust-clear-btn" id="custClearBtn"
-                                                onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M18 6L6 18M6 6l12 12"/>
-                                            </svg>
-                                        </button>
+                                <div id="custPickerArea">
+                                    <div class="sd" id="customerDropdown"
+                                         data-endpoint="${pageContext.request.contextPath}/warehouse/customers?action=search&q=">
+                                        <div class="cust-trigger-wrap">
+                                            <button type="button" class="cust-trigger" id="custTrigger"
+                                                    onclick="openCustomerPanel()" aria-haspopup="dialog">
+                                                <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
+                                                <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
+                                            </button>
+                                            <button type="button" class="cust-clear-btn" id="custClearBtn"
+                                                    onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M18 6L6 18M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <input type="hidden" name="customerId" id="sdHiddenId" value="<c:out value="${order.customerId}"/>" />
+                                    <button type="button" class="btn btn-primary" onclick="openNewCustomerModal()" style="margin-top:10px;">
+                                        <svg class="icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                                        Thêm khách hàng mới
+                                    </button>
                                 </div>
 
-                                
+                                <input type="hidden" name="customerId" id="sdHiddenId" value="<c:out value='${order.customerId}'/>" />
+                                <c:set var="preName"    value="${(preselectCustomer != null) ? preselectCustomer.name    : order.customer.name}" />
+                                <c:set var="prePhone"   value="${(preselectCustomer != null) ? preselectCustomer.phone   : order.customer.phone}" />
+                                <c:set var="preEmail"   value="${(preselectCustomer != null) ? preselectCustomer.email   : order.customer.email}" />
+                                <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : order.customer.address}" />
+                                <c:set var="preCompany" value="${(preselectCustomer != null) ? preselectCustomer.companyName : order.customer.companyName}" />
+                                <c:set var="preTypeId"  value="${(preselectCustomer != null) ? preselectCustomer.customerTypeId : order.customer.customerTypeId}" />
+                                <input type="hidden" name="customerName"    id="inpCustName"    value="<c:out value='${preName}'/>" />
+                                <input type="hidden" name="customerPhone"   id="inpCustPhone"   value="<c:out value='${prePhone}'/>" />
+                                <input type="hidden" name="customerEmail"   id="inpCustEmail"   value="<c:out value='${preEmail}'/>" />
+                                <input type="hidden" name="customerAddress" id="inpCustAddress" value="<c:out value='${preAddress}'/>" />
+                                <input type="hidden" name="customerCompany" id="customerCompany" value="<c:out value='${preCompany}'/>" />
+                                <input type="hidden" name="customerTypeId"  id="customerTypeId"  value="<c:out value='${preTypeId}'/>" />
 
-                                <div class="form-grid">
-                                    <div class="field">
-                                        <label class="field-label">Tên khách hàng <span class="req">*</span></label>
-                                        <c:set var="preName" value="${(preselectCustomer != null) ? preselectCustomer.name : order.customer.name}" />
-                                        <input class="input" name="customerName" id="inpCustName" placeholder="VD: Nguyễn Văn A" value="<c:out value="${preName}"/>" required />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Số điện thoại <span class="req">*</span></label>
-                                        <c:set var="prePhone" value="${(preselectCustomer != null) ? preselectCustomer.phone : order.customer.phone}" />
-                                        <input class="input mono" name="customerPhone" id="inpCustPhone" placeholder="VD: 0912345678" value="<c:out value="${prePhone}"/>" required />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Email</label>
-                                        <c:set var="preEmail" value="${(preselectCustomer != null) ? preselectCustomer.email : order.customer.email}" />
-                                        <input class="input mono" name="customerEmail" id="inpCustEmail" type="email" placeholder="email@example.com" value="<c:out value="${preEmail}"/>" />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Địa chỉ giao hàng <span class="req">*</span></label>
-                                        <c:set var="preAddress" value="${(preselectCustomer != null) ? preselectCustomer.address : order.customer.address}" />
-                                        <input class="input" name="customerAddress" id="inpCustAddress" placeholder="VD: Số 1, Đường ABC, Quận 1, TP.HCM" value="<c:out value="${preAddress}"/>" required />
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Loại khách hàng <span class="req">*</span></label>
-                                        <c:set var="preTypeId" value="${(preselectCustomer != null) ? preselectCustomer.customerTypeId : order.customer.customerTypeId}" />
-                                        <select class="input" id="customerTypeSelect" name="customerTypeId" onchange="onCustomerTypeChange()" required>
-                                            <option value="">-- Chọn loại khách hàng --</option>
-                                            <c:forEach var="ct" items="${customerTypes}">
-                                                <option value="${ct.id}" data-name="${ct.name}"
-                                                        <c:if test="${preTypeId == ct.id}">selected</c:if>>
-                                                    <c:out value="${ct.name}"/>
-                                                </option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tên công ty <span class="req company-req" style="display:none;">*</span></label>
-                                        <c:set var="preCompany" value="${(preselectCustomer != null) ? preselectCustomer.companyName : order.customer.companyName}" />
-                                        <input class="input" id="customerCompany" name="customerCompany" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${preCompany}"/>" />
-                                    </div>
-                                </div>
+                                <div id="customerCardContainer" class="customer-info-card" style="display:none;"></div>
                             </div>
 
                             <div class="form-section">
@@ -503,7 +493,7 @@
             }
             function updateTotal() {
                 var grand = 0;
-                document.querySelectorAll('#detailBody tr').forEach(function (row) {
+                Array.from(document.querySelectorAll('#detailBody tr')).forEach(function (row) {
                     var sel = row.querySelector('.gen-select');
                     var qty = parseInt(row.querySelector('.qty-input').value) || 0;
                     var priceInput = row.querySelector('.unit-price-input');
@@ -530,7 +520,7 @@
                 updateTotal();
             }
             function updateRowNumbers() {
-                document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
+                Array.from(document.querySelectorAll('#detailBody .row-num')).forEach(function (el, i) {
                     el.textContent = i + 1;
                 });
             }
@@ -572,24 +562,201 @@
             document.addEventListener('DOMContentLoaded', function () {
                 updateTotal();
                 // Cập nhật cột tồn kho cho các dòng đã chọn sẵn
-                document.querySelectorAll('#detailBody .gen-select').forEach(function (sel) {
+                Array.from(document.querySelectorAll('#detailBody .gen-select')).forEach(function (sel) {
                     updateStockCell(sel);
                 });
             });
 
-            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
+            /* ── Customer postcard (bưu thiếp) ── */
+            function htmlEsc(s) {
+                if (s == null) return '';
+                return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+            function refreshCustomerCard() {
+                var container = document.getElementById('customerCardContainer');
+                var picker = document.getElementById('custPickerArea');
+                if (!container) return;
+                var hid = document.getElementById('sdHiddenId');
+                var custId = hid ? hid.value : '';
+                if (!custId || !custId.trim()) {
+                    container.style.display = 'none';
+                    if (picker) picker.style.display = '';
+                    return;
+                }
+                if (picker) picker.style.display = 'none';
+                var nameVal    = (document.getElementById('inpCustName')    || {}).value || '';
+                var phoneVal   = (document.getElementById('inpCustPhone')   || {}).value || '';
+                var emailVal   = (document.getElementById('inpCustEmail')   || {}).value || '';
+                var addressVal = (document.getElementById('inpCustAddress') || {}).value || '';
+                var companyVal = (document.getElementById('customerCompany')|| {}).value || '';
+                var html = '<div class="cic-header">';
+                html += '<span class="cic-name">' + htmlEsc(nameVal || '') + '</span>';
+                html += '<div class="cic-actions">';
+                html += '<button type="button" class="cic-btn-remove" onclick="clearCustomerSelection();refreshCustomerCard();" title="Hủy chọn khách hàng" aria-label="Hủy chọn">';
+                html += '<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+                html += '</button></div></div>';
+                html += '<div class="cic-details">';
+                if (phoneVal)   html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' + htmlEsc(phoneVal) + '</span>';
+                if (companyVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>' + htmlEsc(companyVal) + '</span>';
+                if (emailVal)   html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' + htmlEsc(emailVal) + '</span>';
+                if (addressVal) html += '<span class="cic-detail-item"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' + htmlEsc(addressVal) + '</span>';
+                html += '</div>';
+                container.innerHTML = html;
+                container.style.display = '';
+            }
+            var _origClearSelection = window.clearCustomerSelection;
+            window.clearCustomerSelection = function () {
+                if (typeof _origClearSelection === 'function') _origClearSelection();
+                refreshCustomerCard();
+            };
+            (function () {
+                var list = document.getElementById('custList');
+                if (list) {
+                    list.addEventListener('click', function (e) {
+                        if (e.target.closest('.cust-card')) {
+                            setTimeout(refreshCustomerCard, 0);
+                        }
+                    });
+                }
+            })();
+            document.addEventListener('DOMContentLoaded', refreshCustomerCard);
+
             function onCustomerTypeChange() {
-                var sel = document.getElementById('customerTypeSelect');
-                var opt = sel.options[sel.selectedIndex];
-                var name = (opt && opt.getAttribute('data-name') || '').toLowerCase();
-                var isCompany = name.indexOf('doanh nghiệp') >= 0 || name.indexOf('công ty') >= 0;
-                document.getElementById('customerCompany').required = isCompany;
-                document.querySelectorAll('.company-req').forEach(function (el) {
-                    el.style.display = isCompany ? 'inline' : 'none';
+                // No-op: <select id="customerTypeSelect"> đã được thay bằng hidden input customerTypeId.
+            }
+            /* ── Thêm khách hàng mới (quick-create) ── */
+            function openNewCustomerModal() {
+                ['ncName', 'ncPhone', 'ncEmail', 'ncCompanyName', 'ncAddress', 'ncTypeId'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                var err = document.getElementById('custModalError');
+                if (err) { err.classList.remove('show'); err.textContent = ''; }
+                document.getElementById('custModalOverlay').classList.add('show');
+            }
+            function closeNewCustomerModal() {
+                document.getElementById('custModalOverlay').classList.remove('show');
+            }
+            function saveNewCustomer() {
+                var name = document.getElementById('ncName').value.trim();
+                var phone = document.getElementById('ncPhone').value.trim();
+                if (!name) {
+                    var err = document.getElementById('custModalError');
+                    err.textContent = 'Vui lòng nhập tên khách hàng.';
+                    err.classList.add('show');
+                    return;
+                }
+                if (!phone || !/^[0-9]{10,11}$/.test(phone)) {
+                    var err = document.getElementById('custModalError');
+                    err.textContent = 'Vui lòng nhập SĐT hợp lệ (10-11 chữ số).';
+                    err.classList.add('show');
+                    return;
+                }
+                var btn = document.getElementById('ncSaveBtn');
+                btn.disabled = true;
+                btn.textContent = 'Đang lưu...';
+                var fd = new FormData();
+                fd.append('action', 'quickCreateCustomer');
+                fd.append('name', name);
+                fd.append('phone', phone);
+                fd.append('email', document.getElementById('ncEmail').value.trim());
+                fd.append('address', document.getElementById('ncAddress').value.trim());
+                fd.append('companyName', document.getElementById('ncCompanyName').value.trim());
+                fd.append('customerTypeId', document.getElementById('ncTypeId').value);
+                fetch('${pageContext.request.contextPath}/order', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    btn.disabled = false;
+                    btn.textContent = 'Lưu khách hàng';
+                    if (!data.ok) {
+                        var err = document.getElementById('custModalError');
+                        err.textContent = data.error || 'Lỗi';
+                        err.classList.add('show');
+                        return;
+                    }
+                    document.getElementById('sdHiddenId').value = data.id;
+                    document.getElementById('inpCustName').value = data.name || '';
+                    document.getElementById('inpCustPhone').value = data.phone || '';
+                    document.getElementById('inpCustEmail').value = data.email || '';
+                    document.getElementById('inpCustAddress').value = data.address || '';
+                    document.getElementById('customerCompany').value = data.companyName || '';
+                    if (data.customerTypeId) {
+                        document.getElementById('customerTypeId').value = String(data.customerTypeId);
+                    }
+                    var label = document.getElementById('custTriggerLabel');
+                    label.textContent = data.name || data.phone || '';
+                    label.classList.add('has-value');
+                    closeNewCustomerModal();
+                    refreshCustomerCard();
+                    if (typeof showToast === 'function') {
+                        showToast(
+                            data.existing ? 'SĐT đã có khách hàng: ' + data.name + ' — đã tự chọn.' : 'Đã thêm khách hàng "' + data.name + '"',
+                            data.existing ? 'info' : 'success'
+                        );
+                    }
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                    btn.textContent = 'Lưu khách hàng';
+                    var err = document.getElementById('custModalError');
+                    err.textContent = 'Lỗi kết nối';
+                    err.classList.add('show');
                 });
             }
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeNewCustomerModal();
+            });
+
             document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
+
+        <!-- Modal: Thêm khách hàng mới -->
+        <div class="modal-host" id="custModalOverlay">
+            <div class="modal">
+                <div class="modal-head">
+                    <h3>Thêm khách hàng mới</h3>
+                    <button type="button" class="modal-close" onclick="closeNewCustomerModal()">&times;</button>
+                </div>
+                <p class="modal-sub">Khách hàng sẽ được áp dụng cho toàn bộ phiếu.</p>
+                <div class="modal-error" id="custModalError"></div>
+                <div class="modal-grid">
+                    <div>
+                        <label class="field-label">Tên khách hàng <span class="req">*</span></label>
+                        <input class="input" id="ncName" placeholder="VD: Nguyễn Văn A" />
+                    </div>
+                    <div>
+                        <label class="field-label">Số điện thoại <span class="req">*</span></label>
+                        <input class="input mono" id="ncPhone" type="tel" placeholder="VD: 0912345678" inputmode="numeric" maxlength="11" />
+                    </div>
+                    <div>
+                        <label class="field-label">Email</label>
+                        <input class="input mono" id="ncEmail" type="email" placeholder="email@example.com" />
+                    </div>
+                    <div>
+                        <label class="field-label">Loại khách hàng</label>
+                        <select class="select" id="ncTypeId">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="ct" items="${customerTypes}">
+                                <option value="${ct.id}"><c:out value="${ct.name}"/></option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                    <div class="span-2">
+                        <label class="field-label">Tên công ty</label>
+                        <input class="input" id="ncCompanyName" placeholder="VD: Công ty TNHH ABC" />
+                    </div>
+                    <div class="span-2">
+                        <label class="field-label">Địa chỉ</label>
+                        <textarea class="textarea" id="ncAddress" rows="2" placeholder="Địa chỉ khách hàng"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeNewCustomerModal()">Huỷ</button>
+                    <button type="button" class="btn btn-primary" id="ncSaveBtn" onclick="saveNewCustomer()">Lưu khách hàng</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Side panel for customer selection -->
         <div class="side-panel-overlay" id="custPanelOverlay" onclick="closeCustomerPanel()"></div>

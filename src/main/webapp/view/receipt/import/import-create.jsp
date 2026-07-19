@@ -16,111 +16,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
-    <style>
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .form-field { display: flex; flex-direction: column; gap: 6px; }
-        .form-field.full { grid-column: 1 / -1; }
-        .form-field label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-        .form-field input, .form-field select, .form-field textarea {
-            width: 100%; padding: 9px 12px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
-        }
-        .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
-            outline: none; border-color: var(--accent);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
-        }
-        .form-field textarea { min-height: 70px; resize: vertical; font-family: var(--font-ui); }
-        .form-field input:disabled, .form-field select:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
-        .order-pin { padding: 10px 14px; background: var(--accent-soft); color: var(--accent);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
-        .order-pin .order-cust { color: var(--fg-soft); font-weight: 500; }
-
-        .detail-table { width: 100%; border-collapse: collapse; }
-        .detail-table th { text-align: left; padding: 10px 12px; font-size: 11px;
-            font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border);
-            text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); }
-        .detail-table td { padding: 8px 8px; vertical-align: top; border-bottom: 1px solid var(--border); }
-        .detail-table tbody tr:last-child td { border-bottom: 0; }
-        .detail-table select, .detail-table input {
-            width: 100%; padding: 7px 10px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
-        }
-        .detail-table select:focus, .detail-table input:focus {
-            outline: none; border-color: var(--accent);
-        }
-        .detail-table .col-num { width: 36px; text-align: center; color: var(--muted);
-            font-size: 12px; font-weight: 600; padding-top: 14px; font-family: var(--font-mono); }
-        .detail-table .col-gen { min-width: 200px; }
-        .detail-table .col-serial { min-width: 130px; }
-        .detail-table .col-note { min-width: 130px; }
-        .detail-table .col-del { width: 40px; text-align: center; }
-
-        .row-del-btn { width: 28px; height: 28px; border: 1px solid transparent;
-            background: transparent; color: var(--danger); cursor: pointer;
-            border-radius: var(--radius-sm); display: inline-flex; align-items: center;
-            justify-content: center; margin-top: 4px; }
-        .row-del-btn:hover { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 25%, transparent); }
-        .row-del-btn:disabled { color: var(--muted); cursor: not-allowed; opacity: 0.5; }
-        .add-row-btn { margin-top: 12px; font-size: 13px; }
-        .add-row-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
-            border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; }
-        .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
-            stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
-        .alert .alert-body { flex: 1; line-height: 1.5; }
-        .alert .alert-title { font-weight: 700; margin-bottom: 4px; }
-        .alert ul { margin: 4px 0 0 18px; padding: 0; }
-        .alert-error { background: var(--danger-soft); color: var(--danger);
-            border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
-        .alert-warn { background: var(--warn-soft); color: var(--warn);
-            border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
-        .alert-info { background: var(--accent-soft); color: var(--accent);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
-
-        a.btn { text-decoration: none; }
-        .stock-info { font-size: 11px; color: var(--muted); margin-top: 3px; font-family: var(--font-mono); display: block; min-height: 14px; }
-        .stock-info .stock-label { color: var(--muted); }
-        .stock-info .stock-value { color: var(--accent); font-weight: 600; }
-
-        .scanner-box {
-            display: flex; flex-direction: column; gap: 8px;
-            padding: 14px 16px; margin-bottom: 14px;
-            background: var(--accent-soft);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-            border-radius: var(--radius);
-        }
-        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-        .scanner-box .scanner-input-wrap { position: relative; }
-        .scanner-box input {
-            width: 100%; padding: 11px 14px;
-            border: 1px solid var(--border); border-radius: var(--radius-sm);
-            background: var(--bg); color: var(--fg);
-            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box;
-            transition: border-color .15s ease, box-shadow .15s ease;
-        }
-        .scanner-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        .scanner-box input.success { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
-        .scanner-box input.error { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent); }
-        .scanner-box input:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
-        .scanner-box small { color: var(--muted); font-size: 12px; min-height: 16px; }
-        .scanner-box small.success { color: var(--accent); }
-        .scanner-box small.error { color: var(--danger); }
-        .scanner-box.disabled { opacity: 0.55; }
-        tr.po-locked-row.flash { animation: flashRowGreen 0.9s ease-out; }
-        @keyframes flashRowGreen {
-            0% { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-            100% { background-color: transparent; }
-        }
-        tr.manual-row.flash { animation: flashRowGreen 0.9s ease-out; }
-
-        @media (max-width: 760px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
 </head>
 <body>
 <div class="app">
@@ -142,7 +38,7 @@
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/import-receipt">
+            <a class="receipt-back-link" href="${pageContext.request.contextPath}/import-receipt">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Huỷ và quay lại danh sách
             </a>
@@ -159,6 +55,20 @@
                 <c:if test="${not empty receipt.purchaseOrderId}">
                     <input type="hidden" name="poId" value="${receipt.purchaseOrderId}" />
                 </c:if>
+                <c:if test="${not empty exportReceiptId}">
+                    <input type="hidden" name="exportReceiptId" value="${exportReceiptId}" />
+                </c:if>
+
+                <c:if test="${not empty fromExportReceipt}">
+                    <div class="alert" style="background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); margin: 16px 0; padding: 12px 16px; border-radius: var(--radius);">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
+                        <div>
+                            <div style="font-weight: 700; margin-bottom: 4px;">Tạo phiếu nhập từ phiếu xuất <c:out value="${exportReceiptCode}"/></div>
+                            <div style="font-size: 12.5px;">Theo phiếu đề xuất luân chuyển <strong><c:out value="${transferCode}"/></strong>. Các serial đã được hệ thống tự động gắn sẵn — bạn chỉ cần kiểm tra và lưu.</div>
+                        </div>
+                    </div>
+                </c:if>
+
                 <div class="content">
                     <section class="section">
                         <div class="section-head">
@@ -182,6 +92,20 @@
                                             </c:forEach>
                                             <strong><c:out value="${warehouseName}"/></strong>
                                             <span style="color: var(--muted); font-size: 11px; margin-left: 4px;">(đã khóa theo PO)</span>
+                                        </div>
+                                        <input type="hidden" name="warehouseId" value="${receipt.warehouseId}"/>
+                                    </c:when>
+                                    <c:when test="${fromExportReceipt}">
+                                        <div class="readonly-field" style="display:flex; align-items:center; gap:8px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--fg); font-size: 13px;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                            <c:set var="warehouseName" value=""/>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <c:if test="${wh.warehouseId == receipt.warehouseId}">
+                                                    <c:set var="warehouseName" value="${wh.name}"/>
+                                                </c:if>
+                                            </c:forEach>
+                                            <strong><c:out value="${warehouseName}"/></strong>
+                                            <span style="color: var(--muted); font-size: 11px; margin-left: 4px;">(đã khóa theo phiếu xuất)</span>
                                         </div>
                                         <input type="hidden" name="warehouseId" value="${receipt.warehouseId}"/>
                                     </c:when>
@@ -240,13 +164,29 @@
                                 </span>
                             </div>
                         </div>
+                        <c:if test="${not fromPurchaseOrder and not fromExportReceipt}">
+                            <div class="scanner-model-picker">
+                                <label>Mẫu máy phát điện *</label>
+                                <select id="activeGeneratorId" name="selectedGeneratorId" required onchange="onActiveGeneratorChange()">
+                                    <option value="">-- Chọn mẫu máy trước khi quét --</option>
+                                    <c:forEach var="gen" items="${generators}">
+                                        <c:set var="genLabel" value="${gen.model}"/>
+                                        <c:if test="${not empty brandMap[gen.id]}">
+                                            <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
+                                        </c:if>
+                                        <option value="${gen.id}" data-model="<c:out value='${gen.model}'/>" data-brand="<c:out value='${brandMap[gen.id]}'/>">${genLabel}</option>
+                                    </c:forEach>
+                                </select>
+                                <small class="hint">Mỗi serial quét vào sẽ tự gắn vào mẫu máy đã chọn. Muốn đổi mẫu thì chọn lại ở đây.</small>
+                            </div>
+                        </c:if>
                         <div class="scanner-box" id="importScannerBox">
                             <label>Quét serial để nhập nhanh</label>
                             <div class="scanner-input-wrap">
                                 <input type="text" id="importScanBox" autocomplete="off"
-                                       placeholder="Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
+                                       placeholder="Chọn mẫu máy ở trên, sau đó đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
                             </div>
-                            <small id="importScanStatus">Sẵn sàng. Mỗi serial quét vào sẽ tự điền vào dòng trống tương ứng bên dưới.</small>
+                            <small id="importScanStatus">Chọn mẫu máy phía trên, sau đó quét serial vào đây.</small>
                         </div>
                     </section>
 
@@ -261,7 +201,7 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                                     Tải mẫu Excel
                                 </a>
-                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
+                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:when test="${not empty fromExportReceipt}">Nhập serial từ Excel (áp dụng cho phiếu luân chuyển)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l5-5-5 5M12 3v12"/></svg>
                                     Nhập từ Excel
                                 </button>
@@ -330,14 +270,13 @@
                                             </tr>
                                         </c:forEach>
                                     </c:when>
-                                    <c:otherwise>
+                                        <c:otherwise>
                                         <tr>
                                             <td class="col-num"><span class="row-num">1</span></td>
                                             <td>
-                                                <select name="manualGeneratorId" required disabled onchange="onGeneratorChange(this)">
-                                                    <option value="">-- Chọn kho trước --</option>
-                                                </select>
-                                                <span class="stock-info" data-stock-info></span>
+                                                <input type="hidden" name="manualGeneratorId" value="" data-locked-gen/>
+                                                <strong class="locked-gen-label">-- Chọn mẫu máy ở mục 02 --</strong>
+                                                <span class="po-lock-tag" style="margin-left: 6px; font-size: 10px; padding: 2px 6px; background: var(--accent-soft); color: var(--accent); border-radius: 99px; font-weight: 600;">KHÓA</span>
                                                 <span class="field-error" style="display:none;"></span>
                                             </td>
                                             <td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required disabled onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>
@@ -348,7 +287,7 @@
                                                 </button>
                                             </td>
                                         </tr>
-                                    </c:otherwise>
+                                        </c:otherwise>
                                 </c:choose>
                             </tbody>
                         </table>
@@ -400,17 +339,8 @@
 </script>
 <script>
     var ctx = window.APP_CTX;
-    var generatorCache = [];
-    var prefillDetails = [];
-    var preservedManualRows = [];
-
-    <c:if test="${not empty receipt.details}">
-    prefillDetails = [
-        <c:forEach var="d" items="${receipt.details}" varStatus="st">
-        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
-        </c:forEach>
-    ];
-    </c:if>
+    var generatorCache = ${empty generatorsJson ? '[]' : generatorsJson};
+    var prefillDetails = ${empty prefillDetailsJson ? '[]' : prefillDetailsJson};
 
     <c:if test="${not empty preservedManualRows}">
     preservedManualRows = [
@@ -424,32 +354,6 @@
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
     }
 
-    function renderGeneratorOptions(selectEl) {
-        var cur = selectEl.getAttribute('data-current');
-        var html = '<option value="">-- Chọn máy --</option>';
-        for (var i = 0; i < generatorCache.length; i++) {
-            var g = generatorCache[i];
-            var label = g.model + (g.brand ? ' (' + g.brand + ')' : '') + ' — Tồn: ' + (g.stockQty || 0);
-            var sel = (cur && String(g.id) === String(cur)) ? ' selected' : '';
-            html += '<option value="' + g.id + '" data-stock="' + (g.stockQty || 0) + '"' + sel + '>' + label + '</option>';
-        }
-        selectEl.innerHTML = html;
-    }
-
-    function updateStockInfo(selectEl) {
-        var row = selectEl.closest('tr');
-        if (!row) return;
-        var info = row.querySelector('[data-stock-info]');
-        if (!info) return;
-        var opt = selectEl.options[selectEl.selectedIndex];
-        if (!opt || !opt.value) {
-            info.innerHTML = '';
-            return;
-        }
-        var stock = parseInt(opt.getAttribute('data-stock')) || 0;
-        info.innerHTML = '<span class="stock-label">Tồn kho hiện tại:</span> <span class="stock-value">' + stock + '</span> máy';
-    }
-
     function onWarehouseChange() {
         var whId = document.getElementById('warehouseSelect').value;
         var warn = document.getElementById('warehouseWarn');
@@ -457,6 +361,7 @@
             generatorCache = [];
             warn.style.display = 'flex';
             disableAllRows(true);
+            refreshScannerState();
             return;
         }
         warn.style.display = 'none';
@@ -467,20 +372,21 @@
                 disableAllRows(false);
                 refreshAllGeneratorSelects();
                 applyPrefill();
+                applyActiveGeneratorToAllRows();
+                refreshScannerState();
             })
             .catch(function (err) {
                 console.error(err);
-                generatorCache = [];
                 disableAllRows(false);
                 refreshAllGeneratorSelects();
                 applyPrefill();
+                applyActiveGeneratorToAllRows();
+                refreshScannerState();
             });
     }
 
     function refreshAllGeneratorSelects() {
-        document.querySelectorAll('#detailBody tr select[name="manualGeneratorId"]').forEach(function (sel) {
-            renderGeneratorOptions(sel);
-        });
+        applyActiveGeneratorToAllRows();
     }
 
     function applyPrefill() {
@@ -512,11 +418,12 @@
             });
         }
         updateRowNumbers();
+        applyActiveGeneratorToAllRows();
     }
 
     function disableAllRows(disabled) {
         document.querySelectorAll('#detailBody tr').forEach(function (row) {
-            row.querySelectorAll('select[name="manualGeneratorId"], input[name="manualSerialNumber"]').forEach(function (el) {
+            row.querySelectorAll('input[name="manualSerialNumber"], input[name="manualGeneratorId"]').forEach(function (el) {
                 el.disabled = disabled;
             });
             var btn = row.querySelector('.row-del-btn');
@@ -524,24 +431,166 @@
         });
         var addBtn = document.getElementById('addRowBtn');
         if (addBtn) addBtn.disabled = disabled;
+        var activeGen = document.getElementById('activeGeneratorId');
+        if (activeGen && !disabled) {
+        }
     }
 
-    function onGeneratorChange(sel) {
-        updateStockInfo(sel);
+    var TRANSFER_IMPORT_ROWS = ${empty transferRowListJson ? '[]' : transferRowListJson};
+    var isTransferImportMode = ${not empty fromExportReceipt and fromExportReceipt};
+
+    function prefillTransferImportRows() {
+        if (!isTransferImportMode) return;
+        var tbody = document.getElementById('detailBody');
+        tbody.innerHTML = '';
+        var cachedModel = null;
+        TRANSFER_IMPORT_ROWS.forEach(function (p) {
+            var tr = buildEmptyRow(p.generatorId);
+            tr.classList.add('transfer-locked-row');
+            tr.setAttribute('data-expected-serial', p.serialNumber || '');
+            tr.setAttribute('data-expected-generator-id', String(p.generatorId || ''));
+            tr.setAttribute('data-inventory-id', p.inventoryId || '');
+            tbody.appendChild(tr);
+
+            var serialInput = tr.querySelector('input[name="manualSerialNumber"]');
+            if (serialInput) {
+                serialInput.value = '';
+                serialInput.placeholder = p.serialNumber || 'S/N dự kiến';
+                serialInput.readOnly = false;
+                serialInput.removeAttribute('disabled');
+            }
+            var noteInput = tr.querySelector('input[name="manualDetailNote"]');
+            if (noteInput) {
+                noteInput.value = p.note || '';
+                noteInput.readOnly = false;
+            }
+            var delBtn = tr.querySelector('.row-del-btn');
+            if (delBtn) delBtn.disabled = true;
+
+            // Append hint dưới serial: Mẫu: X • Serial dự kiến: Y
+            if (!cachedModel || String(cachedModel.id) !== String(p.generatorId)) {
+                cachedModel = null;
+                for (var k = 0; k < generatorCache.length; k++) {
+                    if (String(generatorCache[k].id) === String(p.generatorId)) {
+                        cachedModel = generatorCache[k];
+                        break;
+                    }
+                }
+            }
+            var serialCell = tr.querySelector('td:nth-child(3)');
+            if (serialCell) {
+                var hint = document.createElement('small');
+                hint.className = 'transfer-row-hint';
+                var modelText = cachedModel ? cachedModel.model : ('Mẫu #' + p.generatorId);
+                var brandText = (cachedModel && cachedModel.brand) ? (' (' + cachedModel.brand + ')') : '';
+                hint.innerHTML = 'Mẫu: <strong>' + escapeHtml(modelText + brandText) + '</strong>'
+                        + ' • Serial dự kiến: <strong>' + escapeHtml(p.serialNumber || '—') + '</strong>';
+                serialCell.appendChild(hint);
+            }
+        });
+        updateRowNumbers();
+        // Khoá nhẹ: chỉ khoá nút xoá dòng + nút thêm dòng, KHÔNG khoá input serial/note
+        document.querySelectorAll('tr.transfer-locked-row .row-del-btn').forEach(function (btn) { btn.disabled = true; });
+        var addBtn = document.getElementById('addRowBtn');
+        if (addBtn) addBtn.disabled = true;
+        refreshScannerState();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (isTransferImportMode) {
+            prefillTransferImportRows();
+        }
+    });
+
+    function getActiveGeneratorInfo() {
+        var sel = document.getElementById('activeGeneratorId');
+        if (!sel || !sel.value) return null;
+        var opt = sel.options[sel.selectedIndex];
+        return {
+            id: sel.value,
+            model: opt ? (opt.getAttribute('data-model') || opt.text || '') : '',
+            brand: opt ? (opt.getAttribute('data-brand') || '') : ''
+        };
+    }
+
+    function applyActiveGeneratorToRow(tr) {
+        var info = getActiveGeneratorInfo();
+        if (!info || !tr) return false;
+        var hidden = tr.querySelector('input[name="manualGeneratorId"][data-locked-gen]');
+        var label = tr.querySelector('.locked-gen-label');
+        if (hidden) hidden.value = info.id;
+        if (label) {
+            var text = info.model || ('#' + info.id);
+            if (info.brand) text += ' (' + info.brand + ')';
+            label.textContent = text;
+            label.classList.remove('locked-gen-empty');
+        }
+        return true;
+    }
+
+    function applyActiveGeneratorToAllRows() {
+        var info = getActiveGeneratorInfo();
+        document.querySelectorAll('#detailBody tr').forEach(function (tr) {
+            if (tr.classList.contains('po-locked-row')) return;
+            if (tr.classList.contains('transfer-locked-row')) return;
+            var hidden = tr.querySelector('input[name="manualGeneratorId"][data-locked-gen]');
+            if (!hidden) return;
+            var serialEl = tr.querySelector('input[name="manualSerialNumber"]');
+            var serialVal = serialEl ? serialEl.value.trim() : '';
+            var genVal = hidden.value.trim();
+            if (serialVal !== '' || genVal !== '') return;
+            if (info) {
+                hidden.value = info.id;
+                var label = tr.querySelector('.locked-gen-label');
+                if (label) {
+                    var text = info.model || ('#' + info.id);
+                    if (info.brand) text += ' (' + info.brand + ')';
+                    label.textContent = text;
+                    label.classList.remove('locked-gen-empty');
+                }
+            } else {
+                hidden.value = '';
+                var lbl = tr.querySelector('.locked-gen-label');
+                if (lbl) {
+                    lbl.textContent = '-- Chọn mẫu máy ở mục 02 --';
+                    lbl.classList.add('locked-gen-empty');
+                }
+            }
+        });
+    }
+
+    function onActiveGeneratorChange() {
+        applyActiveGeneratorToAllRows();
+        refreshScannerState();
     }
 
     function buildEmptyRow(presetGenId) {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
-                + '<td><select name="manualGeneratorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="hidden" name="manualGeneratorId" value="" data-locked-gen/><strong class="locked-gen-label">-- Chọn mẫu máy ở mục 02 --</strong><span class="po-lock-tag" style="margin-left: 6px; font-size: 10px; padding: 2px 6px; background: var(--accent-soft); color: var(--accent); border-radius: 99px; font-weight: 600;">KHÓA</span><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
-        var sel = tr.querySelector('select[name="manualGeneratorId"]');
-        if (presetGenId) {
-            sel.setAttribute('data-current', presetGenId);
+        var info = getActiveGeneratorInfo();
+        if (presetGenId && presetGenId !== '' && presetGenId != null) {
+            var hidden = tr.querySelector('input[name="manualGeneratorId"][data-locked-gen]');
+            var label = tr.querySelector('.locked-gen-label');
+            if (hidden) hidden.value = presetGenId;
+            if (label) {
+                var found = null;
+                for (var i = 0; i < generatorCache.length; i++) {
+                    if (String(generatorCache[i].id) === String(presetGenId)) { found = generatorCache[i]; break; }
+                }
+                var text = (found && found.model) ? found.model : ('#' + presetGenId);
+                if (found && found.brand) text += ' (' + found.brand + ')';
+                if (label) {
+                    label.textContent = text;
+                    label.classList.remove('locked-gen-empty');
+                }
+            }
+        } else if (info) {
+            applyActiveGeneratorToRow(tr);
         }
-        renderGeneratorOptions(sel);
         return tr;
     }
 
@@ -561,7 +610,6 @@
             return;
         }
         var tbody = document.getElementById('detailBody');
-        if (tbody.querySelectorAll('tr').length <= 1) return;
         btn.closest('tr').remove();
         updateRowNumbers();
         updatePoCounter();
@@ -594,6 +642,18 @@
         var scanEl = document.getElementById('importScanBox');
         if (scanEl && poRows.length > 0 && filled >= poRows.length) {
             disableScanWhenPoFull();
+        }
+        // Transfer-import: neu da dien het serial thi khoa scanner
+        var transferRows = document.querySelectorAll('tr.transfer-locked-row');
+        if (scanEl && transferRows.length > 0) {
+            var transferFilled = 0;
+            transferRows.forEach(function (r) {
+                var inp = r.querySelector('input[name="manualSerialNumber"]');
+                if (inp && inp.value && inp.value.trim().length > 0) transferFilled++;
+            });
+            if (transferFilled >= transferRows.length) {
+                disableScanWhenTransferFull();
+            }
         }
         updateSubmitAvailability();
     }
@@ -638,6 +698,7 @@
         var valid = true;
         var firstInvalid = null;
         var isPoMode = !!document.querySelector('tr.po-locked-row');
+        var isTransferMode = !!document.querySelector('tr.transfer-locked-row');
 
         document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
             if (isPoMode && el.tagName === 'SELECT' && el.name === 'manualGeneratorId') {
@@ -649,6 +710,15 @@
             }
         });
 
+        if (!isPoMode && !isTransferMode) {
+            var genPicker = document.getElementById('activeGeneratorId');
+            if (!genPicker || !genPicker.value) {
+                toast('Vui lòng chọn mẫu máy phát điện ở mục 02 trước khi gửi phiếu.', 'danger');
+                if (genPicker) genPicker.focus();
+                valid = false;
+            }
+        }
+
         if (isPoMode) {
             var missingSerial = 0;
             document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
@@ -658,10 +728,43 @@
                 toast('Còn ' + missingSerial + ' dòng chưa nhập serial. Hãy nhập đủ serial cho tất cả các máy trong PO.', 'danger');
                 valid = false;
             }
+        } else if (isTransferMode) {
+            var missingSerialT = 0;
+            document.querySelectorAll('tr.transfer-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+                if (!inp.value || !inp.value.trim()) missingSerialT++;
+            });
+            if (missingSerialT > 0) {
+                toast('Còn ' + missingSerialT + ' dòng chưa nhập serial. Vui lòng quét đủ serial cho từng máy trong phiếu luân chuyển.', 'danger');
+                valid = false;
+            }
+            // Đảm bảo mỗi serial khớp với data-expected-serial của dòng đó
+            var mismatchT = 0;
+            document.querySelectorAll('tr.transfer-locked-row').forEach(function (r) {
+                var expected = (r.getAttribute('data-expected-serial') || '').trim();
+                var sn = r.querySelector('input[name="manualSerialNumber"]');
+                if (!sn) return;
+                var actual = (sn.value || '').trim();
+                if (actual && expected && actual !== expected) mismatchT++;
+            });
+            if (mismatchT > 0) {
+                toast('Có ' + mismatchT + ' serial không khớp với serial dự kiến của phiếu luân chuyển.', 'danger');
+                valid = false;
+            }
         } else {
-            if (document.querySelectorAll('#detailBody tr').length === 0) {
+            var detailRows = document.querySelectorAll('#detailBody tr');
+            if (detailRows.length === 0) {
                 toast('Vui lòng thêm ít nhất 1 dòng chi tiết', 'danger');
                 valid = false;
+            } else {
+                var hasSerial = false;
+                detailRows.forEach(function (r) {
+                    var sn = r.querySelector('input[name="manualSerialNumber"]');
+                    if (sn && sn.value && sn.value.trim()) hasSerial = true;
+                });
+                if (!hasSerial) {
+                    toast('Vui lòng quét ít nhất 1 serial cho mẫu máy đã chọn.', 'danger');
+                    valid = false;
+                }
             }
         }
 
@@ -688,11 +791,42 @@
             onWarehouseChange();
         }
         </c:if>
+        <c:if test="${empty preservedWarehouseId and (empty receipt or receipt.warehouseId <= 0) and scopedWarehouseId > 0}">
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect) {
+            whSelect.value = '${scopedWarehouseId}';
+            onWarehouseChange();
+        }
+        </c:if>
+        <c:if test="${empty preservedWarehouseId and (empty receipt or receipt.warehouseId <= 0) and (empty scopedWarehouseId or scopedWarehouseId <= 0)}">
+        var whSelect = document.getElementById('warehouseSelect');
+        if (whSelect && whSelect.options.length === 2) {
+            whSelect.value = whSelect.options[1].value;
+            onWarehouseChange();
+        }
+        </c:if>
         </c:if>
 
         <c:if test="${fromPurchaseOrder}">
         updatePoCounter();
         </c:if>
+
+        // Pre-populate generator selects even before warehouse selection
+        <c:if test="${not fromPurchaseOrder}">
+        if (generatorCache.length > 0) {
+            refreshAllGeneratorSelects();
+            applyActiveGeneratorToAllRows();
+        }
+        </c:if>
+
+        <c:if test="${not empty preservedSelectedGeneratorId}">
+        var picker = document.getElementById('activeGeneratorId');
+        if (picker) {
+            picker.value = '${preservedSelectedGeneratorId}';
+            applyActiveGeneratorToAllRows();
+        }
+        </c:if>
+
         // Lắng nghe thay đổi trên MỌI ô serial (cả PO và non-PO) để cập nhật counter + submit
         document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
             inp.addEventListener('input', function () {
@@ -726,21 +860,13 @@
         if (!scanInput) return;
 
         var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        var refreshScannerState = function () {
-            var wh = whSelect ? whSelect.value : '';
-            if (!wh) {
-                scanBox.classList.add('disabled');
-                scanInput.disabled = true;
-                scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
-            } else {
-                scanBox.classList.remove('disabled');
-                scanInput.disabled = false;
-                scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
-            }
-        };
+        var genPicker = document.getElementById('activeGeneratorId');
         refreshScannerState();
         if (whSelect && whSelect.tagName === 'SELECT') {
             whSelect.addEventListener('change', refreshScannerState);
+        }
+        if (genPicker) {
+            genPicker.addEventListener('change', refreshScannerState);
         }
 
         scanInput.addEventListener('keydown', function (e) {
@@ -756,10 +882,35 @@
             scanInput.classList.remove('success', 'error');
         });
 
-        // Auto-focus scan box ngay từ đầu
         setTimeout(function () {
             if (!scanInput.disabled) scanInput.focus();
         }, 100);
+    }
+
+    function refreshScannerState() {
+        var scanInput = document.getElementById('importScanBox');
+        var scanBox = document.getElementById('importScannerBox');
+        if (!scanInput) return;
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        var wh = whSelect ? whSelect.value : '';
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+        var isTransferMode = !!document.querySelector('tr.transfer-locked-row');
+        var genPicker = document.getElementById('activeGeneratorId');
+        var hasGen = !genPicker || !!genPicker.value;
+
+        if (!wh) {
+            scanBox.classList.add('disabled');
+            scanInput.disabled = true;
+            scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
+        } else if (!isPoMode && !isTransferMode && !hasGen) {
+            scanBox.classList.add('disabled');
+            scanInput.disabled = true;
+            scanInput.placeholder = 'Vui lòng chọn mẫu máy phát điện trước khi quét...';
+        } else {
+            scanBox.classList.remove('disabled');
+            scanInput.disabled = false;
+            scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+        }
     }
 
     function setImportScanStatus(msg, type) {
@@ -804,6 +955,20 @@
         }
 
         var isPoMode = !!document.querySelector('tr.po-locked-row');
+        var isTransferMode = !!document.querySelector('tr.transfer-locked-row');
+
+        // Non-PO + non-transfer: bat buoc chon mau may truoc khi quet
+        if (!isPoMode && !isTransferMode) {
+            var activeInfo = getActiveGeneratorInfo();
+            if (!activeInfo) {
+                importScannerLock = false;
+                setImportScanStatus('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'error');
+                flashImportScan('error');
+                var picker = document.getElementById('activeGeneratorId');
+                if (picker) picker.focus();
+                return;
+            }
+        }
 
         // 1. Check duplicate trong bảng
         var dupFound = null;
@@ -815,6 +980,93 @@
             setImportScanStatus('Serial "' + serial + '" đã quét trong phiếu này.', 'error');
             flashImportScan('error');
             focusScanBox();
+            return;
+        }
+
+        if (isTransferMode) {
+            // Transfer-import mode: moi dong co data-expected-serial co dinh.
+            // Serial quet phai khop voi expected cua 1 dong nao do (chua duoc dien).
+            var targetT = null;
+            var alreadyFilledIn = null;
+            document.querySelectorAll('tr.transfer-locked-row').forEach(function (r) {
+                var expected = (r.getAttribute('data-expected-serial') || '').trim();
+                var snInput = r.querySelector('input[name="manualSerialNumber"]');
+                if (!snInput) return;
+                if (expected === serial) {
+                    if (snInput.value.trim() && snInput.value.trim() !== serial) {
+                        alreadyFilledIn = r;
+                    } else if (!snInput.value.trim()) {
+                        if (!targetT) targetT = r;
+                    }
+                }
+            });
+
+            if (alreadyFilledIn && !targetT) {
+                importScannerLock = false;
+                setImportScanStatus('Serial "' + serial + '" đã được quét ở dòng khác trong phiếu này.', 'error');
+                flashImportScan('error');
+                focusScanBox();
+                return;
+            }
+            if (!targetT) {
+                importScannerLock = false;
+                setImportScanStatus('Serial "' + serial + '" không thuộc danh sách serial dự kiến của phiếu luân chuyển này.', 'error');
+                flashImportScan('error');
+                focusScanBox();
+                return;
+            }
+
+            var expectedGenId = targetT.getAttribute('data-expected-generator-id') || '';
+            var urlT = ctx + '/inventory-lookup?action=scan&serial=' + encodeURIComponent(serial)
+                    + '&expectedGeneratorId=' + encodeURIComponent(expectedGenId);
+            fetch(urlT).then(function (r) { return r.json(); })
+                .then(function (data) {
+                    importScannerLock = false;
+                    if (!data || !data.found) {
+                        setImportScanStatus('Serial "' + serial + '" không tồn tại trong hệ thống.', 'error');
+                        flashImportScan('error');
+                        focusScanBox();
+                        return;
+                    }
+                    if (data.status && data.status !== 'IN_TRANSIT') {
+                        setImportScanStatus('Serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + data.status + '), không thể nhập.', 'error');
+                        flashImportScan('error');
+                        focusScanBox();
+                        return;
+                    }
+                    if (data.mismatch) {
+                        setImportScanStatus('Serial "' + serial + '" thuộc mẫu "' + (data.generatorModel || '') + '", không khớp dòng đang quét.', 'error');
+                        flashImportScan('error');
+                        focusScanBox();
+                        return;
+                    }
+                    var snInputT = targetT.querySelector('input[name="manualSerialNumber"]');
+                    if (snInputT) snInputT.value = serial;
+                    flashRowSuccess(targetT);
+                    flashImportScan('success');
+                    setImportScanStatus('✓ Đã xác nhận serial "' + serial + '".', 'success');
+                    updatePoCounter();
+
+                    var scanElT = document.getElementById('importScanBox');
+                    if (scanElT) scanElT.value = '';
+
+                    var totalT = document.querySelectorAll('tr.transfer-locked-row').length;
+                    var filledT = 0;
+                    document.querySelectorAll('tr.transfer-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
+                        if (inp.value && inp.value.trim()) filledT++;
+                    });
+                    if (filledT >= totalT) {
+                        disableScanWhenTransferFull();
+                    }
+                    focusScanBox();
+                })
+                .catch(function (err) {
+                    importScannerLock = false;
+                    console.error(err);
+                    setImportScanStatus('Lỗi kết nối: ' + err.message, 'error');
+                    flashImportScan('error');
+                    focusScanBox();
+                });
             return;
         }
 
@@ -858,27 +1110,23 @@
             return;
         }
 
-        // 2. Non-PO mode: van giu nguyen flow AJAX lookup nhu cu
+        // 2. Non-PO + non-transfer mode: da co mau may, can check serial moi
+        var activeInfo2 = getActiveGeneratorInfo();
         var url = ctx + '/inventory-lookup?action=scan&serial=' + encodeURIComponent(serial)
-                + '&warehouseId=' + encodeURIComponent(whId);
+                + '&warehouseId=' + encodeURIComponent(whId)
+                + '&expectedGeneratorId=' + encodeURIComponent(activeInfo2.id);
         fetch(url).then(function (r) { return r.json(); })
             .then(function (data) {
                 importScannerLock = false;
 
-                if (!data || !data.found) {
-                    setImportScanStatus('Serial "' + serial + '" không tồn tại trong hệ thống.', 'error');
-                    flashImportScan('error');
-                    focusScanBox();
-                    return;
-                }
-                if (data.blocked) {
-                    setImportScanStatus('Serial "' + serial + '" đang bị chặn / đang sử dụng.', 'error');
+                if (data && data.found) {
+                    setImportScanStatus('Serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.', 'error');
                     flashImportScan('error');
                     focusScanBox();
                     return;
                 }
 
-                // Non-PO mode: tìm dòng trống hoặc tạo dòng mới
+                // Tim dong trong hoac tao dong moi
                 var emptyRow = findEmptyManualRow();
                 var targetTr;
                 if (emptyRow) {
@@ -888,37 +1136,17 @@
                     document.getElementById('detailBody').appendChild(targetTr);
                     updateRowNumbers();
                 }
-                var genSel = targetTr.querySelector('select[name="manualGeneratorId"]');
                 var snInput2 = targetTr.querySelector('input[name="manualSerialNumber"]');
-                if (genSel) {
-                    // Đảm bảo generator từ serial quét có trong cache để dropdown hiển thị
-                    var foundInCache = false;
-                    for (var i = 0; i < generatorCache.length; i++) {
-                        if (String(generatorCache[i].id) === String(data.generatorId)) { foundInCache = true; break; }
-                    }
-                    if (!foundInCache) {
-                        generatorCache.push({
-                            id: data.generatorId,
-                            model: data.generatorModel || ('#' + data.generatorId),
-                            brand: data.generatorBrand || '',
-                            stockQty: 0
-                        });
-                    }
-                    genSel.setAttribute('data-current', data.generatorId);
-                    renderGeneratorOptions(genSel);
-                    genSel.value = data.generatorId;
-                    onGeneratorChange(genSel);
-                }
                 if (snInput2) {
                     snInput2.value = serial;
                 }
                 flashRowSuccess(targetTr);
                 flashImportScan('success');
-                setImportScanStatus('✓ Đã thêm serial "' + serial + '" (model "' + (data.generatorModel || '') + '").', 'success');
+                setImportScanStatus('✓ Đã thêm serial "' + serial + '" vào mẫu ' + (activeInfo2.model || '') + '.', 'success');
                 updatePoCounter();
 
-                var scanEl = document.getElementById('importScanBox');
-                if (scanEl) scanEl.value = '';
+                var scanEl2 = document.getElementById('importScanBox');
+                if (scanEl2) scanEl2.value = '';
                 focusScanBox();
             })
             .catch(function (err) {
@@ -955,6 +1183,15 @@
         var scanBox = document.getElementById('importScannerBox');
         scanEl.disabled = true;
         scanEl.placeholder = 'Đã đủ serial theo PO. Bấm "Gửi phiếu" để hoàn tất.';
+        if (scanBox) scanBox.classList.add('disabled');
+    }
+
+    function disableScanWhenTransferFull() {
+        var scanEl = document.getElementById('importScanBox');
+        if (!scanEl) return;
+        var scanBox = document.getElementById('importScannerBox');
+        scanEl.disabled = true;
+        scanEl.placeholder = 'Đã quét đủ serial theo phiếu luân chuyển. Bấm "Gửi phiếu" để hoàn tất.';
         if (scanBox) scanBox.classList.add('disabled');
     }
 
@@ -1038,6 +1275,8 @@
             if (isPoMode) {
                 applySerialsToPoRows(data.serials || []);
                 if (typeof updatePoCounter === 'function') updatePoCounter();
+            } else if (isTransferMode) {
+                applySerialsToTransferRows(data.serials || []);
             } else {
                 applySerialsToManualRows(data.generatorIds || [], data.serials || []);
             }
@@ -1062,12 +1301,28 @@
         updatePoCounter();
     }
 
+    function applySerialsToTransferRows(serials) {
+        var rows = document.querySelectorAll('tr.transfer-locked-row');
+        if (rows.length === 0) return;
+        for (var i = 0; i < rows.length; i++) {
+            var input = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (!input) continue;
+            input.value = (i < serials.length && serials[i] != null) ? serials[i] : '';
+        }
+        if (serials.length !== rows.length) {
+            toast('File Excel có ' + serials.length + ' dòng serial nhưng phiếu yêu cầu ' + rows.length + ' dòng. Đã điền theo vị trí.', 'warning');
+        }
+        updatePoCounter();
+    }
+
     function applySerialsToManualRows(generatorIds, serials) {
         var tbody = document.getElementById('detailBody');
         if (!tbody) return;
+        var activeInfo = getActiveGeneratorInfo();
+        var fallbackGenId = activeInfo ? activeInfo.id : (generatorIds && generatorIds[0] ? generatorIds[0] : '');
         while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
         for (var i = 0; i < serials.length; i++) {
-            var genId = generatorIds[i];
+            var genId = (generatorIds && generatorIds[i]) ? generatorIds[i] : fallbackGenId;
             var serial = serials[i];
             if (!serial) continue;
             var tr = buildEmptyRow(genId);

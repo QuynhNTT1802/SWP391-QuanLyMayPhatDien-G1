@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<<<<<<< HEAD
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
@@ -191,6 +192,16 @@
             var modelCount = Object.keys(models).length;
             document.getElementById('barModelCount').textContent = modelCount > 0 ? ' · ' + modelCount + ' model' : '';
             document.getElementById('formTotalVal').textContent = fmt(total) + ' đ';
+=======
+<%
+    String ctx = request.getContextPath();
+    String id = request.getParameter("id");
+    if (id != null && !id.trim().isEmpty()) {
+        String wh = request.getParameter("warehouseId");
+        String url = ctx + "/liquidations?action=detail&id=" + id.trim();
+        if (wh != null && !wh.trim().isEmpty()) {
+            url += "&warehouseId=" + wh.trim();
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         }
 
         checkboxes.forEach(function (cb) {

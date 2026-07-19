@@ -20,6 +20,8 @@ public class Transfer {
     private Integer finalReviewedBy;
     private LocalDateTime finalReviewedAt;
     private LocalDateTime executedAt;
+    private Integer exportReceiptId;
+    private Integer importReceiptId;
     private String note;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -31,6 +33,8 @@ public class Transfer {
     private String managerReviewedByName;
     private String ceoReviewedByName;
     private String finalReviewedByName;
+    private String exportReceiptCode;
+    private String importReceiptCode;
     private List<TransferDetail> details;
 
     public Transfer() {
@@ -154,6 +158,38 @@ public class Transfer {
 
     public void setExecutedAt(LocalDateTime executedAt) {
         this.executedAt = executedAt;
+    }
+
+    public Integer getExportReceiptId() {
+        return exportReceiptId;
+    }
+
+    public void setExportReceiptId(Integer exportReceiptId) {
+        this.exportReceiptId = exportReceiptId;
+    }
+
+    public Integer getImportReceiptId() {
+        return importReceiptId;
+    }
+
+    public void setImportReceiptId(Integer importReceiptId) {
+        this.importReceiptId = importReceiptId;
+    }
+
+    public String getExportReceiptCode() {
+        return exportReceiptCode;
+    }
+
+    public void setExportReceiptCode(String exportReceiptCode) {
+        this.exportReceiptCode = exportReceiptCode;
+    }
+
+    public String getImportReceiptCode() {
+        return importReceiptCode;
+    }
+
+    public void setImportReceiptCode(String importReceiptCode) {
+        this.importReceiptCode = importReceiptCode;
     }
 
     private static java.util.Date toDate(LocalDateTime ldt) {

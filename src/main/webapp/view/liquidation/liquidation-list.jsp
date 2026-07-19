@@ -50,9 +50,14 @@
             </div>
 
             <c:set var="kpiCount" value="1"/>
+<<<<<<< HEAD
             <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_manager')}"><c:set var="kpiCount" value="${kpiCount + 1}"/></c:if>
             <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_ceo')}"><c:set var="kpiCount" value="${kpiCount + 1}"/></c:if>
             <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
+=======
+            <c:if test="${canSeeCeoKpi}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
+            <c:if test="${canSeeEditKpi}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             <div class="stats-row liq-stats" style="--kpi-cols: ${kpiCount};">
                 <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_manager')}">
                     <div class="stat">
@@ -64,6 +69,10 @@
                     <div class="stat">
                         <div class="lbl">Chờ Sếp duyệt</div>
                         <div class="val">${kpiPendingCeo}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="lbl">Đã duyệt</div>
+                        <div class="val">${kpiApproved}</div>
                     </div>
                 </c:if>
                 <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
@@ -91,8 +100,9 @@
                 </div>
                 <select class="filter-select" name="status" onchange="this.form.submit()">
                     <option value="">Trạng thái: Tất cả</option>
-                    <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
+                    <c:if test="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.create') or sessionScope.userPermissions.contains('liquidations.approve_ceo'))}">
                         <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ Sếp duyệt</option>
+                        <option value="APPROVED" ${statusFilter == 'APPROVED' ? 'selected' : ''}>Đã duyệt chờ xuất</option>
                         <option value="CEO_REQUEST_EDIT" ${statusFilter == 'CEO_REQUEST_EDIT' ? 'selected' : ''}>Sếp yêu cầu sửa</option>
                         <option value="CANCELLED" ${statusFilter == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
                     </c:if>
@@ -189,7 +199,7 @@
                                                 <c:when test="${liq.status == 'PENDING_CEO'}">
                                                     <span class="pill liq-pending-ceo"><span class="pdot"></span>Chờ Sếp duyệt</span>
                                                 </c:when>
-                                                <c:when test="${liq.status == 'APPROVED_BY_CEO'}">
+                                                <c:when test="${liq.status == 'APPROVED'}">
                                                     <span class="pill liq-pending-mgr" title="Sếp đã duyệt"><span class="pdot"></span>Đã duyệt</span>
                                                 </c:when>
                                                 <c:when test="${liq.status == 'COMPLETED'}">

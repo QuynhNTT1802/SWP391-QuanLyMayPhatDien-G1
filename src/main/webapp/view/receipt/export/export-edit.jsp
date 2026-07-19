@@ -124,10 +124,7 @@
                 <a class="btn" href="javascript:void(0)" onclick="confirmCancelEdit()">Huỷ</a>
                 <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-                    <c:choose>
-                        <c:when test="${isDraft}">Gửi phiếu</c:when>
-                        <c:otherwise>Gửi lại để duyệt</c:otherwise>
-                    </c:choose>
+                    Gửi lại để duyệt
                 </button>
             </div>
         </header>
@@ -143,14 +140,7 @@
                 <div class="hero-body">
                     <h2 class="hero-name">
                         <c:out value="${receipt.receiptCode}"/>
-                        <c:choose>
-                            <c:when test="${isDraft}">
-                                <span class="status-pill" style="background: oklch(94% 0.04 250); color: oklch(45% 0.13 250); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Bản nháp</span>
-                            </c:when>
-                            <c:otherwise>
-                                <span class="status-pill" style="background: oklch(94% 0.04 75); color: oklch(50% 0.13 75); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Yêu cầu chỉnh sửa</span>
-                            </c:otherwise>
-                        </c:choose>
+                        <span class="status-pill" style="background: oklch(94% 0.04 75); color: oklch(50% 0.13 75); padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">Yêu cầu chỉnh sửa</span>
                     </h2>
                     <div class="hero-meta">
                         <span>Phiếu xuất kho</span>
@@ -601,9 +591,6 @@
     }
 
     function validateReceiptForm() {
-        var submitter = (typeof event !== 'undefined' && event && event.submitter) ? event.submitter : null;
-        var isDraft = submitter && submitter.value === 'draft';
-        if (isDraft) return true;
         var valid = true;
         var firstInvalid = null;
         document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
@@ -694,24 +681,44 @@
         var whId = document.getElementById('warehouseSelect').value;
         if (!whId) { toast('Không xác định được kho', 'danger'); exportEditScannerLocked = false; return; }
 
-        var url = ctx + '/export-receipt?action=addScannedSerial'
-                + '&warehouseId=' + encodeURIComponent(whId)
-                + '&serialNumber=' + encodeURIComponent(serial)
-                + '&receiptId=' + encodeURIComponent(currentEditReceiptId);
+        var url = ctx + '/inventory-lookup?action=scan'
+                + '&serial=' + encodeURIComponent(serial)
+                + '&warehouseId=' + encodeURIComponent(whId);
 
-        fetch(url, { method: 'POST' })
+        var focusScan = function () {
+            var scanEl = document.getElementById('scanBox');
+            if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+        };
+
+        fetch(url)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 exportEditScannerLocked = false;
-                if (!data || !data.success) {
-                    toast((data && data.message) ? data.message : 'Lỗi khi quét', 'danger');
+                if (!data || !data.found) {
+                    toast((data && data.message) ? data.message : 'Serial không tồn tại trong hệ thống', 'danger');
+                    focusScan();
+                    return;
+                }
+                if (data.inTargetWarehouse === false) {
+                    toast('Serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
+                    focusScan();
+                    return;
+                }
+                var dupFound = false;
+                document.querySelectorAll('#detailBody select[name="serialNumber"]').forEach(function (select) {
+                    if (select.value && select.value === data.serialNumber) {
+                        dupFound = true;
+                    }
+                });
+                if (dupFound) {
+                    toast('Serial "' + data.serialNumber + '" đã có trong phiếu, không thể quét trùng.', 'danger');
+                    focusScan();
                     return;
                 }
                 var tr = buildEmptyRow();
                 if (data.inventoryId) {
                     tr.setAttribute('data-inventory-id', data.inventoryId);
                 }
-                tr.setAttribute('data-receipt-id', currentEditReceiptId);
                 var sel = tr.querySelector('select[name="generatorId"]');
                 if (sel && data.generatorId) {
                     sel.setAttribute('data-current', data.generatorId);
@@ -739,9 +746,8 @@
                 document.getElementById('detailBody').appendChild(tr);
                 updateRowNumbers();
                 if (typeof validateInventoryRealtime === 'function') validateInventoryRealtime();
-                toast('Đã reserve serial ' + data.serialNumber, 'success');
-                var scanEl = document.getElementById('scanBox');
-                if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+                toast('Đã thêm serial ' + data.serialNumber, 'success');
+                focusScan();
             })
             .catch(function (err) {
                 exportEditScannerLocked = false;

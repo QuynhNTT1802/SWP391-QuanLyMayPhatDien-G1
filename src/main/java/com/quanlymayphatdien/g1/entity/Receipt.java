@@ -18,6 +18,8 @@ public class Receipt {
     private String receiptType;
     private Integer orderId;
     private Integer purchaseOrderId;
+    private Integer linkedTransferId;
+    private Integer relatedExportReceiptId;
     private int warehouseId;
     private int createdBy;
     private Integer approvedBy;
@@ -38,6 +40,8 @@ public class Receipt {
     private Integer reasonId;
     private String reasonNote;
     private String reasonName;
+    private String transferCode;
+    private String relatedExportReceiptCode;
     private List<ReceiptDetail> details;
     
     // Additional fields for displaying references
@@ -101,6 +105,38 @@ public class Receipt {
 
     public void setPurchaseOrderId(Integer purchaseOrderId) {
         this.purchaseOrderId = purchaseOrderId;
+    }
+
+    public Integer getLinkedTransferId() {
+        return linkedTransferId;
+    }
+
+    public void setLinkedTransferId(Integer linkedTransferId) {
+        this.linkedTransferId = linkedTransferId;
+    }
+
+    public Integer getRelatedExportReceiptId() {
+        return relatedExportReceiptId;
+    }
+
+    public void setRelatedExportReceiptId(Integer relatedExportReceiptId) {
+        this.relatedExportReceiptId = relatedExportReceiptId;
+    }
+
+    public String getTransferCode() {
+        return transferCode;
+    }
+
+    public void setTransferCode(String transferCode) {
+        this.transferCode = transferCode;
+    }
+
+    public String getRelatedExportReceiptCode() {
+        return relatedExportReceiptCode;
+    }
+
+    public void setRelatedExportReceiptCode(String relatedExportReceiptCode) {
+        this.relatedExportReceiptCode = relatedExportReceiptCode;
     }
 
     public int getWarehouseId() {

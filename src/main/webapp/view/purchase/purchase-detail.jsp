@@ -63,11 +63,161 @@
             .modal-host.show { display: flex; }
             .modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 100%; max-width: 480px; padding: 20px 22px; box-shadow: 0 20px 50px oklch(0% 0 0 / 0.25); }
             .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+<<<<<<< HEAD
             .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
             .modal-card label { display: block; font-size: 12px; font-weight: 600; color: var(--fg-soft); margin-bottom: 6px; }
             .modal-card textarea { width: 100%; min-height: 90px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); color: var(--fg); font-family: var(--font-ui); font-size: 13px; resize: vertical; }
             .modal-card textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
             .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+=======
+            .modal-card .modal-sub {
+                font-size: 12.5px;
+                color: var(--muted);
+                margin-bottom: 14px;
+                line-height: 1.5;
+            }
+            .modal-card label {
+                display: block;
+                font-size: 11px;
+                color: var(--muted);
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin-bottom: 6px;
+            }
+            .modal-card textarea {
+                width: 100%;
+                padding: 9px 12px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                background: var(--bg);
+                color: var(--fg);
+                font-size: 13px;
+                font-family: var(--font-ui);
+                box-sizing: border-box;
+                min-height: 80px;
+                resize: vertical;
+            }
+            .modal-card textarea:focus {
+                outline: none;
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+            }
+            .modal-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                margin-top: 16px;
+            }
+
+            .action-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 2px 9px;
+                border-radius: 999px;
+                border: 1px solid;
+                text-transform: uppercase;
+                letter-spacing: 0.02em;
+                font-family: var(--font-ui);
+            }
+            .action-badge.action-create   { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
+            .action-badge.action-update   { color: var(--info);   border-color: color-mix(in srgb, var(--info) 32%, transparent);    background: var(--info-soft); }
+            .action-badge.action-approve  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
+            .action-badge.action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent);  background: var(--danger-soft); }
+            .action-badge.action-revision { color: #7c3aed;        border-color: color-mix(in srgb, #7c3aed 32%, transparent);         background: color-mix(in srgb, #7c3aed 8%, transparent); }
+            .action-badge.action-cancel   { color: var(--muted);  border-color: var(--border); background: var(--surface-2); }
+            .proposal-table-wrap { padding: 0; overflow-x: auto; }
+            .proposal-table { width: 100%; border-collapse: collapse; }
+            .proposal-table th, .proposal-table td {
+                padding: 11px 14px;
+                text-align: left;
+                border-bottom: 1px solid var(--border);
+                vertical-align: middle;
+            }
+            .proposal-table th {
+                font-size: 11px;
+                color: var(--muted);
+                text-transform: uppercase;
+                font-weight: 700;
+                background: var(--surface-2);
+                letter-spacing: 0.04em;
+            }
+            .proposal-table td { font-size: 13px; }
+            .proposal-table tbody tr { cursor: pointer; }
+            .proposal-table tbody tr:hover { background: var(--surface-2); }
+            .proposal-link {
+                font-family: var(--font-mono);
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--accent);
+                text-decoration: none;
+                cursor: pointer;
+                background: none;
+                border: none;
+                padding: 0;
+            }
+            .proposal-link:hover { text-decoration: underline; }
+
+            .proposal-modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,.45);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .proposal-modal-backdrop.open { display: flex; }
+            .proposal-modal {
+                background: var(--surface);
+                border-radius: 8px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 10px 40px rgba(0,0,0,.25);
+                overflow: hidden;
+                animation: modalPop .18s ease-out;
+            }
+            @keyframes modalPop {
+                from { transform: scale(.96); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .proposal-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border);
+            }
+            .proposal-modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+            .proposal-modal-close {
+                background: transparent; border: none; font-size: 22px; line-height: 1;
+                cursor: pointer; color: var(--muted); padding: 0 4px;
+            }
+            .proposal-modal-close:hover { color: var(--fg); }
+            .proposal-modal-body { padding: 16px 18px; }
+            .prow {
+                display: flex;
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px dashed var(--border);
+                font-size: 13.5px;
+            }
+            .prow:last-child { border-bottom: none; }
+            .prow .lbl { flex: 0 0 110px; color: var(--muted); font-weight: 500; }
+            .prow .val { flex: 1; color: var(--fg); word-break: break-word; }
+            .proposal-modal-footer {
+                padding: 12px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                background: var(--surface-2);
+            }
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         </style>
     </head>
     <body>
@@ -97,11 +247,14 @@
                     </a>
 
                     <c:choose>
+<<<<<<< HEAD
                         <c:when test="${po.status == 'DRAFT'}">
                             <c:set var="statusLabel" value="Nháp"/>
                             <c:set var="statusBg" value="#e2e3e5"/>
                             <c:set var="statusFg" value="#383d41"/>
                         </c:when>
+=======
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         <c:when test="${po.status == 'PENDING_CEO'}">
                             <c:set var="statusLabel" value="Chờ CEO duyệt"/>
                             <c:set var="statusBg" value="#fff3cd"/>
@@ -129,6 +282,7 @@
                         </c:otherwise>
                     </c:choose>
 
+<<<<<<< HEAD
                     <c:set var="heroInitials">
                         <c:choose>
                             <c:when test="${not empty po.createdByName}">
@@ -150,6 +304,28 @@
                                 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
                                     <span class="pdot"></span>${statusLabel}
                                 </span>
+=======
+                    <c:set var="canApproveNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
+                    <c:set var="canRejectNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
+                    <c:set var="canRevisionNow" value="${po.status == 'PENDING_CEO' && canApprovePo}" />
+
+                    <%-- ============================================================
+                         HEADER BAR
+                         ============================================================ --%>
+                    <div class="header-bar">
+                        <div class="left">
+                            <a class="back-link" href="${pageContext.request.contextPath}/purchase-order">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách
+                            </a>
+                            <span class="code-tag">
+                                <span class="ct-label">Phiếu mua -</span>
+                                <span><c:out value="${po.poCode}"/></span>
+                            </span>
+                            <h2 class="page-main-title">
+                                #<c:out value="${po.poCode}"/>
+                                <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                             </h2>
                             <div class="hero-meta">
                                 <span class="id"><c:out value="${po.poCode}"/></span>
@@ -166,6 +342,7 @@
                                 <span class="pill warehouse"><span class="pdot"></span>Tổng tiền: <fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="₫"/></span>
                             </div>
                         </div>
+<<<<<<< HEAD
                     </div>
 
                     <c:set var="perms" value="${sessionScope.userPermissions}"/>
@@ -183,6 +360,20 @@
                                 <button type="button" class="btn btn-danger" onclick="openModal('cancelModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Hủy phiếu
+=======
+                        <div class="right">
+                            <c:if test="${canApproveNow}">
+                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Xác nhận
+                                </button>
+                            </c:if>
+                            
+                            <c:if test="${canRejectNow}">
+                                <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    Từ chối
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                 </button>
                             </c:if>
                         </div>
@@ -236,6 +427,7 @@
                                     <input type="hidden" name="tab" value="history"/>
                                     <input type="hidden" name="page" value="1"/>
 
+<<<<<<< HEAD
                                     <div class="search-input hf-search">
                                         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                         <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
@@ -265,6 +457,107 @@
                                             <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
                                             Xóa lọc
                                         </a>
+=======
+                        <div class="tab-bar">
+                            <a href="#" class="tab ${currentTab != 'history' && currentTab != 'proposals' ? 'active' : ''}" data-tab="generators">
+                                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                Danh sách máy
+                            </a>
+                            <a href="#" class="tab ${currentTab == 'proposals' ? 'active' : ''}" data-tab="proposals">
+                                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                Phiếu đề xuất gốc
+                                <span class="tab-badge">${fn:length(sourceProposals)}</span>
+                            </a>
+                            <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}" data-tab="history">
+                                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Lịch sử cập nhật
+                                <span class="tab-badge">${totalLogs}</span>
+                            </a>
+                        </div>
+
+                        <%-- ============ Tab 1: Bảng máy cần mua ============ --%>
+                        <div class="tab-panel ${currentTab != 'history' && currentTab != 'proposals' ? 'active' : ''}" data-panel="generators">
+                            <div class="table-toolbar">
+                                <div class="search-input">
+                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input id="poSearch" placeholder="Tìm kiếm thông tin..." autocomplete="off"/>
+                                </div>
+                                <div class="spacer"></div>
+                                <button type="button" class="btn" title="Xuất file (đang phát triển)">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Xuất file
+                                </button>
+                            </div>
+
+                            <div style="overflow-x:auto;">
+                                <table class="product-table" id="poTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã máy</th>
+                                            <th>Tên máy</th>
+                                            <th>Thương hiệu</th>
+                                            <th class="text-right">SL đề xuất</th>
+                                            <th class="text-right">Tồn kho</th>
+                                            <th class="text-right">SL mua</th>
+                                            <th class="text-right">Đơn giá</th>
+                                            <th class="text-right">Thành tiền</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <c:choose>
+                                            <c:when test="${empty po.details}">
+                                                <tr><td colspan="9">
+                                                    <div class="empty-state">
+                                                        <div class="icon-wrap">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                        </div>
+                                                        <strong>Chưa có dòng máy nào trong phiếu mua</strong>
+                                                    </div>
+                                                </td></tr>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="d" items="${po.details}" varStatus="st">
+                                                    <tr data-row-id="${d.poDetailId != null ? d.poDetailId : st.index}"
+                                                        data-search="<c:out value='${d.generatorCode} ${d.generatorName} ${d.brandName}'/>"
+                                                        data-status="${po.status}">
+                                                        <td class="mono"><c:out value="${d.generatorCode}"/></td>
+                                                        <td><strong><c:out value="${d.generatorName}"/></strong></td>
+                                                        <td><c:out value="${d.brandName}"/></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.proposedQuantity}"/></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.currentStock}"/></td>
+                                                        <td class="text-right mono"><strong><fmt:formatNumber value="${d.finalQuantity}"/></strong></td>
+                                                        <td class="text-right mono">
+                                                            <c:choose>
+                                                                <c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/> ₫</c:when>
+                                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td class="text-right mono" style="font-weight:600;">
+                                                            <c:choose>
+                                                                <c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice * d.finalQuantity}" pattern="#,##0"/> ₫</c:when>
+                                                                <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
+                                                        <td>
+                                                            <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
+                                                        </td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </tbody>
+                                    <c:if test="${not empty po.details}">
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="7" class="text-right" style="padding: 12px 14px;">Tổng cộng:</td>
+                                                <td class="text-right mono" style="padding: 12px 14px; color: var(--accent);">
+                                                    <fmt:formatNumber value="${grandTotal}" pattern="#,##0"/> ₫
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                     </c:if>
                                 </form>
 
@@ -275,11 +568,133 @@
                                     </c:if>
                                 </div>
 
+<<<<<<< HEAD
                                 <table>
                                     <thead><tr>
                                         <th style="width:150px;">Thời gian</th>
                                         <th style="width:180px;">Người thực hiện</th>
                                         <th style="width:160px;">Hành động</th>
+=======
+                            <c:if test="${po.status == 'REJECTED' && not empty po.rejectReason}">
+                                <div style="padding: 18px 20px;">
+                                    <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do từ chối</div>
+                                    <div class="danger-note"><c:out value="${po.rejectReason}"/></div>
+                                </div>
+                            </c:if>
+                            <c:if test="${po.status == 'CANCELLED' && not empty po.cancelReason}">
+                                <div style="padding: 18px 20px;">
+                                    <div class="info-label" style="font-size:11px;color:var(--danger);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do hủy</div>
+                                    <div class="danger-note"><c:out value="${po.cancelReason}"/></div>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty po.note}">
+                                <div style="padding: 0 20px 18px;">
+                                    <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú PO</div>
+                                    <div class="note-soft"><c:out value="${po.note}"/></div>
+                                </div>
+                            </c:if>
+                        </div>
+
+                        <%-- ============ Tab 2: Phiếu đề xuất gốc ============ --%>
+                        <div class="tab-panel ${currentTab == 'proposals' ? 'active' : ''}" data-panel="proposals">
+                            <div class="proposal-table-wrap">
+                                <c:choose>
+                                    <c:when test="${empty sourceProposals}">
+                                        <div class="empty-state">
+                                            <div class="icon-wrap">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                            </div>
+                                            <strong>Không có phiếu đề xuất nào</strong>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <table class="proposal-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Phiếu đề xuất</th>
+                                                    <th>Người tạo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <c:forEach var="sp" items="${sourceProposals}">
+                                                    <c:set var="totalQty" value="0"/>
+                                                    <c:forEach var="d" items="${sp.details}">
+                                                        <c:set var="totalQty" value="${totalQty + d.quantity}"/>
+                                                    </c:forEach>
+                                                    <tr onclick="showProposalModal(this)"
+                                                        data-proposal-id="${sp.proposalId}"
+                                                        data-proposal-code="${sp.proposalCode}"
+                                                        data-creator="${sp.createdByName}"
+                                                        data-date="${sp.proposalDate.format(poDateFmt)}"
+                                                        data-supplier="${sp.supplierName}"
+                                                        data-status="${sp.status}"
+                                                        data-total-details="${fn:length(sp.details)}"
+                                                        data-total-qty="${totalQty}">
+                                                        <td><button type="button" class="proposal-link">${sp.proposalCode}</button></td>
+                                                        <td style="color:var(--muted);">${sp.createdByName}</td>
+                                                    </tr>
+                                                </c:forEach>
+                                            </tbody>
+                                        </table>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+
+                        <%-- ============ Tab 3: Lịch sử ============ --%>
+                        <div class="tab-panel ${currentTab == 'history' ? 'active' : ''}" data-panel="history">
+                            <form method="get" action="${pageContext.request.contextPath}/purchase-order" class="history-filter-bar">
+                                <input type="hidden" name="action" value="detail"/>
+                                <input type="hidden" name="id" value="${po.poId}"/>
+                                <input type="hidden" name="tab" value="history"/>
+                                <input type="hidden" name="page" value="1"/>
+
+                                <div class="search-input hf-search">
+                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
+                                </div>
+                                <select name="logAction" class="filter-select">
+                                    <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
+                                    <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu mua</option>
+                                    <option value="SEND_TO_CEO" ${logAction == 'SEND_TO_CEO' ? 'selected' : ''}>Gửi duyệt</option>
+                                    <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
+                                    <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
+                                    <option value="REQUEST_REVISION" ${logAction == 'REQUEST_REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa đề xuất</option>
+                                    <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                                    <option value="CANCEL" ${logAction == 'CANCEL' ? 'selected' : ''}>Hủy phiếu</option>
+                                </select>
+                                <div class="date-range">
+                                    <label class="date-label">Từ</label>
+                                    <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
+                                    <label class="date-label">đến</label>
+                                    <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    Áp dụng
+                                </button>
+                                <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                    <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}&amp;tab=history" class="btn">
+                                        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                        Xóa lọc
+                                    </a>
+                                </c:if>
+                            </form>
+
+                            <div class="result-summary">
+                                Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                                <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                    &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                                </c:if>
+                            </div>
+
+                            <table class="product-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:170px;">Thời gian</th>
+                                        <th style="width:200px;">Người thực hiện</th>
+                                        <th style="width:170px;">Hành động</th>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                         <th>Chi tiết thay đổi</th>
                                     </tr></thead>
                                     <tbody>
@@ -546,7 +961,6 @@
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa đề xuất</h3>
-                    <div class="modal-sub">Các đề xuất gốc sẽ được tách khỏi phiếu mua này và chuyển sang trạng thái <strong>Cần chỉnh sửa</strong> để Sale Manager chỉnh sửa (ghi chú, nhà cung cấp, kho, tháng...). Không áp dụng cho sai máy/giá/số lượng - trường hợp đó hãy dùng <strong>Từ chối</strong>.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=requestRevision">
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <label for="revisionReason">Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
@@ -590,6 +1004,7 @@
             </div>
         </c:if>
 
+<<<<<<< HEAD
         <c:if test="${po.status == 'DRAFT' && canCreatePo}">
             <div class="modal-host" id="sendToCeoModal">
                 <div class="modal-card">
@@ -621,6 +1036,32 @@
                 </div>
             </c:if>
         </c:if>
+=======
+        <div class="proposal-modal-backdrop" id="proposalModal" onclick="if (event.target === this) closeProposalModal();">
+            <div class="proposal-modal" role="dialog" aria-modal="true">
+                <div class="proposal-modal-header">
+                    <h3>Thông tin phiếu đề xuất</h3>
+                    <button type="button" class="proposal-modal-close" onclick="closeProposalModal()" aria-label="Đóng">&times;</button>
+                </div>
+                <div class="proposal-modal-body">
+                    <div class="prow"><div class="lbl">Mã phiếu</div><div class="val mono" id="pm-code">—</div></div>
+                    <div class="prow"><div class="lbl">Người tạo</div><div class="val" id="pm-creator">—</div></div>
+                    <div class="prow"><div class="lbl">Ngày tạo</div><div class="val" id="pm-date">—</div></div>
+                    <div class="prow"><div class="lbl">Nhà cung cấp</div><div class="val" id="pm-supplier">—</div></div>
+                    <div class="prow"><div class="lbl">Trạng thái</div><div class="val" id="pm-status">—</div></div>
+                    <div class="prow"><div class="lbl">Số dòng</div><div class="val" id="pm-details">—</div></div>
+                    <div class="prow"><div class="lbl">Tổng SL</div><div class="val" id="pm-qty">—</div></div>
+                </div>
+                <div class="proposal-modal-footer">
+                    <button type="button" class="btn" onclick="closeProposalModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="pm-detail-link" target="_blank">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 
         <div class="toast-host" id="toastHost"></div>
 
@@ -659,9 +1100,26 @@
             document.querySelectorAll('.modal-host').forEach(function (m) {
                 m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
             });
+
+            function showProposalModal(el) {
+                document.getElementById('pm-code').textContent = el.getAttribute('data-proposal-code');
+                document.getElementById('pm-creator').textContent = el.getAttribute('data-creator');
+                document.getElementById('pm-date').textContent = el.getAttribute('data-date');
+                document.getElementById('pm-supplier').textContent = el.getAttribute('data-supplier');
+                document.getElementById('pm-status').textContent = el.getAttribute('data-status');
+                document.getElementById('pm-details').textContent = el.getAttribute('data-total-details');
+                document.getElementById('pm-qty').textContent = el.getAttribute('data-total-qty');
+                document.getElementById('pm-detail-link').href = window.APP_CTX + '/proposal?action=detail&id=' + el.getAttribute('data-proposal-id');
+                document.getElementById('proposalModal').classList.add('open');
+            }
+            function closeProposalModal() {
+                document.getElementById('proposalModal').classList.remove('open');
+            }
+
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
+                    closeProposalModal();
                 }
             });
         </script>

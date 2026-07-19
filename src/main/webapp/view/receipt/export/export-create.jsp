@@ -16,111 +16,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
-    <style>
-        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .form-field { display: flex; flex-direction: column; gap: 6px; }
-        .form-field.full { grid-column: 1 / -1; }
-        .form-field label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
-        .form-field input, .form-field select, .form-field textarea {
-            width: 100%; padding: 9px 12px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
-        }
-        .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
-            outline: none; border-color: var(--accent);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
-        }
-        .form-field textarea { min-height: 70px; resize: vertical; font-family: var(--font-ui); }
-        .form-field input:disabled, .form-field select:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
-        .order-pin { padding: 10px 14px; background: var(--accent-soft); color: var(--accent);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
-        .order-pin .order-cust { color: var(--fg-soft); font-weight: 500; }
-
-        .detail-table { width: 100%; border-collapse: collapse; }
-        .detail-table th { text-align: left; padding: 10px 12px; font-size: 11px;
-            font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border);
-            text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); }
-        .detail-table td { padding: 8px 8px; vertical-align: top; border-bottom: 1px solid var(--border); }
-        .detail-table tbody tr:last-child td { border-bottom: 0; }
-        .detail-table select, .detail-table input {
-            width: 100%; padding: 7px 10px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 13px; font-family: var(--font-ui); box-sizing: border-box;
-        }
-        .detail-table select:focus, .detail-table input:focus {
-            outline: none; border-color: var(--accent);
-        }
-        .detail-table .col-num { width: 36px; text-align: center; color: var(--muted);
-            font-size: 12px; font-weight: 600; padding-top: 14px; font-family: var(--font-mono); }
-        .detail-table .col-gen { min-width: 200px; }
-        .detail-table .col-serial { min-width: 130px; }
-        .detail-table .col-note { min-width: 130px; }
-        .detail-table .col-del { width: 40px; text-align: center; }
-        .detail-table .col-stock { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: var(--font-mono); }
-        .detail-table tr.row-short { background: color-mix(in srgb, var(--danger) 6%, transparent); }
-        .detail-table tr.row-short select[name="generatorId"],
-        .detail-table tr.row-short select[name="serialNumber"] { border-color: var(--danger); }
-        .detail-table tr.row-short .col-stock { color: var(--danger); font-weight: 600; }
-
-        .row-del-btn { width: 28px; height: 28px; border: 1px solid transparent;
-            background: transparent; color: var(--danger); cursor: pointer;
-            border-radius: var(--radius-sm); display: inline-flex; align-items: center;
-            justify-content: center; margin-top: 4px; }
-        .row-del-btn:hover { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 25%, transparent); }
-        .row-del-btn:disabled { color: var(--muted); cursor: not-allowed; opacity: 0.5; }
-        .add-row-btn { margin-top: 12px; font-size: 13px; }
-        .add-row-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .scanner-box { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px;
-            background: color-mix(in srgb, var(--accent) 6%, var(--bg));
-            border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
-            border-radius: var(--radius); margin-bottom: 14px; }
-        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.04em; }
-        .scanner-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border);
-            border-radius: var(--radius-sm); background: var(--bg); color: var(--fg);
-            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box; }
-        .scanner-box input:focus { outline: none; border-color: var(--accent);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
-        .scanner-box small { color: var(--muted); font-size: 12px; }
-        .scanner-box.disabled { opacity: 0.5; }
-        .scanner-box.disabled input { cursor: not-allowed; }
-
-        .alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
-            border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; }
-        .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none;
-            stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
-        .alert .alert-body { flex: 1; line-height: 1.5; }
-        .alert .alert-title { font-weight: 700; margin-bottom: 4px; }
-        .alert ul { margin: 4px 0 0 18px; padding: 0; }
-        .alert-error { background: var(--danger-soft); color: var(--danger);
-            border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
-        .alert-warn { background: var(--warn-soft); color: var(--warn);
-            border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
-        .alert-info { background: var(--accent-soft); color: var(--accent);
-            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
-
-        a.btn { text-decoration: none; }
-
-        .scanner-row { display: flex; gap: 8px; align-items: stretch; }
-        .scanner-row input { flex: 1; }
-        .scanner-row .cam-btn { width: 42px; min-width: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--accent); cursor: pointer; display: grid; place-items: center; }
-        .scanner-row .cam-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
-        .scanner-row .cam-btn.active { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
-        #scannerCamera { display: none; margin-top: 8px; }
-        #scannerCamera video { width: 100%; max-width: 400px; border-radius: var(--radius-sm); }
-
-        .order-counter { font-size: 12px; color: var(--muted); padding: 6px 0; }
-        .order-counter strong { color: var(--accent); }
-        .order-req-banner { background: var(--accent-soft); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
-        .order-req-banner .req-title { font-weight: 700; margin-bottom: 4px; }
-        .order-req-banner .req-item { color: var(--fg); }
-        .order-req-banner .req-item strong { color: var(--accent); }
-        @media (max-width: 760px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
 </head>
 <body>
 <div class="app">
@@ -141,8 +37,8 @@
             </div>
         </header>
 
-        <main>
-            <a class="back-link" href="javascript:void(0)" onclick="confirmCancelCreate()">
+                <main>
+                    <a class="receipt-back-link" href="javascript:void(0)" onclick="confirmCancelCreate()">
                 <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 Huỷ và quay lại danh sách
             </a>
@@ -166,16 +62,29 @@
                                     <li><c:out value="${e}"/></li>
                                 </c:forEach>
                             </ul>
-                            <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
-                                Bạn có thể <strong>Lưu nháp</strong> để xử lý sau, hoặc nhập thêm máy vào kho rồi tạo lại phiếu.
-                            </div>
                         </div>
                     </div>
                 </c:if>
                 <c:if test="${not empty receipt.orderId}">
                     <input type="hidden" name="orderId" value="${receipt.orderId}" />
                 </c:if>
+                <c:if test="${not empty transferId}">
+                    <input type="hidden" name="transferId" value="${transferId}" />
+                </c:if>
+                <c:if test="${not empty receipt.liquidationId}">
+                    <input type="hidden" name="liquidationId" value="${receipt.liquidationId}" />
+                </c:if>
                 <input type="hidden" name="receiptId" id="receiptIdField" value="0" />
+
+                <c:if test="${not empty fromTransfer}">
+                    <div class="alert" style="background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); margin: 16px 0; padding: 12px 16px; border-radius: var(--radius);">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
+                        <div>
+                            <div style="font-weight: 700; margin-bottom: 4px;">Tạo phiếu xuất từ phiếu đề xuất luân chuyển <c:out value="${transferCode}"/></div>
+                            <div style="font-size: 12.5px;">Quét các serial từ kho nguồn <strong><c:out value="${transfer.sourceWarehouseName}"/></strong>. Khi lưu, phiếu đề xuất sẽ chuyển sang trạng thái <strong>EXPORTED</strong> và kho đích sẽ nhận thông báo để tạo phiếu nhập.</div>
+                        </div>
+                    </div>
+                </c:if>
 
                 <div class="content">
                     <section class="section">
@@ -188,22 +97,49 @@
                         <div class="form-grid">
                             <div class="form-field">
                                 <label>Kho *</label>
-                                <select id="warehouseSelect" name="warehouseId" required onchange="onWarehouseChange()">
-                                    <option value="">-- Chọn kho trước --</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}">${wh.name}</option>
-                                    </c:forEach>
-                                </select>
+                                <c:choose>
+                                    <c:when test="${fromLiquidation}">
+                                        <input type="hidden" name="warehouseId" value="${receipt.warehouseId}" />
+                                        <select id="warehouseSelect" disabled>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <option value="${wh.warehouseId}" ${wh.warehouseId == receipt.warehouseId ? 'selected' : ''}>${wh.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <select id="warehouseSelect" name="warehouseId" required onchange="onWarehouseChange()">
+                                            <option value="">-- Chọn kho trước --</option>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <option value="${wh.warehouseId}"
+                                                        <c:if test="${wh.warehouseId == preselectSourceWarehouseId}">selected</c:if>>
+                                                    <c:out value="${wh.name}"/>
+                                                </option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:otherwise>
+                                </c:choose>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <div class="form-field">
                                 <label>Lý do *</label>
-                                <select name="reasonId" class="input" required onchange="validateField(this)">
-                                    <option value="">-- Chọn lý do --</option>
-                                    <c:forEach var="r" items="${receiptReasons}">
-                                        <option value="${r.id}">${r.name}</option>
-                                    </c:forEach>
-                                </select>
+                                <c:choose>
+                                    <c:when test="${fromLiquidation}">
+                                        <input type="hidden" name="reasonId" value="${receipt.reasonId}" />
+                                        <select class="input" disabled>
+                                            <c:forEach var="r" items="${receiptReasons}">
+                                                <option value="${r.id}" ${r.id == receipt.reasonId ? 'selected' : ''}>${r.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <select name="reasonId" class="input" required onchange="validateField(this)">
+                                            <option value="">-- Chọn lý do --</option>
+                                            <c:forEach var="r" items="${receiptReasons}">
+                                                <option value="${r.id}">${r.name}</option>
+                                            </c:forEach>
+                                        </select>
+                                    </c:otherwise>
+                                </c:choose>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <c:if test="${not empty order}">
@@ -212,6 +148,15 @@
                                     <div class="order-pin">
                                         <strong>${order.orderCode}</strong>
                                         <span class="order-cust">— ${order.customer.name}</span>
+                                    </div>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty liquidation}">
+                                <div class="form-field full">
+                                    <label>Đơn thanh lý nguồn</label>
+                                    <div class="order-pin">
+                                        <strong>${liquidation.liquidationCode}</strong>
+                                        <span class="order-cust">— Kho: ${liquidation.warehouseName}</span>
                                     </div>
                                 </div>
                             </c:if>
@@ -257,11 +202,9 @@
                             <div class="alert-body">
                                 <div class="alert-title">Tồn kho không đủ để xuất</div>
                                 <ul id="realtimeWarnList"></ul>
-                                <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
-                                    Bạn có thể <strong>Lưu nháp</strong> để xử lý sau, hoặc nhập thêm máy vào kho rồi tạo lại phiếu.
-                                </div>
                             </div>
                         </div>
+                        <c:if test="${not fromLiquidation}">
                         <div class="scanner-box" id="scannerBox">
                             <label>Quét barcode nhanh</label>
                             <div class="scanner-row">
@@ -274,6 +217,7 @@
                             <div id="scannerCamera"></div>
                             <small>Mỗi lần quét, hệ thống tự reserve serial nếu máy đang IN_STOCK tại kho đã chọn.</small>
                         </div>
+                        </c:if>
                         <c:if test="${fromOrder}">
                         <div class="order-req-banner">
                             <div class="req-title">Đơn hàng <strong><c:out value="${order.orderCode}"/></strong> yêu cầu:</div>
@@ -282,7 +226,35 @@
                             </c:forEach>
                         </div>
                         </c:if>
-                        <div class="order-counter"><c:if test="${fromOrder}">Đã nhập: <strong id="orderScannedCount">0</strong> / <strong>${expectedRows}</strong> serial &middot; </c:if>Tổng số dòng: <strong id="totalRowCount">0</strong></div>
+                        <c:if test="${not empty stockWarningsTransfer}">
+                            <div class="alert alert-warn" style="margin: 0 0 14px 0;">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                <div class="alert-body">
+                                    <div class="alert-title">Phiếu đề xuất đang thiếu máy tại kho nguồn</div>
+                                    <ul>
+                                        <c:forEach var="w" items="${stockWarningsTransfer}">
+                                            <li><strong>Thiếu:</strong> <c:out value="${w}"/></li>
+                                        </c:forEach>
+                                    </ul>
+                                    <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+                                        Vui lòng nhập thêm máy vào kho nguồn hoặc chờ phiếu đề xuất khác.
+                                    </div>
+                                </div>
+                            </div>
+                        </c:if>
+                        <c:if test="${fromTransfer}">
+                        <div class="order-req-banner">
+                            <div class="req-title">Phiếu đề xuất luân chuyển <strong><c:out value="${transferCode}"/></strong> yêu cầu:</div>
+                            <c:forEach var="td" items="${transferDetails}" varStatus="st">
+                            <div class="req-item">${st.count}. <c:out value="${td.generatorModel}"/> x <strong><c:out value="${td.quantity}"/></strong></div>
+                            </c:forEach>
+                        </div>
+                        </c:if>
+                        <div class="order-counter">
+                            <c:if test="${fromOrder}">Đã nhập: <strong id="orderScannedCount">0</strong> / <strong>${expectedRows}</strong> serial &middot; </c:if>
+                            <c:if test="${fromTransfer}">Đã nhập: <strong id="transferScannedCount">0</strong> / <strong>${expectedTransferRows}</strong> serial &middot; </c:if>
+                            Tổng số dòng: <strong id="totalRowCount">0</strong>
+                        </div>
                         <table class="detail-table">
                             <thead>
                                 <tr>
@@ -294,32 +266,25 @@
                                 </tr>
                             </thead>
                             <tbody id="detailBody">
-                                <tr>
-                                    <td class="col-num"><span class="row-num">1</span></td>
-                                    <td>
-                                        <select name="generatorId" required disabled onchange="onGeneratorChange(this)">
-                                            <option value="">-- Chọn kho trước --</option>
-                                        </select>
-                                        <div class="col-stock"></div>
-                                        <span class="field-error" style="display:none;"></span>
-                                    </td>
-                                    <td><select name="serialNumber" required disabled onchange="onSerialChange(this)" style="font-family: var(--font-mono); font-size: 12px;"><option value="">-- Chọn máy trước --</option></select><span class="field-error" style="display:none;"></span></td>
-                                    <td><input type="text" name="detailNote" placeholder="Ghi chú" /></td>
-                                    <td class="col-del">
-                                        <button type="button" class="row-del-btn" disabled onclick="removeRow(this)" title="Xoá dòng">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                        </button>
-                                    </td>
-                                </tr>
                             </tbody>
                         </table>
 
+<<<<<<< HEAD
                         <c:if test="${not fromOrder}">
+=======
+                        <c:if test="${not fromLiquidation}">
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
                         </c:if>
+<<<<<<< HEAD
+=======
+                        <c:if test="${fromLiquidation}">
+                        <button type="button" class="btn add-row-btn" id="addRowBtn" disabled style="display:none;">Thêm dòng</button>
+                        </c:if>
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     </section>
                 </div>
 
@@ -349,11 +314,28 @@
 <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
 <script>
     var ctx = window.APP_CTX;
+    function confirmCancelCreate() {
+        if (confirm('Bạn có chắc muốn huỷ tạo phiếu xuất?')) {
+            location.href = ctx + '/export-receipt';
+        }
+    }
     var generatorCache = [];
     var prefillDetails = [
+        <c:choose>
+        <c:when test="${fromLiquidation}">
+        <c:forEach var="r" items="${orderRowList}" varStatus="st">
+        <c:if test="${st.index > 0}">,</c:if>{generatorId: ${r.generatorId}, serialNumber: '<c:out value="${r.serialNumber}"/>', model: '<c:out value="${r.generatorModel}"/>', note: '<c:out value="${r.note}"/>'}
+        </c:forEach>
+        </c:when>
+        <c:when test="${not empty prefillDetailsJson}">
+        ${prefillDetailsJson}
+        </c:when>
+        <c:otherwise>
         <c:forEach var="d" items="${receipt.details}" varStatus="st">
         <c:if test="${st.index > 0}">,</c:if>{generatorId: ${d.generatorId}, note: '<c:out value="${d.note}"/>'}
         </c:forEach>
+        </c:otherwise>
+        </c:choose>
     ];
     var stockWarningGenIds = [
         <c:forEach var="genId" items="${stockWarningGenIds}" varStatus="st">
@@ -374,7 +356,50 @@
         </c:forEach>
     ];
     var isOrderMode = ${not empty fromOrder and fromOrder};
+    var isTransferMode = ${not empty fromTransfer and fromTransfer};
+    var isLiquidationMode = ${not empty fromLiquidation and fromLiquidation};
     var expectedRows = ${empty expectedRows ? 0 : expectedRows};
+<<<<<<< HEAD
+=======
+    var ORDER_REQUIREMENTS = [
+        <c:forEach var="req" items="${orderRequirements}" varStatus="st">
+        {genId: ${req.generatorId}, model: '<c:out value="${req.generatorModel}"/>', qty: ${req.quantity}}<c:if test="${!st.last}">,</c:if>
+        </c:forEach>
+    ];
+    var TRANSFER_REQUIREMENTS = [
+        <c:forEach var="d" items="${transferDetails}" varStatus="st">
+        {genId: ${d.generatorId}, qty: ${d.quantity}, model: '<c:out value="${d.generatorModel}"/>'}<c:if test="${!st.last}">,</c:if>
+        </c:forEach>
+    ];
+    var TRANSFER_PROGRESS = {};
+
+    function updateTransferCounter() {
+        if (!isTransferMode) return;
+        var scannedByGen = {};
+        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+            if (sel.value) scannedByGen[sel.value] = (scannedByGen[sel.value] || 0) + 1;
+        });
+        var total = 0;
+        TRANSFER_REQUIREMENTS.forEach(function (req) {
+            total += scannedByGen[String(req.genId)] || 0;
+        });
+        var el = document.getElementById('transferScannedCount');
+        if (el) el.textContent = total;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (prefillDetails && prefillDetails.length > 0) {
+            var whId = document.getElementById('warehouseSelect').value;
+            if (whId) {
+                onWarehouseChange();
+            }
+        }
+        if (window.SESSION_DATA && window.SESSION_DATA.message) {
+            toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+            window.SESSION_DATA = null;
+        }
+    });
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -452,7 +477,40 @@
             var genSelect = tr.querySelector('select[name="generatorId"]');
             var serialSelect = tr.querySelector('select[name="serialNumber"]');
             if (genSelect && serialSelect) {
-                populateSerialOptions(serialSelect, parseInt(genSelect.value, 10));
+                if (isLiquidationMode && p.serialNumber) {
+                    genSelect.innerHTML = '';
+                    var genOpt = document.createElement('option');
+                    genOpt.value = p.generatorId;
+                    genOpt.textContent = p.model || ('#' + p.generatorId);
+                    genSelect.appendChild(genOpt);
+                    genSelect.value = p.generatorId;
+                    genSelect.disabled = true;
+                    genSelect.removeAttribute('name');
+                    var genHidden = document.createElement('input');
+                    genHidden.type = 'hidden';
+                    genHidden.name = 'generatorId';
+                    genHidden.value = p.generatorId;
+                    genSelect.parentNode.appendChild(genHidden);
+
+                    serialSelect.innerHTML = '';
+                    var opt = document.createElement('option');
+                    opt.value = p.serialNumber;
+                    opt.textContent = p.serialNumber;
+                    serialSelect.appendChild(opt);
+                    serialSelect.value = p.serialNumber;
+                    serialSelect.disabled = true;
+                    serialSelect.removeAttribute('name');
+                    var snHidden = document.createElement('input');
+                    snHidden.type = 'hidden';
+                    snHidden.name = 'serialNumber';
+                    snHidden.value = p.serialNumber;
+                    serialSelect.parentNode.appendChild(snHidden);
+
+                    var delBtn = tr.querySelector('.row-del-btn');
+                    if (delBtn) delBtn.style.display = 'none';
+                } else {
+                    populateSerialOptions(serialSelect, parseInt(genSelect.value, 10));
+                }
             }
         });
         updateRowNumbers();
@@ -513,7 +571,6 @@
             }
         }
         serialSelect.disabled = false;
-        filterAlreadySelected();
     }
 
     function onSerialChange(sel) {
@@ -566,7 +623,6 @@
 
     function removeRow(btn) {
         var tbody = document.getElementById('detailBody');
-        if (tbody.querySelectorAll('tr').length <= 1) return;
         var row = btn.closest('tr');
         var invId = parseInt(row.getAttribute('data-inventory-id') || '0', 10);
         var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
@@ -581,7 +637,6 @@
                     }
                     if (data.emptyReceipt) {
                         document.getElementById('receiptIdField').value = '0';
-                        sessionStorage.removeItem('scanDraftReceiptId');
                     }
                     row.remove();
                     updateRowNumbers();
@@ -718,14 +773,87 @@
             toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy hoặc Lưu nháp để xử lý sau.', 'danger');
             return false;
         }
+<<<<<<< HEAD
+=======
+        if (isOrderMode && ORDER_REQUIREMENTS && ORDER_REQUIREMENTS.length > 0) {
+            var scannedByGen = {};
+            document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+                if (sel.value) {
+                    scannedByGen[sel.value] = (scannedByGen[sel.value] || 0) + 1;
+                }
+            });
+            var orderGenIds = {};
+            ORDER_REQUIREMENTS.forEach(function (req) {
+                orderGenIds[String(req.genId)] = true;
+            });
+            var mismatches = [];
+            ORDER_REQUIREMENTS.forEach(function (req) {
+                var scanned = scannedByGen[String(req.genId)] || 0;
+                if (scanned < req.qty) {
+                    mismatches.push('Thiếu ' + (req.qty - scanned) + ' ' + req.model);
+                } else if (scanned > req.qty) {
+                    mismatches.push('Thừa ' + (scanned - req.qty) + ' ' + req.model);
+                }
+            });
+            Object.keys(scannedByGen).forEach(function (genId) {
+                if (!orderGenIds[genId]) {
+                    mismatches.push('Có dòng máy không thuộc đơn (ID=' + genId + ')');
+                }
+            });
+            if (mismatches.length > 0) {
+                toast('Chưa khớp với đơn hàng: ' + mismatches.join('; '), 'danger');
+                return false;
+            }
+        }
+        if (isTransferMode && TRANSFER_REQUIREMENTS && TRANSFER_REQUIREMENTS.length > 0) {
+            var scannedByGenT = {};
+            document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+                if (sel.value) {
+                    scannedByGenT[sel.value] = (scannedByGenT[sel.value] || 0) + 1;
+                }
+            });
+            var transferGenIds = {};
+            TRANSFER_REQUIREMENTS.forEach(function (req) {
+                transferGenIds[String(req.genId)] = true;
+            });
+            var mismatchesT = [];
+            TRANSFER_REQUIREMENTS.forEach(function (req) {
+                var scanned = scannedByGenT[String(req.genId)] || 0;
+                if (scanned < req.qty) {
+                    mismatchesT.push('Thiếu ' + (req.qty - scanned) + ' ' + req.model);
+                } else if (scanned > req.qty) {
+                    mismatchesT.push('Thừa ' + (scanned - req.qty) + ' ' + req.model);
+                }
+            });
+            Object.keys(scannedByGenT).forEach(function (genId) {
+                if (!transferGenIds[genId]) {
+                    mismatchesT.push('Có dòng máy không thuộc phiếu đề xuất (ID=' + genId + ')');
+                }
+            });
+            if (mismatchesT.length > 0) {
+                toast('Chưa khớp với phiếu đề xuất: ' + mismatchesT.join('; '), 'danger');
+                return false;
+            }
+        }
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         sessionStorage.removeItem('scanDraftReceiptId');
         return valid;
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        if (prefillDetails && prefillDetails.length > 0) {
-            var whId = document.getElementById('warehouseSelect').value;
-            if (whId) {
+        if (isLiquidationMode) {
+            var whSelect = document.getElementById('warehouseSelect');
+            if (whSelect) {
+                generatorCache = [];
+                var whId = parseInt(whSelect.value, 10);
+                whSelect.dataset.whId = whId;
+            }
+            applyPrefill();
+            var addBtn = document.getElementById('addRowBtn');
+            if (addBtn) addBtn.style.display = 'none';
+        } else if (prefillDetails && prefillDetails.length > 0) {
+            var whId2 = document.getElementById('warehouseSelect').value;
+            if (whId2) {
                 onWarehouseChange();
             }
         }
@@ -812,13 +940,17 @@
         var totalRows = document.querySelectorAll('#detailBody tr').length;
         var elTotal = document.getElementById('totalRowCount');
         if (elTotal) elTotal.textContent = totalRows;
-        if (!isOrderMode) return;
-        var count = 0;
-        document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
-            if (sel.value) count++;
-        });
-        var el = document.getElementById('orderScannedCount');
-        if (el) el.textContent = count;
+        if (isOrderMode) {
+            var count = 0;
+            document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
+                if (sel.value) count++;
+            });
+            var el = document.getElementById('orderScannedCount');
+            if (el) el.textContent = count;
+        }
+        if (isTransferMode && typeof updateTransferCounter === 'function') {
+            updateTransferCounter();
+        }
     }
 
     function onExportScanned(serial) {
@@ -828,32 +960,46 @@
         if (exportScannerLocked) return;
         exportScannerLocked = true;
 
-        var url = ctx + '/export-receipt?action=addScannedSerial'
-                + '&warehouseId=' + encodeURIComponent(whId)
-                + '&serialNumber=' + encodeURIComponent(serial)
-                + (currentExportReceiptId ? '&receiptId=' + currentExportReceiptId : '');
+        var url = ctx + '/inventory-lookup?action=scan'
+                + '&serial=' + encodeURIComponent(serial)
+                + '&warehouseId=' + encodeURIComponent(whId);
 
-        fetch(url, { method: 'POST' })
+        var focusScan = function () {
+            var scanEl = document.getElementById('scanBox');
+            if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+        };
+
+        fetch(url)
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 exportScannerLocked = false;
-                if (!data || !data.success) {
-                    toast((data && data.message) ? data.message : 'Lỗi khi quét', 'danger');
+                if (!data || !data.found) {
+                    toast((data && data.message) ? data.message : 'Serial không tồn tại trong hệ thống', 'danger');
+                    focusScan();
                     return;
                 }
-                currentExportReceiptId = data.receiptId || currentExportReceiptId;
-                var receiptIdField = document.getElementById('receiptIdField');
-                if (receiptIdField && data.receiptId) {
-                    receiptIdField.value = data.receiptId;
-                    sessionStorage.setItem('scanDraftReceiptId', data.receiptId);
+                if (data.inTargetWarehouse === false) {
+                    toast('Serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
+                    focusScan();
+                    return;
+                }
+
+                // Check duplicate serial in existing rows
+                var dupFound = false;
+                document.querySelectorAll('#detailBody select[name="serialNumber"]').forEach(function (select) {
+                    if (select.value && select.value === data.serialNumber) {
+                        dupFound = true;
+                    }
+                });
+                if (dupFound) {
+                    toast('Serial "' + data.serialNumber + '" đã có trong phiếu, không thể quét trùng.', 'danger');
+                    focusScan();
+                    return;
                 }
 
                 var tr = buildEmptyRow();
                 if (data.inventoryId) {
                     tr.setAttribute('data-inventory-id', data.inventoryId);
-                }
-                if (data.receiptId) {
-                    tr.setAttribute('data-receipt-id', data.receiptId);
                 }
                 var sel = tr.querySelector('select[name="generatorId"]');
                 if (sel && data.generatorId) {
@@ -887,9 +1033,8 @@
                 tbody.appendChild(tr);
                 updateRowNumbers();
                 updateOrderCounter();
-                toast('Đã reserve serial ' + data.serialNumber, 'success');
-                var scanEl = document.getElementById('scanBox');
-                if (scanEl) { scanEl.value = ''; scanEl.focus(); }
+                toast('Đã thêm serial ' + data.serialNumber, 'success');
+                focusScan();
             })
             .catch(function (err) {
                 exportScannerLocked = false;
@@ -920,112 +1065,13 @@
         if (isOrderMode) {
             updateOrderCounter();
         }
-        (function () {
-            var orphanedId = sessionStorage.getItem('scanDraftReceiptId');
-            var currentId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
-            if (orphanedId && currentId === 0) {
-                var id = parseInt(orphanedId, 10);
-                if (id > 0 && window.ExportScannerActions) {
-                    window.ExportScannerActions.discardDraft(id)
-                        .then(function () { sessionStorage.removeItem('scanDraftReceiptId'); })
-                        .catch(function () { sessionStorage.removeItem('scanDraftReceiptId'); });
-                } else { sessionStorage.removeItem('scanDraftReceiptId'); }
-            }
-        })();
     });
 
-    var createReceiptLock = false;
-    function confirmCancelCreate() {
-        var ctx = window.APP_CTX;
-        var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
-        if (!receiptId || !window.ExportScannerActions) {
-            window.location.href = ctx + '/export-receipt';
-            return;
-        }
-        if (createReceiptLock) return;
-        window.ExportScannerActions.confirmAction({
-            modalId: 'discardDraftModalCreate',
-            title: 'Huỷ phiếu nháp',
-            body: 'Phiếu nháp sẽ bị huỷ và tất cả serial đã quét sẽ được trả về kho. Hành động này không thể hoàn tác.',
-            confirmLabel: 'Huỷ phiếu nháp',
-            danger: true
-        }).then(function () {
-            createReceiptLock = true;
-            return window.ExportScannerActions.discardDraft(receiptId);
-        }).then(function (data) {
-            createReceiptLock = false;
-            if (!data || !data.success) {
-                toast((data && data.message) ? data.message : 'Lỗi khi huỷ phiếu', 'danger');
-                return;
-            }
-            toast(data.message || 'Đã huỷ phiếu nháp', 'success');
-            sessionStorage.removeItem('scanDraftReceiptId');
-            setTimeout(function () {
-                window.location.href = ctx + '/export-receipt';
-            }, 600);
-        }).catch(function (err) {
-            createReceiptLock = false;
-            if (err && err.message === 'cancelled') return;
-            console.error(err);
-            toast('Lỗi kết nối: ' + err.message, 'danger');
-        });
-    }
 
-    (function () {
-        var prevWarehouse = document.getElementById('warehouseSelect').value;
-        var whSelect = document.getElementById('warehouseSelect');
-        if (!whSelect) return;
-        whSelect.addEventListener('change', function () {
-            stopCamera();
-            var newWh = whSelect.value;
-            var receiptId = parseInt(document.getElementById('receiptIdField').value || '0', 10);
-            if (newWh !== prevWarehouse && receiptId > 0 && window.ExportScannerActions) {
-                window.ExportScannerActions.confirmAction({
-                    modalId: 'changeWarehouseModalCreate',
-                    title: 'Đổi kho sẽ huỷ phiếu nháp',
-                    body: 'Bạn đang có phiếu nháp với các serial đã reserve. Đổi kho sẽ huỷ phiếu hiện tại và giải phóng các serial đã quét. Tiếp tục?',
-                    confirmLabel: 'Đổi kho và huỷ phiếu cũ',
-                    danger: true
-                }).then(function () {
-                    return window.ExportScannerActions.discardDraft(receiptId);
-                }).then(function (data) {
-                    if (!data || !data.success) {
-                        toast((data && data.message) ? data.message : 'Lỗi', 'danger');
-                        whSelect.value = prevWarehouse;
-                        return;
-                    }
-                    document.getElementById('receiptIdField').value = '0';
-                    currentExportReceiptId = 0;
-                    sessionStorage.removeItem('scanDraftReceiptId');
-                    var tbody = document.getElementById('detailBody');
-                    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-                    tbody.appendChild(buildEmptyRow());
-                    updateRowNumbers();
-                    updateOrderCounter();
-                    prevWarehouse = newWh;
-                    onWarehouseChange();
-                    toast('Đã huỷ phiếu nháp và đổi kho', 'success');
-                }).catch(function (err) {
-                    if (err && err.message === 'cancelled') {
-                        whSelect.value = prevWarehouse;
-                        return;
-                    }
-                    console.error(err);
-                    toast('Lỗi kết nối: ' + err.message, 'danger');
-                });
-            } else {
-                prevWarehouse = newWh;
-            }
-        });
-    })();
+
+
 
     window.addEventListener('beforeunload', function () { stopCamera(); });
-    window.addEventListener('pagehide', function () {
-        var id = sessionStorage.getItem('scanDraftReceiptId');
-        if (id) {
-            navigator.sendBeacon(ctx + '/export-receipt?action=discardDraft&receiptId=' + encodeURIComponent(id));
-        }
-    });
 </script>
 </body>
 </html>

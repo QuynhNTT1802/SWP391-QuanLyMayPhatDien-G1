@@ -28,6 +28,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,6 +38,8 @@ import java.util.Set;
 
 @WebServlet(name = "OrderController", urlPatterns = {"/order"})
 public class OrderController extends HttpServlet {
+
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -115,6 +119,12 @@ public class OrderController extends HttpServlet {
                 case "requestRevision":
                     requestRevisionOrder(request, response);
                     break;
+                case "quickCreateCustomer":
+                    quickCreateCustomer(request, response);
+                    break;
+                case "delete":
+                    deleteOrder(request, response);
+                    break;
                 default:
                     doGet(request, response);
                     break;
@@ -138,11 +148,11 @@ public class OrderController extends HttpServlet {
         boolean canViewAllOrders = permissions != null && permissions.contains("orders.approve");
         int userId = canViewAllOrders ? 0 : user.getId();
 
-        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId);
-        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId);
-        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId);
-        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId);
-        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId);
+        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId, user.getId());
+        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId, user.getId());
+        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId, user.getId());
+        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId, user.getId());
+        List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId, user.getId());
 
         int page = 1;
         int pageSize = 10;
@@ -335,6 +345,16 @@ public class OrderController extends HttpServlet {
             request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         }
 
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        boolean isOwner = loggedUser != null && order.getCreatedBy() == loggedUser.getId();
+
+        // If deleted and not the creator, redirect
+        if (GlobalUtils.STATUS_DELETED.equals(order.getStatus()) && !isOwner) {
+            setMsg(session, "Đơn hàng đã bị xoá.", "danger");
+            response.sendRedirect(request.getContextPath() + "/order?action=list");
+            return;
+        }
+
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
         request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
@@ -342,6 +362,21 @@ public class OrderController extends HttpServlet {
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
+<<<<<<< HEAD
+=======
+        request.setAttribute("isOwner", isOwner);
+
+        int totalQty = 0;
+        int totalRows = 0;
+        if (details != null) {
+            totalRows = details.size();
+            for (OrderDetail d : details) {
+                totalQty += d.getQuantity();
+            }
+        }
+        request.setAttribute("totalQty", totalQty);
+        request.setAttribute("totalRows", totalRows);
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         request.setAttribute("userPermissions", perms);
         request.getRequestDispatcher("/view/order/detail.jsp").forward(request, response);
     }
@@ -377,8 +412,102 @@ public class OrderController extends HttpServlet {
         request.setAttribute("phases", phases);
         request.setAttribute("top4Customers", top4Customers);
         request.setAttribute("stockMap", stockMap);
+        request.setAttribute("canCreateCustomer", true);
 
         request.getRequestDispatcher("/view/order/create.jsp").forward(request, response);
+    }
+
+    private void quickCreateCustomer(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
+            return;
+        }
+
+        String name = request.getParameter("name");
+        String phone = request.getParameter("phone");
+        String email = request.getParameter("email");
+        String address = request.getParameter("address");
+        String companyName = request.getParameter("companyName");
+        String typeIdStr = request.getParameter("customerTypeId");
+
+        if (name == null || name.trim().isEmpty()) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập tên khách hàng\"}");
+            return;
+        }
+        if (phone == null || phone.trim().isEmpty()) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập số điện thoại\"}");
+            return;
+        }
+
+        CustomerDAO custDAO = new CustomerDAO();
+        if (custDAO.isPhoneExists(phone.trim(), null)) {
+            Customer existing = custDAO.findByPhone(phone.trim());
+            if (existing != null) {
+                response.getWriter().write("{\"ok\":true,\"existing\":true,\"id\":" + existing.getId()
+                        + ",\"name\":\"" + escapeJson(existing.getName())
+                        + "\",\"phone\":\"" + escapeJson(existing.getPhone())
+                        + "\",\"email\":\"" + escapeJson(existing.getEmail())
+                        + "\",\"address\":\"" + escapeJson(existing.getAddress())
+                        + "\",\"companyName\":\"" + escapeJson(existing.getCompanyName())
+                        + "\",\"customerTypeId\":" + existing.getCustomerTypeId() + "}");
+                return;
+            }
+        }
+
+        Customer c = new Customer();
+        c.setName(name.trim());
+        c.setPhone(phone.trim());
+        c.setEmail(email != null && !email.trim().isEmpty() ? email.trim() : null);
+        c.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
+        c.setCompanyName(companyName != null && !companyName.trim().isEmpty() ? companyName.trim() : null);
+        if (typeIdStr != null && !typeIdStr.trim().isEmpty()) {
+            try {
+                c.setCustomerTypeId(Integer.parseInt(typeIdStr.trim()));
+            } catch (NumberFormatException ignore) {}
+        }
+        c.setStatus("active");
+        User u = (User) session.getAttribute("loggedUser");
+        if (u != null) {
+            c.setCreatedBy(u.getId());
+        }
+
+        int newId = custDAO.insert(c);
+        if (newId <= 0) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Không thể lưu khách hàng\"}");
+            return;
+        }
+
+        response.getWriter().write("{\"ok\":true,\"existing\":false,\"id\":" + newId
+                + ",\"name\":\"" + escapeJson(name.trim())
+                + "\",\"phone\":\"" + escapeJson(phone.trim())
+                + "\",\"email\":\"" + escapeJson(email != null ? email.trim() : "")
+                + "\",\"address\":\"" + escapeJson(address != null ? address.trim() : "")
+                + "\",\"companyName\":\"" + escapeJson(companyName != null ? companyName.trim() : "")
+                + "\",\"customerTypeId\":" + (typeIdStr != null && !typeIdStr.trim().isEmpty() ? typeIdStr.trim() : "0") + "}");
+    }
+
+    private void deleteOrder(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+        User user = (User) session.getAttribute("loggedUser");
+        if (user == null) {
+            response.sendRedirect(request.getContextPath() + "/authen?action=login");
+            return;
+        }
+
+        int id = Integer.parseInt(request.getParameter("id"));
+        SaleOrderDAO saleorderdao = new SaleOrderDAO();
+        boolean ok = saleorderdao.deleteByCreator(id, user.getId());
+
+        if (ok) {
+            setMsg(session, "Đã xoá đơn hàng.", "success");
+        } else {
+            setMsg(session, "Không thể xoá: đơn không ở trạng thái chờ duyệt hoặc không phải người tạo.", "danger");
+        }
+        response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
 
     private void createOrder(HttpServletRequest request, HttpServletResponse response)
@@ -557,8 +686,25 @@ public class OrderController extends HttpServlet {
                 d.setOrderId(newId);
                 orderdetaildao.insert(d);
             }
+<<<<<<< HEAD
             session.setAttribute("message", "Tạo đơn hàng thành công! Mã đơn: " + order.getOrderCode());
             session.setAttribute("messageType", "success");
+=======
+            setMsg(session, "Tạo đơn hàng thành công! Mã đơn: " + order.getOrderCode(), "success");
+
+            List<User> approvers = userDAO.findUsersByPermission("orders", "approve");
+            for (User u : approvers) {
+                NotificationService.send(
+                    u.getId(),
+                    "Đơn hàng " + order.getOrderCode() + " chờ duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo đơn hàng cần duyệt.",
+                    request.getContextPath() + "/order?action=detail&id=" + newId,
+                    "order",
+                    newId
+                );
+            }
+
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         } else {
             session.setAttribute("message", "Tạo đơn hàng thất bại.");
@@ -807,10 +953,27 @@ public class OrderController extends HttpServlet {
             }
         }
 
+        SaleOrder order = saleorderdao.findById(id);
         boolean success = saleorderdao.approveOrder(id, user.getId());
 
         if (success) {
+<<<<<<< HEAD
             request.getSession().setAttribute("message", "Đã duyệt đơn hàng.");
+=======
+            setMsg(request.getSession(), "Đã duyệt đơn hàng.", "success");
+
+            int creatorId = order != null ? order.getCreatedBy() : 0;
+            if (creatorId > 0) {
+                NotificationService.send(
+                    creatorId,
+                    "Đơn hàng " + order.getOrderCode() + " đã được duyệt",
+                    "Đơn hàng " + order.getOrderCode() + " đã được " + user.getName() + " duyệt.",
+                    request.getContextPath() + "/order?action=detail&id=" + id,
+                    "order",
+                    id
+                );
+            }
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         } else {
             request.getSession().setAttribute("message", "Duyệt thất bại (đơn không ở trạng thái chờ).");
         }
@@ -849,10 +1012,27 @@ public class OrderController extends HttpServlet {
             return;
         }
 
+        SaleOrder order = saleorderdao.findById(id);
         boolean success = saleorderdao.rejectOrder(id, user.getId(), reason);
 
         if (success) {
+<<<<<<< HEAD
             request.getSession().setAttribute("message", "Đã từ chối đơn hàng.");
+=======
+            setMsg(request.getSession(), "Đã từ chối đơn hàng.", "success");
+
+            int creatorId = order != null ? order.getCreatedBy() : 0;
+            if (creatorId > 0) {
+                NotificationService.send(
+                    creatorId,
+                    "Đơn hàng " + order.getOrderCode() + " bị từ chối",
+                    "Đơn hàng " + order.getOrderCode() + " bị " + user.getName() + " từ chối (lý do: " + reason + ").",
+                    request.getContextPath() + "/order?action=detail&id=" + id,
+                    "order",
+                    id
+                );
+            }
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         } else {
             request.getSession().setAttribute("message", "Từ chối thất bại.");
         }
@@ -917,4 +1097,21 @@ public class OrderController extends HttpServlet {
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
+<<<<<<< HEAD
+=======
+
+    private void setMsg(HttpSession session, String message, String type) {
+        session.setAttribute("message", message);
+        session.setAttribute("messageType", type);
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 }

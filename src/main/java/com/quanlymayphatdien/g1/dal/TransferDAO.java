@@ -37,7 +37,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "  u1.name AS created_by_name, "
                 + "  u2.name AS manager_reviewed_by_name, "
                 + "  u3.name AS ceo_reviewed_by_name, "
-                + "  u4.name AS final_reviewed_by_name "
+                + "  u4.name AS final_reviewed_by_name, "
+                + "  rexp.receipt_code AS export_receipt_code, "
+                + "  rimp.receipt_code AS import_receipt_code "
                 + "FROM transfer t "
                 + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
                 + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
@@ -45,6 +47,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
                 + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
                 + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+                + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
                 + "ORDER BY t.created_at DESC";
         try {
             connection = getConnection();
@@ -72,7 +76,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "  u1.name AS created_by_name, "
                 + "  u2.name AS manager_reviewed_by_name, "
                 + "  u3.name AS ceo_reviewed_by_name, "
-                + "  u4.name AS final_reviewed_by_name "
+                + "  u4.name AS final_reviewed_by_name, "
+                + "  rexp.receipt_code AS export_receipt_code, "
+                + "  rimp.receipt_code AS import_receipt_code "
                 + "FROM transfer t "
                 + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
                 + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
@@ -80,6 +86,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
                 + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
                 + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+                + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
                 + "WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
         if (status != null && !status.isEmpty()) {
@@ -175,11 +183,135 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         } finally {
             closeResources();
         }
+<<<<<<< HEAD
         for (String s : new String[]{"DRAFT", "PENDING_MANAGER", "PENDING_CEO",
             "COMPLETED", "REJECTED", "CANCELLED"}) {
+=======
+        for (String s : new String[]{"PENDING_CEO", "APPROVED", "EXPORTED",
+            "COMPLETED", "REJECTED"}) {
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             result.putIfAbsent(s, 0);
         }
         return result;
+    }
+
+    public List<Transfer> findReadyForExport(int scopedWarehouseId, int userId) {
+        List<Transfer> list = new ArrayList<>();
+        String sql = "SELECT t.*, "
+                + "  ws.name AS source_warehouse_name, "
+                + "  wd.name AS dest_warehouse_name, "
+                + "  u1.name AS created_by_name, "
+                + "  u3.name AS ceo_reviewed_by_name, "
+                + "  u4.name AS final_reviewed_by_name, "
+                + "  rexp.receipt_code AS export_receipt_code, "
+                + "  rimp.receipt_code AS import_receipt_code "
+                + "FROM transfer t "
+                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+                + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
+                + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+                + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
+                + "WHERE t.status = 'APPROVED' AND t.export_receipt_id IS NULL "
+                + "AND (t.source_warehouse_id = ? OR t.created_by = ?) "
+                + "ORDER BY t.created_at DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, scopedWarehouseId > 0 ? scopedWarehouseId : -1);
+            if (scopedWarehouseId > 0) {
+                statement.setInt(2, userId);
+            } else {
+                statement.setInt(2, -1);
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public List<Transfer> findReadyForImport(int scopedWarehouseId, int userId) {
+        List<Transfer> list = new ArrayList<>();
+        String sql = "SELECT t.*, "
+                + "  ws.name AS source_warehouse_name, "
+                + "  wd.name AS dest_warehouse_name, "
+                + "  u1.name AS created_by_name, "
+                + "  u3.name AS ceo_reviewed_by_name, "
+                + "  u4.name AS final_reviewed_by_name, "
+                + "  rexp.receipt_code AS export_receipt_code, "
+                + "  rimp.receipt_code AS import_receipt_code "
+                + "FROM transfer t "
+                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+                + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
+                + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+                + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
+                + "WHERE t.status = 'EXPORTED' AND t.import_receipt_id IS NULL "
+                + "AND (t.dest_warehouse_id = ?) "
+                + "ORDER BY t.created_at DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, scopedWarehouseId > 0 ? scopedWarehouseId : -1);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public Transfer findByExportReceiptId(int exportReceiptId) {
+        String sql = "SELECT t.*, "
+                + "  ws.name AS source_warehouse_name, "
+                + "  wd.name AS dest_warehouse_name, "
+                + "  u1.name AS created_by_name, "
+                + "  u3.name AS ceo_reviewed_by_name, "
+                + "  u4.name AS final_reviewed_by_name, "
+                + "  rexp.receipt_code AS export_receipt_code, "
+                + "  rimp.receipt_code AS import_receipt_code "
+                + "FROM transfer t "
+                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+                + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
+                + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+                + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
+                + "WHERE t.export_receipt_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, exportReceiptId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Transfer t = getFromResultSet(resultSet);
+                TransferDetailDAO dDao = new TransferDetailDAO();
+                t.setDetails(dDao.findByTransferId(t.getTransferId()));
+                return t;
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return null;
     }
 
     public Transfer findById(int id) {
@@ -189,7 +321,9 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "  u1.name AS created_by_name, "
                 + "  u2.name AS manager_reviewed_by_name, "
                 + "  u3.name AS ceo_reviewed_by_name, "
-                + "  u4.name AS final_reviewed_by_name "
+                + "  u4.name AS final_reviewed_by_name, "
+                + "  rexp.receipt_code AS export_receipt_code, "
+                + "  rimp.receipt_code AS import_receipt_code "
                 + "FROM transfer t "
                 + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
                 + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
@@ -197,6 +331,8 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "LEFT JOIN user u2 ON t.manager_reviewed_by = u2.id "
                 + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
                 + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+                + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+                + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
                 + "WHERE t.transfer_id = ?";
         try {
             connection = getConnection();
@@ -299,6 +435,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return false;
     }
 
+<<<<<<< HEAD
     public boolean submitForReview(int transferId, int userId) {
         String sql = "UPDATE transfer SET status = 'PENDING_MANAGER', updated_at = ? "
                 + "WHERE transfer_id = ? AND status = 'DRAFT' AND created_by = ?";
@@ -344,6 +481,16 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         String sql = "UPDATE transfer SET status = 'PENDING_MANAGER', "
                 + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ? "
                 + "WHERE transfer_id = ? AND status = 'PENDING_CEO' AND final_reviewed_at IS NULL";
+=======
+    public boolean ceApproveForward(int transferId, int ceoId, String note) {
+        return ceApprove(transferId, ceoId, note);
+    }
+
+    public boolean ceApprove(int transferId, int ceoId, String note) {
+        String sql = "UPDATE transfer SET status = 'APPROVED', "
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_CEO'";
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -419,6 +566,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return false;
     }
 
+<<<<<<< HEAD
     public boolean setStatusCompleted(int transferId, int finalReviewerId) {
         String sql = "UPDATE transfer SET status = 'COMPLETED', "
                 + "final_reviewed_by = ?, final_reviewed_at = ?, "
@@ -431,6 +579,71 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             statement.setInt(1, finalReviewerId);
             statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
             statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+=======
+    public boolean ceReject(int transferId, int ceoId, String note) {
+        String sql = "UPDATE transfer SET status = 'REJECTED', "
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_CEO'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, ceoId);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                statement.setString(3, note.trim());
+            } else {
+                statement.setNull(3, Types.VARCHAR);
+            }
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(5, transferId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    /**
+     * Kho nguon tao phieu xuat tu phieu de xuat. APPROVED -> EXPORTED.
+     */
+    public boolean markExportReceiptCreated(int transferId, int exportReceiptId) {
+        String sql = "UPDATE transfer SET status = 'EXPORTED', "
+                + "export_receipt_id = ?, executed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'APPROVED' AND export_receipt_id IS NULL";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, exportReceiptId);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(4, transferId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    /**
+     * Kho dich tao phieu nhap tu phieu xuat. EXPORTED -> COMPLETED.
+     */
+    public boolean markImportReceiptCreated(int transferId, int importReceiptId, int finalUserId) {
+        String sql = "UPDATE transfer SET status = 'COMPLETED', "
+                + "import_receipt_id = ?, final_reviewed_by = ?, final_reviewed_at = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'EXPORTED' AND import_receipt_id IS NULL";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, importReceiptId);
+            statement.setInt(2, finalUserId);
+            statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
             statement.setInt(5, transferId);
             return statement.executeUpdate() > 0;
@@ -464,6 +677,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
     }
 
     public String executeTransfer(int transferId, int finalReviewerId) {
+<<<<<<< HEAD
         Connection conn = null;
         try {
             conn = getConnection();
@@ -669,6 +883,10 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             } catch (SQLException ignored) {
             }
         }
+=======
+        throw new UnsupportedOperationException("executeTransfer() khong con su dung trong luong moi. "
+                + "Vui long tao phieu xuat/nhap rieng.");
+>>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
     }
 
     @Override
@@ -719,6 +937,20 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             t.setFinalReviewedBy(frb);
         }
         try {
+            int exr = rs.getInt("export_receipt_id");
+            if (!rs.wasNull()) {
+                t.setExportReceiptId(exr);
+            }
+        } catch (SQLException ignored) {
+        }
+        try {
+            int imr = rs.getInt("import_receipt_id");
+            if (!rs.wasNull()) {
+                t.setImportReceiptId(imr);
+            }
+        } catch (SQLException ignored) {
+        }
+        try {
             t.setSourceWarehouseName(rs.getString("source_warehouse_name"));
         } catch (SQLException ignored) {
         }
@@ -740,6 +972,14 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         }
         try {
             t.setFinalReviewedByName(rs.getString("final_reviewed_by_name"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            t.setExportReceiptCode(rs.getString("export_receipt_code"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            t.setImportReceiptCode(rs.getString("import_receipt_code"));
         } catch (SQLException ignored) {
         }
         t.setNote(rs.getString("note"));
