@@ -127,6 +127,9 @@ public class SecurityFilter implements Filter {
                             "create", "transfers.create",
                             "ce_approve", "transfers.approve_ceo",
                             "ce_reject", "transfers.approve_ceo",
+                            "ce_request_revision", "transfers.approve_ceo",
+                            "edit_submit", "transfers.create",
+                            "edit_view", "transfers.create",
                             "dest_accept", "transfers.approve_dest",
                             "dest_reject", "transfers.approve_dest"),
                     "transfers.view")
