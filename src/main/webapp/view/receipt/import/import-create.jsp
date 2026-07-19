@@ -32,7 +32,7 @@
                         <a class="btn" href="${pageContext.request.contextPath}/import-receipt">Huỷ</a>
                         <button type="submit" id="submitBtn" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-                            Gửi phiếu
+                            Lưu phiếu
                         </button>
             </div>
         </header>
@@ -186,7 +186,6 @@
                                 <input type="text" id="importScanBox" autocomplete="off"
                                        placeholder="Chọn mẫu máy ở trên, sau đó đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
                             </div>
-                            <small id="importScanStatus">Chọn mẫu máy phía trên, sau đó quét serial vào đây.</small>
                         </div>
                     </section>
 
@@ -205,12 +204,6 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l5-5-5 5M12 3v12"/></svg>
                                     Nhập từ Excel
                                 </button>
-                                <c:if test="${fromPurchaseOrder}">
-                                    <span class="po-lock-badge" style="background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                        Đã khóa từ PO ${purchaseOrder.poCode}
-                                    </span>
-                                </c:if>
                             </div>
                         </div>
                         <c:if test="${fromPurchaseOrder}">
@@ -219,7 +212,6 @@
                                 <div class="alert-body">
                                     <div class="alert-title">Phiếu nhập từ Purchase Order - danh sách máy đã được cố định</div>
                                     <div>
-                                        Bạn <strong>chỉ cần nhập serial</strong> cho từng máy. Không thể thay đổi kho, máy, thêm hoặc xoá dòng.
                                         Tổng cần nhập: <strong>${expectedRows} serial</strong>.
                                     </div>
                                 </div>

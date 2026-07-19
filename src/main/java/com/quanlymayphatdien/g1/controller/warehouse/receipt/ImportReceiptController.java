@@ -482,24 +482,34 @@ public class ImportReceiptController extends HttpServlet {
         }
 
         List<String> serialList = new ArrayList<>();
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
         List<String> duplicateSerials = new ArrayList<>();
         List<String> blockedSerials = new ArrayList<>();
+        List<Integer> emptyRows = new ArrayList<>();
+        List<Integer> tooLongRows = new ArrayList<>();
         for (int i = 0; i < rawRows.size(); i++) {
             Map<String, String> raw = rawRows.get(i);
             String serial = raw.getOrDefault(ReceiptExcelSupport.COL_SERIAL, "").trim();
-            if (serial.isEmpty()) continue;
+            int rowNum = i + 2;
+            if (serial.isEmpty()) {
+                emptyRows.add(rowNum);
+                continue;
+            }
             if (serial.length() > MAX_SERIAL_LENGTH) {
-                serialList.add(serial);
-                blockedSerials.add("Dòng " + (i + 2) + ": serial quá " + MAX_SERIAL_LENGTH + " ký tự");
+                tooLongRows.add(rowNum);
+                blockedSerials.add("Dòng " + rowNum + ": serial quá " + MAX_SERIAL_LENGTH + " ký tự");
                 continue;
             }
-            if (!seen.add(serial)) {
-                duplicateSerials.add("Dòng " + (i + 2) + ": serial \"" + serial + "\" bị trùng trong file");
+            Integer firstRow = firstSeenRow.get(serial);
+            if (firstRow != null) {
+                duplicateSerials.add("Dòng " + firstRow + " và dòng " + rowNum
+                        + ": serial \"" + serial + "\" bị trùng trong file");
                 continue;
             }
+            firstSeenRow.put(serial, rowNum);
             if (inventoryDAO.isSerialBlocked(serial)) {
-                blockedSerials.add("Dòng " + (i + 2) + ": serial \"" + serial + "\" đã tồn tại trong hệ thống");
+                blockedSerials.add("Dòng " + rowNum + ": serial \"" + serial + "\" đã tồn tại trong hệ thống");
+                continue;
             }
             serialList.add(serial);
         }
@@ -508,22 +518,29 @@ public class ImportReceiptController extends HttpServlet {
         if (isAjax) {
             response.setContentType("application/json;charset=UTF-8");
             Map<String, Object> body = new LinkedHashMap<>();
-            if (serialList.size() != expectedCount) {
-                body.put("success", false);
-                body.put("message", "Số serial trong file (" + serialList.size()
-                        + ") không khớp với PO (yêu cầu " + expectedCount + ")");
-                new Gson().toJson(body, response.getWriter());
-                return;
-            }
             if (!duplicateSerials.isEmpty()) {
                 body.put("success", false);
                 body.put("message", "Có serial trùng trong file: " + String.join("; ", duplicateSerials));
+                body.put("duplicateSerials", duplicateSerials);
+                new Gson().toJson(body, response.getWriter());
+                return;
+            }
+            if (serialList.size() != expectedCount) {
+                body.put("success", false);
+                body.put("message", buildSerialCountMismatchMessage(
+                        serialList.size(), expectedCount,
+                        emptyRows, blockedSerials));
+                body.put("validCount", serialList.size());
+                body.put("expectedCount", expectedCount);
+                body.put("emptyRows", emptyRows);
+                body.put("blockedSerials", blockedSerials);
                 new Gson().toJson(body, response.getWriter());
                 return;
             }
             if (!blockedSerials.isEmpty()) {
                 body.put("success", false);
                 body.put("message", "Có serial không hợp lệ: " + String.join("; ", blockedSerials));
+                body.put("blockedSerials", blockedSerials);
                 new Gson().toJson(body, response.getWriter());
                 return;
             }
@@ -535,13 +552,15 @@ public class ImportReceiptController extends HttpServlet {
             return;
         }
 
-        if (serialList.size() != expectedCount) {
-            String msg = "Số serial trong file (" + serialList.size() + ") không khớp với PO (yêu cầu " + expectedCount + ")";
+        if (!duplicateSerials.isEmpty()) {
+            String msg = "Có serial trùng trong file: " + String.join("; ", duplicateSerials);
             forwardBackToCreate(request, response, msg, "danger", warehouseId, reasonId, note);
             return;
         }
-        if (!duplicateSerials.isEmpty()) {
-            String msg = "Có serial trùng trong file: " + String.join("; ", duplicateSerials);
+        if (serialList.size() != expectedCount) {
+            String msg = buildSerialCountMismatchMessage(
+                    serialList.size(), expectedCount,
+                    emptyRows, blockedSerials);
             forwardBackToCreate(request, response, msg, "danger", warehouseId, reasonId, note);
             return;
         }
@@ -1193,8 +1212,26 @@ public class ImportReceiptController extends HttpServlet {
             int poId = parseId(poIdStr);
             if (poId > 0) {
                 PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
-                if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
-                    poDetails = po.getDetails();
+                if (po == null) {
+                    redirectWithToast(request, response,
+                            "Phiếu mua #" + poId + " không tồn tại", "danger",
+                            "/import-receipt?action=create&poId=" + poId);
+                    return;
+                }
+                if (!"APPROVED".equalsIgnoreCase(po.getStatus())) {
+                    redirectWithToast(request, response,
+                            "Phiếu mua " + po.getPoCode() + " chưa được duyệt (hiện tại: " + po.getStatus() + ")",
+                            "danger",
+                            "/import-receipt?action=create&poId=" + poId);
+                    return;
+                }
+                poDetails = po.getDetails();
+                if (poDetails == null || poDetails.isEmpty()) {
+                    redirectWithToast(request, response,
+                            "Phiếu mua " + po.getPoCode() + " không có chi tiết máy nào để nhập",
+                            "danger",
+                            "/import-receipt?action=create&poId=" + poId);
+                    return;
                 }
             }
         }
@@ -1204,6 +1241,16 @@ public class ImportReceiptController extends HttpServlet {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         workbook.write(response.getOutputStream());
         workbook.close();
+    }
+
+    private void redirectWithToast(HttpServletRequest request, HttpServletResponse response,
+                                    String message, String type, String redirectPath) throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("toastMessage", message);
+            session.setAttribute("toastType", type);
+        }
+        response.sendRedirect(request.getContextPath() + redirectPath);
     }
 
     private void importPreview(HttpServletRequest request, HttpServletResponse response)
@@ -1300,7 +1347,7 @@ public class ImportReceiptController extends HttpServlet {
 
         List<Map<String, Object>> validRows = new ArrayList<>();
         List<Map<String, Object>> invalidRows = new ArrayList<>();
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
+        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
 
         for (int i = 0; i < rawRows.size(); i++) {
             Map<String, String> raw = rawRows.get(i);
@@ -1353,8 +1400,14 @@ public class ImportReceiptController extends HttpServlet {
                 errors.add("Ghi chú vượt quá " + MAX_NOTE_LENGTH + " ký tự");
             }
 
-            if (!serial.isEmpty() && !seenSerials.add(serial)) {
-                errors.add("Serial \"" + serial + "\" bị trùng trong file");
+            if (!serial.isEmpty()) {
+                Integer firstSeenIndex = firstSeenRow.get(serial);
+                if (firstSeenIndex != null) {
+                    errors.add("Dòng " + firstSeenIndex + " và dòng " + rowNum
+                            + ": serial \"" + serial + "\" bị trùng trong file");
+                } else {
+                    firstSeenRow.put(serial, rowNum);
+                }
             }
 
             if (!serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
@@ -1772,11 +1825,31 @@ public class ImportReceiptController extends HttpServlet {
         return msg.toString();
     }
 
+    private String buildSerialCountMismatchMessage(int validCount, int expectedCount,
+            List<Integer> emptyRows, List<String> blockedSerials) {
+        StringBuilder msg = new StringBuilder();
+        msg.append("Số serial hợp lệ trong file (").append(validCount)
+           .append(") không khớp với PO (yêu cầu ").append(expectedCount).append(").");
+        if (!emptyRows.isEmpty()) {
+            msg.append(" Có ").append(emptyRows.size())
+               .append(" dòng trống serial: dòng ")
+               .append(emptyRows.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", ")))
+               .append(".");
+        }
+        if (!blockedSerials.isEmpty()) {
+            msg.append(" Có ").append(blockedSerials.size())
+               .append(" serial không hợp lệ: ")
+               .append(String.join("; ", blockedSerials))
+               .append(".");
+        }
+        return msg.toString();
+    }
+
     private List<ReceiptDetail> parseDetailsStrict(String[] genIds, String[] serials,
             String[] detailNotes, List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) return details;
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
+        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
@@ -1796,9 +1869,13 @@ public class ImportReceiptController extends HttpServlet {
                 else if (serial.length() > MAX_SERIAL_LENGTH) {
                     errors.add("Dòng " + rowNum + ": Số serial không được vượt quá " + MAX_SERIAL_LENGTH + " ký tự"); continue;
                 } else {
-                    if (!seenSerials.add(serial)) {
-                        errors.add("Dòng " + rowNum + ": Số serial \"" + serial + "\" bị trùng trong phiếu"); continue;
+                    Integer firstRow = firstSeenRow.get(serial);
+                    if (firstRow != null) {
+                        errors.add("Dòng " + firstRow + " và dòng " + rowNum
+                                + ": Số serial \"" + serial + "\" bị trùng trong phiếu");
+                        continue;
                     }
+                    firstSeenRow.put(serial, rowNum);
                 }
             }
             if (serial == null) { errors.add("Dòng " + rowNum + ": Vui lòng nhập số serial"); continue; }
