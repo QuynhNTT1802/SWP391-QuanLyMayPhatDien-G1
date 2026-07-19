@@ -144,12 +144,11 @@ public class TransferController extends HttpServlet {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        boolean isManagerOrCeo = perms != null
-                && (perms.contains("transfers.approve_manager") || perms.contains("transfers.approve_ceo"));
+        boolean isCeo = perms != null && perms.contains("transfers.approve_ceo");
 
         int scopedWarehouseId = com.quanlymayphatdien.g1.utils.WarehouseAccessUtil.getScopedWarehouseId(session);
 
-        Integer filterUserId = (isManagerOrCeo && scopedWarehouseId <= 0) ? null : null;
+        Integer filterUserId = (isCeo && scopedWarehouseId <= 0) ? null : loggedUser.getId();
 
         int total = transferDAO.countTotal(search, statusFilter, filterUserId, scopedWarehouseId, loggedUser.getId());
         int totalPages = (int) Math.ceil((double) total / limit);
