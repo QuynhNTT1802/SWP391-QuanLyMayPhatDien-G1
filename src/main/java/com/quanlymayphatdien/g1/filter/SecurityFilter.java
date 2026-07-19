@@ -125,7 +125,22 @@ public class SecurityFilter implements Filter {
                             "update", "inventory_check.update",
                             "complete", "inventory_check.complete",
                             "exportReport", "inventory_check.view"),
+<<<<<<< HEAD
                     "inventory_check.view")
+=======
+                    "inventory_check.view"),
+            Rule.action("/transfers",
+                    Map.of(
+                            "create", "transfers.create",
+                            "ce_approve", "transfers.approve_ceo",
+                            "ce_reject", "transfers.approve_ceo",
+                            "ce_request_revision", "transfers.approve_ceo",
+                            "edit_submit", "transfers.create",
+                            "edit_view", "transfers.create",
+                            "dest_accept", "transfers.approve_dest",
+                            "dest_reject", "transfers.approve_dest"),
+                    "transfers.view")
+>>>>>>> cf857ca9744428e34c1eb3a571113d45a128a435
     );
 
     @Override

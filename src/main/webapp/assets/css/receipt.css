@@ -644,6 +644,284 @@
 .locked-gen-label.locked-gen-empty { color: var(--muted); font-weight: 400; font-style: italic; }
 .locked-gen-label + .po-lock-tag { vertical-align: middle; }
 
+.tabs-container {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 14px;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-button:hover {
+    color: var(--text);
+}
+
+.tab-button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.tab-button .icon {
+    flex-shrink: 0;
+}
+
+.tab-pane {
+    display: none;
+    padding: 4px 0 12px 0;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.scanner-counter {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.excel-action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border-radius: var(--radius);
+}
+
+.excel-hint {
+    font-size: 12px;
+    color: var(--muted);
+    flex: 1;
+}
+
+.detail-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detail-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.detail-group[open] {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.detail-group > summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    background: var(--surface-2);
+    transition: background 0.15s;
+}
+
+.detail-group > summary::-webkit-details-marker {
+    display: none;
+}
+
+.detail-group > summary:hover {
+    background: color-mix(in srgb, var(--surface-2) 70%, var(--accent) 5%);
+}
+
+.detail-group > summary::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--muted);
+    transition: transform 0.15s;
+    flex-shrink: 0;
+}
+
+.detail-group[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.group-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.group-count {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--bg);
+    padding: 2px 10px;
+    border-radius: 99px;
+    margin-left: 4px;
+}
+
+.group-spacer {
+    flex: 1;
+}
+
+.group-delete-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--danger);
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.group-delete-btn:hover {
+    background: var(--danger-soft);
+}
+
+.group-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+}
+
+.group-table thead {
+    background: color-mix(in srgb, var(--surface-2) 50%, transparent);
+}
+
+.group-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+}
+
+.group-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.group-table tr:last-child td {
+    border-bottom: none;
+}
+
+.group-table tr.flash {
+    animation: rowFlash 0.6s ease;
+}
+
+@keyframes rowFlash {
+    0% { background: var(--accent-soft); }
+    100% { background: transparent; }
+}
+
+.group-table input[type="text"] {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 13px;
+}
+
+.group-table input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.group-table .col-num {
+    width: 50px;
+    text-align: center;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.group-table .col-serial input {
+    font-family: var(--font-mono);
+}
+
+.group-table .col-note {
+    width: 200px;
+}
+
+.group-table .col-del {
+    width: 50px;
+    text-align: center;
+}
+
+.row-del-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--danger);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.row-del-btn:hover {
+    background: var(--danger-soft);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--muted);
+    text-align: center;
+    background: color-mix(in srgb, var(--surface-2) 30%, transparent);
+}
+
+.empty-state svg {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-state-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 4px 0;
+}
+
+.empty-state-hint {
+    font-size: 13px;
+    margin: 0;
+}
+
 .transfer-row-hint {
     display: block;
     margin-top: 4px;

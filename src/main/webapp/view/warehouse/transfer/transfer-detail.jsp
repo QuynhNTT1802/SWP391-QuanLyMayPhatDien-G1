@@ -143,8 +143,13 @@
                     <c:set var="statusBg" value="#f8d7da"/>
                     <c:set var="statusFg" value="#721c24"/>
                 </c:when>
+<<<<<<< HEAD
                 <c:when test="${status == 'CANCELLED'}">
                     <c:set var="statusLabel" value="Đã hủy"/>
+=======
+                <c:when test="${status == 'REQUEST_REVISION'}">
+                    <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
+>>>>>>> cf857ca9744428e34c1eb3a571113d45a128a435
                     <c:set var="statusBg" value="#fff3cd"/>
                     <c:set var="statusFg" value="#856404"/>
                 </c:when>
@@ -195,6 +200,7 @@
                 </c:if>
             </c:if>
 
+<<<<<<< HEAD
             <c:if test="${status == 'DRAFT' || status == 'PENDING_MANAGER' || status == 'PENDING_CEO' || status == 'NEEDS_REVISION'}">
                 <div class="action-bar-top">
 <<<<<<< HEAD
@@ -257,6 +263,40 @@
                         </button>
                         <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('reject_ceo', 'Từ chối phiếu (CEO)', 'ceoNote')">Từ chối</button>
                     </c:if>
+=======
+            <c:if test="${status == 'REQUEST_REVISION'}">
+                <div style="background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); padding: 14px 16px; border-radius: var(--radius); color: var(--warn); margin-bottom: 16px;">
+                    <strong style="font-weight: 700; font-size: 14px; margin-bottom: 4px; display: block;">Yêu cầu chỉnh sửa từ CEO</strong>
+                    <c:if test="${not empty t.ceoNote}">
+                        <span style="font-size: 13px; white-space: pre-wrap; line-height: 1.55;">${t.ceoNote}</span>
+                    </c:if>
+                    <c:if test="${empty t.ceoNote}">
+                        <span style="font-size: 13px;">CEO yêu cầu chỉnh sửa phiếu này.</span>
+                    </c:if>
+                </div>
+            </c:if>
+
+            <c:if test="${canCeApprove or canCeReject or canCeRequestRevision}">
+                <div class="action-bar-top">
+                    <button type="button" class="btn btn-primary" onclick="openApproveModal()">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Duyệt
+                    </button>
+                    <button type="button" class="btn btn-outline-warn" onclick="openRejectModal('ce_request_revision', 'Yêu cầu chỉnh sửa', 'ceoNote', 'Nhập lý do yêu cầu chỉnh sửa...', 'Xác nhận yêu cầu')">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Yêu cầu chỉnh sửa
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('ce_reject', 'Từ chối phiếu', 'ceoNote', 'Nhập lý do từ chối...', 'Xác nhận từ chối')">Từ chối</button>
+                </div>
+            </c:if>
+
+            <c:if test="${canEditRevision}">
+                <div class="action-bar-top">
+                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/transfers?action=edit_view&amp;id=${t.transferId}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Sửa &amp; gửi lại duyệt
+                    </a>
+>>>>>>> cf857ca9744428e34c1eb3a571113d45a128a435
                 </div>
             </c:if>
 
@@ -544,7 +584,12 @@
                                 </c:if>
                                 <c:if test="${not empty t.ceoReviewedAt}">
                                     <div class="info-field">
-                                        <div class="info-label">CEO duyệt</div>
+                                        <div class="info-label">
+                                            <c:choose>
+                                                <c:when test="${status == 'REQUEST_REVISION'}">CEO yêu cầu chỉnh sửa</c:when>
+                                                <c:otherwise>CEO duyệt</c:otherwise>
+                                            </c:choose>
+                                        </div>
                                         <div class="info-value">
                                             ${t.ceoReviewedByName}
                                             <span class="mono" style="color: var(--muted); font-size: 12px;">lúc <fmt:formatDate value="${t.ceoReviewedAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></span>
@@ -612,10 +657,25 @@
         <form method="POST" action="${pageContext.request.contextPath}/transfers" id="rejectForm">
             <input type="hidden" name="id" value="${transfer.transferId}" />
             <input type="hidden" name="action" id="rejectFormAction" value="" />
-            <textarea name="REPLACE_NOTE" id="rejectFormNote" required maxlength="500" rows="4" placeholder="Nhập lý do từ chối..."></textarea>
+            <textarea name="REPLACE_NOTE" id="rejectFormNote" required maxlength="500" rows="4" placeholder="Nhập lý do..."></textarea>
             <div class="modal-actions">
                 <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                <button type="submit" class="btn btn-danger" id="rejectFormSubmit">Xác nhận từ chối</button>
+                <button type="submit" class="btn btn-danger" id="rejectFormSubmit">Xác nhận</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-host" id="approveModal">
+    <div class="modal-card">
+        <h3 style="color: var(--accent);">Duyệt phiếu luân chuyển</h3>
+        <p style="margin: 12px 0 4px; font-size: 13px; color: var(--fg-soft);">Bạn xác nhận duyệt cho phép phiếu luân chuyển này được thực hiện?</p>
+        <p style="margin: 0; font-size: 12px; color: var(--muted);">Sau khi duyệt, kho nguồn có thể tạo phiếu xuất.</p>
+        <form method="POST" action="${pageContext.request.contextPath}/transfers?action=ce_approve" id="approveForm" style="margin-top: 18px;">
+            <input type="hidden" name="id" value="${transfer.transferId}" />
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
+                <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
             </div>
         </form>
     </div>
@@ -642,12 +702,24 @@
     function openModal(id) { document.getElementById(id).classList.add('show'); }
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 
-    function openRejectModal(action, title, noteFieldName) {
+    function openApproveModal() {
+        openModal('approveModal');
+    }
+
+    function openRejectModal(action, title, noteFieldName, placeholder, submitLabel) {
         document.getElementById('rejectModalTitle').innerText = title;
         document.getElementById('rejectFormAction').value = action;
         var ta = document.getElementById('rejectFormNote');
         ta.value = '';
         ta.setAttribute('name', noteFieldName);
+        ta.setAttribute('placeholder', placeholder || 'Nhập lý do...');
+        document.getElementById('rejectFormSubmit').innerText = submitLabel || 'Xác nhận';
+        var submitBtn = document.getElementById('rejectFormSubmit');
+        if (action === 'ce_request_revision') {
+            submitBtn.className = 'btn btn-warn';
+        } else {
+            submitBtn.className = 'btn btn-danger';
+        }
         openModal('rejectModal');
     }
 
