@@ -86,8 +86,6 @@ public class ProposalController extends HttpServlet {
                 case "searchSupplier":
                     searchSupplierAjax(request, response);
                     return;
-<<<<<<< HEAD
-=======
                 case "searchGenerator":
                     searchGeneratorAjax(request, response);
                     return;
@@ -97,9 +95,11 @@ public class ProposalController extends HttpServlet {
                 case "quickCreateSupplier":
                     quickCreateSupplier(request, response);
                     return;
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                 case "redirectCreateSupplier":
                     redirectCreateSupplier(request, response);
+                    return;
+                case "redirectCreateGenerator":
+                    redirectCreateGenerator(request, response);
                     return;
                 case "importConfirm":
                     reShowImportPreview(request, response);
@@ -169,17 +169,17 @@ public class ProposalController extends HttpServlet {
                 case "importConfirm":
                     importProposalConfirm(request, response);
                     break;
-<<<<<<< HEAD
-                case "assignSupplier":
-                    assignSupplierAjax(request, response);
-                    return;
-=======
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                 case "revalidateImport":
                     revalidateImport(request, response);
                     return;
                 case "uploadEditExcel":
                     uploadEditExcel(request, response);
+                    break;
+                case "quickCreateGenerator":
+                    quickCreateGenerator(request, response);
+                    break;
+                case "quickCreateSupplier":
+                    quickCreateSupplier(request, response);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -310,13 +310,6 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
 
-<<<<<<< HEAD
-    /**
-     * Kiểm tra user có quyền edit proposal hay không.
-     * - Creator có thể edit proposal ở DRAFT hoặc NEEDS_REVISION (do SM yêu cầu)
-     * - Sale Manager (canApprove) chỉ được edit khi proposal ở NEEDS_REVISION do CEO yêu cầu
-     */
-=======
     private void loadProposalFormAttributes(HttpServletRequest request, int warehouseId) {
         request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.setAttribute("generators", new GeneratorDAO().findAllActive());
@@ -330,7 +323,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("catFuelTypes", catDAO.findByType("fuel_type"));
         request.setAttribute("catPhases", catDAO.findByType("phase"));
         request.setAttribute("catGenTypes", catDAO.findByType("generator_type"));
-        request.setAttribute("supplierTypeList", catDAO.findByType("supplier_type"));
+        request.setAttribute("supplierTypeList", catDAO.findByType("customer_type"));
 
         Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
         boolean canCreateGenerator = perms != null && perms.contains("generators.create");
@@ -340,7 +333,6 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     }
 
     
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
     private boolean canEditProposal(ImportProposal p, int currentUserId, boolean canApprove) {
         if (p == null) return false;
         if (!GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())) {
@@ -457,15 +449,27 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("proposal", p);
 
         java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
+        int totalQty = 0;
+        int totalRows = 0;
         if (p.getDetails() != null) {
+            totalRows = p.getDetails().size();
             for (ImportProposalDetail d : p.getDetails()) {
+                totalQty += d.getQuantity();
                 if (d.getUnitPrice() != null) {
                     grandTotal = grandTotal.add(
                         d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
                 }
             }
         }
+        java.time.format.DateTimeFormatter __dateFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        java.time.format.DateTimeFormatter __dtFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        String proposalDateInput = p.getProposalDate() != null ? p.getProposalDate().toLocalDate().format(__dateFmt) : "";
+        String approvedAtInput = p.getApprovedAt() != null ? p.getApprovedAt().format(__dtFmt) : "";
         request.setAttribute("grandTotal", grandTotal);
+        request.setAttribute("totalQty", totalQty);
+        request.setAttribute("totalRows", totalRows);
+        request.setAttribute("proposalDateInput", proposalDateInput);
+        request.setAttribute("approvedAtInput", approvedAtInput);
         request.setAttribute("isOwner", p.getCreatedBy() == loggedUser.getId());
         request.setAttribute("isCreator", isCreator);
         request.setAttribute("canApprove", canApprove);
@@ -542,6 +546,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         p.setStatus(GlobalUtils.STATUS_PENDING);
         p.setCreatedBy(user.getId());
         p.setProposalDate(LocalDateTime.now());
+        p.setPeriod(PeriodUtils.currentPeriod());
 
         ImportProposalDAO dao = new ImportProposalDAO();
         p.setProposalCode(dao.generateProposalCode());
@@ -566,15 +571,26 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         session.setAttribute("toastType", "success");
 
         List<User> approvers = userDAO.findUsersByPermission("proposals", "approve");
+        boolean anyNotifFailed = false;
         for (User u : approvers) {
-            NotificationService.send(
-                u.getId(),
-                "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
-                "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
-                request.getContextPath() + "/proposal?action=detail&id=" + newId,
-                "proposal",
-                newId
-            );
+            try {
+                boolean ok = NotificationService.send(
+                    u.getId(),
+                    "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
+                    request.getContextPath() + "/proposal?action=detail&id=" + newId,
+                    "proposal",
+                    newId
+                );
+                if (!ok) anyNotifFailed = true;
+            } catch (Exception e) {
+                SystemLogger.error(LogModule.PROPOSAL, "ProposalController.saveProposal.sendNotification", e.getMessage(), e);
+                anyNotifFailed = true;
+            }
+        }
+        if (anyNotifFailed) {
+            session.setAttribute("toastMessage", "Tạo phiếu đề xuất thành công nhưng gửi thông báo chưa đầy đủ");
+            session.setAttribute("toastType", "danger");
         }
 
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
@@ -816,14 +832,23 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
             User actor = (User) session.getAttribute("loggedUser");
             if (p != null && p.getCreatedBy() > 0) {
-                NotificationService.send(
-                    p.getCreatedBy(),
-                    "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
-                    "Phiếu " + p.getProposalCode() + " đã được " + actor.getName() + " duyệt.",
-                    request.getContextPath() + "/proposal?action=detail&id=" + id,
-                    "proposal",
-                    id
-                );
+                boolean notifOk = false;
+                try {
+                    notifOk = NotificationService.send(
+                        p.getCreatedBy(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
+                        "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
+                        request.getContextPath() + "/proposal?action=detail&id=" + id,
+                        "proposal",
+                        id
+                    );
+                } catch (Exception e) {
+                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.approveProposal.sendNotification", e.getMessage(), e);
+                }
+                if (!notifOk) {
+                    session.setAttribute("toastMessage", "Đã duyệt nhưng không gửi được thông báo cho nhân viên tạo");
+                    session.setAttribute("toastType", "danger");
+                }
             }
         } else {
             session.setAttribute("toastMessage", "Không thể duyệt (phiếu không ở trạng thái chờ duyệt)");
@@ -877,14 +902,23 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
             User actor = (User) session.getAttribute("loggedUser");
             if (p != null && p.getCreatedBy() > 0) {
-                NotificationService.send(
-                    p.getCreatedBy(),
-                    "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
-                    "Phiếu " + p.getProposalCode() + " bị " + actor.getName() + " từ chối (lý do: " + reason.trim() + ").",
-                    request.getContextPath() + "/proposal?action=detail&id=" + id,
-                    "proposal",
-                    id
-                );
+                boolean notifOk = false;
+                try {
+                    notifOk = NotificationService.send(
+                        p.getCreatedBy(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
+                        "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",
+                        request.getContextPath() + "/proposal?action=detail&id=" + id,
+                        "proposal",
+                        id
+                    );
+                } catch (Exception e) {
+                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.rejectProposal.sendNotification", e.getMessage(), e);
+                }
+                if (!notifOk) {
+                    session.setAttribute("toastMessage", "Đã từ chối nhưng không gửi được thông báo cho nhân viên tạo");
+                    session.setAttribute("toastType", "danger");
+                }
             }
         } else {
             session.setAttribute("toastMessage", "Không thể từ chối (phiếu không ở trạng thái chờ duyệt)");
@@ -1159,7 +1193,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 errors.add("Đơn giá đề xuất không được trống");
             } else {
                 try {
-                    String cleaned = unitPriceStr.trim().replace(",", "").replace(".", "");
+                    String cleaned = unitPriceStr.trim().replaceAll("[^0-9.]", "");
                     unitPrice = new BigDecimal(cleaned);
                     if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
                         errors.add("Đơn giá phải lớn hơn 0");
@@ -1268,11 +1302,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         @SuppressWarnings("unchecked")
         List<Map<String, String>> pendingRows = (List<Map<String, String>>) session.getAttribute("pendingImportRows");
         if (pendingRows == null || pendingRows.isEmpty()) {
-<<<<<<< HEAD
-            // Vẫn có thể có invalid rows trong pendingImportAllRows
-=======
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             List<Map<String, String>> emptyInvalid = new ArrayList<>();
             @SuppressWarnings("unchecked")
             List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
@@ -1298,35 +1328,6 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         Integer warehouseId = (Integer) session.getAttribute("pendingImportWarehouseId");
         String note = (String) session.getAttribute("pendingImportNote");
 
-<<<<<<< HEAD
-        String newSupplierIdStr = request.getParameter("newSupplierId");
-        String assignedGidStr = request.getParameter("assignedGid");
-        if (assignedGidStr == null || assignedGidStr.isEmpty()) {
-            assignedGidStr = request.getParameter("gid");
-        }
-
-        // Nếu có newSupplierId + assignedGid, gán trực tiếp vào pendingImportRows
-        if (newSupplierIdStr != null && !newSupplierIdStr.isEmpty()
-                && assignedGidStr != null && !assignedGidStr.isEmpty()) {
-            try {
-                int newId = Integer.parseInt(newSupplierIdStr);
-                String targetGid = assignedGidStr;
-                Supplier newSup = new SupplierDAO().findById(newId);
-                if (newSup != null) {
-                for (Map<String, String> p : pendingRows) {
-                    if (targetGid.equals(p.get("gid"))) {
-                        p.put("supplierId", String.valueOf(newId));
-                        p.put("supplierNameResolved", newSup.getName());
-                        p.put("supplierQuery", newSup.getName());
-                    }
-                }
-                }
-            } catch (NumberFormatException ignored) {
-            }
-        }
-
-        SupplierDAO supDAO = new SupplierDAO();
-=======
         String newGeneratorModel = request.getParameter("newGeneratorModel");
         if (newGeneratorModel != null && !newGeneratorModel.isEmpty()) {
             session.setAttribute("toastMessage",
@@ -1335,53 +1336,9 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         }
 
         GeneratorDAO genDAO = new GeneratorDAO();
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         List<Map<String, String>> validRows = new ArrayList<>();
         List<Map<String, String>> invalidRows = new ArrayList<>();
 
-<<<<<<< HEAD
-        for (Map<String, String> enriched : pendingRows) {
-            String supplierNameRaw = enriched.get(ProposalExcelSupport.HEADER_SUPPLIER_NAME);
-            Map<String, String> copy = new LinkedHashMap<>(enriched);
-            String supplierQuery = supplierNameRaw == null ? "" : supplierNameRaw.trim();
-            copy.put("supplierQuery", supplierQuery);
-
-            Integer resolvedSupplierId = null;
-            String resolvedSupplierName = null;
-            boolean supplierResolved = false;
-
-            // Nếu đã gán sẵn supplierId (từ newSupplier), dùng luôn
-            String sidStr = copy.get("supplierId");
-            if (sidStr != null && !sidStr.isEmpty()) {
-                try {
-                    resolvedSupplierId = Integer.parseInt(sidStr);
-                    resolvedSupplierName = copy.get("supplierNameResolved");
-                    if (resolvedSupplierId != null && resolvedSupplierId > 0) {
-                        supplierResolved = true;
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-            }
-
-            if (!supplierResolved && !supplierQuery.isEmpty()) {
-                List<Supplier> found = supDAO.findByNameExact(supplierQuery);
-                if (found.size() == 1) {
-                    resolvedSupplierId = found.get(0).getId();
-                    resolvedSupplierName = found.get(0).getName();
-                    supplierResolved = true;
-                    copy.put("supplierId", String.valueOf(resolvedSupplierId));
-                    copy.put("supplierNameResolved", resolvedSupplierName);
-                } else if (found.size() >= 2) {
-                    copy.put("supplierMultiple", "true");
-                    copy.put("supplierMultipleCount", String.valueOf(found.size()));
-                } else {
-                    copy.put("supplierMultiple", "false");
-                }
-            }
-
-            String errors = copy.get("gerrors");
-            String warnings = copy.get("gwarnings");
-=======
         // Re-resolve generator id nếu vừa thêm máy mới
         for (Map<String, String> enriched : pendingRows) {
             String gmodel = enriched.get("gmodel");
@@ -1399,27 +1356,10 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
         for (Map<String, String> enriched : pendingRows) {
             String errors = enriched.get("gerrors");
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             if (errors != null && !errors.isEmpty()) {
                 invalidRows.add(new LinkedHashMap<>(enriched));
             } else {
-<<<<<<< HEAD
-                validRows.add(copy);
-            }
-        }
-
-        // Merge invalid rows từ pendingImportAllRows (giữ lại dòng lỗi như qty=-1)
-        @SuppressWarnings("unchecked")
-        List<Map<String, String>> allRows = (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
-        if (allRows != null) {
-            for (Map<String, String> r : allRows) {
-                String errs = r.get("gerrors");
-                if (errs != null && !errs.isEmpty()) {
-                    invalidRows.add(r);
-                }
-=======
                 validRows.add(new LinkedHashMap<>(enriched));
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             }
         }
 
@@ -1529,7 +1469,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             }
             BigDecimal up;
             try {
-                String cleaned = upStr.trim().replace(",", "").replace(".", "");
+                String cleaned = upStr.trim().replaceAll("[^0-9.]", "");
                 up = new BigDecimal(cleaned);
                 if (up.compareTo(BigDecimal.ZERO) <= 0) {
                     continue;
@@ -1557,7 +1497,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         }
         dao.insertDetailsBatch(details);
 
-        // Cập nhật danh mục (hãng, xuất xứ, ...) cho generator từ dữ liệu Excel
+        
         updateGeneratorCategoriesFromImport(session, generatorIds);
 
         session.removeAttribute("pendingImportRows");
@@ -1625,10 +1565,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         return u != null ? u.getId() : 0;
     }
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
     private int parseId(HttpServletRequest request) {
         try {
             return Integer.parseInt(request.getParameter("id"));
@@ -1677,7 +1614,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             if (unitPrices != null && i < unitPrices.length
                     && unitPrices[i] != null && !unitPrices[i].trim().isEmpty()) {
                 try {
-                    String cleaned = unitPrices[i].trim().replace(",", "").replace(".", "");
+                    String cleaned = unitPrices[i].trim().replaceAll("[^0-9.]", "");
                     up = new BigDecimal(cleaned);
                 } catch (NumberFormatException ex) {
                     up = null;
@@ -1739,77 +1676,6 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         response.getWriter().write(sb.toString());
     }
 
-<<<<<<< HEAD
-    @SuppressWarnings("unchecked")
-    private void assignSupplierAjax(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
-            return;
-        }
-        String gidStr = request.getParameter("gid");
-        String rowIdxStr = request.getParameter("rowIndex");
-        if ((gidStr == null || gidStr.isEmpty()) && (rowIdxStr != null && !rowIdxStr.isEmpty())) {
-            gidStr = rowIdxStr;
-        }
-        String supIdStr = request.getParameter("supplierId");
-        int supId = parseInt(supIdStr);
-        if (gidStr == null || gidStr.isEmpty() || supId <= 0) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"bad_params\"}");
-            return;
-        }
-        List<Map<String, String>> rows =
-                (List<Map<String, String>>) session.getAttribute("pendingImportRows");
-        if (rows == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
-        Supplier s = new SupplierDAO().findById(supId);
-        if (s == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"supplier_not_found\"}");
-            return;
-        }
-        boolean found = false;
-        boolean useRowIndex = rowIdxStr != null && !rowIdxStr.isEmpty();
-        int rowIdx = useRowIndex ? parseInt(rowIdxStr) : -1;
-        for (int i = 0; i < rows.size(); i++) {
-            Map<String, String> p = rows.get(i);
-            if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
-                p.put("supplierId", String.valueOf(s.getId()));
-                p.put("supplierNameResolved", s.getName());
-                p.remove("supplierQuery");
-                p.remove("supplierMultiple");
-                p.remove("supplierMultipleCount");
-                found = true;
-            }
-        }
-        if (!found) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"row_not_found\"}");
-            return;
-        }
-        // Also update pendingImportAllRows for consistency
-        List<Map<String, String>> allRows =
-                (List<Map<String, String>>) session.getAttribute("pendingImportAllRows");
-        if (allRows != null) {
-            for (int i = 0; i < allRows.size(); i++) {
-                Map<String, String> p = allRows.get(i);
-                if (gidStr.equals(p.get("gid")) || (useRowIndex && i == rowIdx)) {
-                    p.put("supplierId", String.valueOf(s.getId()));
-                    p.put("supplierNameResolved", s.getName());
-                    p.remove("supplierQuery");
-                    p.remove("supplierMultiple");
-                    p.remove("supplierMultipleCount");
-                }
-            }
-        }
-
-        response.getWriter().write("{\"ok\":true,\"supplier\":{\"id\":" + s.getId()
-                + ",\"name\":\"" + escapeJson(s.getName()) + "\"}}");
-    }
-
-=======
     private void searchGeneratorAjax(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
@@ -1844,7 +1710,6 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     }
 
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
     @SuppressWarnings("unchecked")
     private void revalidateImport(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -1883,11 +1748,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             int stt = parseInt(sttStr);
             if (stt <= 0) continue;
 
-<<<<<<< HEAD
-            // Find the row in allRows by STT
-=======
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             Map<String, String> targetRow = null;
             for (Map<String, String> r : allRows) {
                 if (sttStr.equals(r.get("stt"))) {
@@ -1900,11 +1761,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 continue;
             }
 
-<<<<<<< HEAD
-            // Overlay edited values onto the raw Excel data
-=======
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             String newModel = (modelArr != null && i < modelArr.length) ? modelArr[i] : "";
             String newQty = (qtyArr != null && i < qtyArr.length) ? qtyArr[i] : "";
             String newUp = (upArr != null && i < upArr.length) ? upArr[i] : "";
@@ -1931,11 +1788,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 }
             }
 
-<<<<<<< HEAD
-            // Quantity
-=======
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             if (newQty == null || newQty.trim().isEmpty()) {
                 errors.add("Số lượng không được trống");
             } else {
@@ -1954,16 +1807,12 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 }
             }
 
-<<<<<<< HEAD
-            // Unit price
-=======
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             if (newUp == null || newUp.trim().isEmpty()) {
                 errors.add("Đơn giá đề xuất không được trống");
             } else {
                 try {
-                    String cleaned = newUp.trim().replace(",", "").replace(".", "");
+                    String cleaned = newUp.trim().replaceAll("[^0-9.]", "");
                     BigDecimal up = new BigDecimal(cleaned);
                     if (up.compareTo(BigDecimal.ZERO) <= 0) {
                         errors.add("Đơn giá phải lớn hơn 0");
@@ -1984,7 +1833,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             }
         }
 
-        // Rebuild pendingImportRows from allRows (only error-free rows)
+        
         List<Map<String, String>> pendingRows = new ArrayList<>();
         for (Map<String, String> r : allRows) {
             String errs = r.get("gerrors");
@@ -2022,87 +1871,159 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     private void quickCreateGenerator(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
-            return;
-        }
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("generators.create")) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"forbidden\"}");
-            return;
-        }
-
-        String model = request.getParameter("model");
-        String powerStr = request.getParameter("powerRating");
-        String freq = request.getParameter("frequency");
-        String weightStr = request.getParameter("weight");
-        if (model == null || model.trim().isEmpty()) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập mã máy phát\"}");
-            return;
-        }
-        if (powerStr == null || powerStr.trim().isEmpty()) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập công suất\"}");
-            return;
-        }
-
-        GeneratorDAO genDAO = new GeneratorDAO();
-        Generator existing = genDAO.findByModel(model.trim());
-        if (existing != null) {
-            response.getWriter().write("{\"ok\":true,\"existing\":true,\"id\":" + existing.getId()
-                    + ",\"model\":\"" + escapeJson(existing.getModel()) + "\"}");
-            return;
-        }
-
-        Generator g = new Generator();
-        g.setModel(model.trim());
+        response.setStatus(HttpServletResponse.SC_OK);
         try {
-            g.setPowerRating(new BigDecimal(powerStr.trim()));
-        } catch (NumberFormatException ex) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Công suất không hợp lệ\"}");
-            return;
-        }
-        g.setFrequency(freq != null && !freq.trim().isEmpty() ? freq.trim() : null);
-        if (weightStr != null && !weightStr.trim().isEmpty()) {
+            HttpSession session = request.getSession(false);
+            if (session == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Phiên đăng nhập đã hết hạn\"}");
+                return;
+            }
+            Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+            if (perms == null || !perms.contains("generators.create")) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Bạn không có quyền thêm máy phát\"}");
+                return;
+            }
+
+            String model = request.getParameter("model");
+            String powerStr = request.getParameter("powerRating");
+            String freq = request.getParameter("frequency");
+            String weightStr = request.getParameter("weight");
+            String brandIdStr = request.getParameter("brandId");
+            String conditionIdStr = request.getParameter("conditionId");
+            String fuelTypeIdStr = request.getParameter("fuelTypeId");
+
+            if (model == null || model.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng nhập mã máy phát\"}");
+                return;
+            }
+            if (model.trim().length() > 100) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Mã máy phát không được vượt quá 100 ký tự\"}");
+                return;
+            }
+            if (powerStr == null || powerStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng nhập công suất\"}");
+                return;
+            }
+
+            BigDecimal power;
             try {
-                g.setWeight(new BigDecimal(weightStr.trim()));
+                power = new BigDecimal(powerStr.trim());
             } catch (NumberFormatException ex) {
-                g.setWeight(null);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Công suất phải là số hợp lệ\"}");
+                return;
+            }
+            if (power.compareTo(BigDecimal.ZERO) <= 0) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Công suất phải lớn hơn 0\"}");
+                return;
+            }
+
+            if (weightStr == null || weightStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng nhập trọng lượng\"}");
+                return;
+            }
+            BigDecimal weight;
+            try {
+                weight = new BigDecimal(weightStr.trim());
+            } catch (NumberFormatException ex) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Trọng lượng phải là số hợp lệ\"}");
+                return;
+            }
+            if (weight.compareTo(BigDecimal.ZERO) <= 0) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Trọng lượng phải lớn hơn 0\"}");
+                return;
+            }
+
+            String frequency = null;
+            if (freq != null && !freq.trim().isEmpty()) {
+                try {
+                    BigDecimal freqNum = new BigDecimal(freq.trim());
+                    if (freqNum.compareTo(BigDecimal.ZERO) <= 0) {
+                        safeWriteJson(response, "{\"ok\":false,\"error\":\"Tần số phải lớn hơn 0\"}");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    safeWriteJson(response, "{\"ok\":false,\"error\":\"Tần số phải là số hợp lệ\"}");
+                    return;
+                }
+                frequency = freq.trim();
+            }
+
+            if (brandIdStr == null || brandIdStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng chọn thương hiệu\"}");
+                return;
+            }
+            if (conditionIdStr == null || conditionIdStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng chọn tình trạng\"}");
+                return;
+            }
+            if (fuelTypeIdStr == null || fuelTypeIdStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng chọn nhiên liệu\"}");
+                return;
+            }
+
+            GeneratorDAO genDAO = new GeneratorDAO();
+            Generator existing = genDAO.findByModel(model.trim());
+            if (existing != null) {
+                safeWriteJson(response, "{\"ok\":true,\"existing\":true,\"id\":" + existing.getId()
+                        + ",\"model\":\"" + escapeJson(existing.getModel()) + "\"}");
+                return;
+            }
+
+            Generator g = new Generator();
+            g.setModel(model.trim());
+            g.setPowerRating(power);
+            g.setFrequency(frequency);
+            g.setWeight(weight);
+            g.setStatus("active");
+            g.setCreatedAt(LocalDateTime.now());
+            User u = (User) session.getAttribute("loggedUser");
+            if (u != null) {
+                g.setCreatedBy(u.getId());
+            }
+
+            int newId = genDAO.insert(g);
+            if (newId <= 0) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Không thể lưu máy phát\"}");
+                return;
+            }
+
+            CategoryDAO catDAO = new CategoryDAO();
+            List<Integer> catIds = new ArrayList<>();
+            addCatIfPresent(catDAO, brandIdStr, "brand", catIds);
+            addCatIfPresent(catDAO, request.getParameter("originId"), "origin", catIds);
+            addCatIfPresent(catDAO, conditionIdStr, "condition", catIds);
+            addCatIfPresent(catDAO, fuelTypeIdStr, "fuel_type", catIds);
+            addCatIfPresent(catDAO, request.getParameter("phaseId"), "phase", catIds);
+            addCatIfPresent(catDAO, request.getParameter("genTypeId"), "generator_type", catIds);
+            if (!catIds.isEmpty()) {
+                genDAO.deleteGeneratorCategories(newId);
+                genDAO.saveGeneratorCategories(newId, catIds);
+            }
+
+            User logU = (User) session.getAttribute("loggedUser");
+            logActivity(logU != null ? logU.getId() : 0, "generator", "CREATE", newId,
+                    model.trim(),
+                    "Tạo máy phát nhanh từ đề xuất nhập kho: " + model.trim());
+
+            safeWriteJson(response, "{\"ok\":true,\"existing\":false,\"id\":" + newId
+                    + ",\"model\":\"" + escapeJson(model.trim()) + "\"}");
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.quickCreateGenerator", e.getMessage(), e);
+            try {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage()) + "\"}");
+            } catch (IOException ignored) {
             }
         }
-        g.setStatus("active");
-        g.setCreatedAt(LocalDateTime.now());
-        User u = (User) session.getAttribute("loggedUser");
-        if (u != null) {
-            g.setCreatedBy(u.getId());
+    }
+
+    private void safeWriteJson(HttpServletResponse response, String json) throws IOException {
+        if (!response.isCommitted()) {
+            response.getWriter().write(json);
+            response.getWriter().flush();
         }
-
-        int newId = genDAO.insert(g);
-        if (newId <= 0) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Không thể lưu máy phát\"}");
-            return;
-        }
-
-        CategoryDAO catDAO = new CategoryDAO();
-        List<Integer> catIds = new ArrayList<>();
-        addCatIfPresent(catDAO, request.getParameter("brandId"), "brand", catIds);
-        addCatIfPresent(catDAO, request.getParameter("originId"), "origin", catIds);
-        addCatIfPresent(catDAO, request.getParameter("conditionId"), "condition", catIds);
-        addCatIfPresent(catDAO, request.getParameter("fuelTypeId"), "fuel_type", catIds);
-        addCatIfPresent(catDAO, request.getParameter("phaseId"), "phase", catIds);
-        addCatIfPresent(catDAO, request.getParameter("genTypeId"), "generator_type", catIds);
-        if (!catIds.isEmpty()) {
-            genDAO.deleteGeneratorCategories(newId);
-            genDAO.saveGeneratorCategories(newId, catIds);
-        }
-
-        User logU = (User) session.getAttribute("loggedUser");
-        logActivity(logU != null ? logU.getId() : 0, "generator", "CREATE", newId,
-                model.trim(),
-                "Tạo máy phát nhanh từ đề xuất nhập kho: " + model.trim());
-
-        response.getWriter().write("{\"ok\":true,\"existing\":false,\"id\":" + newId
-                + ",\"model\":\"" + escapeJson(model.trim()) + "\"}");
     }
 
     private void addCatIfPresent(CategoryDAO catDAO, String rawId, String type, List<Integer> acc) {
@@ -2161,6 +2082,11 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             }
         }
 
+        if ("33".equals(typeIdStr) && (companyName == null || companyName.trim().isEmpty())) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập tên công ty cho nhà cung cấp Doanh nghiệp\"}");
+            return;
+        }
+
         Supplier s = new Supplier();
         s.setName(name.trim());
         s.setPhone(phone.trim());
@@ -2190,7 +2116,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
         response.getWriter().write("{\"ok\":true,\"existing\":false,\"id\":" + newId
                 + ",\"name\":\"" + escapeJson(name.trim())
-                + "\",\"phone\":\"" + escapeJson(phone.trim()) + "\"}");
+                + "\",\"phone\":\"" + escapeJson(phone.trim())
+                + "\",\"companyName\":\"" + escapeJson(s.getCompanyName() != null ? s.getCompanyName() : "") + "\"}");
     }
 
     private void redirectCreateSupplier(HttpServletRequest request, HttpServletResponse response)
@@ -2203,6 +2130,28 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 .append("&prefillName=").append(urlEncode(supplierQuery))
                 .append("&returnUrl=").append(urlEncode(returnUrl))
                 .append("&rowGid=").append(urlEncode(rowGid));
+        response.sendRedirect(url.toString());
+    }
+
+    private void redirectCreateGenerator(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        Set<String> perms = (session != null)
+                ? (Set<String>) session.getAttribute("userPermissions") : null;
+        if (perms == null || !perms.contains("generators.create")) {
+            session.setAttribute("toastMessage", "Bạn không có quyền thêm máy phát điện.");
+            session.setAttribute("toastType", "danger");
+            response.sendRedirect(request.getContextPath() + "/proposal?action=importConfirm");
+            return;
+        }
+        String model = request.getParameter("model");
+        String stt = request.getParameter("stt");
+        String returnUrl = request.getContextPath() + "/proposal?action=importConfirm";
+        StringBuilder url = new StringBuilder(request.getContextPath())
+                .append("/warehouse/generators?action=create")
+                .append("&prefillModel=").append(urlEncode(model))
+                .append("&returnUrl=").append(urlEncode(returnUrl))
+                .append("&rowStt=").append(urlEncode(stt));
         response.sendRedirect(url.toString());
     }
 
