@@ -343,7 +343,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "JOIN liquidation l ON l.liquidation_id = ld.liquidation_id "
                 + "WHERE i.warehouse_id = ? "
                 + "  AND i.status = ? "
-                + "  AND l.status IN ('PENDING_MANAGER','PENDING_CEO','MANAGER_REQUEST_EDIT','CEO_REQUEST_EDIT')";
+                + "  AND l.status IN ('PENDING_CEO','CEO_REQUEST_EDIT')";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -486,10 +486,52 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
 
+    /**
+     * Insert mot serial moi vao inventory voi trang thai IN_STOCK ngay lap tuc.
+     * Dung cho luong tao phieu nhap truc tiep (khong can manager duyet).
+     * Tra ve inventory_id vua tao, hoac -1 neu that bai.
+     */
+    public int insertInStock(Connection conn, int generatorId,
+                              String serialNumber, int warehouseId) throws SQLException {
+        String sql = "INSERT INTO inventory (generator_id, serial_number, warehouse_id, status) "
+                   + "VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, generatorId);
+            ps.setString(2, serialNumber);
+            ps.setInt(3, warehouseId);
+            ps.setString(4, STATUS_IN_STOCK);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return -1;
+    }
+
+
     public boolean reserveForExport(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, STATUS_RESERVED_EXPORT);
+            ps.setInt(2, inventoryId);
+            ps.setString(3, STATUS_IN_STOCK);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+
+    /**
+     * Danh dau mot serial IN_STOCK da duoc xuat truc tiep (IN_STOCK -> targetStatus).
+     * Dung cho luong tao phieu xuat khong can manager duyet: serial di thang tu IN_STOCK
+     * sang SOLD (hoac LIQUIDATED neu la phieu thanh ly).
+     * Tra ve true neu update duoc 1 row, false neu serial khong o trang thai IN_STOCK.
+     */
+    public boolean markAsExported(Connection conn, int inventoryId, String targetStatus) throws SQLException {
+        String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, targetStatus);
             ps.setInt(2, inventoryId);
             ps.setString(3, STATUS_IN_STOCK);
             return ps.executeUpdate() > 0;
@@ -1151,4 +1193,256 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         }
         return null;
     }
+
+    // ===================== BÁO CÁO TỒN KHO =====================
+    private String buildInvReportWhere(java.time.LocalDate from, java.time.LocalDate to,
+                                       Integer warehouseId, List<Object> params) {
+        StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
+        if (from != null) {
+            w.append(" AND DATE(i.created_at) >= ?");
+            params.add(java.sql.Date.valueOf(from));
+        }
+        if (to != null) {
+            w.append(" AND DATE(i.created_at) <= ?");
+            params.add(java.sql.Date.valueOf(to));
+        }
+        if (warehouseId != null) {
+            w.append(" AND i.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        return w.toString();
+    }
+
+    private void bindParams(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+    }
+
+    // KPI: tong serial, in_stock, so kho, so model
+    public Map<String, Object> getInventoryReportSummary(java.time.LocalDate from, java.time.LocalDate to,
+                                                       Integer warehouseId) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildInvReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(*) AS total_serials, "
+                + "SUM(CASE WHEN i.status = 'IN_STOCK' THEN 1 ELSE 0 END) AS in_stock, "
+                + "COUNT(DISTINCT i.warehouse_id) AS warehouse_count, "
+                + "COUNT(DISTINCT i.generator_id) AS model_count "
+                + "FROM inventory i JOIN warehouse w ON i.warehouse_id = w.warehouse_id"
+                + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                m.put("totalSerials", resultSet.getInt("total_serials"));
+                m.put("inStock", resultSet.getInt("in_stock"));
+                m.put("warehouseCount", resultSet.getInt("warehouse_count"));
+                m.put("modelCount", resultSet.getInt("model_count"));
+            } else {
+                m.put("totalSerials", 0);
+                m.put("inStock", 0);
+                m.put("warehouseCount", 0);
+                m.put("modelCount", 0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getInventoryReportSummary: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return m;
+    }
+
+    // Phan tich theo kho: kho | so serial | so model
+    public List<Map<String, Object>> getInventoryByWarehouse(java.time.LocalDate from, java.time.LocalDate to,
+                                                             Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildInvReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT w.name AS warehouse_name, w.warehouse_id, "
+                + "COUNT(i.inventory_id) AS serial_count, "
+                + "COUNT(DISTINCT i.generator_id) AS model_count, "
+                + "SUM(CASE WHEN i.status = 'IN_STOCK' THEN 1 ELSE 0 END) AS in_stock_count "
+                + "FROM inventory i JOIN warehouse w ON i.warehouse_id = w.warehouse_id"
+                + where
+                + " GROUP BY w.warehouse_id, w.name ORDER BY serial_count DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("serialCount", resultSet.getInt("serial_count"));
+                r.put("modelCount", resultSet.getInt("model_count"));
+                r.put("inStockCount", resultSet.getInt("in_stock_count"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getInventoryByWarehouse: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Phan tich theo trang thai: trang thai | so serial
+    public List<Map<String, Object>> getInventoryByStatus(java.time.LocalDate from, java.time.LocalDate to,
+                                                          Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildInvReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT i.status, COUNT(*) AS serial_count "
+                + "FROM inventory i JOIN warehouse w ON i.warehouse_id = w.warehouse_id"
+                + where
+                + " GROUP BY i.status ORDER BY serial_count DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("status", resultSet.getString("status"));
+                r.put("serialCount", resultSet.getInt("serial_count"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getInventoryByStatus: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Xu huong theo thang: thang | so nhap | so xuat | ton cuoi thang
+    public List<Map<String, Object>> getInventoryMonthlyTrend(java.time.LocalDate from, java.time.LocalDate to,
+                                                             Integer warehouseId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        // Build where rieng cho stock_card (khong dung inventory)
+        List<Object> params = new ArrayList<>();
+        StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
+        if (from != null) {
+            w.append(" AND DATE(sc.created_at) >= ?");
+            params.add(java.sql.Date.valueOf(from));
+        }
+        if (to != null) {
+            w.append(" AND DATE(sc.created_at) <= ?");
+            params.add(java.sql.Date.valueOf(to));
+        }
+        if (warehouseId != null) {
+            w.append(" AND sc.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        String sql = "SELECT ym, "
+                + "SUM(CASE WHEN transaction_type = 'IMPORT' THEN quantity_change ELSE 0 END) AS import_qty, "
+                + "SUM(CASE WHEN transaction_type = 'EXPORT' THEN -quantity_change ELSE 0 END) AS export_qty "
+                + "FROM (SELECT DATE_FORMAT(sc.created_at, '%Y-%m') AS ym, "
+                + "             sc.transaction_type, sc.quantity_change "
+                + "      FROM stock_card sc JOIN warehouse w ON sc.warehouse_id = w.warehouse_id"
+                + w
+                + "      GROUP BY sc.stock_card_id) t "
+                + "GROUP BY ym ORDER BY ym ASC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("month", resultSet.getString("ym"));
+                r.put("importQty", resultSet.getInt("import_qty"));
+                r.put("exportQty", resultSet.getInt("export_qty"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getInventoryMonthlyTrend: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Chi tiet serial trong ky (gom theo inventory)
+    public List<Map<String, Object>> getInventoryDetailList(java.time.LocalDate from, java.time.LocalDate to,
+                                                           Integer warehouseId, int limit, int offset) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildInvReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT i.inventory_id, i.serial_number, i.status, i.created_at, i.updated_at, "
+                + "g.model AS generator_model, "
+                + "(SELECT c.name FROM generator_category gc "
+                + "   JOIN category c ON gc.category_id = c.id "
+                + "   WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand, "
+                + "w.name AS warehouse_name, "
+                + "imp.receipt_code AS import_receipt_code "
+                + "FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN ( "
+                + "  SELECT rd.inventory_id, r.receipt_code "
+                + "  FROM receipt_detail rd "
+                + "  JOIN receipt r ON r.receipt_id = rd.receipt_id "
+                + "  WHERE r.receipt_type = 'IMPORT' AND r.status NOT IN ('CANCELLED') "
+                + ") imp ON imp.inventory_id = i.inventory_id"
+                + where
+                + " ORDER BY i.updated_at DESC, i.inventory_id DESC "
+                + "LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("inventoryId", resultSet.getInt("inventory_id"));
+                r.put("serialNumber", resultSet.getString("serial_number"));
+                r.put("status", resultSet.getString("status"));
+                r.put("generatorModel", resultSet.getString("generator_model"));
+                r.put("generatorBrand", resultSet.getString("generator_brand"));
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("importReceiptCode", resultSet.getString("import_receipt_code"));
+                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                r.put("createdAtStr", createdAt != null ? createdAt.toLocalDate().format(df) : "");
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getInventoryDetailList: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countInventoryDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Object> params = new ArrayList<>();
+        String where = buildInvReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(*) FROM inventory i JOIN warehouse w ON i.warehouse_id = w.warehouse_id" + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error countInventoryDetailList: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
+    // ===================== END BÁO CÁO TỒN KHO =====================
 }

@@ -25,6 +25,7 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
@@ -118,15 +119,6 @@ public class ImportReceiptController extends HttpServlet {
                 case "update":
                     updateReceipt(request, response);
                     break;
-                case "approve":
-                    approveReceipt(request, response);
-                    break;
-                case "reject":
-                    rejectReceipt(request, response);
-                    break;
-                case "requestRevision":
-                    requestRevision(request, response);
-                    break;
                 case "importPreview":
                     importPreview(request, response);
                     break;
@@ -167,8 +159,20 @@ public class ImportReceiptController extends HttpServlet {
             createdByFilter = loggedUser.getId();
         }
 
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         String statusFilter = request.getParameter("status");
         String whFilter = request.getParameter("warehouse");
+        if (scopedWarehouseId > 0) {
+            if (whFilter != null && !whFilter.isEmpty()) {
+                try {
+                    if (Integer.parseInt(whFilter) != scopedWarehouseId) {
+                        response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+            whFilter = String.valueOf(scopedWarehouseId);
+        }
         String search = request.getParameter("search");
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
@@ -183,7 +187,16 @@ public class ImportReceiptController extends HttpServlet {
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("receiptList", receiptList);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        if (scopedWarehouseId > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+            if (scoped != null) {
+                request.setAttribute("scopedWarehouseName", scoped.getName());
+            }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("whFilter", whFilter);
         request.setAttribute("search", search);
@@ -199,7 +212,19 @@ public class ImportReceiptController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
+        if (scopedWarehouseId > 0) {
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+            if (scoped != null) {
+                request.setAttribute("scopedWarehouseName", scoped.getName());
+            }
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("generators", genDAO.findAllActive());
         request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
         request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
@@ -210,7 +235,14 @@ public class ImportReceiptController extends HttpServlet {
             int poId = parseId(poIdStr);
             PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
             if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
+                if (scopedWarehouseId > 0 && po.getWarehouseId() != scopedWarehouseId) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
                 applyPoPrefillToRequest(request, po, "Tạo từ phiếu purchase " + po.getPoCode());
+            } else if (po != null && scopedWarehouseId > 0 && po.getWarehouseId() != scopedWarehouseId) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
             }
         }
 
@@ -565,34 +597,7 @@ public class ImportReceiptController extends HttpServlet {
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) { response.sendRedirect(request.getContextPath() + "/import-receipt"); return; }
-
-        Receipt receipt = receiptDAO.findById(id);
-        if (receipt == null || receipt.getCreatedBy() != loggedUser.getId()) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        if (!TYPE.equals(receipt.getReceiptType())) {
-            response.sendRedirect(request.getContextPath() + "/export-receipt?action=edit&id=" + id);
-            return;
-        }
-        boolean isRevision = GlobalUtils.RECEIPT_STATUS_REVISION.equals(receipt.getStatus());
-        if (!isRevision) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-
-        request.setAttribute("isDraft", false);
-        request.setAttribute("receipt", receipt);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
-        request.setAttribute("generators", genDAO.findAllActive());
-        request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
-        request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-        request.setAttribute("activePage", "import-edit");
-        request.getRequestDispatcher("/view/receipt/import/import-edit.jsp").forward(request, response);
+        response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + parseId(request.getParameter("id")));
     }
 
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
@@ -610,6 +615,11 @@ public class ImportReceiptController extends HttpServlet {
         }
         if (!TYPE.equals(receipt.getReceiptType())) {
             response.sendRedirect(request.getContextPath() + "/export-receipt?action=detail&id=" + id);
+            return;
+        }
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+        if (scopedWarehouseId > 0 && receipt.getWarehouseId() != scopedWarehouseId) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
@@ -657,7 +667,16 @@ public class ImportReceiptController extends HttpServlet {
 
     private void loadGeneratorsJson(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         int whId = parseId(request.getParameter("warehouseId"));
+        if (scopedWarehouseId > 0) {
+            if (whId > 0 && whId != scopedWarehouseId) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+            whId = scopedWarehouseId;
+        }
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         if (whId <= 0) {
@@ -688,6 +707,8 @@ public class ImportReceiptController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
         Integer poId = parsePoIdFromRequest(request);
         boolean fromPo = poId != null;
         if (fromPo && !isPoValid(request, poId)) {
@@ -702,6 +723,9 @@ public class ImportReceiptController extends HttpServlet {
         List<String> errors = new ArrayList<>();
 
         if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
+        if (scopedWarehouseId > 0 && warehouseId > 0 && warehouseId != scopedWarehouseId) {
+            errors.add("Bạn chỉ được phép tạo phiếu nhập cho kho của mình");
+        }
         if (note != null && note.length() > MAX_NOTE_LENGTH) errors.add("Ghi chú phiếu không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
 
         String reasonIdStr = request.getParameter("reasonId");
@@ -807,7 +831,9 @@ public class ImportReceiptController extends HttpServlet {
                 r.setPurchaseOrderId(Integer.parseInt(pid));
             } catch (NumberFormatException ignored) {}
         }
-        r.setStatus(GlobalUtils.RECEIPT_STATUS_PENDING);
+        r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
+        r.setApprovedBy(loggedUser.getId());
+        r.setApprovedAt(java.time.LocalDateTime.now());
 
         int receiptId = receiptDAO.insert(r);
         if (receiptId <= 0) {
@@ -826,7 +852,7 @@ public class ImportReceiptController extends HttpServlet {
             conn = receiptDAO.getConnection();
             conn.setAutoCommit(false);
             for (ReceiptDetail d : details) {
-                int invId = inventoryDAO.insertPendingImport(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
+                int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
                 if (invId <= 0) {
                     throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
                 }
@@ -834,6 +860,8 @@ public class ImportReceiptController extends HttpServlet {
                 d.setInventoryId(invId);
             }
             detailDAO.batchInsert(conn, details);
+            receiptDAO.writeStockCardsForImport(conn, receiptId, r.getReceiptCode(),
+                    warehouseId, loggedUser.getId(), details);
             conn.commit();
             ok = true;
         } catch (java.sql.SQLException ex) {
@@ -862,22 +890,8 @@ public class ImportReceiptController extends HttpServlet {
         log.setAction("CREATE");
         log.setEntityId(receiptId);
         log.setEntityName(r.getReceiptCode());
-        log.setDetails("Tạo phiếu nhập kho");
+        log.setDetails("Tạo phiếu nhập kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
-
-        String notifLink = request.getContextPath() + "/import-receipt?action=detail&id=" + receiptId;
-        List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
-        for (User mgr : approvers) {
-            if (mgr.getId() == loggedUser.getId()) continue;
-            NotificationService.send(
-                    mgr.getId(),
-                    "Phiếu nhập kho mới chờ duyệt",
-                    "Nhân viên " + loggedUser.getName() + " đã tạo phiếu nhập " + r.getReceiptCode() + " cần bạn duyệt.",
-                    notifLink,
-                    "import_receipt",
-                    receiptId
-            );
-        }
 
         session.setAttribute("toastMessage", "Thêm phiếu thành công");
         session.setAttribute("toastType", "success");
@@ -886,315 +900,11 @@ public class ImportReceiptController extends HttpServlet {
 
     private void updateReceipt(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
         int receiptId = parseId(request.getParameter("receiptId"));
-        if (receiptId <= 0) { response.sendRedirect(request.getContextPath() + "/import-receipt"); return; }
-
-        Receipt existing = receiptDAO.findById(receiptId);
-        if (existing == null || !TYPE.equals(existing.getReceiptType())) {
-            response.sendRedirect(request.getContextPath() + "/import-receipt");
-            return;
-        }
-        boolean isRevision = GlobalUtils.RECEIPT_STATUS_REVISION.equals(existing.getStatus());
-        if (existing.getCreatedBy() != loggedUser.getId() || !isRevision) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-
-        int warehouseId = parseId(request.getParameter("warehouseId"));
-        String note = request.getParameter("note");
-        Integer reasonId = null;
-        List<String> errors = new ArrayList<>();
-        if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
-        if (note != null && note.length() > MAX_NOTE_LENGTH) errors.add("Ghi chú phiếu không được vượt quá " + MAX_NOTE_LENGTH + " ký tự");
-
-        String reasonIdStr = request.getParameter("reasonId");
-        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
-            try { reasonId = Integer.parseInt(reasonIdStr); }
-            catch (NumberFormatException e) { errors.add("Lý do không hợp lệ"); }
-        } else errors.add("Vui lòng chọn lý do");
-
-        String[] genIds = request.getParameterValues("manualGeneratorId");
-        String[] serials = request.getParameterValues("manualSerialNumber");
-        String[] detailNotes = request.getParameterValues("manualDetailNote");
-
-        List<ReceiptDetail> details = parseDetailsStrict(genIds, serials, detailNotes, errors);
-        if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
-            errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
-        }
-
-        if (!errors.isEmpty()) {
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("toastMessage", buildErrorMessage("Cập nhật phiếu thất bại:", errors));
-            request.setAttribute("errors", errors);
-            request.setAttribute("activePage", "import-edit");
-            request.setAttribute("isDraft", false);
-            request.setAttribute("receipt", existing);
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", genDAO.findAllActive());
-            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
-            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-            request.getRequestDispatcher("/view/receipt/import/import-edit.jsp").forward(request, response);
-            return;
-        }
-
-        for (ReceiptDetail d : details) {
-            if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                if (inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
-                    errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
-                }
-            }
-        }
-        if (!errors.isEmpty()) {
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("toastMessage", buildErrorMessage("Cập nhật phiếu thất bại:", errors));
-            request.setAttribute("activePage", "import-edit");
-            request.setAttribute("isDraft", false);
-            request.setAttribute("receipt", existing);
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", genDAO.findAllActive());
-            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
-            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-            request.getRequestDispatcher("/view/receipt/import/import-edit.jsp").forward(request, response);
-            return;
-        }
-
-        // Insert new inventory rows (PENDING_IMPORT) truoc khi goi updateReceipt
-        // de updateReceipt co the set inventory_id len tung detail
-        java.sql.Connection conn = null;
-        boolean inventoryCreated = false;
-        try {
-            conn = receiptDAO.getConnection();
-            conn.setAutoCommit(false);
-            for (ReceiptDetail d : details) {
-                if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
-                    continue;
-                }
-                int invId = inventoryDAO.insertPendingImport(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
-                if (invId <= 0) {
-                    throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
-                }
-                d.setInventoryId(invId);
-            }
-            conn.commit();
-            inventoryCreated = true;
-        } catch (java.sql.SQLException ex) {
-            if (conn != null) {
-                try { conn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-            }
-            errors.add("Lỗi khi tạo serial mới: " + ex.getMessage());
-        } finally {
-            if (conn != null) {
-                try { conn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-            }
-        }
-        if (!inventoryCreated) {
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("toastMessage", buildErrorMessage("Cập nhật phiếu thất bại:", errors));
-            request.setAttribute("activePage", "import-edit");
-            request.setAttribute("isDraft", false);
-            request.setAttribute("receipt", existing);
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", genDAO.findAllActive());
-            request.getRequestDispatcher("/view/receipt/import/import-edit.jsp").forward(request, response);
-            return;
-        }
-
-        Receipt r = new Receipt();
-        r.setReceiptId(receiptId);
-        r.setWarehouseId(warehouseId);
-        r.setNote(note);
-        r.setReasonId(reasonId);
-        boolean ok = receiptDAO.updateReceipt(r, details, loggedUser.getId());
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(loggedUser.getId());
-            log.setEntityType("receipt");
-            log.setAction("UPDATE");
-            log.setEntityId(receiptId);
-            log.setEntityName(existing.getReceiptCode());
-            log.setDetails("Cập nhật phiếu nhập kho");
-            activityLogDAO.insert(log);
-            String notifLink = request.getContextPath() + "/import-receipt?action=detail&id=" + receiptId;
-            List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
-            for (User mgr : approvers) {
-                if (mgr.getId() == loggedUser.getId()) continue;
-                NotificationService.send(
-                        mgr.getId(),
-                        "Phiếu nhập kho được gửi lại chờ duyệt",
-                        "Nhân viên " + loggedUser.getName() + " đã cập nhật phiếu nhập " + existing.getReceiptCode() + " và gửi lại để duyệt.",
-                        notifLink,
-                        "import_receipt",
-                        receiptId
-                );
-            }
-            session.setAttribute("toastMessage", "Cập nhật phiếu thành công, đã gửi lại để duyệt");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/import-receipt?action=list");
-        } else {
-            request.setAttribute("toastMessage", "Không thể cập nhật phiếu");
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("isDraft", false);
-            request.setAttribute("receipt", existing);
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", genDAO.findAllActive());
-            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
-            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-            request.getRequestDispatcher("/view/receipt/import/import-edit.jsp").forward(request, response);
-        }
-    }
-
-    private void approveReceipt(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
         HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        if (!hasApprovePerm(session)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return; }
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) { response.sendRedirect(request.getContextPath() + "/import-receipt"); return; }
-        List<String> errors = receiptDAO.approveReceipt(id, loggedUser.getId());
-        if (errors == null || errors.isEmpty()) {
-            Receipt r = receiptDAO.findById(id);
-            if (r != null) {
-                ActivityLog log = new ActivityLog();
-                log.setUserId(loggedUser.getId());
-                log.setEntityType("receipt");
-                log.setAction("APPROVE");
-                log.setEntityId(id);
-                log.setEntityName(r.getReceiptCode());
-                log.setDetails("Duyệt phiếu nhập kho, cập nhật tồn kho");
-                activityLogDAO.insert(log);
-                if (r.getCreatedBy() != loggedUser.getId()) {
-                    NotificationService.send(
-                            r.getCreatedBy(),
-                            "Phiếu nhập kho đã được duyệt",
-                            "Phiếu nhập " + r.getReceiptCode() + " đã được " + loggedUser.getName() + " duyệt.",
-                            request.getContextPath() + "/import-receipt?action=detail&id=" + id,
-                            "import_receipt",
-                            id
-                    );
-                }
-            }
-            session.setAttribute("toastMessage", "Duyệt phiếu thành công");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + id);
-        } else {
-            StringBuilder msg = new StringBuilder("Không thể duyệt phiếu:");
-            for (String e : errors) msg.append(" ").append(e).append(";");
-            request.setAttribute("toastMessage", msg.toString());
-            request.setAttribute("toastType", "danger");
-            viewDetail(request, response);
-        }
-    }
-
-    private void rejectReceipt(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        if (!hasApprovePerm(session)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return; }
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) { response.sendRedirect(request.getContextPath() + "/import-receipt"); return; }
-        Integer reasonId = null;
-        String reasonIdStr = request.getParameter("reasonId");
-        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
-            try { reasonId = Integer.parseInt(reasonIdStr); }
-            catch (NumberFormatException e) { reasonId = null; }
-        }
-        String reasonNote = request.getParameter("reason");
-        if (reasonNote != null) {
-            reasonNote = reasonNote.trim();
-            if (reasonNote.isEmpty()) reasonNote = null;
-        }
-        boolean ok = receiptDAO.rejectReceipt(id, loggedUser.getId(), reasonId, reasonNote);
-        if (ok) {
-            Receipt r = receiptDAO.findById(id);
-            if (r != null) {
-                ActivityLog log = new ActivityLog();
-                log.setUserId(loggedUser.getId());
-                log.setEntityType("receipt");
-                log.setAction("REJECT");
-                log.setEntityId(id);
-                log.setEntityName(r.getReceiptCode());
-                String detail = "Từ chối phiếu";
-                if (reasonNote != null) detail += ": " + reasonNote;
-                log.setDetails(detail);
-                activityLogDAO.insert(log);
-                if (r.getCreatedBy() != loggedUser.getId()) {
-                    String notifMsg = "Phiếu nhập " + r.getReceiptCode() + " đã bị từ chối bởi " + loggedUser.getName() + ".";
-                    if (reasonNote != null) notifMsg += " Lý do: " + reasonNote;
-                    NotificationService.send(
-                            r.getCreatedBy(),
-                            "Phiếu nhập kho bị từ chối",
-                            notifMsg,
-                            request.getContextPath() + "/import-receipt?action=detail&id=" + id,
-                            "import_receipt",
-                            id
-                    );
-                }
-            }
-            session.setAttribute("toastMessage", "Đã từ chối phiếu");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + id);
-        } else {
-            request.setAttribute("toastMessage", "Không thể từ chối phiếu");
-            request.setAttribute("toastType", "danger");
-            viewDetail(request, response);
-        }
-    }
-
-    private void requestRevision(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        if (!hasApprovePerm(session)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return; }
-        int id = parseId(request.getParameter("id"));
-        if (id <= 0) { response.sendRedirect(request.getContextPath() + "/import-receipt"); return; }
-        Integer reasonId = null;
-        String reasonIdStr = request.getParameter("reasonId");
-        if (reasonIdStr != null && !reasonIdStr.isEmpty()) {
-            try { reasonId = Integer.parseInt(reasonIdStr); }
-            catch (NumberFormatException e) { reasonId = null; }
-        }
-        String reasonNote = request.getParameter("reason");
-        if (reasonNote != null) {
-            reasonNote = reasonNote.trim();
-            if (reasonNote.isEmpty()) reasonNote = null;
-        }
-        boolean ok = receiptDAO.requestRevision(id, loggedUser.getId(), reasonId, reasonNote);
-        if (ok) {
-            Receipt r = receiptDAO.findById(id);
-            if (r != null) {
-                ActivityLog log = new ActivityLog();
-                log.setUserId(loggedUser.getId());
-                log.setEntityType("receipt");
-                log.setAction("REVISION");
-                log.setEntityId(id);
-                log.setEntityName(r.getReceiptCode());
-                String detail = "Yêu cầu chỉnh sửa";
-                if (reasonNote != null) detail += ": " + reasonNote;
-                log.setDetails(detail);
-                activityLogDAO.insert(log);
-                if (r.getCreatedBy() != loggedUser.getId()) {
-                    String notifMsg = "Phiếu nhập " + r.getReceiptCode() + " cần chỉnh sửa bởi " + loggedUser.getName() + ".";
-                    if (reasonNote != null) notifMsg += " Lý do: " + reasonNote;
-                    NotificationService.send(
-                            r.getCreatedBy(),
-                            "Phiếu nhập kho cần chỉnh sửa",
-                            notifMsg,
-                            request.getContextPath() + "/import-receipt?action=detail&id=" + id,
-                            "import_receipt",
-                            id
-                    );
-                }
-            }
-            session.setAttribute("toastMessage", "Đã gửi yêu cầu chỉnh sửa");
-            session.setAttribute("toastType", "success");
-            response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + id);
-        } else {
-            request.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa");
-            request.setAttribute("toastType", "danger");
-            viewDetail(request, response);
-        }
+        session.setAttribute("toastMessage", "Chức năng sửa phiếu đã ngừng sử dụng");
+        session.setAttribute("toastType", "warning");
+        response.sendRedirect(request.getContextPath() + "/import-receipt?action=detail&id=" + receiptId);
     }
 
     private void downloadTemplate(HttpServletRequest request, HttpServletResponse response)
@@ -1369,6 +1079,10 @@ public class ImportReceiptController extends HttpServlet {
                 errors.add("Serial \"" + serial + "\" bị trùng trong file");
             }
 
+            if (!serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
+                errors.add("Serial \"" + serial + "\" đã tồn tại trong hệ thống");
+            }
+
             if (resolved != null) {
                 row.put("generatorId", resolved.getId());
                 row.put("generatorModel", resolved.getModel());
@@ -1392,10 +1106,45 @@ public class ImportReceiptController extends HttpServlet {
             }
         }
 
-        request.setAttribute("validRows", validRows);
-        request.setAttribute("invalidRows", invalidRows);
-        preserveFormStateForInlinePreview(request, warehouseId, reasonId, note);
-        request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
+        if (!isAjaxRequest(request)) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json;charset=UTF-8");
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("success", false);
+            body.put("message", "API importPreview chi ho tro AJAX");
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        if (validRows.isEmpty() && !invalidRows.isEmpty()) {
+            response.setContentType("application/json;charset=UTF-8");
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("success", false);
+            List<String> errorMessages = new ArrayList<>();
+            for (Map<String, Object> inv : invalidRows) {
+                Object e = inv.get("_errors");
+                if (e != null) errorMessages.add("Dòng " + inv.get("rowNum") + ": " + e);
+            }
+            body.put("message", "File Excel không có dòng hợp lệ nào. "
+                    + String.join("; ", errorMessages));
+            new Gson().toJson(body, response.getWriter());
+            return;
+        }
+
+        response.setContentType("application/json;charset=UTF-8");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("success", true);
+        body.put("message", "Đã đọc " + validRows.size() + " dòng từ Excel"
+                + (invalidRows.isEmpty() ? "" : " (bỏ qua " + invalidRows.size() + " dòng lỗi)"));
+        List<String> serials = new ArrayList<>();
+        List<Integer> generatorIds = new ArrayList<>();
+        for (Map<String, Object> v : validRows) {
+            serials.add((String) v.get("serial"));
+            generatorIds.add((Integer) v.get("generatorId"));
+        }
+        body.put("serials", serials);
+        body.put("generatorIds", generatorIds);
+        new Gson().toJson(body, response.getWriter());
     }
 
     /**
@@ -1628,7 +1377,9 @@ public class ImportReceiptController extends HttpServlet {
         r.setCreatedBy(loggedUser.getId());
         r.setNote(note);
         r.setReasonId(reasonId);
-        r.setStatus(GlobalUtils.RECEIPT_STATUS_PENDING);
+        r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
+        r.setApprovedBy(loggedUser.getId());
+        r.setApprovedAt(java.time.LocalDateTime.now());
 
         int receiptId = receiptDAO.insert(r);
         if (receiptId <= 0) {
@@ -1647,7 +1398,7 @@ public class ImportReceiptController extends HttpServlet {
             conn = receiptDAO.getConnection();
             conn.setAutoCommit(false);
             for (ReceiptDetail d : details) {
-                int invId = inventoryDAO.insertPendingImport(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
+                int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
                 if (invId <= 0) {
                     throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
                 }
@@ -1655,6 +1406,8 @@ public class ImportReceiptController extends HttpServlet {
                 d.setInventoryId(invId);
             }
             detailDAO.batchInsert(conn, details);
+            receiptDAO.writeStockCardsForImport(conn, receiptId, r.getReceiptCode(),
+                    warehouseId, loggedUser.getId(), details);
             conn.commit();
             ok = true;
         } catch (java.sql.SQLException ex) {
@@ -1689,17 +1442,12 @@ public class ImportReceiptController extends HttpServlet {
         log.setAction("IMPORT_EXCEL");
         log.setEntityId(receiptId);
         log.setEntityName(r.getReceiptCode());
-        log.setDetails("Nhập " + importedFromFile + " dòng từ Excel → tạo phiếu nhập kho");
+        log.setDetails("Nhập " + importedFromFile + " dòng từ Excel → tạo phiếu nhập kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
 
         session.setAttribute("toastMessage", "Đã nhập " + importedFromFile + " dòng từ Excel");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/import-receipt?action=list");
-    }
-
-    private boolean hasApprovePerm(HttpSession session) {
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        return perms != null && perms.contains("receipts.approve");
     }
 
     private int parseId(String s) {

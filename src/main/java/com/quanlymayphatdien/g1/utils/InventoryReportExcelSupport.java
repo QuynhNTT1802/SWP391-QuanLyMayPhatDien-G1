@@ -1,6 +1,5 @@
 package com.quanlymayphatdien.g1.utils;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -17,7 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class LiquidationReportExcelSupport {
+public class InventoryReportExcelSupport {
 
     private static final XSSFColor HEADER_BG = new XSSFColor(new byte[]{(byte) 79, (byte) 129, (byte) 189}, null);
     private static final DateTimeFormatter DF = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -60,9 +59,9 @@ public class LiquidationReportExcelSupport {
         CellStyle dataStyle = wb.createCellStyle();
         dataStyle.setFont(dataFont);
 
-        CellStyle moneyStyle = wb.createCellStyle();
-        moneyStyle.setFont(dataFont);
-        moneyStyle.setDataFormat(wb.createDataFormat().getFormat("#,##0"));
+        CellStyle numStyle = wb.createCellStyle();
+        numStyle.setFont(dataFont);
+        numStyle.setAlignment(HorizontalAlignment.CENTER);
 
         CellStyle totalStyle = wb.createCellStyle();
         totalStyle.setFont(dataFont);
@@ -73,15 +72,13 @@ public class LiquidationReportExcelSupport {
         String range = DF.format(fromDate) + " - " + DF.format(toDate);
         String wh = warehouseName != null && !warehouseName.isEmpty() ? warehouseName : "Tất cả kho";
 
-        String[] headers = {"STT", "Mã đơn", "Ngày thanh lý", "Kho", "Lý do",
-                "Serial Number", "Model", "Giá nhập (VNĐ)", "Giá thanh lý (VNĐ)", "Chênh lệch (VNĐ)",
-                "Khách hàng", "Người duyệt"};
+        String[] headers = {"STT", "Serial", "Trạng thái", "Model", "Hãng", "Kho", "Ngày nhập", "Mã phiếu nhập"};
 
-        XSSFSheet sheet = wb.createSheet("Báo cáo thanh lý chi tiết");
+        XSSFSheet sheet = wb.createSheet("Báo cáo tồn kho");
 
         int r = 0;
         Row titleRow = sheet.createRow(r);
-        titleRow.createCell(0).setCellValue("BÁO CÁO THANH LÝ CHI TIẾT");
+        titleRow.createCell(0).setCellValue("BÁO CÁO TỒN KHO CHI TIẾT");
         titleRow.getCell(0).setCellStyle(titleStyle);
         sheet.addMergedRegion(new CellRangeAddress(r, r, 0, headers.length - 1));
 
@@ -108,52 +105,21 @@ public class LiquidationReportExcelSupport {
             c.setCellStyle(headerStyle);
         }
 
-        int machineCountTotal = rows.size();
-        BigDecimal sumOrig = BigDecimal.ZERO;
-        BigDecimal sumLiq = BigDecimal.ZERO;
-        BigDecimal sumLoss = BigDecimal.ZERO;
         int idx = 1;
-
         for (Map<String, Object> m : rows) {
             r++;
             Row row = sheet.createRow(r);
-            row.createCell(0).setCellValue(idx++);
-            row.getCell(0).setCellStyle(dataStyle);
+            Cell stt = row.createCell(0);
+            stt.setCellValue(idx++);
+            stt.setCellStyle(numStyle);
 
-            cellStr(row, 1, (String) m.get("liquidationCode"), dataStyle);
-            cellStr(row, 2, (String) m.get("reviewedAtStr"), dataStyle);
-            cellStr(row, 3, (String) m.get("warehouseName"), dataStyle);
-            cellStr(row, 4, (String) m.get("reasonName"), dataStyle);
-            cellStr(row, 5, (String) m.get("serialNumber"), dataStyle);
-            cellStr(row, 6, (String) m.get("modelName"), dataStyle);
-            cellMoney(row, 7, bd(m.get("originalPrice")), moneyStyle);
-            cellMoney(row, 8, bd(m.get("liquidationPrice")), moneyStyle);
-            cellMoney(row, 9, bd(m.get("totalLoss")), moneyStyle);
-            cellStr(row, 10, (String) m.get("customerName"), dataStyle);
-            cellStr(row, 11, (String) m.get("ceoName"), dataStyle);
-
-            sumOrig = sumOrig.add(bd(m.get("originalPrice")));
-            sumLiq = sumLiq.add(bd(m.get("liquidationPrice")));
-            sumLoss = sumLoss.add(bd(m.get("totalLoss")));
-        }
-
-        r++;
-        Row total = sheet.createRow(r);
-        total.createCell(0).setCellStyle(totalStyle);
-        Cell totalLabel = total.createCell(1);
-        totalLabel.setCellValue("Tổng (" + machineCountTotal + " máy)");
-        totalLabel.setCellStyle(totalStyle);
-        sheet.addMergedRegion(new CellRangeAddress(r, r, 1, 6));
-        for (int i = 2; i <= 6; i++) {
-            Cell c = total.createCell(i);
-            c.setCellStyle(totalStyle);
-        }
-        cellMoney(total, 7, sumOrig, totalStyle);
-        cellMoney(total, 8, sumLiq, totalStyle);
-        cellMoney(total, 9, sumLoss, totalStyle);
-        for (int i = 10; i <= 11; i++) {
-            Cell c = total.createCell(i);
-            c.setCellStyle(totalStyle);
+            cellStr(row, 1, (String) m.get("serialNumber"), dataStyle);
+            cellStr(row, 2, statusLabel((String) m.get("status")), dataStyle);
+            cellStr(row, 3, (String) m.get("generatorModel"), dataStyle);
+            cellStr(row, 4, (String) m.get("generatorBrand"), dataStyle);
+            cellStr(row, 5, (String) m.get("warehouseName"), dataStyle);
+            cellStr(row, 6, (String) m.get("createdAtStr"), dataStyle);
+            cellStr(row, 7, (String) m.get("importReceiptCode"), dataStyle);
         }
 
         for (int i = 0; i < headers.length; i++) {
@@ -164,19 +130,33 @@ public class LiquidationReportExcelSupport {
         return wb;
     }
 
+    private static String statusLabel(String status) {
+        if (status == null) {
+            return "";
+        }
+        switch (status) {
+            case "IN_STOCK":
+                return "Đang trong kho";
+            case "SOLD":
+                return "Đã bán";
+            case "PENDING_LIQUIDATION":
+                return "Chờ thanh lý";
+            case "LIQUIDATED":
+                return "Đã thanh lý";
+            case "IN_TRANSIT":
+                return "Đang vận chuyển";
+            case "PENDING_IMPORT":
+                return "Chờ nhập";
+            case "RESERVED_EXPORT":
+                return "Đã đặt xuất";
+            default:
+                return status;
+        }
+    }
+
     private static void cellStr(Row row, int col, String val, CellStyle s) {
         Cell c = row.createCell(col);
         c.setCellValue(val != null ? val : "");
         c.setCellStyle(s);
-    }
-
-    private static void cellMoney(Row row, int col, BigDecimal val, CellStyle s) {
-        Cell c = row.createCell(col);
-        c.setCellValue(val != null ? val.doubleValue() : 0d);
-        c.setCellStyle(s);
-    }
-
-    private static BigDecimal bd(Object o) {
-        return o instanceof BigDecimal ? (BigDecimal) o : BigDecimal.ZERO;
     }
 }

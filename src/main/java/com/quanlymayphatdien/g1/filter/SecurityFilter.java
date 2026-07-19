@@ -79,7 +79,9 @@ public class SecurityFilter implements Filter {
             Rule.exact("/warehouse", "warehouses.view"),
             Rule.exact("/inventory", "inventory.view"),
             Rule.exact("/inventory/list", "inventory.view"),
+            Rule.exact("/inventory/report", "inventory.view"),
             Rule.exact("/stock-card", "stock_card.view"),
+            Rule.exact("/stock-card/report", "stock_card.view"),
             Rule.action("/import-receipt",
                     Map.of(
                             "create", "receipts.create",
@@ -96,6 +98,7 @@ public class SecurityFilter implements Filter {
                             "approve", "receipts.approve",
                             "reject", "receipts.reject"),
                     "receipts.view"),
+            Rule.exact("/receipts/report", "receipts.view"),
             Rule.action("/order",
                     Map.of(
                             "create", "orders.create",
@@ -109,8 +112,6 @@ public class SecurityFilter implements Filter {
                     Map.of(
                             "create", "liquidations.create",
                             "edit_submit", "liquidations.create",
-                            "approve_manager", "liquidations.approve_manager",
-                            "reject_manager", "liquidations.approve_manager",
                             "approve_ceo", "liquidations.approve_ceo",
                             "reject_ceo", "liquidations.approve_ceo"),
                     "liquidations.view"),

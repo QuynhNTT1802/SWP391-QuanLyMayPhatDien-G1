@@ -67,18 +67,6 @@
                     <div class="top-actions">
                         <jsp:include page="../../common/admin/bell.jsp"/>
                         <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                        <c:if test="${(receipt.status == 'NEEDS_REVISION' || receipt.status == 'DRAFT') && isOwner}">
-                            <a class="btn btn-primary" href="${pageContext.request.contextPath}/export-receipt?action=edit&id=${receipt.receiptId}">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Chỉnh sửa
-                            </a>
-                        </c:if>
-                        <c:if test="${receipt.status == 'PENDING' && isOwner}">
-                            <button type="button" class="btn btn-danger" onclick="confirmCancelDetail()">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                                Rút phiếu
-                            </button>
-                        </c:if>
                     </div>
                 </header>
 
@@ -96,20 +84,10 @@
                     </c:if>
 
                     <c:choose>
-                        <c:when test="${receipt.status == 'DRAFT'}">
-                            <c:set var="statusLabel" value="Bản nháp"/>
-                            <c:set var="statusBg" value="#d1ecf1"/>
-                            <c:set var="statusFg" value="#0c5460"/>
-                        </c:when>
                         <c:when test="${receipt.status == 'PENDING'}">
                             <c:set var="statusLabel" value="Chờ duyệt"/>
                             <c:set var="statusBg" value="#fff3cd"/>
                             <c:set var="statusFg" value="#856404"/>
-                        </c:when>
-                        <c:when test="${receipt.status == 'NEEDS_REVISION'}">
-                            <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
-                            <c:set var="statusBg" value="#ffe0b2"/>
-                            <c:set var="statusFg" value="#b15c00"/>
                         </c:when>
                         <c:when test="${receipt.status == 'COMPLETED'}">
                             <c:set var="statusLabel" value="Hoàn thành"/>
@@ -155,24 +133,7 @@
                         </div>
                     </div>
 
-                    <c:if test="${receipt.status == 'PENDING' && isManager}">
-                        <div class="action-bar-top">
-                            <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
-                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                Duyệt phiếu
-                            </button>
-                            <button type="button" class="btn" onclick="openModal('revisionModal')">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                Yêu cầu chỉnh sửa
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
-                                <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                Từ chối
-                            </button>
-                        </div>
-                    </c:if>
-
-                    <div class="tab-bar">
+<div class="tab-bar">
                         <a href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${receipt.receiptId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
                             <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                             Thông tin & các máy
@@ -205,8 +166,6 @@
                                         <option value="APPROVE" ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
                                         <option value="REJECT" ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
                                         <option value="REVISION" ${logAction == 'REVISION' ? 'selected' : ''}>Yêu cầu sửa</option>
-                                        <option value="DRAFT_UPDATE" ${logAction == 'DRAFT_UPDATE' ? 'selected' : ''}>Lưu nháp</option>
-                                        <option value="SUBMIT_DRAFT" ${logAction == 'SUBMIT_DRAFT' ? 'selected' : ''}>Gửi duyệt</option>
                                     </select>
                                     <div class="date-range">
                                         <label class="date-label">Từ</label>
@@ -270,8 +229,6 @@
                                                             <c:when test="${log.action == 'APPROVE'}">approve</c:when>
                                                             <c:when test="${log.action == 'REJECT'}">reject</c:when>
                                                             <c:when test="${log.action == 'REVISION'}">revision</c:when>
-                                                            <c:when test="${log.action == 'DRAFT_UPDATE'}">draft_update</c:when>
-                                                            <c:when test="${log.action == 'SUBMIT_DRAFT'}">submit_draft</c:when>
                                                             <c:otherwise>default</c:otherwise>
                                                         </c:choose>">
                                                         <c:choose>
@@ -281,8 +238,6 @@
                                                             <c:when test="${log.action == 'APPROVE'}">Duyệt</c:when>
                                                             <c:when test="${log.action == 'REJECT'}">Từ chối</c:when>
                                                             <c:when test="${log.action == 'REVISION'}">Yêu cầu sửa</c:when>
-                                                            <c:when test="${log.action == 'DRAFT_UPDATE'}">Lưu nháp</c:when>
-                                                            <c:when test="${log.action == 'SUBMIT_DRAFT'}">Gửi duyệt</c:when>
                                                             <c:otherwise>${log.action}</c:otherwise>
                                                         </c:choose></span>
                                                     </td>
@@ -387,6 +342,18 @@
                                         </div>
                                     </div>
                                 </div>
+                                <c:if test="${not empty receipt.liquidationCode}">
+                                    <div style="margin-top: 14px;">
+                                        <div class="info-field">
+                                            <div class="info-label">Đơn thanh lý</div>
+                                            <div class="info-value mono">
+                                                <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${receipt.liquidationId}">
+                                                    <c:out value="${receipt.liquidationCode}"/>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </c:if>
                                 <c:if test="${not empty receipt.note}">
                                     <div style="margin-top: 18px;">
                                         <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
@@ -436,54 +403,6 @@
             </div>
         </div>
 
-        <c:if test="${receipt.status == 'PENDING' && isManager}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt phiếu xuất</h3>
-                    <div class="modal-sub">Xác nhận duyệt phiếu <strong><c:out value="${receipt.receiptCode}"/></strong>? Hệ thống sẽ cập nhật tồn kho tương ứng.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/export-receipt?action=approve" id="approveForm">
-                        <input type="hidden" name="id" value="${receipt.receiptId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal-host" id="rejectModal">
-                <div class="modal-card">
-                    <h3>Từ chối phiếu</h3>
-                    <div class="modal-sub">Phiếu sẽ bị huỷ và không cập nhật tồn kho. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/export-receipt?action=reject">
-                        <input type="hidden" name="id" value="${receipt.receiptId}" />
-                        <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReason" name="reason" required placeholder="Ví dụ: Sai số lượng, thiếu chứng từ, hàng không đạt chất lượng..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="modal-host" id="revisionModal">
-                <div class="modal-card">
-                    <h3>Yêu cầu chỉnh sửa</h3>
-                    <div class="modal-sub">Gửi phiếu lại cho nhân viên tạo phiếu kèm lý do để chỉnh sửa và gửi lại.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/export-receipt?action=requestRevision" id="revisionFormDetail">
-                        <input type="hidden" name="id" value="${receipt.receiptId}" />
-                        <label>Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>
-                        <textarea name="reason" id="revisionReasonDetail" required placeholder="Mô tả chi tiết phần cần chỉnh sửa..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <div class="toast-host" id="toastHost"></div>
         <script>
             <c:if test="${not empty sessionScope.toastMessage}">
@@ -503,53 +422,12 @@
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
         <script>
-            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
-            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
-            document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                }
-            });
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SESSION_DATA && window.SESSION_DATA.message) {
                     toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
                     window.SESSION_DATA = null;
                 }
             });
-
-            var detailCancelLock = false;
-            function confirmCancelDetail() {
-                var ctx = window.APP_CTX;
-                var receiptId = ${receipt.receiptId};
-                if (!receiptId || !window.ExportScannerActions) return;
-                if (detailCancelLock) return;
-                window.ExportScannerActions.confirmAction({
-                    modalId: 'cancelDetailModal',
-                    title: 'Rút phiếu đang chờ duyệt',
-                    body: 'Phiếu đang chờ duyệt sẽ bị rút lại, các serial sẽ trả về kho và người duyệt sẽ nhận thông báo.',
-                    confirmLabel: 'Rút phiếu',
-                    danger: true
-                }).then(function () {
-                    detailCancelLock = true;
-                    return window.ExportScannerActions.cancelPending(receiptId);
-                }).then(function (data) {
-                    detailCancelLock = false;
-                    if (!data || !data.success) {
-                        toast((data && data.message) ? data.message : 'Lỗi', 'danger');
-                        return;
-                    }
-                    toast(data.message || 'Đã huỷ phiếu', 'success');
-                    setTimeout(function () { window.location.reload(); }, 700);
-                }).catch(function (err) {
-                    detailCancelLock = false;
-                    if (err && err.message === 'cancelled') return;
-                    console.error(err);
-                    toast('Lỗi kết nối: ' + err.message, 'danger');
-                });
-            }
         </script>
     </body>
 </html>

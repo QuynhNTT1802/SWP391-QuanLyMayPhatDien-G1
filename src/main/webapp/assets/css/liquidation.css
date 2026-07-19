@@ -65,12 +65,14 @@
 }
 .pill.liq-edit .pdot { background: var(--warn); }
 
-.pill.liq-rejected {
+.pill.liq-cancelled,
+.status-pill.liq-cancelled {
     color: var(--danger);
     border-color: color-mix(in srgb, var(--danger) 30%, transparent);
     background: var(--danger-soft);
 }
-.pill.liq-rejected .pdot { background: var(--danger); }
+.pill.liq-cancelled .pdot,
+.status-pill.liq-cancelled .pdot { background: var(--danger); }
 
 .pill.liq-muted {
     color: var(--muted);
@@ -793,11 +795,6 @@
     background: var(--accent-soft);
 }
 .act-badge.act-edit_submit {
-    color: var(--info);
-    border-color: color-mix(in srgb, var(--info) 32%, transparent);
-    background: var(--info-soft);
-}
-.act-badge.act-approve_manager {
     color: var(--info);
     border-color: color-mix(in srgb, var(--info) 32%, transparent);
     background: var(--info-soft);

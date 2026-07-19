@@ -86,6 +86,37 @@
         .stock-info .stock-label { color: var(--muted); }
         .stock-info .stock-value { color: var(--accent); font-weight: 600; }
 
+        .scanner-box {
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 14px 16px; margin-bottom: 14px;
+            background: var(--accent-soft);
+            border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+            border-radius: var(--radius);
+        }
+        .scanner-box label { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        .scanner-box .scanner-input-wrap { position: relative; }
+        .scanner-box input {
+            width: 100%; padding: 11px 14px;
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            background: var(--bg); color: var(--fg);
+            font-size: 14px; font-family: var(--font-mono); box-sizing: border-box;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .scanner-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        .scanner-box input.success { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+        .scanner-box input.error { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent); }
+        .scanner-box input:disabled { background: var(--surface-2); color: var(--muted); cursor: not-allowed; }
+        .scanner-box small { color: var(--muted); font-size: 12px; min-height: 16px; }
+        .scanner-box small.success { color: var(--accent); }
+        .scanner-box small.error { color: var(--danger); }
+        .scanner-box.disabled { opacity: 0.55; }
+        tr.po-locked-row.flash { animation: flashRowGreen 0.9s ease-out; }
+        @keyframes flashRowGreen {
+            0% { background-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+            100% { background-color: transparent; }
+        }
+        tr.manual-row.flash { animation: flashRowGreen 0.9s ease-out; }
+
         @media (max-width: 760px) {
             .form-grid { grid-template-columns: 1fr; }
         }
@@ -103,7 +134,7 @@
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <a class="btn" href="${pageContext.request.contextPath}/import-receipt">Huỷ</a>
-                        <button type="submit" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
+                        <button type="submit" id="submitBtn" name="submitMode" value="submit" form="receiptForm" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                             Gửi phiếu
                         </button>
@@ -193,7 +224,36 @@
                     <section class="section">
                         <div class="section-head">
                             <div>
-                                <div class="section-num">02 — CHI TIẾT DÒNG HÀNG</div>
+                                <div class="section-num">02 — QUÉT SERIAL NHẬP KHO</div>
+                                <h3 class="section-title">Quét barcode từng máy một cho đến khi đủ số lượng</h3>
+                            </div>
+                            <div class="section-actions">
+                                <span id="scanCounter" style="background: var(--surface-2); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; color: var(--muted);">
+                                    <c:choose>
+                                        <c:when test="${fromPurchaseOrder}">
+                                            Đã quét: <strong id="scanFilledCount" style="color: var(--accent);">0</strong> / <strong id="scanTotalCount">${expectedRows}</strong>
+                                        </c:when>
+                                        <c:otherwise>
+                                            Đã quét: <strong id="scanFilledCount" style="color: var(--accent);">0</strong> serial
+                                        </c:otherwise>
+                                    </c:choose>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="scanner-box" id="importScannerBox">
+                            <label>Quét serial để nhập nhanh</label>
+                            <div class="scanner-input-wrap">
+                                <input type="text" id="importScanBox" autocomplete="off"
+                                       placeholder="Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
+                            </div>
+                            <small id="importScanStatus">Sẵn sàng. Mỗi serial quét vào sẽ tự điền vào dòng trống tương ứng bên dưới.</small>
+                        </div>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">03 — CHI TIẾT DÒNG HÀNG</div>
                                 <h3 class="section-title">Danh sách máy phát điện</h3>
                             </div>
                             <div class="section-actions" style="display:flex; gap:8px;">
@@ -303,117 +363,11 @@
                             </div>
                         </c:if>
                     </section>
-
-                    <c:if test="${not empty validRows or not empty invalidRows}">
-                        <section class="section excel-preview-section" style="padding: 18px 22px; margin-top: 16px;">
-                            <div class="section-head">
-                                <div>
-                                    <div class="section-num">03 — XEM TRƯỚC TỪ EXCEL</div>
-                                    <h3 class="section-title">
-                                        Dữ liệu đọc từ file Excel
-                                        <span style="font-weight: 500; font-size: 12px; color: var(--muted); margin-left: 8px;">
-                                            Hợp lệ: <strong style="color:#065f46;">${fn:length(validRows)}</strong>
-                                            &nbsp;|&nbsp; Lỗi: <strong style="color:#991b1b;">${fn:length(invalidRows)}</strong>
-                                        </span>
-                                    </h3>
-                                </div>
-                            </div>
-
-                            <c:if test="${not empty invalidRows}">
-                                <div class="alert alert-warn" style="margin-bottom: 14px;">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                                    <div class="alert-body">
-                                        <div class="alert-title">Có ${fn:length(invalidRows)} dòng lỗi (sẽ bị bỏ qua)</div>
-                                        <ul style="margin: 4px 0 0 18px; padding: 0;">
-                                            <c:forEach var="row" items="${invalidRows}">
-                                                <li>Dòng ${row.rowNum}: ${row.model} / ${row.serial} - <strong style="color:#991b1b;">${row['_errors']}</strong></li>
-                                            </c:forEach>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </c:if>
-
-                            <c:if test="${empty validRows}">
-                                <div class="alert alert-error">
-                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                    <div class="alert-body">
-                                        <div class="alert-title">Không có dòng hợp lệ nào trong file Excel</div>
-                                        <div>Hãy sửa file và upload lại.</div>
-                                    </div>
-                                </div>
-                            </c:if>
-
-                            <c:if test="${not empty validRows}">
-                                <div class="info-box" style="background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px;">
-                                    <strong>Lưu ý:</strong> Tick chọn các dòng muốn nhập. Khi bấm "Tạo phiếu nhập", các dòng tick sẽ được thêm vào phiếu nháp.
-                                    Các dòng manual trong bảng phía trên cũng sẽ được thêm.
-                                </div>
-                                <table class="detail-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="col-num" style="width: 36px;">
-                                                <input type="checkbox" id="checkAllExcel" checked
-                                                       onclick="document.querySelectorAll('.excel-row-cb').forEach(c => c.checked = this.checked)"/>
-                                            </th>
-                                            <th class="col-num">#</th>
-                                            <th class="col-gen">Máy phát</th>
-                                            <th class="col-serial">Serial</th>
-                                            <th class="col-note">Ghi chú</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <c:forEach var="row" items="${validRows}" varStatus="st">
-                                            <tr>
-                                                <td class="col-num" style="text-align:center; padding-top:14px;">
-                                                    <input type="checkbox" class="excel-row-cb row-cb-excel"
-                                                           name="rowIndex" value="${st.index}" checked
-                                                           onchange="syncExcelHiddenInputs()"/>
-                                                </td>
-                                                <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
-                                                <td>
-                                                    <strong>${row.generatorModel}</strong>
-                                                    <span class="stock-info">${row.brand}</span>
-                                                    <input type="hidden" class="excel-gen" name="generatorId" value="${row.generatorId}"
-                                                           disabled="disabled"/>
-                                                </td>
-                                                <td>
-                                                    <span class="mono">${row.serial}</span>
-                                                    <input type="hidden" class="excel-serial" name="serialNumber" value="${row.serial}"
-                                                           disabled="disabled"/>
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="excel-note" name="detailNote" value="${row.note}"
-                                                           placeholder="(không có)" disabled="disabled"/>
-                                                </td>
-                                            </tr>
-                                        </c:forEach>
-                                    </tbody>
-                                </table>
-
-                                <div class="btn-row" style="display:flex; gap:10px; margin-top: 14px;">
-                                    <button type="button" class="btn btn-primary" onclick="submitImportConfirm()">
-                                        <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
-                                        Tạo phiếu nháp từ <span id="selectedCount">${fn:length(validRows)}</span> dòng Excel đã chọn
-                                    </button>
-                                    <button type="button" class="btn" onclick="document.getElementById('excelFileInput').click()">
-                                        Upload lại file khác
-                                    </button>
-                                </div>
-                            </c:if>
-                        </section>
-                    </c:if>
                 </div>
             </form>
 
-            <form id="excelUploadForm" method="POST" enctype="multipart/form-data"
-                  action="${pageContext.request.contextPath}/import-receipt?action=importPreview" style="display:none;">
-                <input type="hidden" name="warehouseId" id="excelWarehouseId"/>
-                <input type="hidden" name="reasonId" id="excelReasonId"/>
-                <input type="hidden" name="note" id="excelNote"/>
-                <input type="hidden" name="poId" id="excelPoId" value="<c:out value='${receipt.purchaseOrderId}'/>"/>
-                <input type="file" name="excelFile" id="excelFileInput" accept=".xlsx"
-                       onchange="submitExcelUpload(this)"/>
-            </form>
+            <input type="file" name="excelFile" id="excelFileInput" accept=".xlsx"
+                   onchange="submitExcelUpload(this)" style="display:none;"/>
         </main>
     </div>
 </div>
@@ -610,6 +564,7 @@
         if (tbody.querySelectorAll('tr').length <= 1) return;
         btn.closest('tr').remove();
         updateRowNumbers();
+        updatePoCounter();
     }
 
     function updateRowNumbers() {
@@ -621,12 +576,48 @@
 
     function updatePoCounter() {
         var counter = document.getElementById('poFilledCount');
-        if (!counter) return;
+        var poRows = document.querySelectorAll('tr.po-locked-row');
         var filled = 0;
-        document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
-            if (inp.value && inp.value.trim().length > 0) filled++;
+        poRows.forEach(function (r) {
+            var inp = r.querySelector('input[name="manualSerialNumber"]');
+            if (inp && inp.value && inp.value.trim().length > 0) filled++;
         });
-        counter.textContent = filled;
+        if (counter) counter.textContent = filled;
+        var scanFilled = document.getElementById('scanFilledCount');
+        if (scanFilled) {
+            var count = 0;
+            document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
+                if (inp.value && inp.value.trim().length > 0) count++;
+            });
+            scanFilled.textContent = count;
+        }
+        var scanEl = document.getElementById('importScanBox');
+        if (scanEl && poRows.length > 0 && filled >= poRows.length) {
+            disableScanWhenPoFull();
+        }
+        updateSubmitAvailability();
+    }
+
+    function updateSubmitAvailability() {
+        var submitBtn = document.getElementById('submitBtn');
+        if (!submitBtn) return;
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+        if (!isPoMode) {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('title');
+            return;
+        }
+        var rows = document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]');
+        var total = rows.length;
+        var filled = 0;
+        rows.forEach(function (inp) { if (inp.value && inp.value.trim()) filled++; });
+        if (filled === total) {
+            submitBtn.disabled = false;
+            submitBtn.removeAttribute('title');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.title = 'Đã nhập ' + filled + '/' + total + ' serial. Hãy quét tiếp đến khi đủ.';
+        }
     }
 
     function validateField(el) {
@@ -701,10 +692,16 @@
 
         <c:if test="${fromPurchaseOrder}">
         updatePoCounter();
-        document.querySelectorAll('tr.po-locked-row input[name="manualSerialNumber"]').forEach(function (inp) {
-            inp.addEventListener('input', updatePoCounter);
-        });
         </c:if>
+        // Lắng nghe thay đổi trên MỌI ô serial (cả PO và non-PO) để cập nhật counter + submit
+        document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+                updatePoCounter();
+                maybeReenableScanOnEdit();
+            });
+        });
+        // Khi xoá dòng thì update lại
+        document.getElementById('detailBody').addEventListener('DOMSubtreeModified', updatePoCounter);
 
         <c:if test="${preservedReasonId != null}">
         var reasonSel = document.querySelector('select[name="reasonId"]');
@@ -716,16 +713,291 @@
         if (noteEl) noteEl.value = '<c:out value="${preservedNote}"/>';
         </c:if>
 
-        syncExcelHiddenInputs();
+        initImportScanner();
+        updateSubmitAvailability();
     });
+
+    // ========== Scanner nhập kho ==========
+    var importScannerLock = false;
+
+    function initImportScanner() {
+        var scanInput = document.getElementById('importScanBox');
+        var scanBox = document.getElementById('importScannerBox');
+        if (!scanInput) return;
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        var refreshScannerState = function () {
+            var wh = whSelect ? whSelect.value : '';
+            if (!wh) {
+                scanBox.classList.add('disabled');
+                scanInput.disabled = true;
+                scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
+            } else {
+                scanBox.classList.remove('disabled');
+                scanInput.disabled = false;
+                scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+            }
+        };
+        refreshScannerState();
+        if (whSelect && whSelect.tagName === 'SELECT') {
+            whSelect.addEventListener('change', refreshScannerState);
+        }
+
+        scanInput.addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (importScannerLock) return;
+            var serial = scanInput.value.trim();
+            if (!serial) return;
+            handleImportScan(serial);
+        });
+
+        scanInput.addEventListener('input', function () {
+            scanInput.classList.remove('success', 'error');
+        });
+
+        // Auto-focus scan box ngay từ đầu
+        setTimeout(function () {
+            if (!scanInput.disabled) scanInput.focus();
+        }, 100);
+    }
+
+    function setImportScanStatus(msg, type) {
+        var el = document.getElementById('importScanStatus');
+        if (!el) return;
+        el.textContent = msg;
+        el.classList.remove('success', 'error');
+        if (type) el.classList.add(type);
+    }
+
+    function flashImportScan(type) {
+        var inp = document.getElementById('importScanBox');
+        if (!inp) return;
+        inp.classList.remove('success', 'error');
+        inp.classList.add(type);
+        setTimeout(function () { inp.classList.remove(type); }, 900);
+    }
+
+    function flashRowSuccess(row) {
+        if (!row) return;
+        row.classList.remove('flash');
+        // restart animation
+        void row.offsetWidth;
+        row.classList.add('flash');
+    }
+
+    function handleImportScan(serial) {
+        importScannerLock = true;
+        serial = (serial || '').trim();
+        if (!serial) {
+            importScannerLock = false;
+            return;
+        }
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        var whId = whSelect ? whSelect.value : '';
+        if (!whId) {
+            importScannerLock = false;
+            setImportScanStatus('Vui lòng chọn kho trước khi quét.', 'error');
+            flashImportScan('error');
+            return;
+        }
+
+        var isPoMode = !!document.querySelector('tr.po-locked-row');
+
+        // 1. Check duplicate trong bảng
+        var dupFound = null;
+        document.querySelectorAll('input[name="manualSerialNumber"]').forEach(function (inp) {
+            if (inp.value.trim() === serial) dupFound = inp;
+        });
+        if (dupFound) {
+            importScannerLock = false;
+            setImportScanStatus('Serial "' + serial + '" đã quét trong phiếu này.', 'error');
+            flashImportScan('error');
+            focusScanBox();
+            return;
+        }
+
+        if (isPoMode) {
+            // PO mode: chi can quet QR dien vao dong trong tiep theo,
+            // khong can check serial co ton tai trong he thong hay khong.
+            // Hang di theo PO da co san generator_id, nguoi dung chi can
+            // quet den khi du so dong theo PO la xong.
+            var poRows = document.querySelectorAll('tr.po-locked-row');
+            var targetRow = findPoTargetRow();
+            if (!targetRow) {
+                importScannerLock = false;
+                setImportScanStatus('Đã quét đủ ' + poRows.length + ' serial theo PO. Bấm "Gửi phiếu" để hoàn tất.', 'success');
+                flashImportScan('success');
+                disableScanWhenPoFull();
+                var scanEl0 = document.getElementById('importScanBox');
+                if (scanEl0) scanEl0.value = '';
+                focusScanBox();
+                return;
+            }
+            var snInput = targetRow.querySelector('input[name="manualSerialNumber"]');
+            snInput.value = serial;
+            flashRowSuccess(targetRow);
+            flashImportScan('success');
+            updatePoCounter();
+
+            var filledNow = 0;
+            poRows.forEach(function (r) {
+                var inp = r.querySelector('input[name="manualSerialNumber"]');
+                if (inp && inp.value.trim()) filledNow++;
+            });
+            setImportScanStatus('✓ Đã quét ' + filledNow + '/' + poRows.length + ' serial.', 'success');
+
+            var scanEl = document.getElementById('importScanBox');
+            if (scanEl) scanEl.value = '';
+            if (filledNow >= poRows.length) {
+                disableScanWhenPoFull();
+            }
+            importScannerLock = false;
+            focusScanBox();
+            return;
+        }
+
+        // 2. Non-PO mode: van giu nguyen flow AJAX lookup nhu cu
+        var url = ctx + '/inventory-lookup?action=scan&serial=' + encodeURIComponent(serial)
+                + '&warehouseId=' + encodeURIComponent(whId);
+        fetch(url).then(function (r) { return r.json(); })
+            .then(function (data) {
+                importScannerLock = false;
+
+                if (!data || !data.found) {
+                    setImportScanStatus('Serial "' + serial + '" không tồn tại trong hệ thống.', 'error');
+                    flashImportScan('error');
+                    focusScanBox();
+                    return;
+                }
+                if (data.blocked) {
+                    setImportScanStatus('Serial "' + serial + '" đang bị chặn / đang sử dụng.', 'error');
+                    flashImportScan('error');
+                    focusScanBox();
+                    return;
+                }
+
+                // Non-PO mode: tìm dòng trống hoặc tạo dòng mới
+                var emptyRow = findEmptyManualRow();
+                var targetTr;
+                if (emptyRow) {
+                    targetTr = emptyRow;
+                } else {
+                    targetTr = buildEmptyRow();
+                    document.getElementById('detailBody').appendChild(targetTr);
+                    updateRowNumbers();
+                }
+                var genSel = targetTr.querySelector('select[name="manualGeneratorId"]');
+                var snInput2 = targetTr.querySelector('input[name="manualSerialNumber"]');
+                if (genSel) {
+                    // Đảm bảo generator từ serial quét có trong cache để dropdown hiển thị
+                    var foundInCache = false;
+                    for (var i = 0; i < generatorCache.length; i++) {
+                        if (String(generatorCache[i].id) === String(data.generatorId)) { foundInCache = true; break; }
+                    }
+                    if (!foundInCache) {
+                        generatorCache.push({
+                            id: data.generatorId,
+                            model: data.generatorModel || ('#' + data.generatorId),
+                            brand: data.generatorBrand || '',
+                            stockQty: 0
+                        });
+                    }
+                    genSel.setAttribute('data-current', data.generatorId);
+                    renderGeneratorOptions(genSel);
+                    genSel.value = data.generatorId;
+                    onGeneratorChange(genSel);
+                }
+                if (snInput2) {
+                    snInput2.value = serial;
+                }
+                flashRowSuccess(targetTr);
+                flashImportScan('success');
+                setImportScanStatus('✓ Đã thêm serial "' + serial + '" (model "' + (data.generatorModel || '') + '").', 'success');
+                updatePoCounter();
+
+                var scanEl = document.getElementById('importScanBox');
+                if (scanEl) scanEl.value = '';
+                focusScanBox();
+            })
+            .catch(function (err) {
+                importScannerLock = false;
+                console.error(err);
+                setImportScanStatus('Lỗi kết nối: ' + err.message, 'error');
+                flashImportScan('error');
+                focusScanBox();
+            });
+    }
+
+    function focusScanBox() {
+        var scanEl = document.getElementById('importScanBox');
+        if (scanEl && !scanEl.disabled) {
+            scanEl.focus();
+        }
+    }
+
+    function findPoTargetRow() {
+        var rows = document.querySelectorAll('tr.po-locked-row');
+        for (var i = 0; i < rows.length; i++) {
+            var snInput = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (!snInput) continue;
+            if (!snInput.value.trim()) {
+                return rows[i];
+            }
+        }
+        return null;
+    }
+
+    function disableScanWhenPoFull() {
+        var scanEl = document.getElementById('importScanBox');
+        if (!scanEl) return;
+        var scanBox = document.getElementById('importScannerBox');
+        scanEl.disabled = true;
+        scanEl.placeholder = 'Đã đủ serial theo PO. Bấm "Gửi phiếu" để hoàn tất.';
+        if (scanBox) scanBox.classList.add('disabled');
+    }
+
+    function maybeReenableScanOnEdit() {
+        var scanEl = document.getElementById('importScanBox');
+        if (!scanEl || !scanEl.disabled) return;
+        if (!document.querySelector('tr.po-locked-row')) return;
+        var poRows = document.querySelectorAll('tr.po-locked-row');
+        var emptyExists = false;
+        poRows.forEach(function (r) {
+            var inp = r.querySelector('input[name="manualSerialNumber"]');
+            if (inp && !inp.value.trim()) emptyExists = true;
+        });
+        if (emptyExists) {
+            scanEl.disabled = false;
+            scanEl.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+            var scanBox = document.getElementById('importScannerBox');
+            if (scanBox) scanBox.classList.remove('disabled');
+            setImportScanStatus('Đã mở lại ô quét. Bạn có thể tiếp tục quét serial.', 'success');
+        }
+    }
+
+    function findEmptyManualRow() {
+        var rows = document.querySelectorAll('#detailBody tr');
+        for (var i = 0; i < rows.length; i++) {
+            var snInput = rows[i].querySelector('input[name="manualSerialNumber"]');
+            if (snInput && !snInput.value.trim()) {
+                return rows[i];
+            }
+        }
+        return null;
+    }
 
     function submitExcelUpload(input) {
         if (!input.files || !input.files[0]) {
             return;
         }
-        var whIdInput = document.querySelector('input[name="warehouseId"]');
-        var whSelect = document.getElementById('warehouseSelect');
-        var whId = whIdInput ? whIdInput.value : (whSelect ? whSelect.value : '');
+        var whSelect = document.querySelector('select[name="warehouseId"]');
+        var whId = whSelect ? whSelect.value : '';
+        if (!whId) {
+            var whHidden = document.querySelector('input[name="warehouseId"][type="hidden"]');
+            if (whHidden) whId = whHidden.value;
+        }
         if (!whId) {
             toast('Vui lòng chọn kho trước khi nhập Excel', 'danger');
             input.value = '';
@@ -733,16 +1005,6 @@
         }
 
         var isPoMode = !!document.querySelector('tr.po-locked-row');
-        if (!isPoMode) {
-            document.getElementById('excelWarehouseId').value = whId;
-            var reasonEl = document.querySelector('select[name="reasonId"]');
-            if (reasonEl) document.getElementById('excelReasonId').value = reasonEl.value;
-            var noteEl = document.querySelector('textarea[name="note"]');
-            if (noteEl) document.getElementById('excelNote').value = noteEl.value;
-            document.getElementById('excelUploadForm').submit();
-            return;
-        }
-
         var reasonEl = document.querySelector('select[name="reasonId"]');
         var noteEl = document.querySelector('textarea[name="note"]');
         var existingPoId = document.querySelector('input[name="poId"]');
@@ -753,15 +1015,6 @@
         formData.append('reasonId', reasonEl ? reasonEl.value : '');
         formData.append('note', noteEl ? noteEl.value : '');
         if (existingPoId) formData.append('poId', existingPoId.value || '');
-
-        document.querySelectorAll('#detailBody tr').forEach(function (tr) {
-            var g = tr.querySelector('select[name="manualGeneratorId"]');
-            var s = tr.querySelector('input[name="manualSerialNumber"]');
-            var n = tr.querySelector('input[name="manualDetailNote"]');
-            if (g) formData.append('manualGeneratorId', g.value || '');
-            if (s) formData.append('manualSerialNumber', s.value || '');
-            if (n) formData.append('manualDetailNote', n.value || '');
-        });
 
         var btn = document.getElementById('btnImportExcel');
         if (btn) { btn.disabled = true; btn.classList.add('loading'); }
@@ -782,9 +1035,13 @@
                 toast((data && data.message) ? data.message : 'Lỗi khi đọc file', 'danger');
                 return;
             }
-            applySerialsToPoRows(data.serials || []);
-            if (typeof updatePoCounter === 'function') updatePoCounter();
-            toast(data.message || ('Đã đọc ' + data.serials.length + ' serial'), 'success');
+            if (isPoMode) {
+                applySerialsToPoRows(data.serials || []);
+                if (typeof updatePoCounter === 'function') updatePoCounter();
+            } else {
+                applySerialsToManualRows(data.generatorIds || [], data.serials || []);
+            }
+            toast(data.message || 'Đã đọc file Excel', 'success');
         })
         .catch(function (err) {
             if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
@@ -802,48 +1059,25 @@
             if (!input) continue;
             input.value = (i < serials.length && serials[i] != null) ? serials[i] : '';
         }
+        updatePoCounter();
     }
 
-    function addHidden(form, name, value) {
-        if (value === undefined || value === null) value = '';
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
-    }
-
-    function syncExcelHiddenInputs() {
-        var checked = document.querySelectorAll('.excel-row-cb:checked').length;
-        var span = document.getElementById('selectedCount');
-        if (span) span.textContent = checked;
-
-        document.querySelectorAll('.excel-row-cb').forEach(function (cb) {
-            var row = cb.closest('tr');
-            if (!row) return;
-            var enabled = cb.checked;
-            row.querySelectorAll('input.excel-gen, input.excel-serial, input.excel-note').forEach(function (inp) {
-                inp.disabled = !enabled;
-            });
-        });
-    }
-
-    function submitImportConfirm() {
-        if (document.querySelector('tr.po-locked-row')) {
-            toast('Đang ở chế độ PO, hãy dùng nút Gửi phiếu.', 'info');
-            return;
+    function applySerialsToManualRows(generatorIds, serials) {
+        var tbody = document.getElementById('detailBody');
+        if (!tbody) return;
+        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+        for (var i = 0; i < serials.length; i++) {
+            var genId = generatorIds[i];
+            var serial = serials[i];
+            if (!serial) continue;
+            var tr = buildEmptyRow(genId);
+            var snInput = tr.querySelector('input[name="manualSerialNumber"]');
+            if (snInput) snInput.value = serial;
+            tbody.appendChild(tr);
         }
-        var checkedCount = document.querySelectorAll('.excel-row-cb:checked').length;
-        if (checkedCount === 0) {
-            toast('Vui lòng tick chọn ít nhất 1 dòng Excel để nhập', 'danger');
-            return;
-        }
-        if (!confirm('Tạo phiếu nháp với ' + checkedCount + ' dòng Excel đã chọn (cộng với các dòng manual)? Bạn có thể chỉnh sửa trước khi gửi duyệt.')) {
-            return;
-        }
-        var form = document.getElementById('receiptForm');
-        form.action = ctx + '/import-receipt?action=importConfirm';
-        form.submit();
+        updateRowNumbers();
+        if (typeof updateOrderCounter === 'function') updateOrderCounter();
+        updatePoCounter();
     }
 </script>
 </body>
