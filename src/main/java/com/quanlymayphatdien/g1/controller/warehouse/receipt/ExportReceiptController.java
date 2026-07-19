@@ -100,6 +100,9 @@ public class ExportReceiptController extends HttpServlet {
                 case "selectLiquidation":
                     selectLiquidation(request, response);
                     break;
+                case "selectTransfer":
+                    selectTransfer(request, response);
+                    break;
                 case "loadGenerators":
                     loadGeneratorsJson(request, response);
                     break;
@@ -554,6 +557,24 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("toIndex", toIndex);
         request.setAttribute("activePage", "export-select-liquidation");
         request.getRequestDispatcher("/view/receipt/export/export-select-liquidation.jsp").forward(request, response);
+    }
+
+    private void selectTransfer(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+
+        Integer scopedWarehouseId = (Integer) session.getAttribute("scopedWarehouseId");
+        if (scopedWarehouseId == null) scopedWarehouseId = 0;
+
+        com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+        java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
+                = tDAO.findReadyForExport(scopedWarehouseId, loggedUser.getId());
+
+        request.setAttribute("transfers", transfers);
+        request.setAttribute("totalItems", transfers.size());
+        request.setAttribute("activePage", "export-select-transfer");
+        request.getRequestDispatcher("/view/receipt/export/export-select-transfer.jsp").forward(request, response);
     }
 
     private void loadGeneratorsJson(HttpServletRequest request, HttpServletResponse response)
@@ -1467,7 +1488,3 @@ public class ExportReceiptController extends HttpServlet {
         return "";
     }
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
