@@ -148,54 +148,8 @@
                     <section class="section">
                         <div class="section-head">
                             <div>
-                                <div class="section-num">02 — CHỌN MẪU MÁY</div>
-                                <h3 class="section-title">
-                                    <c:choose>
-                                        <c:when test="${not empty availableGenerators}">Chọn mẫu máy từ phiếu mua</c:when>
-                                        <c:otherwise>Chọn mẫu máy phát điện cần nhập</c:otherwise>
-                                    </c:choose>
-                                </h3>
-                            </div>
-                        </div>
-                        <div class="scanner-model-picker">
-                            <label>Mẫu máy phát điện *</label>
-                            <select id="activeGeneratorId" name="selectedGeneratorId" required onchange="onActiveGeneratorChange()">
-                                <option value="">-- Chọn mẫu máy trước khi quét --</option>
-                                <c:choose>
-                                    <c:when test="${not empty availableGenerators}">
-                                        <c:forEach var="gen" items="${availableGenerators}">
-                                            <c:set var="genLabel" value="${gen.model}"/>
-                                            <c:if test="${not empty brandMap[gen.id]}">
-                                                <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
-                                            </c:if>
-                                            <option value="${gen.id}" data-model="<c:out value='${gen.model}'/>" data-brand="<c:out value='${brandMap[gen.id]}'/>">${genLabel}</option>
-                                        </c:forEach>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <c:forEach var="gen" items="${generators}">
-                                            <c:set var="genLabel" value="${gen.model}"/>
-                                            <c:if test="${not empty brandMap[gen.id]}">
-                                                <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
-                                            </c:if>
-                                            <option value="${gen.id}" data-model="<c:out value='${gen.model}'/>" data-brand="<c:out value='${brandMap[gen.id]}'/>">${genLabel}</option>
-                                        </c:forEach>
-                                    </c:otherwise>
-                                </c:choose>
-                            </select>
-                            <small class="hint">
-                                <c:choose>
-                                    <c:when test="${not empty availableGenerators}">Chỉ hiển thị các mẫu máy có trong phiếu mua. Serial quét vào phải khớp với mẫu máy đã chọn.</c:when>
-                                    <c:otherwise>Mỗi serial quét vào sẽ tự gắn vào mẫu máy đã chọn.</c:otherwise>
-                                </c:choose>
-                            </small>
-                        </div>
-                    </section>
-
-                    <section class="section">
-                        <div class="section-head">
-                            <div>
-                                <div class="section-num">03 — DANH SÁCH MÁY PHÁT ĐIỆN</div>
-                                <h3 class="section-title">Nhập serial theo từng phương thức</h3>
+                                <div class="section-num">02 — DANH SÁCH MÁY PHÁT ĐIỆN</div>
+                                <h3 class="section-title">Quét / Nhập serial hàng loạt</h3>
                             </div>
                         </div>
 
@@ -210,23 +164,69 @@
                             </button>
                         </div>
 
-                        <div class="tab-pane active" data-tab="scan">
-                            <div class="scanner-box" id="importScannerBox">
-                                <label>Quét serial để nhập nhanh</label>
-                                <div class="scanner-input-wrap">
-                                    <input type="text" id="importScanBox" autocomplete="off"
-                                           placeholder="<c:choose><c:when test="${not fromPurchaseOrder and not fromExportReceipt}">Chọn mẫu máy ở mục 02, sau đó đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...</c:when><c:otherwise>Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...</c:otherwise></c:choose>" />
+                        
+                        <c:if test="${fromPurchaseOrder}">
+                            <c:set var="poBreakdown" value=""/>
+                            <c:forEach var="entry" items="${poQtyMap}" varStatus="loop">
+                                <c:set var="genLabel" value=""/>
+                                <c:forEach var="gen" items="${generators}">
+                                    <c:if test="${gen.id eq entry.key}">
+                                        <c:set var="genLabel" value="${gen.model}"/>
+                                        <c:if test="${not empty brandMap[gen.id]}">
+                                            <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
+                                        </c:if>
+                                    </c:if>
+                                </c:forEach>
+                                <c:set var="poBreakdown" value="${poBreakdown}${entry.value} ${genLabel}${!loop.last ? ', ' : ''}"/>
+                            </c:forEach>
+                            <div class="alert alert-info" style="margin: 14px 0;">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                                <div class="alert-body">
+                                    <div class="alert-title">Phiếu nhập từ Purchase Order</div>
+                                    <div>
+                                        Tổng cần nhập: <strong>${expectedRows} serial</strong>, bao gồm: <strong>${poBreakdown}</strong>.
+                                    </div>
                                 </div>
-                                <span id="scanCounter" class="scanner-counter">
+                            </div>
+                        </c:if>
+                        <div class="tab-pane active" data-tab="scan">
+                            <div class="scanner-model-picker">
+                                <label>Mẫu máy phát điện *</label>
+                                <select id="activeGeneratorId" name="selectedGeneratorId" required onchange="onActiveGeneratorChange()">
+                                    <option value="">-- Chọn mẫu máy trước khi quét --</option>
                                     <c:choose>
-                                        <c:when test="${fromPurchaseOrder or fromExportReceipt}">
-                                            Đã quét: <strong id="scanFilledCount" style="color: var(--accent);">0</strong> / <strong id="scanTotalCount">${expectedRows}</strong>
+                                        <c:when test="${not empty availableGenerators}">
+                                            <c:forEach var="gen" items="${availableGenerators}">
+                                                <c:set var="genLabel" value="${gen.model}"/>
+                                                <c:if test="${not empty brandMap[gen.id]}">
+                                                    <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
+                                                </c:if>
+                                                <option value="${gen.id}" data-model="<c:out value='${gen.model}'/>" data-brand="<c:out value='${brandMap[gen.id]}'/>">${genLabel}</option>
+                                            </c:forEach>
                                         </c:when>
                                         <c:otherwise>
-                                            Đã quét: <strong id="scanFilledCount" style="color: var(--accent);">0</strong> serial
+                                            <c:forEach var="gen" items="${generators}">
+                                                <c:set var="genLabel" value="${gen.model}"/>
+                                                <c:if test="${not empty brandMap[gen.id]}">
+                                                    <c:set var="genLabel" value="${genLabel} (${brandMap[gen.id]})"/>
+                                                </c:if>
+                                                <option value="${gen.id}" data-model="<c:out value='${gen.model}'/>" data-brand="<c:out value='${brandMap[gen.id]}'/>">${genLabel}</option>
+                                            </c:forEach>
                                         </c:otherwise>
                                     </c:choose>
-                                </span>
+                                </select>
+                                <small class="hint">
+                                    <c:choose>
+                                        <c:when test="${not empty availableGenerators}">Chỉ hiển thị các mẫu máy có trong phiếu mua</c:when>
+                                        <c:otherwise>Mỗi serial quét vào sẽ tự gắn vào mẫu máy đã chọn.</c:otherwise>
+                                    </c:choose>
+                                </small>
+                            </div>
+                            <div class="scanner-box" id="importScannerBox">
+                                <div class="scanner-input-wrap">
+                                    <input type="text" id="importScanBox" autocomplete="off"
+                                           placeholder="" />
+                                </div>
                             </div>
                         </div>
 
@@ -240,23 +240,10 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l5-5-5 5M12 3v12"/></svg>
                                     Nhập từ Excel
                                 </button>
-                                <span class="excel-hint">
-                                    Tải mẫu Excel → điền serial → bấm "Nhập từ Excel" để upload
-                                </span>
                             </div>
                         </div>
 
-                        <c:if test="${fromPurchaseOrder}">
-                            <div class="alert alert-info" style="margin: 14px 0;">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                                <div class="alert-body">
-                                    <div class="alert-title">Phiếu nhập từ Purchase Order - danh sách máy đã được cố định</div>
-                                    <div>
-                                        Tổng cần nhập: <strong>${expectedRows} serial</strong>.
-                                    </div>
-                                </div>
-                            </div>
-                        </c:if>
+
                         <div id="warehouseWarn" class="alert alert-info" style="display:none;">
                             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <div class="alert-body">
@@ -316,6 +303,7 @@
     var ctx = window.APP_CTX;
     var generatorCache = ${empty generatorsJson ? '[]' : generatorsJson};
     var prefillDetails = ${empty prefillDetailsJson ? '[]' : prefillDetailsJson};
+    var expectedRowsJs = <c:out value="${empty expectedRows ? 0 : expectedRows}"/>;
     <c:if test="${not empty availableGenerators}">
     window.PO_AVAILABLE_GENERATORS = [
         <c:forEach var="gen" items="${availableGenerators}" varStatus="st">
@@ -612,7 +600,7 @@
         empty.style.display = hasGroups ? 'none' : 'flex';
     }
 
-    function addRowToGroup(group, serial, note) {
+    function addRowToGroup(group, serial, note, existingInventoryId) {
         if (!group) return null;
         var tbody = group.querySelector('tbody');
         if (!tbody) return null;
@@ -631,8 +619,17 @@
         hidden.name = 'manualGeneratorId';
         hidden.value = genId;
         tr.appendChild(hidden);
+        if (existingInventoryId != null && existingInventoryId !== '') {
+            var existHidden = document.createElement('input');
+            existHidden.type = 'hidden';
+            existHidden.name = 'existingInventoryId';
+            existHidden.value = existingInventoryId;
+            tr.appendChild(existHidden);
+            tr.setAttribute('data-existing', '1');
+        }
         tbody.appendChild(tr);
         updateGroupCount(group);
+        updateRowNumbers();
         return tr;
     }
 
@@ -659,6 +656,7 @@
                 updateEmptyState();
             }
         }
+        updateRowNumbers();
         updatePoCounter();
         refreshScannerState();
     }
@@ -669,6 +667,7 @@
         if (!confirm('Xoá cả nhóm máy này?')) return;
         group.remove();
         updateEmptyState();
+        updateRowNumbers();
         updatePoCounter();
         refreshScannerState();
     }
@@ -676,7 +675,7 @@
     function addRow() {
         var info = getActiveGeneratorInfo();
         if (!info) {
-            toast('Vui lòng chọn mẫu máy phát điện ở mục 02 trước.', 'danger');
+            toast('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'danger');
             return;
         }
         var group = getOrCreateGroup(info.id);
@@ -699,13 +698,6 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-    }
-
-    function updateRowNumbers() {
-        document.querySelectorAll('#detailGroups .row-num').forEach(function (el, i) {
-            el.textContent = i + 1;
-        });
-        updatePoCounter();
     }
 
     function updatePoCounter() {
@@ -955,12 +947,25 @@
             return;
         }
 
+        if (expectedRowsJs && expectedRowsJs > 0) {
+            var currentFilled = parseInt((document.getElementById('poFilledCount') || {}).textContent || '0', 10) || 0;
+            if (currentFilled >= expectedRowsJs) {
+                importScannerLock = false;
+                var fullMsg = 'Đã quét đủ ' + expectedRowsJs + ' serial theo phiếu. Không thể quét thêm.';
+                setImportScanStatus(fullMsg, 'error');
+                flashImportScan('error');
+                toast(fullMsg, 'danger');
+                focusScanBox();
+                return;
+            }
+        }
+
         var activeInfo = getActiveGeneratorInfo();
         var isTransferMode = !!document.querySelector('tr.transfer-suggest-row');
 
         if (!isTransferMode && !activeInfo) {
             importScannerLock = false;
-            setImportScanStatus('Vui lòng chọn mẫu máy phát điện ở mục 02 trước khi quét.', 'error');
+            setImportScanStatus('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'error');
             flashImportScan('error');
             var picker = document.getElementById('activeGeneratorId');
             if (picker) picker.focus();
@@ -973,8 +978,10 @@
         });
         if (dupFound) {
             importScannerLock = false;
-            setImportScanStatus('Serial "' + serial + '" đã quét trong phiếu này.', 'error');
+            var dupMsg = 'Serial "' + serial + '" đã tồn tại trong phiếu này.';
+            setImportScanStatus(dupMsg, 'error');
             flashImportScan('error');
+            toast(dupMsg, 'danger');
             focusScanBox();
             return;
         }
@@ -991,11 +998,18 @@
             .then(function (data) {
                 importScannerLock = false;
 
+                var existingInvId = null;
                 if (data && data.found) {
-                    setImportScanStatus('Serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.', 'error');
-                    flashImportScan('error');
-                    focusScanBox();
-                    return;
+                    if (data.status === 'SOLD') {
+                        existingInvId = data.inventoryId;
+                    } else {
+                        var sysMsg = 'Serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.';
+                        setImportScanStatus(sysMsg, 'error');
+                        flashImportScan('error');
+                        toast(sysMsg, 'danger');
+                        focusScanBox();
+                        return;
+                    }
                 }
 
                 if (window.PO_QTY_MAP && activeInfo && window.PO_QTY_MAP[String(activeInfo.id)]) {
@@ -1003,8 +1017,10 @@
                     var filled = countFilledForGen(activeInfo.id);
                     if (filled >= allowed) {
                         importScannerLock = false;
-                        setImportScanStatus('Đã quét đủ ' + allowed + ' serial cho mẫu ' + (activeInfo.model || '') + '.', 'error');
+                        var perGenMsg = 'Đã quét đủ ' + allowed + ' serial cho mẫu ' + (activeInfo.model || '') + '.';
+                        setImportScanStatus(perGenMsg, 'error');
                         flashImportScan('error');
+                        toast(perGenMsg, 'danger');
                         focusScanBox();
                         return;
                     }
@@ -1014,12 +1030,15 @@
                     importScannerLock = false;
                     return;
                 }
-                var targetTr = addRowToGroup(group, serial, '');
+                var targetTr = addRowToGroup(group, serial, '', existingInvId);
                 group.setAttribute('open', '');
                 flashRowSuccess(targetTr);
                 flashImportScan('success');
                 var modelLabel = activeInfo ? (activeInfo.model || '') : '';
-                setImportScanStatus('✓ Đã thêm serial "' + serial + '" vào mẫu ' + modelLabel + '.', 'success');
+                var okMsg = existingInvId
+                        ? ('✓ Đã nhập lại serial "' + serial + '" (đã bán trước đó) vào kho.')
+                        : ('✓ Đã thêm serial "' + serial + '" vào mẫu ' + modelLabel + '.');
+                setImportScanStatus(okMsg, 'success');
                 updatePoCounter();
 
                 var scanEl2 = document.getElementById('importScanBox');
@@ -1238,7 +1257,7 @@
                 if (isTransferMode2) {
                     applySerialsToTransferRows(data.serials || []);
                 } else {
-                    applySerialsToTableRows(data.generatorIds || [], data.serials || []);
+                    applySerialsToTableRows(data.generatorIds || [], data.serials || [], data.models || []);
                 }
                 toast(data.message || 'Đã đọc file Excel', 'success');
                 if (typeof switchImportTab === 'function') switchImportTab('scan');
@@ -1251,23 +1270,63 @@
         });
     }
 
-    function applySerialsToTableRows(generatorIds, serials) {
+    function clearAllGroups() {
+        var groups = document.getElementById('detailGroups');
+        if (!groups) return;
+        groups.querySelectorAll('details.detail-group').forEach(function (g) { g.remove(); });
+        groups.querySelectorAll('tr.transfer-suggest-row').forEach(function (r) {
+            var sn = r.querySelector('input[name="manualSerialNumber"]');
+            if (sn) sn.value = '';
+        });
+        updateEmptyState();
+        updateRowNumbers();
+        updatePoCounter();
+    }
+
+    function applySerialsToTableRows(generatorIds, serials, models) {
+        clearAllGroups();
+        var skipped = 0;
+        var added = 0;
         for (var i = 0; i < serials.length; i++) {
             var serial = (serials[i] || '').trim();
             if (!serial) continue;
             var genId = (generatorIds && generatorIds[i]) ? generatorIds[i] : '';
-            if (!genId) {
-                var info = getActiveGeneratorInfo();
-                genId = info ? info.id : '';
+            if (!genId && models && models[i]) {
+                var resolved = findGenInfoByModelName(models[i]);
+                if (resolved) genId = resolved.id;
             }
-            if (!genId) continue;
+            if (!genId) {
+                skipped++;
+                continue;
+            }
             var group = getOrCreateGroup(genId);
             addRowToGroup(group, serial, '');
+            added++;
         }
         document.querySelectorAll('#detailGroups details.detail-group').forEach(function (g) {
             g.setAttribute('open', '');
         });
         updatePoCounter();
+        updateRowNumbers();
+        if (added > 0) {
+            toast('Đã nhập ' + added + ' serial từ Excel.', 'success');
+        }
+        if (skipped > 0) {
+            toast('Bỏ qua ' + skipped + ' dòng Excel không xác định được mẫu máy.', 'warning');
+        }
+    }
+
+    function findGenInfoByModelName(modelName) {
+        if (!modelName) return null;
+        var target = String(modelName).trim().toLowerCase();
+        var list = (window.PO_AVAILABLE_GENERATORS && window.PO_AVAILABLE_GENERATORS.length > 0)
+                ? window.PO_AVAILABLE_GENERATORS : generatorCache;
+        for (var i = 0; i < list.length; i++) {
+            if (String(list[i].model || '').trim().toLowerCase() === target) {
+                return list[i];
+            }
+        }
+        return null;
     }
 
     function applySerialsToTransferRows(serials) {

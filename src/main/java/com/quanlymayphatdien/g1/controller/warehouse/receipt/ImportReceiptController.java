@@ -17,6 +17,7 @@ import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
@@ -250,26 +251,6 @@ public class ImportReceiptController extends HttpServlet {
                     return;
                 }
                 applyPoPrefillToRequest(request, po, "Tạo từ phiếu purchase " + po.getPoCode());
-                java.util.Set<Integer> poGenIds = new java.util.HashSet<>();
-                java.util.Map<Integer, Integer> poQtyMap = new java.util.LinkedHashMap<>();
-                if (po.getDetails() != null) {
-                    for (com.quanlymayphatdien.g1.entity.PurchaseOrderDetail pod : po.getDetails()) {
-                        int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
-                                : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
-                        poGenIds.add(pod.getGeneratorId());
-                        poQtyMap.merge(pod.getGeneratorId(), qty, Integer::sum);
-                    }
-                }
-                java.util.List<Generator> poGenerators = new java.util.ArrayList<>();
-                java.util.Map<Integer, Generator> allGenMap = new java.util.HashMap<>();
-                for (Generator g : genDAO.findAllActive()) allGenMap.put(g.getId(), g);
-                for (Integer gid : poGenIds) {
-                    Generator g = allGenMap.get(gid);
-                    if (g != null) poGenerators.add(g);
-                }
-                request.setAttribute("availableGenerators", poGenerators);
-                request.setAttribute("poQtyMap", poQtyMap);
-                setGeneratorsAttributes(request, poGenerators);
             } else if (po != null && scopedWarehouseId > 0 && po.getWarehouseId() != scopedWarehouseId) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
@@ -412,10 +393,14 @@ public class ImportReceiptController extends HttpServlet {
         List<ReceiptDetail> ds = new ArrayList<>();
         List<Map<String, Object>> poRowList = new ArrayList<>();
         int expectedRows = 0;
+        java.util.Set<Integer> poGenIds = new java.util.HashSet<>();
+        java.util.Map<Integer, Integer> poQtyMap = new java.util.LinkedHashMap<>();
         if (pods != null) {
             for (PurchaseOrderDetail pod : pods) {
                 int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
                          : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                poGenIds.add(pod.getGeneratorId());
+                poQtyMap.merge(pod.getGeneratorId(), qty, Integer::sum);
                 for (int k = 0; k < qty; k++) {
                     ReceiptDetail rd = new ReceiptDetail();
                     rd.setGeneratorId(pod.getGeneratorId());
@@ -438,6 +423,18 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("receipt", prefill);
         request.setAttribute("expectedRows", expectedRows);
         request.setAttribute("poRowList", poRowList);
+        if (request.getAttribute("availableGenerators") == null) {
+            java.util.List<Generator> poGenerators = new java.util.ArrayList<>();
+            java.util.Map<Integer, Generator> allGenMap = new java.util.HashMap<>();
+            for (Generator g : genDAO.findAllActive()) allGenMap.put(g.getId(), g);
+            for (Integer gid : poGenIds) {
+                Generator g = allGenMap.get(gid);
+                if (g != null) poGenerators.add(g);
+            }
+            request.setAttribute("availableGenerators", poGenerators);
+            request.setAttribute("poQtyMap", poQtyMap);
+            setGeneratorsAttributes(request, poGenerators);
+        }
     }
 
     private Integer parsePoIdFromRequest(HttpServletRequest request) {
@@ -564,8 +561,21 @@ public class ImportReceiptController extends HttpServlet {
                 new Gson().toJson(body, response.getWriter());
                 return;
             }
+            List<Integer> generatorIdsList = new ArrayList<>();
+            int serialIdx = 0;
+            poLoop:
+            for (PurchaseOrderDetail pod : pods) {
+                int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
+                         : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                for (int k = 0; k < qty; k++) {
+                    if (serialIdx >= serialList.size()) break poLoop;
+                    generatorIdsList.add(pod.getGeneratorId());
+                    serialIdx++;
+                }
+            }
             body.put("success", true);
             body.put("serials", serialList);
+            body.put("generatorIds", generatorIdsList);
             body.put("expectedCount", expectedCount);
             body.put("message", "Đã đọc " + serialList.size() + " serial");
             new Gson().toJson(body, response.getWriter());
@@ -1063,16 +1073,35 @@ public class ImportReceiptController extends HttpServlet {
                         warehouseId, loggedUser.getId(), rdList);
             } else {
                 for (ReceiptDetail d : details) {
-                    if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
-                        throw new SQLException("Serial '" + d.getSerialNumber()
-                                + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ serial trùng).");
-                    }
-                    int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
-                    if (invId <= 0) {
-                        throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
+                    int existingInvId = d.getInventoryId();
+                    if (existingInvId > 0) {
+                        Inventory existingInv
+                                = inventoryDAO.findBySerialNumber(d.getSerialNumber());
+                        if (existingInv == null
+                                || existingInv.getInventoryId() != existingInvId
+                                || !"SOLD".equals(existingInv.getStatus())) {
+                            throw new SQLException("Serial '" + d.getSerialNumber()
+                                    + "' không còn ở trạng thái SOLD, vui lòng quay lại và bỏ serial này.");
+                        }
+                        int updated = inventoryDAO.reactivateSold(conn, existingInvId,
+                                d.getGeneratorId(), warehouseId);
+                        if (updated <= 0) {
+                            throw new SQLException("Không thể nhập lại serial '" + d.getSerialNumber()
+                                    + "' (cập nhật inventory thất bại).");
+                        }
+                        d.setInventoryId(existingInvId);
+                    } else {
+                        if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
+                            throw new SQLException("Serial '" + d.getSerialNumber()
+                                    + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ serial trùng).");
+                        }
+                        int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
+                        if (invId <= 0) {
+                            throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
+                        }
+                        d.setInventoryId(invId);
                     }
                     d.setReceiptId(receiptId);
-                    d.setInventoryId(invId);
                 }
                 detailDAO.batchInsert(conn, details);
                 receiptDAO.writeStockCardsForImport(conn, receiptId, r.getReceiptCode(),
@@ -1489,12 +1518,16 @@ public class ImportReceiptController extends HttpServlet {
                 + (invalidRows.isEmpty() ? "" : " (bỏ qua " + invalidRows.size() + " dòng lỗi)"));
         List<String> serials = new ArrayList<>();
         List<Integer> generatorIds = new ArrayList<>();
+        List<String> models = new ArrayList<>();
         for (Map<String, Object> v : validRows) {
             serials.add((String) v.get("serial"));
             generatorIds.add((Integer) v.get("generatorId"));
+            Object m = v.get("model");
+            models.add(m == null ? "" : m.toString());
         }
         body.put("serials", serials);
         body.put("generatorIds", generatorIds);
+        body.put("models", models);
         new Gson().toJson(body, response.getWriter());
     }
 
@@ -1611,6 +1644,7 @@ public class ImportReceiptController extends HttpServlet {
         String[] manualGenIds = request.getParameterValues("manualGeneratorId");
         String[] manualSerials = request.getParameterValues("manualSerialNumber");
         String[] manualDetailNotes = request.getParameterValues("manualDetailNote");
+        String[] manualExistingInvIds = request.getParameterValues("existingInventoryId");
 
         List<ReceiptDetail> details = new ArrayList<>();
         java.util.Set<String> seen = new java.util.HashSet<>();
@@ -1684,6 +1718,14 @@ public class ImportReceiptController extends HttpServlet {
                 d.setGeneratorId(genId);
                 d.setSerialNumber(serial);
                 d.setNote(detailNote);
+                String existingInvIdStr = (manualExistingInvIds != null && i < manualExistingInvIds.length)
+                        ? manualExistingInvIds[i] : null;
+                if (existingInvIdStr != null && !existingInvIdStr.trim().isEmpty()) {
+                    try {
+                        d.setInventoryId(Integer.parseInt(existingInvIdStr.trim()));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
                 details.add(d);
             }
         }
@@ -1701,7 +1743,7 @@ public class ImportReceiptController extends HttpServlet {
 
         for (ReceiptDetail d : details) {
             if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                if (inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
+                if (d.getInventoryId() <= 0 && inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
                     errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
                 }
             }
