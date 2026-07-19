@@ -276,22 +276,15 @@
                             </table>
                         </div>
 
-<<<<<<< HEAD
-                        <c:if test="${not fromOrder}">
-=======
                         <c:if test="${not fromLiquidation}">
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
                         </c:if>
-<<<<<<< HEAD
-=======
                         <c:if test="${fromLiquidation}">
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled style="display:none;">Thêm dòng</button>
                         </c:if>
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     </section>
                 </div>
 
@@ -366,8 +359,6 @@
     var isTransferMode = ${not empty fromTransfer and fromTransfer};
     var isLiquidationMode = ${not empty fromLiquidation and fromLiquidation};
     var expectedRows = ${empty expectedRows ? 0 : expectedRows};
-<<<<<<< HEAD
-=======
     var ORDER_REQUIREMENTS = [
         <c:forEach var="req" items="${orderRequirements}" varStatus="st">
         {genId: ${req.generatorId}, model: '<c:out value="${req.generatorModel}"/>', qty: ${req.quantity}}<c:if test="${!st.last}">,</c:if>
@@ -408,7 +399,6 @@
             window.SESSION_DATA = null;
         }
     });
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
 
     function formatVND(num) {
         return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -838,12 +828,6 @@
     }
 
     function validateReceiptForm() {
-        var submitter = (typeof event !== 'undefined' && event && event.submitter) ? event.submitter : null;
-        var isDraft = submitter && submitter.value === 'draft';
-        if (isDraft) {
-            sessionStorage.removeItem('scanDraftReceiptId');
-            return true;
-        }
         var valid = true;
         var firstInvalid = null;
         document.querySelectorAll('#receiptForm [required]').forEach(function (el) {
@@ -863,11 +847,9 @@
         }
         var banner = document.getElementById('realtimeWarn');
         if (banner && banner.style.display !== 'none' && banner.offsetParent !== null) {
-            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy hoặc Lưu nháp để xử lý sau.', 'danger');
+            toast('Tồn kho không đủ để gửi phiếu. Vui lòng nhập thêm máy.', 'danger');
             return false;
         }
-<<<<<<< HEAD
-=======
         if (isOrderMode && ORDER_REQUIREMENTS && ORDER_REQUIREMENTS.length > 0) {
             var scannedByGen = {};
             document.querySelectorAll('#detailBody tr select[name="generatorId"]').forEach(function (sel) {
@@ -928,7 +910,6 @@
                 return false;
             }
         }
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
         sessionStorage.removeItem('scanDraftReceiptId');
         return valid;
     }
