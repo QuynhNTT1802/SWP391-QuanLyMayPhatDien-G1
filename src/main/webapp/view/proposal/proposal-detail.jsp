@@ -23,444 +23,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-        <style>
-            a.btn, a.back-link { text-decoration: none; }
-            .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
-            .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
-            .alert-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 25%, transparent); }
-            .alert-info { background: var(--info-soft); color: var(--info); border: 1px solid color-mix(in srgb, var(--info) 25%, transparent); }
-
-            
-            .header-bar {
-                display: flex;
-                gap: 20px;
-                align-items: flex-start;
-                justify-content: space-between;
-                flex-wrap: wrap;
-                margin-bottom: 18px;
-            }
-            .header-bar .left {
-                flex: 1;
-                min-width: 240px;
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
-            .code-tag {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 7px 14px;
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                font-family: var(--font-mono);
-                font-size: 12.5px;
-                font-weight: 600;
-                background: var(--surface);
-                color: var(--fg);
-                width: fit-content;
-            }
-            .code-tag .ct-label {
-                color: var(--muted);
-                font-weight: 500;
-            }
-            .page-main-title {
-                font-size: 24px;
-                font-weight: 700;
-                margin: 0;
-                letter-spacing: -0.02em;
-                display: flex;
-                gap: 12px;
-                align-items: center;
-                flex-wrap: wrap;
-            }
-            .header-bar .right {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-                align-items: center;
-                align-content: flex-start;
-            }
-
-            
-            .section {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 10px;
-                overflow: hidden;
-                margin-bottom: 16px;
-            }
-            .section-head {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                padding: 14px 20px;
-                border-bottom: 1px solid var(--border);
-                background: var(--surface);
-            }
-            .section-head h3 {
-                font-size: 14px;
-                font-weight: 700;
-                margin: 0;
-            }
-            .section-body {
-                padding: 20px;
-            }
-
-            
-            .form-grid {
-                display: grid;
-                gap: 14px 18px;
-            }
-            .form-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
-            .form-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-            .form-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
-            @media (max-width: 1280px) {
-                .form-grid.cols-5 { grid-template-columns: repeat(3, 1fr); }
-                .form-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
-            }
-            @media (max-width: 760px) {
-                .form-grid.cols-5,
-                .form-grid.cols-4,
-                .form-grid.cols-2 { grid-template-columns: 1fr; }
-            }
-            .info-field {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-                min-width: 0;
-                position: relative;
-            }
-            .info-field label {
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-            }
-            .info-input,
-            .info-select {
-                font-family: var(--font-ui);
-                font-size: 13px;
-                color: var(--fg);
-                background: var(--surface-2);
-                border: 1px solid var(--border);
-                border-radius: var(--radius-sm);
-                padding: 9px 11px;
-                width: 100%;
-                line-height: 1.4;
-                box-sizing: border-box;
-            }
-            .info-input:disabled,
-            .info-select:disabled {
-                opacity: 0.85;
-                cursor: not-allowed;
-            }
-            .info-select {
-                appearance: none;
-                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>");
-                background-repeat: no-repeat;
-                background-position: right 8px center;
-                background-size: 12px;
-                padding-inline-end: 28px;
-            }
-            .info-input.mono {
-                font-family: var(--font-mono);
-                font-variant-numeric: tabular-nums;
-            }
-            .info-field.with-info-icon .info-input,
-            .info-field.with-info-icon .info-select {
-                padding-right: 32px;
-            }
-            .info-field .info-icon {
-                position: absolute;
-                right: 8px;
-                bottom: 9px;
-                width: 18px;
-                height: 18px;
-                border-radius: 50%;
-                background: var(--surface);
-                color: var(--muted);
-                display: grid;
-                place-items: center;
-                font-size: 11px;
-                font-weight: 700;
-                border: 1px solid var(--border);
-                pointer-events: none;
-            }
-            .info-field.full { grid-column: 1 / -1; }
-
-            
-            .tab-bar {
-                display: flex;
-                gap: 4px;
-                padding: 0 16px;
-                border-bottom: 1px solid var(--border);
-                background: var(--surface);
-            }
-            .tab {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                padding: 12px 16px;
-                font-size: 13px;
-                font-weight: 600;
-                color: var(--muted);
-                text-decoration: none;
-                border-bottom: 2px solid transparent;
-                margin-bottom: -1px;
-                transition: all .12s ease;
-                cursor: pointer;
-            }
-            .tab:hover { color: var(--fg); }
-            .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
-            .tab-icon { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
-            .tab-badge {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 18px;
-                height: 18px;
-                padding: 0 6px;
-                font-family: var(--font-mono);
-                font-size: 11px;
-                font-weight: 700;
-                background: var(--surface-2);
-                border: 1px solid var(--border);
-                color: var(--muted);
-                border-radius: 999px;
-            }
-            .tab.active .tab-badge {
-                background: var(--accent-soft);
-                color: var(--accent);
-                border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-            }
-
-            .tab-panel { display: none; }
-            .tab-panel.active { display: block; }
-
-            
-            .table-toolbar {
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                flex-wrap: wrap;
-                padding: 12px 14px;
-                background: var(--surface);
-                border-top: 1px solid var(--border);
-                border-bottom: 1px solid var(--border);
-            }
-            .table-toolbar .spacer { flex: 1; }
-
-            
-            .product-table { width: 100%; border-collapse: collapse; }
-            .product-table th, .product-table td {
-                padding: 11px 14px;
-                text-align: left;
-                border-bottom: 1px solid var(--border);
-                vertical-align: middle;
-            }
-            .product-table th {
-                font-size: 11px;
-                color: var(--muted);
-                text-transform: uppercase;
-                font-weight: 700;
-                background: var(--surface-2);
-                letter-spacing: 0.04em;
-            }
-            .product-table td { font-size: 13px; }
-            .product-table tbody tr:hover { background: var(--surface-2); }
-            .product-table tfoot td {
-                background: var(--surface-2);
-                font-weight: 700;
-                border-top: 2px solid var(--border);
-            }
-            .text-center { text-align: center; }
-            .text-right { text-align: right; }
-            .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-
-            
-            .status-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 11.5px;
-                font-weight: 600;
-                padding: 3px 9px;
-                border-radius: 999px;
-                border: 1px solid;
-                white-space: nowrap;
-            }
-            .status-pill .pdot {
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: currentColor;
-            }
-            .status-pending,
-            .status-pending_ceo { background: #fff3cd; color: #856404; border-color: color-mix(in srgb, #856404 25%, transparent); }
-            .status-approved { background: #d4edda; color: #155724; border-color: color-mix(in srgb, #155724 25%, transparent); }
-            .status-rejected { background: #f8d7da; color: #721c24; border-color: color-mix(in srgb, #721c24 25%, transparent); }
-            .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
-            .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
-            .status-deleted { background: #6c757d; color: #ffffff; border-color: #565e64; }
-
-            
-            .empty-state {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 48px 16px;
-                gap: 8px;
-                color: var(--muted);
-            }
-            .empty-state .icon-wrap {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                background: var(--surface-2);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .empty-state .icon-wrap svg {
-                width: 22px;
-                height: 22px;
-                stroke: var(--muted);
-            }
-            .empty-state strong {
-                color: var(--fg);
-                font-size: 14px;
-            }
-
-            
-            .history-filter-bar {
-                display: flex;
-                gap: 10px;
-                align-items: center;
-                flex-wrap: wrap;
-                padding: 12px 14px;
-                background: var(--surface);
-                border-top: 1px solid var(--border);
-                border-bottom: 1px solid var(--border);
-            }
-            .history-filter-bar .hf-search { flex: 1; min-width: 200px; max-width: 320px; }
-            .history-filter-bar .date-range { display: inline-flex; align-items: center; gap: 6px; }
-            .history-filter-bar .date-label { font-size: 11px; color: var(--muted); font-weight: 600; }
-            .history-filter-bar .date-input {
-                border: 1px solid var(--border);
-                background: var(--surface-2);
-                color: var(--fg);
-                border-radius: var(--radius-sm);
-                padding: 6px 10px;
-                font-size: 12.5px;
-                font-family: var(--font-ui);
-                font-weight: 600;
-            }
-
-            .result-summary {
-                padding: 10px 14px;
-                font-size: 12.5px;
-                color: var(--muted);
-                background: var(--surface-2);
-                border-bottom: 1px solid var(--border);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-            .filter-active-badge {
-                display: inline-block;
-                padding: 2px 8px;
-                border-radius: 999px;
-                background: var(--accent-soft);
-                color: var(--accent);
-                font-weight: 600;
-                font-size: 11px;
-            }
-
-            
-            .modal-host {
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.45);
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 100;
-                padding: 20px;
-            }
-            .modal-host.show { display: flex; }
-            .modal-card {
-                background: var(--bg);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 22px;
-                width: 100%;
-                max-width: 480px;
-            }
-            .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-            .modal-card .modal-sub {
-                font-size: 12.5px;
-                color: var(--muted);
-                margin-bottom: 14px;
-                line-height: 1.5;
-            }
-            .modal-card label {
-                display: block;
-                font-size: 11px;
-                color: var(--muted);
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                margin-bottom: 6px;
-            }
-            .modal-card textarea {
-                width: 100%;
-                padding: 9px 12px;
-                border: 1px solid var(--border);
-                border-radius: var(--radius-sm);
-                background: var(--bg);
-                color: var(--fg);
-                font-size: 13px;
-                font-family: var(--font-ui);
-                box-sizing: border-box;
-                min-height: 80px;
-                resize: vertical;
-            }
-            .modal-card textarea:focus {
-                outline: none;
-                border-color: var(--accent);
-                box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
-            }
-            .modal-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 8px;
-                margin-top: 16px;
-            }
-
-            .action-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                font-size: 11px;
-                font-weight: 700;
-                padding: 2px 9px;
-                border-radius: 999px;
-                border: 1px solid;
-                text-transform: uppercase;
-                letter-spacing: 0.02em;
-                font-family: var(--font-ui);
-            }
-            .action-badge.action-create   { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
-            .action-badge.action-update   { color: var(--info);   border-color: color-mix(in srgb, var(--info) 32%, transparent);    background: var(--info-soft); }
-            .action-badge.action-approve  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 32%, transparent);  background: var(--accent-soft); }
-            .action-badge.action-reject   { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 32%, transparent);  background: var(--danger-soft); }
-            .action-badge.action-revision { color: #7c3aed;        border-color: color-mix(in srgb, #7c3aed 32%, transparent);         background: color-mix(in srgb, #7c3aed 8%, transparent); }
-            .action-badge.action-cancel   { color: var(--muted);  border-color: var(--border); background: var(--surface-2); }
-        </style>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-detail.css">
     </head>
     <body>
         <div class="app">
@@ -470,20 +33,17 @@
                 <header class="topbar">
                     <h1>Chi tiết đề xuất nhập kho</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal?action=list">Đề xuất nhập kho</a> / <span><c:out value="${proposal.proposalCode}"/></span></span>
-                    <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+<div class="top-actions">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="i theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
+                        <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
 
                 <main>
-<<<<<<< HEAD
-                    <c:choose>
-=======
 <c:choose>
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     <c:when test="${proposal.status == 'PENDING'}">
                             <c:set var="statusLabel" value="Chờ duyệt"/>
                             <c:set var="statusPillClass" value="status-pending"/>
@@ -541,12 +101,8 @@
                         </div>
                         <div class="right">
 
-<<<<<<< HEAD
-                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && isOwner}">
-=======
 
                             <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && isOwner && !isViewingDeleted}">
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                 <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     Chỉnh sửa
@@ -568,22 +124,14 @@
                                 </button>
                             </c:if>
 
-<<<<<<< HEAD
-                            <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner}">
-=======
                             <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner && !isViewingDeleted}">
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                 <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
                                     Xoá
                                 </button>
                             </c:if>
 
-<<<<<<< HEAD
-                            <c:if test="${proposal.status == 'PENDING' && canApprove}">
-=======
                             <c:if test="${proposal.status == 'PENDING' && canApprove && !isViewingDeleted}">
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Xác nhận
@@ -1048,19 +596,11 @@
             </div>
         </c:if>
 
-<<<<<<< HEAD
-        <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner}">
-            <div class="modal-host" id="deleteModal">
-                <div class="modal-card">
-                    <h3>Xoá phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu sẽ bị xoá hoàn toàn khỏi hệ thống. Hành động này không thể hoàn tác.</div>
-=======
         <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner && !isViewingDeleted}">
             <div class="modal-host" id="deleteModal">
                 <div class="modal-card">
                     <h3>Xoá phiếu đề xuất</h3>
                     <div class="modal-sub">Phiếu sẽ được chuyển sang trạng thái <strong>Đã xoá</strong> và ẩn khỏi danh sách chung. Bạn vẫn có thể xem lại ở chế độ chỉ đọc.</div>
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=delete">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <div class="modal-actions">
@@ -1116,56 +656,6 @@
         </script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-        <script>
-            function openModal(id) { var m = document.getElementById(id); if (m) m.classList.add('show'); }
-            function closeModal(id) { var m = document.getElementById(id); if (m) m.classList.remove('show'); }
-            document.querySelectorAll('.modal-host').forEach(function (m) {
-                m.addEventListener('click', function (e) { if (e.target === m) m.classList.remove('show'); });
-            });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal-host.show').forEach(function (m) { m.classList.remove('show'); });
-                }
-            });
-
-            (function () {
-                var tabs = document.querySelectorAll('.tab-bar .tab');
-                var panels = document.querySelectorAll('.tab-panel');
-                tabs.forEach(function (t) {
-                    t.addEventListener('click', function (e) {
-                        var target = t.getAttribute('data-tab');
-                        if (target === 'history') {
-                            return;
-                        }
-                        e.preventDefault();
-                        tabs.forEach(function (x) { x.classList.remove('active'); });
-                        panels.forEach(function (p) { p.classList.remove('active'); });
-                        t.classList.add('active');
-                        var panel = document.querySelector('.tab-panel[data-panel="' + target + '"]');
-                        if (panel) panel.classList.add('active');
-                        if (window.history && window.history.pushState) {
-                            var url = window.location.href.split('?')[0];
-                            window.history.pushState({}, '', url);
-                        }
-                    });
-                });
-
-                var search = document.getElementById('genSearch');
-                var table = document.getElementById('genTable');
-                if (table) {
-                    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr[data-row-id]'));
-                    function applyFilter() {
-                        var q = (search && search.value ? search.value : '').toLowerCase().trim();
-                        rows.forEach(function (r) {
-                            var haystack = (r.getAttribute('data-search') || '').toLowerCase();
-                            var matchText = !q || haystack.indexOf(q) !== -1;
-                            r.style.display = matchText ? '' : 'none';
-                        });
-                    }
-                    if (search) search.addEventListener('input', applyFilter);
-                    applyFilter();
-                }
-            })();
-        </script>
+        <script src="${pageContext.request.contextPath}/assets/js/proposal-detail.js"></script>
     </body>
 </html>
