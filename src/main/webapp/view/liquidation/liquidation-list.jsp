@@ -49,23 +49,13 @@
                 </div>
             </div>
 
+            <c:set var="canSeeCeoKpi" value="${not empty sessionScope.userPermissions and (sessionScope.userPermissions.contains('liquidations.create') or sessionScope.userPermissions.contains('liquidations.approve_ceo'))}"/>
+            <c:set var="canSeeEditKpi" value="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}"/>
             <c:set var="kpiCount" value="1"/>
-<<<<<<< HEAD
-            <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_manager')}"><c:set var="kpiCount" value="${kpiCount + 1}"/></c:if>
-            <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_ceo')}"><c:set var="kpiCount" value="${kpiCount + 1}"/></c:if>
-            <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
-=======
             <c:if test="${canSeeCeoKpi}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
             <c:if test="${canSeeEditKpi}"><c:set var="kpiCount" value="${kpiCount + 2}"/></c:if>
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             <div class="stats-row liq-stats" style="--kpi-cols: ${kpiCount};">
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_manager')}">
-                    <div class="stat">
-                        <div class="lbl">Chờ Quản lý duyệt</div>
-                        <div class="val">${kpiPendingManager}</div>
-                    </div>
-                </c:if>
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.approve_ceo')}">
+                <c:if test="${canSeeCeoKpi}">
                     <div class="stat">
                         <div class="lbl">Chờ Sếp duyệt</div>
                         <div class="val">${kpiPendingCeo}</div>
@@ -75,7 +65,7 @@
                         <div class="val">${kpiApproved}</div>
                     </div>
                 </c:if>
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('liquidations.create')}">
+                <c:if test="${canSeeEditKpi}">
                     <div class="stat">
                         <div class="lbl">Bị yêu cầu sửa</div>
                         <div class="val">${kpiRequestEdit}</div>
