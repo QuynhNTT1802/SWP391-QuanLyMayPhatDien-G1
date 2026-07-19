@@ -210,12 +210,66 @@ function closeNewGeneratorModal() {
 function saveNewGenerator() {
     var model = document.getElementById('ngModel').value.trim();
     var power = document.getElementById('ngPower').value.trim();
-    if (!model || !power) {
-        var err = document.getElementById('genModalError');
-        err.textContent = MSG.ERR_MODEL_INFO;
+    var freq = document.getElementById('ngFreq').value.trim();
+    var weight = document.getElementById('ngWeight').value.trim();
+    var brandId = document.getElementById('ngBrandId').value;
+    var conditionId = document.getElementById('ngConditionId').value;
+    var fuelTypeId = document.getElementById('ngFuelTypeId').value;
+
+    var err = document.getElementById('genModalError');
+    function showErr(msg) {
+        err.textContent = msg;
         err.classList.add('show');
+    }
+    err.classList.remove('show');
+    err.textContent = '';
+
+    if (!model) {
+        showErr('Vui lòng nhập mã máy phát');
         return;
     }
+    if (model.length > 100) {
+        showErr('Mã máy phát không được vượt quá 100 ký tự');
+        return;
+    }
+    if (!power) {
+        showErr('Vui lòng nhập công suất');
+        return;
+    }
+    var powerNum = Number(power);
+    if (!isFinite(powerNum) || powerNum <= 0) {
+        showErr('Công suất phải là số lớn hơn 0');
+        return;
+    }
+    if (!weight) {
+        showErr('Vui lòng nhập trọng lượng');
+        return;
+    }
+    var weightNum = Number(weight);
+    if (!isFinite(weightNum) || weightNum <= 0) {
+        showErr('Trọng lượng phải là số lớn hơn 0');
+        return;
+    }
+    if (freq) {
+        var freqNum = Number(freq);
+        if (!isFinite(freqNum) || freqNum <= 0) {
+            showErr('Tần số phải là số lớn hơn 0');
+            return;
+        }
+    }
+    if (!brandId) {
+        showErr('Vui lòng chọn thương hiệu');
+        return;
+    }
+    if (!conditionId) {
+        showErr('Vui lòng chọn tình trạng');
+        return;
+    }
+    if (!fuelTypeId) {
+        showErr('Vui lòng chọn nhiên liệu');
+        return;
+    }
+
     var btn = document.getElementById('ngSaveBtn');
     btn.disabled = true;
     btn.textContent = MSG.SAVING;
@@ -223,23 +277,26 @@ function saveNewGenerator() {
     fd.append('action', 'quickCreateGenerator');
     fd.append('model', model);
     fd.append('powerRating', power);
-    fd.append('frequency', document.getElementById('ngFreq').value.trim());
-    fd.append('weight', document.getElementById('ngWeight').value.trim());
-    fd.append('brandId', document.getElementById('ngBrandId').value);
+    fd.append('frequency', freq);
+    fd.append('weight', weight);
+    fd.append('brandId', brandId);
     fd.append('originId', document.getElementById('ngOriginId').value);
-    fd.append('conditionId', document.getElementById('ngConditionId').value);
-    fd.append('fuelTypeId', document.getElementById('ngFuelTypeId').value);
+    fd.append('conditionId', conditionId);
+    fd.append('fuelTypeId', fuelTypeId);
     fd.append('phaseId', document.getElementById('ngPhaseId').value);
     fd.append('genTypeId', document.getElementById('ngGenTypeId').value);
     fetch(window.APP_CTX + '/proposal', { method: 'POST', body: fd })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+            if (!r.ok) {
+                throw new Error('HTTP ' + r.status);
+            }
+            return r.json();
+        })
         .then(function (data) {
             btn.disabled = false;
             btn.textContent = MSG.SAVE_GEN;
             if (!data.ok) {
-                var err = document.getElementById('genModalError');
-                err.textContent = data.error || MSG.ERR;
-                err.classList.add('show');
+                showErr(data.error || MSG.ERR);
                 return;
             }
             Array.from(document.querySelectorAll('#detailBody .gen-select')).forEach(function (sel) {
@@ -262,12 +319,10 @@ function saveNewGenerator() {
                 );
             }
         })
-        .catch(function () {
+        .catch(function (e) {
             btn.disabled = false;
             btn.textContent = MSG.SAVE_GEN;
-            var err = document.getElementById('genModalError');
-            err.textContent = MSG.CONN_ERR;
-            err.classList.add('show');
+            showErr(e && e.message ? e.message : MSG.CONN_ERR);
         });
 }
 
@@ -373,9 +428,17 @@ function applyExcelRows(rows) {
 function saveNewSupplier() {
     var name = document.getElementById('nsName').value.trim();
     var phone = document.getElementById('nsPhone').value.trim();
+    var typeId = document.getElementById('nsTypeId').value;
+    var companyName = document.getElementById('nsCompanyName').value.trim();
     if (!name || !/^[0-9]{10,11}$/.test(phone)) {
         var err = document.getElementById('supModalError');
         err.textContent = MSG.ERR_CONTACT;
+        err.classList.add('show');
+        return;
+    }
+    if (typeId === '33' && !companyName) {
+        var err = document.getElementById('supModalError');
+        err.textContent = 'Vui lòng nhập tên công ty cho nhà cung cấp Doanh nghiệp';
         err.classList.add('show');
         return;
     }
@@ -388,7 +451,7 @@ function saveNewSupplier() {
     fd.append('phone', phone);
     fd.append('email', document.getElementById('nsEmail').value.trim());
     fd.append('address', document.getElementById('nsAddress').value.trim());
-    fd.append('companyName', document.getElementById('nsCompanyName').value.trim());
+    fd.append('companyName', companyName);
     fd.append('supplierTypeId', document.getElementById('nsTypeId').value);
     fetch(window.APP_CTX + '/proposal', { method: 'POST', body: fd })
         .then(function (r) { return r.json(); })

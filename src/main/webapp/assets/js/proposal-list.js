@@ -13,8 +13,24 @@ document.addEventListener('DOMContentLoaded', function () {
     var tickedCountEl = document.getElementById('tickedCount');
     var reviewForm = document.getElementById('reviewForm');
 
+    function syncRowHighlight(cb) {
+        var tr = cb.closest('tr');
+        if (!tr) return;
+        if (cb.checked) {
+            tr.classList.add('selected');
+        } else {
+            tr.classList.remove('selected');
+        }
+    }
+
     function updateCount() {
-        var ticked = document.querySelectorAll('.row-check:checked').length;
+        var ticked = 0;
+        document.querySelectorAll('.row-check').forEach(function (cb) {
+            if (cb.checked) {
+                ticked++;
+                syncRowHighlight(cb);
+            }
+        });
         tickedCountEl.textContent = ticked;
         if (groupBtn) {
             if (ticked > 0) {
@@ -34,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selectAll.addEventListener('change', function () {
             rowChecks.forEach(function (cb) {
                 cb.checked = selectAll.checked;
+                syncRowHighlight(cb);
             });
             updateCount();
         });
@@ -41,6 +58,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     rowChecks.forEach(function (cb) {
         cb.addEventListener('change', updateCount);
+    });
+
+    document.querySelectorAll('#proposalsBody tr[data-id]').forEach(function (tr) {
+        tr.addEventListener('click', function (e) {
+            if (e.target.tagName === 'A' || e.target.tagName === 'INPUT') return;
+            var cb = tr.querySelector('.row-check');
+            if (cb && !cb.disabled) {
+                cb.checked = !cb.checked;
+                updateCount();
+            }
+        });
     });
 
     if (reviewForm) {

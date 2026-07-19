@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (perGen[g] && perGen[g].price > 0) {
                 el.textContent = fmtMoney(perGen[g].price);
             } else {
-                el.textContent = '—';
+                el.textContent = '\u2014';
             }
         });
         document.querySelectorAll('.agg-row-total').forEach(function (el) {
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.agg-note').forEach(function (el) {
             var g = el.getAttribute('data-gen');
             var n = perGen[g] ? perGen[g].note : '';
-            el.textContent = n ? n : '—';
+            el.textContent = n ? n : '\u2014';
             el.style.color = n ? '' : 'var(--muted)';
         });
         if (grandQtyEl) grandQtyEl.textContent = totalQty;

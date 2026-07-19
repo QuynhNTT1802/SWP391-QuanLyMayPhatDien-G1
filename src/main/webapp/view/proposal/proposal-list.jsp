@@ -121,7 +121,7 @@
                                 <th>Deadline</th>
                                 <th>Phiếu mua</th>
                                 <th class="col-status">Trạng thái</th>
-                                                
+
                                 </tr>
                             </thead>
                             <tbody id="proposalsBody">

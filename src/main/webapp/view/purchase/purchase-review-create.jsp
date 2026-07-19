@@ -12,7 +12,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Review tạo phiếu mua — Warehouse OS</title>
+        <title>Review tạo phiếu mua &mdash; Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -21,7 +21,6 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
                 <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-review-create.css">
-    </head>
     </head>
     <body>
         <div class="app">
@@ -88,19 +87,23 @@
                             <c:forEach var="group" items="${creatorGroups}">
                                 <div class="creator-section">
                                     <div class="creator-header open" onclick="toggleCreator(this)">
-                                        <span class="toggle-icon">▶</span>
-                                        <span class="creator-name"><c:out value="${group.creatorName}"/></span>
+                                        <span>
+                                            <span class="toggle-icon">▶</span>
+                                            <span class="creator-name"><c:out value="${group.creatorName}"/></span>
+                                        </span>
                                         <span class="creator-count">${fn:length(group.proposals)} phiếu</span>
                                     </div>
                                     <div class="creator-body open">
                                         <c:forEach var="p" items="${group.proposals}">
                                             <div class="proposal-card">
                                                 <div class="proposal-head open" onclick="toggleProposal(this)">
-                                                    <span class="toggle-icon">▶</span>
-                                                    <span class="proposal-code"><c:out value="${p.proposalCode}"/></span>
+                                                    <span>
+                                                        <span class="toggle-icon">▶</span>
+                                                        <span class="proposal-code"><c:out value="${p.proposalCode}"/></span>
+                                                    </span>
                                                     <span class="proposal-date">
                                                         <c:choose>
-                                                            <c:when test="${p.proposalDate == null}">—</c:when>
+                                                            <c:when test="${p.proposalDate == null}">&mdash;</c:when>
                                                             <c:otherwise>${p.proposalDate.format(propFmt)}</c:otherwise>
                                                         </c:choose>
                                                     </span>
@@ -195,9 +198,9 @@
                                                     <td>${agg.totalProposed}</td>
                                                     <td>${agg.currentStock}</td>
                                                     <td><span class="agg-qty mono" data-gen="${agg.generatorId}">${agg.totalProposed}</span></td>
-                                                    <td><span class="agg-price mono" data-gen="${agg.generatorId}">—</span></td>
+                                                    <td><span class="agg-price mono" data-gen="${agg.generatorId}">&mdash;</span></td>
                                                     <td class="mono text-right"><span class="agg-row-total mono" data-gen="${agg.generatorId}">0</span></td>
-                                                    <td><span class="agg-note" data-gen="${agg.generatorId}" style="color:var(--muted);">—</span></td>
+                                                    <td><span class="agg-note" data-gen="${agg.generatorId}" style="color:var(--muted);">&mdash;</span></td>
                                                 </tr>
                                             </c:forEach>
                                         </tbody>

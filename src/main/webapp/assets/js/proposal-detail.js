@@ -1,3 +1,12 @@
+window.openModal = function (id) {
+    var m = document.getElementById(id);
+    if (m) m.classList.add('show');
+};
+window.closeModal = function (id) {
+    var m = document.getElementById(id);
+    if (m) m.classList.remove('show');
+};
+
 document.addEventListener('DOMContentLoaded', function () {
     if (window.SESSION_DATA && window.SESSION_DATA.message) {
         if (typeof showToast === 'function') {
@@ -8,15 +17,6 @@ document.addEventListener('DOMContentLoaded', function () {
             alert(window.SESSION_DATA.message);
         }
         window.SESSION_DATA = null;
-    }
-
-    function openModal(id) {
-        var m = document.getElementById(id);
-        if (m) m.classList.add('show');
-    }
-    function closeModal(id) {
-        var m = document.getElementById(id);
-        if (m) m.classList.remove('show');
     }
 
     document.querySelectorAll('.modal-host').forEach(function (m) {

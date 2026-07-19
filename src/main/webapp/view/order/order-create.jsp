@@ -543,6 +543,16 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+
+        <script>
+            <c:if test="${not empty sessionScope.message}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${sessionScope.message}"/>';
+            window.SESSION_DATA.type = '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>';
+                <c:remove var="message" scope="session"/>
+                <c:remove var="messageType" scope="session"/>
+            </c:if>
+        </script>
         <script>
             function formatVND(num) {
                 return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -796,15 +806,15 @@
                 var btn = document.getElementById('ncSaveBtn');
                 btn.disabled = true;
                 btn.textContent = 'Đang lưu...';
-                var fd = new FormData();
-                fd.append('action', 'quickCreateCustomer');
-                fd.append('name', name);
-                fd.append('phone', phone);
-                fd.append('email', document.getElementById('ncEmail').value.trim());
-                fd.append('address', document.getElementById('ncAddress').value.trim());
-                fd.append('companyName', document.getElementById('ncCompanyName').value.trim());
-                fd.append('customerTypeId', document.getElementById('ncTypeId').value);
-                fetch(contextPath + '/order', { method: 'POST', body: fd })
+                var params = new URLSearchParams();
+                params.set('action', 'quickCreateCustomer');
+                params.set('name', name);
+                params.set('phone', phone);
+                params.set('email', document.getElementById('ncEmail').value.trim());
+                params.set('address', document.getElementById('ncAddress').value.trim());
+                params.set('companyName', document.getElementById('ncCompanyName').value.trim());
+                params.set('customerTypeId', document.getElementById('ncTypeId').value);
+                fetch(contextPath + '/order', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     btn.disabled = false;
