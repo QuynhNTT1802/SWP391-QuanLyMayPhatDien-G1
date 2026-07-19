@@ -1,6 +1,7 @@
 package com.quanlymayphatdien.g1.utils;
 
 public class GlobalUtils {
+
     public static final String REGEX_USERNAME = "^[a-zA-Z0-9_]+$";
 
     public static final String REGEX_PASSWORD = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$";
@@ -31,7 +32,6 @@ public class GlobalUtils {
     public static final String RECEIPT_STATUS_COMPLETED = "COMPLETED";
     public static final String RECEIPT_STATUS_CANCELLED = "CANCELLED";
 
-
     public static final String PO_STATUS_PENDING_CEO = "PENDING_CEO";
     public static final String PO_STATUS_APPROVED = "APPROVED";
     public static final String PO_STATUS_REJECTED = "REJECTED";
@@ -51,4 +51,6 @@ public class GlobalUtils {
     public static final String TRANSFER_STATUS_EXPORTED = "EXPORTED";
     public static final String TRANSFER_STATUS_COMPLETED = "COMPLETED";
     public static final String TRANSFER_STATUS_REJECTED = "REJECTED";
+    public static final String TRANSFER_STATUS_REQUEST_REVISION = "REQUEST_REVISION";
+
 }
