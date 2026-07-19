@@ -196,7 +196,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             closeResources();
         }
         for (String s : new String[]{"PENDING_CEO", "APPROVED", "EXPORTED",
-            "COMPLETED", "REJECTED"}) {
+            "COMPLETED", "REJECTED", "REQUEST_REVISION"}) {
             result.putIfAbsent(s, 0);
         }
         return result;
@@ -442,6 +442,76 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             statement = connection.prepareStatement(sql);
             statement.setInt(1, ceoId);
             statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                statement.setString(3, note.trim());
+            } else {
+                statement.setNull(3, Types.VARCHAR);
+            }
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(5, transferId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean ceRequestRevision(int transferId, int ceoId, String note) {
+        String sql = "UPDATE transfer SET status = 'REQUEST_REVISION', "
+                + "ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_note = ?, updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'PENDING_CEO'";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, ceoId);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            if (note != null && !note.trim().isEmpty()) {
+                statement.setString(3, note.trim());
+            } else {
+                statement.setNull(3, Types.VARCHAR);
+            }
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(5, transferId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean submitRevision(int transferId, int userId) {
+        String sql = "UPDATE transfer SET status = 'PENDING_CEO', updated_at = ? "
+                + "WHERE transfer_id = ? AND status = 'REQUEST_REVISION' AND created_by = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, transferId);
+            statement.setInt(3, userId);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
+    public boolean updateHeader(int transferId, int sourceWarehouseId, int destWarehouseId, String note) {
+        String sql = "UPDATE transfer SET source_warehouse_id = ?, dest_warehouse_id = ?, "
+                + "note = ?, updated_at = ? WHERE transfer_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, sourceWarehouseId);
+            statement.setInt(2, destWarehouseId);
             if (note != null && !note.trim().isEmpty()) {
                 statement.setString(3, note.trim());
             } else {

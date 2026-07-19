@@ -250,6 +250,26 @@ public class ImportReceiptController extends HttpServlet {
                     return;
                 }
                 applyPoPrefillToRequest(request, po, "Tạo từ phiếu purchase " + po.getPoCode());
+                java.util.Set<Integer> poGenIds = new java.util.HashSet<>();
+                java.util.Map<Integer, Integer> poQtyMap = new java.util.LinkedHashMap<>();
+                if (po.getDetails() != null) {
+                    for (com.quanlymayphatdien.g1.entity.PurchaseOrderDetail pod : po.getDetails()) {
+                        int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
+                                : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                        poGenIds.add(pod.getGeneratorId());
+                        poQtyMap.merge(pod.getGeneratorId(), qty, Integer::sum);
+                    }
+                }
+                java.util.List<Generator> poGenerators = new java.util.ArrayList<>();
+                java.util.Map<Integer, Generator> allGenMap = new java.util.HashMap<>();
+                for (Generator g : genDAO.findAllActive()) allGenMap.put(g.getId(), g);
+                for (Integer gid : poGenIds) {
+                    Generator g = allGenMap.get(gid);
+                    if (g != null) poGenerators.add(g);
+                }
+                request.setAttribute("availableGenerators", poGenerators);
+                request.setAttribute("poQtyMap", poQtyMap);
+                setGeneratorsAttributes(request, poGenerators);
             } else if (po != null && scopedWarehouseId > 0 && po.getWarehouseId() != scopedWarehouseId) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
@@ -873,10 +893,10 @@ public class ImportReceiptController extends HttpServlet {
         List<ReceiptDetail> details;
         if (fromPo) {
             details = parseDetailsStrict(genIds, serials, detailNotes, errors);
-            validateAgainstPurchaseOrder(poId, details, errors);
             if (details.isEmpty()) {
                 errors.add("Phiếu nhập từ PO phải có ít nhất 1 dòng serial hợp lệ");
             }
+            validateAgainstPurchaseOrder(poId, details, errors);
         } else {
             details = parseDetailsStrict(genIds, serials, detailNotes, errors);
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {

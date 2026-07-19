@@ -51,4 +51,5 @@ public class GlobalUtils {
     public static final String TRANSFER_STATUS_EXPORTED = "EXPORTED";
     public static final String TRANSFER_STATUS_COMPLETED = "COMPLETED";
     public static final String TRANSFER_STATUS_REJECTED = "REJECTED";
+    public static final String TRANSFER_STATUS_REQUEST_REVISION = "REQUEST_REVISION";
 }

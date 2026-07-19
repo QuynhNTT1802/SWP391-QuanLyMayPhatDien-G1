@@ -255,19 +255,26 @@
                             <c:if test="${fromTransfer}">Đã nhập: <strong id="transferScannedCount">0</strong> / <strong>${expectedTransferRows}</strong> serial &middot; </c:if>
                             Tổng số dòng: <strong id="totalRowCount">0</strong>
                         </div>
-                        <table class="detail-table">
-                            <thead>
-                                <tr>
-                                    <th class="col-num">#</th>
-                                    <th class="col-gen">Máy phát (Tồn kho)</th>
-                                    <th class="col-serial">Serial</th>
-                                    <th class="col-note">Ghi chú</th>
-                                    <th class="col-del"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailBody">
-                            </tbody>
-                        </table>
+                        <div id="detailGroups" class="detail-groups">
+                            <div id="emptyState" class="empty-state" style="display:none;">
+                                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                                <p class="empty-state-title">Chưa có serial nào</p>
+                                <p class="empty-state-hint">Hãy quét barcode hoặc thêm dòng để bắt đầu</p>
+                            </div>
+                            <table class="detail-table" style="display:none;">
+                                <thead>
+                                    <tr>
+                                        <th class="col-num">#</th>
+                                        <th class="col-gen">Máy phát (Tồn kho)</th>
+                                        <th class="col-serial">Serial</th>
+                                        <th class="col-note">Ghi chú</th>
+                                        <th class="col-del"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailBody">
+                                </tbody>
+                            </table>
+                        </div>
 
                         <c:if test="${not fromLiquidation}">
                         <button type="button" class="btn add-row-btn" id="addRowBtn" disabled onclick="addRow()">
@@ -385,6 +392,8 @@
                 onWarehouseChange();
             }
         }
+        updateEmptyState();
+        reorganizeGroups();
         if (window.SESSION_DATA && window.SESSION_DATA.message) {
             toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
             window.SESSION_DATA = null;
@@ -651,6 +660,90 @@
         document.querySelectorAll('#detailBody .row-num').forEach(function (el, i) {
             el.textContent = i + 1;
         });
+        updateEmptyState();
+        reorganizeGroups();
+    }
+
+    function updateEmptyState() {
+        var groups = document.getElementById('detailGroups');
+        var empty = document.getElementById('emptyState');
+        var table = groups ? groups.querySelector('table.detail-table') : null;
+        if (!groups || !empty || !table) return;
+        var rowCount = document.querySelectorAll('#detailBody tr').length;
+        var showEmpty = rowCount === 0;
+        empty.style.display = showEmpty ? 'flex' : 'none';
+        table.style.display = showEmpty ? 'none' : '';
+    }
+
+    function reorganizeGroups() {
+        var groups = document.getElementById('detailGroups');
+        var table = groups ? groups.querySelector('table.detail-table') : null;
+        if (!groups || !table) return;
+
+        var existingGroups = Array.prototype.slice.call(groups.querySelectorAll('details.export-group'));
+        var rowGroups = {};
+        var orphanRows = [];
+
+        table.querySelectorAll('tbody tr').forEach(function (tr) {
+            var sel = tr.querySelector('select[name="generatorId"]');
+            var genId = sel ? sel.value : '';
+            if (genId) {
+                if (!rowGroups[genId]) rowGroups[genId] = [];
+                rowGroups[genId].push(tr);
+            } else {
+                orphanRows.push(tr);
+            }
+        });
+
+        existingGroups.forEach(function (g) { g.remove(); });
+
+        var sortedGenIds = Object.keys(rowGroups).sort(function (a, b) {
+            return parseInt(a, 10) - parseInt(b, 10);
+        });
+        sortedGenIds.forEach(function (genId) {
+            var rows = rowGroups[genId];
+            var info = generatorCache.find(function (g) { return String(g.id) === String(genId); });
+            var modelText = info ? info.model : ('Mẫu #' + genId);
+            var details = document.createElement('details');
+            details.className = 'detail-group export-group';
+            details.setAttribute('data-gen-id', String(genId));
+            details.setAttribute('open', '');
+            details.innerHTML = '<summary>'
+                    + '<span class="group-title">' + escapeHtml(modelText) + '</span>'
+                    + '<span class="group-count">(<span class="group-count-num">' + rows.length + '</span> máy)</span>'
+                    + '<span class="group-spacer"></span>'
+                    + '</summary>'
+                    + '<table class="group-table"><tbody></tbody></table>';
+            var newTbody = details.querySelector('tbody');
+            rows.forEach(function (tr) { newTbody.appendChild(tr); });
+            groups.appendChild(details);
+        });
+
+        if (orphanRows.length > 0) {
+            var orphanDetails = document.createElement('details');
+            orphanDetails.className = 'detail-group export-group';
+            orphanDetails.setAttribute('data-gen-id', 'none');
+            orphanDetails.setAttribute('open', '');
+            orphanDetails.innerHTML = '<summary>'
+                    + '<span class="group-title">Chưa chọn mẫu máy</span>'
+                    + '<span class="group-count">(<span class="group-count-num">' + orphanRows.length + '</span> dòng)</span>'
+                    + '<span class="group-spacer"></span>'
+                    + '</summary>'
+                    + '<table class="group-table"><tbody></tbody></table>';
+            var orphanTbody = orphanDetails.querySelector('tbody');
+            orphanRows.forEach(function (tr) { orphanTbody.appendChild(tr); });
+            groups.appendChild(orphanDetails);
+        }
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     function validateInventoryRealtime() {
