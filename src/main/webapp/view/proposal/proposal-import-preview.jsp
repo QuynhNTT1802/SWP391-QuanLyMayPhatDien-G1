@@ -385,7 +385,7 @@
                                 Tải lại file Excel khác
                             </a>
                             <a class="btn" href="${pageContext.request.contextPath}/proposal?action=list">Hủy</a>
-                            <button type="button" class="btn" id="btnDraft" disabled>Lưu nháp</button>
+                           
                             <button type="button" class="btn btn-primary" id="btnPending" disabled>Gửi duyệt</button>
                         </div>
                     </form>

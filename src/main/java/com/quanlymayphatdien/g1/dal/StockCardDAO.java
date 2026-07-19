@@ -12,6 +12,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -410,4 +411,268 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         }
         return sc;
     }
+
+    // ===================== BÁO CÁO THẺ KHO =====================
+    private String buildSCReportWhere(java.time.LocalDate from, java.time.LocalDate to,
+                                     Integer warehouseId, Integer generatorId,
+                                     String transactionType, List<Object> params) {
+        StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
+        if (from != null) {
+            w.append(" AND DATE(sc.created_at) >= ?");
+            params.add(java.sql.Date.valueOf(from));
+        }
+        if (to != null) {
+            w.append(" AND DATE(sc.created_at) <= ?");
+            params.add(java.sql.Date.valueOf(to));
+        }
+        if (warehouseId != null) {
+            w.append(" AND sc.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        if (generatorId != null) {
+            w.append(" AND sc.generator_id = ?");
+            params.add(generatorId);
+        }
+        if (transactionType != null && !transactionType.isEmpty()) {
+            w.append(" AND sc.transaction_type = ?");
+            params.add(transactionType);
+        }
+        return w.toString();
+    }
+
+    private void bindParams(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+    }
+
+    // KPI: tong giao dich, tong nhap, tong xuat, so kho
+    public Map<String, Object> getStockCardReportSummary(java.time.LocalDate from, java.time.LocalDate to,
+                                                       Integer warehouseId, Integer generatorId,
+                                                       String transactionType) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildSCReportWhere(from, to, warehouseId, generatorId, transactionType, params);
+        String sql = "SELECT COUNT(*) AS total_tx, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'IMPORT' THEN sc.quantity_change ELSE 0 END), 0) AS import_qty, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'EXPORT' THEN sc.quantity_change ELSE 0 END), 0) AS export_qty, "
+                + "COUNT(DISTINCT sc.warehouse_id) AS warehouse_count, "
+                + "COUNT(DISTINCT sc.generator_id) AS model_count "
+                + "FROM stock_card sc JOIN warehouse w ON sc.warehouse_id = w.warehouse_id"
+                + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                int importQty = resultSet.getInt("import_qty");
+                int exportQty = resultSet.getInt("export_qty");
+                m.put("totalTx", resultSet.getInt("total_tx"));
+                m.put("importQty", importQty);
+                m.put("exportQty", exportQty);
+                m.put("netChange", importQty - exportQty);
+                m.put("warehouseCount", resultSet.getInt("warehouse_count"));
+                m.put("modelCount", resultSet.getInt("model_count"));
+            } else {
+                m.put("totalTx", 0);
+                m.put("importQty", 0);
+                m.put("exportQty", 0);
+                m.put("netChange", 0);
+                m.put("warehouseCount", 0);
+                m.put("modelCount", 0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getStockCardReportSummary: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return m;
+    }
+
+    // Phan tich theo kho: kho | so giao dich | nhap | xuat
+    public List<Map<String, Object>> getStockCardByWarehouse(java.time.LocalDate from, java.time.LocalDate to,
+                                                             Integer warehouseId, Integer generatorId,
+                                                             String transactionType) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildSCReportWhere(from, to, warehouseId, generatorId, transactionType, params);
+        String sql = "SELECT w.name AS warehouse_name, "
+                + "COUNT(*) AS tx_count, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'IMPORT' THEN sc.quantity_change ELSE 0 END), 0) AS import_qty, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'EXPORT' THEN sc.quantity_change ELSE 0 END), 0) AS export_qty "
+                + "FROM stock_card sc JOIN warehouse w ON sc.warehouse_id = w.warehouse_id"
+                + where
+                + " GROUP BY w.warehouse_id, w.name ORDER BY tx_count DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("txCount", resultSet.getInt("tx_count"));
+                r.put("importQty", resultSet.getInt("import_qty"));
+                r.put("exportQty", resultSet.getInt("export_qty"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getStockCardByWarehouse: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Phan tich theo model: model | so giao dich | nhap | xuat
+    public List<Map<String, Object>> getStockCardByGenerator(java.time.LocalDate from, java.time.LocalDate to,
+                                                             Integer warehouseId, Integer generatorId,
+                                                             String transactionType) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildSCReportWhere(from, to, warehouseId, generatorId, transactionType, params);
+        String sql = "SELECT g.model AS generator_model, g.id AS generator_id, "
+                + "COUNT(*) AS tx_count, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'IMPORT' THEN sc.quantity_change ELSE 0 END), 0) AS import_qty, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'EXPORT' THEN sc.quantity_change ELSE 0 END), 0) AS export_qty "
+                + "FROM stock_card sc "
+                + "JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
+                + "JOIN generator g ON sc.generator_id = g.id"
+                + where
+                + " GROUP BY g.id, g.model ORDER BY tx_count DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("generatorModel", resultSet.getString("generator_model"));
+                r.put("txCount", resultSet.getInt("tx_count"));
+                r.put("importQty", resultSet.getInt("import_qty"));
+                r.put("exportQty", resultSet.getInt("export_qty"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getStockCardByGenerator: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Xu huong theo thang: thang | nhap | xuat | bien dong (net)
+    public List<Map<String, Object>> getStockCardMonthlyTrend(java.time.LocalDate from, java.time.LocalDate to,
+                                                             Integer warehouseId, Integer generatorId,
+                                                             String transactionType) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildSCReportWhere(from, to, warehouseId, generatorId, transactionType, params);
+        String sql = "SELECT DATE_FORMAT(sc.created_at, '%Y-%m') AS ym, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'IMPORT' THEN sc.quantity_change ELSE 0 END), 0) AS import_qty, "
+                + "COALESCE(SUM(CASE WHEN sc.transaction_type = 'EXPORT' THEN sc.quantity_change ELSE 0 END), 0) AS export_qty "
+                + "FROM stock_card sc JOIN warehouse w ON sc.warehouse_id = w.warehouse_id"
+                + where
+                + " GROUP BY ym ORDER BY ym ASC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("month", resultSet.getString("ym"));
+                r.put("importQty", resultSet.getInt("import_qty"));
+                r.put("exportQty", resultSet.getInt("export_qty"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getStockCardMonthlyTrend: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Chi tiet giao dich
+    public List<Map<String, Object>> getStockCardDetailList(java.time.LocalDate from, java.time.LocalDate to,
+                                                            Integer warehouseId, Integer generatorId,
+                                                            String transactionType, int limit, int offset) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildSCReportWhere(from, to, warehouseId, generatorId, transactionType, params);
+        String sql = "SELECT sc.stock_card_id, sc.warehouse_id, sc.generator_id, sc.receipt_id, "
+                + "sc.transaction_type, sc.quantity_change, sc.quantity_after, "
+                + "sc.reference_note, sc.created_at, "
+                + "w.name AS warehouse_name, g.model AS generator_model, "
+                + "r.receipt_code, "
+                + "(SELECT GROUP_CONCAT(i.serial_number SEPARATOR ', ') "
+                + " FROM receipt_detail rd JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                + " WHERE rd.receipt_id = sc.receipt_id AND i.generator_id = sc.generator_id) AS serial_list "
+                + "FROM stock_card sc "
+                + "LEFT JOIN warehouse w ON sc.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN generator g ON sc.generator_id = g.id "
+                + "LEFT JOIN receipt r ON sc.receipt_id = r.receipt_id"
+                + where
+                + " ORDER BY sc.created_at DESC, sc.stock_card_id DESC "
+                + "LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("stockCardId", resultSet.getInt("stock_card_id"));
+                r.put("transactionType", resultSet.getString("transaction_type"));
+                r.put("quantityChange", resultSet.getInt("quantity_change"));
+                r.put("quantityAfter", resultSet.getInt("quantity_after"));
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("generatorModel", resultSet.getString("generator_model"));
+                r.put("receiptCode", resultSet.getString("receipt_code"));
+                r.put("referenceNote", resultSet.getString("reference_note"));
+                r.put("serialList", resultSet.getString("serial_list"));
+                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                r.put("createdAtStr", createdAt != null ? createdAt.format(df) : "");
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getStockCardDetailList: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countStockCardDetailList(java.time.LocalDate from, java.time.LocalDate to,
+                                        Integer warehouseId, Integer generatorId,
+                                        String transactionType) {
+        List<Object> params = new ArrayList<>();
+        String where = buildSCReportWhere(from, to, warehouseId, generatorId, transactionType, params);
+        String sql = "SELECT COUNT(*) FROM stock_card sc JOIN warehouse w ON sc.warehouse_id = w.warehouse_id" + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error countStockCardDetailList: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
+    // ===================== END BÁO CÁO THẺ KHO =====================
 }

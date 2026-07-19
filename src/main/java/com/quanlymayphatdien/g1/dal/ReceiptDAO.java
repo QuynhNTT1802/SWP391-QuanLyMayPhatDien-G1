@@ -64,10 +64,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             sql += "AND r.created_by = ? ";
             inputs.add(createdByFilter);
         }
-        if (currentUserId != null) {
-            sql += "AND (r.status <> '" + GlobalUtils.RECEIPT_STATUS_DRAFT + "' OR r.created_by = ?) ";
-            inputs.add(currentUserId);
-        }
+        sql += "AND r.status NOT IN ('DRAFT', 'NEEDS_REVISION') ";
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
                     + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ? OR po.po_code LIKE ?) ";
@@ -132,10 +129,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             sql += "AND r.created_by = ? ";
             inputs.add(createdByFilter);
         }
-        if (currentUserId != null) {
-            sql += "AND (r.status <> '" + GlobalUtils.RECEIPT_STATUS_DRAFT + "' OR r.created_by = ?) ";
-            inputs.add(currentUserId);
-        }
+        sql += "AND r.status NOT IN ('DRAFT', 'NEEDS_REVISION') ";
         if (search != null && !search.trim().isEmpty()) {
             sql += "AND (r.receipt_code LIKE ? OR so.order_code LIKE ? "
                     + "OR c.name LIKE ? OR u1.name LIKE ? OR ip.proposal_code LIKE ?) ";
@@ -205,8 +199,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id,\n"
-                + "    warehouse_id, created_by, status, note, reason_id, created_at)\n"
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "    warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at)\n"
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -232,6 +226,16 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 statement.setNull(9, Types.INTEGER);
             }
             statement.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                statement.setInt(11, r.getApprovedBy());
+            } else {
+                statement.setNull(11, Types.INTEGER);
+            }
+            if (r.getApprovedAt() != null) {
+                statement.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+            } else {
+                statement.setNull(12, Types.TIMESTAMP);
+            }
             int affectedRows = statement.executeUpdate();
             if (affectedRows > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -254,8 +258,8 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             status = GlobalUtils.RECEIPT_STATUS_PENDING;
         }
         String sql = "INSERT INTO receipt (receipt_code, receipt_type, order_id, purchase_order_id, "
-                + "warehouse_id, created_by, status, note, reason_id, created_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "warehouse_id, created_by, status, note, reason_id, created_at, approved_by, approved_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, r.getReceiptCode());
             ps.setString(2, r.getReceiptType());
@@ -279,6 +283,16 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 ps.setNull(9, Types.INTEGER);
             }
             ps.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+            if (r.getApprovedBy() != null) {
+                ps.setInt(11, r.getApprovedBy());
+            } else {
+                ps.setNull(11, Types.INTEGER);
+            }
+            if (r.getApprovedAt() != null) {
+                ps.setTimestamp(12, Timestamp.valueOf(r.getApprovedAt()));
+            } else {
+                ps.setNull(12, Types.TIMESTAMP);
+            }
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -290,6 +304,273 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
         return -1;
     }
+
+    // ===================== BÁO CÁO NHẬP / XUẤT =====================
+    // Báo cáo lọc theo receipt_type (IMPORT/EXPORT), loại bỏ DRAFT/NEEDS_REVISION
+    // vì hiện tại hệ thống không dùng đến. Mốc thời gian dựa trên approved_at
+    // (giống báo cáo thanh lý), có thể lọc thêm theo kho.
+
+    private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to,
+                                    Integer warehouseId, List<Object> params, String receiptType) {
+        StringBuilder w = new StringBuilder(" WHERE r.receipt_type = ?");
+        params.add(receiptType);
+        w.append(" AND r.status NOT IN ('DRAFT', 'NEEDS_REVISION')");
+        // He thong khong co workflow duyet that su, dung created_at lam moc thoi gian
+        if (from != null) {
+            w.append(" AND DATE(r.created_at) >= ?");
+            params.add(java.sql.Date.valueOf(from));
+        }
+        if (to != null) {
+            w.append(" AND DATE(r.created_at) <= ?");
+            params.add(java.sql.Date.valueOf(to));
+        }
+        if (warehouseId != null) {
+            w.append(" AND r.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        return w.toString();
+    }
+
+    private void bindParams(PreparedStatement ps, List<Object> params) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            ps.setObject(i + 1, params.get(i));
+        }
+    }
+
+    // Tổng quan: tổng phiếu, tổng máy, số phiếu theo trạng thái (chỉ tính COMPLETED/PENDING/CANCELLED).
+    public Map<String, Object> getReportSummary(java.time.LocalDate from, java.time.LocalDate to,
+                                                Integer warehouseId, String receiptType) {
+        Map<String, Object> m = new java.util.HashMap<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params, receiptType);
+        // Subquery loc ra danh sach receipt_id truoc de tranh double-count khi JOIN detail
+        String sql = "SELECT COUNT(*) AS total_receipts, "
+                + "COALESCE(SUM(machine_count), 0) AS total_machines, "
+                + "SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed_count, "
+                + "SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count, "
+                + "SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) AS cancelled_count "
+                + "FROM (SELECT r.receipt_id, r.status, COUNT(rd.receipt_detail_id) AS machine_count "
+                + "      FROM receipt r LEFT JOIN receipt_detail rd ON rd.receipt_id = r.receipt_id"
+                + where
+                + "      GROUP BY r.receipt_id, r.status) t";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                int totalReceipts = resultSet.getInt("total_receipts");
+                int totalMachines = resultSet.getInt("total_machines");
+                int completedCount = resultSet.getInt("completed_count");
+                int pendingCount = resultSet.getInt("pending_count");
+                int cancelledCount = resultSet.getInt("cancelled_count");
+                double completionRate = totalReceipts > 0
+                        ? Math.round((completedCount * 1000.0) / totalReceipts) / 10.0
+                        : 0.0;
+                m.put("totalReceipts", totalReceipts);
+                m.put("totalMachines", totalMachines);
+                m.put("completedCount", completedCount);
+                m.put("pendingCount", pendingCount);
+                m.put("cancelledCount", cancelledCount);
+                m.put("completionRate", completionRate);
+            } else {
+                m.put("totalReceipts", 0);
+                m.put("totalMachines", 0);
+                m.put("completedCount", 0);
+                m.put("pendingCount", 0);
+                m.put("cancelledCount", 0);
+                m.put("completionRate", 0.0);
+            }
+        } catch (Exception e) {
+            System.out.println("Error getReportSummary: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return m;
+    }
+
+    // Phân tích theo kho: kho | số phiếu | số máy.
+    public List<Map<String, Object>> getReportByWarehouse(java.time.LocalDate from, java.time.LocalDate to,
+                                                          Integer warehouseId, String receiptType) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params, receiptType);
+        // Subquery truoc de tranh double-count tu LEFT JOIN receipt_detail
+        String sql = "SELECT warehouse_name, COUNT(*) AS receipt_count, SUM(machine_count) AS machine_count "
+                + "FROM (SELECT r.warehouse_id, w.name AS warehouse_name, r.receipt_id, "
+                + "             COUNT(rd.receipt_detail_id) AS machine_count "
+                + "      FROM receipt r "
+                + "      JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
+                + "      LEFT JOIN receipt_detail rd ON rd.receipt_id = r.receipt_id"
+                + where
+                + "      GROUP BY r.warehouse_id, w.name, r.receipt_id) t "
+                + "GROUP BY warehouse_id, warehouse_name ORDER BY receipt_count DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("receiptCount", resultSet.getInt("receipt_count"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            System.out.println("Error getReportByWarehouse: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Phân tích theo trạng thái: trạng thái | số phiếu.
+    public List<Map<String, Object>> getReportByStatus(java.time.LocalDate from, java.time.LocalDate to,
+                                                       Integer warehouseId, String receiptType) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params, receiptType);
+        String sql = "SELECT r.status, COUNT(r.receipt_id) AS receipt_count "
+                + "FROM receipt r"
+                + where
+                + " GROUP BY r.status ORDER BY receipt_count DESC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("status", resultSet.getString("status"));
+                r.put("receiptCount", resultSet.getInt("receipt_count"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            System.out.println("Error getReportByStatus: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Xu hướng theo tháng: tháng (yyyy-MM) | số phiếu | số máy.
+    public List<Map<String, Object>> getReportMonthlyTrend(java.time.LocalDate from, java.time.LocalDate to,
+                                                           Integer warehouseId, String receiptType) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params, receiptType);
+        String sql = "SELECT ym, COUNT(*) AS receipt_count, SUM(machine_count) AS machine_count "
+                + "FROM (SELECT r.receipt_id, "
+                + "             DATE_FORMAT(r.created_at, '%Y-%m') AS ym, "
+                + "             COUNT(rd.receipt_detail_id) AS machine_count "
+                + "      FROM receipt r LEFT JOIN receipt_detail rd ON rd.receipt_id = r.receipt_id"
+                + where
+                + "      GROUP BY r.receipt_id) t "
+                + "GROUP BY ym ORDER BY ym ASC";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("month", resultSet.getString("ym"));
+                r.put("receiptCount", resultSet.getInt("receipt_count"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            System.out.println("Error getReportMonthlyTrend: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    // Chi tiết từng phiếu (gom GROUP BY receipt_id, mỗi dòng = 1 phiếu).
+    public List<Map<String, Object>> getReportDetailList(java.time.LocalDate from, java.time.LocalDate to,
+                                                        Integer warehouseId, String receiptType,
+                                                        int limit, int offset) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params, receiptType);
+        // Pre-aggregate machine_count trong subquery de tranh GROUP BY o ngoai (MySQL ONLY_FULL_GROUP_BY)
+        String sql = "SELECT r.receipt_id, r.receipt_code, r.status, r.note, r.created_at, "
+                + "w.name AS warehouse_name, "
+                + "COALESCE(mc.machine_count, 0) AS machine_count, "
+                + "cu.name AS creator_name, "
+                + "po.po_code AS purchase_order_code, so.order_code, "
+                + "liq.liquidation_code "
+                + "FROM receipt r "
+                + "JOIN warehouse w ON r.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN (SELECT receipt_id, COUNT(*) AS machine_count "
+                + "             FROM receipt_detail GROUP BY receipt_id) mc ON mc.receipt_id = r.receipt_id "
+                + "LEFT JOIN user cu ON r.created_by = cu.id "
+                + "LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id "
+                + "LEFT JOIN sale_order so ON r.order_id = so.order_id "
+                + "LEFT JOIN liquidation liq ON liq.converted_receipt_id = r.receipt_id"
+                + where
+                + " ORDER BY r.created_at DESC, r.receipt_id DESC "
+                + "LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                r.put("receiptId", resultSet.getInt("receipt_id"));
+                r.put("receiptCode", resultSet.getString("receipt_code"));
+                r.put("status", resultSet.getString("status"));
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                r.put("creatorName", resultSet.getString("creator_name"));
+                r.put("purchaseOrderCode", resultSet.getString("purchase_order_code"));
+                r.put("orderCode", resultSet.getString("order_code"));
+                r.put("liquidationCode", resultSet.getString("liquidation_code"));
+                r.put("note", resultSet.getString("note"));
+                // He thong khong co workflow duyet that su -> hien thi theo ngay tao
+                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                r.put("createdAtStr", createdAt != null ? createdAt.toLocalDate().format(df) : "");
+                list.add(r);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error getReportDetailList: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countReportDetailList(java.time.LocalDate from, java.time.LocalDate to,
+                                     Integer warehouseId, String receiptType) {
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params, receiptType);
+        String sql = "SELECT COUNT(*) FROM (SELECT r.receipt_id "
+                + "FROM receipt r"
+                + where
+                + " GROUP BY r.receipt_id) t";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error countReportDetailList: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
+    // ===================== END BÁO CÁO NHẬP / XUẤT =====================
 
     public List<String> approveReceipt(int receiptId, int approvedBy) {
         List<String> errors = new ArrayList<>();
@@ -465,6 +746,100 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         }
     }
 
+    /**
+     * Ghi stock_card theo generator cho mot phieu nhap (IMPORT) moi tao.
+     * Moi generator_id se tao mot stock_card voi quantity_change = +size(group)
+     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
+     *
+     * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
+     * de dam bao atomic.
+     */
+    public void writeStockCardsForImport(Connection conn, int receiptId, String receiptCode,
+                                         int warehouseId, int createdBy,
+                                         List<ReceiptDetail> details) throws SQLException {
+        if (details == null || details.isEmpty()) return;
+        StockCardDAO scDAO = new StockCardDAO();
+        Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+        for (ReceiptDetail d : details) {
+            if (d.getGeneratorId() > 0) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+        }
+        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+            int genId = entry.getKey();
+            int totalQty = entry.getValue().size();
+            int qtyAfter = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+                qtyPs.setInt(1, warehouseId);
+                qtyPs.setInt(2, genId);
+                try (ResultSet qtyRs = qtyPs.executeQuery()) {
+                    if (qtyRs.next()) {
+                        qtyAfter = qtyRs.getInt(1);
+                    }
+                }
+            }
+            StockCard sc = new StockCard();
+            sc.setWarehouseId(warehouseId);
+            sc.setGeneratorId(genId);
+            sc.setReceiptId(receiptId);
+            sc.setTransactionType("IMPORT");
+            sc.setQuantityChange(totalQty);
+            sc.setQuantityAfter(qtyAfter);
+            sc.setReferenceNote("Phiếu " + receiptCode);
+            sc.setCreatedAt(LocalDateTime.now());
+            sc.setCreatedBy(createdBy);
+            scDAO.insert(conn, sc);
+        }
+    }
+
+    /**
+     * Ghi stock_card theo generator cho mot phieu xuat (EXPORT) moi tao.
+     * Moi generator_id se tao mot stock_card voi quantity_change = -size(group)
+     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
+     *
+     * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
+     * de dam bao atomic.
+     */
+    public void writeStockCardsForExport(Connection conn, int receiptId, String receiptCode,
+                                         int warehouseId, int createdBy,
+                                         List<ReceiptDetail> details) throws SQLException {
+        if (details == null || details.isEmpty()) return;
+        StockCardDAO scDAO = new StockCardDAO();
+        Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
+        for (ReceiptDetail d : details) {
+            if (d.getGeneratorId() > 0) {
+                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
+            }
+        }
+        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
+            int genId = entry.getKey();
+            int totalQty = entry.getValue().size();
+            int qtyAfter = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+                qtyPs.setInt(1, warehouseId);
+                qtyPs.setInt(2, genId);
+                try (ResultSet qtyRs = qtyPs.executeQuery()) {
+                    if (qtyRs.next()) {
+                        qtyAfter = qtyRs.getInt(1);
+                    }
+                }
+            }
+            StockCard sc = new StockCard();
+            sc.setWarehouseId(warehouseId);
+            sc.setGeneratorId(genId);
+            sc.setReceiptId(receiptId);
+            sc.setTransactionType("EXPORT");
+            sc.setQuantityChange(-totalQty);
+            sc.setQuantityAfter(qtyAfter);
+            sc.setReferenceNote("Phiếu " + receiptCode);
+            sc.setCreatedAt(LocalDateTime.now());
+            sc.setCreatedBy(createdBy);
+            scDAO.insert(conn, sc);
+        }
+    }
+
     public boolean rejectReceipt(int receiptId, int approvedBy, Integer reasonId, String reasonNote) {
         Connection conn = null;
         try {
@@ -536,7 +911,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     public boolean requestRevision(int receiptId, int managerId, Integer reasonId, String reasonNote) {
-        String sql = "UPDATE receipt SET status = '" + GlobalUtils.RECEIPT_STATUS_REVISION + "', approved_by = ?, "
+        String sql = "UPDATE receipt SET status = 'CANCELLED', approved_by = ?, "
                 + "reason_id = ?, reason_note = ? "
                 + "WHERE receipt_id = ? AND status = '" + GlobalUtils.RECEIPT_STATUS_PENDING + "'";
         try {
@@ -565,15 +940,12 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
 
     public boolean updateReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId) {
         return updateReceiptInternalMulti(r, newDetails, userId,
-                GlobalUtils.RECEIPT_STATUS_PENDING, new String[]{GlobalUtils.RECEIPT_STATUS_REVISION});
+                GlobalUtils.RECEIPT_STATUS_PENDING, new String[]{GlobalUtils.RECEIPT_STATUS_PENDING});
     }
 
     public boolean updateDraftReceipt(Receipt r, List<ReceiptDetail> newDetails, int userId, String newStatus) {
-        String target = GlobalUtils.RECEIPT_STATUS_DRAFT.equals(newStatus)
-                ? GlobalUtils.RECEIPT_STATUS_DRAFT
-                : GlobalUtils.RECEIPT_STATUS_PENDING;
         return updateReceiptInternalMulti(r, newDetails, userId,
-                target, new String[]{GlobalUtils.RECEIPT_STATUS_DRAFT, GlobalUtils.RECEIPT_STATUS_REVISION});
+                GlobalUtils.RECEIPT_STATUS_PENDING, new String[]{GlobalUtils.RECEIPT_STATUS_PENDING});
     }
 
     private boolean updateReceiptInternalMulti(Receipt r, List<ReceiptDetail> newDetails, int userId,

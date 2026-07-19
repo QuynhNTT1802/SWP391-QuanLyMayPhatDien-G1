@@ -26,12 +26,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         l.setWarehouseId(rs.getInt("warehouse_id"));
         l.setCustomerId(rs.getObject("customer_id", Integer.class));
 
-        l.setManagerReviewedBy(rs.getObject("manager_reviewed_by", Integer.class));
-        l.setManagerReviewedAt(rs.getObject("manager_reviewed_at", LocalDateTime.class));
         l.setCeoReviewedBy(rs.getObject("ceo_reviewed_by", Integer.class));
         l.setCeoReviewedAt(rs.getObject("ceo_reviewed_at", LocalDateTime.class));
         l.setCeoFeedbackId(rs.getObject("ceo_feedback_id", Integer.class));
-        l.setManagerFeedbackId(rs.getObject("manager_feedback_id", Integer.class));
         l.setConvertedReceiptId(rs.getObject("converted_receipt_id", Integer.class));
 
         l.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
@@ -41,10 +38,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             l.setCreatedByName(rs.getString("created_by_name"));
 
             l.setReasonName(rs.getString("reason_name"));
-
             l.setCeoFeedbackName(rs.getString("ceo_feedback_name"));
-
-            l.setManagerFeedbackName(rs.getString("manager_feedback_name"));
 
             l.setWarehouseName(rs.getString("warehouse_name"));
 
@@ -133,7 +127,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
     public List<Liquidation> findWithPagination(int limit, int offset, String search, String status, Integer createdBy) {
         List<Liquidation> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name, w.name AS warehouse_name, cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, mf.name AS manager_feedback_name, f.name AS ceo_feedback_name, agg.detail_count, agg.total_original_price, agg.total_liquidation_price FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id JOIN warehouse w ON l.warehouse_id = w.warehouse_id LEFT JOIN customer cu ON l.customer_id = cu.id LEFT JOIN category mf ON l.manager_feedback_id = mf.id LEFT JOIN category f ON l.ceo_feedback_id = f.id LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT l.*, u.name AS created_by_name, c.name AS reason_name, w.name AS warehouse_name, cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, f.name AS ceo_feedback_name, agg.detail_count, agg.total_original_price, agg.total_liquidation_price FROM liquidation l JOIN user u ON l.created_by = u.id JOIN category c ON l.reason_id = c.id JOIN warehouse w ON l.warehouse_id = w.warehouse_id LEFT JOIN customer cu ON l.customer_id = cu.id LEFT JOIN category f ON l.ceo_feedback_id = f.id LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id WHERE 1=1");
         List<Object> params = new ArrayList<>();
         if (createdBy != null) {
             sql.append(" AND l.created_by = ?");
@@ -197,7 +191,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
     public Liquidation findById(int id) {
         String sql = "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, "
-                + "mf.name AS manager_feedback_name, w.name AS warehouse_name, "
+                + "w.name AS warehouse_name, "
                 + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, "
                 + "agg.detail_count, agg.total_original_price, agg.total_liquidation_price "
                 + "FROM liquidation l "
@@ -206,7 +200,6 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN category f ON l.ceo_feedback_id = f.id "
-                + "LEFT JOIN category mf ON l.manager_feedback_id = mf.id "
                 + "LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id "
                 + "WHERE l.liquidation_id = ?";
         try {
@@ -225,37 +218,26 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return null;
     }
 
-    public boolean updateStatus(int liquidationId, String status, int reviewerId, String role, Integer receiptId) {
-        String sql = "UPDATE liquidation SET status = ?, updated_at = ?";
-        if (role.equals("manager")) {
-            sql += ", manager_reviewed_by = ?, manager_reviewed_at = ?";
-        } else if (role.equals("ceo")) {
-            sql += ", ceo_reviewed_by = ?, ceo_reviewed_at = ?, converted_receipt_id = ?";
+    public boolean updateStatus(int liquidationId, String status, int reviewerId, Integer receiptId) {
+        String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ?";
+        if (receiptId != null) {
+            sql += ", converted_receipt_id = ?";
         }
         sql += " WHERE liquidation_id = ?";
 
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, status);
             LocalDateTime now = LocalDateTime.now();
-            statement.setObject(2, now);
-
-            if (role.equals("manager")) {
-                statement.setInt(3, reviewerId);
-                statement.setObject(4, now);
-                statement.setInt(5, liquidationId);
-            } else if (role.equals("ceo")) {
-                statement.setInt(3, reviewerId);
-                statement.setObject(4, now);
-                if (receiptId != null) {
-                    statement.setInt(5, receiptId);
-                } else {
-                    statement.setNull(5, java.sql.Types.INTEGER);
-                }
+            statement.setString(1, status);
+            statement.setInt(2, reviewerId);
+            statement.setObject(3, now);
+            statement.setObject(4, now);
+            if (receiptId != null) {
+                statement.setInt(5, receiptId);
                 statement.setInt(6, liquidationId);
             } else {
-                statement.setInt(3, liquidationId);
+                statement.setInt(5, liquidationId);
             }
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
@@ -266,12 +248,38 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return false;
     }
 
+    public void updateStatus(Connection conn, int liquidationId, String status, Integer reviewerId, Integer receiptId) throws SQLException {
+        String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, updated_at = ?";
+        if (receiptId != null) {
+            sql += ", converted_receipt_id = ?";
+        }
+        sql += " WHERE liquidation_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            LocalDateTime now = LocalDateTime.now();
+            ps.setString(1, status);
+            if (reviewerId != null) {
+                ps.setInt(2, reviewerId);
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }
+            ps.setObject(3, now);
+            ps.setObject(4, now);
+            if (receiptId != null) {
+                ps.setInt(5, receiptId);
+                ps.setInt(6, liquidationId);
+            } else {
+                ps.setInt(5, liquidationId);
+            }
+            ps.executeUpdate();
+        }
+    }
+
     public boolean updateReject(int liquidationId, int ceoId, int feedbackId) {
         return updateCeoReject(liquidationId, ceoId, feedbackId, false);
     }
 
     public boolean updateCeoReject(int liquidationId, int ceoId, int feedbackId, boolean isPermanent) {
-        String status = isPermanent ? "REJECTED_BY_CEO" : "CEO_REQUEST_EDIT";
+        String status = isPermanent ? "CANCELLED" : "CEO_REQUEST_EDIT";
         String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_feedback_id = ?, updated_at = ? WHERE liquidation_id = ?";
         try {
             connection = getConnection();
@@ -292,31 +300,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return false;
     }
 
-    public boolean updateManagerReject(int liquidationId, int managerId, int feedbackId, boolean isPermanent) {
-        String status = isPermanent ? "REJECTED_BY_MANAGER" : "MANAGER_REQUEST_EDIT";
-        String sql = "UPDATE liquidation SET status = ?, manager_reviewed_by = ?, manager_reviewed_at = ?, manager_feedback_id = ?, updated_at = ? WHERE liquidation_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            LocalDateTime now = LocalDateTime.now();
-            statement.setString(1, status);
-            statement.setInt(2, managerId);
-            statement.setObject(3, now);
-            statement.setInt(4, feedbackId);
-            statement.setObject(5, now);
-            statement.setInt(6, liquidationId);
-            return statement.executeUpdate() > 0;
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateManagerReject", e.getMessage(), e);
-        } finally {
-            closeResources();
-        }
-        return false;
-    }
-
     public boolean updateReasonAndStatus(int liquidationId, int reasonId, String targetStatus) {
         String sql = "UPDATE liquidation SET reason_id = ?, status = ?, "
-                + "manager_feedback_id = NULL, manager_reviewed_by = NULL, manager_reviewed_at = NULL, "
+                + "ceo_feedback_id = NULL, ceo_reviewed_by = NULL, ceo_reviewed_at = NULL, "
                 + "ceo_feedback_id = NULL, ceo_reviewed_by = NULL, ceo_reviewed_at = NULL, "
                 + "updated_at = ? WHERE liquidation_id = ?";
         try {
@@ -337,7 +323,6 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
 
     public boolean updateReasonAndStatus(Connection conn, int liquidationId, int reasonId, String targetStatus) throws SQLException {
         String sql = "UPDATE liquidation SET reason_id = ?, status = ?, "
-                + "manager_feedback_id = NULL, manager_reviewed_by = NULL, manager_reviewed_at = NULL, "
                 + "ceo_feedback_id = NULL, ceo_reviewed_by = NULL, ceo_reviewed_at = NULL, "
                 + "updated_at = ? WHERE liquidation_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -365,22 +350,6 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return false;
     }
 
-    public boolean updateCancel(int liquidationId) {
-        String sql = "UPDATE liquidation SET status = 'CANCELLED', updated_at = ? WHERE liquidation_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setObject(1, LocalDateTime.now());
-            statement.setInt(2, liquidationId);
-            return statement.executeUpdate() > 0;
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCancel", e.getMessage(), e);
-        } finally {
-            closeResources();
-        }
-        return false;
-    }
-
     @Override
     public boolean update(Liquidation t) {
         return false;
@@ -398,14 +367,16 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     // Lọc theo khoảng ngày + kho (tuỳ chọn).
 
     // Build mệnh đề WHERE chung + nạp tham số theo đúng thứ tự.
+    // Dùng mốc receipt.approved_at (ngày xuất kho thực tế) thay vì ceo_reviewed_at.
+    // Các query gọi buildReportWhere phải có JOIN receipt r ON l.converted_receipt_id = r.receipt_id trong FROM.
     private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, List<Object> params) {
         StringBuilder w = new StringBuilder(" WHERE l.status = 'COMPLETED'");
         if (from != null) {
-            w.append(" AND DATE(l.ceo_reviewed_at) >= ?");
+            w.append(" AND DATE(r.approved_at) >= ?");
             params.add(java.sql.Date.valueOf(from));
         }
         if (to != null) {
-            w.append(" AND DATE(l.ceo_reviewed_at) <= ?");
+            w.append(" AND DATE(r.approved_at) <= ?");
             params.add(java.sql.Date.valueOf(to));
         }
         if (warehouseId != null) {
@@ -430,7 +401,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation, "
                 + "COUNT(DISTINCT l.liquidation_id) AS order_count "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
                 + where;
         try {
             connection = getConnection();
@@ -447,7 +420,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 totalOriginal = resultSet.getBigDecimal("total_original");
                 totalLiquidation = resultSet.getBigDecimal("total_liquidation");
             }
-            java.math.BigDecimal loss = totalOriginal.subtract(totalLiquidation);
+            java.math.BigDecimal loss = totalLiquidation.subtract(totalOriginal);
             double recoveryRate = totalOriginal.signum() > 0
                     ? totalLiquidation.multiply(new java.math.BigDecimal(100))
                             .divide(totalOriginal, 1, java.math.RoundingMode.HALF_UP).doubleValue()
@@ -474,7 +447,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT c.name AS reason_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN category c ON l.reason_id = c.id"
                 + where
                 + " GROUP BY l.reason_id, c.name ORDER BY total_original DESC";
@@ -491,7 +466,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 list.add(r);
             }
         } catch (Exception e) {
@@ -510,7 +485,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT w.name AS warehouse_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id"
                 + where
                 + " GROUP BY l.warehouse_id, w.name ORDER BY total_original DESC";
@@ -530,7 +507,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 r.put("recoveryRate", rate);
                 list.add(r);
             }
@@ -550,7 +527,9 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT g.model AS model_name, COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN generator g ON ld.generator_id = g.id"
                 + where
                 + " GROUP BY ld.generator_id, g.model ORDER BY machine_count DESC, total_original DESC LIMIT ?";
@@ -584,12 +563,14 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
-        String sql = "SELECT DATE_FORMAT(l.ceo_reviewed_at, '%Y-%m') AS ym, "
+        String sql = "SELECT DATE_FORMAT(r.approved_at, '%Y-%m') AS ym, "
                 + "COUNT(DISTINCT l.liquidation_id) AS order_count, "
                 + "COUNT(ld.liquidation_detail_id) AS machine_count, "
                 + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
                 + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation "
-                + "FROM liquidation l JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id"
                 + where
                 + " GROUP BY ym ORDER BY ym ASC";
         try {
@@ -606,7 +587,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("machineCount", resultSet.getInt("machine_count"));
                 r.put("totalOriginal", orig);
                 r.put("totalLiquidation", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 list.add(r);
             }
         } catch (Exception e) {
@@ -618,16 +599,21 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     }
 
     // Chi tiết từng máy đã thanh lý (mỗi dòng = 1 máy) để xuất sheet "Chi tiết".
-    // Cùng phạm vi lọc với các query báo cáo khác (APPROVED_BY_CEO, theo ngày + kho).
+    // Cùng phạm vi lọc với các query báo cáo khác (COMPLETED, theo ngày + kho).
     public List<Map<String, Object>> getReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        return getReportDetailList(from, to, warehouseId, Integer.MAX_VALUE, 0);
+    }
+
+    public List<Map<String, Object>> getReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, int limit, int offset) {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildReportWhere(from, to, warehouseId, params);
-        String sql = "SELECT l.liquidation_code, ld.serial_number, g.model AS model_name, "
+        String sql = "SELECT l.liquidation_id, l.liquidation_code, ld.serial_number, g.model AS model_name, "
                 + "w.name AS warehouse_name, c.name AS reason_name, "
                 + "ld.original_price, ld.liquidation_price, "
-                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at "
+                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at, r.approved_at AS export_at "
                 + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
                 + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
                 + "JOIN generator g ON ld.generator_id = g.id "
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
@@ -635,7 +621,10 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
                 + where
-                + " ORDER BY l.ceo_reviewed_at DESC, l.liquidation_code, ld.serial_number";
+                + " ORDER BY r.approved_at DESC, l.liquidation_code, ld.serial_number"
+                + " LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
@@ -652,6 +641,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 if (liq == null) {
                     liq = java.math.BigDecimal.ZERO;
                 }
+                r.put("liquidationId", resultSet.getInt("liquidation_id"));
                 r.put("liquidationCode", resultSet.getString("liquidation_code"));
                 r.put("serialNumber", resultSet.getString("serial_number"));
                 r.put("modelName", resultSet.getString("model_name"));
@@ -659,11 +649,12 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("reasonName", resultSet.getString("reason_name"));
                 r.put("originalPrice", orig);
                 r.put("liquidationPrice", liq);
-                r.put("totalLoss", orig.subtract(liq));
+                r.put("totalLoss", liq.subtract(orig));
                 r.put("customerName", resultSet.getString("customer_name"));
                 r.put("ceoName", resultSet.getString("ceo_name"));
-                java.time.LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", java.time.LocalDateTime.class);
+                java.time.LocalDateTime reviewedAt = resultSet.getObject("export_at", java.time.LocalDateTime.class);
                 r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
+                r.put("exportAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
                 list.add(r);
             }
         } catch (Exception e) {
@@ -674,17 +665,43 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         return list;
     }
 
+    public int countReportDetailList(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(*) FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN generator g ON ld.generator_id = g.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + where;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countReportDetailList", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
     @Override
     public int insert(Liquidation t) {
-        String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, manager_reviewed_by, manager_reviewed_at, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO liquidation (liquidation_code, created_by, status, reason_id, warehouse_id, customer_id, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             LocalDateTime now = LocalDateTime.now();
             statement.setString(1, t.getLiquidationCode());
             statement.setInt(2, t.getCreatedBy());
-            statement.setString(3, t.getStatus() != null ? t.getStatus() : "PENDING_MANAGER");
+            statement.setString(3, t.getStatus() != null ? t.getStatus() : "PENDING_CEO");
             statement.setInt(4, t.getReasonId());
             statement.setInt(5, t.getWarehouseId());
             if (t.getCustomerId() != null) {
@@ -692,15 +709,8 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             } else {
                 statement.setNull(6, java.sql.Types.INTEGER);
             }
-            if (t.getManagerReviewedBy() != null) {
-                statement.setInt(7, t.getManagerReviewedBy());
-                statement.setObject(8, t.getManagerReviewedAt() != null ? t.getManagerReviewedAt() : now);
-            } else {
-                statement.setNull(7, java.sql.Types.INTEGER);
-                statement.setNull(8, java.sql.Types.TIMESTAMP);
-            }
-            statement.setObject(9, now);
-            statement.setObject(10, now);
+            statement.setObject(7, now);
+            statement.setObject(8, now);
             if (statement.executeUpdate() > 0) {
                 resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {
@@ -713,5 +723,192 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             closeResources();
         }
         return -1;
+    }
+
+    public int countReportFlatTable(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT COUNT(*) FROM (SELECT l.liquidation_id "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN user cr ON l.created_by = cr.id "
+                + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + where
+                + " GROUP BY l.liquidation_id) t";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countReportFlatTable", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
+    public List<Map<String, Object>> getReportFlatTable(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId) {
+        return getReportFlatTable(from, to, warehouseId, 0, Integer.MAX_VALUE);
+    }
+
+    public List<Map<String, Object>> getReportFlatTable(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, int limit, int offset) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        String where = buildReportWhere(from, to, warehouseId, params);
+        String sql = "SELECT l.liquidation_id, l.liquidation_code, r.approved_at AS ceo_reviewed_at, "
+                + "w.name AS warehouse_name, c.name AS reason_name, "
+                + "COUNT(ld.liquidation_detail_id) AS machine_count, "
+                + "COALESCE(SUM(ld.original_price), 0) AS total_original, "
+                + "COALESCE(SUM(ld.liquidation_price), 0) AS total_liquidation, "
+                + "cu.name AS customer_name, cr.name AS creator_name, ceo.name AS ceo_name "
+                + "FROM liquidation l "
+                + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
+                + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN user cr ON l.created_by = cr.id "
+                + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + where
+                + " GROUP BY l.liquidation_id ORDER BY r.approved_at DESC"
+                + " LIMIT ? OFFSET ?";
+        params.add(limit);
+        params.add(offset);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            bindParams(statement, params);
+            resultSet = statement.executeQuery();
+            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            while (resultSet.next()) {
+                Map<String, Object> r = new java.util.HashMap<>();
+                java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
+                java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
+                if (orig == null) orig = java.math.BigDecimal.ZERO;
+                if (liq == null) liq = java.math.BigDecimal.ZERO;
+                r.put("liquidationId", resultSet.getInt("liquidation_id"));
+                r.put("liquidationCode", resultSet.getString("liquidation_code"));
+                java.time.LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", java.time.LocalDateTime.class);
+                r.put("ceoReviewedAt", reviewedAt);
+                r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.format(df) : "");
+                r.put("warehouseName", resultSet.getString("warehouse_name"));
+                r.put("reasonName", resultSet.getString("reason_name"));
+                r.put("machineCount", resultSet.getInt("machine_count"));
+                r.put("totalOriginal", orig);
+                r.put("totalLiquidation", liq);
+                r.put("totalLoss", liq.subtract(orig));
+                r.put("customerName", resultSet.getString("customer_name"));
+                r.put("creatorName", resultSet.getString("creator_name"));
+                r.put("ceoName", resultSet.getString("ceo_name"));
+                list.add(r);
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportFlatTable", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public List<Liquidation> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
+        List<Liquidation> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT l.*, u.name AS created_by_name, c.name AS reason_name, f.name AS ceo_feedback_name, "
+                + "w.name AS warehouse_name, "
+                + "cu.name AS customer_name, cu.phone AS customer_phone, cu.email AS customer_email, cu.address AS customer_address, "
+                + "agg.detail_count, agg.total_original_price, agg.total_liquidation_price "
+                + "FROM liquidation l "
+                + "JOIN user u ON l.created_by = u.id "
+                + "JOIN category c ON l.reason_id = c.id "
+                + "LEFT JOIN category f ON l.ceo_feedback_id = f.id "
+                + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id "
+                + "WHERE l.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (l.liquidation_code LIKE ? OR cu.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY l.ceo_reviewed_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findApprovedAvailableFiltered", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM liquidation l "
+                + "JOIN user u ON l.created_by = u.id "
+                + "LEFT JOIN customer cu ON l.customer_id = cu.id "
+                + "WHERE l.status = 'APPROVED' "
+                + "AND NOT EXISTS ("
+                + "  SELECT 1 FROM receipt r "
+                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> 'CANCELLED'"
+                + ") ");
+        List<Object> params = new ArrayList<>();
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (l.liquidation_code LIKE ? OR cu.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(l.ceo_reviewed_at) <= ? ");
+            params.add(toDate);
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countApprovedAvailableFiltered", e.getMessage(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
     }
 }

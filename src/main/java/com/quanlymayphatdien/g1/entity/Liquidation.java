@@ -4,7 +4,6 @@
  */
 package com.quanlymayphatdien.g1.entity;
 
-import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,21 +18,16 @@ public class Liquidation {
     private int createdBy;
     private String status;
     private int reasonId;
-    private Integer managerReviewedBy; 
-    private LocalDateTime managerReviewedAt;
     private Integer ceoReviewedBy;
     private LocalDateTime ceoReviewedAt;
     private Integer ceoFeedbackId;
-    private Integer managerFeedbackId;
     private Integer convertedReceiptId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     private String createdByName;
-    private String managerReviewedByName;
     private String reasonName;
     private String ceoFeedbackName;
-    private String managerFeedbackName;
     
     // New fields
     private int warehouseId;
@@ -54,26 +48,21 @@ public class Liquidation {
     public Liquidation() {
     }
 
-    public Liquidation(int liquidationId, String liquidationCode, int createdBy, String status, int reasonId, Integer managerReviewedBy, LocalDateTime managerReviewedAt, Integer ceoReviewedBy, LocalDateTime ceoReviewedAt, Integer ceoFeedbackId, Integer managerFeedbackId, Integer convertedReceiptId, LocalDateTime createdAt, LocalDateTime updatedAt, String createdByName, String managerReviewedByName, String reasonName, String ceoFeedbackName, String managerFeedbackName, List<LiquidationDetail> details) {
+    public Liquidation(int liquidationId, String liquidationCode, int createdBy, String status, int reasonId, Integer ceoReviewedBy, LocalDateTime ceoReviewedAt, Integer ceoFeedbackId, Integer convertedReceiptId, LocalDateTime createdAt, LocalDateTime updatedAt, String createdByName, String reasonName, String ceoFeedbackName, List<LiquidationDetail> details) {
         this.liquidationId = liquidationId;
         this.liquidationCode = liquidationCode;
         this.createdBy = createdBy;
         this.status = status;
         this.reasonId = reasonId;
-        this.managerReviewedBy = managerReviewedBy;
-        this.managerReviewedAt = managerReviewedAt;
         this.ceoReviewedBy = ceoReviewedBy;
         this.ceoReviewedAt = ceoReviewedAt;
         this.ceoFeedbackId = ceoFeedbackId;
-        this.managerFeedbackId = managerFeedbackId;
         this.convertedReceiptId = convertedReceiptId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.createdByName = createdByName;
-        this.managerReviewedByName = managerReviewedByName;
         this.reasonName = reasonName;
         this.ceoFeedbackName = ceoFeedbackName;
-        this.managerFeedbackName = managerFeedbackName;
         this.details = details;
     }
 
@@ -117,22 +106,6 @@ public class Liquidation {
         this.reasonId = reasonId;
     }
 
-    public Integer getManagerReviewedBy() {
-        return managerReviewedBy;
-    }
-
-    public void setManagerReviewedBy(Integer managerReviewedBy) {
-        this.managerReviewedBy = managerReviewedBy;
-    }
-
-    public LocalDateTime getManagerReviewedAt() {
-        return managerReviewedAt;
-    }
-
-    public void setManagerReviewedAt(LocalDateTime managerReviewedAt) {
-        this.managerReviewedAt = managerReviewedAt;
-    }
-
     public Integer getCeoReviewedBy() {
         return ceoReviewedBy;
     }
@@ -155,14 +128,6 @@ public class Liquidation {
 
     public void setCeoFeedbackId(Integer ceoFeedbackId) {
         this.ceoFeedbackId = ceoFeedbackId;
-    }
-
-    public Integer getManagerFeedbackId() {
-        return managerFeedbackId;
-    }
-
-    public void setManagerFeedbackId(Integer managerFeedbackId) {
-        this.managerFeedbackId = managerFeedbackId;
     }
 
     public Integer getConvertedReceiptId() {
@@ -197,14 +162,6 @@ public class Liquidation {
         this.createdByName = createdByName;
     }
 
-    public String getManagerReviewedByName() {
-        return managerReviewedByName;
-    }
-
-    public void setManagerReviewedByName(String managerReviewedByName) {
-        this.managerReviewedByName = managerReviewedByName;
-    }
-
     public String getReasonName() {
         return reasonName;
     }
@@ -219,14 +176,6 @@ public class Liquidation {
 
     public void setCeoFeedbackName(String ceoFeedbackName) {
         this.ceoFeedbackName = ceoFeedbackName;
-    }
-
-    public String getManagerFeedbackName() {
-        return managerFeedbackName;
-    }
-
-    public void setManagerFeedbackName(String managerFeedbackName) {
-        this.managerFeedbackName = managerFeedbackName;
     }
 
     public List<LiquidationDetail> getDetails() {
