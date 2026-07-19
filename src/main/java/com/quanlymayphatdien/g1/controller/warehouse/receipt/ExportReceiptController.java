@@ -567,12 +567,32 @@ public class ExportReceiptController extends HttpServlet {
         Integer scopedWarehouseId = (Integer) session.getAttribute("scopedWarehouseId");
         if (scopedWarehouseId == null) scopedWarehouseId = 0;
 
+        String search = request.getParameter("search");
+        String fromDate = request.getParameter("fromDate");
+        String toDate = request.getParameter("toDate");
+        int page = parsePage(request.getParameter("page"));
+        int pageSize = 10;
+
         com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+        int totalItems = tDAO.countReadyForExportFiltered(search, fromDate, toDate, scopedWarehouseId, loggedUser.getId());
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
+        if (page > totalPages) {
+            page = totalPages;
+        }
         java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
-                = tDAO.findReadyForExport(scopedWarehouseId, loggedUser.getId());
+                = tDAO.findReadyForExportFiltered(search, fromDate, toDate, page, pageSize, scopedWarehouseId, loggedUser.getId());
+        int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
+        int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("transfers", transfers);
-        request.setAttribute("totalItems", transfers.size());
+        request.setAttribute("search", search);
+        request.setAttribute("fromDate", fromDate);
+        request.setAttribute("toDate", toDate);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
         request.setAttribute("activePage", "export-select-transfer");
         request.getRequestDispatcher("/view/receipt/export/export-select-transfer.jsp").forward(request, response);
     }

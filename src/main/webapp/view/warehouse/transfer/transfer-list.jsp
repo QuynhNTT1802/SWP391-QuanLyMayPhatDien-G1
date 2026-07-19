@@ -78,6 +78,7 @@
                 <select class="filter-select" name="status" onchange="this.form.submit()">
                     <option value="">Tất cả trạng thái</option>
                     <option value="PENDING_CEO" ${statusFilter == 'PENDING_CEO' ? 'selected' : ''}>Chờ CEO duyệt</option>
+                    <option value="REQUEST_REVISION" ${statusFilter == 'REQUEST_REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa</option>
                     <option value="APPROVED" ${statusFilter == 'APPROVED' ? 'selected' : ''}>Đã duyệt (chờ tạo phiếu xuất)</option>
                     <option value="EXPORTED" ${statusFilter == 'EXPORTED' ? 'selected' : ''}>Đã xuất (chờ phiếu nhập)</option>
                     <option value="AWAITING_DEST_ACCEPT" ${statusFilter == 'AWAITING_DEST_ACCEPT' ? 'selected' : ''}>Chờ kho đích xác nhận (cũ)</option>
@@ -154,6 +155,9 @@
                                                 </c:when>
                                                 <c:when test="${t.status == 'REJECTED'}">
                                                     <span class="pill" style="color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft);"><span class="pdot" style="background: var(--danger);"></span>Bị từ chối</span>
+                                                </c:when>
+                                                <c:when test="${t.status == 'REQUEST_REVISION'}">
+                                                    <span class="pill" style="color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, transparent); background: var(--danger-soft);"><span class="pdot" style="background: var(--danger);"></span>Yêu cầu chỉnh sửa</span>
                                                 </c:when>
                                                 <c:otherwise><span class="pill" style="color: var(--muted); border-color: color-mix(in srgb, var(--muted) 30%, transparent); background: var(--surface-2);"><span class="pdot" style="background: var(--muted);"></span>${t.status}</span></c:otherwise>
                                             </c:choose>
