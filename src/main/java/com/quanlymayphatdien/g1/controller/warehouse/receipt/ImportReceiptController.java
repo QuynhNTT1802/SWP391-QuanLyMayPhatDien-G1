@@ -1284,6 +1284,29 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
         }
+
+        String exportReceiptIdStr = request.getParameter("exportReceiptId");
+        if (exportReceiptIdStr != null && !exportReceiptIdStr.isEmpty() && poDetails == null) {
+            int exportReceiptId = parseId(exportReceiptIdStr);
+            if (exportReceiptId > 0) {
+                GeneratorDAO genDAO = new GeneratorDAO();
+                List<Generator> allGens = genDAO.findAllActive();
+                ReceiptDAO receiptDAO = new ReceiptDAO();
+                Receipt exportReceipt = receiptDAO.findById(exportReceiptId);
+                if (exportReceipt != null && exportReceipt.getDetails() != null
+                        && !exportReceipt.getDetails().isEmpty()) {
+                    XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(
+                            exportReceipt.getDetails(), allGens);
+                    String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
+                    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                    response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+                    workbook.write(response.getOutputStream());
+                    workbook.close();
+                    return;
+                }
+            }
+        }
+
         XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(poDetails);
         String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -1394,6 +1417,9 @@ public class ImportReceiptController extends HttpServlet {
             }
         }
 
+        String exportReceiptIdStr = request.getParameter("exportReceiptId");
+        boolean isTransferImport = exportReceiptIdStr != null && !exportReceiptIdStr.isEmpty();
+
         List<Map<String, Object>> validRows = new ArrayList<>();
         List<Map<String, Object>> invalidRows = new ArrayList<>();
         java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
@@ -1459,7 +1485,7 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
 
-            if (!serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
+            if (!isTransferImport && !serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
                 errors.add("Serial \"" + serial + "\" đã tồn tại trong hệ thống");
             }
 

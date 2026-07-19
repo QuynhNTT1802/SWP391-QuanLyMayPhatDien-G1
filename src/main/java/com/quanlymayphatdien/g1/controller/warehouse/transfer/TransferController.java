@@ -190,9 +190,9 @@ public class TransferController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-        User loggedUser = (User) session.getAttribute("loggedUser");
 
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        List<Warehouse> allWarehouses = warehouseDAO.findAll();
+        request.setAttribute("warehouses", allWarehouses);
         List<Generator> allActive = generatorDAO.findAllActive();
         request.setAttribute("generators", allActive);
         request.setAttribute("activePage", "transfer-create");
@@ -208,35 +208,22 @@ public class TransferController extends HttpServlet {
             request.setAttribute("defaultSourceWarehouseId", null);
         }
 
-        Map<Integer, Integer> inStockByGen = new java.util.HashMap<>();
-        for (Generator g : allActive) {
-            int qty = inventoryDAO.findInStockByWarehouseAndGenerator(
-                    scopedWarehouseId > 0 ? scopedWarehouseId : 0, g.getId()).size();
-            inStockByGen.put(g.getId(), qty);
-        }
+        Map<Integer, Integer> inStockByGen = scopedWarehouseId > 0
+                ? inventoryDAO.countInStockMapByWarehouse(scopedWarehouseId)
+                : new LinkedHashMap<>();
         request.setAttribute("inStockByGen", inStockByGen);
 
         // Build warehouse -> generator (with stock) JSON for client-side filter
         Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
-        List<Map<String, Object>> allGensEntry = new ArrayList<>();
-        for (Generator g : allActive) {
-            Map<String, Object> entry = new LinkedHashMap<>();
-            entry.put("id", g.getId());
-            entry.put("m", g.getModel());
-            entry.put("q", 0);
-            allGensEntry.add(entry);
-        }
-        warehouseData.put(0, allGensEntry);
-        List<Warehouse> allWarehouses = warehouseDAO.findAll();
+        warehouseData.put(0, new ArrayList<>());
         for (Warehouse w : allWarehouses) {
+            Map<Integer, Integer> stockByGenerator = inventoryDAO.countInStockMapByWarehouse(w.getWarehouseId());
             List<Map<String, Object>> wsGens = new ArrayList<>();
             for (Generator g : allActive) {
-                int qty = inventoryDAO.findInStockByWarehouseAndGenerator(
-                        w.getWarehouseId(), g.getId()).size();
                 Map<String, Object> entry = new LinkedHashMap<>();
                 entry.put("id", g.getId());
                 entry.put("m", g.getModel());
-                entry.put("q", qty);
+                entry.put("q", stockByGenerator.getOrDefault(g.getId(), 0));
                 wsGens.add(entry);
             }
             warehouseData.put(w.getWarehouseId(), wsGens);
@@ -264,27 +251,58 @@ public class TransferController extends HttpServlet {
             return;
         }
 
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        List<Warehouse> allWarehouses = warehouseDAO.findAll();
+        request.setAttribute("warehouses", allWarehouses);
         request.setAttribute("transfer", t);
         request.setAttribute("isRevision", true);
         request.setAttribute("activePage", "transfer-edit");
 
-        List<Map<String, Object>> allSerials = new ArrayList<>();
-        List<Warehouse> allWarehouses = warehouseDAO.findAll();
+        List<Generator> allActive = generatorDAO.findAllActive();
+        request.setAttribute("generators", allActive);
+
+        int sourceWhId = t.getSourceWarehouseId();
+        request.setAttribute("defaultSourceWarehouseId", sourceWhId);
+
+        Map<Integer, Integer> inStockByGen = inventoryDAO.countInStockMapByWarehouse(sourceWhId);
+        request.setAttribute("inStockByGen", inStockByGen);
+
+        // Build warehouse -> generator (with stock) JSON for client-side filter
+        Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
+        warehouseData.put(0, new ArrayList<>());
         for (Warehouse w : allWarehouses) {
-            List<Inventory> invs = inventoryDAO.findInStockByWarehouse(w.getWarehouseId());
-            for (Inventory inv : invs) {
+            Map<Integer, Integer> stockByGenerator = inventoryDAO.countInStockMapByWarehouse(w.getWarehouseId());
+            List<Map<String, Object>> wsGens = new ArrayList<>();
+            for (Generator g : allActive) {
                 Map<String, Object> entry = new LinkedHashMap<>();
-                entry.put("inventoryId", inv.getInventoryId());
-                entry.put("serialNumber", inv.getSerialNumber());
-                entry.put("generatorId", inv.getGeneratorId());
-                entry.put("generatorModel", inv.getGeneratorModel());
-                entry.put("warehouseId", inv.getWarehouseId());
-                entry.put("warehouseName", inv.getWarehouseName());
-                allSerials.add(entry);
+                entry.put("id", g.getId());
+                entry.put("m", g.getModel());
+                entry.put("q", stockByGenerator.getOrDefault(g.getId(), 0));
+                wsGens.add(entry);
+            }
+            warehouseData.put(w.getWarehouseId(), wsGens);
+        }
+        request.setAttribute("warehouseDataJson", new com.google.gson.Gson().toJson(warehouseData));
+
+        // Aggregate transfer details by generatorId to pre-fill quantities
+        Map<Integer, Integer> detailQtyMap = new LinkedHashMap<>();
+        Map<Integer, String> detailNoteMap = new LinkedHashMap<>();
+        if (t.getDetails() != null) {
+            for (com.quanlymayphatdien.g1.entity.TransferDetail d : t.getDetails()) {
+                int gid = d.getGeneratorId();
+                detailQtyMap.put(gid, detailQtyMap.getOrDefault(gid, 0) + 1);
+                String existingNote = detailNoteMap.get(gid);
+                String dn = d.getNote();
+                if (dn != null && !dn.isEmpty()) {
+                    if (existingNote == null || existingNote.isEmpty()) {
+                        detailNoteMap.put(gid, dn);
+                    } else if (!existingNote.contains(dn)) {
+                        detailNoteMap.put(gid, existingNote + "; " + dn);
+                    }
+                }
             }
         }
-        request.setAttribute("allSerials", allSerials);
+        request.setAttribute("detailQtyMap", detailQtyMap);
+        request.setAttribute("detailNoteMap", detailNoteMap);
 
         request.getRequestDispatcher("/view/warehouse/transfer/transfer-edit.jsp").forward(request, response);
     }
@@ -455,7 +473,6 @@ public class TransferController extends HttpServlet {
             errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
         }
 
-        Map<Integer, Integer> inStockByGen = new java.util.HashMap<>();
         Set<String> seenRows = new HashSet<>();
         List<TransferDetail> details = new ArrayList<>();
         if (genIds != null) {
@@ -510,7 +527,6 @@ public class TransferController extends HttpServlet {
                 }
 
                 int availableQty = inventoryDAO.findInStockByWarehouseAndGenerator(sourceWh, genId).size();
-                inStockByGen.put(genId, availableQty);
                 if (qty > availableQty && sourceWh > 0) {
                     Generator g = generatorDAO.findById(genId);
                     String model = (g != null && g.getModel() != null && !g.getModel().isEmpty())
@@ -534,11 +550,7 @@ public class TransferController extends HttpServlet {
         if (!errors.isEmpty()) {
             request.setAttribute("toastType", "danger");
             request.setAttribute("toastMessage", String.join("; ", errors));
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", generatorDAO.findAllActive());
-            request.setAttribute("inStockByGen", inStockByGen);
-            request.setAttribute("activePage", "transfer-create");
-            request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
+            showCreateForm(request, response);
             return;
         }
 
@@ -554,11 +566,7 @@ public class TransferController extends HttpServlet {
         if (newId <= 0) {
             request.setAttribute("toastMessage", "Khong the tao phieu");
             request.setAttribute("toastType", "danger");
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", generatorDAO.findAllActive());
-            request.setAttribute("inStockByGen", inStockByGen);
-            request.setAttribute("activePage", "transfer-create");
-            request.getRequestDispatcher("/view/warehouse/transfer/transfer-create.jsp").forward(request, response);
+            showCreateForm(request, response);
             return;
         }
         for (TransferDetail d : details) {
@@ -780,58 +788,76 @@ public class TransferController extends HttpServlet {
             errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
         }
 
-        Set<String> seenRows = new HashSet<>();
         List<TransferDetail> details = new ArrayList<>();
-        String[] serials = request.getParameterValues("serialNumber");
+        String[] genIds = request.getParameterValues("generatorId");
+        String[] quantities = request.getParameterValues("quantity");
         String[] detailNotes = request.getParameterValues("detailNote");
-        if (serials != null) {
-            for (int i = 0; i < serials.length; i++) {
-                String sn = serials[i];
+        if (genIds != null) {
+            for (int i = 0; i < genIds.length; i++) {
+                String idStr = genIds[i];
+                String qtyStr = (quantities != null && i < quantities.length) ? quantities[i] : null;
                 String dn = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-                if (sn == null || sn.trim().isEmpty()) {
+                boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
+                        && (qtyStr == null || qtyStr.trim().isEmpty());
+                if (rowEmpty) continue;
+                int rowNum = i + 1;
+                int genId = 0;
+                try {
+                    genId = Integer.parseInt(idStr.trim());
+                } catch (NumberFormatException e) {
+                    errors.add("Dong " + rowNum + ": Vui long chon may phat dien");
                     continue;
                 }
-                sn = sn.trim();
-                int rowNum = i + 1;
-                if (!seenRows.add(sn)) {
-                    errors.add("Dong " + rowNum + ": Serial bi trung");
+                if (genId <= 0) {
+                    errors.add("Dong " + rowNum + ": Vui long chon may phat dien");
                     continue;
                 }
                 if (dn != null && dn.length() > MAX_DETAIL_NOTE_LENGTH) {
                     errors.add("Dong " + rowNum + ": Ghi chu khong vuot qua " + MAX_DETAIL_NOTE_LENGTH + " ky tu");
                     continue;
                 }
-                Inventory inv = inventoryDAO.findBySerialNumber(sn);
-                if (inv == null) {
-                    errors.add("Dong " + rowNum + ": Serial " + sn + " khong ton tai");
+                int qty = 1;
+                if (qtyStr != null && !qtyStr.trim().isEmpty()) {
+                    try {
+                        qty = Integer.parseInt(qtyStr.trim());
+                    } catch (NumberFormatException e) {
+                        errors.add("Dong " + rowNum + ": So luong phai la so nguyen");
+                        continue;
+                    }
+                }
+                if (qty <= 0) {
+                    errors.add("Dong " + rowNum + ": So luong phai lon hon 0");
                     continue;
                 }
-                if (inv.getWarehouseId() != sourceWh) {
-                    errors.add("Dong " + rowNum + ": Serial " + sn + " khong thuoc kho nguon");
+                if (qty > MAX_QUANTITY) {
+                    errors.add("Dong " + rowNum + ": So luong khong vuot qua " + MAX_QUANTITY);
                     continue;
                 }
-                if (!"IN_STOCK".equals(inv.getStatus())) {
-                    errors.add("Dong " + rowNum + ": Serial " + sn + " khong o trang thai con hang");
+                int availableQty = inventoryDAO.findInStockByWarehouseAndGenerator(sourceWh, genId).size();
+                if (qty > availableQty && sourceWh > 0) {
+                    Generator g = generatorDAO.findById(genId);
+                    String model = (g != null && g.getModel() != null && !g.getModel().isEmpty())
+                            ? g.getModel() : ("#" + genId);
+                    errors.add("Dong " + rowNum + ": " + model + " chi con " + availableQty
+                            + " may trong kho nguon (can " + qty + ")");
                     continue;
                 }
                 TransferDetail d = new TransferDetail();
                 d.setTransferId(id);
-                d.setGeneratorId(inv.getGeneratorId());
-                d.setSerialNumber(sn);
-                d.setQuantity(1);
+                d.setGeneratorId(genId);
+                d.setQuantity(qty);
                 d.setNote(dn);
                 details.add(d);
             }
         }
         if (details.isEmpty()) {
-            errors.add("Phai co it nhat 1 dong serial hop le");
+            errors.add("Phai co it nhat 1 dong chi tiet hop le");
         }
 
         if (!errors.isEmpty()) {
-            HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", String.join("; ", errors));
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
+            request.setAttribute("toastType", "danger");
+            request.setAttribute("toastMessage", String.join("; ", errors));
+            showEditView(request, response);
             return;
         }
 

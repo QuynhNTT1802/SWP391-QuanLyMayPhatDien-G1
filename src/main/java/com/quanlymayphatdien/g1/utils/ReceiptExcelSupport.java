@@ -88,6 +88,57 @@ public class ReceiptExcelSupport {
         return workbook;
     }
 
+    public static XSSFWorkbook createTemplateWorkbook(List<ReceiptDetail> details, List<Generator> generators) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Phiếu nhập (Mẫu)");
+
+        XSSFFont font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeightInPoints((short) 11);
+        font.setColor(new org.apache.poi.xssf.usermodel.XSSFColor(
+                new byte[]{(byte) 255, (byte) 255, (byte) 255}, null));
+
+        CellStyle headerStyle = workbook.createCellStyle();
+        headerStyle.setFont(font);
+        headerStyle.setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(
+                new byte[]{(byte) 79, (byte) 129, (byte) 189}, null));
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < HEADERS.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(HEADERS[i] + " (*)");
+            cell.setCellStyle(headerStyle);
+        }
+
+        Map<Integer, Generator> genMap = new LinkedHashMap<>();
+        if (generators != null) {
+            for (Generator g : generators) {
+                genMap.put(g.getId(), g);
+            }
+        }
+
+        int rowIndex = 1;
+        if (details != null) {
+            for (ReceiptDetail d : details) {
+                if (rowIndex > MAX_ROWS) break;
+                Row row = sheet.createRow(rowIndex++);
+                Generator g = genMap.get(d.getGeneratorId());
+                row.createCell(0).setCellValue(g != null ? g.getModel() : "");
+                row.createCell(1).setCellValue("");
+                row.createCell(2).setCellValue(d.getNote() != null ? d.getNote() : "");
+            }
+        }
+
+        for (int i = 0; i < HEADERS.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        return workbook;
+    }
+
     public static List<Map<String, String>> parseFromExcel(InputStream is) throws IOException {
         List<Map<String, String>> result = new ArrayList<>();
         XSSFWorkbook workbook = new XSSFWorkbook(is);
