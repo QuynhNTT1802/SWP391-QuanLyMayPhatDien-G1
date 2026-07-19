@@ -911,8 +911,4 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         }
         return 0;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
