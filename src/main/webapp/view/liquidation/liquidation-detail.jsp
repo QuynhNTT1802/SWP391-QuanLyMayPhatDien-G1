@@ -563,6 +563,7 @@
                                             <tr>
                                                 <th>Dòng máy</th>
                                                 <th>Số Serial</th>
+                                                <th>Tình trạng</th>
                                                 <th class="text-right">Giá gốc (VNĐ)</th>
                                                 <th class="text-right">Giá thanh lý (VNĐ)</th>
                                                 <th>Trạng thái</th>
@@ -573,6 +574,14 @@
                                                 <tr data-search="<c:out value='${d.generatorModelName} ${d.serialNumber}'/>">
                                                     <td><strong>${d.generatorModelName}</strong></td>
                                                     <td class="mono">${d.serialNumber}</td>
+                                                    <td>
+                                                        <c:choose>
+                                                            <c:when test="${d.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                            <c:when test="${d.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                            <c:when test="${d.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                            <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                        </c:choose>
+                                                    </td>
                                                     <td class="text-right mono"><fmt:formatNumber value="${d.originalPrice}" type="number" maxFractionDigits="0"/></td>
                                                     <td class="text-right">
                                                         <input type="hidden" name="detailId" value="${d.liquidationDetailId}" />
@@ -585,7 +594,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td colspan="2" class="text-right">Tổng cộng:</td>
+                                                <td colspan="3" class="text-right">Tổng cộng:</td>
                                                 <td class="text-right mono"><c:if test="${not empty liquidation.totalOriginalPrice}"><fmt:formatNumber value="${liquidation.totalOriginalPrice}" type="number" maxFractionDigits="0"/></c:if></td>
                                                 <td class="text-right mono" style="color:var(--accent);"><c:if test="${not empty liquidation.totalLiquidationPrice and liquidation.totalLiquidationPrice > 0}"><fmt:formatNumber value="${liquidation.totalLiquidationPrice}" type="number" maxFractionDigits="0"/></c:if></td>
                                                 <td></td>

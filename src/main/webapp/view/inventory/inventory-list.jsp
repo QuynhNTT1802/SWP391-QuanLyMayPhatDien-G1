@@ -210,6 +210,7 @@
                                             <th style="width:40px;">#</th>
                                             <th>Serial</th>
                                             <th>Kho</th>
+                                            <th>Tình trạng</th>
                                             <th style="width:150px;">Trạng thái</th>
                                             <th style="width:160px;">Phiếu nhập</th>
                                             <th style="width:160px;">Ngày nhập</th>
@@ -219,7 +220,7 @@
                                     <tbody>
                                         <c:choose>
                                             <c:when test="${empty serialList}">
-                                                <tr><td colspan="7">
+                                                <tr><td colspan="8">
                                                     <div class="empty-state">
                                                         <div class="icon-wrap">
                                                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -238,6 +239,14 @@
                                                             </strong>
                                                         </td>
                                                         <td><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${item.warehouseId}"><c:out value="${item.warehouseName}"/></a></td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${item.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                                <c:when test="${item.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                                <c:when test="${item.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                                <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
                                                         <td>
                                                             <span class="status-badge status-${item.status}">
                                                                 <span class="sdot"></span>

@@ -611,7 +611,8 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         String sql = "SELECT l.liquidation_id, l.liquidation_code, ld.serial_number, g.model AS model_name, "
                 + "w.name AS warehouse_name, c.name AS reason_name, "
                 + "ld.original_price, ld.liquidation_price, "
-                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at, r.approved_at AS export_at "
+                + "cu.name AS customer_name, ceo.name AS ceo_name, l.ceo_reviewed_at, r.approved_at AS export_at, "
+                + "i.condition "
                 + "FROM liquidation l "
                 + "JOIN receipt r ON l.converted_receipt_id = r.receipt_id "
                 + "JOIN liquidation_detail ld ON ld.liquidation_id = l.liquidation_id "
@@ -620,6 +621,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 + "JOIN category c ON l.reason_id = c.id "
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN user ceo ON l.ceo_reviewed_by = ceo.id"
+                + " LEFT JOIN inventory i ON ld.serial_number = i.serial_number"
                 + where
                 + " ORDER BY r.approved_at DESC, l.liquidation_code, ld.serial_number"
                 + " LIMIT ? OFFSET ?";
@@ -655,6 +657,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 java.time.LocalDateTime reviewedAt = resultSet.getObject("export_at", java.time.LocalDateTime.class);
                 r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
                 r.put("exportAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
+                r.put("condition", resultSet.getString("condition"));
                 list.add(r);
             }
         } catch (Exception e) {

@@ -12,6 +12,7 @@ import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PurchaseOrderDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
+import com.quanlymayphatdien.g1.dal.TransferDetailDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
@@ -22,6 +23,8 @@ import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
+import com.quanlymayphatdien.g1.entity.Transfer;
+import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
@@ -100,6 +103,12 @@ public class ImportReceiptController extends HttpServlet {
                     break;
                 case "template":
                     downloadTemplate(request, response);
+                    break;
+                case "getPurchaseDetail":
+                    getPurchaseDetailJson(request, response);
+                    break;
+                case "getTransferDetail":
+                    getTransferDetailJson(request, response);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -378,6 +387,55 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("totalItems", transfers.size());
         request.setAttribute("activePage", "import-select-transfer");
         request.getRequestDispatcher("/view/receipt/import/import-select-transfer.jsp").forward(request, response);
+    }
+
+    private void getPurchaseDetailJson(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int poId = parseId(request.getParameter("id"));
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (poId <= 0) {
+            response.getWriter().write("[]");
+            return;
+        }
+        PurchaseOrderDAO poDAO = new PurchaseOrderDAO();
+        List<PurchaseOrderDetail> details = poDAO.findDetails(poId);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (PurchaseOrderDetail d : details) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("generatorCode", d.getGeneratorCode() != null ? d.getGeneratorCode() : "");
+            item.put("generatorName", d.getGeneratorName() != null ? d.getGeneratorName() : "");
+            item.put("brandName", d.getBrandName() != null ? d.getBrandName() : "");
+            item.put("proposedQuantity", d.getProposedQuantity());
+            item.put("finalQuantity", d.getFinalQuantity());
+            item.put("unitPrice", d.getUnitPrice() != null ? d.getUnitPrice() : 0);
+            item.put("note", d.getNote() != null ? d.getNote() : "");
+            out.add(item);
+        }
+        new Gson().toJson(out, response.getWriter());
+    }
+
+    private void getTransferDetailJson(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int transferId = parseId(request.getParameter("id"));
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (transferId <= 0) {
+            response.getWriter().write("[]");
+            return;
+        }
+        TransferDetailDAO tdDAO = new TransferDetailDAO();
+        List<TransferDetail> details = tdDAO.findByTransferId(transferId);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (TransferDetail d : details) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("generatorModel", d.getGeneratorModel() != null ? d.getGeneratorModel() : "");
+            item.put("serialNumber", d.getSerialNumber() != null ? d.getSerialNumber() : "");
+            item.put("quantity", d.getQuantity());
+            item.put("note", d.getNote() != null ? d.getNote() : "");
+            out.add(item);
+        }
+        new Gson().toJson(out, response.getWriter());
     }
 
     private void applyPoPrefillToRequest(HttpServletRequest request, PurchaseOrder po, String note) {
@@ -1284,6 +1342,29 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
         }
+
+        String exportReceiptIdStr = request.getParameter("exportReceiptId");
+        if (exportReceiptIdStr != null && !exportReceiptIdStr.isEmpty() && poDetails == null) {
+            int exportReceiptId = parseId(exportReceiptIdStr);
+            if (exportReceiptId > 0) {
+                GeneratorDAO genDAO = new GeneratorDAO();
+                List<Generator> allGens = genDAO.findAllActive();
+                ReceiptDAO receiptDAO = new ReceiptDAO();
+                Receipt exportReceipt = receiptDAO.findById(exportReceiptId);
+                if (exportReceipt != null && exportReceipt.getDetails() != null
+                        && !exportReceipt.getDetails().isEmpty()) {
+                    XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(
+                            exportReceipt.getDetails(), allGens);
+                    String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
+                    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                    response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+                    workbook.write(response.getOutputStream());
+                    workbook.close();
+                    return;
+                }
+            }
+        }
+
         XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(poDetails);
         String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -1394,6 +1475,9 @@ public class ImportReceiptController extends HttpServlet {
             }
         }
 
+        String exportReceiptIdStr = request.getParameter("exportReceiptId");
+        boolean isTransferImport = exportReceiptIdStr != null && !exportReceiptIdStr.isEmpty();
+
         List<Map<String, Object>> validRows = new ArrayList<>();
         List<Map<String, Object>> invalidRows = new ArrayList<>();
         java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
@@ -1459,7 +1543,7 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
 
-            if (!serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
+            if (!isTransferImport && !serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
                 errors.add("Serial \"" + serial + "\" đã tồn tại trong hệ thống");
             }
 

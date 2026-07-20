@@ -18,8 +18,9 @@ public class LiquidationDetail {
     private BigDecimal originalPrice;
     private BigDecimal liquidationPrice;
     
-    private String generatorModelName; 
-    
+    private String generatorModelName;
+    private String condition;
+
     public LiquidationDetail() {
         
     }
@@ -89,6 +90,13 @@ public class LiquidationDetail {
     public void setGeneratorModelName(String generatorModelName) {
         this.generatorModelName = generatorModelName;
     }
-    
-    
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
+    }
+
 }

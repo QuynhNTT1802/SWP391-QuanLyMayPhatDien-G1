@@ -224,11 +224,19 @@
                                 <tr>
                                     <td class="col-num"><span class="row-num">1</span></td>
                                     <td>
-                                        <select class="serial-select generator-select" name="generatorId" required id="genSelect0" onchange="onGeneratorChange(this)">
-                                            <option value="">-- Chọn dòng máy --</option>
-                                            <c:forEach var="g" items="${generators}">
-                                                <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> (c\u1ecbn <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
-                                            </c:forEach>
+                                        <select class="serial-select generator-select" name="generatorId" required id="genSelect0" onchange="onGeneratorChange(this)"
+                                                <c:if test="${empty defaultSourceWarehouseId}">disabled</c:if>>
+                                            <c:choose>
+                                                <c:when test="${empty defaultSourceWarehouseId}">
+                                                    <option value="">-- Chọn kho nguồn trước --</option>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <option value="">-- Chọn dòng máy --</option>
+                                                    <c:forEach var="g" items="${generators}">
+                                                        <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> ( <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
+                                                    </c:forEach>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </select>
                                     </td>
                                     <td>
@@ -274,10 +282,17 @@
 </div>
 
 <select id="genOptionsTpl" style="display:none">
-    <option value="">-- Chọn dòng máy --</option>
-    <c:forEach var="g" items="${generators}">
-        <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> (c\u1ecbn <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
-    </c:forEach>
+    <c:choose>
+        <c:when test="${empty defaultSourceWarehouseId}">
+            <option value="">-- Chọn kho nguồn trước --</option>
+        </c:when>
+        <c:otherwise>
+            <option value="">-- Chọn dòng máy --</option>
+            <c:forEach var="g" items="${generators}">
+                <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> (còn <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
+            </c:forEach>
+        </c:otherwise>
+    </c:choose>
 </select>
 
 <script>
@@ -305,16 +320,17 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
 
     function getWarehouseGenerators(whId) {
         if (!whId) {
-            var data0 = window.WAREHOUSE_DATA || {};
-            return data0[0] || [];
+            return [];
         }
         var data = window.WAREHOUSE_DATA || {};
-        return data[whId] || data[String(whId)] || data[0] || [];
+        return data[whId] || data[String(whId)] || [];
     }
 
     function repopulateGeneratorSelects(whId) {
         var items = getWarehouseGenerators(whId);
-        var html = buildOptionsHtml(items);
+        var html = whId
+            ? buildOptionsHtml(items)
+            : '<option value="">-- Chọn kho nguồn trước --</option>';
         var tpl = document.getElementById('genOptionsTpl');
         if (tpl) {
             tpl.innerHTML = html;
@@ -324,6 +340,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
             var sel = selects[i];
             var prev = sel.value;
             sel.innerHTML = html;
+            sel.disabled = !whId;
             if (prev) {
                 var stillExists = false;
                 for (var j = 0; j < sel.options.length; j++) {
@@ -404,9 +421,10 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
             selOptions = '<option value="">-- Chọn dòng máy --</option>';
         }
         var tr = document.createElement('tr');
+        var selectDisabled = src ? '' : ' disabled';
         tr.innerHTML = ''
             + '<td class="col-num"><span class="row-num"></span></td>'
-            + '<td><select class="serial-select generator-select" name="generatorId" required onchange="onGeneratorChange(this)">'
+            + '<td><select class="serial-select generator-select" name="generatorId" required onchange="onGeneratorChange(this)"' + selectDisabled + '>'
             + selOptions
             + '</select></td>'
             + '<td><input type="number" name="quantity" min="1" max="100000" value="1" required class="qty-input" oninput="onQuantityChange(this)" /></td>'
@@ -497,9 +515,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         renumberRows();
         document.querySelectorAll('#detailBody tr').forEach(updateRowMax);
         var initialSrc = document.getElementById('sourceWarehouseId').value;
-        if (initialSrc) {
-            repopulateGeneratorSelects(initialSrc);
-        }
+        repopulateGeneratorSelects(initialSrc);
         validatePairRealtime();
     });
 })();
