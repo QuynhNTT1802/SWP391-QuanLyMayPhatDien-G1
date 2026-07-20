@@ -2,6 +2,10 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%
+    java.time.format.DateTimeFormatter __rptFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    request.setAttribute("rptFmt", __rptFmt);
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -45,11 +49,7 @@
                                 <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
                             </c:forEach>
                         </select>
-                        <select name="year" class="edit-input" style="width:110px;">
-                            <c:forEach var="y" begin="2020" end="2030">
-                                <option value="${y}" ${y == year ? 'selected' : ''}>${y}</option>
-                            </c:forEach>
-                        </select>
+                        <input type="number" name="year" value="${year}" class="edit-input" style="width:110px;">
                     </div>
                 </div>
 
@@ -141,12 +141,20 @@
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><fmt:formatDate value="${r.createdAt}" pattern="dd/MM/yyyy"/></td>
+                                    <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <c:if test="${reportType == 'export'}"><td><c:out value="${r.customerName}"/></td></c:if>
                                     <c:if test="${reportType == 'import'}"><td><c:out value="${r.purchaseOrderCode}"/></td></c:if>
                                     <td><c:out value="${r.createdByName}"/></td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(r.status)}"><c:out value="${r.status}"/></span></td>
+                                    <td><span class="status-badge status-${fn:toLowerCase(r.status)}">
+                                        <c:choose>
+                                            <c:when test="${r.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                            <c:when test="${r.status == 'PENDING'}">Chờ duyệt</c:when>
+                                            <c:when test="${r.status == 'CANCELLED'}">Đã hủy</c:when>
+                                            <c:when test="${r.status == 'DRAFT'}">Bản nháp</c:when>
+                                            <c:otherwise><c:out value="${r.status}"/></c:otherwise>
+                                        </c:choose>
+                                    </span></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty receiptItems}">
@@ -221,8 +229,16 @@
                                     <td><c:out value="${po.period}"/></td>
                                     <td class="num">${po.totalQuantity}</td>
                                     <td><c:out value="${po.createdByName}"/></td>
-                                    <td><fmt:formatDate value="${po.createdAt}" pattern="dd/MM/yyyy"/></td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(po.status)}"><c:out value="${po.status}"/></span></td>
+                                    <td>${po.createdAt.format(rptFmt)}</td>
+                                    <td><span class="status-badge status-${fn:toLowerCase(po.status)}">
+                                        <c:choose>
+                                            <c:when test="${po.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                            <c:when test="${po.status == 'PENDING'}">Chờ duyệt</c:when>
+                                            <c:when test="${po.status == 'CANCELLED'}">Đã hủy</c:when>
+                                            <c:when test="${po.status == 'DRAFT'}">Bản nháp</c:when>
+                                            <c:otherwise><c:out value="${po.status}"/></c:otherwise>
+                                        </c:choose>
+                                    </span></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty poItems}">
@@ -254,7 +270,15 @@
                                     <td><c:out value="${so.customer.name}"/></td>
                                     <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/></td>
                                     <td><c:out value="${so.createdByName}"/></td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(so.status)}"><c:out value="${so.status}"/></span></td>
+                                    <td><span class="status-badge status-${fn:toLowerCase(so.status)}">
+                                        <c:choose>
+                                            <c:when test="${so.status == 'COMPLETED'}">Hoàn thành</c:when>
+                                            <c:when test="${so.status == 'PENDING'}">Chờ duyệt</c:when>
+                                            <c:when test="${so.status == 'CANCELLED'}">Đã hủy</c:when>
+                                            <c:when test="${so.status == 'APPROVED'}">Đã duyệt</c:when>
+                                            <c:otherwise><c:out value="${so.status}"/></c:otherwise>
+                                        </c:choose>
+                                    </span></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty saleItems}">

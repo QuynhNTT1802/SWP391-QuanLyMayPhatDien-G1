@@ -108,7 +108,7 @@
                         <tr>
                             <th style="width:60px;text-align:center;font-family:var(--font-mono);">ID</th>
                             <th>Tên kho</th>
-                            <th style="width:160px;text-align:right;">Số serial</th>
+                            <th style="width:160px;text-align:right;">Số máy</th>
                             <th style="width:160px;text-align:right;">Số mặt hàng</th>
                         </tr>
                     </thead>

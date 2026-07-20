@@ -514,34 +514,16 @@ public class InventoryCheckController extends HttpServlet {
 
     private void exportReport(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        String detailIdStr = request.getParameter("detailId");
         String fromDateStr = request.getParameter("fromDate");
         String toDateStr = request.getParameter("toDate");
 
-        if (detailIdStr == null || detailIdStr.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        int checkId = Integer.parseInt(request.getParameter("checkId"));
+        List<InventoryCheckDetail> allDetails = checkDAO.findDetailsByCheckId(checkId);
+
+        if (allDetails == null || allDetails.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không có dữ liệu kiểm kê");
             return;
         }
-        int detailId = Integer.parseInt(detailIdStr);
-
-        InventoryCheckDetail detail = null;
-        List<InventoryCheckDetail> allDetails = checkDAO.findDetailsByCheckId(
-                Integer.parseInt(request.getParameter("checkId")));
-        for (InventoryCheckDetail d : allDetails) {
-            if (d.getId() == detailId) {
-                detail = d;
-                break;
-            }
-        }
-
-        if (detail == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        List<StockCard> stockCards = stockCardDAO.findByWarehouseAndGenerator(
-                Integer.parseInt(request.getParameter("warehouseId")),
-                detail.getGeneratorId());
 
         LocalDate fromDate = (fromDateStr != null && !fromDateStr.isEmpty())
                 ? LocalDate.parse(fromDateStr) : null;
@@ -556,17 +538,26 @@ public class InventoryCheckController extends HttpServlet {
             return;
         }
 
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+        String warehouseName = request.getParameter("warehouseName");
+
+        List<InventoryCheckExcelSupport.DetailReportData> reportDataList = new ArrayList<>();
+        for (InventoryCheckDetail detail : allDetails) {
+            List<StockCard> stockCards = stockCardDAO.findByWarehouseAndGenerator(
+                    warehouseId, detail.getGeneratorId());
+            reportDataList.add(new InventoryCheckExcelSupport.DetailReportData(detail.getGeneratorModel(), stockCards));
+        }
+
         XSSFWorkbook workbook = InventoryCheckExcelSupport.exportReport(
-                detail.getGeneratorModel(),
-                request.getParameter("warehouseName"),
-                fromDate, toDate, stockCards);
+                warehouseName, fromDate, toDate, reportDataList);
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
-                "attachment; filename=BaoCaoKiemKe_" + detail.getGeneratorModel() + ".xlsx");
+                "attachment; filename=BaoCaoKiemKe_" + checkId + ".xlsx");
         try (OutputStream out = response.getOutputStream()) {
             workbook.write(out);
         }
         workbook.close();
     }
+
 }
