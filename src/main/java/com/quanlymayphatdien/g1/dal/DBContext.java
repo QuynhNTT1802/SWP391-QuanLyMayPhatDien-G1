@@ -48,7 +48,11 @@ public class DBContext {
     }
 
     public Connection getConnection() {
-        return new DBContext().connection;
+        Connection conn = new DBContext().connection;
+        if (conn == null) {
+            throw new RuntimeException("Không thể kết nối database. Vui lòng kiểm tra MySQL service.");
+        }
+        return conn;
     }
 
     public static void main(String[] args) {

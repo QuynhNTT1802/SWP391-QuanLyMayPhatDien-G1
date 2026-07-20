@@ -987,53 +987,6 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
     }
 
-    /**
-     * CEO yêu cầu Sale Manager chỉnh sửa các đề xuất gốc trong PO này.
-     * - PO: PENDING_CEO -> NEEDS_REVISION (giữ nguyên mã PO để tra cứu)
-     * - Proposals: PENDING_CEO -> NEEDS_REVISION, purchase_order_id = NULL, role='CEO'
-     */
-    public boolean requestProposalRevision(int poId, int ceoId, String reason) {
-        if (poId <= 0 || ceoId <= 0 || reason == null || reason.trim().isEmpty()) {
-            return false;
-        }
-        try {
-            connection = getConnection();
-            connection.setAutoCommit(false);
-            statement = connection.prepareStatement(
-                    "UPDATE purchase_order SET status = ?, reject_reason = ?, "
-                    + "rejected_by = ?, rejected_at = NOW() "
-                    + "WHERE po_id = ? AND status = ?");
-            statement.setString(1, GlobalUtils.PO_STATUS_NEEDS_REVISION);
-            statement.setString(2, reason.trim());
-            statement.setInt(3, ceoId);
-            statement.setInt(4, poId);
-            statement.setString(5, GlobalUtils.PO_STATUS_PENDING_CEO);
-            if (statement.executeUpdate() == 0) {
-                connection.rollback();
-                return false;
-            }
-            statement.close();
-            statement = connection.prepareStatement(
-                    "UPDATE import_proposal SET purchase_order_id = NULL, status = ?, "
-                    + "reject_reason = ?, rejected_by = ?, rejected_at = NOW(), "
-                    + "revision_requested_by_role = ? "
-                    + "WHERE purchase_order_id = ?");
-            statement.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
-            statement.setString(2, reason.trim());
-            statement.setInt(3, ceoId);
-            statement.setString(4, GlobalUtils.REVISION_REQUESTER_CEO);
-            statement.setInt(5, poId);
-            statement.executeUpdate();
-            connection.commit();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            closeResources();
-        }
-    }
-
     public boolean cancelWithMode(int poId, int ceoId, String mode, String reason) {
         if (poId <= 0 || ceoId <= 0 || mode == null
                 || (!mode.equals("REBUILD") && !mode.equals("KILL"))) {

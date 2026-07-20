@@ -19,36 +19,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-        <style>
-            .status-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: 600;
-            }
-            .status-pending_ceo { background: #fff3cd; color: #856404; }
-            .status-approved { background: #d4edda; color: #155724; }
-            .status-rejected { background: #f8d7da; color: #721c24; }
-            .status-needs_revision { background: #ede9fe; color: #5b21b6; }
-            .status-cancelled { background: #e2e3e5; color: #383d41; }
-            .po-code, .code-link {
-                font-family: 'JetBrains Mono', monospace;
-                font-size: 12.5px;
-            }
-            .code-link {
-                color: var(--accent);
-                text-decoration: none;
-                font-weight: 600;
-            }
-            .code-link:hover {
-                text-decoration: underline;
-            }
-            .col-status { white-space: nowrap; width: 140px; }
-            
-        </style>
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-list.css">
     </head>
     <body>
         <div class="app">
@@ -63,6 +34,7 @@
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
+                        <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
 
@@ -112,33 +84,29 @@
                             <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
                             <%-- CEO (chỉ có approve): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa --%>
                             <c:if test="${perms.contains('purchase_orders.approve') and !perms.contains('purchase_orders.create')}">
-                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                             </c:if>
 
                             <%-- Sale Manager (có create + view): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa, Đã hủy --%>
                             <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
-                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
                             <%-- Có cả create + approve (admin/PM): thấy tất cả status --%>
                             <c:if test="${perms.contains('purchase_orders.approve') and perms.contains('purchase_orders.create')}">
-                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO</option>
+                                <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
-                                <option value="NEEDS_REVISION" <c:if test="${status == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa đề xuất</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
                         </select>
@@ -182,7 +150,6 @@
                                                         <c:when test="${po.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo">Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${po.status == 'APPROVED'}"><span class="status-pill status-approved">Đã duyệt bởi CEO</span></c:when>
                                                         <c:when test="${po.status == 'REJECTED'}"><span class="status-pill status-rejected">Từ chối bởi CEO</span></c:when>
-                                                        <c:when test="${po.status == 'NEEDS_REVISION'}"><span class="status-pill status-needs_revision">Cần chỉnh sửa đề xuất</span></c:when>
                                                         <c:when test="${po.status == 'CANCELLED'}"><span class="status-pill status-cancelled">Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><c:out value="${po.status}"/></span></c:otherwise>
                                                     </c:choose>
@@ -222,17 +189,6 @@
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
-        <script>
-
-            document.addEventListener('DOMContentLoaded', function () {
-                if (window.SESSION_DATA && window.SESSION_DATA.message) {
-                    if (typeof showToast === 'function') {
-                        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
-                    } else {
-                        alert(window.SESSION_DATA.message);
-                    }
-                }
-            });
-        </script>
+        <script src="${pageContext.request.contextPath}/assets/js/purchase-list.js"></script>
     </body>
 </html>

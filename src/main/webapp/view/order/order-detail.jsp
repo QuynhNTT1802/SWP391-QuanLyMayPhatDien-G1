@@ -306,6 +306,25 @@
                 border-radius: 50%;
                 background: currentColor;
             }
+            .revision-reason {
+                background: var(--surface-2);
+                border: 1px solid color-mix(in srgb,#7c3aed 30%,transparent);
+                border-radius: 10px;
+                padding: 14px 18px;
+                margin-bottom: 16px;
+            }
+            .revision-reason .rr-label {
+                font-weight: 700;
+                font-size: 11px;
+                color: #7c3aed;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                margin-bottom: 4px;
+            }
+            .revision-reason .rr-body {
+                font-size: 13px;
+                color: var(--fg);
+            }
             .status-draft { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
             .status-pending { background: #fff3cd; color: #856404; border-color: color-mix(in srgb, #856404 25%, transparent); }
             .status-approved { background: #d4edda; color: #155724; border-color: color-mix(in srgb, #155724 25%, transparent); }
@@ -520,6 +539,7 @@
                             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                             In đơn
                         </button>
+                        <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
 
@@ -601,6 +621,22 @@
                                     Hủy đơn
                                 </button>
                             </c:if>
+                            <c:if test="${canUpdateOrder && order.status == 'NEEDS_REVISION' && isOwner}">
+                                <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                    Gửi duyệt lại
+                                </button>
+                            </c:if>
+                            <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
+                                <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                    Sửa
+                                </a>
+                            </c:if>
                             <c:if test="${canDeleteNow}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -609,13 +645,6 @@
                             </c:if>
                         </div>
                     </div>
-
-                    <c:if test="${order.status == 'NEEDS_REVISION' && order.createdBy == sessionScope.loggedUser.id}">
-                        <div class="alert alert-warn">
-                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span>Đơn hàng cần được chỉnh sửa theo yêu cầu của Sale Manager. <a href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}" style="color:inherit;text-decoration:underline;font-weight:700;">Sửa lại &amp; Gửi duyệt</a></span>
-                        </div>
-                    </c:if>
 
                     <%-- ============================================================
                          KHỐI 1: THÔNG TIN CHUNG
@@ -808,8 +837,10 @@
                                 </c:when>
                                 <c:when test="${order.status == 'NEEDS_REVISION' && not empty order.revisionReason}">
                                     <div style="padding: 18px 20px;">
-                                        <div class="info-label" style="font-size:11px;color:#b15c00;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Lý do yêu cầu chỉnh sửa</div>
-                                        <div class="note-soft" style="border-left:3px solid #b15c00;"><c:out value="${order.revisionReason}"/></div>
+                                        <div class="revision-reason">
+                                            <div class="rr-label">Lý do yêu cầu chỉnh sửa</div>
+                                            <div class="rr-body"><c:out value="${order.revisionReason}"/></div>
+                                        </div>
                                     </div>
                                 </c:when>
                             </c:choose>
@@ -1029,6 +1060,35 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('revisionModal')">Huỷ</button>
                             <button type="submit" class="btn btn-warn">Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </c:if>
+
+        <c:if test="${canUpdateOrder && order.status == 'NEEDS_REVISION' && isOwner}">
+            <div class="modal-host" id="resubmitModal">
+                <div class="modal-card">
+                    <h3>Gửi duyệt lại</h3>
+                    <div class="modal-sub">Đơn hàng sẽ chuyển sang trạng thái "Chờ duyệt" để Sale Manager xem xét lại sau khi đã chỉnh sửa.</div>
+                    <form method="POST" action="${pageContext.request.contextPath}/order?action=update" id="resubmitForm">
+                        <input type="hidden" name="orderId" value="${order.orderId}" />
+                        <input type="hidden" name="customerName" value="<c:out value='${order.customer.name}'/>" />
+                        <input type="hidden" name="customerPhone" value="<c:out value='${order.customer.phone}'/>" />
+                        <input type="hidden" name="customerEmail" value="<c:out value='${order.customer.email}'/>" />
+                        <input type="hidden" name="customerAddress" value="<c:out value='${order.customer.address}'/>" />
+                        <input type="hidden" name="customerCompany" value="<c:out value='${order.customer.companyName}'/>" />
+                        <input type="hidden" name="customerTypeId" value="<c:out value='${order.customer.customerTypeId}'/>" />
+                        <input type="hidden" name="customerNote" value="<c:out value='${order.customerNote}'/>" />
+                        <input type="hidden" name="note" value="<c:out value='${order.note}'/>" />
+                        <c:forEach var="d" items="${details}">
+                            <input type="hidden" name="generatorId" value="${d.generatorId}" />
+                            <input type="hidden" name="quantity" value="${d.quantity}" />
+                            <input type="hidden" name="unitPrice" value="${d.unitPrice}" />
+                        </c:forEach>
+                        <div class="modal-actions">
+                            <button type="button" class="btn" onclick="closeModal('resubmitModal')">Đóng</button>
+                            <button type="submit" class="btn btn-primary">Gửi duyệt lại</button>
                         </div>
                     </form>
                 </div>
