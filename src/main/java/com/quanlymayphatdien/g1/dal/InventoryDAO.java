@@ -621,6 +621,24 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     /**
+     * Tái kích hoạt một serial đã bán (SOLD) về IN_STOCK, đồng thời cập nhật
+     * kho và mẫu máy mới. Chỉ áp dụng khi serial hiện đang ở trạng thái SOLD.
+     * Trả về số dòng được cập nhật (0 nếu serial không còn SOLD hoặc không tồn tại).
+     */
+    public int reactivateSold(Connection conn, int inventoryId, int newGeneratorId, int newWarehouseId) throws SQLException {
+        String sql = "UPDATE inventory SET status = ?, generator_id = ?, warehouse_id = ? "
+                   + "WHERE inventory_id = ? AND status = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, STATUS_IN_STOCK);
+            ps.setInt(2, newGeneratorId);
+            ps.setInt(3, newWarehouseId);
+            ps.setInt(4, inventoryId);
+            ps.setString(5, STATUS_SOLD);
+            return ps.executeUpdate();
+        }
+    }
+
+    /**
      * Overload khong can connection (tu mo connection rieng).
      */
     public boolean updateStatusBySerial(String serialNumber, String newStatus) {

@@ -17,6 +17,7 @@ import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
+import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
@@ -93,6 +94,9 @@ public class ImportReceiptController extends HttpServlet {
                     break;
                 case "selectPurchase":
                     selectPurchase(request, response);
+                    break;
+                case "selectTransfer":
+                    selectTransfer(request, response);
                     break;
                 case "template":
                     downloadTemplate(request, response);
@@ -358,6 +362,24 @@ public class ImportReceiptController extends HttpServlet {
         request.getRequestDispatcher("/view/receipt/import/import-select-purchase.jsp").forward(request, response);
     }
 
+    private void selectTransfer(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+
+        Integer scopedWarehouseId = (Integer) session.getAttribute("scopedWarehouseId");
+        if (scopedWarehouseId == null) scopedWarehouseId = 0;
+
+        com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+        java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
+                = tDAO.findReadyForImport(scopedWarehouseId, loggedUser.getId());
+
+        request.setAttribute("transfers", transfers);
+        request.setAttribute("totalItems", transfers.size());
+        request.setAttribute("activePage", "import-select-transfer");
+        request.getRequestDispatcher("/view/receipt/import/import-select-transfer.jsp").forward(request, response);
+    }
+
     private void applyPoPrefillToRequest(HttpServletRequest request, PurchaseOrder po, String note) {
         if (po == null) return;
         request.setAttribute("purchaseOrder", po);
@@ -371,10 +393,14 @@ public class ImportReceiptController extends HttpServlet {
         List<ReceiptDetail> ds = new ArrayList<>();
         List<Map<String, Object>> poRowList = new ArrayList<>();
         int expectedRows = 0;
+        java.util.Set<Integer> poGenIds = new java.util.HashSet<>();
+        java.util.Map<Integer, Integer> poQtyMap = new java.util.LinkedHashMap<>();
         if (pods != null) {
             for (PurchaseOrderDetail pod : pods) {
                 int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
                          : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                poGenIds.add(pod.getGeneratorId());
+                poQtyMap.merge(pod.getGeneratorId(), qty, Integer::sum);
                 for (int k = 0; k < qty; k++) {
                     ReceiptDetail rd = new ReceiptDetail();
                     rd.setGeneratorId(pod.getGeneratorId());
@@ -397,6 +423,18 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("receipt", prefill);
         request.setAttribute("expectedRows", expectedRows);
         request.setAttribute("poRowList", poRowList);
+        if (request.getAttribute("availableGenerators") == null) {
+            java.util.List<Generator> poGenerators = new java.util.ArrayList<>();
+            java.util.Map<Integer, Generator> allGenMap = new java.util.HashMap<>();
+            for (Generator g : genDAO.findAllActive()) allGenMap.put(g.getId(), g);
+            for (Integer gid : poGenIds) {
+                Generator g = allGenMap.get(gid);
+                if (g != null) poGenerators.add(g);
+            }
+            request.setAttribute("availableGenerators", poGenerators);
+            request.setAttribute("poQtyMap", poQtyMap);
+            setGeneratorsAttributes(request, poGenerators);
+        }
     }
 
     private Integer parsePoIdFromRequest(HttpServletRequest request) {
@@ -461,24 +499,34 @@ public class ImportReceiptController extends HttpServlet {
         }
 
         List<String> serialList = new ArrayList<>();
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
         List<String> duplicateSerials = new ArrayList<>();
         List<String> blockedSerials = new ArrayList<>();
+        List<Integer> emptyRows = new ArrayList<>();
+        List<Integer> tooLongRows = new ArrayList<>();
         for (int i = 0; i < rawRows.size(); i++) {
             Map<String, String> raw = rawRows.get(i);
             String serial = raw.getOrDefault(ReceiptExcelSupport.COL_SERIAL, "").trim();
-            if (serial.isEmpty()) continue;
+            int rowNum = i + 2;
+            if (serial.isEmpty()) {
+                emptyRows.add(rowNum);
+                continue;
+            }
             if (serial.length() > MAX_SERIAL_LENGTH) {
-                serialList.add(serial);
-                blockedSerials.add("Dòng " + (i + 2) + ": serial quá " + MAX_SERIAL_LENGTH + " ký tự");
+                tooLongRows.add(rowNum);
+                blockedSerials.add("Dòng " + rowNum + ": serial quá " + MAX_SERIAL_LENGTH + " ký tự");
                 continue;
             }
-            if (!seen.add(serial)) {
-                duplicateSerials.add("Dòng " + (i + 2) + ": serial \"" + serial + "\" bị trùng trong file");
+            Integer firstRow = firstSeenRow.get(serial);
+            if (firstRow != null) {
+                duplicateSerials.add("Dòng " + firstRow + " và dòng " + rowNum
+                        + ": serial \"" + serial + "\" bị trùng trong file");
                 continue;
             }
+            firstSeenRow.put(serial, rowNum);
             if (inventoryDAO.isSerialBlocked(serial)) {
-                blockedSerials.add("Dòng " + (i + 2) + ": serial \"" + serial + "\" đã tồn tại trong hệ thống");
+                blockedSerials.add("Dòng " + rowNum + ": serial \"" + serial + "\" đã tồn tại trong hệ thống");
+                continue;
             }
             serialList.add(serial);
         }
@@ -487,40 +535,62 @@ public class ImportReceiptController extends HttpServlet {
         if (isAjax) {
             response.setContentType("application/json;charset=UTF-8");
             Map<String, Object> body = new LinkedHashMap<>();
-            if (serialList.size() != expectedCount) {
-                body.put("success", false);
-                body.put("message", "Số serial trong file (" + serialList.size()
-                        + ") không khớp với PO (yêu cầu " + expectedCount + ")");
-                new Gson().toJson(body, response.getWriter());
-                return;
-            }
             if (!duplicateSerials.isEmpty()) {
                 body.put("success", false);
                 body.put("message", "Có serial trùng trong file: " + String.join("; ", duplicateSerials));
+                body.put("duplicateSerials", duplicateSerials);
+                new Gson().toJson(body, response.getWriter());
+                return;
+            }
+            if (serialList.size() != expectedCount) {
+                body.put("success", false);
+                body.put("message", buildSerialCountMismatchMessage(
+                        serialList.size(), expectedCount,
+                        emptyRows, blockedSerials));
+                body.put("validCount", serialList.size());
+                body.put("expectedCount", expectedCount);
+                body.put("emptyRows", emptyRows);
+                body.put("blockedSerials", blockedSerials);
                 new Gson().toJson(body, response.getWriter());
                 return;
             }
             if (!blockedSerials.isEmpty()) {
                 body.put("success", false);
                 body.put("message", "Có serial không hợp lệ: " + String.join("; ", blockedSerials));
+                body.put("blockedSerials", blockedSerials);
                 new Gson().toJson(body, response.getWriter());
                 return;
             }
+            List<Integer> generatorIdsList = new ArrayList<>();
+            int serialIdx = 0;
+            poLoop:
+            for (PurchaseOrderDetail pod : pods) {
+                int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
+                         : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
+                for (int k = 0; k < qty; k++) {
+                    if (serialIdx >= serialList.size()) break poLoop;
+                    generatorIdsList.add(pod.getGeneratorId());
+                    serialIdx++;
+                }
+            }
             body.put("success", true);
             body.put("serials", serialList);
+            body.put("generatorIds", generatorIdsList);
             body.put("expectedCount", expectedCount);
             body.put("message", "Đã đọc " + serialList.size() + " serial");
             new Gson().toJson(body, response.getWriter());
             return;
         }
 
-        if (serialList.size() != expectedCount) {
-            String msg = "Số serial trong file (" + serialList.size() + ") không khớp với PO (yêu cầu " + expectedCount + ")";
+        if (!duplicateSerials.isEmpty()) {
+            String msg = "Có serial trùng trong file: " + String.join("; ", duplicateSerials);
             forwardBackToCreate(request, response, msg, "danger", warehouseId, reasonId, note);
             return;
         }
-        if (!duplicateSerials.isEmpty()) {
-            String msg = "Có serial trùng trong file: " + String.join("; ", duplicateSerials);
+        if (serialList.size() != expectedCount) {
+            String msg = buildSerialCountMismatchMessage(
+                    serialList.size(), expectedCount,
+                    emptyRows, blockedSerials);
             forwardBackToCreate(request, response, msg, "danger", warehouseId, reasonId, note);
             return;
         }
@@ -833,10 +903,10 @@ public class ImportReceiptController extends HttpServlet {
         List<ReceiptDetail> details;
         if (fromPo) {
             details = parseDetailsStrict(genIds, serials, detailNotes, errors);
-            validateAgainstPurchaseOrder(poId, details, errors);
             if (details.isEmpty()) {
                 errors.add("Phiếu nhập từ PO phải có ít nhất 1 dòng serial hợp lệ");
             }
+            validateAgainstPurchaseOrder(poId, details, errors);
         } else {
             details = parseDetailsStrict(genIds, serials, detailNotes, errors);
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
@@ -1003,16 +1073,35 @@ public class ImportReceiptController extends HttpServlet {
                         warehouseId, loggedUser.getId(), rdList);
             } else {
                 for (ReceiptDetail d : details) {
-                    if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
-                        throw new SQLException("Serial '" + d.getSerialNumber()
-                                + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ serial trùng).");
-                    }
-                    int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
-                    if (invId <= 0) {
-                        throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
+                    int existingInvId = d.getInventoryId();
+                    if (existingInvId > 0) {
+                        Inventory existingInv
+                                = inventoryDAO.findBySerialNumber(d.getSerialNumber());
+                        if (existingInv == null
+                                || existingInv.getInventoryId() != existingInvId
+                                || !"SOLD".equals(existingInv.getStatus())) {
+                            throw new SQLException("Serial '" + d.getSerialNumber()
+                                    + "' không còn ở trạng thái SOLD, vui lòng quay lại và bỏ serial này.");
+                        }
+                        int updated = inventoryDAO.reactivateSold(conn, existingInvId,
+                                d.getGeneratorId(), warehouseId);
+                        if (updated <= 0) {
+                            throw new SQLException("Không thể nhập lại serial '" + d.getSerialNumber()
+                                    + "' (cập nhật inventory thất bại).");
+                        }
+                        d.setInventoryId(existingInvId);
+                    } else {
+                        if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
+                            throw new SQLException("Serial '" + d.getSerialNumber()
+                                    + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ serial trùng).");
+                        }
+                        int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
+                        if (invId <= 0) {
+                            throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
+                        }
+                        d.setInventoryId(invId);
                     }
                     d.setReceiptId(receiptId);
-                    d.setInventoryId(invId);
                 }
                 detailDAO.batchInsert(conn, details);
                 receiptDAO.writeStockCardsForImport(conn, receiptId, r.getReceiptCode(),
@@ -1172,8 +1261,26 @@ public class ImportReceiptController extends HttpServlet {
             int poId = parseId(poIdStr);
             if (poId > 0) {
                 PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
-                if (po != null && "APPROVED".equalsIgnoreCase(po.getStatus())) {
-                    poDetails = po.getDetails();
+                if (po == null) {
+                    redirectWithToast(request, response,
+                            "Phiếu mua #" + poId + " không tồn tại", "danger",
+                            "/import-receipt?action=create&poId=" + poId);
+                    return;
+                }
+                if (!"APPROVED".equalsIgnoreCase(po.getStatus())) {
+                    redirectWithToast(request, response,
+                            "Phiếu mua " + po.getPoCode() + " chưa được duyệt (hiện tại: " + po.getStatus() + ")",
+                            "danger",
+                            "/import-receipt?action=create&poId=" + poId);
+                    return;
+                }
+                poDetails = po.getDetails();
+                if (poDetails == null || poDetails.isEmpty()) {
+                    redirectWithToast(request, response,
+                            "Phiếu mua " + po.getPoCode() + " không có chi tiết máy nào để nhập",
+                            "danger",
+                            "/import-receipt?action=create&poId=" + poId);
+                    return;
                 }
             }
         }
@@ -1183,6 +1290,16 @@ public class ImportReceiptController extends HttpServlet {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         workbook.write(response.getOutputStream());
         workbook.close();
+    }
+
+    private void redirectWithToast(HttpServletRequest request, HttpServletResponse response,
+                                    String message, String type, String redirectPath) throws IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute("toastMessage", message);
+            session.setAttribute("toastType", type);
+        }
+        response.sendRedirect(request.getContextPath() + redirectPath);
     }
 
     private void importPreview(HttpServletRequest request, HttpServletResponse response)
@@ -1279,7 +1396,7 @@ public class ImportReceiptController extends HttpServlet {
 
         List<Map<String, Object>> validRows = new ArrayList<>();
         List<Map<String, Object>> invalidRows = new ArrayList<>();
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
+        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
 
         for (int i = 0; i < rawRows.size(); i++) {
             Map<String, String> raw = rawRows.get(i);
@@ -1332,8 +1449,14 @@ public class ImportReceiptController extends HttpServlet {
                 errors.add("Ghi chú vượt quá " + MAX_NOTE_LENGTH + " ký tự");
             }
 
-            if (!serial.isEmpty() && !seenSerials.add(serial)) {
-                errors.add("Serial \"" + serial + "\" bị trùng trong file");
+            if (!serial.isEmpty()) {
+                Integer firstSeenIndex = firstSeenRow.get(serial);
+                if (firstSeenIndex != null) {
+                    errors.add("Dòng " + firstSeenIndex + " và dòng " + rowNum
+                            + ": serial \"" + serial + "\" bị trùng trong file");
+                } else {
+                    firstSeenRow.put(serial, rowNum);
+                }
             }
 
             if (!serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
@@ -1395,12 +1518,16 @@ public class ImportReceiptController extends HttpServlet {
                 + (invalidRows.isEmpty() ? "" : " (bỏ qua " + invalidRows.size() + " dòng lỗi)"));
         List<String> serials = new ArrayList<>();
         List<Integer> generatorIds = new ArrayList<>();
+        List<String> models = new ArrayList<>();
         for (Map<String, Object> v : validRows) {
             serials.add((String) v.get("serial"));
             generatorIds.add((Integer) v.get("generatorId"));
+            Object m = v.get("model");
+            models.add(m == null ? "" : m.toString());
         }
         body.put("serials", serials);
         body.put("generatorIds", generatorIds);
+        body.put("models", models);
         new Gson().toJson(body, response.getWriter());
     }
 
@@ -1517,6 +1644,7 @@ public class ImportReceiptController extends HttpServlet {
         String[] manualGenIds = request.getParameterValues("manualGeneratorId");
         String[] manualSerials = request.getParameterValues("manualSerialNumber");
         String[] manualDetailNotes = request.getParameterValues("manualDetailNote");
+        String[] manualExistingInvIds = request.getParameterValues("existingInventoryId");
 
         List<ReceiptDetail> details = new ArrayList<>();
         java.util.Set<String> seen = new java.util.HashSet<>();
@@ -1590,6 +1718,14 @@ public class ImportReceiptController extends HttpServlet {
                 d.setGeneratorId(genId);
                 d.setSerialNumber(serial);
                 d.setNote(detailNote);
+                String existingInvIdStr = (manualExistingInvIds != null && i < manualExistingInvIds.length)
+                        ? manualExistingInvIds[i] : null;
+                if (existingInvIdStr != null && !existingInvIdStr.trim().isEmpty()) {
+                    try {
+                        d.setInventoryId(Integer.parseInt(existingInvIdStr.trim()));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
                 details.add(d);
             }
         }
@@ -1607,7 +1743,7 @@ public class ImportReceiptController extends HttpServlet {
 
         for (ReceiptDetail d : details) {
             if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
-                if (inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
+                if (d.getInventoryId() <= 0 && inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
                     errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
                 }
             }
@@ -1751,11 +1887,31 @@ public class ImportReceiptController extends HttpServlet {
         return msg.toString();
     }
 
+    private String buildSerialCountMismatchMessage(int validCount, int expectedCount,
+            List<Integer> emptyRows, List<String> blockedSerials) {
+        StringBuilder msg = new StringBuilder();
+        msg.append("Số serial hợp lệ trong file (").append(validCount)
+           .append(") không khớp với PO (yêu cầu ").append(expectedCount).append(").");
+        if (!emptyRows.isEmpty()) {
+            msg.append(" Có ").append(emptyRows.size())
+               .append(" dòng trống serial: dòng ")
+               .append(emptyRows.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", ")))
+               .append(".");
+        }
+        if (!blockedSerials.isEmpty()) {
+            msg.append(" Có ").append(blockedSerials.size())
+               .append(" serial không hợp lệ: ")
+               .append(String.join("; ", blockedSerials))
+               .append(".");
+        }
+        return msg.toString();
+    }
+
     private List<ReceiptDetail> parseDetailsStrict(String[] genIds, String[] serials,
             String[] detailNotes, List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) return details;
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
+        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
@@ -1775,9 +1931,13 @@ public class ImportReceiptController extends HttpServlet {
                 else if (serial.length() > MAX_SERIAL_LENGTH) {
                     errors.add("Dòng " + rowNum + ": Số serial không được vượt quá " + MAX_SERIAL_LENGTH + " ký tự"); continue;
                 } else {
-                    if (!seenSerials.add(serial)) {
-                        errors.add("Dòng " + rowNum + ": Số serial \"" + serial + "\" bị trùng trong phiếu"); continue;
+                    Integer firstRow = firstSeenRow.get(serial);
+                    if (firstRow != null) {
+                        errors.add("Dòng " + firstRow + " và dòng " + rowNum
+                                + ": Số serial \"" + serial + "\" bị trùng trong phiếu");
+                        continue;
                     }
+                    firstSeenRow.put(serial, rowNum);
                 }
             }
             if (serial == null) { errors.add("Dòng " + rowNum + ": Vui lòng nhập số serial"); continue; }
