@@ -314,13 +314,14 @@
                                             <th style="width: 40px;">#</th>
                                             <th>Máy phát / Hãng</th>
                                             <th>Serial</th>
+                                            <th>Tình trạng</th>
                                             <th>Ghi chú</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <c:choose>
                                             <c:when test="${empty receipt.details}">
-                                                <tr><td colspan="4" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+                                                <tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="d" items="${receipt.details}" varStatus="st">
@@ -331,6 +332,14 @@
                                                             <span style="color: var(--muted);"><c:out value="${d.generatorBrand}"/></span>
                                                         </td>
                                                         <td style="font-family:var(--font-mono);"><c:out value="${d.serialNumber}"/></td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${d.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                                <c:when test="${d.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                                <c:when test="${d.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                                <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                            </c:choose>
+                                                        </td>
                                                         <td><c:out value="${d.note}"/></td>
                                                     </tr>
                                                 </c:forEach>

@@ -351,6 +351,7 @@
                             <th class="col-stt">#</th>
                             <th class="col-serial">Serial</th>
                             <th class="col-status">Trạng thái</th>
+                            <th>Tình trạng</th>
                             <th class="col-model">Model</th>
                             <th class="col-brand">Hãng</th>
                             <th class="col-wh">Kho</th>
@@ -361,7 +362,7 @@
                     <tbody>
                         <c:choose>
                             <c:when test="${empty rows}">
-                                <tr><td colspan="8" class="empty-cell">Không có dữ liệu tồn kho trong khoảng thời gian này.</td></tr>
+                                <tr><td colspan="9" class="empty-cell">Không có dữ liệu tồn kho trong khoảng thời gian này.</td></tr>
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="r" items="${rows}" varStatus="vs">
@@ -369,6 +370,14 @@
                                         <td class="col-stt">${vs.count + (currentPage - 1) * pageSize}</td>
                                         <td class="col-serial">${r.serialNumber}</td>
                                         <td class="col-status">${r.status}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${r.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                <c:when test="${r.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                <c:when test="${r.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
                                         <td class="col-model">${empty r.generatorModel ? '—' : r.generatorModel}</td>
                                         <td class="col-brand">${empty r.generatorBrand ? '—' : r.generatorBrand}</td>
                                         <td class="col-wh">${r.warehouseName}</td>
@@ -383,7 +392,7 @@
                         <tfoot>
                             <tr>
                                 <td class="col-stt"></td>
-                                <td colspan="6">Tổng (${fn:length(rows)} serial)</td>
+                                <td colspan="7">Tổng (${fn:length(rows)} serial)</td>
                                 <td></td>
                             </tr>
                         </tfoot>
