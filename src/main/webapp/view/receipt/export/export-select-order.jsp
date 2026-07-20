@@ -80,11 +80,7 @@
                                     <th>Khách hàng</th>
                                     <th>Ngày duyệt</th>
                                     <th>Tổng tiền</th>
-<<<<<<< HEAD
-                                    <th class="col-actions">Thao tác</th>
-=======
                                     <th>Chi tiết</th>
->>>>>>> a5e47376ac2d480c01ba639b32e5083d5b3a4d6a
                                 </tr>
                             </thead>
                             <tbody>
@@ -96,18 +92,11 @@
                                         <td class="amount-cell">
                                             <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="₫"/>
                                         </td>
-<<<<<<< HEAD
-                                        <td class="col-actions">
-                                            <a href="${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}" class="btn btn-primary" style="font-size:12px;padding:4px 10px;">
-                                                Tạo phiếu xuất
-                                            </a>
-=======
                                         <td>
                                             <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewOrderDetail(${o.orderId}, '${o.orderCode}', '${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}')" title="Xem chi tiết đơn hàng">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 Xem chi tiết
                                             </button>
->>>>>>> a5e47376ac2d480c01ba639b32e5083d5b3a4d6a
                                         </td>
                                     </tr>
                                 </c:forEach>
