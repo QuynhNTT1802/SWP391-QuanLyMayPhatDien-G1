@@ -3,7 +3,9 @@ package com.quanlymayphatdien.g1.dal;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PurchaseReportDAO extends BaseReportDAO {
 
@@ -36,6 +38,63 @@ public class PurchaseReportDAO extends BaseReportDAO {
                 + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
                 + " ORDER BY po.created_at DESC";
         return queryFlat(sql, params(month, year, warehouseId));
+    }
+
+    public Map<String, Object> getPurchaseSummary(Integer warehouseId, int month, int year) {
+        Map<String, Object> summary = new HashMap<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+
+        String totalSql = "SELECT COALESCE(SUM(pod.final_quantity * pod.unit_price), 0) AS total_amount"
+                + " FROM purchase_order po"
+                + " JOIN purchase_order_detail pod ON pod.po_id = po.po_id"
+                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
+                + (warehouseId != null ? " AND po.warehouse_id = ?" : "");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(totalSql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                summary.put("totalAmount", resultSet.getDouble("total_amount"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+
+        String topSql = "SELECT g.model, SUM(pod.final_quantity) AS total_qty"
+                + " FROM purchase_order po"
+                + " JOIN purchase_order_detail pod ON pod.po_id = po.po_id"
+                + " JOIN generator g ON pod.generator_id = g.id"
+                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
+                + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
+                + " GROUP BY g.id, g.model ORDER BY total_qty DESC LIMIT 1";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(topSql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                summary.put("topModel", resultSet.getString("model"));
+                summary.put("topModelQty", resultSet.getInt("total_qty"));
+            } else {
+                summary.put("topModel", "");
+                summary.put("topModelQty", 0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return summary;
     }
 
     private List<PurchaseOrder> queryPurchaseOrders(Integer warehouseId, int month, int year, int page, int pageSize) {

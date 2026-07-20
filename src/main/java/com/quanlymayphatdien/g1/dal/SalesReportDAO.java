@@ -3,7 +3,9 @@ package com.quanlymayphatdien.g1.dal;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SalesReportDAO extends BaseReportDAO {
 
@@ -34,6 +36,57 @@ public class SalesReportDAO extends BaseReportDAO {
                 + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
                 + " ORDER BY so.created_at DESC";
         return queryFlat(sql, params(month, year, null));
+    }
+
+    public Map<String, Object> getSalesSummary(int month, int year) {
+        Map<String, Object> summary = new HashMap<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+
+        String totalSql = "SELECT COALESCE(SUM(so.total_amount), 0) AS total_amount"
+                + " FROM sale_order so"
+                + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(totalSql);
+            statement.setString(1, firstDay(month, year));
+            statement.setString(2, lastDay(month, year));
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                summary.put("totalAmount", resultSet.getDouble("total_amount"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+
+        String topSql = "SELECT g.model, SUM(od.quantity) AS total_qty"
+                + " FROM sale_order so"
+                + " JOIN order_detail od ON od.order_id = so.order_id"
+                + " JOIN generator g ON od.generator_id = g.id"
+                + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
+                + " GROUP BY g.id, g.model ORDER BY total_qty DESC LIMIT 1";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(topSql);
+            statement.setString(1, firstDay(month, year));
+            statement.setString(2, lastDay(month, year));
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                summary.put("topModel", resultSet.getString("model"));
+                summary.put("topModelQty", resultSet.getInt("total_qty"));
+            } else {
+                summary.put("topModel", "");
+                summary.put("topModelQty", 0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return summary;
     }
 
     private List<SaleOrder> querySaleOrders(int month, int year, int page, int pageSize) {
