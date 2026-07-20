@@ -1445,7 +1445,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         List<Map<String, Object>> list = new ArrayList<>();
         List<Object> params = new ArrayList<>();
         String where = buildInvReportWhere(from, to, warehouseId, params);
-        String sql = "SELECT i.inventory_id, i.serial_number, i.status, i.created_at, i.updated_at, "
+        String sql = "SELECT i.inventory_id, i.serial_number, i.status, i.condition, i.created_at, i.updated_at, "
                 + "g.model AS generator_model, "
                 + "(SELECT c.name FROM generator_category gc "
                 + "   JOIN category c ON gc.category_id = c.id "
@@ -1481,6 +1481,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 r.put("generatorBrand", resultSet.getString("generator_brand"));
                 r.put("warehouseName", resultSet.getString("warehouse_name"));
                 r.put("importReceiptCode", resultSet.getString("import_receipt_code"));
+                r.put("condition", resultSet.getString("condition"));
                 java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
                 r.put("createdAtStr", createdAt != null ? createdAt.toLocalDate().format(df) : "");
                 list.add(r);

@@ -12,6 +12,7 @@ public class TransferDetail {
     // join fields
     private String generatorModel;
     private String generatorBrand;
+    private String condition;
     private int sourceWarehouseId;
     private int destWarehouseId;
 
@@ -80,6 +81,14 @@ public class TransferDetail {
 
     public void setGeneratorBrand(String generatorBrand) {
         this.generatorBrand = generatorBrand;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 
     public int getSourceWarehouseId() {

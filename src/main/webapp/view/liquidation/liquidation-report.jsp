@@ -412,6 +412,7 @@
                             <th class="col-reason">Lý do</th>
                             <th class="col-serial">Serial</th>
                             <th class="col-model">Model</th>
+                            <th>Tình trạng</th>
                             <th class="num col-money">Giá nhập</th>
                             <th class="num col-money">Giá TL</th>
                             <th class="num col-money">Chênh lệch</th>
@@ -422,7 +423,7 @@
                     <tbody>
                         <c:choose>
                             <c:when test="${empty rows}">
-                                <tr><td colspan="12" class="empty-cell">Không có dữ liệu thanh lý trong khoảng thời gian này.</td></tr>
+                                <tr><td colspan="13" class="empty-cell">Không có dữ liệu thanh lý trong khoảng thời gian này.</td></tr>
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="r" items="${rows}" varStatus="vs">
@@ -434,6 +435,14 @@
                                         <td class="col-reason">${r.reasonName}</td>
                                         <td class="col-serial">${r.serialNumber}</td>
                                         <td class="col-model">${r.modelName}</td>
+                                        <td>
+                                            <c:choose>
+                                                <c:when test="${r.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                <c:when test="${r.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                <c:when test="${r.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                            </c:choose>
+                                        </td>
                                         <td class="num col-money"><fmt:formatNumber value="${r.originalPrice}" type="number" maxFractionDigits="0"/></td>
                                         <td class="num col-money"><fmt:formatNumber value="${r.liquidationPrice}" type="number" maxFractionDigits="0"/></td>
                                         <td class="num col-money" style="color: ${r.totalLoss != null && r.totalLoss.signum() < 0 ? 'var(--danger)' : (r.totalLoss != null && r.totalLoss.signum() > 0 ? 'var(--accent)' : '')};">
