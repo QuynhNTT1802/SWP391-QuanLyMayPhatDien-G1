@@ -20,9 +20,10 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
     @Override
     public List<TransferDetail> findAll() {
         List<TransferDetail> list = new ArrayList<>();
-        String sql = "SELECT td.*, g.model AS generator_model "
+        String sql = "SELECT td.*, g.model AS generator_model, i.condition "
                    + "FROM transfer_detail td "
                    + "LEFT JOIN generator g ON td.generator_id = g.id "
+                   + "LEFT JOIN inventory i ON td.serial_number = i.serial_number "
                    + "ORDER BY td.transfer_detail_id ASC";
         try {
             connection = getConnection();
@@ -42,9 +43,10 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
 
     public List<TransferDetail> findByTransferId(int transferId) {
         List<TransferDetail> list = new ArrayList<>();
-        String sql = "SELECT td.*, g.model AS generator_model "
+        String sql = "SELECT td.*, g.model AS generator_model, i.condition "
                    + "FROM transfer_detail td "
                    + "LEFT JOIN generator g ON td.generator_id = g.id "
+                   + "LEFT JOIN inventory i ON td.serial_number = i.serial_number "
                    + "WHERE td.transfer_id = ? "
                    + "ORDER BY td.transfer_detail_id ASC";
         try {
@@ -197,6 +199,10 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
         d.setNote(rs.getString("note"));
         try {
             d.setGeneratorModel(rs.getString("generator_model"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            d.setCondition(rs.getString("condition"));
         } catch (SQLException ignored) {
         }
         return d;

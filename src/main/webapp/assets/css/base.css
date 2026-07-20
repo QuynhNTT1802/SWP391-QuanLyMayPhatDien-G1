@@ -194,3 +194,29 @@ body {
 [data-theme="dark"] .dropdown-item.convert:hover { background: color-mix(in srgb, #60a5fa 15%, transparent); }
 [data-theme="dark"] .dropdown-item.submit  { color: #60a5fa; }
 [data-theme="dark"] .dropdown-item.submit:hover  { background: color-mix(in srgb, #60a5fa 15%, transparent); }
+
+/* Badge tình trạng kiểm kê (Tốt/Kém/Hỏng) */
+.cond-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.cond-good {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    color: var(--accent);
+}
+.cond-poor {
+    background: color-mix(in srgb, var(--warn) 15%, transparent);
+    color: var(--warn);
+}
+.cond-damaged {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
+}
+.cond-none {
+    background: color-mix(in srgb, var(--muted) 15%, transparent);
+    color: var(--muted);
+}

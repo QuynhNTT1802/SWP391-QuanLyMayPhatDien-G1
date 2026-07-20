@@ -501,13 +501,14 @@
                                     <th>Dòng máy</th>
                                     <th style="width: 80px;">Số lượng</th>
                                     <th>Số Serial</th>
+                                    <th>Tình trạng</th>
                                     <th>Ghi chú</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty t.details}">
-                                        <tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có chi tiết</td></tr>
+                                        <tr><td colspan="6" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có chi tiết</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="d" items="${t.details}" varStatus="st">
@@ -516,6 +517,14 @@
                                                 <td><strong>${d.generatorModel}</strong></td>
                                                 <td class="mono">${d.quantity}</td>
                                                 <td class="mono">${d.serialNumber != null ? d.serialNumber : '—'}</td>
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${d.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
+                                                        <c:when test="${d.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+                                                        <c:when test="${d.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
+                                                        <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+                                                    </c:choose>
+                                                </td>
                                                 <td>${d.note != null ? d.note : '—'}</td>
                                             </tr>
                                         </c:forEach>

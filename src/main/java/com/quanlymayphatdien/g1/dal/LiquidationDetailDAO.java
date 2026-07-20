@@ -84,14 +84,19 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
             SystemLogger.error(LogModule.LIQUIDATION, "Lỗi lấy thông tin của liquidation detail", e.getMessage(), e);
 
         }
+        try {
+            d.setCondition(rs.getString("condition"));
+        } catch (SQLException ignored) {
+        }
         return d;
     }
     
     public List<LiquidationDetail> findByLiquidationId(int liquidationId) {
         List<LiquidationDetail> list = new ArrayList<>();
-        String sql = "select ld.*, g.model as generator_model_name "
+        String sql = "select ld.*, g.model as generator_model_name, i.condition "
                    + "from liquidation_detail ld "
                    + "join generator g on ld.generator_id = g.id "
+                   + "left join inventory i on ld.serial_number = i.serial_number "
                    + "where ld.liquidation_id = ?";
         try {
             connection = getConnection();
