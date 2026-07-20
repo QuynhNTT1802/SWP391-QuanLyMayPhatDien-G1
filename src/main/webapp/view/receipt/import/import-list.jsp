@@ -35,6 +35,9 @@
                         <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=selectPurchase">
                             Tạo từ phiếu purchase
                         </a>
+                        <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=selectTransfer">
+                            Từ phiếu luân chuyển
+                        </a>
                         <a class="btn btn-primary" href="${pageContext.request.contextPath}/import-receipt?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                             Tạo phiếu nhập
