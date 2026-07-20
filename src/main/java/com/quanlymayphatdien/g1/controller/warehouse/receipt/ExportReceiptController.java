@@ -16,6 +16,8 @@ import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
 import com.quanlymayphatdien.g1.dal.StockCardDAO;
+import com.quanlymayphatdien.g1.dal.TransferDAO;
+import com.quanlymayphatdien.g1.dal.TransferDetailDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
@@ -29,6 +31,8 @@ import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.StockCard;
+import com.quanlymayphatdien.g1.entity.Transfer;
+import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
@@ -105,6 +109,15 @@ public class ExportReceiptController extends HttpServlet {
                     break;
                 case "loadGenerators":
                     loadGeneratorsJson(request, response);
+                    break;
+                case "getOrderDetail":
+                    getOrderDetailJson(request, response);
+                    break;
+                case "getLiquidationDetail":
+                    getLiquidationDetailJson(request, response);
+                    break;
+                case "getTransferDetail":
+                    getTransferDetailJson(request, response);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -624,6 +637,76 @@ public class ExportReceiptController extends HttpServlet {
             item.put("brand", brand);
             int stockQty = inventoryDAO.findInStockByWarehouseAndGenerator(whId, g.getId()).size();
             item.put("stockQty", stockQty);
+            out.add(item);
+        }
+        new Gson().toJson(out, response.getWriter());
+    }
+
+    private void getOrderDetailJson(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int orderId = parseId(request.getParameter("id"));
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (orderId <= 0) {
+            response.getWriter().write("[]");
+            return;
+        }
+        OrderDetailDAO odDAO = new OrderDetailDAO();
+        List<OrderDetail> details = odDAO.findGeneratorById(orderId);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (OrderDetail d : details) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("generatorModel", d.getGeneratorModel() != null ? d.getGeneratorModel() : "");
+            item.put("generatorPower", d.getGeneratorPower() != null ? d.getGeneratorPower() : "");
+            item.put("quantity", d.getQuantity());
+            item.put("unitPrice", d.getUnitPrice() != null ? d.getUnitPrice() : 0);
+            item.put("note", d.getNote() != null ? d.getNote() : "");
+            out.add(item);
+        }
+        new Gson().toJson(out, response.getWriter());
+    }
+
+    private void getLiquidationDetailJson(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int liquidationId = parseId(request.getParameter("id"));
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (liquidationId <= 0) {
+            response.getWriter().write("[]");
+            return;
+        }
+        LiquidationDetailDAO ldDAO = new LiquidationDetailDAO();
+        List<LiquidationDetail> details = ldDAO.findByLiquidationId(liquidationId);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (LiquidationDetail d : details) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("generatorModel", d.getGeneratorModelName() != null ? d.getGeneratorModelName() : "");
+            item.put("serialNumber", d.getSerialNumber() != null ? d.getSerialNumber() : "");
+            item.put("originalPrice", d.getOriginalPrice() != null ? d.getOriginalPrice() : 0);
+            item.put("liquidationPrice", d.getLiquidationPrice() != null ? d.getLiquidationPrice() : 0);
+            out.add(item);
+        }
+        new Gson().toJson(out, response.getWriter());
+    }
+
+    private void getTransferDetailJson(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int transferId = parseId(request.getParameter("id"));
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        if (transferId <= 0) {
+            response.getWriter().write("[]");
+            return;
+        }
+        TransferDetailDAO tdDAO = new TransferDetailDAO();
+        List<TransferDetail> details = tdDAO.findByTransferId(transferId);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (TransferDetail d : details) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("generatorModel", d.getGeneratorModel() != null ? d.getGeneratorModel() : "");
+            item.put("serialNumber", d.getSerialNumber() != null ? d.getSerialNumber() : "");
+            item.put("quantity", d.getQuantity());
+            item.put("note", d.getNote() != null ? d.getNote() : "");
             out.add(item);
         }
         new Gson().toJson(out, response.getWriter());
