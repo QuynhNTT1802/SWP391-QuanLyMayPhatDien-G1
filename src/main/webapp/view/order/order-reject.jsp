@@ -40,9 +40,10 @@
     <div class="app">
         <jsp:include page="../common/admin/aside.jsp"></jsp:include>
         <div style="flex: 1; display: flex; flex-direction: column;">
-            <header class="topbar">
-                <h1>Xác nhận từ chối</h1>
-            </header>
+<header class="topbar">
+            <h1>Xác nhận từ chối</h1>
+            <jsp:include page="../common/admin/bell.jsp"/>
+        </header>
             
             <main>
                 <div class="card">

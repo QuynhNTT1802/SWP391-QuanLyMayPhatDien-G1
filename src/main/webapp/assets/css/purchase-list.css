@@ -1,0 +1,26 @@
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.status-pending_ceo { background: #fff3cd; color: #856404; }
+.status-approved { background: #d4edda; color: #155724; }
+.status-rejected { background: #f8d7da; color: #721c24; }
+.status-cancelled { background: #e2e3e5; color: #383d41; }
+.po-code, .code-link {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+}
+.code-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+.code-link:hover {
+    text-decoration: underline;
+}
+.col-status { white-space: nowrap; width: 140px; }

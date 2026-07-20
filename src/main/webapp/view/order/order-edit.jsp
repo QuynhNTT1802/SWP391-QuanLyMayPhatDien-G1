@@ -17,6 +17,10 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
         <style>
+            .form-layout {
+                grid-template-columns: 1fr;
+                max-width: none;
+            }
             /* ── Customer postcard (bưu thiếp) ── */
             .customer-info-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface-2); margin-top: 10px; }
             .cic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -149,6 +153,25 @@
                 font-weight: 700;
                 color: var(--accent);
             }
+            .revision-reason {
+                background: var(--surface-2);
+                border: 1px solid color-mix(in srgb,#7c3aed 30%,transparent);
+                border-radius: 10px;
+                padding: 14px 18px;
+                margin-bottom: 16px;
+            }
+            .revision-reason .rr-label {
+                font-weight: 700;
+                font-size: 11px;
+                color: #7c3aed;
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                margin-bottom: 4px;
+            }
+            .revision-reason .rr-body {
+                font-size: 13px;
+                color: var(--fg);
+            }
         </style>
     </head>
     <body>
@@ -162,11 +185,12 @@
                     <header class="topbar">
                         <h1>Chỉnh sửa đơn hàng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Chỉnh sửa</span>
-                    <div class="top-actions">
+<div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
+                        <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
 
@@ -186,6 +210,13 @@
                         window.SESSION_DATA.type = 'danger';
                         </c:if>
                     </script>
+
+                    <c:if test="${order.status == 'NEEDS_REVISION' && not empty order.revisionReason}">
+                        <div class="revision-reason">
+                            <div class="rr-label">Lý do yêu cầu chỉnh sửa</div>
+                            <div class="rr-body"><c:out value="${order.revisionReason}"/></div>
+                        </div>
+                    </c:if>
 
                     <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
                         <svg viewBox="0 0 24 24"><path d="M19 
@@ -394,6 +425,16 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+
+        <script>
+            <c:if test="${not empty sessionScope.message}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${sessionScope.message}"/>';
+            window.SESSION_DATA.type = '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>';
+                <c:remove var="message" scope="session"/>
+                <c:remove var="messageType" scope="session"/>
+            </c:if>
+        </script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
@@ -656,15 +697,15 @@
                 var btn = document.getElementById('ncSaveBtn');
                 btn.disabled = true;
                 btn.textContent = 'Đang lưu...';
-                var fd = new FormData();
-                fd.append('action', 'quickCreateCustomer');
-                fd.append('name', name);
-                fd.append('phone', phone);
-                fd.append('email', document.getElementById('ncEmail').value.trim());
-                fd.append('address', document.getElementById('ncAddress').value.trim());
-                fd.append('companyName', document.getElementById('ncCompanyName').value.trim());
-                fd.append('customerTypeId', document.getElementById('ncTypeId').value);
-                fetch('${pageContext.request.contextPath}/order', { method: 'POST', body: fd })
+                var params = new URLSearchParams();
+                params.set('action', 'quickCreateCustomer');
+                params.set('name', name);
+                params.set('phone', phone);
+                params.set('email', document.getElementById('ncEmail').value.trim());
+                params.set('address', document.getElementById('ncAddress').value.trim());
+                params.set('companyName', document.getElementById('ncCompanyName').value.trim());
+                params.set('customerTypeId', document.getElementById('ncTypeId').value);
+                fetch('${pageContext.request.contextPath}/order', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     btn.disabled = false;
