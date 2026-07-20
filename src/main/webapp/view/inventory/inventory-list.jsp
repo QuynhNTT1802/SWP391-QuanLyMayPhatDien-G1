@@ -93,7 +93,7 @@
                                     <th style="width:50px;">#</th>
                                     <th>Model</th>
                                     <th>Hãng</th>
-                                    <th style="width:140px;text-align:center;">Số serial</th>
+                                    <th style="width:140px;text-align:center;">Số máy</th>
                                 </tr>
                             </thead>
                             <tbody>

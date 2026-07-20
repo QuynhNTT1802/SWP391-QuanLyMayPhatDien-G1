@@ -602,7 +602,7 @@
                     input.value = '0';
                 }
             }
-            // Stock map từ server (generatorId -> tổng tồn kho IN_STOCK)
+            
             var STOCK_MAP = {
                 <c:forEach var="entry" items="${stockMap}">${entry.key}: ${entry.value},</c:forEach>
             };
@@ -671,7 +671,7 @@
                     el.textContent = i + 1;
                 });
             }
-            // Validate trước khi submit
+            
             document.querySelector('form.form-card').addEventListener('submit', function (e) {
                 var rows = document.querySelectorAll('#detailBody tr');
                 var hasValid = false;
@@ -705,10 +705,6 @@
                     return false;
                 }
             });
-<<<<<<< HEAD
-            // Tự tính ngay khi load (vì có dữ liệu pre-fill)
-            // Khi đổi loại khách hàng: nếu chọn "Doanh nghiệp" => bắt buộc tên công ty
-=======
             
             /* ── Customer postcard (bưu thiếp) ── */
             function htmlEsc(s) {
@@ -765,7 +761,6 @@
             })();
             document.addEventListener('DOMContentLoaded', refreshCustomerCard);
 
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
             function onCustomerTypeChange() {
                 // No-op: <select id="customerTypeSelect"> đã được thay bằng hidden input customerTypeId.
                 // Function vẫn được gọi từ searchable-dropdown.js để tương thích ngược với các trang khác.

@@ -123,8 +123,9 @@ public class ReportDAO extends DBContext{
     private int countReceiptByType(String type, Integer warehouseId, int month, int year) {
         String firstDay = String.format("%04d-%02d-01", year, month);
         String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String statusFilter = "EXPORT".equals(type) ? "" : " AND r.status = 'COMPLETED'";
         String sql = "SELECT COUNT(*) FROM receipt r"
-                + " WHERE r.receipt_type = ? AND r.status = 'COMPLETED'"
+                + " WHERE r.receipt_type = ?" + statusFilter
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
                 + (warehouseId != null ? " AND r.warehouse_id = ?" : "");
         List<Object> params = new ArrayList<>();
@@ -161,7 +162,8 @@ public class ReportDAO extends DBContext{
             from += " LEFT JOIN sale_order so ON r.order_id = so.order_id"
                     + " LEFT JOIN customer c ON so.customer_id = c.id";
         }
-        String where = " WHERE r.receipt_type = '" + type + "' AND r.status = 'COMPLETED'"
+        String statusFilter = "EXPORT".equals(type) ? "" : " AND r.status = 'COMPLETED'";
+        String where = " WHERE r.receipt_type = '" + type + "'" + statusFilter
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
                 + (warehouseId != null ? " AND r.warehouse_id = ?" : "");
         String order = " ORDER BY r.created_at DESC";
@@ -470,7 +472,10 @@ public class ReportDAO extends DBContext{
                     r.setCustomerName(resultSet.getString("customer_name"));
                 } catch (Exception e) {
                 }
-                r.setPurchaseOrderCode(resultSet.getString("purchase_order_code"));
+                try {
+                    r.setPurchaseOrderCode(resultSet.getString("purchase_order_code"));
+                } catch (Exception e) {
+                }
                 list.add(r);
             }
         } catch (SQLException e) {

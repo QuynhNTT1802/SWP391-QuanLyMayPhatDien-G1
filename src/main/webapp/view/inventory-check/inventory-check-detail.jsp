@@ -34,130 +34,113 @@
             </header>
 
             <main>
-                <a class="back-link" href="${pageContext.request.contextPath}/inventory-check">
-                    <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Quay lại danh sách
-                </a>
-
-                <c:if test="${not empty sessionScope.toastMessage}">
-                    <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                        <c:out value="${sessionScope.toastMessage}"/>
-                    </div>
-                    <c:remove var="toastMessage" scope="session"/>
-                </c:if>
-                <c:if test="${not empty error}">
-                    <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
-                        <c:out value="${error}"/>
-                    </div>
-                    <c:remove var="error" scope="session"/>
-                </c:if>
-
-                <div class="hero">
-                    <div class="hero-body">
-                        <h2 class="hero-name">
-                            <c:out value="${check.checkCode}"/>
+                <div class="header-bar">
+                    <div class="left">
+                        <a class="back-link" href="${pageContext.request.contextPath}/inventory-check">
+                            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Quay lại danh sách
+                        </a>
+                            <br>
+                        <span class="code-tag">
+                            <span class="ct-label">Phiếu kiểm kê -</span>
+                            <span><c:out value="${check.checkCode}"/></span>
+                        </span>
+                        <h2 class="page-main-title">
+                            #<c:out value="${check.checkCode}"/>
                             <c:choose>
-                                <c:when test="${check.status == 'doing'}"><span class="status-doing"><span class="sdot"></span>Đang kiểm kê</span></c:when>
-                                <c:when test="${check.status == 'completed'}"><span class="status-completed"><span class="sdot"></span>Đã hoàn thành</span></c:when>
+                                <c:when test="${check.status == 'doing'}"><span class="status-pill status-doing"><span class="pdot"></span>Đang kiểm kê</span></c:when>
+                                <c:when test="${check.status == 'completed'}"><span class="status-pill status-completed"><span class="pdot"></span>Đã hoàn thành</span></c:when>
                             </c:choose>
                         </h2>
-                        <div class="hero-meta">
-                            <span>Phiếu kiểm kê</span>
-                            <span class="sep">·</span>
-                            <span class="id">#${check.id}</span>
-                            <span class="sep">·</span>
-                            <span>Ngày tạo: ${check.createdAt}</span>
-                        </div>
-                        <div class="hero-pills">
-                            <span class="pill warehouse"><span class="pdot"></span><a href="${pageContext.request.contextPath}/warehouse?action=view&id=${check.warehouseId}"><c:out value="${check.warehouseName}"/></a></span>
-                            <span class="pill status-active"><span class="pdot"></span>Người thực hiện: <c:out value="${check.createdByName}"/></span>
-                        </div>
+                    </div>
+                    <div class="right">
+                        <c:if test="${check.status == 'doing'}">
+                            <a href="${pageContext.request.contextPath}/inventory-check?action=edit&id=${check.id}" class="btn btn-warn">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                                Nhập số lượng
+                            </a>
+                            <button type="button" class="btn btn-success" onclick="openModal('completeModal')">
+                                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                Hoàn thành kiểm kê
+                            </button>
+                        </c:if>
                     </div>
                 </div>
 
-                <c:if test="${check.status == 'doing'}">
-                    <div class="action-bar-top">
-                        <a href="${pageContext.request.contextPath}/inventory-check?action=edit&id=${check.id}" class="btn btn-warn">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                            Nhập số lượng
-                        </a>
-                        <button type="button" class="btn btn-success" onclick="openModal('completeModal')">
-                            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                            Hoàn thành kiểm kê
-                        </button>
+                <div class="section">
+                    <div class="section-head">
+                        <h3>Thông tin chung</h3>
                     </div>
-                </c:if>
+                    <div class="section-body">
+                        <div class="form-grid cols-5">
+                            <div class="info-field">
+                                <label>Mã phiếu kiểm kê</label>
+                                <input class="info-input mono" type="text" disabled value="<c:out value='${check.checkCode}'/>">
+                            </div>
+                            <div class="info-field">
+                                <label>Kho kiểm kê</label>
+                                <input class="info-input" type="text" disabled value="<c:out value='${check.warehouseName}'/>">
+                            </div>
+                            <div class="info-field">
+                                <label>Người thực hiện</label>
+                                <input class="info-input" type="text" disabled value="<c:out value='${check.createdByName}'/>">
+                            </div>
+                            <div class="info-field">
+                                <label>Trạng thái</label>
+                                <input class="info-input" type="text" disabled value="${check.status == 'doing' ? 'Đang kiểm kê' : (check.status == 'completed' ? 'Đã hoàn thành' : '')}">
+                            </div>
+                            <div class="info-field">
+                                <label>Tổng mặt hàng</label>
+                                <input class="info-input mono" type="text" disabled value="${details.size()} máy">
+                            </div>
+                        </div>
+                        <div class="form-grid cols-5" style="margin-top: 14px;">
+                            <div class="info-field">
+                                <label>Thời gian bắt đầu</label>
+                                <input class="info-input mono" type="text" disabled value="${check.startedAt}">
+                            </div>
+                            <div class="info-field">
+                                <label>Thời gian kết thúc</label>
+                                <input class="info-input mono" type="text" disabled value="${not empty check.completedAt ? check.completedAt : '—'}">
+                            </div>
+                            <div class="info-field">
+                                <label>Mã ID</label>
+                                <input class="info-input mono" type="text" disabled value="#${check.id}">
+                            </div>
+                            <div class="info-field">
+                                <label>Ngày tạo</label>
+                                <input class="info-input mono" type="text" disabled value="${check.createdAt}">
+                            </div>
+                        </div>
+                        <c:if test="${not empty check.notes}">
+                            <div style="padding: 0 20px 18px; margin-top: 14px;">
+                                <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
+                                <div class="note-soft"><c:out value="${check.notes}"/></div>
+                            </div>
+                        </c:if>
 
-                <c:if test="${check.status == 'completed'}">
-                    <div class="action-bar-top">
-                        <button type="button" class="btn btn-primary" onclick="openModal('exportModal')">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                            Trích xuất báo cáo
-                        </button>
                     </div>
-                </c:if>
-
-                <div class="section" style="padding: 18px 22px;">
+                </div>
+                                <c:if test="${check.status == 'completed'}">
+                                    <div>
+                                        <button type="button" class="btn btn-primary" onclick="openModal('exportModal')">
+                                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                            Trích xuất báo cáo
+                                        </button>
+                                    </div>
+                                </c:if>
+                            <br>
+                <div class="section">
                     <div class="tabs">
-                        <button type="button" class="tab active" data-tab="info">Thông tin chung</button>
-                        <button type="button" class="tab" data-tab="products">Chi tiết kiểm kê</button>
+                        <button type="button" class="tab active" data-tab="products">Chi tiết kiểm kê</button>
                         <c:if test="${not empty logs}">
                             <button type="button" class="tab" data-tab="history">Lịch sử</button>
                         </c:if>
                     </div>
 
-                    <div class="tab-panel active" id="tab-info">
-                        <div class="info-grid">
-                            <div class="info-field">
-                                <div class="info-label">Mã phiếu</div>
-                                <div class="info-value"><c:out value="${check.checkCode}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Kho kiểm kê</div>
-                                <div class="info-value"><c:out value="${check.warehouseName}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Người thực hiện</div>
-                                <div class="info-value"><c:out value="${check.createdByName}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
-                                    <c:choose>
-                                        <c:when test="${check.status == 'doing'}"><span class="status-doing"><span class="sdot"></span>Đang kiểm kê</span></c:when>
-                                        <c:when test="${check.status == 'completed'}"><span class="status-completed"><span class="sdot"></span>Đã hoàn thành</span></c:when>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Thời gian bắt đầu</div>
-                                <div class="info-value mono">${check.startedAt}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Thời gian kết thúc</div>
-                                <div class="info-value mono">
-                                    <c:choose>
-                                        <c:when test="${not empty check.completedAt}">${check.completedAt}</c:when>
-                                        <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Tổng mặt hàng</div>
-                                <div class="info-value">${details.size()} máy</div>
-                            </div>
-                        </div>
-                        <c:if test="${not empty check.notes}">
-                            <div style="margin-top: 18px;">
-                                <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
-                                <div style="font-size:13px;color:var(--fg-soft);white-space:pre-wrap;line-height:1.55;padding:14px;background:var(--surface-2);border-radius:var(--radius-sm);"><c:out value="${check.notes}"/></div>
-                            </div>
-                        </c:if>
-                    </div>
-
-                    <div class="tab-panel" id="tab-products">
+                    <div class="tab-panel active" id="tab-products">
                     <c:if test="${empty details}">
-                        <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Chưa có dữ liệu kiểm kê.</div>
+                        <div>Chưa có dữ liệu kiểm kê.</div>
                     </c:if>
                     <c:if test="${not empty details}">
                         <c:set var="totalSys" value="0"/>
@@ -359,28 +342,23 @@
     <div class="modal-host" id="exportModal">
         <div class="modal-card">
             <h3>Trích xuất báo cáo</h3>
-            <div class="modal-sub">Chọn khoảng thời gian để xuất báo cáo stock card cho từng máy trong phiếu kiểm kê.</div>
-            <c:forEach var="d" items="${details}" varStatus="st">
-                <form method="GET" action="${pageContext.request.contextPath}/inventory-check?action=exportReport"
-                      class="export-form" style="margin-bottom: ${st.last ? '0' : '12px'}; padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm);">
-                    <input type="hidden" name="action" value="exportReport" />
-                    <input type="hidden" name="checkId" value="${check.id}" />
-                    <input type="hidden" name="detailId" value="${d.id}" />
-                    <input type="hidden" name="warehouseId" value="${check.warehouseId}" />
-                    <input type="hidden" name="warehouseName" value="<c:out value="${check.warehouseName}"/>" />
-                    <div style="font-weight:600;font-size:13px;margin-bottom:8px;"><c:out value="${d.generatorModel}"/></div>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <input type="date" name="fromDate" class="edit-input" style="flex:1;" required max="${today}" />
-                        <span>→</span>
-                        <input type="date" name="toDate" class="edit-input" style="flex:1;" required max="${today}" />
-                        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                            Xuất Excel
-                        </button>
-                    </div>
-                </form>
-            </c:forEach>
-            <div class="modal-actions">
+            <div class="modal-sub">Chọn khoảng thời gian để xuất báo cáo stock card cho tất cả máy trong phiếu kiểm kê.</div>
+            <form method="GET" action="${pageContext.request.contextPath}/inventory-check?action=exportReport" class="export-form" style="padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm);">
+                <input type="hidden" name="action" value="exportReport" />
+                <input type="hidden" name="checkId" value="${check.id}" />
+                <input type="hidden" name="warehouseId" value="${check.warehouseId}" />
+                <input type="hidden" name="warehouseName" value="<c:out value="${check.warehouseName}"/>" />
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="date" name="fromDate" class="edit-input" style="flex:1;" required max="${today}" />
+                    <span>→</span>
+                    <input type="date" name="toDate" class="edit-input" style="flex:1;" required max="${today}" />
+                    <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
+                    </button>
+                </div>
+            </form>
+            <div class="modal-actions" style="margin-top:12px;">
                 <button type="button" class="btn" onclick="closeModal('exportModal')">Đóng</button>
             </div>
         </div>
