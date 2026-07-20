@@ -53,12 +53,10 @@ public class ReportDAO extends DBContext{
                 + " t.generator_id, g.model,"
                 + " COALESCE(br.name, '') AS brand,"
                 + " COALESCE(open_qty, 0) AS open_qty,"
-                + " COALESCE(imp_qty, 0) AS import_qty,"
-                + " COALESCE(exp_qty, 0) AS export_qty,"
-                + " COALESCE(open_qty, 0) + COALESCE(imp_qty, 0) - COALESCE(exp_qty, 0) AS close_qty"
+                + " COALESCE(close_qty, 0) AS close_qty"
                 + " FROM ("
                 + "  SELECT DISTINCT warehouse_id, generator_id FROM stock_card"
-                + "  WHERE DATE(created_at) <= ?"
+                + "  WHERE created_at < ?"
                 + (warehouseId != null ? " AND warehouse_id = ?" : "")
                 + "  UNION SELECT DISTINCT i.warehouse_id, i.generator_id FROM inventory i"
                 + "  WHERE i.status = 'IN_STOCK'"
@@ -76,24 +74,21 @@ public class ReportDAO extends DBContext{
                 + "   SELECT MAX(sc2.stock_card_id) FROM stock_card sc2"
                 + "   WHERE sc2.warehouse_id = sc1.warehouse_id"
                 + "    AND sc2.generator_id = sc1.generator_id"
-                + "    AND DATE(sc2.created_at) < ?"
+                + "    AND sc2.created_at < ?"
                 + "   GROUP BY sc2.warehouse_id, sc2.generator_id"
                 + "  )"
                 + " ) open_t ON open_t.warehouse_id = t.warehouse_id AND open_t.generator_id = t.generator_id"
                 + " LEFT JOIN ("
-                + "  SELECT warehouse_id, generator_id, SUM(quantity_change) AS imp_qty"
-                + "  FROM stock_card"
-                + "  WHERE transaction_type = 'IMPORT'"
-                + "   AND DATE(created_at) >= ? AND DATE(created_at) <= ?"
-                + "  GROUP BY warehouse_id, generator_id"
-                + " ) imp_t ON imp_t.warehouse_id = t.warehouse_id AND imp_t.generator_id = t.generator_id"
-                + " LEFT JOIN ("
- + "  SELECT warehouse_id, generator_id, SUM(ABS(quantity_change)) AS exp_qty"
-                 + "  FROM stock_card"
-                 + "  WHERE transaction_type = 'EXPORT'"
-                + "   AND DATE(created_at) >= ? AND DATE(created_at) <= ?"
-                + "  GROUP BY warehouse_id, generator_id"
-                + " ) exp_t ON exp_t.warehouse_id = t.warehouse_id AND exp_t.generator_id = t.generator_id";
+                + "  SELECT sc3.warehouse_id, sc3.generator_id, sc3.quantity_after AS close_qty"
+                + "  FROM stock_card sc3"
+                + "  WHERE sc3.stock_card_id IN ("
+                + "   SELECT MAX(sc4.stock_card_id) FROM stock_card sc4"
+                + "   WHERE sc4.warehouse_id = sc3.warehouse_id"
+                + "    AND sc4.generator_id = sc3.generator_id"
+                + "    AND sc4.created_at < ?"
+                + "   GROUP BY sc4.warehouse_id, sc4.generator_id"
+                + "  )"
+                + " ) close_t ON close_t.warehouse_id = t.warehouse_id AND close_t.generator_id = t.generator_id";
     }
     
     public int countImportReport(Integer warehouseId, int month, int year) {
@@ -333,20 +328,16 @@ public class ReportDAO extends DBContext{
             int month, int year, int page, int pageSize) {
         List<InventoryReportItem> list = new ArrayList<>();
         String firstDay = String.format("%04d-%02d-01", year, month);
-        String prevMonth = LocalDate.of(year, month, 1).minusMonths(1).toString();
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String nextDay = LocalDate.of(year, month, 1).plusMonths(1).toString();
         StringBuilder sql = new StringBuilder(baseSql);
         List<Object> params = new ArrayList<>();
-        params.add(lastDay);
+        params.add(nextDay);
         if (warehouseId != null) {
             params.add(warehouseId);
             params.add(warehouseId);
         }
-        params.add(prevMonth);
         params.add(firstDay);
-        params.add(lastDay);
-        params.add(firstDay);
-        params.add(lastDay);
+        params.add(nextDay);
         if (page > 0 && pageSize > 0) {
             sql.append(" LIMIT ? OFFSET ?");
             params.add(pageSize);
@@ -367,8 +358,6 @@ public class ReportDAO extends DBContext{
                 item.setModel(resultSet.getString("model"));
                 item.setBrand(resultSet.getString("brand"));
                 item.setOpenQuantity(resultSet.getInt("open_qty"));
-                item.setImportQuantity(resultSet.getInt("import_qty"));
-                item.setExportQuantity(resultSet.getInt("export_qty"));
                 item.setCloseQuantity(resultSet.getInt("close_qty"));
                 list.add(item);
             }

@@ -1365,6 +1365,12 @@ INSERT INTO `stock_card` VALUES (8,1,1,14,'IMPORT',1,1,'Phiếu RX-IM-20260701-3
 UNLOCK TABLES;
 
 --
+-- Indexes for inventory report queries on stock_card
+--
+ALTER TABLE `stock_card` ADD INDEX `idx_sc_wh_gen_ctime_id` (`warehouse_id`, `generator_id`, `created_at`, `stock_card_id`);
+ALTER TABLE `stock_card` ADD INDEX `idx_sc_type_ctime_wh_gen` (`transaction_type`, `created_at`, `warehouse_id`, `generator_id`);
+
+--
 -- Table structure for table `supplier`
 --
 

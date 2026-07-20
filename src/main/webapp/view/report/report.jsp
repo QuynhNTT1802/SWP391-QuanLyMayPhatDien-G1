@@ -95,8 +95,6 @@
                                 <th>Model</th>
                                 <th>Thương hiệu</th>
                                 <th>Tồn đầu kì</th>
-                                <th>Nhập trong kì</th>
-                                <th>Xuất trong kì</th>
                                 <th>Tồn cuối kì</th>
                             </tr>
                         </thead>
@@ -109,13 +107,11 @@
                                     <td><c:out value="${item.model}"/></td>
                                     <td><c:out value="${item.brand}"/></td>
                                     <td class="num">${item.openQuantity}</td>
-                                    <td class="num">${item.importQuantity}</td>
-                                    <td class="num">${item.exportQuantity}</td>
                                     <td class="num">${item.closeQuantity}</td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty inventoryItems}">
-                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
