@@ -5,35 +5,34 @@
 
 package com.quanlymayphatdien.g1.controller.report;
 
-import com.quanlymayphatdien.g1.dal.ReportDAO;
+import com.quanlymayphatdien.g1.dal.ExportReportDAO;
+import com.quanlymayphatdien.g1.dal.ImportReportDAO;
+import com.quanlymayphatdien.g1.dal.InventoryCheckReportDAO;
+import com.quanlymayphatdien.g1.dal.InventoryReportDAO;
+import com.quanlymayphatdien.g1.dal.PurchaseReportDAO;
+import com.quanlymayphatdien.g1.dal.SalesReportDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
-import com.quanlymayphatdien.g1.entity.InventoryCheckReportItem;
-import com.quanlymayphatdien.g1.entity.InventoryReportItem;
-import com.quanlymayphatdien.g1.entity.PurchaseOrder;
-import com.quanlymayphatdien.g1.entity.Receipt;
-import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.utils.ReportExcelSupport;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.io.OutputStream;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-/**
- *
- * @author Aadmin
- */
 @WebServlet(name="ReportController", urlPatterns={"/reports"})
 public class ReportController extends HttpServlet {
-    private final ReportDAO reportDAO = new ReportDAO();
+    private final InventoryReportDAO inventoryReportDAO = new InventoryReportDAO();
+    private final ImportReportDAO importReportDAO = new ImportReportDAO();
+    private final ExportReportDAO exportReportDAO = new ExportReportDAO();
+    private final InventoryCheckReportDAO inventoryCheckReportDAO = new InventoryCheckReportDAO();
+    private final PurchaseReportDAO purchaseReportDAO = new PurchaseReportDAO();
+    private final SalesReportDAO salesReportDAO = new SalesReportDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     
     @Override
@@ -112,63 +111,57 @@ public class ReportController extends HttpServlet {
 
         switch (type) {
             case "inventory": {
-                totalItems = reportDAO.countInventoryReport(warehouseId, month, year);
+                totalItems = inventoryReportDAO.countInventoryReport(warehouseId, month, year);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                List<InventoryReportItem> items = reportDAO.getInventoryReport(warehouseId, month, year, page, pageSize);
-                req.setAttribute("inventoryItems", items);
+                req.setAttribute("inventoryItems", inventoryReportDAO.getInventoryReport(warehouseId, month, year, page, pageSize));
                 break;
             }
             case "import": {
-                totalItems = reportDAO.countImportReport(warehouseId, month, year);
+                totalItems = importReportDAO.countImportReport(warehouseId, month, year);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                List<Receipt> items = reportDAO.getImportReport(warehouseId, month, year, page, pageSize);
-                req.setAttribute("receiptItems", items);
+                req.setAttribute("importItems", importReportDAO.getImportReport(warehouseId, month, year, page, pageSize));
                 break;
             }
             case "export": {
-                totalItems = reportDAO.countExportReport(warehouseId, month, year);
+                totalItems = exportReportDAO.countExportReport(warehouseId, month, year);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                List<Receipt> items = reportDAO.getExportReport(warehouseId, month, year, page, pageSize);
-                req.setAttribute("receiptItems", items);
+                req.setAttribute("exportItems", exportReportDAO.getExportReport(warehouseId, month, year, page, pageSize));
                 break;
             }
             case "inventory-check": {
-                totalItems = reportDAO.countInventoryCheckReport(warehouseId, month, year);
+                totalItems = inventoryCheckReportDAO.countInventoryCheckReport(warehouseId, month, year);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                List<InventoryCheckReportItem> items = reportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize);
-                req.setAttribute("checkItems", items);
+                req.setAttribute("checkItems", inventoryCheckReportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize));
                 break;
             }
             case "purchase": {
-                totalItems = reportDAO.countPurchaseReport(warehouseId, month, year);
+                totalItems = purchaseReportDAO.countPurchaseReport(warehouseId, month, year);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                List<PurchaseOrder> items = reportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize);
-                req.setAttribute("poItems", items);
+                req.setAttribute("poItems", purchaseReportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize));
                 break;
             }
             case "sales": {
-                totalItems = reportDAO.countSalesReport(month, year);
+                totalItems = salesReportDAO.countSalesReport(month, year);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                List<SaleOrder> items = reportDAO.getSalesReport(month, year, page, pageSize);
-                req.setAttribute("saleItems", items);
+                req.setAttribute("saleItems", salesReportDAO.getSalesReport(month, year, page, pageSize));
                 break;
             }
         }
@@ -213,37 +206,37 @@ public class ReportController extends HttpServlet {
 
         switch (type) {
             case "inventory": {
-                var data = reportDAO.getAllInventoryReport(warehouseId, month, year);
+                var data = inventoryReportDAO.getAllInventoryReport(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportInventory(data, month, year, warehouseName);
                 filename = "BaoCaoTonKho_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "import": {
-                var data = reportDAO.getImportExcelData(warehouseId, month, year);
+                var data = importReportDAO.getImportExcelData(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportImport(data, month, year, warehouseName);
                 filename = "BaoCaoNhap_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "export": {
-                var data = reportDAO.getExportExcelData(warehouseId, month, year);
+                var data = exportReportDAO.getExportExcelData(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportExport(data, month, year, warehouseName);
                 filename = "BaoCaoXuat_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "inventory-check": {
-                var data = reportDAO.getAllInventoryCheckReport(warehouseId, month, year);
+                var data = inventoryCheckReportDAO.getAllInventoryCheckReport(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportInventoryCheck(data, month, year, warehouseName);
                 filename = "BaoCaoKiemKe_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "purchase": {
-                var data = reportDAO.getPurchaseExcelData(warehouseId, month, year);
+                var data = purchaseReportDAO.getPurchaseExcelData(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportPurchase(data, month, year, warehouseName);
                 filename = "BaoCaoMua_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "sales": {
-                var data = reportDAO.getSalesExcelData(month, year);
+                var data = salesReportDAO.getSalesExcelData(month, year);
                 workbook = ReportExcelSupport.exportSales(data, month, year);
                 filename = "BaoCaoBan_T" + month + "_" + year + ".xlsx";
                 break;

@@ -1,0 +1,99 @@
+package com.quanlymayphatdien.g1.dal;
+
+import com.quanlymayphatdien.g1.entity.InventoryReportItem;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class InventoryReportDAO extends BaseReportDAO {
+
+    private final StockCardDAO stockCardDAO = new StockCardDAO();
+
+    public int countInventoryReport(Integer warehouseId, int month, int year) {
+        String sql = "SELECT COUNT(DISTINCT t.warehouse_id, t.generator_id) FROM ("
+                + "SELECT DISTINCT warehouse_id, generator_id FROM stock_card"
+                + " WHERE DATE(created_at) <= ?"
+                + (warehouseId != null ? " AND warehouse_id = ?" : "")
+                + " UNION SELECT DISTINCT i.warehouse_id, i.generator_id FROM inventory i"
+                + " WHERE i.status = 'IN_STOCK'"
+                + (warehouseId != null ? " AND i.warehouse_id = ?" : "")
+                + ") t";
+        List<Object> params = new ArrayList<>();
+        params.add(lastDay(month, year));
+        if (warehouseId != null) {
+            params.add(warehouseId);
+            params.add(warehouseId);
+        }
+        return countWithParams(sql, params);
+    }
+
+    public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+        return queryInventoryReport(warehouseId, month, year, page, pageSize);
+    }
+
+    public List<InventoryReportItem> getAllInventoryReport(Integer warehouseId, int month, int year) {
+        return queryInventoryReport(warehouseId, month, year, -1, -1);
+    }
+
+    private List<InventoryReportItem> queryInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+        String firstDay = firstDay(month, year);
+        String nextDay = nextDay(month, year);
+
+        Map<String, Integer> openMap = stockCardDAO.getBalanceSnapshot(warehouseId, firstDay);
+        Map<String, Integer> closeMap = stockCardDAO.getBalanceSnapshot(warehouseId, nextDay);
+
+        String baseSql = baseGeneratorSql(warehouseId)
+                + (page < 0 ? " ORDER BY w.name, g.model" : "")
+                + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
+        List<InventoryReportItem> list = new ArrayList<>();
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(baseSql);
+            int idx = 1;
+            statement.setString(idx++, nextDay);
+            if (warehouseId != null) {
+                statement.setInt(idx++, warehouseId);
+                statement.setInt(idx++, warehouseId);
+            }
+            if (page > 0 && pageSize > 0) {
+                statement.setInt(idx++, pageSize);
+                statement.setInt(idx++, (page - 1) * pageSize);
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getInt("warehouse_id") + "_" + resultSet.getInt("generator_id");
+                InventoryReportItem item = new InventoryReportItem();
+                item.setWarehouseId(resultSet.getInt("warehouse_id"));
+                item.setWarehouseName(resultSet.getString("warehouse_name"));
+                item.setGeneratorId(resultSet.getInt("generator_id"));
+                item.setModel(resultSet.getString("model"));
+                item.setBrand(resultSet.getString("brand"));
+                item.setOpenQuantity(openMap.getOrDefault(key, 0));
+                item.setCloseQuantity(closeMap.getOrDefault(key, 0));
+                list.add(item);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    private String baseGeneratorSql(Integer warehouseId) {
+        return "SELECT DISTINCT t.warehouse_id, t.generator_id, g.model, COALESCE(br.name, '') AS brand, w.name AS warehouse_name"
+                + " FROM ("
+                + "  SELECT warehouse_id, generator_id FROM stock_card WHERE created_at < ?"
+                + (warehouseId != null ? " AND warehouse_id = ?" : "")
+                + "  UNION"
+                + "  SELECT warehouse_id, generator_id FROM inventory WHERE status = 'IN_STOCK'"
+                + (warehouseId != null ? " AND warehouse_id = ?" : "")
+                + " ) t"
+                + " JOIN generator g ON t.generator_id = g.id"
+                + " JOIN warehouse w ON t.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN generator_category gc_br ON gc_br.generator_id = g.id"
+                + "  AND gc_br.category_id IN (SELECT id FROM category WHERE type = 'brand')"
+                + " LEFT JOIN category br ON gc_br.category_id = br.id";
+    }
+}
