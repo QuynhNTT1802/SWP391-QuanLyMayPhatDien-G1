@@ -72,7 +72,7 @@
                 </c:when>
                 <c:otherwise>
                     <div class="table-card">
-                        <table class="users">
+                        <table class="users" style="width:100%;table-layout:fixed;">
                             <thead>
                                 <tr>
                                     <th>Mã đơn</th>
