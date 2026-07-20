@@ -17,6 +17,7 @@ public class ReceiptDetail {
     private int generatorId;
     private String generatorModel;
     private String generatorBrand;
+    private String condition;
 
     public ReceiptDetail() {
     }
@@ -83,5 +84,13 @@ public class ReceiptDetail {
 
     public void setGeneratorBrand(String generatorBrand) {
         this.generatorBrand = generatorBrand;
+    }
+
+    public String getCondition() {
+        return condition;
+    }
+
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 }
