@@ -239,11 +239,12 @@
                     <header class="topbar">
                         <h1>Tạo đơn hàng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Thêm mới</span>
-                    <div class="top-actions">
+<div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
+                        <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
 
@@ -542,6 +543,16 @@
         </div>
 
         <div class="toast-host" id="toastHost"></div>
+
+        <script>
+            <c:if test="${not empty sessionScope.message}">
+            window.SESSION_DATA = window.SESSION_DATA || {};
+            window.SESSION_DATA.message = '<c:out value="${sessionScope.message}"/>';
+            window.SESSION_DATA.type = '<c:out value="${sessionScope.messageType != null ? sessionScope.messageType : 'success'}"/>';
+                <c:remove var="message" scope="session"/>
+                <c:remove var="messageType" scope="session"/>
+            </c:if>
+        </script>
         <script>
             function formatVND(num) {
                 return new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(num || 0);
@@ -795,15 +806,15 @@
                 var btn = document.getElementById('ncSaveBtn');
                 btn.disabled = true;
                 btn.textContent = 'Đang lưu...';
-                var fd = new FormData();
-                fd.append('action', 'quickCreateCustomer');
-                fd.append('name', name);
-                fd.append('phone', phone);
-                fd.append('email', document.getElementById('ncEmail').value.trim());
-                fd.append('address', document.getElementById('ncAddress').value.trim());
-                fd.append('companyName', document.getElementById('ncCompanyName').value.trim());
-                fd.append('customerTypeId', document.getElementById('ncTypeId').value);
-                fetch(contextPath + '/order', { method: 'POST', body: fd })
+                var params = new URLSearchParams();
+                params.set('action', 'quickCreateCustomer');
+                params.set('name', name);
+                params.set('phone', phone);
+                params.set('email', document.getElementById('ncEmail').value.trim());
+                params.set('address', document.getElementById('ncAddress').value.trim());
+                params.set('companyName', document.getElementById('ncCompanyName').value.trim());
+                params.set('customerTypeId', document.getElementById('ncTypeId').value);
+                fetch(contextPath + '/order', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     btn.disabled = false;
