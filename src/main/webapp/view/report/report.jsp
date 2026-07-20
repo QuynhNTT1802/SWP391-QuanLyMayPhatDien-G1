@@ -16,6 +16,13 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report.css">
+    <style>
+      .summary-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+      .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+      .summary-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; }
+      .summary-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 6px; }
+      .summary-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -86,6 +93,16 @@
             <c:choose>
                 <%-- TỒN KHO --%>
                 <c:when test="${reportType == 'inventory'}">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-label">Tổng model</div>
+                            <div class="summary-value">${summary.totalModels}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Tổng serial tồn kho</div>
+                            <div class="summary-value"><fmt:formatNumber value="${summary.totalSerials}" pattern="#,##0"/></div>
+                        </div>
+                    </div>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -230,6 +247,17 @@
                 </c:when>
 
                 <c:when test="${reportType == 'purchase'}">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-label">Tổng tiền mua hàng</div>
+                            <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Model mua nhiều nhất</div>
+                            <div class="summary-value"><c:out value="${summary.topModel}"/></div>
+                            <div class="summary-sub">${summary.topModelQty} máy</div>
+                        </div>
+                    </div>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -272,6 +300,17 @@
                 </c:when>
 
                 <c:when test="${reportType == 'sales'}">
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="summary-label">Tổng doanh thu bán hàng</div>
+                            <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Model bán nhiều nhất</div>
+                            <div class="summary-value"><c:out value="${summary.topModel}"/></div>
+                            <div class="summary-sub">${summary.topModelQty} máy</div>
+                        </div>
+                    </div>
                     <table class="report-table">
                         <thead>
                             <tr>

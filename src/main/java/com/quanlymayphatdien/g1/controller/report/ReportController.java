@@ -117,6 +117,7 @@ public class ReportController extends HttpServlet {
                     page = totalPages;
                 }
                 req.setAttribute("inventoryItems", inventoryReportDAO.getInventoryReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("summary", inventoryReportDAO.getInventorySummary(warehouseId, month, year));
                 break;
             }
             case "import": {
@@ -153,6 +154,7 @@ public class ReportController extends HttpServlet {
                     page = totalPages;
                 }
                 req.setAttribute("poItems", purchaseReportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("summary", purchaseReportDAO.getPurchaseSummary(warehouseId, month, year));
                 break;
             }
             case "sales": {
@@ -162,6 +164,7 @@ public class ReportController extends HttpServlet {
                     page = totalPages;
                 }
                 req.setAttribute("saleItems", salesReportDAO.getSalesReport(month, year, page, pageSize));
+                req.setAttribute("summary", salesReportDAO.getSalesSummary(month, year));
                 break;
             }
         }

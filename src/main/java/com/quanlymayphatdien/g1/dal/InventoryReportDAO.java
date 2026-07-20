@@ -28,6 +28,19 @@ public class InventoryReportDAO extends BaseReportDAO {
         return countWithParams(sql, params);
     }
 
+    public Map<String, Object> getInventorySummary(Integer warehouseId, int month, int year) {
+        Map<String, Object> summary = new java.util.HashMap<>();
+        String nextDay = nextDay(month, year);
+        Map<String, Integer> closeMap = stockCardDAO.getBalanceSnapshot(warehouseId, nextDay);
+        int totalSerials = closeMap.values().stream().mapToInt(Integer::intValue).sum();
+        summary.put("totalSerials", totalSerials);
+        summary.put("totalModels", (int) closeMap.keySet().stream()
+                .map(k -> k.split("_")[1])
+                .distinct()
+                .count());
+        return summary;
+    }
+
     public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
         return queryInventoryReport(warehouseId, month, year, page, pageSize);
     }
