@@ -1,4 +1,4 @@
-
+﻿
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -35,7 +35,7 @@
             <c:when test="${not empty sidebarUser.roles and not empty sidebarUser.roles[0]}">
                 ${sidebarUser.roles[0].description}
             </c:when>
-            <c:otherwise>User</c:otherwise>
+            <c:otherwise>Người dùng</c:otherwise>
         </c:choose>
     </c:set>
 </c:if>
@@ -52,7 +52,7 @@
         <c:if test="${not empty perms and perms.contains('dashboard.view')}">
             <a href="${pageContext.request.contextPath}/admin/dashboard">
                 <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                Dashboard
+                Bảng điều khiển
             </a>
         </c:if>
 

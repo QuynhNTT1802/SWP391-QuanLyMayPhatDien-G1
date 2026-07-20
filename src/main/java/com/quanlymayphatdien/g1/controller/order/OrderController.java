@@ -488,7 +488,7 @@ public class OrderController extends HttpServlet {
                     + "\",\"customerTypeId\":" + (typeIdStr != null && !typeIdStr.trim().isEmpty() ? typeIdStr.trim() : "0") + "}");
         } catch (Exception e) {
             SystemLogger.error(LogModule.ORDER, "quickCreateCustomer", e.getMessage(), e);
-            response.getWriter().write("{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage() != null ? e.getMessage() : "unknown") + "\"}");
+            response.getWriter().write("{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage() != null ? e.getMessage() : "không xác định") + "\"}");
         }
     }
 

@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : dashboard
     Created on : May 18, 2026, 3:08:02 AM
     Author     : FPTShop
@@ -10,7 +10,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quản lý kho — Dashboard</title>
+<title>Quản lý kho — Bảng điều khiển</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -96,7 +96,7 @@
 
   <div>
     <header class="topbar" data-od-id="topbar">
-      <h1>Dashboard</h1>
+      <h1>Bảng điều khiển</h1>
       <span class="crumb">/ Kho HN-01 · Hôm nay</span>
 
       <div class="search">
@@ -106,7 +106,7 @@
       </div>
 
       <div class="top-actions">
-        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
           <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
         </button>
@@ -127,7 +127,7 @@
             <div class="value mono">12,438</div>
             <div class="delta">
               <span class="change up">▲ 1.8%</span>
-              vs. tuần trước
+              so với tuần trước
             </div>
             <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
               <polyline points="0,24 12,22 24,20 36,21 48,18 60,16 72,14 84,15 96,11 108,9 120,7" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
@@ -189,7 +189,7 @@
               <button class="tab">7N</button>
               <button class="tab active">14N</button>
               <button class="tab">30N</button>
-              <button class="tab">QTD</button>
+              <button class="tab">Quý này</button>
             </div>
           </div>
           <div class="card-body">
@@ -441,7 +441,7 @@
 
       <div class="foot">
         <span>Đồng bộ cuối · 12/05/2026 13:12 · Kho HN-01</span>
-        <span>v2.4.1 · 6 user online</span>
+        <span>v2.4.1 · 6 người dùng đang online</span>
       </div>
 
     </main>

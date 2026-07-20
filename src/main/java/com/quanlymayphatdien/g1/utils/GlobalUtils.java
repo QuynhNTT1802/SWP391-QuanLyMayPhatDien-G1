@@ -16,7 +16,7 @@ public class GlobalUtils {
     public static final String PASSWORD_ERROR_MSG = "Mật khẩu phải có ít nhất 1 chữ hoa, 1 chữ thường và 1 số.";
 
     public static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-    public static final String EMAIL_ERROR_MSG = "Email kh�ng h?p l?.";
+    public static final String EMAIL_ERROR_MSG = "Email không hợp lệ.";
 
     public static final String STATUS_DRAFT = "DRAFT";
 

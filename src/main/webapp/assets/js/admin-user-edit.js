@@ -3,7 +3,7 @@
   var USER = window.USER_DATA || {}
   var SESSION = window.SESSION_DATA || {}
 
-  var ROLE_LABEL = { admin: 'Admin', manager: 'Qu\u1ea3n l\u00fd kho', keeper: 'Th\u1ee7 kho', account: 'K\u1ebf to\u00e1n', staff: 'Nh\u00e2n vi\u00ean', viewer: 'Viewer' }
+  var ROLE_LABEL = { admin: 'Qu\u1ea3n tr\u1ecb vi\u00ean', manager: 'Qu\u1ea3n l\u00fd kho', keeper: 'Th\u1ee7 kho', account: 'K\u1ebf to\u00e1n', staff: 'Nh\u00e2n vi\u00ean', viewer: 'Ng\u01b0\u1eddi xem' }
   var STATUS_LABEL = { active: 'Ho\u1ea1t \u0111\u1ed9ng', inactive: 'Ch\u01b0a k\u00edch ho\u1ea1t', pending: 'Ch\u1edd duy\u1ec7t', locked: 'B\u1ecb kho\u00e1' }
   var WH_LABEL = { 'HN-01': 'HN-01 H\u00e0 N\u1ed9i', 'HCM-03': 'HCM-03 TP.HCM', 'DN-02': 'DN-02 \u0110\u00e0 N\u1eb5ng', 'ALL': 'To\u00e0n h\u1ec7 th\u1ed1ng' }
   var FIELD_LABEL = {
@@ -199,9 +199,9 @@
   ;[].slice.call(document.querySelectorAll('[data-danger]')).forEach(function (btn) {
     btn.addEventListener('click', function () {
       var action = btn.dataset.danger
-      if (action === 'reset-pw') confirmAction('G\u1eedi reset m\u1eadt kh\u1ea9u?', 'Email s\u1ebd g\u1eedi link \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u.', function () { toast('\u0110\u00e3 g\u1eedi email reset m\u1eadt kh\u1ea9u', 'success') })
-      else if (action === 'logout-all') confirmAction('\u0110\u0103ng xu\u1ea5t m\u1ecdi thi\u1ebft b\u1ecb?', 'User ph\u1ea3i \u0111\u0103ng nh\u1eadp l\u1ea1i.', function () { toast('\u0110\u00e3 \u0111\u0103ng xu\u1ea5t t\u1ea5t c\u1ea3 thi\u1ebft b\u1ecb', 'success') })
-      else if (action === 'delete') confirmAction('Xo\u00e1 t\u00e0i kho\u1ea3n?', 'Soft delete \u00b7 c\u00f3 th\u1ec3 kh\u00f4i ph\u1ee5c trong 30 ng\u00e0y.', function () { toast('\u0110\u00e3 xo\u00e1 t\u00e0i kho\u1ea3n', 'success'); setTimeout(function () { window.location.href = CTX + '/admin/users?action=list' }, 1200) })
+      if (action === 'reset-pw') confirmAction('G\u1eedi y\u00eau c\u1ea7u \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u?', 'M\u1ed9t li\u00ean k\u1ebft \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u s\u1ebd \u0111\u01b0\u1ee3c g\u1eedi qua email.', function () { toast('\u0110\u00e3 g\u1eedi email \u0111\u1eb7t l\u1ea1i m\u1eadt kh\u1ea9u', 'success') })
+      else if (action === 'logout-all') confirmAction('\u0110\u0103ng xu\u1ea5t m\u1ecdi thi\u1ebft b\u1ecb?', 'Ng\u01b0\u1eddi d\u00f9ng ph\u1ea3i \u0111\u0103ng nh\u1eadp l\u1ea1i.', function () { toast('\u0110\u00e3 \u0111\u0103ng xu\u1ea5t t\u1ea5t c\u1ea3 thi\u1ebft b\u1ecb', 'success') })
+      else if (action === 'delete') confirmAction('Xo\u00e1 t\u00e0i kho\u1ea3n?', 'Xo\u00e1 m\u1ec1m \u00b7 c\u00f3 th\u1ec3 kh\u00f4i ph\u1ee5c trong 30 ng\u00e0y.', function () { toast('\u0110\u00e3 xo\u00e1 t\u00e0i kho\u1ea3n', 'success'); setTimeout(function () { window.location.href = CTX + '/admin/users?action=list' }, 1200) })
     })
   })
 

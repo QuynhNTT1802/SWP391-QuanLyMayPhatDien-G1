@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
@@ -117,7 +117,7 @@
                                                 <td>
                                                     <button type="button" class="icon-btn toggle-serials"
                                                             data-detail-id="${d.id}"
-                                                            title="Xem serials">
+                                                            title="Xem số serial">
                                                         <svg viewBox="0 0 24 24" class="icon-collapse"><polyline points="6 9 12 15 18 9"/></svg>
                                                     </button>
                                                 </td>
@@ -127,14 +127,14 @@
                                                     <div class="serial-container">
                                                         <c:choose>
                                                             <c:when test="${empty serialsByDetail[d.id]}">
-                                                                <div class="serial-empty">Không có serial nào.</div>
+                                                                <div class="serial-empty">Không có số serial nào.</div>
                                                             </c:when>
                                                             <c:otherwise>
                                                                 <table class="serial-table">
                                                                     <thead>
                                                                         <tr>
                                                                             <th class="col-30">#</th>
-                                                                            <th>Serial</th>
+                                                                            <th>Số serial</th>
                                                                             <th>Trạng thái</th>
                                                                             <th>Ghi chú</th>
                                                                         </tr>
@@ -166,7 +166,7 @@
                                                                                 </td>
                                                                                 <td>
                                                                                     <input type="text" name="serialNote_${s.id}" class="edit-input-note"
-                                                                                           value="<c:out value='${s.notes}'/>" placeholder="Ghi chú serial..." />
+                                                                                           value="<c:out value='${s.notes}'/>" placeholder="Ghi chú số serial..." />
                                                                                 </td>
                                                                             </tr>
                                                                         </c:forEach>

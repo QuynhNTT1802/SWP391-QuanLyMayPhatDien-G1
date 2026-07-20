@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
@@ -22,7 +22,7 @@
 
     <div>
         <header class="topbar">
-            <h1>Đơn hàng đã duyệt</h1>
+            <h1>Đơn hàng</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Chọn đơn hàng</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>

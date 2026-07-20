@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@page import="com.quanlymayphatdien.g1.dal.InventoryDAO"%>
@@ -34,7 +34,7 @@
             <h1>Tồn kho</h1>
             <span class="crumb">/ Kho / Tồn kho</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                     <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41 1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                     <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                 </button>
@@ -52,7 +52,7 @@
                 <div class="left">
                     <div class="eyebrow">Kho · Tồn kho</div>
                     <h2 class="page-title">Tồn kho hiện tại</h2>
-                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện đang IN_STOCK tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
+                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện ĐANG TRONG KHO tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
                 </div>
             </div>
 
@@ -61,7 +61,7 @@
                     <div class="kpi-icon">
                         <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
                     </div>
-                    <div class="kpi-title">Tổng IN_STOCK</div>
+                    <div class="kpi-title">Tổng đang trong kho</div>
                     <div class="kpi-value"><fmt:formatNumber value="${kpiTotalQty}"/></div>
                 </div>
                 <div class="kpi-card kpi-active">
