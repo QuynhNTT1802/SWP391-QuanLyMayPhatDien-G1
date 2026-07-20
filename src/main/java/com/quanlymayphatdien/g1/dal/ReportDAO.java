@@ -9,6 +9,7 @@ import com.quanlymayphatdien.g1.entity.InventoryReportItem;
 import com.quanlymayphatdien.g1.entity.PurchaseOrder;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,9 +20,20 @@ import java.util.List;
  * @author Aadmin
  */
 public class ReportDAO extends DBContext{
+
+    private static String firstDay(int month, int year) {
+        return String.format("%04d-%02d-01", year, month);
+    }
+    private static String lastDay(int month, int year) {
+        return LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+    }
+    private static String nextDay(int month, int year) {
+        return LocalDate.of(year, month, 1).plusMonths(1).toString();
+    }
+
     public int countInventoryReport(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT COUNT(DISTINCT t.warehouse_id, t.generator_id) FROM ("
                 + "SELECT DISTINCT warehouse_id, generator_id FROM stock_card"
                 + " WHERE DATE(created_at) <= ?"
@@ -92,82 +104,153 @@ public class ReportDAO extends DBContext{
     }
     
     public int countImportReport(Integer warehouseId, int month, int year) {
-        return countReceiptByType("IMPORT", warehouseId, month, year);
+        return countWithParams(
+                "SELECT COUNT(*) FROM receipt r WHERE r.receipt_type = 'IMPORT' AND r.status = 'COMPLETED'"
+                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : ""),
+                params(month, year, warehouseId));
     }
-    
+
     public int countExportReport(Integer warehouseId, int month, int year) {
-        return countReceiptByType("EXPORT", warehouseId, month, year);
+        return countWithParams(
+                "SELECT COUNT(*) FROM receipt r WHERE r.receipt_type = 'EXPORT'"
+                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : ""),
+                params(month, year, warehouseId));
     }
-    
+
     public List<Receipt> getImportReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        return queryReceipts(buildReceiptSql("IMPORT", warehouseId, false), warehouseId, month, year, page, pageSize);
+        return queryImportReceipts(warehouseId, month, year, page, pageSize);
     }
-    
+
     public List<Receipt> getAllImportReport(Integer warehouseId, int month, int year) {
-        return queryReceipts(buildReceiptSql("IMPORT", warehouseId, true), warehouseId, month, year, -1, -1);
+        return queryImportReceipts(warehouseId, month, year, -1, -1);
     }
-    
+
     public List<Receipt> getExportReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        return queryReceipts(buildReceiptSql("EXPORT", warehouseId, false), warehouseId, month, year, page, pageSize);
+        return queryExportReceipts(warehouseId, month, year, page, pageSize);
     }
-    
+
     public List<Receipt> getAllExportReport(Integer warehouseId, int month, int year) {
-        return queryReceipts(buildReceiptSql("EXPORT", warehouseId, true), warehouseId, month, year, -1, -1);
+        return queryExportReceipts(warehouseId, month, year, -1, -1);
     }
-    
-    private int countReceiptByType(String type, Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
-        String statusFilter = "EXPORT".equals(type) ? "" : " AND r.status = 'COMPLETED'";
-        String sql = "SELECT COUNT(*) FROM receipt r"
-                + " WHERE r.receipt_type = ?" + statusFilter
-                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
-                + (warehouseId != null ? " AND r.warehouse_id = ?" : "");
-        List<Object> params = new ArrayList<>();
-        params.add(type);
-        params.add(firstDay);
-        params.add(lastDay);
-        if (warehouseId != null) {
-            params.add(warehouseId);
-        }
-        return countWithParams(sql, params);
+
+    private List<Object> params(int month, int year, Integer warehouseId) {
+        List<Object> p = new ArrayList<>();
+        p.add(firstDay(month, year));
+        p.add(lastDay(month, year));
+        if (warehouseId != null) p.add(warehouseId);
+        return p;
     }
-    
-    private String buildReceiptSql(String type, Integer warehouseId, boolean allRows) {
-        String select = "SELECT r.*, w.name AS warehouse_name, u.name AS created_by_name,";
-        String from = " FROM receipt r"
+
+    private String detailInfoSubquery() {
+        return " (SELECT GROUP_CONCAT(CONCAT(g.model, '|', i2.serial_number) SEPARATOR '; ')"
+                + "  FROM receipt_detail rd"
+                + "  JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
+                + "  JOIN generator g ON i2.generator_id = g.id"
+                + "  WHERE rd.receipt_id = r.receipt_id) AS detail_info";
+    }
+
+    private List<Receipt> queryImportReceipts(Integer warehouseId, int month, int year, int page, int pageSize) {
+        List<Receipt> list = new ArrayList<>();
+        String sql = "SELECT r.*, w.name AS warehouse_name, u.name AS created_by_name,"
+                + " po.po_code AS purchase_order_code," + detailInfoSubquery()
+                + " FROM receipt r"
                 + " LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
-                + " LEFT JOIN user u ON r.created_by = u.id";
-        String groupBy = "";
-        if ("IMPORT".equals(type)) {
-            select += " po.po_code AS purchase_order_code,"
-                    + " (SELECT GROUP_CONCAT(CONCAT(g.model, '|', i2.serial_number) SEPARATOR '; ')"
-                    + "  FROM receipt_detail rd"
-                    + "  JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
-                    + "  JOIN generator g ON i2.generator_id = g.id"
-                    + "  WHERE rd.receipt_id = r.receipt_id) AS detail_info";
-            from += " LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id";
-        } else {
-            select += " so.order_code, c.name AS customer_name,"
-                    + " (SELECT GROUP_CONCAT(CONCAT(g.model, '|', i2.serial_number) SEPARATOR '; ')"
-                    + "  FROM receipt_detail rd"
-                    + "  JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
-                    + "  JOIN generator g ON i2.generator_id = g.id"
-                    + "  WHERE rd.receipt_id = r.receipt_id) AS detail_info";
-            from += " LEFT JOIN sale_order so ON r.order_id = so.order_id"
-                    + " LEFT JOIN customer c ON so.customer_id = c.id";
-        }
-        String statusFilter = "EXPORT".equals(type) ? "" : " AND r.status = 'COMPLETED'";
-        String where = " WHERE r.receipt_type = '" + type + "'" + statusFilter
+                + " LEFT JOIN user u ON r.created_by = u.id"
+                + " LEFT JOIN purchase_order po ON r.purchase_order_id = po.po_id"
+                + " WHERE r.receipt_type = 'IMPORT' AND r.status = 'COMPLETED'"
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
-                + (warehouseId != null ? " AND r.warehouse_id = ?" : "");
-        String order = " ORDER BY r.created_at DESC";
-        return select + from + where + order;
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + " ORDER BY r.created_at DESC"
+                + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            int idx = 1;
+            statement.setString(idx++, firstDay(month, year));
+            statement.setString(idx++, lastDay(month, year));
+            if (warehouseId != null) statement.setInt(idx++, warehouseId);
+            if (page > 0 && pageSize > 0) {
+                statement.setInt(idx++, pageSize);
+                statement.setInt(idx++, (page - 1) * pageSize);
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Receipt r = mapReceipt(resultSet);
+                r.setPurchaseOrderCode(resultSet.getString("purchase_order_code"));
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    private List<Receipt> queryExportReceipts(Integer warehouseId, int month, int year, int page, int pageSize) {
+        List<Receipt> list = new ArrayList<>();
+        String sql = "SELECT r.*, w.name AS warehouse_name, u.name AS created_by_name,"
+                + " so.order_code, c.name AS customer_name," + detailInfoSubquery()
+                + " FROM receipt r"
+                + " LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN user u ON r.created_by = u.id"
+                + " LEFT JOIN sale_order so ON r.order_id = so.order_id"
+                + " LEFT JOIN customer c ON so.customer_id = c.id"
+                + " WHERE r.receipt_type = 'EXPORT'"
+                + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + " ORDER BY r.created_at DESC"
+                + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            int idx = 1;
+            statement.setString(idx++, firstDay(month, year));
+            statement.setString(idx++, lastDay(month, year));
+            if (warehouseId != null) statement.setInt(idx++, warehouseId);
+            if (page > 0 && pageSize > 0) {
+                statement.setInt(idx++, pageSize);
+                statement.setInt(idx++, (page - 1) * pageSize);
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Receipt r = mapReceipt(resultSet);
+                r.setOrderCode(resultSet.getString("order_code"));
+                r.setCustomerName(resultSet.getString("customer_name"));
+                list.add(r);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    private Receipt mapReceipt(ResultSet rs) throws SQLException {
+        Receipt r = new Receipt();
+        r.setReceiptId(rs.getInt("receipt_id"));
+        r.setReceiptCode(rs.getString("receipt_code"));
+        r.setReceiptType(rs.getString("receipt_type"));
+        r.setWarehouseId(rs.getInt("warehouse_id"));
+        r.setWarehouseName(rs.getString("warehouse_name"));
+        r.setCreatedBy(rs.getInt("created_by"));
+        r.setCreatedByName(rs.getString("created_by_name"));
+        r.setStatus(rs.getString("status"));
+        r.setNote(rs.getString("note"));
+        r.setOrderId((Integer) rs.getObject("order_id"));
+        r.setPurchaseOrderId((Integer) rs.getObject("purchase_order_id"));
+        if (rs.getTimestamp("created_at") != null) {
+            r.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        }
+        return r;
     }
     
     public int countInventoryCheckReport(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT COUNT(*) FROM inventory_check ic"
                 + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
                 + " WHERE DATE(ic.created_at) >= ? AND DATE(ic.created_at) <= ?"
@@ -182,8 +265,8 @@ public class ReportDAO extends DBContext{
     }
     
     public List<InventoryCheckReportItem> getInventoryCheckReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
                 + " ic.status, u.name AS created_by_name,"
                 + " ic.started_at, ic.completed_at,"
@@ -211,8 +294,8 @@ public class ReportDAO extends DBContext{
     }
     
     public List<InventoryCheckReportItem> getAllInventoryCheckReport(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
                 + " ic.status, u.name AS created_by_name,"
                 + " ic.started_at, ic.completed_at,"
@@ -237,8 +320,8 @@ public class ReportDAO extends DBContext{
     }
     
     public int countPurchaseReport(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT COUNT(*) FROM purchase_order po"
                 + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
                 + (warehouseId != null ? " AND po.warehouse_id = ?" : "");
@@ -274,8 +357,8 @@ public class ReportDAO extends DBContext{
     }
     
     public int countSalesReport(int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT COUNT(*) FROM sale_order so"
                 + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?";
         List<Object> params = new ArrayList<>();
@@ -327,8 +410,8 @@ public class ReportDAO extends DBContext{
     private List<InventoryReportItem> queryInventoryReport(String baseSql, Integer warehouseId,
             int month, int year, int page, int pageSize) {
         List<InventoryReportItem> list = new ArrayList<>();
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String nextDay = LocalDate.of(year, month, 1).plusMonths(1).toString();
+        String firstDay = firstDay(month, year);
+        String nextDay = nextDay(month, year);
         StringBuilder sql = new StringBuilder(baseSql);
         List<Object> params = new ArrayList<>();
         params.add(nextDay);
@@ -407,79 +490,13 @@ public class ReportDAO extends DBContext{
         return list;
     }
     
-    private List<Receipt> queryReceipts(String baseSql, Integer warehouseId,
-            int month, int year, int page, int pageSize) {
-        List<Receipt> list = new ArrayList<>();
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
-        StringBuilder sql = new StringBuilder(baseSql);
-        List<Object> params = new ArrayList<>();
-        params.add(firstDay);
-        params.add(lastDay);
-        if (warehouseId != null) {
-            params.add(warehouseId);
-        }
-        if (page > 0 && pageSize > 0) {
-            sql.append(" LIMIT ? OFFSET ?");
-            params.add(pageSize);
-            params.add((page - 1) * pageSize);
-        }
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql.toString());
-            for (int i = 0; i < params.size(); i++) {
-                statement.setObject(i + 1, params.get(i));
-            }
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                Receipt r = new Receipt();
-                r.setReceiptId(resultSet.getInt("receipt_id"));
-                r.setReceiptCode(resultSet.getString("receipt_code"));
-                r.setReceiptType(resultSet.getString("receipt_type"));
-                r.setWarehouseId(resultSet.getInt("warehouse_id"));
-                r.setWarehouseName(resultSet.getString("warehouse_name"));
-                r.setCreatedBy(resultSet.getInt("created_by"));
-                r.setCreatedByName(resultSet.getString("created_by_name"));
-                r.setStatus(resultSet.getString("status"));
-                r.setNote(resultSet.getString("note"));
-                try {
-                    r.setOrderId((Integer) resultSet.getObject("order_id"));
-                } catch (Exception e) {
-                }
-                try {
-                    r.setPurchaseOrderId((Integer) resultSet.getObject("purchase_order_id"));
-                } catch (Exception e) {
-                }
-                if (resultSet.getTimestamp("created_at") != null) {
-                    r.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
-                }
-                try {
-                    r.setOrderCode(resultSet.getString("order_code"));
-                } catch (Exception e) {
-                }
-                try {
-                    r.setCustomerName(resultSet.getString("customer_name"));
-                } catch (Exception e) {
-                }
-                try {
-                    r.setPurchaseOrderCode(resultSet.getString("purchase_order_code"));
-                } catch (Exception e) {
-                }
-                list.add(r);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return list;
-    }
+
     
     private List<PurchaseOrder> queryPurchaseOrders(String baseSql, Integer warehouseId,
             int month, int year, int page, int pageSize) {
         List<PurchaseOrder> list = new ArrayList<>();
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         StringBuilder sql = new StringBuilder(baseSql);
         List<Object> params = new ArrayList<>();
         params.add(firstDay);
@@ -531,8 +548,8 @@ public class ReportDAO extends DBContext{
     
     private List<SaleOrder> querySaleOrders(String baseSql, int month, int year, int page, int pageSize) {
         List<SaleOrder> list = new ArrayList<>();
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         StringBuilder sql = new StringBuilder(baseSql);
         List<Object> params = new ArrayList<>();
         params.add(firstDay);
@@ -580,8 +597,8 @@ public class ReportDAO extends DBContext{
     }
     
     public List<Object[]> getImportExcelData(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT r.receipt_code, DATE_FORMAT(r.created_at, '%d/%m/%Y'), w.name,"
                 + " g.model, i2.serial_number, u.name"
                 + " FROM receipt r"
@@ -604,8 +621,8 @@ public class ReportDAO extends DBContext{
     }
     
     public List<Object[]> getExportExcelData(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT r.receipt_code, DATE_FORMAT(r.created_at, '%d/%m/%Y'), w.name,"
                 + " c.name, g.model, i2.serial_number, u.name"
                 + " FROM receipt r"
@@ -630,8 +647,8 @@ public class ReportDAO extends DBContext{
     }
     
     public List<Object[]> getPurchaseExcelData(Integer warehouseId, int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT po.po_code, w.name, po.period,"
                 + " g.model, pod.final_quantity, u.name,"
                 + " DATE_FORMAT(po.created_at, '%d/%m/%Y'), po.status"
@@ -653,8 +670,8 @@ public class ReportDAO extends DBContext{
     }
     
     public List<Object[]> getSalesExcelData(int month, int year) {
-        String firstDay = String.format("%04d-%02d-01", year, month);
-        String lastDay = LocalDate.of(year, month, 1).plusMonths(1).minusDays(1).toString();
+        String firstDay = firstDay(month, year);
+        String lastDay = lastDay(month, year);
         String sql = "SELECT so.order_code, DATE_FORMAT(so.created_at, '%d/%m/%Y'),"
                 + " c.name, g.model, od.quantity, od.unit_price,"
                 + " (od.quantity * od.unit_price), u.name, so.status"
