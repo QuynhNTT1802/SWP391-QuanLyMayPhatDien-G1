@@ -1,4 +1,4 @@
-<%--
+﻿<%--
     Document   : admin-category
     Created on : May 24, 2026, 8:48:05 AM
     Author     : LENOVO
@@ -35,7 +35,7 @@
                     </h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/categories?module=${currentModule}">Quản trị</a> / ${moduleLabel}<c:if test="${not empty currentType}"> / ${typeLabel}</c:if></span>
                         <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                                 <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             </button>
@@ -179,7 +179,7 @@
                                                                         </td>
                                                                                                         <td style="font-weight:600;color:var(--fg);">${log.entityName}</td>
                                                                 <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
-                                                                    Admin đã <c:choose><c:when test="${log.action == 'CREATE'}">thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">cập nhật</c:when><c:when test="${log.action == 'DELETE'}">khóa</c:when><c:otherwise>${fn:toLowerCase(log.action)}</c:otherwise></c:choose> danh mục <strong>${log.entityName}</strong>.
+                                                                    Quản trị viên đã <c:choose><c:when test="${log.action == 'CREATE'}">thêm mới</c:when><c:when test="${log.action == 'UPDATE'}">cập nhật</c:when><c:when test="${log.action == 'DELETE'}">khóa</c:when><c:otherwise>${fn:toLowerCase(log.action)}</c:otherwise></c:choose> danh mục <strong>${log.entityName}</strong>.
                                                                         </td>
                                                                     </tr>
                                                         </c:forEach>
@@ -249,7 +249,7 @@
                                                     <th>Tên</th>
                                                         <c:choose>
                                                             <c:when test="${currentType == 'brand'}">
-                                                            <th>Quốc gia</th><th>Website</th><th>Năm TL</th><th>Bảo hành</th>
+                                                            <th>Quốc gia</th><th>Trang web</th><th>Năm TL</th><th>Bảo hành</th>
                                                             </c:when>
                                                             <c:when test="${currentType == 'fuel_type'}">
                                                             <th>Đơn vị</th><th>Giá tham khảo</th>

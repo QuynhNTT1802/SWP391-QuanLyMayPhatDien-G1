@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -56,7 +56,7 @@
                     <h1>Thẻ kho</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/stock-card">Thẻ kho</a> / Chi tiết</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -108,7 +108,7 @@
                         <input type="hidden" name="generatorId" value="${generatorId}" />
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, serial, ghi chú" autocomplete="off" />
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, số serial, ghi chú" autocomplete="off" />
                         </div>
                         <select class="filter-select" name="type" onchange="this.form.submit()">
                             <option value="">Loại: Tất cả</option>
@@ -139,7 +139,7 @@
                                     <th style="width:90px;">+/- SL</th>
                                     <th style="width:80px;">Tồn sau</th>
                                     <th>Mã phiếu</th>
-                                    <th style="width:200px;">Serial</th>
+                                    <th style="width:200px;">Số serial</th>
                                     <th>Ghi chú</th>
                                     <th>Người tạo</th>
                                 </tr>
@@ -197,7 +197,7 @@
                                                             <c:set var="serialCount" value="${fn:length(serialsArr)}" />
                                                             <span class="serial-tag"><c:out value="${serialsArr[0]}"/></span>
                                                             <c:if test="${serialCount > 1}">
-                                                                <button type="button" class="serial-more" onclick="openSerialModal(${sc.stockCardId})" title="Xem tất cả serial">+${serialCount - 1}</button>
+                                                                <button type="button" class="serial-more" onclick="openSerialModal(${sc.stockCardId})" title="Xem tất cả số serial">+${serialCount - 1}</button>
                                                             </c:if>
                                                         </c:otherwise>
                                                     </c:choose>
@@ -251,12 +251,12 @@
                 <div class="modal-head">
                     <h3>
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-                        Danh sách serial
+                        Danh sách số serial
                     </h3>
                     <div class="meta" id="serialMeta">—</div>
                 </div>
                 <div class="modal-body">
-                    <input type="text" class="modal-search" id="serialSearch" placeholder="Tìm serial..." autocomplete="off" />
+                    <input type="text" class="modal-search" id="serialSearch" placeholder="Tìm số serial..." autocomplete="off" />
                     <div class="serial-grid" id="serialGrid"></div>
                 </div>
                 <div class="modal-foot">
@@ -287,7 +287,7 @@
                     return !q || s.toLowerCase().indexOf(q) >= 0;
                 });
                 if (list.length === 0) {
-                    grid.innerHTML = '<div class="serial-empty" style="grid-column:1/-1;">Không có serial nào' + (q ? ' khớp với "' + escapeHtml(q) + '"' : '') + '.</div>';
+                    grid.innerHTML = '<div class="serial-empty" style="grid-column:1/-1;">Không có số serial nào' + (q ? ' khớp với "' + escapeHtml(q) + '"' : '') + '.</div>';
                 } else {
                     var html = '';
                     for (var i = 0; i < list.length; i++) {
@@ -296,14 +296,14 @@
                     grid.innerHTML = html;
                 }
                 document.getElementById('serialCount').textContent =
-                        'Hiển thị ' + list.length + ' / ' + (window._currentSerials ? window._currentSerials.length : 0) + ' serial';
+                        'Hiển thị ' + list.length + ' / ' + (window._currentSerials ? window._currentSerials.length : 0) + ' số serial';
             }
 
             function openSerialModal(stockCardId) {
                 var serials = serialsMap[stockCardId] || [];
                 serials = serials.filter(function (s) { return s && s.length > 0; });
                 window._currentSerials = serials;
-                var meta = 'Stock card #' + stockCardId + ' · ' + serials.length + ' serial';
+                var meta = 'Thẻ kho #' + stockCardId + ' · ' + serials.length + ' số serial';
                 document.getElementById('serialMeta').textContent = meta;
                 document.getElementById('serialSearch').value = '';
                 renderSerialList('');

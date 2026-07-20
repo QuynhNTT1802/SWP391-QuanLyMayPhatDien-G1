@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -46,7 +46,7 @@
                 <div class="hero-body">
                     <div class="hero-meta">
                         <c:if test="${not empty purchaseOrder}">
-                            <span>Tạo từ phiếu purchase <span class="id">${purchaseOrder.poCode}</span></span>
+                            <span>Tạo từ đơn mua <span class="id">${purchaseOrder.poCode}</span></span>
                         </c:if>
                     </div>
                 </div>
@@ -64,7 +64,7 @@
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
                         <div>
                             <div style="font-weight: 700; margin-bottom: 4px;">Tạo phiếu nhập từ phiếu xuất <c:out value="${exportReceiptCode}"/></div>
-                            <div style="font-size: 12.5px;">Theo phiếu đề xuất luân chuyển <strong><c:out value="${transferCode}"/></strong>. Các serial đã được hệ thống tự động gắn sẵn — bạn chỉ cần kiểm tra và lưu.</div>
+                            <div style="font-size: 12.5px;">Theo phiếu đề xuất luân chuyển <strong><c:out value="${transferCode}"/></strong>. Các số serial đã được hệ thống tự động gắn sẵn — bạn chỉ cần kiểm tra và lưu.</div>
                         </div>
                     </div>
                 </c:if>
@@ -149,14 +149,14 @@
                         <div class="section-head">
                             <div>
                                 <div class="section-num">02 — DANH SÁCH MÁY PHÁT ĐIỆN</div>
-                                <h3 class="section-title">Quét / Nhập serial hàng loạt</h3>
+                                <h3 class="section-title">Quét / Nhập số serial hàng loạt</h3>
                             </div>
                         </div>
 
                         <div class="tabs-container">
                             <button type="button" class="tab-button active" data-tab="scan">
                                 <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2M3 17v2a2 2 0 0 0 2 2h2M21 7V5a2 2 0 0 0-2-2h-2M21 17v2a2 2 0 0 1-2 2h-2M7 8v8M11 8v8M15 8v8M19 8v8"/></svg>
-                                Quét barcode
+                                Quét mã vạch
                             </button>
                             <button type="button" class="tab-button" data-tab="excel">
                                 <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -184,7 +184,7 @@
                                 <div class="alert-body">
                                     <div class="alert-title">Phiếu nhập từ Purchase Order</div>
                                     <div>
-                                        Tổng cần nhập: <strong>${expectedRows} serial</strong>, bao gồm: <strong>${poBreakdown}</strong>.
+                                        Tổng cần nhập: <strong>${expectedRows} số serial</strong>, bao gồm: <strong>${poBreakdown}</strong>.
                                     </div>
                                 </div>
                             </div>
@@ -195,7 +195,7 @@
                                 <div class="alert-body">
                                     <div class="alert-title">Nhập từ phiếu luân chuyển</div>
                                     <div>
-                                        Tổng cần nhập: <strong>${expectedRows} serial</strong>
+                                        Tổng cần nhập: <strong>${expectedRows} số serial</strong>
                                     </div>
                                 </div>
                             </div>
@@ -230,7 +230,7 @@
                                 <small class="hint">
                                     <c:choose>
                                         <c:when test="${not empty availableGenerators}">Chỉ hiển thị các mẫu máy có trong phiếu mua</c:when>
-                                        <c:otherwise>Mỗi serial quét vào sẽ tự gắn vào mẫu máy đã chọn.</c:otherwise>
+                                        <c:otherwise>Mỗi số serial quét vào sẽ tự gắn vào mẫu máy đã chọn.</c:otherwise>
                                     </c:choose>
                                 </small>
                             </div>
@@ -249,7 +249,7 @@
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                                     Tải mẫu Excel
                                 </a>
-                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:when test="${not empty fromExportReceipt}">Nhập serial từ Excel (áp dụng cho phiếu luân chuyển)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
+                                <button type="button" class="btn" id="btnImportExcel" onclick="document.getElementById('excelFileInput').click()" title="<c:choose><c:when test="${fromPurchaseOrder}">Nhập số serial từ Excel (chỉ áp dụng cho các dòng từ PO)</c:when><c:when test="${not empty fromExportReceipt}">Nhập số serial từ Excel (áp dụng cho phiếu luân chuyển)</c:when><c:otherwise>Nhập hàng loạt từ Excel (.xlsx)</c:otherwise></c:choose>">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l5-5-5 5M12 3v12"/></svg>
                                     Nhập từ Excel
                                 </button>
@@ -268,13 +268,13 @@
                         <div id="detailGroups" class="detail-groups">
                             <div id="emptyState" class="empty-state" style="display:none;">
                                 <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
-                                <p class="empty-state-title">Chưa có serial nào</p>
-                                <p class="empty-state-hint">Hãy quét barcode hoặc nhập từ Excel để bắt đầu</p>
+                                <p class="empty-state-title">Chưa có số serial nào</p>
+                                <p class="empty-state-hint">Hãy quét mã vạch hoặc nhập từ Excel để bắt đầu</p>
                             </div>
                         </div>
 
                         <div id="poCounter" style="margin-top: 12px; padding: 10px 14px; background: var(--surface-2); border-radius: var(--radius-sm); font-size: 13px; color: var(--muted);">
-                            Đã nhập serial: <strong id="poFilledCount" style="color: var(--accent);">0</strong> <c:if test="${not empty expectedRows}"> / <strong>${expectedRows}</strong></c:if>
+                            Đã nhập số serial: <strong id="poFilledCount" style="color: var(--accent);">0</strong> <c:if test="${not empty expectedRows}"> / <strong>${expectedRows}</strong></c:if>
                         </div>
                     </section>
                 </div>
@@ -498,7 +498,7 @@
     function buildEmptyRow() {
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
-                + '<td class="col-serial"><input type="text" name="manualSerialNumber" placeholder="Quét hoặc nhập S/N" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td class="col-serial"><input type="text" name="manualSerialNumber" placeholder="Quét hoặc nhập số serial" onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td class="col-note"><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
         return tr;
@@ -532,7 +532,7 @@
                 + '<button type="button" class="group-delete-btn" onclick="removeGroup(this)" title="Xoá cả nhóm">Xoá nhóm</button>'
                 + '</summary>'
                 + '<table class="group-table">'
-                + '<thead><tr><th class="col-num">#</th><th>Serial</th><th class="col-note">Ghi chú</th><th class="col-del"></th></tr></thead>'
+                + '<thead><tr><th class="col-num">#</th><th>Số serial</th><th class="col-note">Ghi chú</th><th class="col-del"></th></tr></thead>'
                 + '<tbody></tbody>'
                 + '</table>';
         groups.appendChild(details);
@@ -709,15 +709,15 @@
         });
 
         if (!hasAnySerial) {
-            toast('Vui lòng nhập ít nhất 1 serial trước khi gửi phiếu.', 'danger');
+            toast('Vui lòng nhập ít nhất 1 số serial trước khi gửi phiếu.', 'danger');
             valid = false;
         }
         if (rowsWithSerialButNoGen > 0) {
-            toast('Có ' + rowsWithSerialButNoGen + ' dòng có serial nhưng chưa gắn với mẫu máy.', 'danger');
+            toast('Có ' + rowsWithSerialButNoGen + ' dòng có số serial nhưng chưa gắn với mẫu máy.', 'danger');
             valid = false;
         }
         if (rowsWithGenButNoSerial > 0) {
-            toast('Có ' + rowsWithGenButNoSerial + ' dòng đã gắn với nhóm máy nhưng chưa nhập serial.', 'danger');
+            toast('Có ' + rowsWithGenButNoSerial + ' dòng đã gắn với nhóm máy nhưng chưa nhập số serial.', 'danger');
             valid = false;
         }
 
@@ -857,7 +857,7 @@
         } else {
             scanBox.classList.remove('disabled');
             scanInput.disabled = false;
-            scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)...';
+            scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét mã vạch (hoặc gõ tay rồi Enter)...';
         }
     }
 
@@ -906,7 +906,7 @@
             var currentFilled = parseInt((document.getElementById('poFilledCount') || {}).textContent || '0', 10) || 0;
             if (currentFilled >= expectedRowsJs) {
                 importScannerLock = false;
-                var fullMsg = 'Đã quét đủ ' + expectedRowsJs + ' serial theo phiếu. Không thể quét thêm.';
+                var fullMsg = 'Đã quét đủ ' + expectedRowsJs + ' số serial theo phiếu. Không thể quét thêm.';
                 setImportScanStatus(fullMsg, 'error');
                 flashImportScan('error');
                 toast(fullMsg, 'danger');
@@ -933,7 +933,7 @@
         });
         if (dupFound) {
             importScannerLock = false;
-            var dupMsg = 'Serial "' + serial + '" đã tồn tại trong phiếu này.';
+            var dupMsg = 'Số serial "' + serial + '" đã tồn tại trong phiếu này.';
             setImportScanStatus(dupMsg, 'error');
             flashImportScan('error');
             toast(dupMsg, 'danger');
@@ -953,9 +953,9 @@
                     if (data.status === 'SOLD' || (isTransferImportMode && data.status === 'IN_TRANSIT')) {
                         existingInvId = data.inventoryId;
                     } else {
-                        var sysMsg = 'Serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.';
+                        var sysMsg = 'Số serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.';
                         if (isTransferImportMode) {
-                            sysMsg = 'Serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + (data.status || 'unknown') + '), không thể nhập.';
+                            sysMsg = 'Số serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + (data.status || 'unknown') + '), không thể nhập.';
                         }
                         setImportScanStatus(sysMsg, 'error');
                         flashImportScan('error');
@@ -964,7 +964,7 @@
                         return;
                     }
                 } else if (isTransferImportMode) {
-                    var nfMsg = 'Serial "' + serial + '" không tồn tại trong hệ thống, không thể nhập từ phiếu luân chuyển.';
+                    var nfMsg = 'Số serial "' + serial + '" không tồn tại trong hệ thống, không thể nhập từ phiếu luân chuyển.';
                     setImportScanStatus(nfMsg, 'error');
                     flashImportScan('error');
                     toast(nfMsg, 'danger');
@@ -977,7 +977,7 @@
                     var filled = countFilledForGen(activeInfo.id);
                     if (filled >= allowed) {
                         importScannerLock = false;
-                        var perGenMsg = 'Đã quét đủ ' + allowed + ' serial cho mẫu ' + (activeInfo.model || '') + '.';
+                        var perGenMsg = 'Đã quét đủ ' + allowed + ' số serial cho mẫu ' + (activeInfo.model || '') + '.';
                         setImportScanStatus(perGenMsg, 'error');
                         flashImportScan('error');
                         toast(perGenMsg, 'danger');
@@ -1007,8 +1007,8 @@
                     modelLabel = activeInfo ? (activeInfo.model || '') : '';
                 }
                 var okMsg = existingInvId
-                        ? ('✓ Đã nhập lại serial "' + serial + '" (đã bán trước đó) vào kho.')
-                        : ('✓ Đã thêm serial "' + serial + '" vào mẫu ' + modelLabel + '.');
+                        ? ('✓ Đã nhập lại số serial "' + serial + '" (đã bán trước đó) vào kho.')
+                        : ('✓ Đã thêm số serial "' + serial + '" vào mẫu ' + modelLabel + '.');
                 setImportScanStatus(okMsg, 'success');
                 updatePoCounter();
 
@@ -1174,7 +1174,7 @@
         updatePoCounter();
         updateRowNumbers();
         if (added > 0) {
-            toast('Đã nhập ' + added + ' serial từ Excel.', 'success');
+            toast('Đã nhập ' + added + ' số serial từ Excel.', 'success');
         }
         if (skipped > 0) {
             toast('Bỏ qua ' + skipped + ' dòng Excel không xác định được mẫu máy.', 'warning');
@@ -1207,7 +1207,7 @@
         updatePoCounter();
         updateRowNumbers();
         if (added > 0) {
-            toast('Đã nhập ' + added + ' serial từ Excel.', 'success');
+            toast('Đã nhập ' + added + ' số serial từ Excel.', 'success');
         }
         if (skipped > 0) {
             toast('Bỏ qua ' + skipped + ' dòng Excel không xác định được mẫu máy.', 'warning');
@@ -1241,7 +1241,7 @@
             }
         }
         if (serials.length !== transferGroups.length) {
-            toast('File Excel có ' + serials.length + ' dòng serial nhưng phiếu yêu cầu ' + transferGroups.length + ' dòng. Đã điền theo vị trí.', 'warning');
+            toast('File Excel có ' + serials.length + ' dòng số serial nhưng phiếu yêu cầu ' + transferGroups.length + ' dòng. Đã điền theo vị trí.', 'warning');
         }
         updatePoCounter();
     }

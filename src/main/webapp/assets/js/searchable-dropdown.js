@@ -46,7 +46,7 @@
             if (wrap)
                 wrap.classList.add('has-value');
         } else {
-            label.textContent = '-- Click \u0111\u1ec3 ch\u1ecdn kh\u00e1ch h\u00e0ng --';
+            label.textContent = '-- Nh\u1ea5p \u0111\u1ec3 ch\u1ecdn kh\u00e1ch h\u00e0ng --';
             label.classList.remove('has-value');
             if (wrap)
                 wrap.classList.remove('has-value');

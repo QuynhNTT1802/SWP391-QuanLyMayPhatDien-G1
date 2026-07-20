@@ -372,12 +372,12 @@ function uploadExcelFile(input) {
     .then(function (r) { return r.json(); })
     .then(function (data) {
         if (!data.success) {
-            toast(data.message || 'Lá»—i khÃ´ng xÃ¡c Ä‘á»‹nh', 'danger');
+            toast(data.message || 'Lỗi không xác định', 'danger');
             return;
         }
         if (data.invalidCount > 0) {
             data.rows.forEach(function (r) {
-                if (r.error) toast('Dong ' + r.stt + ': ' + r.error, 'danger');
+                if (r.error) toast('Dòng ' + r.stt + ': ' + r.error, 'danger');
             });
             return;
         }
@@ -387,7 +387,7 @@ function uploadExcelFile(input) {
         toast(data.message, 'success');
     })
     .catch(function () {
-        toast('Lá»—i káº¿t ná»‘i hoáº·c server khÃ´ng pháº£n há»“i dá»¯ liá»‡u há»£p lá»‡.', 'danger');
+        toast('Lỗi kết nối hoặc máy chủ không phản hồi dữ liệu hợp lệ.', 'danger');
     });
 }
 

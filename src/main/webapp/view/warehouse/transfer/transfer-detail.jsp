@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -500,7 +500,7 @@
                                     <th style="width: 40px;">#</th>
                                     <th>Dòng máy</th>
                                     <th style="width: 80px;">Số lượng</th>
-                                    <th>Số Serial</th>
+                                    <th>Số serial</th>
                                     <th>Tình trạng</th>
                                     <th>Ghi chú</th>
                                 </tr>

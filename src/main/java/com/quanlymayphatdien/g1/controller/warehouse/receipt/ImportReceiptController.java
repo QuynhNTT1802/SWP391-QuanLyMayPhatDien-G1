@@ -303,8 +303,8 @@ public class ImportReceiptController extends HttpServlet {
         prefill.setReceiptType(TYPE);
         prefill.setLinkedTransferId(transfer.getTransferId());
         prefill.setRelatedExportReceiptId(exportReceipt.getReceiptId());
-        prefill.setNote("Nhap kho theo phieu luan chuyen " + transfer.getTransferCode()
-                + " | Phieu xuat " + exportReceipt.getReceiptCode());
+        prefill.setNote("Nhập kho theo phiếu luân chuyển " + transfer.getTransferCode()
+                + " | Phiếu xuất " + exportReceipt.getReceiptCode());
         List<ReceiptDetail> prefillDetails = new ArrayList<>();
         List<Map<String, Object>> transferRowList = new ArrayList<>();
         if (exportReceipt.getDetails() != null) {
@@ -658,7 +658,7 @@ public class ImportReceiptController extends HttpServlet {
             return;
         }
 
-        applyPoPrefillToRequest(request, po, note != null ? note : "Tao tu phieu purchase " + po.getPoCode());
+        applyPoPrefillToRequest(request, po, note != null ? note : "Tạo từ phiếu purchase " + po.getPoCode());
         request.setAttribute("poSerialList", serialList);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         setGeneratorsAttributes(request, genDAO.findAllActive());
@@ -690,7 +690,7 @@ public class ImportReceiptController extends HttpServlet {
         }
         PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
         if (po == null) {
-            errors.add("Khong tim thay phieu purchase " + poId);
+            errors.add("Không tìm thấy phiếu purchase " + poId);
             return;
         }
         java.util.Map<Integer, Integer> expectedQty = new java.util.LinkedHashMap<>();
@@ -710,18 +710,18 @@ public class ImportReceiptController extends HttpServlet {
             if (actual != expected) {
                 String label = lookupGeneratorLabel(e.getKey());
                 if (actual < expected) {
-                    errors.add("Thieu " + (expected - actual) + " serial cho may " + label
-                            + " (PO yeu cau " + expected + ", dang co " + actual + ")");
+                    errors.add("Thiếu " + (expected - actual) + " số serial cho máy " + label
+                            + " (PO yêu cầu " + expected + ", đang có " + actual + ")");
                 } else {
-                    errors.add("Thua " + (actual - expected) + " serial cho may " + label
-                            + " (PO yeu cau " + expected + ", dang co " + actual + ")");
+                    errors.add("Thừa " + (actual - expected) + " số serial cho máy " + label
+                            + " (PO yêu cầu " + expected + ", đang có " + actual + ")");
                 }
             }
         }
         for (java.util.Map.Entry<Integer, Integer> a : actualQty.entrySet()) {
             if (!expectedQty.containsKey(a.getKey())) {
                 String label = lookupGeneratorLabel(a.getKey());
-                errors.add("May " + label + " khong co trong PO (khong duoc them)");
+                errors.add("Máy " + label + " không có trong PO (không được thêm)");
             }
         }
     }
@@ -789,7 +789,7 @@ public class ImportReceiptController extends HttpServlet {
         if (poId != null) {
             PurchaseOrder po = new PurchaseOrderDAO().findById(poId);
             if (po != null) {
-                applyPoPrefillToRequest(request, po, "Tao tu phieu purchase " + po.getPoCode());
+                applyPoPrefillToRequest(request, po, "Tạo từ phiếu purchase " + po.getPoCode());
             }
         }
 
@@ -962,7 +962,7 @@ public class ImportReceiptController extends HttpServlet {
         if (fromPo) {
             details = parseDetailsStrict(genIds, serials, detailNotes, errors);
             if (details.isEmpty()) {
-                errors.add("Phiếu nhập từ PO phải có ít nhất 1 dòng serial hợp lệ");
+                errors.add("Phiếu nhập từ PO phải có ít nhất 1 dòng số serial hợp lệ");
             }
             validateAgainstPurchaseOrder(poId, details, errors);
         } else {
@@ -1056,7 +1056,7 @@ public class ImportReceiptController extends HttpServlet {
                     || !com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transferForImport.getStatus())
                     || transferForImport.getImportReceiptId() != null) {
                 HttpSession s = request.getSession();
-                s.setAttribute("toastMessage", "Phieu de xuat khong hop le hoac da co phieu nhap");
+                s.setAttribute("toastMessage", "Phiếu đề xuất không hợp lệ hoặc đã có phiếu nhập");
                 s.setAttribute("toastType", "danger");
                 response.sendRedirect(request.getContextPath()
                         + "/transfers?action=detail&id=" + (transferForImport != null ? transferForImport.getTransferId() : 0));
@@ -1064,7 +1064,7 @@ public class ImportReceiptController extends HttpServlet {
             }
             if (warehouseId != transferForImport.getDestWarehouseId()) {
                 HttpSession s = request.getSession();
-                s.setAttribute("toastMessage", "Kho nhap phai la kho dich cua phieu luan chuyen");
+                s.setAttribute("toastMessage", "Kho nhập phải là kho đích của phiếu luân chuyển");
                 s.setAttribute("toastType", "danger");
                 response.sendRedirect(request.getContextPath()
                         + "/transfers?action=detail&id=" + transferForImport.getTransferId());
@@ -1073,7 +1073,7 @@ public class ImportReceiptController extends HttpServlet {
             exportReceipt = receiptDAO.findById(exportReceiptId);
             if (exportReceipt == null) {
                 HttpSession s = request.getSession();
-                s.setAttribute("toastMessage", "Khong tim thay phieu xuat goc");
+                s.setAttribute("toastMessage", "Không tìm thấy phiếu xuất gốc");
                 s.setAttribute("toastType", "danger");
                 response.sendRedirect(request.getContextPath() + "/transfers");
                 return;
@@ -1116,8 +1116,8 @@ public class ImportReceiptController extends HttpServlet {
                 List<ReceiptDetail> rdList = new ArrayList<>();
                 for (ReceiptDetail src : exportReceipt.getDetails()) {
                     if (!inventoryDAO.completeTransferImport(conn, src.getInventoryId(), warehouseId)) {
-                        throw new SQLException("Serial inventory_id=" + src.getInventoryId()
-                                + " khong o trang thai IN_TRANSIT");
+                        throw new SQLException("Số serial inventory_id=" + src.getInventoryId()
+                                + " không ở trạng thái IN_TRANSIT");
                     }
                     ReceiptDetail rd = new ReceiptDetail();
                     rd.setReceiptId(receiptId);
@@ -1138,24 +1138,24 @@ public class ImportReceiptController extends HttpServlet {
                         if (existingInv == null
                                 || existingInv.getInventoryId() != existingInvId
                                 || !"SOLD".equals(existingInv.getStatus())) {
-                            throw new SQLException("Serial '" + d.getSerialNumber()
-                                    + "' không còn ở trạng thái SOLD, vui lòng quay lại và bỏ serial này.");
+                            throw new SQLException("Số serial '" + d.getSerialNumber()
+                                    + "' không còn ở trạng thái SOLD, vui lòng quay lại và bỏ số serial này.");
                         }
                         int updated = inventoryDAO.reactivateSold(conn, existingInvId,
                                 d.getGeneratorId(), warehouseId);
                         if (updated <= 0) {
-                            throw new SQLException("Không thể nhập lại serial '" + d.getSerialNumber()
+                            throw new SQLException("Không thể nhập lại số serial '" + d.getSerialNumber()
                                     + "' (cập nhật inventory thất bại).");
                         }
                         d.setInventoryId(existingInvId);
                     } else {
                         if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
-                            throw new SQLException("Serial '" + d.getSerialNumber()
-                                    + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ serial trùng).");
+                            throw new SQLException("Số serial '" + d.getSerialNumber()
+                                    + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ số serial trùng).");
                         }
                         int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
                         if (invId <= 0) {
-                            throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
+throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() + "'");
                         }
                         d.setInventoryId(invId);
                     }
@@ -1196,7 +1196,7 @@ public class ImportReceiptController extends HttpServlet {
         log.setEntityId(receiptId);
         log.setEntityName(r.getReceiptCode());
         log.setDetails(isTransferImport
-                ? "Tao phieu nhap theo phieu luan chuyen " + transferForImport.getTransferCode()
+                ? "Tạo phiếu nhập theo phiếu luân chuyển " + transferForImport.getTransferCode()
                 : "Tạo phiếu nhập kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
 
@@ -1209,8 +1209,8 @@ public class ImportReceiptController extends HttpServlet {
                 transferLog.setAction("IMPORT_CREATED");
                 transferLog.setEntityId(transferForImport.getTransferId());
                 transferLog.setEntityName(transferForImport.getTransferCode());
-                transferLog.setDetails("Phieu nhap " + r.getReceiptCode()
-                        + " da hoan tat (EXPORTED -> COMPLETED)");
+                transferLog.setDetails("Phiếu nhập " + r.getReceiptCode()
+                        + " đã hoàn tất (EXPORTED -> COMPLETED)");
                 activityLogDAO.insert(transferLog);
 
                 notifySourceWarehouseStaff(transferForImport, r, loggedUser, request.getContextPath());
@@ -1218,7 +1218,7 @@ public class ImportReceiptController extends HttpServlet {
         }
 
         session.setAttribute("toastMessage", isTransferImport
-                ? "Tao phieu nhap thanh cong. Phieu luan chuyen da hoan tat."
+                ? "Tạo phiếu nhập thành công. Phiếu luân chuyển đã hoàn tất."
                 : "Thêm phiếu thành công");
         session.setAttribute("toastType", "success");
         if (isTransferImport) {
@@ -1504,7 +1504,7 @@ public class ImportReceiptController extends HttpServlet {
             if (serial.isEmpty()) {
                 errors.add("Thiếu số serial");
             } else if (serial.length() > MAX_SERIAL_LENGTH) {
-                errors.add("Serial vượt quá " + MAX_SERIAL_LENGTH + " ký tự");
+                errors.add("Số serial vượt quá " + MAX_SERIAL_LENGTH + " ký tự");
             }
 
             Generator resolved = null;
@@ -1537,14 +1537,14 @@ public class ImportReceiptController extends HttpServlet {
                 Integer firstSeenIndex = firstSeenRow.get(serial);
                 if (firstSeenIndex != null) {
                     errors.add("Dòng " + firstSeenIndex + " và dòng " + rowNum
-                            + ": serial \"" + serial + "\" bị trùng trong file");
+                            + ": số serial \"" + serial + "\" bị trùng trong file");
                 } else {
                     firstSeenRow.put(serial, rowNum);
                 }
             }
 
             if (!isTransferImport && !serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
-                errors.add("Serial \"" + serial + "\" đã tồn tại trong hệ thống");
+                errors.add("Số serial \"" + serial + "\" đã tồn tại trong hệ thống");
             }
 
             if (resolved != null) {
@@ -1575,7 +1575,7 @@ public class ImportReceiptController extends HttpServlet {
             response.setContentType("application/json;charset=UTF-8");
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("success", false);
-            body.put("message", "API importPreview chi ho tro AJAX");
+            body.put("message", "API importPreview chỉ hỗ trợ AJAX");
             new Gson().toJson(body, response.getWriter());
             return;
         }
@@ -1828,7 +1828,7 @@ public class ImportReceiptController extends HttpServlet {
         for (ReceiptDetail d : details) {
             if (d.getSerialNumber() != null && !d.getSerialNumber().trim().isEmpty()) {
                 if (d.getInventoryId() <= 0 && inventoryDAO.isSerialBlocked(d.getSerialNumber())) {
-                    errors.add("Serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
+                    errors.add("Số serial \"" + d.getSerialNumber() + "\" đã tồn tại và đang được sử dụng trong hệ thống");
                 }
             }
         }
@@ -1867,7 +1867,7 @@ public class ImportReceiptController extends HttpServlet {
             for (ReceiptDetail d : details) {
                 int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
                 if (invId <= 0) {
-                    throw new SQLException("Không thể tạo serial '" + d.getSerialNumber() + "'");
+                    throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() + "'");
                 }
                 d.setReceiptId(receiptId);
                 d.setInventoryId(invId);

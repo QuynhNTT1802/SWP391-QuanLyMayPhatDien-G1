@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%
@@ -30,7 +30,7 @@
                     <h1>Phiếu mua</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/purchase-order">Kinh doanh</a> / Phiếu mua</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -94,7 +94,7 @@
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                             </c:if>
 
-                            <%-- Sale Manager (có create + view): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa, Đã hủy --%>
+                            <%-- Quản lý Bán hàng (có create + view): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa, Đã hủy --%>
                             <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>

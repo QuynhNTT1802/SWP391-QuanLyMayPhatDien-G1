@@ -247,11 +247,11 @@ public class UserManagementController extends HttpServlet {
                 if (!roleIdList.isEmpty()) {
                     userDAO.updateUserRoles(newUserId, roleIdList);
                 }
-                request.getSession().setAttribute("message", "User added successfully!");
+                request.getSession().setAttribute("message", "Thêm người dùng thành công!");
                 logActivity(request, "user", newUserId, name, "CREATE",
                         "Tạo người dùng: " + username);
             } else {
-                request.getSession().setAttribute("message", "Failed to add user!");
+                request.getSession().setAttribute("message", "Thêm người dùng thất bại!");
             }
 
         } catch (Exception e) {
@@ -441,7 +441,7 @@ public class UserManagementController extends HttpServlet {
 
                     request.getServletContext().setAttribute("perm_refresh_" + userId, true);
 
-                    request.getSession().setAttribute("message", "Update successfully");
+                    request.getSession().setAttribute("message", "Cập nhật thành công");
                     String details;
                     if (fieldChanges.isEmpty()) {
                         details = "Cập nhật người dùng #" + userId + " (" + safe(name) + "): không có thay đổi";
@@ -451,10 +451,10 @@ public class UserManagementController extends HttpServlet {
                     }
                     logActivity(request, "user", userId, name, "UPDATE", details);
                 } else {
-                    request.getSession().setAttribute("message", "Fail to update");
+                    request.getSession().setAttribute("message", "Cập nhật thất bại");
                 }
             } else {
-                request.getSession().setAttribute("message", "Account not found!");
+                request.getSession().setAttribute("message", "Không tìm thấy tài khoản!");
             }
         } catch (Exception e) {
             SystemLogger.error(LogModule.USER, "UserManagementController.updateUser", e.getMessage(), e);

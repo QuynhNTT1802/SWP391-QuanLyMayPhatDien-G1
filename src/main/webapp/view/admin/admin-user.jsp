@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : admin-user
     Created on : May 15, 2026, 9:23:11 AM
     Author     : Aadmin
@@ -31,7 +31,7 @@
                         <h1>Người dùng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users">Quản trị</a> / Người dùng</span>
                         <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                                 <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             </button>
@@ -45,7 +45,7 @@
                 <main>
                     <div class="page-head">
                         <div class="left">
-                            <div class="eyebrow">Quản trị · Admin</div>
+                            <div class="eyebrow">Quản trị · Quản trị viên</div>
                             <h2 class="page-title">Quản lý người dùng</h2>
                             <div class="page-sub">${totalUsers} tài khoản</div>
                         </div>
@@ -74,7 +74,7 @@
 
                             <select class="filter-select" name="role" onchange="this.form.submit()">
                                 <option value="">Vai trò: Tất cả</option>
-                                <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Admin</option>
+                                <option value="admin" <c:if test="${roleFilter == 'admin'}">selected</c:if>>Quản trị viên</option>
                                 <option value="warehouse_manager" <c:if test="${roleFilter == 'warehouse_manager'}">selected</c:if>>Quản lý kho</option>
                                 <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
                                 <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên bán hàng</option>
@@ -125,7 +125,7 @@
                                                 <td>
                                                     <c:forEach var="role" items="${user.roles}">
                                                         <c:choose>
-                                                            <c:when test="${role.roleName == 'admin'}"><span class="pill role-admin"><span class="pdot"></span>Admin</span></c:when>
+                                                            <c:when test="${role.roleName == 'admin'}"><span class="pill role-admin"><span class="pdot"></span>Quản trị viên</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kho</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Thủ kho</span></c:when>
                                                             <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý bán hàng</span></c:when>

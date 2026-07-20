@@ -1167,7 +1167,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                     enriched.put("gname", g.getModel());
                 } else {
                     enriched.put("gname", model.trim());
-                    errors.add("Máy phát '" + model.trim() + "' chưa có trong hệ thống. Vui lòng thêm máy phát trước khi import.");
+                    errors.add("Máy phát '" + model.trim() + "' chưa có trong hệ thống. Vui lòng thêm máy phát trước khi nhập.");
                 }
             }
 
