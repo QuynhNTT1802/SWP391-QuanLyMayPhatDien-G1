@@ -88,9 +88,9 @@ public class ReportDAO extends DBContext{
                 + "  GROUP BY warehouse_id, generator_id"
                 + " ) imp_t ON imp_t.warehouse_id = t.warehouse_id AND imp_t.generator_id = t.generator_id"
                 + " LEFT JOIN ("
-                + "  SELECT warehouse_id, generator_id, SUM(quantity_change) AS exp_qty"
-                + "  FROM stock_card"
-                + "  WHERE transaction_type = 'EXPORT'"
+ + "  SELECT warehouse_id, generator_id, SUM(ABS(quantity_change)) AS exp_qty"
+                 + "  FROM stock_card"
+                 + "  WHERE transaction_type = 'EXPORT'"
                 + "   AND DATE(created_at) >= ? AND DATE(created_at) <= ?"
                 + "  GROUP BY warehouse_id, generator_id"
                 + " ) exp_t ON exp_t.warehouse_id = t.warehouse_id AND exp_t.generator_id = t.generator_id";
