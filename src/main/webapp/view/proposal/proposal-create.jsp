@@ -248,59 +248,59 @@
                     </div>
                     <div>
                         <label class="field-label">Công suất (kVA) <span class="req">*</span></label>
-                        <input class="input mono" id="ngPower" type="number" step="0.01" placeholder="VD: 50" />
+                        <input class="input mono" id="ngPower" type="number" step="0.01" min="0" placeholder="VD: 50" />
                     </div>
                     <div>
                         <label class="field-label">Tần số (Hz)</label>
-                        <input class="input mono" id="ngFreq" placeholder="VD: 50" />
+                        <input class="input mono" id="ngFreq" placeholder="VD: 50Hz" />
                     </div>
                     <div>
-                        <label class="field-label">Trọng lượng (kg)</label>
-                        <input class="input mono" id="ngWeight" type="number" step="0.01" placeholder="VD: 120" />
+                        <label class="field-label">Trọng lượng (kg) <span class="req">*</span></label>
+                        <input class="input mono" id="ngWeight" type="number" step="0.01" min="0" placeholder="VD: 120" />
                     </div>
                     <div>
-                        <label class="field-label">Thương hiệu</label>
+                        <label class="field-label">Thương hiệu <span class="req">*</span></label>
                         <select class="select" id="ngBrandId">
                             <option value="">-- Chọn --</option>
                             <c:forEach var="b" items="${catBrands}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="field-label">Xuất xứ</label>
-                            <select class="select" id="ngOriginId">
-                                <option value="">-- Chọn --</option>
-                            <c:forEach var="b" items="${catOrigins}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="field-label">Tình trạng</label>
-                            <select class="select" id="ngConditionId">
-                                <option value="">-- Chọn --</option>
-                            <c:forEach var="b" items="${catConditions}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="field-label">Nhiên liệu</label>
-                            <select class="select" id="ngFuelTypeId">
-                                <option value="">-- Chọn --</option>
-                            <c:forEach var="b" items="${catFuelTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="field-label">Số pha</label>
-                            <select class="select" id="ngPhaseId">
-                                <option value="">-- Chọn --</option>
-                            <c:forEach var="b" items="${catPhases}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="field-label">Loại máy phát</label>
-                            <select class="select" id="ngGenTypeId">
-                                <option value="">-- Chọn --</option>
-                            <c:forEach var="b" items="${catGenTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
-                            </select>
-                        </div>
+                        </select>
                     </div>
+                    <div>
+                        <label class="field-label">Xuất xứ</label>
+                        <select class="select" id="ngOriginId">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catOrigins}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Tình trạng <span class="req">*</span></label>
+                        <select class="select" id="ngConditionId">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catConditions}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Nhiên liệu <span class="req">*</span></label>
+                        <select class="select" id="ngFuelTypeId">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catFuelTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Số pha</label>
+                        <select class="select" id="ngPhaseId">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catPhases}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Loại máy phát</label>
+                        <select class="select" id="ngGenTypeId">
+                            <option value="">-- Chọn --</option>
+                            <c:forEach var="b" items="${catGenTypes}"><option value="${b.id}"><c:out value="${b.name}"/></option></c:forEach>
+                        </select>
+                    </div>
+                </div>
                     <div class="modal-actions">
                         <button type="button" class="btn" onclick="closeNewGeneratorModal()">Huỷ</button>
                         <button type="button" class="btn btn-primary" id="ngSaveBtn" onclick="saveNewGenerator()">Lưu máy phát</button>

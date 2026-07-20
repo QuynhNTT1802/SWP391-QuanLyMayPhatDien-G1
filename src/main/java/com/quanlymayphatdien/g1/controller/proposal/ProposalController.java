@@ -175,6 +175,12 @@ public class ProposalController extends HttpServlet {
                 case "uploadEditExcel":
                     uploadEditExcel(request, response);
                     break;
+                case "quickCreateGenerator":
+                    quickCreateGenerator(request, response);
+                    break;
+                case "quickCreateSupplier":
+                    quickCreateSupplier(request, response);
+                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -317,7 +323,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("catFuelTypes", catDAO.findByType("fuel_type"));
         request.setAttribute("catPhases", catDAO.findByType("phase"));
         request.setAttribute("catGenTypes", catDAO.findByType("generator_type"));
-        request.setAttribute("supplierTypeList", catDAO.findByType("supplier_type"));
+        request.setAttribute("supplierTypeList", catDAO.findByType("customer_type"));
 
         Set<String> perms = (Set<String>) request.getSession().getAttribute("userPermissions");
         boolean canCreateGenerator = perms != null && perms.contains("generators.create");
@@ -565,15 +571,26 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         session.setAttribute("toastType", "success");
 
         List<User> approvers = userDAO.findUsersByPermission("proposals", "approve");
+        boolean anyNotifFailed = false;
         for (User u : approvers) {
-            NotificationService.send(
-                u.getId(),
-                "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
-                "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
-                request.getContextPath() + "/proposal?action=detail&id=" + newId,
-                "proposal",
-                newId
-            );
+            try {
+                boolean ok = NotificationService.send(
+                    u.getId(),
+                    "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
+                    request.getContextPath() + "/proposal?action=detail&id=" + newId,
+                    "proposal",
+                    newId
+                );
+                if (!ok) anyNotifFailed = true;
+            } catch (Exception e) {
+                SystemLogger.error(LogModule.PROPOSAL, "ProposalController.saveProposal.sendNotification", e.getMessage(), e);
+                anyNotifFailed = true;
+            }
+        }
+        if (anyNotifFailed) {
+            session.setAttribute("toastMessage", "Tạo phiếu đề xuất thành công nhưng gửi thông báo chưa đầy đủ");
+            session.setAttribute("toastType", "danger");
         }
 
         response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + newId);
@@ -815,14 +832,23 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
             User actor = (User) session.getAttribute("loggedUser");
             if (p != null && p.getCreatedBy() > 0) {
-                NotificationService.send(
-                    p.getCreatedBy(),
-                    "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
-                    "Phiếu " + p.getProposalCode() + " đã được " + actor.getName() + " duyệt.",
-                    request.getContextPath() + "/proposal?action=detail&id=" + id,
-                    "proposal",
-                    id
-                );
+                boolean notifOk = false;
+                try {
+                    notifOk = NotificationService.send(
+                        p.getCreatedBy(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
+                        "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
+                        request.getContextPath() + "/proposal?action=detail&id=" + id,
+                        "proposal",
+                        id
+                    );
+                } catch (Exception e) {
+                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.approveProposal.sendNotification", e.getMessage(), e);
+                }
+                if (!notifOk) {
+                    session.setAttribute("toastMessage", "Đã duyệt nhưng không gửi được thông báo cho nhân viên tạo");
+                    session.setAttribute("toastType", "danger");
+                }
             }
         } else {
             session.setAttribute("toastMessage", "Không thể duyệt (phiếu không ở trạng thái chờ duyệt)");
@@ -876,14 +902,23 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
             User actor = (User) session.getAttribute("loggedUser");
             if (p != null && p.getCreatedBy() > 0) {
-                NotificationService.send(
-                    p.getCreatedBy(),
-                    "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
-                    "Phiếu " + p.getProposalCode() + " bị " + actor.getName() + " từ chối (lý do: " + reason.trim() + ").",
-                    request.getContextPath() + "/proposal?action=detail&id=" + id,
-                    "proposal",
-                    id
-                );
+                boolean notifOk = false;
+                try {
+                    notifOk = NotificationService.send(
+                        p.getCreatedBy(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
+                        "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",
+                        request.getContextPath() + "/proposal?action=detail&id=" + id,
+                        "proposal",
+                        id
+                    );
+                } catch (Exception e) {
+                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.rejectProposal.sendNotification", e.getMessage(), e);
+                }
+                if (!notifOk) {
+                    session.setAttribute("toastMessage", "Đã từ chối nhưng không gửi được thông báo cho nhân viên tạo");
+                    session.setAttribute("toastType", "danger");
+                }
             }
         } else {
             session.setAttribute("toastMessage", "Không thể từ chối (phiếu không ở trạng thái chờ duyệt)");
@@ -1836,87 +1871,159 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     private void quickCreateGenerator(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json;charset=UTF-8");
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"no_session\"}");
-            return;
-        }
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("generators.create")) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"forbidden\"}");
-            return;
-        }
-
-        String model = request.getParameter("model");
-        String powerStr = request.getParameter("powerRating");
-        String freq = request.getParameter("frequency");
-        String weightStr = request.getParameter("weight");
-        if (model == null || model.trim().isEmpty()) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập mã máy phát\"}");
-            return;
-        }
-        if (powerStr == null || powerStr.trim().isEmpty()) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập công suất\"}");
-            return;
-        }
-
-        GeneratorDAO genDAO = new GeneratorDAO();
-        Generator existing = genDAO.findByModel(model.trim());
-        if (existing != null) {
-            response.getWriter().write("{\"ok\":true,\"existing\":true,\"id\":" + existing.getId()
-                    + ",\"model\":\"" + escapeJson(existing.getModel()) + "\"}");
-            return;
-        }
-
-        Generator g = new Generator();
-        g.setModel(model.trim());
+        response.setStatus(HttpServletResponse.SC_OK);
         try {
-            g.setPowerRating(new BigDecimal(powerStr.trim()));
-        } catch (NumberFormatException ex) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Công suất không hợp lệ\"}");
-            return;
-        }
-        g.setFrequency(freq != null && !freq.trim().isEmpty() ? freq.trim() : null);
-        if (weightStr != null && !weightStr.trim().isEmpty()) {
+            HttpSession session = request.getSession(false);
+            if (session == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Phiên đăng nhập đã hết hạn\"}");
+                return;
+            }
+            Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
+            if (perms == null || !perms.contains("generators.create")) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Bạn không có quyền thêm máy phát\"}");
+                return;
+            }
+
+            String model = request.getParameter("model");
+            String powerStr = request.getParameter("powerRating");
+            String freq = request.getParameter("frequency");
+            String weightStr = request.getParameter("weight");
+            String brandIdStr = request.getParameter("brandId");
+            String conditionIdStr = request.getParameter("conditionId");
+            String fuelTypeIdStr = request.getParameter("fuelTypeId");
+
+            if (model == null || model.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng nhập mã máy phát\"}");
+                return;
+            }
+            if (model.trim().length() > 100) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Mã máy phát không được vượt quá 100 ký tự\"}");
+                return;
+            }
+            if (powerStr == null || powerStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng nhập công suất\"}");
+                return;
+            }
+
+            BigDecimal power;
             try {
-                g.setWeight(new BigDecimal(weightStr.trim()));
+                power = new BigDecimal(powerStr.trim());
             } catch (NumberFormatException ex) {
-                g.setWeight(null);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Công suất phải là số hợp lệ\"}");
+                return;
+            }
+            if (power.compareTo(BigDecimal.ZERO) <= 0) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Công suất phải lớn hơn 0\"}");
+                return;
+            }
+
+            if (weightStr == null || weightStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng nhập trọng lượng\"}");
+                return;
+            }
+            BigDecimal weight;
+            try {
+                weight = new BigDecimal(weightStr.trim());
+            } catch (NumberFormatException ex) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Trọng lượng phải là số hợp lệ\"}");
+                return;
+            }
+            if (weight.compareTo(BigDecimal.ZERO) <= 0) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Trọng lượng phải lớn hơn 0\"}");
+                return;
+            }
+
+            String frequency = null;
+            if (freq != null && !freq.trim().isEmpty()) {
+                try {
+                    BigDecimal freqNum = new BigDecimal(freq.trim());
+                    if (freqNum.compareTo(BigDecimal.ZERO) <= 0) {
+                        safeWriteJson(response, "{\"ok\":false,\"error\":\"Tần số phải lớn hơn 0\"}");
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    safeWriteJson(response, "{\"ok\":false,\"error\":\"Tần số phải là số hợp lệ\"}");
+                    return;
+                }
+                frequency = freq.trim();
+            }
+
+            if (brandIdStr == null || brandIdStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng chọn thương hiệu\"}");
+                return;
+            }
+            if (conditionIdStr == null || conditionIdStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng chọn tình trạng\"}");
+                return;
+            }
+            if (fuelTypeIdStr == null || fuelTypeIdStr.trim().isEmpty()) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Vui lòng chọn nhiên liệu\"}");
+                return;
+            }
+
+            GeneratorDAO genDAO = new GeneratorDAO();
+            Generator existing = genDAO.findByModel(model.trim());
+            if (existing != null) {
+                safeWriteJson(response, "{\"ok\":true,\"existing\":true,\"id\":" + existing.getId()
+                        + ",\"model\":\"" + escapeJson(existing.getModel()) + "\"}");
+                return;
+            }
+
+            Generator g = new Generator();
+            g.setModel(model.trim());
+            g.setPowerRating(power);
+            g.setFrequency(frequency);
+            g.setWeight(weight);
+            g.setStatus("active");
+            g.setCreatedAt(LocalDateTime.now());
+            User u = (User) session.getAttribute("loggedUser");
+            if (u != null) {
+                g.setCreatedBy(u.getId());
+            }
+
+            int newId = genDAO.insert(g);
+            if (newId <= 0) {
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Không thể lưu máy phát\"}");
+                return;
+            }
+
+            CategoryDAO catDAO = new CategoryDAO();
+            List<Integer> catIds = new ArrayList<>();
+            addCatIfPresent(catDAO, brandIdStr, "brand", catIds);
+            addCatIfPresent(catDAO, request.getParameter("originId"), "origin", catIds);
+            addCatIfPresent(catDAO, conditionIdStr, "condition", catIds);
+            addCatIfPresent(catDAO, fuelTypeIdStr, "fuel_type", catIds);
+            addCatIfPresent(catDAO, request.getParameter("phaseId"), "phase", catIds);
+            addCatIfPresent(catDAO, request.getParameter("genTypeId"), "generator_type", catIds);
+            if (!catIds.isEmpty()) {
+                genDAO.deleteGeneratorCategories(newId);
+                genDAO.saveGeneratorCategories(newId, catIds);
+            }
+
+            User logU = (User) session.getAttribute("loggedUser");
+            logActivity(logU != null ? logU.getId() : 0, "generator", "CREATE", newId,
+                    model.trim(),
+                    "Tạo máy phát nhanh từ đề xuất nhập kho: " + model.trim());
+
+            safeWriteJson(response, "{\"ok\":true,\"existing\":false,\"id\":" + newId
+                    + ",\"model\":\"" + escapeJson(model.trim()) + "\"}");
+        } catch (Exception e) {
+            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.quickCreateGenerator", e.getMessage(), e);
+            try {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                safeWriteJson(response, "{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage()) + "\"}");
+            } catch (IOException ignored) {
             }
         }
-        g.setStatus("active");
-        g.setCreatedAt(LocalDateTime.now());
-        User u = (User) session.getAttribute("loggedUser");
-        if (u != null) {
-            g.setCreatedBy(u.getId());
+    }
+
+    private void safeWriteJson(HttpServletResponse response, String json) throws IOException {
+        if (!response.isCommitted()) {
+            response.getWriter().write(json);
+            response.getWriter().flush();
         }
-
-        int newId = genDAO.insert(g);
-        if (newId <= 0) {
-            response.getWriter().write("{\"ok\":false,\"error\":\"Không thể lưu máy phát\"}");
-            return;
-        }
-
-        CategoryDAO catDAO = new CategoryDAO();
-        List<Integer> catIds = new ArrayList<>();
-        addCatIfPresent(catDAO, request.getParameter("brandId"), "brand", catIds);
-        addCatIfPresent(catDAO, request.getParameter("originId"), "origin", catIds);
-        addCatIfPresent(catDAO, request.getParameter("conditionId"), "condition", catIds);
-        addCatIfPresent(catDAO, request.getParameter("fuelTypeId"), "fuel_type", catIds);
-        addCatIfPresent(catDAO, request.getParameter("phaseId"), "phase", catIds);
-        addCatIfPresent(catDAO, request.getParameter("genTypeId"), "generator_type", catIds);
-        if (!catIds.isEmpty()) {
-            genDAO.deleteGeneratorCategories(newId);
-            genDAO.saveGeneratorCategories(newId, catIds);
-        }
-
-        User logU = (User) session.getAttribute("loggedUser");
-        logActivity(logU != null ? logU.getId() : 0, "generator", "CREATE", newId,
-                model.trim(),
-                "Tạo máy phát nhanh từ đề xuất nhập kho: " + model.trim());
-
-        response.getWriter().write("{\"ok\":true,\"existing\":false,\"id\":" + newId
-                + ",\"model\":\"" + escapeJson(model.trim()) + "\"}");
     }
 
     private void addCatIfPresent(CategoryDAO catDAO, String rawId, String type, List<Integer> acc) {
@@ -1975,6 +2082,11 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             }
         }
 
+        if ("33".equals(typeIdStr) && (companyName == null || companyName.trim().isEmpty())) {
+            response.getWriter().write("{\"ok\":false,\"error\":\"Vui lòng nhập tên công ty cho nhà cung cấp Doanh nghiệp\"}");
+            return;
+        }
+
         Supplier s = new Supplier();
         s.setName(name.trim());
         s.setPhone(phone.trim());
@@ -2004,7 +2116,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
         response.getWriter().write("{\"ok\":true,\"existing\":false,\"id\":" + newId
                 + ",\"name\":\"" + escapeJson(name.trim())
-                + "\",\"phone\":\"" + escapeJson(phone.trim()) + "\"}");
+                + "\",\"phone\":\"" + escapeJson(phone.trim())
+                + "\",\"companyName\":\"" + escapeJson(s.getCompanyName() != null ? s.getCompanyName() : "") + "\"}");
     }
 
     private void redirectCreateSupplier(HttpServletRequest request, HttpServletResponse response)

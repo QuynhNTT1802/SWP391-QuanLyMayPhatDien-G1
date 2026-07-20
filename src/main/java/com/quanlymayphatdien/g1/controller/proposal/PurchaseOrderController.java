@@ -107,9 +107,6 @@ public class PurchaseOrderController extends HttpServlet {
                 case "reject":
                     reject(request, response);
                     break;
-                case "requestRevision":
-                    requestProposalRevision(request, response);
-                    break;
                 case "cancel":
                     cancel(request, response);
                     break;
@@ -834,52 +831,6 @@ public class PurchaseOrderController extends HttpServlet {
             }
         } else {
             session.setAttribute("toastMessage", "Không thể từ chối");
-            session.setAttribute("toastType", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-    }
-
-    private void requestProposalRevision(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession();
-        User user = (User) session.getAttribute("loggedUser");
-        Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        if (perms == null || !perms.contains("purchase_orders.approve")) {
-            session.setAttribute("toastMessage", "Bạn không có quyền yêu cầu chỉnh sửa phiếu mua.");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-
-        int id = parseInt(request.getParameter("id"));
-        if (id <= 0) {
-            session.setAttribute("toastMessage", "Thiếu mã phiếu mua");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=list");
-            return;
-        }
-        String reason = request.getParameter("revisionReason");
-        if (reason == null || reason.trim().isEmpty()) {
-            session.setAttribute("toastMessage", "Vui lòng nhập lý do yêu cầu chỉnh sửa đề xuất");
-            session.setAttribute("toastType", "danger");
-            response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
-            return;
-        }
-
-        boolean ok = new PurchaseOrderDAO().requestProposalRevision(id, user.getId(), reason.trim());
-        if (ok) {
-            ActivityLog log = new ActivityLog();
-            log.setUserId(user.getId());
-            log.setEntityType("purchase_order");
-            log.setAction("REQUEST_REVISION");
-            log.setEntityId(id);
-            log.setEntityName(null);
-            log.setDetails("CEO yêu cầu Sale Manager chỉnh sửa đề xuất: " + reason.trim());
-            new ActivityLogDAO().insertLog(log);
-            session.setAttribute("toastMessage", "Đã yêu cầu Sale Manager chỉnh sửa đề xuất");
-            session.setAttribute("toastType", "success");
-        } else {
-            session.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa (phiếu mua không ở trạng thái Chờ CEO duyệt)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + id);
