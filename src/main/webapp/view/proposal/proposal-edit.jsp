@@ -18,13 +18,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-create.css">
-    <style>
-        .status-badge { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:2px 9px; border-radius:999px; border:1px solid; margin-left:8px; }
-        .status-badge.revision { color:#7c3aed; border-color:color-mix(in srgb,#7c3aed 30%,transparent); background:color-mix(in srgb,#7c3aed 8%,transparent); }
-        .revision-reason { background:var(--surface-2); border:1px solid color-mix(in srgb,#7c3aed 30%,transparent); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
-        .revision-reason .rr-label { font-weight:700; font-size:11px; color:#7c3aed; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
-        .revision-reason .rr-body { font-size:13px; color:var(--fg); }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-edit.css">
 </head>
 <body>
 <div class="app">
@@ -469,30 +463,6 @@ MSG.ADDED_SUP_SUFFIX = '"';
 <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/proposal-create.js"></script>
-<script>
-    (function() {
-        var label = document.getElementById('custTriggerLabel');
-        if (label) {
-            var nameVal = document.getElementById('inpCustName').value || '';
-            var supId = document.getElementById('sdHiddenId').value || '';
-            if (nameVal && supId) {
-                label.textContent = nameVal;
-                label.classList.add('has-value');
-            }
-        }
-        if (typeof refreshSupplierCard === 'function') refreshSupplierCard();
-
-        document.querySelectorAll('.unit-price-input').forEach(function (el) {
-            var intPart = ((el.value || '').trim().split('.')[0] || '').replace(/[^\d]/g, '');
-            el.value = intPart || '0';
-        });
-        if (typeof updateTotal === 'function') updateTotal();
-    })();
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
-            showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
-        }
-    });
-</script>
+<script src="${pageContext.request.contextPath}/assets/js/proposal-edit.js"></script>
 </body>
 </html>
