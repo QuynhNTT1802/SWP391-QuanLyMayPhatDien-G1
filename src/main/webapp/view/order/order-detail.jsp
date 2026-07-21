@@ -331,6 +331,7 @@
             .status-rejected { background: #f8d7da; color: #721c24; border-color: color-mix(in srgb, #721c24 25%, transparent); }
             .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
             .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
+            .status-completed { background: #cce5ff; color: #004085; border-color: color-mix(in srgb, #004085 25%, transparent); }
 
             
             .empty-state {
@@ -553,6 +554,10 @@
                             <c:set var="statusLabel" value="Đã duyệt"/>
                             <c:set var="statusPillClass" value="status-approved"/>
                         </c:when>
+                        <c:when test="${order.status == 'COMPLETED'}">
+                            <c:set var="statusLabel" value="Hoàn thành"/>
+                            <c:set var="statusPillClass" value="status-completed"/>
+                        </c:when>
                         <c:when test="${order.status == 'REJECTED'}">
                             <c:set var="statusLabel" value="Từ chối"/>
                             <c:set var="statusPillClass" value="status-rejected"/>
@@ -646,9 +651,6 @@
                         </div>
                     </div>
 
-                    <%-- ============================================================
-                         KHỐI 1: THÔNG TIN CHUNG
-                         ============================================================ --%>
                     <div class="section">
                         <div class="section-head">
                             <h3>Thông tin chung</h3>
@@ -718,9 +720,6 @@
                         </div>
                     </div>
 
-                    <%-- ============================================================
-                         KHỐI 2: DANH SÁCH MÁY PHÁT
-                         ============================================================ --%>
                     <div class="section">
                         <div class="section-head">
                             <h3>Danh sách máy phát đăng ký</h3>
@@ -979,9 +978,6 @@
             </div>
         </div>
 
-        <%-- ============================================================
-             MODALS
-             ============================================================ --%>
         <c:if test="${canApproveNow}">
             <div class="modal-host" id="approveModal">
                 <div class="modal-card">

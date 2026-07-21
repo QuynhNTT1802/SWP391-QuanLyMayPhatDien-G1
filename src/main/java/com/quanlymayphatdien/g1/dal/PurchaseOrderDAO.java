@@ -953,6 +953,24 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         }
     }
 
+    public boolean markCompleted(int poId) {
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(
+                    "UPDATE purchase_order SET status = ? "
+                    + "WHERE po_id = ? AND status = ?");
+            statement.setString(1, GlobalUtils.STATUS_COMPLETED);
+            statement.setInt(2, poId);
+            statement.setString(3, GlobalUtils.PO_STATUS_APPROVED);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources();
+        }
+    }
+
     public boolean reject(int poId, int ceoId, String reason) {
         try {
             connection = getConnection();
