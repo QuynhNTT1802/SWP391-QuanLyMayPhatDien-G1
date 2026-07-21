@@ -52,33 +52,10 @@
                 <div class="left">
                     <div class="eyebrow">Kho · Tồn kho</div>
                     <h2 class="page-title">Tồn kho hiện tại</h2>
-                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện ĐANG TRONG KHO tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
+                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện đang trong kho tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
                 </div>
             </div>
 
-            <div class="kpi-grid">
-                <div class="kpi-card kpi-total">
-                    <div class="kpi-icon">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                    </div>
-                    <div class="kpi-title">Tổng đang trong kho</div>
-                    <div class="kpi-value"><fmt:formatNumber value="${kpiTotalQty}"/></div>
-                </div>
-                <div class="kpi-card kpi-active">
-                    <div class="kpi-icon">
-                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    </div>
-                    <div class="kpi-title">Kho hoạt động</div>
-                    <div class="kpi-value"><fmt:formatNumber value="${kpiActiveWarehouses}"/></div>
-                </div>
-                <div class="kpi-card kpi-locked">
-                    <div class="kpi-icon">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </div>
-                    <div class="kpi-title">Kho bị khóa</div>
-                    <div class="kpi-value"><fmt:formatNumber value="${kpiLockedWarehouses}"/></div>
-                </div>
-            </div>
 
             <h3 class="section-heading">
                 <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>

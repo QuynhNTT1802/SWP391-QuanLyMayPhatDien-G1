@@ -921,7 +921,7 @@ public class CategoryController extends HttpServlet {
 
         XSSFWorkbook workbook = CategoryExcelSupport.exportToWorkbook(list, extensions, typeFilter);
 
-        String today = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
         String fileName = "danh-muc-"
                 + (typeFilter != null && !typeFilter.isEmpty() ? typeFilter : "all")
                 + "-" + today + ".xlsx";

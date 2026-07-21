@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chọn đơn hàng — Warehouse OS</title>
+    <title>Chọn đơn hàng · Warehouse OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
                 <c:if test="${not empty search or not empty fromDate or not empty toDate}">
                     <a href="${pageContext.request.contextPath}/export-receipt?action=selectOrder" class="btn">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        Xoá lọc
+                        Xóa lọc
                     </a>
                 </c:if>
             </form>
@@ -80,7 +80,7 @@
                                     <th>Khách hàng</th>
                                     <th>Ngày duyệt</th>
                                     <th>Tổng tiền</th>
-                                    <th>Chi tiết</th>
+                                    <th>Chi ti?t</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -90,12 +90,12 @@
                                         <td>${o.customer.name}</td>
                                         <td><fmt:formatDate value="${o.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td class="amount-cell">
-                                            <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="₫"/>
+                                            <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="?"/>
                                         </td>
                                         <td>
-                                            <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewOrderDetail(${o.orderId}, '${o.orderCode}', '${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}')" title="Xem chi tiết đơn hàng">
+                                        <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewOrderDetail(${o.orderId}, '${o.orderCode}', '${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}')" title="Xem chi tiết đơn hàng">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                Xem chi tiết
+                                        Xem chi tiết
                                             </button>
                                         </td>
                                     </tr>
@@ -213,7 +213,7 @@ function viewOrderDetail(orderId, orderCode, createUrl) {
             });
         })
         .catch(function() {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:red;">Lỗi tải dữ liệu.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:red;">L?i t?i d? li?u.</td></tr>';
         });
 }
 function closeDetailModal() {

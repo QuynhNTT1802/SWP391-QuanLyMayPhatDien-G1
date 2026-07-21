@@ -27,7 +27,7 @@ import java.util.List;
 public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal> {
 
     public String generateProposalCode() {
-        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         return String.format("PRC-%s-%03d", dateStr, countTodayProposals() + 1);
     }
 

@@ -49,10 +49,6 @@
                         <c:set var="selectedWhName" value="${w.name}"/>
                     </c:if>
                 </c:forEach>
-                <div class="type-header">
-                    <span class="type-badge"><span class="tdot"></span><c:out value="${selectedWhName}"/></span>
-                    <span class="type-count"><c:if test="${viewMode == 'detail'}">${totalItems} số serial</c:if></span>
-                </div>
             </c:if>
 
             <c:choose>
@@ -64,29 +60,23 @@
                     </h3>
 
                     <form method="get" action="${pageContext.request.contextPath}/inventory/list" class="filter-bar">
+                        <c:if test="${selectedWarehouse != null}">
+                            <input type="hidden" name="warehouse" value="${selectedWarehouse}" />
+                        </c:if>
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mẫu máy" autocomplete="off" />
                         </div>
-                        <select class="filter-select" name="warehouse" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                            <c:choose>
-                                <c:when test="${not empty scopedWarehouseId}">
-                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="">Kho: Tất cả</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </select>
+                        <div class="search-input">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input name="brand" value="<c:out value='${brand}'/>" placeholder="Tìm theo hãng" autocomplete="off" />
+                        </div>
                         <button type="submit" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             Tìm kiếm
                         </button>
-                        <c:if test="${not empty selectedWarehouse or not empty search}">
-                            <a href="${pageContext.request.contextPath}/inventory/list" class="btn">
+                        <c:if test="${not empty selectedWarehouse or not empty search or not empty brand}">
+                            <a href="${pageContext.request.contextPath}/inventory/list<c:if test="${selectedWarehouse != null}">?warehouse=${selectedWarehouse}</c:if>" class="btn">
                                 <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 Xoá lọc
                             </a>
@@ -100,7 +90,7 @@
                                     <th style="width:50px;">#</th>
                                     <th>Mẫu máy</th>
                                     <th>Hãng</th>
-                                    <th style="width:140px;text-align:center;">Số serial</th>
+                                    <th style="width:140px;text-align:center;">Số Máy</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -135,6 +125,9 @@
                         <c:if test="${not empty search}">
                             <c:set var="filterParams" value="${filterParams}&search=${search}" />
                         </c:if>
+                        <c:if test="${not empty brand}">
+                            <c:set var="filterParams" value="${filterParams}&brand=${brand}" />
+                        </c:if>
                         <div class="pagination">
                             <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
                             <div class="controls">
@@ -167,12 +160,8 @@
                         <div class="model-selector" style="margin-bottom:16px;">
                             <h3 class="section-heading" style="margin-bottom:8px;">
                                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                                Số serial &mdash; <c:out value="${selectedGenModel}"/>
+                                <c:out value="${selectedGenModel}"/>
                             </h3>
-                            <a href="${pageContext.request.contextPath}/inventory/list<c:if test="${selectedWarehouse != null}">?warehouse=${selectedWarehouse}</c:if>" class="back-link" style="margin-bottom:12px;">
-                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                                Quay lại danh sách máy
-                            </a>
                         </div>
                     </c:if>
 
@@ -206,16 +195,12 @@
                         </c:if>
                     </form>
 
-                    <div class="result-summary">
-                        <strong>${totalItems}</strong> số serial tồn kho
-                    </div>
-
                     <div class="users-card">
                                 <table class="users">
                                     <thead>
                                         <tr>
                                             <th style="width:40px;">#</th>
-                                            <th>Số serial</th>
+                                            <th>Serial</th>
                                             <th>Kho</th>
                                             <th>Tình trạng</th>
                                             <th style="width:150px;">Trạng thái</th>
@@ -232,7 +217,7 @@
                                                         <div class="icon-wrap">
                                                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                                         </div>
-                                                        <strong>Không có số serial nào</strong>
+                                                        <strong>Không có serial nào</strong>
                                                     </div>
                                                 </td></tr>
                                             </c:when>
