@@ -75,16 +75,6 @@
                             </h2>
                         </div>
                         <div class="right">
-                            <c:if test="${receipt.status == 'PENDING' and isManager}">
-                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Duyệt phiếu
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Từ chối
-                                </button>
-                            </c:if>
                         </div>
                     </div>
 
@@ -344,7 +334,7 @@
                                     </tbody>
                                 </table>
 
-                                <c:if test="${detailTotalPages > 1}">
+                                <c:if test="${detailTotalPages > 0}">
                                 <div class="pagination" style="margin-top: 16px;">
                                     <div class="info">Hiển thị <strong>${(detailPage-1)*10 + 1}</strong>–<strong>${detailPage*10 > totalDetails ? totalDetails : detailPage*10}</strong> / <strong>${totalDetails}</strong> bản ghi</div>
                                     <div class="controls">
@@ -369,37 +359,6 @@
                 </main>
             </div>
         </div>
-
-        <c:if test="${receipt.status == 'PENDING' and isManager}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt phiếu nhập</h3>
-                    <div class="modal-sub">Phiếu nhập sẽ chuyển sang trạng thái "Hoàn thành" và cập nhật tồn kho.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/import-receipt?action=approve">
-                        <input type="hidden" name="id" value="${receipt.receiptId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="modal-host" id="rejectModal">
-                <div class="modal-card">
-                    <h3>Từ chối phiếu nhập</h3>
-                    <div class="modal-sub">Phiếu nhập sẽ bị từ chối. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/import-receipt?action=reject">
-                        <input type="hidden" name="id" value="${receipt.receiptId}"/>
-                        <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReason" name="reason" required placeholder="Ví dụ: Sai số lượng, sai serial, không khớp phiếu mua..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
 
         <style>
             .gen-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px; }
