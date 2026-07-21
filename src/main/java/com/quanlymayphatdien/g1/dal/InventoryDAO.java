@@ -21,7 +21,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     public static final String STATUS_LIQUIDATED = "LIQUIDATED";
 
     public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
-            String search, int page, int pageSize) {
+            String search, String brand, int page, int pageSize) {
         List<GeneratorSummary> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT g.id, g.model, "
@@ -41,6 +41,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND g.model LIKE ? ");
             params.add("%" + search.trim() + "%");
+        }
+        if (brand != null && !brand.trim().isEmpty()) {
+            sql.append("AND EXISTS (SELECT 1 FROM generator_category gc JOIN category c ON gc.category_id = c.id WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?) ");
+            params.add("%" + brand.trim() + "%");
         }
         sql.append("GROUP BY g.id, g.model ORDER BY g.model LIMIT ? OFFSET ?");
         params.add(pageSize);
@@ -68,7 +72,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
-    public int countGeneratorSummary(Integer warehouseId, String search) {
+    public int countGeneratorSummary(Integer warehouseId, String search, String brand) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(DISTINCT g.id) "
               + "FROM generator g "
@@ -83,6 +87,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND g.model LIKE ? ");
             params.add("%" + search.trim() + "%");
+        }
+        if (brand != null && !brand.trim().isEmpty()) {
+            sql.append("AND EXISTS (SELECT 1 FROM generator_category gc JOIN category c ON gc.category_id = c.id WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?) ");
+            params.add("%" + brand.trim() + "%");
         }
         try {
             connection = getConnection();

@@ -50,7 +50,6 @@
                         <div class="left">
                             <div class="eyebrow">Kho · Phiếu nhập</div>
                             <h2 class="page-title">Danh sách phiếu nhập kho</h2>
-                            <div class="page-sub">${totalItems} phiếu</div>
                         </div>
                     </div>
 

@@ -462,7 +462,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             }
         }
         java.time.format.DateTimeFormatter __dateFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        java.time.format.DateTimeFormatter __dtFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        java.time.format.DateTimeFormatter __dtFmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String proposalDateInput = p.getProposalDate() != null ? p.getProposalDate().toLocalDate().format(__dateFmt) : "";
         String approvedAtInput = p.getApprovedAt() != null ? p.getApprovedAt().format(__dtFmt) : "";
         request.setAttribute("grandTotal", grandTotal);
@@ -1085,7 +1085,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
         XSSFWorkbook workbook = ProposalExcelSupport.createTemplateWorkbook();
 
-        String today = new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date());
+        String today = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
         String fileName = "mau-de-xuat-nhap-" + today + ".xlsx";
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

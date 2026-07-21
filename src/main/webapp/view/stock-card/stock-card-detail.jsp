@@ -83,25 +83,6 @@
                         </div>
                     </div>
 
-                    <div class="summary-card">
-                        <div class="summary-item">
-                            <div class="summary-label">Tổng nhập</div>
-                            <div class="summary-value qty-import">+${totalImport}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Tổng xuất</div>
-                            <div class="summary-value qty-export">-${totalExport}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Tồn kho hiện tại</div>
-                            <div class="summary-value" style="color:var(--accent);">${currentStock}</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Tổng giao dịch</div>
-                            <div class="summary-value" style="color:var(--fg);">${totalItems}</div>
-                        </div>
-                    </div>
-
                     <form method="get" action="${pageContext.request.contextPath}/stock-card" class="filter-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
                         <input type="hidden" name="action" value="detail" />
                         <input type="hidden" name="warehouseId" value="${warehouseId}" />
@@ -174,7 +155,7 @@
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${sc.transactionType == 'IMPORT'}"><span class="qty-import">+${sc.quantityChange}</span></c:when>
-                                                        <c:when test="${sc.transactionType == 'EXPORT'}"><span class="qty-export">-${sc.quantityChange}</span></c:when>
+                                                        <c:when test="${sc.transactionType == 'EXPORT'}"><span class="qty-export">${sc.quantityChange}</span></c:when>
                                                         <c:otherwise><c:out value="${sc.quantityChange >= 0 ? '+' : ''}${sc.quantityChange}"/></c:otherwise>
                                                     </c:choose>
                                                 </td>

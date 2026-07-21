@@ -6,7 +6,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chọn phiếu luân chuyển — Warehouse OS</title>
+    <title>Chọn phiếu luân chuyển · Warehouse OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
                 <c:if test="${not empty search or not empty fromDate or not empty toDate}">
                     <a href="${pageContext.request.contextPath}/export-receipt?action=selectTransfer" class="btn">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                        Xoá lọc
+                        Xóa lọc
                     </a>
                 </c:if>
             </form>
@@ -77,11 +77,11 @@
                             <thead>
                                 <tr>
                                     <th>Mã phiếu</th>
-                                    <th>Kho nguồn</th>
+                                    <th>Kho ngu?n</th>
                                     <th>Kho đích</th>
-                                    <th>Người tạo</th>
+                                    <th>Ngu?i t?o</th>
                                     <th>Ngày tạo</th>
-                                    <th>Chi tiết</th>
+                                    <th>Chi ti?t</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -93,9 +93,9 @@
                                         <td>${t.createdByName}</td>
                                         <td><fmt:formatDate value="${t.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td>
-                                            <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewTransferDetail(${t.transferId}, '${t.transferCode}', '${pageContext.request.contextPath}/export-receipt?action=create&transferId=${t.transferId}')" title="Xem chi tiết">
+                                            <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewTransferDetail(${t.transferId}, '${t.transferCode}', '${pageContext.request.contextPath}/export-receipt?action=create&transferId=${t.transferId}')" title="Xem chi ti?t">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                Xem chi tiết
+                                                Xem chi ti?t
                                             </button>
                                         </td>
                                     </tr>
@@ -151,8 +151,8 @@
                     <thead>
                         <tr>
                             <th>Mẫu máy</th>
-                            <th>Số seri</th>
-                            <th>Số lượng</th>
+                            <th>S? seri</th>
+                            <th>S? lu?ng</th>
                             <th>Ghi chú</th>
                         </tr>
                     </thead>
@@ -163,7 +163,7 @@
             <div class="empty-state" id="detailEmpty" style="display:none;">Không có chi tiết.</div>
         </div>
         <div class="modal-footer">
-            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">Tạo phiếu xuất</a>
+            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">T?o phi?u xu?t</a>
             <button type="button" class="btn" onclick="closeDetailModal()">Đóng</button>
         </div>
     </div>
@@ -210,7 +210,7 @@ function viewTransferDetail(id, code, createUrl) {
             });
         })
         .catch(function() {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:red;">Lỗi tải dữ liệu.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:red;">L?i t?i d? li?u.</td></tr>';
         });
 }
 function closeDetailModal() {

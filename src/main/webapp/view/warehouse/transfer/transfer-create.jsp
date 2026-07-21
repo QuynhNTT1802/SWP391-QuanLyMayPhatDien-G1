@@ -179,7 +179,7 @@
                                 <select class="input" name="destWarehouseId" id="destWarehouseId" required onchange="onDestWarehouseChange()">
                                     <option value="">-- Chọn kho đích --</option>
                                     <c:forEach var="w" items="${warehouses}">
-                                        <option value="${w.warehouseId}"><c:out value="${w.name}"/></option>
+                                        <option value="${w.warehouseId}" data-warehouse-name="<c:out value='${w.name}'/>"><c:out value="${w.name}"/></option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -205,10 +205,6 @@
                             <h3 class="form-section-title">Số lượng từng dòng máy cần chuyển</h3>
                         </div>
 
-                        <div class="alert-info">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                            <span>Mỗi dòng chỉ cần chọn dòng máy và số lượng. <strong>Số serial cụ thể sẽ được quét khi tạo phiếu xuất</strong> sau khi CEO duyệt phiếu đề xuất này.</span>
-                        </div>
 
                         <table class="detail-table">
                             <thead>
@@ -300,7 +296,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         for (var i = 0; i < items.length; i++) {
             var g = items[i];
             var qty = g.q != null ? g.q : 0;
-            html += '<option value="' + g.id + '" data-stock="' + qty + '">' + escapeHtml(g.m) + ' (c\u1ecbn ' + qty + ' m\u00e1y)</option>';
+            html += '<option value="' + g.id + '" data-stock="' + qty + '">' + escapeHtml(g.m) + ' (còn ' + qty + ' máy)</option>';
         }
         return html;
     }
@@ -450,7 +446,44 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
     function onSourceWarehouseChange() {
         var src = document.getElementById('sourceWarehouseId').value;
         repopulateGeneratorSelects(src);
+        filterDestWarehouseOptions(src);
         validatePairRealtime();
+    }
+
+    function filterDestWarehouseOptions(srcId) {
+        var destSel = document.getElementById('destWarehouseId');
+        if (!destSel) return;
+        var prev = destSel.value;
+        var srcText = '';
+        for (var i = 0; i < destSel.options.length; i++) {
+            var opt = destSel.options[i];
+            if (opt.value === srcId) {
+                srcText = opt.getAttribute('data-warehouse-name') || opt.textContent;
+                opt.disabled = true;
+                opt.hidden = true;
+            } else {
+                opt.disabled = false;
+                opt.hidden = false;
+            }
+        }
+        if (prev && prev === srcId) {
+            destSel.value = '';
+        } else if (prev) {
+            destSel.value = prev;
+        }
+        if (srcId && srcText) {
+            var hint = destSel.parentNode.querySelector('.dest-hint');
+            if (!hint) {
+                hint = document.createElement('small');
+                hint.className = 'dest-hint';
+                hint.style.color = 'var(--muted)';
+                hint.style.fontSize = '11.5px';
+                destSel.parentNode.appendChild(hint);
+            }
+        } else {
+            var hint = destSel.parentNode.querySelector('.dest-hint');
+            if (hint) hint.remove();
+        }
     }
 
     function onDestWarehouseChange() {
@@ -503,6 +536,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         document.querySelectorAll('#detailBody tr').forEach(updateRowMax);
         var initialSrc = document.getElementById('sourceWarehouseId').value;
         repopulateGeneratorSelects(initialSrc);
+        filterDestWarehouseOptions(initialSrc);
         validatePairRealtime();
     });
 })();
