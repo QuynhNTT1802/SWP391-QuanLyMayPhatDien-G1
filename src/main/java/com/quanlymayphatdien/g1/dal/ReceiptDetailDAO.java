@@ -26,7 +26,8 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
     public List<ReceiptDetail> findByReceiptId(int receiptId) {
         List<ReceiptDetail> list = new ArrayList<>();
         String sql = "SELECT rd.*, i.serial_number, i.generator_id, i.condition, "
-                   + "       g.model AS generator_model, "
+                   + "       g.model AS generator_model, g.description AS generator_name, "
+                   + "       g.power_rating, g.frequency, g.weight, g.status AS generator_status, "
                    + "       (SELECT c.name FROM generator_category gc "
                    + "          JOIN category c ON gc.category_id = c.id "
                    + "          WHERE gc.generator_id = g.id AND c.type = 'brand' LIMIT 1) AS generator_brand "
@@ -191,6 +192,26 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
         }
         try {
             rd.setCondition(rs.getString("condition"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            rd.setGeneratorPower(rs.getString("power_rating"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            rd.setGeneratorFreq(rs.getString("frequency"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            rd.setGeneratorWeight(rs.getString("weight"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            rd.setGeneratorStatus(rs.getString("generator_status"));
+        } catch (SQLException ignored) {
+        }
+        try {
+            rd.setGeneratorName(rs.getString("generator_name"));
         } catch (SQLException ignored) {
         }
         return rd;

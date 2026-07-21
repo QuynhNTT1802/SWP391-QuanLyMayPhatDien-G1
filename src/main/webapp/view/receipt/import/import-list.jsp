@@ -113,18 +113,17 @@
                                     <th class="col-creator">Người tạo</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-date">Ngày tạo</th>
-                                    <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="receiptsBody">
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="8"><div class="empty-state" style="padding:20px;">Không có phiếu nào.</div></td></tr>
+                                        <tr><td colspan="7"><div class="empty-state" style="padding:20px;">Không có phiếu nào.</div></td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="r" items="${receiptList}">
                                             <tr data-id="${r.receiptId}">
-                                                <td><span class="receipt-code"><c:out value="${r.receiptCode}"/></span></td>
+                                                <td><a class="code-link" href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${r.receiptId}"><c:out value="${r.receiptCode}"/></a></td>
                                                 <td>${r.warehouseName}</td>
                                                 <td>
                                                     <c:choose>
@@ -152,19 +151,6 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-date">${r.createdAt}</td>
-                                                <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${r.receiptId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
@@ -215,39 +201,6 @@
                     if (typeof showToast === 'function') {
                         showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
                     }
-                }
-            });
-        </script>
-        <script>
-            function toggleDropdown(btn) {
-                var menu = btn.nextElementSibling;
-                var isOpen = menu.classList.contains('open');
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    if (m !== menu) {
-                        m.classList.remove('open');
-                        m.previousElementSibling.classList.remove('open');
-                    }
-                });
-                if (isOpen) {
-                    menu.classList.remove('open');
-                    btn.classList.remove('open');
-                    return;
-                }
-                var rect = btn.getBoundingClientRect();
-                menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.left = rect.left + 'px';
-                menu.style.minWidth = Math.max(170, rect.width) + 'px';
-                menu.classList.add('open');
-                btn.classList.add('open');
-            }
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                        m.classList.remove('open');
-                    });
-                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                        b.classList.remove('open');
-                    });
                 }
             });
         </script>
