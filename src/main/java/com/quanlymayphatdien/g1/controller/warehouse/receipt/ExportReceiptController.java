@@ -825,6 +825,10 @@ public class ExportReceiptController extends HttpServlet {
         log.setDetails(isDraft ? "Lưu nháp phiếu xuất kho" : "Tạo phiếu xuất kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
 
+        if (!isDraft && r.getOrderId() != null) {
+            new SaleOrderDAO().markCompleted(r.getOrderId());
+        }
+
         if (isDraft) {
             session.setAttribute("toastMessage", "Đã lưu nháp phiếu");
             session.setAttribute("toastType", "success");

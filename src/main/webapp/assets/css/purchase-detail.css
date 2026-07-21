@@ -286,10 +286,92 @@
                 font-weight: 600;
                 color: var(--accent);
                 cursor: pointer;
+                text-decoration: none;
+            }
+            .proposal-link:hover {
+                color: var(--accent);
                 text-decoration: underline;
                 text-underline-offset: 2px;
             }
-            .proposal-link:hover { color: var(--fg); }
+
+            .proposal-modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,.45);
+                z-index: 1000;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .proposal-modal-backdrop.open {
+                display: flex;
+            }
+            .proposal-modal {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                width: 100%;
+                max-width: 480px;
+                box-shadow: var(--shadow-md);
+                overflow: hidden;
+                animation: proposalModalPop .18s ease-out;
+            }
+            @keyframes proposalModalPop {
+                from { transform: scale(.96); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .proposal-modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 18px;
+                border-bottom: 1px solid var(--border);
+            }
+            .proposal-modal-header h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            .proposal-modal-close {
+                background: transparent;
+                border: none;
+                font-size: 22px;
+                line-height: 1;
+                cursor: pointer;
+                color: var(--muted);
+                padding: 0 4px;
+            }
+            .proposal-modal-close:hover { color: var(--fg); }
+            .proposal-modal-body {
+                padding: 16px 18px;
+            }
+            .proposal-modal-body .prow {
+                display: flex;
+                gap: 10px;
+                padding: 8px 0;
+                border-bottom: 1px dashed var(--border);
+                font-size: 13.5px;
+            }
+            .proposal-modal-body .prow:last-child { border-bottom: none; }
+            .proposal-modal-body .prow .lbl {
+                flex: 0 0 110px;
+                color: var(--muted);
+                font-weight: 500;
+            }
+            .proposal-modal-body .prow .val {
+                flex: 1;
+                color: var(--fg);
+                word-break: break-word;
+            }
+            .proposal-modal-footer {
+                padding: 12px 18px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
+                background: var(--surface-2);
+            }
 
             
             .status-pill {
@@ -316,6 +398,7 @@
             .status-revision { background: #ede9fe; color: #5b21b6; border-color: color-mix(in srgb, #5b21b6 25%, transparent); }
             .status-cancelled { background: #e2e3e5; color: #383d41; border-color: #c4c5c7; }
             .status-deleted { background: #6c757d; color: #ffffff; border-color: #565e64; }
+            .status-completed { background: #cce5ff; color: #004085; border-color: color-mix(in srgb, #004085 25%, transparent); }
 
             
             .empty-state {
