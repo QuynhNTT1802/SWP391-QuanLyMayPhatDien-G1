@@ -11,6 +11,7 @@
 .status-approved { background: #d4edda; color: #155724; }
 .status-rejected { background: #f8d7da; color: #721c24; }
 .status-cancelled { background: #e2e3e5; color: #383d41; }
+.status-completed { background: #cce5ff; color: #004085; }
 .po-code, .code-link {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12.5px;

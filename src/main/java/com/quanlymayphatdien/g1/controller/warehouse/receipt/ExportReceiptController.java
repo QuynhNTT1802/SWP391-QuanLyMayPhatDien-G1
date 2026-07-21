@@ -808,7 +808,7 @@ public class ExportReceiptController extends HttpServlet {
                     || !com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED.equals(transferForExport.getStatus())
                     || transferForExport.getExportReceiptId() != null) {
                 HttpSession s = request.getSession();
-                s.setAttribute("toastMessage", "Phieu de xuat khong hop le hoac da co phieu xuat");
+                s.setAttribute("toastMessage", "Phiếu đề xuất không hợp lệ hoặc đã có phiếu xuất");
                 s.setAttribute("toastType", "danger");
                 response.sendRedirect(request.getContextPath()
                         + "/transfers?action=detail&id=" + transferId);
@@ -816,7 +816,7 @@ public class ExportReceiptController extends HttpServlet {
             }
             if (warehouseId != transferForExport.getSourceWarehouseId()) {
                 HttpSession s = request.getSession();
-                s.setAttribute("toastMessage", "Kho xuat phai la kho nguon cua phieu luan chuyen");
+                s.setAttribute("toastMessage", "Kho xuất phải là kho nguồn của phiếu luân chuyển");
                 s.setAttribute("toastType", "danger");
                 response.sendRedirect(request.getContextPath()
                         + "/transfers?action=detail&id=" + transferId);
@@ -847,7 +847,7 @@ public class ExportReceiptController extends HttpServlet {
             }
             if (isTransferExport) {
                 r.setLinkedTransferId(transferId);
-                r.setNote("Xuat kho theo phieu luan chuyen "
+                r.setNote("Xuất kho theo phiếu luân chuyển "
                         + transferForExport.getTransferCode() + (note != null && !note.isEmpty() ? " | " + note : ""));
             }
             if (liquidationId > 0) {
@@ -929,24 +929,24 @@ public class ExportReceiptController extends HttpServlet {
 
                     Inventory inv = inventoryDAO.findBySerialNumber(sn);
                     if (inv == null) {
-                        throw new SQLException("Serial \"" + sn + "\" không tồn tại trong hệ thống");
+                        throw new SQLException("Số serial \"" + sn + "\" không tồn tại trong hệ thống");
                     }
                     if (liquidationId > 0) {
                         if (!inventoryDAO.isPendingLiquidationAtWarehouse(conn, inv.getSerialNumber(), warehouseId)) {
-                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
+                            throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
                         }
                         if (inventoryDAO.markAsExportedFromPendingLiquidation(conn, inv.getInventoryId()) <= 0) {
-                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái PENDING_LIQUIDATION");
+                            throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái PENDING_LIQUIDATION");
                         }
                     } else {
                         if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
-                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
+                            throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái IN_STOCK tại kho này");
                         }
                         boolean marked = isTransferExport
                                 ? inventoryDAO.markAsInTransit(conn, inv.getInventoryId())
                                 : inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
                         if (!marked) {
-                            throw new SQLException("Serial \"" + sn + "\" không ở trạng thái IN_STOCK");
+                            throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái IN_STOCK");
                         }
                     }
                     d.setReceiptId(receiptId);
@@ -963,24 +963,24 @@ public class ExportReceiptController extends HttpServlet {
                     }
                     Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
                     if (inv == null) {
-                        throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
+                        throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
                     }
                     if (liquidationId > 0) {
                         if (!inventoryDAO.isPendingLiquidationAtWarehouse(conn, inv.getSerialNumber(), warehouseId)) {
-                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
+                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
                         }
                         if (inventoryDAO.markAsExportedFromPendingLiquidation(conn, inv.getInventoryId()) <= 0) {
-                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái PENDING_LIQUIDATION");
+                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái PENDING_LIQUIDATION");
                         }
                     } else {
                         if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
-                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
+                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
                         }
                         boolean marked = isTransferExport
                                 ? inventoryDAO.markAsInTransit(conn, inv.getInventoryId())
                                 : inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
                         if (!marked) {
-                            throw new SQLException("Serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
+                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
                         }
                     }
                     d.setReceiptId(receiptId);
@@ -1102,8 +1102,8 @@ public class ExportReceiptController extends HttpServlet {
                 transferLog.setAction("EXPORT_CREATED");
                 transferLog.setEntityId(transferId);
                 transferLog.setEntityName(transferForExport.getTransferCode());
-                transferLog.setDetails("Phieu xuat " + r.getReceiptCode()
-                        + " da duoc tao tu phieu luan chuyen (APPROVED -> EXPORTED)");
+                transferLog.setDetails("Phiếu xuất " + r.getReceiptCode()
+                        + " đã được tạo từ phiếu luân chuyển (APPROVED -> EXPORTED)");
                 activityLogDAO.insert(transferLog);
 
                 notifyDestWarehouseStaff(transferForExport, r, loggedUser, request.getContextPath());
@@ -1114,7 +1114,7 @@ public class ExportReceiptController extends HttpServlet {
         session.setAttribute("toastType", "success");
         if (isTransferExport) {
             session.setAttribute("toastMessage",
-                    "Tao phieu xuat thanh cong. Kho dich co the tao phieu nhap.");
+                    "Tạo phiếu xuất thành công. Kho đích có thể tạo phiếu nhập.");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + transferId);
         } else {
             response.sendRedirect(request.getContextPath() + "/export-receipt?action=list");
@@ -1155,7 +1155,7 @@ public class ExportReceiptController extends HttpServlet {
             sc.setTransactionType("TRANSFER_OUT");
             sc.setQuantityChange(-totalQty);
             sc.setQuantityAfter(qtyAfter);
-            sc.setReferenceNote("Phieu xuat " + receiptCode + " (luan chuyen)");
+            sc.setReferenceNote("Phiếu xuất " + receiptCode + " (luân chuyển)");
             sc.setCreatedAt(java.time.LocalDateTime.now());
             sc.setCreatedBy(createdBy);
             scDAO.insert(conn, sc);
@@ -1181,10 +1181,10 @@ public class ExportReceiptController extends HttpServlet {
             if (scopedWh != null && scopedWh == transfer.getDestWarehouseId()) {
                 NotificationService.send(
                         u.getId(),
-                        "Phieu xuat moi tu kho nguon",
-                        "Kho nguon da tao phieu xuat " + receipt.getReceiptCode()
-                        + " tu phieu luan chuyen " + transfer.getTransferCode()
-                        + ". Ban co the tao phieu nhap tai kho dich.",
+                        "Phiếu xuất mới từ kho nguồn",
+                        "Kho nguồn đã tạo phiếu xuất " + receipt.getReceiptCode()
+                        + " từ phiếu luân chuyển " + transfer.getTransferCode()
+                        + ". Bạn có thể tạo phiếu nhập tại kho đích.",
                         contextPath + "/transfers?action=detail&id=" + transfer.getTransferId(),
                         "transfer",
                         transfer.getTransferId()
@@ -1209,27 +1209,27 @@ public class ExportReceiptController extends HttpServlet {
         int receiptId = parseId(request.getParameter("receiptId"));
         if (receiptId <= 0) {
             body.put("success", false);
-            body.put("message", "Thieu receiptId");
+            body.put("message", "Thiếu receiptId");
             new Gson().toJson(body, response.getWriter());
             return;
         }
         Receipt existing = receiptDAO.findById(receiptId);
         if (existing == null || !TYPE.equals(existing.getReceiptType())) {
             body.put("success", false);
-            body.put("message", "Phieu khong hop le");
+            body.put("message", "Phiếu không hợp lệ");
             new Gson().toJson(body, response.getWriter());
             return;
         }
         if (!GlobalUtils.RECEIPT_STATUS_PENDING.equals(existing.getStatus())) {
             body.put("success", false);
-            body.put("message", "Chi rut duoc phieu o trang thai CHO_DUYET");
+            body.put("message", "Chỉ rút được phiếu ở trạng thái chờ duyệt");
             new Gson().toJson(body, response.getWriter());
             return;
         }
         if (existing.getCreatedBy() != loggedUser.getId()) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             body.put("success", false);
-            body.put("message", "Chi nguoi tao moi duoc rut phieu");
+            body.put("message", "Chỉ người tạo mới được rút phiếu");
             new Gson().toJson(body, response.getWriter());
             return;
         }
@@ -1247,7 +1247,7 @@ public class ExportReceiptController extends HttpServlet {
                 ps.setInt(2, receiptId);
                 ps.setString(3, GlobalUtils.RECEIPT_STATUS_PENDING);
                 if (ps.executeUpdate() == 0) {
-                    throw new SQLException("Phieu khong con o trang thai CHO_DUYET");
+                    throw new SQLException("Phiếu không còn ở trạng thái chờ duyệt");
                 }
             }
 
@@ -1262,7 +1262,7 @@ public class ExportReceiptController extends HttpServlet {
                 }
             }
             body.put("success", false);
-            body.put("message", "Loi: " + ex.getMessage());
+            body.put("message", "Lỗi: " + ex.getMessage());
         } finally {
             if (conn != null) {
                 try {
@@ -1566,12 +1566,12 @@ public class ExportReceiptController extends HttpServlet {
 
         for (LiquidationDetail ld : liqDetails) {
             if (!detailSerials.contains(ld.getSerialNumber())) {
-                errors.add("Thiếu serial " + ld.getSerialNumber() + " (" + ld.getGeneratorModelName() + ") trong phiếu xuất");
+                errors.add("Thiếu số serial " + ld.getSerialNumber() + " (" + ld.getGeneratorModelName() + ") trong phiếu xuất");
             }
         }
         for (String sn : detailSerials) {
             if (!liqSerials.contains(sn)) {
-                errors.add("Serial " + sn + " không thuộc đơn thanh lý này");
+                errors.add("Số serial " + sn + " không thuộc đơn thanh lý này");
             }
         }
     }

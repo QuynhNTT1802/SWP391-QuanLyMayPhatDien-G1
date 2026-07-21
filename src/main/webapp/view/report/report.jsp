@@ -296,7 +296,7 @@
                                 <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
-                    </table>
+   git pull ỏiig                 </table>
                 </c:when>
 
                 <c:when test="${reportType == 'sales'}">
