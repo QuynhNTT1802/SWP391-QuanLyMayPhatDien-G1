@@ -17,7 +17,7 @@ public class GlobalUtils {
     public static final String PASSWORD_ERROR_MSG = "M?t kh?u ph?i c� �t nh?t 1 ch? hoa, 1 ch? th??ng v� 1 s?.";
 
     public static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-    public static final String EMAIL_ERROR_MSG = "Email kh�ng h?p l?.";
+    public static final String EMAIL_ERROR_MSG = "Email không hợp lệ.";
 
     public static final String STATUS_DRAFT = "DRAFT";
 

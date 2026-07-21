@@ -319,7 +319,7 @@ public class TransferController extends HttpServlet {
         }
         Transfer t = transferDAO.findById(id);
         if (t == null) {
-            request.setAttribute("error", "Khong tim thay phieu");
+            request.setAttribute("error", "Không tìm thấy phiếu");
             request.getRequestDispatcher("/view/warehouse/transfer/transfer-detail.jsp").forward(request, response);
             return;
         }
@@ -451,7 +451,7 @@ public class TransferController extends HttpServlet {
         HttpSession session = request.getSession(false);
         int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         if (scopedWarehouseId > 0 && sourceWh != scopedWarehouseId) {
-            redirectError(request, response, "Ban chi duoc tao phieu luan chuyen tu kho cua minh");
+            redirectError(request, response, "Bạn chỉ được tạo phiếu luân chuyển từ kho của mình");
             return;
         }
 
@@ -461,16 +461,16 @@ public class TransferController extends HttpServlet {
 
         List<String> errors = new ArrayList<>();
         if (sourceWh <= 0) {
-            errors.add("Vui long chon kho nguon");
+            errors.add("Vui lòng chọn kho nguồn");
         }
         if (destWh <= 0) {
-            errors.add("Vui long chon kho dich");
+            errors.add("Vui lòng chọn kho đích");
         }
         if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) {
-            errors.add("Kho nguon va kho dich phai khac nhau");
+            errors.add("Kho nguồn và kho đích phải khác nhau");
         }
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
-            errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
+            errors.add("Ghi chú không vượt quá " + MAX_NOTE_LENGTH + " ký tự");
         }
 
         Set<String> seenRows = new HashSet<>();
@@ -490,15 +490,15 @@ public class TransferController extends HttpServlet {
                 try {
                     genId = Integer.parseInt(idStr.trim());
                 } catch (NumberFormatException e) {
-                    errors.add("Dong " + rowNum + ": Vui long chon may phat dien");
+                    errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
                     continue;
                 }
                 if (genId <= 0) {
-                    errors.add("Dong " + rowNum + ": Vui long chon may phat dien");
+                    errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
                     continue;
                 }
                 if (!seenRows.add(genId + "_" + rowNum)) {
-                    errors.add("Dong " + rowNum + ": Bi trung may phat dien");
+                    errors.add("Dòng " + rowNum + ": Bị trùng máy phát điện");
                     continue;
                 }
 
@@ -507,22 +507,22 @@ public class TransferController extends HttpServlet {
                     try {
                         qty = Integer.parseInt(qtyStr.trim());
                     } catch (NumberFormatException e) {
-                        errors.add("Dong " + rowNum + ": So luong phai la so nguyen");
+                        errors.add("Dòng " + rowNum + ": Số lượng phải là số nguyên");
                         continue;
                     }
                 }
                 if (qty <= 0) {
-                    errors.add("Dong " + rowNum + ": So luong phai lon hon 0");
+                    errors.add("Dòng " + rowNum + ": Số lượng phải lớn hơn 0");
                     continue;
                 }
                 if (qty > MAX_QUANTITY) {
-                    errors.add("Dong " + rowNum + ": So luong khong vuot qua " + MAX_QUANTITY);
+                    errors.add("Dòng " + rowNum + ": Số lượng không vượt quá " + MAX_QUANTITY);
                     continue;
                 }
 
                 if (detailNote != null && detailNote.length() > MAX_DETAIL_NOTE_LENGTH) {
-                    errors.add("Dong " + rowNum + ": Ghi chu khong vuot qua "
-                            + MAX_DETAIL_NOTE_LENGTH + " ky tu");
+                    errors.add("Dòng " + rowNum + ": Ghi chú không vượt quá "
+                            + MAX_DETAIL_NOTE_LENGTH + " ký tự");
                     continue;
                 }
 
@@ -531,8 +531,8 @@ public class TransferController extends HttpServlet {
                     Generator g = generatorDAO.findById(genId);
                     String model = (g != null && g.getModel() != null && !g.getModel().isEmpty())
                             ? g.getModel() : ("#" + genId);
-                    errors.add("Dong " + rowNum + ": " + model + " chi con " + availableQty
-                            + " may trong kho nguon (can " + qty + ")");
+                    errors.add("Dòng " + rowNum + ": " + model + " chỉ còn " + availableQty
+                            + " máy trong kho nguồn (cần " + qty + ")");
                     continue;
                 }
 
@@ -544,7 +544,7 @@ public class TransferController extends HttpServlet {
             }
         }
         if (details.isEmpty()) {
-            errors.add("Phai co it nhat 1 dong chi tiet hop le");
+            errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
         }
 
         if (!errors.isEmpty()) {
@@ -564,7 +564,7 @@ public class TransferController extends HttpServlet {
 
         int newId = transferDAO.insert(t);
         if (newId <= 0) {
-            request.setAttribute("toastMessage", "Khong the tao phieu");
+            request.setAttribute("toastMessage", "Không thể tạo phiếu");
             request.setAttribute("toastType", "danger");
             showCreateForm(request, response);
             return;
@@ -580,23 +580,23 @@ public class TransferController extends HttpServlet {
         log.setAction("CREATE");
         log.setEntityId(newId);
         log.setEntityName(t.getTransferCode());
-        log.setDetails("Tao phieu de xuat luan chuyen (PENDING_CEO)");
+        log.setDetails("Tạo phiếu đề xuất luân chuyển (PENDING_CEO)");
         activityLogDAO.insert(log);
 
         List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 1000);
         for (User ceo : ceos) {
             NotificationService.send(
                     ceo.getId(),
-                    "Phieu luan chuyen moi cho duyet",
-                    "Nhan vien " + user.getName() + " da tao phieu luan chuyen "
-                            + t.getTransferCode() + " can CEO duyet.",
+                    "Phiếu luân chuyển mới chờ duyệt",
+                    "Nhân viên " + user.getName() + " đã tạo phiếu luân chuyển "
+                            + t.getTransferCode() + " cần CEO duyệt.",
                     request.getContextPath() + "/transfers?action=detail&id=" + newId,
                     "transfer",
                     newId
             );
         }
 
-        session.setAttribute("toastMessage", "Tao phieu thanh cong. Phieu da duoc gui cho CEO duyet.");
+        session.setAttribute("toastMessage", "Tạo phiếu thành công. Phiếu đã được gửi cho CEO duyệt.");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + newId);
     }
@@ -622,17 +622,17 @@ public class TransferController extends HttpServlet {
             log.setAction("CE_APPROVE");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("CEO duyet phieu luan chuyen (PENDING_CEO -> APPROVED)");
+            log.setDetails("CEO duyệt phiếu luân chuyển (PENDING_CEO -> APPROVED)");
             activityLogDAO.insert(log);
 
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "CEO da duyet phieu. Kho nguon co the tao phieu xuat.");
+            session.setAttribute("toastMessage", "CEO đã duyệt phiếu. Kho nguồn có thể tạo phiếu xuất.");
             session.setAttribute("toastType", "success");
 
             notifySourceWarehouseStaff(t, user, request.getContextPath());
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the duyet (trang thai khong hop le)");
+            session.setAttribute("toastMessage", "Không thể duyệt (trạng thái không hợp lệ)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
@@ -654,7 +654,7 @@ public class TransferController extends HttpServlet {
         }
         if (note == null) {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Vui long nhap ly do tu choi");
+            session.setAttribute("toastMessage", "Vui lòng nhập lý do từ chối");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
@@ -672,15 +672,15 @@ public class TransferController extends HttpServlet {
             log.setAction("CE_REJECT");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("CEO tu choi: " + note);
+            log.setDetails("CEO từ chối: " + note);
             activityLogDAO.insert(log);
 
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da tu choi phieu");
+            session.setAttribute("toastMessage", "Đã từ chối phiếu");
             session.setAttribute("toastType", "success");
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the tu choi (trang thai khong hop le)");
+            session.setAttribute("toastMessage", "Không thể từ chối (trạng thái không hợp lệ)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
@@ -702,7 +702,7 @@ public class TransferController extends HttpServlet {
         }
         if (note == null) {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Vui long nhap ly do yeu cau chinh sua");
+            session.setAttribute("toastMessage", "Vui lòng nhập lý do yêu cầu chỉnh sửa");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
@@ -720,18 +720,18 @@ public class TransferController extends HttpServlet {
             log.setAction("REQUEST_REVISION");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("CEO yeu cau chinh sua: " + note);
+            log.setDetails("CEO yêu cầu chỉnh sửa: " + note);
             activityLogDAO.insert(log);
 
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da yeu cau chinh sua. Nguoi tao can sua va gui lai.");
+            session.setAttribute("toastMessage", "Đã yêu cầu chỉnh sửa. Người tạo cần sửa và gửi lại.");
             session.setAttribute("toastType", "success");
 
             try {
                 NotificationService.send(
                         t.getCreatedBy(),
-                        "Phieu luan chuyen yeu cau chinh sua",
-                        "CEO yeu cau chinh sua phieu " + t.getTransferCode() + ": " + note,
+                        "Phiếu luân chuyển yêu cầu chỉnh sửa",
+                        "CEO yêu cầu chỉnh sửa phiếu " + t.getTransferCode() + ": " + note,
                         request.getContextPath() + "/transfers?action=detail&id=" + id,
                         "transfer",
                         id
@@ -740,7 +740,7 @@ public class TransferController extends HttpServlet {
             }
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the yeu cau chinh sua (trang thai khong hop le)");
+            session.setAttribute("toastMessage", "Không thể yêu cầu chỉnh sửa (trạng thái không hợp lệ)");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
@@ -764,7 +764,7 @@ public class TransferController extends HttpServlet {
         }
         if (!GlobalUtils.TRANSFER_STATUS_REQUEST_REVISION.equals(t.getStatus())) {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Phieu khong o trang thai yeu cau chinh sua");
+            session.setAttribute("toastMessage", "Phiếu không ở trạng thái yêu cầu chỉnh sửa");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
@@ -776,16 +776,16 @@ public class TransferController extends HttpServlet {
 
         List<String> errors = new ArrayList<>();
         if (sourceWh <= 0) {
-            errors.add("Vui long chon kho nguon");
+            errors.add("Vui lòng chọn kho nguồn");
         }
         if (destWh <= 0) {
-            errors.add("Vui long chon kho dich");
+            errors.add("Vui lòng chọn kho đích");
         }
         if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) {
-            errors.add("Kho nguon va kho dich phai khac nhau");
+            errors.add("Kho nguồn và kho đích phải khác nhau");
         }
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
-            errors.add("Ghi chu khong vuot qua " + MAX_NOTE_LENGTH + " ky tu");
+            errors.add("Ghi chú không vượt quá " + MAX_NOTE_LENGTH + " ký tự");
         }
 
         List<TransferDetail> details = new ArrayList<>();
@@ -805,15 +805,15 @@ public class TransferController extends HttpServlet {
                 try {
                     genId = Integer.parseInt(idStr.trim());
                 } catch (NumberFormatException e) {
-                    errors.add("Dong " + rowNum + ": Vui long chon may phat dien");
+                    errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
                     continue;
                 }
                 if (genId <= 0) {
-                    errors.add("Dong " + rowNum + ": Vui long chon may phat dien");
+                    errors.add("Dòng " + rowNum + ": Vui lòng chọn máy phát điện");
                     continue;
                 }
                 if (dn != null && dn.length() > MAX_DETAIL_NOTE_LENGTH) {
-                    errors.add("Dong " + rowNum + ": Ghi chu khong vuot qua " + MAX_DETAIL_NOTE_LENGTH + " ky tu");
+                    errors.add("Dòng " + rowNum + ": Ghi chú không vượt quá " + MAX_DETAIL_NOTE_LENGTH + " ký tự");
                     continue;
                 }
                 int qty = 1;
@@ -821,16 +821,16 @@ public class TransferController extends HttpServlet {
                     try {
                         qty = Integer.parseInt(qtyStr.trim());
                     } catch (NumberFormatException e) {
-                        errors.add("Dong " + rowNum + ": So luong phai la so nguyen");
+                        errors.add("Dòng " + rowNum + ": Số lượng phải là số nguyên");
                         continue;
                     }
                 }
                 if (qty <= 0) {
-                    errors.add("Dong " + rowNum + ": So luong phai lon hon 0");
+                    errors.add("Dòng " + rowNum + ": Số lượng phải lớn hơn 0");
                     continue;
                 }
                 if (qty > MAX_QUANTITY) {
-                    errors.add("Dong " + rowNum + ": So luong khong vuot qua " + MAX_QUANTITY);
+                    errors.add("Dòng " + rowNum + ": Số lượng không vượt quá " + MAX_QUANTITY);
                     continue;
                 }
                 int availableQty = inventoryDAO.findInStockByWarehouseAndGenerator(sourceWh, genId).size();
@@ -838,8 +838,8 @@ public class TransferController extends HttpServlet {
                     Generator g = generatorDAO.findById(genId);
                     String model = (g != null && g.getModel() != null && !g.getModel().isEmpty())
                             ? g.getModel() : ("#" + genId);
-                    errors.add("Dong " + rowNum + ": " + model + " chi con " + availableQty
-                            + " may trong kho nguon (can " + qty + ")");
+                    errors.add("Dòng " + rowNum + ": " + model + " chỉ còn " + availableQty
+                            + " máy trong kho nguồn (cần " + qty + ")");
                     continue;
                 }
                 TransferDetail d = new TransferDetail();
@@ -851,7 +851,7 @@ public class TransferController extends HttpServlet {
             }
         }
         if (details.isEmpty()) {
-            errors.add("Phai co it nhat 1 dong chi tiet hop le");
+            errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
         }
 
         if (!errors.isEmpty()) {
@@ -864,7 +864,7 @@ public class TransferController extends HttpServlet {
         boolean headerOk = transferDAO.updateHeader(id, sourceWh, destWh, note);
         if (!headerOk) {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the cap nhat phieu");
+            session.setAttribute("toastMessage", "Không thể cập nhật phiếu");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
             return;
@@ -883,11 +883,11 @@ public class TransferController extends HttpServlet {
             log.setAction("UPDATE");
             log.setEntityId(id);
             log.setEntityName(t.getTransferCode());
-            log.setDetails("Nguoi tao sua va gui lai phieu sau yeu cau chinh sua");
+            log.setDetails("Người tạo sửa và gửi lại phiếu sau yêu cầu chỉnh sửa");
             activityLogDAO.insert(log);
 
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Da luu chinh sua va gui lai CEO duyet");
+            session.setAttribute("toastMessage", "Đã lưu chỉnh sửa và gửi lại CEO duyệt");
             session.setAttribute("toastType", "success");
 
             try {
@@ -895,9 +895,9 @@ public class TransferController extends HttpServlet {
                 for (User ceo : ceos) {
                     NotificationService.send(
                             ceo.getId(),
-                            "Phieu luan chuyen duoc sua va gui lai",
-                            "Nhan vien " + user.getName() + " da sua phieu " + t.getTransferCode()
-                                    + " va gui lai cho CEO duyet.",
+                            "Phiếu luân chuyển được sửa và gửi lại",
+                            "Nhân viên " + user.getName() + " đã sửa phiếu " + t.getTransferCode()
+                                    + " và gửi lại cho CEO duyệt.",
                             request.getContextPath() + "/transfers?action=detail&id=" + id,
                             "transfer",
                             id
@@ -907,7 +907,7 @@ public class TransferController extends HttpServlet {
             }
         } else {
             HttpSession session = request.getSession();
-            session.setAttribute("toastMessage", "Khong the gui lai phieu");
+            session.setAttribute("toastMessage", "Không thể gửi lại phiếu");
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/transfers?action=detail&id=" + id);
@@ -931,9 +931,9 @@ public class TransferController extends HttpServlet {
             if (scopedWh != null && scopedWh == t.getSourceWarehouseId()) {
                 NotificationService.send(
                         u.getId(),
-                        "Phieu luan chuyen da duoc CEO duyet",
-                        "CEO da duyet phieu luan chuyen " + t.getTransferCode()
-                                + ". Ban co the tao phieu xuat tu kho nguon.",
+                        "Phiếu luân chuyển đã được CEO duyệt",
+                        "CEO đã duyệt phiếu luân chuyển " + t.getTransferCode()
+                                + ". Bạn có thể tạo phiếu xuất từ kho nguồn.",
                         contextPath + "/transfers?action=detail&id=" + t.getTransferId(),
                         "transfer",
                         t.getTransferId()

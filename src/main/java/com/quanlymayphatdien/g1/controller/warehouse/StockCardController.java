@@ -4,6 +4,8 @@ import com.quanlymayphatdien.g1.dal.GeneratorDAO;
 import com.quanlymayphatdien.g1.dal.StockCardDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.StockCard;
+import com.quanlymayphatdien.g1.entity.Warehouse;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -46,6 +48,9 @@ public class StockCardController extends HttpServlet {
 
     private void listStockCards(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
         Integer warehouseId = parseIntOrNull(request.getParameter("warehouseId"));
         Integer generatorId = parseIntOrNull(request.getParameter("generatorId"));
         String typeFilter = request.getParameter("type");
@@ -76,7 +81,15 @@ public class StockCardController extends HttpServlet {
 
         List<StockCard> list = scDAO.findWithFilters(warehouseId, generatorId, typeFilter, search, fromDate, toDate, page, pageSize);
         request.setAttribute("stockCards", list);
+
         request.setAttribute("warehouses", warehouseDAO.findAll());
+        if (scopedWarehouseId > 0) {
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+            if (scoped != null) {
+                request.setAttribute("scopedWarehouseName", scoped.getName());
+            }
+        }
         request.setAttribute("generators", generatorDAO.findAll());
         request.setAttribute("warehouseId", warehouseId);
         request.setAttribute("generatorId", generatorId);
@@ -94,10 +107,17 @@ public class StockCardController extends HttpServlet {
 
     private void viewByGenerator(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+
         Integer warehouseId = parseIntOrNull(request.getParameter("warehouseId"));
         Integer generatorId = parseIntOrNull(request.getParameter("generatorId"));
         if (warehouseId == null || generatorId == null) {
             response.sendRedirect(request.getContextPath() + "/stock-card");
+            return;
+        }
+        if (scopedWarehouseId > 0 && warehouseId != scopedWarehouseId) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
         String typeFilter = request.getParameter("type");
@@ -111,7 +131,9 @@ public class StockCardController extends HttpServlet {
         if (pageStr != null && !pageStr.isEmpty()) {
             try {
                 page = Integer.parseInt(pageStr);
-                if (page < 1) page = 1;
+                if (page < 1) {
+                    page = 1;
+                }
             } catch (NumberFormatException ignored) {
             }
         }
@@ -134,8 +156,12 @@ public class StockCardController extends HttpServlet {
 
         int totalItems = scDAO.countByWarehouseAndGenerator(warehouseId, generatorId, typeFilter, search, fromDate, toDate);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-        if (totalPages < 1) totalPages = 1;
-        if (page > totalPages) page = totalPages;
+        if (totalPages < 1) {
+            totalPages = 1;
+        }
+        if (page > totalPages) {
+            page = totalPages;
+        }
 
         List<StockCard> list = scDAO.findByWarehouseAndGeneratorPaged(warehouseId, generatorId, typeFilter, search, fromDate, toDate, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;

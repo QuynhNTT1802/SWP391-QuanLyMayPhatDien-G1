@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : 403
     Created on : May 25, 2026, 3:34:40 PM
     Author     : LENOVO
@@ -29,13 +29,13 @@
       <a href="${pageContext.request.contextPath}/home#features">Tính năng</a>
       <a href="${pageContext.request.contextPath}/home#preview">Sản phẩm</a>
       <a href="${pageContext.request.contextPath}/home#pricing">Bảng giá</a>
-      <a href="${pageContext.request.contextPath}/home#faq">FAQ</a>
+      <a href="${pageContext.request.contextPath}/home#faq">Câu hỏi thường gặp</a>
       <a href="#">Khách hàng</a>
     </nav>
     <div class="nav-cta">
       <c:choose>
         <c:when test="${not empty loggedUser}">
-          <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn">Dashboard</a>
+          <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn">Bảng điều khiển</a>
         </c:when>
         <c:otherwise>
           <a href="${pageContext.request.contextPath}/authen?action=login" class="btn btn-ghost">Đăng nhập</a>
@@ -82,9 +82,9 @@
       </div>
       <ul class="suggestion-list">
         <li><span class="num">1</span>Yêu cầu quản trị viên cấp quyền truy cập trang này cho vai trò của bạn</li>
-        <li><span class="num">2</span>Đăng nhập bằng tài khoản khác có quyền cao hơn (Admin, Quản lý kho)</li>
+        <li><span class="num">2</span>Đăng nhập bằng tài khoản khác có quyền cao hơn (Quản trị viên, Quản lý kho)</li>
         <li><span class="num">3</span>Kiểm tra vai trò hiện tại tại trang <a href="${pageContext.request.contextPath}/profile" style="color:var(--accent)">Hồ sơ cá nhân</a></li>
-        <li><span class="num">4</span>Liên hệ bộ phận IT qua email <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">support@warehouse-os.vn</span></li>
+        <li><span class="num">4</span>Liên hệ bộ phận IT qua email hỗ trợ <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent)">support@warehouse-os.vn</span></li>
       </ul>
     </div>
   </div>
@@ -95,14 +95,14 @@
     <div class="foot-top">
       <div class="foot-brand">
         <a href="${pageContext.request.contextPath}/home" class="brand"><span class="brand-mark">WH</span>Warehouse OS</a>
-        <p>Hệ điều hành cho kho hàng. Made in Vietnam, dành cho nhà bán lẻ &amp; phân phối Việt.</p>
+        <p>Hệ điều hành cho kho hàng. Sản xuất tại Việt Nam, dành cho nhà bán lẻ &amp; phân phối Việt.</p>
       </div>
       <div class="foot-col">
         <h5>Sản phẩm</h5>
         <ul>
           <li><a href="${pageContext.request.contextPath}/home#features">Tính năng</a></li>
           <li><a href="${pageContext.request.contextPath}/home#pricing">Bảng giá</a></li>
-          <li><a href="#">Demo</a></li>
+          <li><a href="#">Bản demo</a></li>
           <li><a href="#">Tích hợp</a></li>
           <li><a href="#">Thay đổi gần đây</a></li>
         </ul>
@@ -120,7 +120,7 @@
         <h5>Tài liệu</h5>
         <ul>
           <li><a href="#">Hướng dẫn dùng</a></li>
-          <li><a href="#">API docs</a></li>
+          <li><a href="#">Tài liệu API</a></li>
           <li><a href="#">Blog vận hành kho</a></li>
           <li><a href="#">Trạng thái hệ thống</a></li>
         </ul>

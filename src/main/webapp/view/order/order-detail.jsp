@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -532,7 +532,7 @@
                     <h1>Chi tiết đơn hàng</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <span><c:out value="${order.orderCode}"/></span></span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -1014,7 +1014,7 @@
             <div class="modal-host" id="deleteModal">
                 <div class="modal-card">
                     <h3>Xoá đơn hàng</h3>
-                    <div class="modal-sub">Đơn sẽ bị xoá khỏi danh sách của Sale Manager. Bạn vẫn có thể xem lại trong danh sách của mình.</div>
+                    <div class="modal-sub">Đơn sẽ bị xoá khỏi danh sách của Quản lý Bán hàng. Bạn vẫn có thể xem lại trong danh sách của mình.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/order?action=delete">
                         <input type="hidden" name="id" value="${order.orderId}" />
                         <div class="modal-actions">
@@ -1066,7 +1066,7 @@
             <div class="modal-host" id="resubmitModal">
                 <div class="modal-card">
                     <h3>Gửi duyệt lại</h3>
-                    <div class="modal-sub">Đơn hàng sẽ chuyển sang trạng thái "Chờ duyệt" để Sale Manager xem xét lại sau khi đã chỉnh sửa.</div>
+                    <div class="modal-sub">Đơn hàng sẽ chuyển sang trạng thái "Chờ duyệt" để Quản lý Bán hàng xem xét lại sau khi đã chỉnh sửa.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/order?action=update" id="resubmitForm">
                         <input type="hidden" name="orderId" value="${order.orderId}" />
                         <input type="hidden" name="customerName" value="<c:out value='${order.customer.name}'/>" />

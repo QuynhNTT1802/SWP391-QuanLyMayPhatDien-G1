@@ -408,7 +408,7 @@ public class InventoryCheckController extends HttpServlet {
             }
             boolean serialsOk = checkDAO.updateSerialsBatch(serials);
             if (!serialsOk) {
-                session.setAttribute("error", "Có lỗi khi lưu tình trạng serial, vui lòng thử lại");
+                session.setAttribute("error", "Có lỗi khi lưu tình trạng số serial, vui lòng thử lại");
                 response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
                 return;
             }
@@ -457,13 +457,13 @@ public class InventoryCheckController extends HttpServlet {
         int nullStatusCount = checkDAO.countNullStatusByCheckId(checkId);
         if (nullStatusCount < 0) {
             session.setAttribute("error",
-                    "Không thể hoàn thành: lỗi khi kiểm tra trạng thái serial, vui lòng thử lại");
+                    "Không thể hoàn thành: lỗi khi kiểm tra trạng thái số serial, vui lòng thử lại");
             response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
             return;
         }
         if (nullStatusCount > 0) {
             session.setAttribute("error",
-                    "Không thể hoàn thành: còn " + nullStatusCount + " serial chưa được đánh giá tình trạng (Tốt/Kém/Hỏng)");
+                    "Không thể hoàn thành: còn " + nullStatusCount + " số serial chưa được đánh giá tình trạng (Tốt/Kém/Hỏng)");
             response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
             return;
         }

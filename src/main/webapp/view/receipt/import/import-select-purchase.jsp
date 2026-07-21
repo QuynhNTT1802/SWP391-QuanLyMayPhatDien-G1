@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Phiếu purchase đã duyệt — Warehouse OS</title>
+    <title>Đơn mua — Warehouse OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -24,8 +24,8 @@
 
     <div>
         <header class="topbar">
-            <h1>Phiếu purchase đã duyệt</h1>
-            <span class="crumb">/ <a href="${pageContext.request.contextPath}/import-receipt">Phiếu nhập</a> / Chọn phiếu purchase</span>
+            <h1>Đơn mua</h1>
+            <span class="crumb">/ <a href="${pageContext.request.contextPath}/import-receipt">Phiếu nhập</a> / Chọn đơn mua</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
                 <a class="btn" href="${pageContext.request.contextPath}/import-receipt">
@@ -39,7 +39,7 @@
             <div class="page-head">
                 <div class="left">
                     <div class="eyebrow">Kho · Phiếu nhập</div>
-                    <h2 class="page-title">Chọn phiếu purchase đã duyệt</h2>
+                    <h2 class="page-title">Đơn mua</h2>
                     <div class="page-sub">${totalItems} phiếu</div>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                 <input type="hidden" name="page" value="1" />
                 <div class="search-input">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu purchase" autocomplete="off" />
+                    <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã đơn mua" autocomplete="off" />
                 </div>
                 <label style="font-size:13px;color:var(--muted);">Từ:</label>
                 <input type="date" name="fromDate" class="filter-select" value="<c:out value='${fromDate}'/>" title="Từ ngày duyệt" />
@@ -68,7 +68,7 @@
 
             <c:choose>
                 <c:when test="${empty approvedPOs}">
-                    <div class="empty-state">Không có phiếu purchase nào đã duyệt.</div>
+                    <div class="empty-state">Không có đơn mua nào đã duyệt.</div>
                 </c:when>
                 <c:otherwise>
                     <div class="table-card">
@@ -139,7 +139,7 @@
 <div class="modal-overlay" id="detailModal" style="display:none;">
     <div class="modal-box" style="max-width:700px;">
         <div class="modal-header">
-            <h3 id="modalTitle">Chi tiết phiếu purchase</h3>
+            <h3 id="modalTitle">Chi tiết đơn mua</h3>
             <button type="button" class="modal-close" onclick="closeDetailModal()">&times;</button>
         </div>
         <div class="modal-body">
@@ -186,7 +186,7 @@
 </style>
 <script>
 function viewPurchaseDetail(id, code, createUrl) {
-    document.getElementById('modalTitle').textContent = 'Chi tiết phiếu purchase ' + code;
+    document.getElementById('modalTitle').textContent = 'Chi tiết đơn mua ' + code;
     document.getElementById('createBtn').href = createUrl;
     var tbody = document.getElementById('detailBody');
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted)">Đang tải...</td></tr>';

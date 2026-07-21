@@ -179,7 +179,7 @@
                                 <select class="input" name="destWarehouseId" id="destWarehouseId" required onchange="onDestWarehouseChange()">
                                     <option value="">-- Chọn kho đích --</option>
                                     <c:forEach var="w" items="${warehouses}">
-                                        <option value="${w.warehouseId}"><c:out value="${w.name}"/></option>
+                                        <option value="${w.warehouseId}" data-warehouse-name="<c:out value='${w.name}'/>"><c:out value="${w.name}"/></option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -205,10 +205,6 @@
                             <h3 class="form-section-title">Số lượng từng dòng máy cần chuyển</h3>
                         </div>
 
-                        <div class="alert-info">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                            <span>Mỗi dòng chỉ cần chọn dòng máy và số lượng. <strong>Số serial cụ thể sẽ được quét khi tạo phiếu xuất</strong> sau khi CEO duyệt phiếu đề xuất này.</span>
-                        </div>
 
                         <table class="detail-table">
                             <thead>
@@ -258,22 +254,9 @@
                         </button>
                     </div>
 
-<<<<<<< HEAD
-                    <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
-                        <a class="btn" href="${pageContext.request.contextPath}/transfers">Huỷ bỏ</a>
-                        <button type="button" class="btn" onclick="submitForm('create')">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                            Lưu phiếu (DRAFT)
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="submitForm('create_and_submit')">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                            Tạo &amp; Gửi duyệt (Manager)
-                        </button>
-=======
                     <div class="form-actions" style="margin-top: 24px; display: flex; gap: 8px; justify-content: flex-end;">
                         <a class="btn" href="${pageContext.request.contextPath}/transfers">Hủy bỏ</a>
                         <button type="submit" class="btn btn-primary" onclick="return validateForm()">Gửi CEO duyệt</button>
->>>>>>> 43e4ad0e5deebd88847eabeffbcf9cd1a13a3749
                     </div>
                 </form>
             </div>
@@ -313,7 +296,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         for (var i = 0; i < items.length; i++) {
             var g = items[i];
             var qty = g.q != null ? g.q : 0;
-            html += '<option value="' + g.id + '" data-stock="' + qty + '">' + escapeHtml(g.m) + ' (c\u1ecbn ' + qty + ' m\u00e1y)</option>';
+            html += '<option value="' + g.id + '" data-stock="' + qty + '">' + escapeHtml(g.m) + ' (còn ' + qty + ' máy)</option>';
         }
         return html;
     }
@@ -463,7 +446,44 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
     function onSourceWarehouseChange() {
         var src = document.getElementById('sourceWarehouseId').value;
         repopulateGeneratorSelects(src);
+        filterDestWarehouseOptions(src);
         validatePairRealtime();
+    }
+
+    function filterDestWarehouseOptions(srcId) {
+        var destSel = document.getElementById('destWarehouseId');
+        if (!destSel) return;
+        var prev = destSel.value;
+        var srcText = '';
+        for (var i = 0; i < destSel.options.length; i++) {
+            var opt = destSel.options[i];
+            if (opt.value === srcId) {
+                srcText = opt.getAttribute('data-warehouse-name') || opt.textContent;
+                opt.disabled = true;
+                opt.hidden = true;
+            } else {
+                opt.disabled = false;
+                opt.hidden = false;
+            }
+        }
+        if (prev && prev === srcId) {
+            destSel.value = '';
+        } else if (prev) {
+            destSel.value = prev;
+        }
+        if (srcId && srcText) {
+            var hint = destSel.parentNode.querySelector('.dest-hint');
+            if (!hint) {
+                hint = document.createElement('small');
+                hint.className = 'dest-hint';
+                hint.style.color = 'var(--muted)';
+                hint.style.fontSize = '11.5px';
+                destSel.parentNode.appendChild(hint);
+            }
+        } else {
+            var hint = destSel.parentNode.querySelector('.dest-hint');
+            if (hint) hint.remove();
+        }
     }
 
     function onDestWarehouseChange() {
@@ -516,6 +536,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         document.querySelectorAll('#detailBody tr').forEach(updateRowMax);
         var initialSrc = document.getElementById('sourceWarehouseId').value;
         repopulateGeneratorSelects(initialSrc);
+        filterDestWarehouseOptions(initialSrc);
         validatePairRealtime();
     });
 })();

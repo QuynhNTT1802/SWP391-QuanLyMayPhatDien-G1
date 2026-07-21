@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
@@ -39,34 +39,6 @@
                 </div>
             </div>
 
-            <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px;">
-                <c:if test="${not empty sessionScope.userPermissions and sessionScope.userPermissions.contains('transfers.approve_ceo')}">
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Chờ CEO duyệt</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiPendingCeo}</div>
-                </div>
-                </c:if>
-
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Đã duyệt (chờ phiếu xuất)</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiApproved}</div>
-                </div>
-
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Đã xuất (chờ phiếu nhập)</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiExported}</div>
-                </div>
-
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Hoàn tất</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiCompleted}</div>
-                </div>
-
-                <div class="kpi-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase;">Bị từ chối</div>
-                    <div style="font-size: 28px; font-weight: 700; margin-top: 8px; color: var(--text);">${kpiRejected}</div>
-                </div>
-            </div>
 
             <form method="get" action="${pageContext.request.contextPath}/transfers" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px;">
                 <input type="hidden" name="action" value="list"/>
@@ -176,20 +148,23 @@
                     </tbody>
                 </table>
 
-                <c:if test="${totalPages > 1}">
-                    <div class="pagination" style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
-                        <div class="info" style="font-size: 13px; color: var(--muted);">
-                            Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong> · Tổng <strong>${total}</strong> phiếu
-                        </div>
-                        <div class="controls" style="display: flex; gap: 4px;">
-                            <a href="?action=list&page=${currentPage - 1}&search=${search}&status=${statusFilter}" class="page-btn" ${currentPage == 1 ? 'style="pointer-events: none; opacity: 0.5;"' : ''}>Trước</a>
-                            <c:forEach begin="1" end="${totalPages}" var="p">
-                                <a href="?action=list&page=${p}&search=${search}&status=${statusFilter}" class="page-btn ${p == currentPage ? 'active' : ''}">${p}</a>
-                            </c:forEach>
-                            <a href="?action=list&page=${currentPage + 1}&search=${search}&status=${statusFilter}" class="page-btn" ${currentPage == totalPages ? 'style="pointer-events: none; opacity: 0.5;"' : ''}>Sau</a>
-                        </div>
+                <div class="pagination">
+                    <div class="info">Hiển thị <strong>${(currentPage - 1) * 10 + 1}</strong>–<strong>${currentPage * 10 > total ? total : currentPage * 10}</strong> / <strong>${total}</strong> phiếu</div>
+                    <div class="controls">
+                        <c:if test="${currentPage > 1}">
+                            <a href="?action=list&page=${currentPage - 1}<c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">‹</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${totalPages}" var="p">
+                            <c:choose>
+                                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                <c:otherwise><a href="?action=list&page=${p}<c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">${p}</a></c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="?action=list&page=${currentPage + 1}<c:if test="${not empty search}">&search=<c:out value="${search}"/></c:if><c:if test="${not empty statusFilter}">&status=<c:out value="${statusFilter}"/></c:if>" class="page-btn">›</a>
+                        </c:if>
                     </div>
-                </c:if>
+                </div>
             </div>
         </main>
     </div>

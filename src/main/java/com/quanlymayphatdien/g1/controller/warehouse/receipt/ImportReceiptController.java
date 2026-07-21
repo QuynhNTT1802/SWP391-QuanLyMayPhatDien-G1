@@ -1355,7 +1355,7 @@ throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() 
                         && !exportReceipt.getDetails().isEmpty()) {
                     XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(
                             exportReceipt.getDetails(), allGens);
-                    String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
+                    String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date()) + ".xlsx";
                     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                     response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
                     workbook.write(response.getOutputStream());
@@ -1366,7 +1366,7 @@ throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() 
         }
 
         XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(poDetails);
-        String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("yyyyMMdd").format(new java.util.Date()) + ".xlsx";
+        String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date()) + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         workbook.write(response.getOutputStream());

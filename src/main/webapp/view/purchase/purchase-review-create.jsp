@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -12,7 +12,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Review tạo phiếu mua &mdash; Warehouse OS</title>
+        <title>Xem xét tạo phiếu mua &mdash; Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
 
             <div>
 <header class="topbar">
-                <h1>Review tạo phiếu mua</h1>
+                <h1>Xem xét tạo phiếu mua</h1>
                 <span class="crumb">/ <a href="${pageContext.request.contextPath}/purchase-order">Phiếu mua</a> / Tạo mới</span>
                 <jsp:include page="../common/admin/bell.jsp"/>
             </header>
@@ -37,7 +37,7 @@
                     <div class="page-head">
                         <div class="left">
                             <div class="eyebrow">Kinh doanh · Phiếu mua</div>
-                            <h2 class="page-title">Review phiếu mua từ <c:out value="${proposals.size()}"/> đề xuất</h2>
+                            <h2 class="page-title">Xem xét phiếu mua từ <c:out value="${proposals.size()}"/> đề xuất</h2>
                             <div class="page-sub">Kiểm tra số lượng mua cuối cùng trước khi tạo phiếu mua.</div>
                         </div>
                     </div>

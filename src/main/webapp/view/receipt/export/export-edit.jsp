@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -238,23 +238,23 @@
                             </div>
                         </div>
                         <div class="scanner-box">
-                            <label>Quét barcode nhanh</label>
+                            <label>Quét mã vạch nhanh</label>
                             <div class="scanner-row">
                                 <input type="text" id="scanBox" autocomplete="off"
-                                       placeholder="Đặt con trỏ vào đây rồi quét barcode (hoặc gõ tay rồi Enter)..." />
+                                       placeholder="Đặt con trỏ vào đây rồi quét mã vạch (hoặc gõ tay rồi Enter)..." />
                                 <button type="button" class="cam-btn" id="camBtn" title="Mở camera để quét" onclick="toggleCamera()">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                 </button>
                             </div>
                             <div id="scannerCamera"></div>
-                            <small>Mỗi lần quét, hệ thống tự reserve serial nếu máy đang IN_STOCK tại kho <strong>${receipt.warehouseName}</strong>.</small>
+                            <small>Mỗi lần quét, hệ thống tự đặt trước số serial nếu máy đang ĐANG TRONG KHO tại kho <strong>${receipt.warehouseName}</strong>.</small>
                         </div>
                         <table class="detail-table">
                             <thead>
                                 <tr>
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát (Tồn kho)</th>
-                                    <th class="col-serial">Serial</th>
+                                    <th class="col-serial">Số serial</th>
                                     <th class="col-note">Ghi chú</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -274,7 +274,7 @@
                                                 </td>
                                                 <td>
                                                     <select name="serialNumber" data-current="${d.serialNumber}" required onchange="onSerialChange(this)" style="font-family: var(--font-mono); font-size: 12px;">
-                                                        <option value="">-- Chọn serial --</option>
+                                                        <option value="">-- Chọn số serial --</option>
                                                         <option value="<c:out value='${d.serialNumber}'/>" selected><c:out value="${d.serialNumber}"/></option>
                                                     </select>
                                                     <span class="field-error"></span>
@@ -474,13 +474,13 @@
                 .then(function (data) {
                     if (!data || !data.success) {
                         btn.disabled = false;
-                        toast((data && data.message) ? data.message : 'Lỗi khi giải phóng serial', 'danger');
+                        toast((data && data.message) ? data.message : 'Lỗi khi giải phóng số serial', 'danger');
                         return;
                     }
                     row.remove();
                     updateRowNumbers();
                     validateInventoryRealtime();
-                    toast(data.message || 'Đã giải phóng serial', 'success');
+                    toast(data.message || 'Đã giải phóng số serial', 'success');
                 })
                 .catch(function (err) {
                     btn.disabled = false;
@@ -695,12 +695,12 @@
             .then(function (data) {
                 exportEditScannerLocked = false;
                 if (!data || !data.found) {
-                    toast((data && data.message) ? data.message : 'Serial không tồn tại trong hệ thống', 'danger');
+                    toast((data && data.message) ? data.message : 'Số serial không tồn tại trong hệ thống', 'danger');
                     focusScan();
                     return;
                 }
                 if (data.inTargetWarehouse === false) {
-                    toast('Serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
+                    toast('Số serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
                     focusScan();
                     return;
                 }
@@ -711,7 +711,7 @@
                     }
                 });
                 if (dupFound) {
-                    toast('Serial "' + data.serialNumber + '" đã có trong phiếu, không thể quét trùng.', 'danger');
+                    toast('Số serial "' + data.serialNumber + '" đã có trong phiếu, không thể quét trùng.', 'danger');
                     focusScan();
                     return;
                 }
@@ -734,7 +734,7 @@
                     serialSelect.appendChild(opt);
                     var newOpt = document.createElement('option');
                     newOpt.value = '';
-                    newOpt.textContent = '-- Chọn serial --';
+                    newOpt.textContent = '-- Chọn số serial --';
                     serialSelect.insertBefore(newOpt, opt);
                 }
                 var stockDiv = tr.querySelector('.col-stock');
@@ -746,7 +746,7 @@
                 document.getElementById('detailBody').appendChild(tr);
                 updateRowNumbers();
                 if (typeof validateInventoryRealtime === 'function') validateInventoryRealtime();
-                toast('Đã thêm serial ' + data.serialNumber, 'success');
+                toast('Đã thêm số serial ' + data.serialNumber, 'success');
                 focusScan();
             })
             .catch(function (err) {

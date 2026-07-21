@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : login
     Created on : May 15, 2026, 8:48:56 AM
     Author     : Phuong Linh
@@ -36,10 +36,10 @@
                     <div class="mock" aria-hidden="true">
                         <div class="mock-head">
                             <div class="dots"><span></span><span></span><span></span></div>
-                            <div class="title">system.app/overview</div>
+                            <div class="title">warehouse-os.vn / bang-dieu-khien</div>
                         </div>
                         <div class="mock-kpis">
-                            <div class="mock-kpi"><div class="l">Uptime</div><div class="v">99.9%</div></div>
+                            <div class="mock-kpi"><div class="l">Thời gian hoạt động</div><div class="v">99.9%</div></div>
                             <div class="mock-kpi"><div class="l">Người dùng</div><div class="v">1,240</div></div>
                             <div class="mock-kpi"><div class="l">Hiệu suất</div><div class="v acc">A+</div></div>
                         </div>
@@ -67,7 +67,7 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Trang chủ
                     </a>
-                    <button class="theme-toggle" id="themeToggle" title="Đổi theme">
+                    <button class="theme-toggle" id="themeToggle" title="Đổi giao diện">
                         <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
                         <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
@@ -86,7 +86,7 @@
                         </div>
 
                         <div class="field">
-                            <label for="username">Username</label>
+                            <label for="username">Tên đăng nhập</label>
                             <div class="input has-icon">
                                 <span class="leading">
                                     <svg viewBox="0 0 24 24">
@@ -94,7 +94,7 @@
                                     <circle cx="12" cy="7" r="4"/>
                                     </svg>
                                 </span>
-                                <input id="username" type="text" name="username" placeholder="Nhập username" autocomplete="username" required>
+                                <input id="username" type="text" name="username" placeholder="Nhập tên đăng nhập" autocomplete="username" required>
                             </div>
                         </div>
 

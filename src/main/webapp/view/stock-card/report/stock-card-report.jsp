@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -77,7 +77,7 @@
             <h1>Báo cáo thẻ kho</h1>
             <span class="crumb">/ Kho / Thẻ kho / Báo cáo chi tiết</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                     <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
                     <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
                 </button>
@@ -113,8 +113,8 @@
                             <option value="${w.warehouseId}" ${selectedWarehouseId == w.warehouseId ? 'selected' : ''}>${w.name}</option>
                         </c:forEach>
                     </select>
-                    <select name="generatorId" title="Model">
-                        <option value="">Tất cả model</option>
+                    <select name="generatorId" title="Mẫu máy">
+                        <option value="">Tất cả mẫu máy</option>
                         <c:forEach var="g" items="${generators}">
                             <option value="${g.id}" ${selectedGeneratorId == g.id ? 'selected' : ''}>${g.model}</option>
                         </c:forEach>
@@ -141,7 +141,7 @@
                         <div class="label">Tổng giao dịch <span class="dot" style="background:var(--info)"></span></div>
                         <div class="value">${summary.totalTx}</div>
                         <div class="delta">
-                            <span class="sub">${summary.warehouseCount} kho · ${summary.modelCount} model</span>
+                            <span class="sub">${summary.warehouseCount} kho · ${summary.modelCount} mẫu máy</span>
                         </div>
                     </div>
                     <div class="rpt-kpi">
@@ -224,12 +224,12 @@
                         </div>
                     </section>
                     <section class="card" style="margin-bottom:0;">
-                        <h3 style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin:0;padding:10px 14px;border-bottom:1px solid var(--border);">Theo model</h3>
+                        <h3 style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin:0;padding:10px 14px;border-bottom:1px solid var(--border);">Theo mẫu máy</h3>
                         <div style="overflow-x:auto;">
                         <table class="rpt-as">
                             <thead>
                                 <tr>
-                                    <th>Model</th>
+                                    <th>Mẫu máy</th>
                                     <th class="num">Giao dịch</th>
                                     <th class="num">Nhập</th>
                                     <th class="num">Xuất</th>
@@ -358,7 +358,7 @@
                             <th class="col-qty">SL</th>
                             <th class="col-after">Tồn sau</th>
                             <th class="col-wh">Kho</th>
-                            <th class="col-model">Model</th>
+                            <th class="col-model">Mẫu máy</th>
                             <th class="col-ref">Mã phiếu</th>
                             <th>Ghi chú</th>
                         </tr>
