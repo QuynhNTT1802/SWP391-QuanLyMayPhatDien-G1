@@ -9,20 +9,35 @@ import java.util.Map;
 
 public class PurchaseReportDAO extends BaseReportDAO {
 
-    public int countPurchaseReport(Integer warehouseId, int month, int year) {
-        return countWithParams(
-                "SELECT COUNT(*) FROM purchase_order po"
-                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
-                + (warehouseId != null ? " AND po.warehouse_id = ?" : ""),
-                params(month, year, warehouseId));
+    private String searchClause(String search, List<Object> params) {
+        if (search == null || search.trim().isEmpty()) return "";
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        return " AND (po.po_code LIKE ? OR g.model LIKE ?)";
     }
 
-    public List<PurchaseOrder> getPurchaseReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        return queryPurchaseOrders(warehouseId, month, year, page, pageSize);
+    public int countPurchaseReport(Integer warehouseId, int month, int year, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
+        return countWithParams(
+                "SELECT COUNT(*) FROM purchase_order po"
+                + " JOIN purchase_order_detail pod ON pod.po_id = po.po_id"
+                + " JOIN generator g ON pod.generator_id = g.id"
+                + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
+                + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
+                + searchWhere,
+                params);
+    }
+
+    public List<PurchaseOrder> getPurchaseReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
+        return queryPurchaseOrders(warehouseId, month, year, page, pageSize, search);
     }
 
     public List<PurchaseOrder> getAllPurchaseReport(Integer warehouseId, int month, int year) {
-        return queryPurchaseOrders(warehouseId, month, year, -1, -1);
+        return queryPurchaseOrders(warehouseId, month, year, -1, -1, null);
     }
 
     public List<Object[]> getPurchaseExcelData(Integer warehouseId, int month, int year) {
@@ -97,8 +112,13 @@ public class PurchaseReportDAO extends BaseReportDAO {
         return summary;
     }
 
-    private List<PurchaseOrder> queryPurchaseOrders(Integer warehouseId, int month, int year, int page, int pageSize) {
+    private List<PurchaseOrder> queryPurchaseOrders(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
         List<PurchaseOrder> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         String sql = "SELECT po.*, w.name AS warehouse_name, u.name AS created_by_name,"
                 + " GROUP_CONCAT(CONCAT(g.model, '|', pod.final_quantity, '|', COALESCE(pod.unit_price, 0)) SEPARATOR '; ') AS detail_info"
                 + " FROM purchase_order po"
@@ -108,6 +128,7 @@ public class PurchaseReportDAO extends BaseReportDAO {
                 + " LEFT JOIN generator g ON pod.generator_id = g.id"
                 + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
                 + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
+                + searchWhere
                 + " GROUP BY po.po_id"
                 + " ORDER BY po.created_at DESC"
                 + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
@@ -115,9 +136,9 @@ public class PurchaseReportDAO extends BaseReportDAO {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             int idx = 1;
-            statement.setString(idx++, firstDay(month, year));
-            statement.setString(idx++, lastDay(month, year));
-            if (warehouseId != null) statement.setInt(idx++, warehouseId);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(idx++, params.get(i));
+            }
             if (page > 0 && pageSize > 0) {
                 statement.setInt(idx++, pageSize);
                 statement.setInt(idx++, (page - 1) * pageSize);

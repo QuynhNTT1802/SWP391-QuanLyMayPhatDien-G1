@@ -10,7 +10,20 @@ public class InventoryReportDAO extends BaseReportDAO {
 
     private final StockCardDAO stockCardDAO = new StockCardDAO();
 
-    public int countInventoryReport(Integer warehouseId, int month, int year) {
+    private String searchModelClause(String search, List<Object> params) {
+        if (search == null || search.trim().isEmpty()) return "";
+        params.add("%" + search.trim() + "%");
+        return " AND g.model LIKE ?";
+    }
+
+    public int countInventoryReport(Integer warehouseId, int month, int year, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(lastDay(month, year));
+        if (warehouseId != null) {
+            params.add(warehouseId);
+            params.add(warehouseId);
+        }
+        String searchWhere = searchModelClause(search, params);
         String sql = "SELECT COUNT(DISTINCT t.warehouse_id, t.generator_id) FROM ("
                 + "SELECT DISTINCT warehouse_id, generator_id FROM stock_card"
                 + " WHERE DATE(created_at) <= ?"
@@ -18,13 +31,9 @@ public class InventoryReportDAO extends BaseReportDAO {
                 + " UNION SELECT DISTINCT i.warehouse_id, i.generator_id FROM inventory i"
                 + " WHERE i.status = 'IN_STOCK'"
                 + (warehouseId != null ? " AND i.warehouse_id = ?" : "")
-                + ") t";
-        List<Object> params = new ArrayList<>();
-        params.add(lastDay(month, year));
-        if (warehouseId != null) {
-            params.add(warehouseId);
-            params.add(warehouseId);
-        }
+                + ") t"
+                + " JOIN generator g ON t.generator_id = g.id"
+                + searchWhere;
         return countWithParams(sql, params);
     }
 
@@ -41,37 +50,41 @@ public class InventoryReportDAO extends BaseReportDAO {
         return summary;
     }
 
-    public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        return queryInventoryReport(warehouseId, month, year, page, pageSize);
+    public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
+        return queryInventoryReport(warehouseId, month, year, page, pageSize, search);
     }
 
     public List<InventoryReportItem> getAllInventoryReport(Integer warehouseId, int month, int year) {
-        return queryInventoryReport(warehouseId, month, year, -1, -1);
+        return queryInventoryReport(warehouseId, month, year, -1, -1, null);
     }
 
-    private List<InventoryReportItem> queryInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+    private List<InventoryReportItem> queryInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
         String firstDay = firstDay(month, year);
         String nextDay = nextDay(month, year);
 
         Map<String, Integer> openMap = stockCardDAO.getBalanceSnapshot(warehouseId, firstDay);
         Map<String, Integer> closeMap = stockCardDAO.getBalanceSnapshot(warehouseId, nextDay);
 
-        String baseSql = baseGeneratorSql(warehouseId)
-                + (page < 0 ? " ORDER BY w.name, g.model" : "")
-                + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
+        List<Object> params = new ArrayList<>();
+        params.add(nextDay);
+        if (warehouseId != null) {
+            params.add(warehouseId);
+            params.add(warehouseId);
+        }
+        String searchWhere = searchModelClause(search, params);
+        String baseSql = baseGeneratorSql(warehouseId) + searchWhere;
         List<InventoryReportItem> list = new ArrayList<>();
+        baseSql += (page < 0 ? " ORDER BY w.name, g.model" : "")
+                + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
+        if (page > 0 && pageSize > 0) {
+            params.add(pageSize);
+            params.add((page - 1) * pageSize);
+        }
         try {
             connection = getConnection();
             statement = connection.prepareStatement(baseSql);
-            int idx = 1;
-            statement.setString(idx++, nextDay);
-            if (warehouseId != null) {
-                statement.setInt(idx++, warehouseId);
-                statement.setInt(idx++, warehouseId);
-            }
-            if (page > 0 && pageSize > 0) {
-                statement.setInt(idx++, pageSize);
-                statement.setInt(idx++, (page - 1) * pageSize);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
             }
             resultSet = statement.executeQuery();
             while (resultSet.next()) {

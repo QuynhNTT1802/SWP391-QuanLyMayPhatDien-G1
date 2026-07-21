@@ -7,16 +7,35 @@ import java.util.List;
 
 public class InventoryCheckReportDAO extends BaseReportDAO {
 
-    public int countInventoryCheckReport(Integer warehouseId, int month, int year) {
+    private String searchClause(String search, List<Object> params) {
+        if (search == null || search.trim().isEmpty()) return "";
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        return " AND (ic.check_code LIKE ? OR g.model LIKE ?)";
+    }
+
+    public int countInventoryCheckReport(Integer warehouseId, int month, int year, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         return countWithParams(
                 "SELECT COUNT(*) FROM inventory_check ic"
                 + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
+                + " JOIN generator g ON icd.generator_id = g.id"
                 + " WHERE DATE(ic.created_at) >= ? AND DATE(ic.created_at) <= ?"
-                + (warehouseId != null ? " AND ic.warehouse_id = ?" : ""),
-                params(month, year, warehouseId));
+                + (warehouseId != null ? " AND ic.warehouse_id = ?" : "")
+                + searchWhere,
+                params);
     }
 
-    public List<InventoryCheckReportItem> getInventoryCheckReport(Integer warehouseId, int month, int year, int page, int pageSize) {
+    public List<InventoryCheckReportItem> getInventoryCheckReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
                 + " ic.status, u.name AS created_by_name,"
                 + " ic.started_at, ic.completed_at,"
@@ -30,12 +49,17 @@ public class InventoryCheckReportDAO extends BaseReportDAO {
                 + " LEFT JOIN user u ON ic.created_by = u.id"
                 + " WHERE DATE(ic.created_at) >= ? AND DATE(ic.created_at) <= ?"
                 + (warehouseId != null ? " AND ic.warehouse_id = ?" : "")
+                + searchWhere
                 + " ORDER BY ic.created_at DESC, ic.check_code"
                 + " LIMIT ? OFFSET ?";
-        return queryInventoryCheckReport(sql, month, year, warehouseId, page, pageSize);
+        return queryInventoryCheckReport(sql, params, page, pageSize);
     }
 
     public List<InventoryCheckReportItem> getAllInventoryCheckReport(Integer warehouseId, int month, int year) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
         String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
                 + " ic.status, u.name AS created_by_name,"
                 + " ic.started_at, ic.completed_at,"
@@ -50,16 +74,12 @@ public class InventoryCheckReportDAO extends BaseReportDAO {
                 + " WHERE DATE(ic.created_at) >= ? AND DATE(ic.created_at) <= ?"
                 + (warehouseId != null ? " AND ic.warehouse_id = ?" : "")
                 + " ORDER BY ic.created_at DESC, ic.check_code";
-        return queryInventoryCheckReport(sql, month, year, warehouseId, -1, -1);
+        return queryInventoryCheckReport(sql, params, -1, -1);
     }
 
-    private List<InventoryCheckReportItem> queryInventoryCheckReport(String sql, int month, int year,
-            Integer warehouseId, int page, int pageSize) {
+    private List<InventoryCheckReportItem> queryInventoryCheckReport(String sql, List<Object> params,
+            int page, int pageSize) {
         List<InventoryCheckReportItem> list = new ArrayList<>();
-        List<Object> params = new ArrayList<>();
-        params.add(firstDay(month, year));
-        params.add(lastDay(month, year));
-        if (warehouseId != null) params.add(warehouseId);
         if (page > 0 && pageSize > 0) {
             params.add(pageSize);
             params.add((page - 1) * pageSize);

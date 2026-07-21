@@ -86,6 +86,8 @@ public class ReportController extends HttpServlet {
         } catch (Exception e) {
         }
 
+        String search = req.getParameter("search");
+
         int page = 1, pageSize = 15;
         try {
             page = Integer.parseInt(req.getParameter("page"));
@@ -107,63 +109,64 @@ public class ReportController extends HttpServlet {
         req.setAttribute("month", month);
         req.setAttribute("year", year);
         req.setAttribute("selWarehouseId", warehouseId);
+        req.setAttribute("search", search);
         req.setAttribute("warehouses", warehouseDAO.findAll());
 
         switch (type) {
             case "inventory": {
-                totalItems = inventoryReportDAO.countInventoryReport(warehouseId, month, year);
+                totalItems = inventoryReportDAO.countInventoryReport(warehouseId, month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                req.setAttribute("inventoryItems", inventoryReportDAO.getInventoryReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("inventoryItems", inventoryReportDAO.getInventoryReport(warehouseId, month, year, page, pageSize, search));
                 req.setAttribute("summary", inventoryReportDAO.getInventorySummary(warehouseId, month, year));
                 break;
             }
             case "import": {
-                totalItems = importReportDAO.countImportReport(warehouseId, month, year);
+                totalItems = importReportDAO.countImportReport(warehouseId, month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                req.setAttribute("importItems", importReportDAO.getImportReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("importItems", importReportDAO.getImportReport(warehouseId, month, year, page, pageSize, search));
                 break;
             }
             case "export": {
-                totalItems = exportReportDAO.countExportReport(warehouseId, month, year);
+                totalItems = exportReportDAO.countExportReport(warehouseId, month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                req.setAttribute("exportItems", exportReportDAO.getExportReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("exportItems", exportReportDAO.getExportReport(warehouseId, month, year, page, pageSize, search));
                 break;
             }
             case "inventory-check": {
-                totalItems = inventoryCheckReportDAO.countInventoryCheckReport(warehouseId, month, year);
+                totalItems = inventoryCheckReportDAO.countInventoryCheckReport(warehouseId, month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                req.setAttribute("checkItems", inventoryCheckReportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("checkItems", inventoryCheckReportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize, search));
                 break;
             }
             case "purchase": {
-                totalItems = purchaseReportDAO.countPurchaseReport(warehouseId, month, year);
+                totalItems = purchaseReportDAO.countPurchaseReport(warehouseId, month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                req.setAttribute("poItems", purchaseReportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize));
+                req.setAttribute("poItems", purchaseReportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize, search));
                 req.setAttribute("summary", purchaseReportDAO.getPurchaseSummary(warehouseId, month, year));
                 break;
             }
             case "sales": {
-                totalItems = salesReportDAO.countSalesReport(month, year);
+                totalItems = salesReportDAO.countSalesReport(month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
                 if (page > totalPages) {
                     page = totalPages;
                 }
-                req.setAttribute("saleItems", salesReportDAO.getSalesReport(month, year, page, pageSize));
+                req.setAttribute("saleItems", salesReportDAO.getSalesReport(month, year, page, pageSize, search));
                 req.setAttribute("summary", salesReportDAO.getSalesSummary(month, year));
                 break;
             }
