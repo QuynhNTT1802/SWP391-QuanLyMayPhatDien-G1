@@ -196,12 +196,12 @@ public class ImportReceiptController extends HttpServlet {
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
 
-        int totalItems = receiptDAO.countWithFilters(TYPE, statusFilter, whFilter, search, createdByFilter, loggedUser.getId());
+        int totalItems = receiptDAO.countWithFilters(TYPE, statusFilter, whFilter, search, createdByFilter, null, loggedUser.getId());
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
         if (page > totalPages) page = totalPages;
 
         List<Receipt> receiptList = receiptDAO.findWithFilters(
-                TYPE, statusFilter, whFilter, search, createdByFilter, page, pageSize, loggedUser.getId());
+                TYPE, statusFilter, whFilter, search, createdByFilter, null, page, pageSize, loggedUser.getId());
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
@@ -863,6 +863,28 @@ public class ImportReceiptController extends HttpServlet {
             request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
             request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         }
+
+        List<ReceiptDetail> allDetails = receipt.getDetails();
+        int totalDetails = allDetails != null ? allDetails.size() : 0;
+        int detailPageSize = 10;
+        int detailPage = 1;
+        String detailPageStr = request.getParameter("detailPage");
+        if (detailPageStr != null && !detailPageStr.isEmpty()) {
+            try { detailPage = Math.max(1, Integer.parseInt(detailPageStr)); }
+            catch (NumberFormatException ignored) { }
+        }
+        int detailTotalPages = Math.max(1, (int) Math.ceil((double) totalDetails / detailPageSize));
+        if (detailPage > detailTotalPages) detailPage = detailTotalPages;
+        List<ReceiptDetail> pagedDetails = new ArrayList<>();
+        if (allDetails != null && !allDetails.isEmpty()) {
+            int fromIndex = (detailPage - 1) * detailPageSize;
+            int toIndex = Math.min(fromIndex + detailPageSize, allDetails.size());
+            pagedDetails = allDetails.subList(fromIndex, toIndex);
+        }
+        request.setAttribute("pagedDetails", pagedDetails);
+        request.setAttribute("detailPage", detailPage);
+        request.setAttribute("detailTotalPages", detailTotalPages);
+        request.setAttribute("totalDetails", totalDetails);
 
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", isManager);
