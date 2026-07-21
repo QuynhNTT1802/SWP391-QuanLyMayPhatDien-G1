@@ -7,22 +7,41 @@ import java.util.List;
 
 public class ExportReportDAO extends BaseReportDAO {
 
-    public int countExportReport(Integer warehouseId, int month, int year) {
+    private String searchClause(String search, List<Object> params) {
+        if (search == null || search.trim().isEmpty()) return "";
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        return " AND (r.receipt_code LIKE ? OR g.model LIKE ? OR i2.serial_number LIKE ? OR c.name LIKE ?)";
+    }
+
+    public int countExportReport(Integer warehouseId, int month, int year, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         return countWithParams(
                 "SELECT COUNT(*) FROM receipt r"
                 + " JOIN receipt_detail rd ON rd.receipt_id = r.receipt_id"
+                + " JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
+                + " JOIN generator g ON i2.generator_id = g.id"
+                + " LEFT JOIN sale_order so ON r.order_id = so.order_id"
+                + " LEFT JOIN customer c ON so.customer_id = c.id"
                 + " WHERE r.receipt_type = 'EXPORT'"
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
-                + (warehouseId != null ? " AND r.warehouse_id = ?" : ""),
-                params(month, year, warehouseId));
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + searchWhere,
+                params);
     }
 
-    public List<ReceiptDetailReportItem> getExportReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        return queryExportReportDetail(warehouseId, month, year, page, pageSize);
+    public List<ReceiptDetailReportItem> getExportReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
+        return queryExportReportDetail(warehouseId, month, year, page, pageSize, search);
     }
 
     public List<ReceiptDetailReportItem> getAllExportReport(Integer warehouseId, int month, int year) {
-        return queryExportReportDetail(warehouseId, month, year, -1, -1);
+        return queryExportReportDetail(warehouseId, month, year, -1, -1, null);
     }
 
     public List<Object[]> getExportExcelData(Integer warehouseId, int month, int year) {
@@ -43,8 +62,13 @@ public class ExportReportDAO extends BaseReportDAO {
         return queryFlat(sql, params(month, year, warehouseId));
     }
 
-    private List<ReceiptDetailReportItem> queryExportReportDetail(Integer warehouseId, int month, int year, int page, int pageSize) {
+    private List<ReceiptDetailReportItem> queryExportReportDetail(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
         List<ReceiptDetailReportItem> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         String sql = "SELECT r.receipt_code, r.created_at, w.name AS warehouse_name,"
                 + " g.model, i2.serial_number, u.name AS created_by_name, r.status,"
                 + " so.order_code, c.name AS customer_name"
@@ -59,15 +83,16 @@ public class ExportReportDAO extends BaseReportDAO {
                 + " WHERE r.receipt_type = 'EXPORT'"
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
                 + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + searchWhere
                 + " ORDER BY r.created_at DESC, r.receipt_code"
                 + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             int idx = 1;
-            statement.setString(idx++, firstDay(month, year));
-            statement.setString(idx++, lastDay(month, year));
-            if (warehouseId != null) statement.setInt(idx++, warehouseId);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(idx++, params.get(i));
+            }
             if (page > 0 && pageSize > 0) {
                 statement.setInt(idx++, pageSize);
                 statement.setInt(idx++, (page - 1) * pageSize);

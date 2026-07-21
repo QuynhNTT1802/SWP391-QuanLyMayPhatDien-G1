@@ -74,6 +74,12 @@
                     </div>
                 </c:if>
 
+                <div class="filter-group">
+                    <label>Tìm kiếm</label>
+                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, model, serial..."
+                           style="width:220px;">
+                </div>
+
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-primary">
                         <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -353,18 +359,19 @@
         </div>
 
         <c:if test="${totalPages > 1}">
+            <c:set var="q" value="type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}"/>
+            <c:if test="${not empty search}"><c:set var="q" value="${q}&search=${fn:escapeXml(search)}"/></c:if>
             <div class="pagination">
                 <c:if test="${currentPage > 1}">
-                    <a href="?type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}&page=${currentPage - 1}" class="page-link">Trước</a>
+                    <a href="?${q}&page=${currentPage - 1}" class="page-link">Trước</a>
                 </c:if>
                 <c:forEach var="p" begin="1" end="${totalPages}">
                     <c:if test="${p >= currentPage - 2 && p <= currentPage + 2}">
-                        <a href="?type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}&page=${p}"
-                           class="page-link ${p == currentPage ? 'active' : ''}">${p}</a>
+                        <a href="?${q}&page=${p}" class="page-link ${p == currentPage ? 'active' : ''}">${p}</a>
                     </c:if>
                 </c:forEach>
                 <c:if test="${currentPage < totalPages}">
-                    <a href="?type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}&page=${currentPage + 1}" class="page-link">Sau</a>
+                    <a href="?${q}&page=${currentPage + 1}" class="page-link">Sau</a>
                 </c:if>
                 <span class="page-info">${totalItems} bản ghi</span>
             </div>

@@ -9,19 +9,35 @@ import java.util.Map;
 
 public class SalesReportDAO extends BaseReportDAO {
 
-    public int countSalesReport(int month, int year) {
-        return countWithParams(
-                "SELECT COUNT(*) FROM sale_order so"
-                + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?",
-                params(month, year, null));
+    private String searchClause(String search, List<Object> params) {
+        if (search == null || search.trim().isEmpty()) return "";
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        return " AND (so.order_code LIKE ? OR c.name LIKE ? OR g.model LIKE ?)";
     }
 
-    public List<SaleOrder> getSalesReport(int month, int year, int page, int pageSize) {
-        return querySaleOrders(month, year, page, pageSize);
+    public int countSalesReport(int month, int year, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        String searchWhere = searchClause(search, params);
+        return countWithParams(
+                "SELECT COUNT(*) FROM sale_order so"
+                + " LEFT JOIN customer c ON so.customer_id = c.id"
+                + " JOIN order_detail od ON od.order_id = so.order_id"
+                + " JOIN generator g ON od.generator_id = g.id"
+                + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
+                + searchWhere,
+                params);
+    }
+
+    public List<SaleOrder> getSalesReport(int month, int year, int page, int pageSize, String search) {
+        return querySaleOrders(month, year, page, pageSize, search);
     }
 
     public List<SaleOrder> getAllSalesReport(int month, int year) {
-        return querySaleOrders(month, year, -1, -1);
+        return querySaleOrders(month, year, -1, -1, null);
     }
 
     public List<Object[]> getSalesExcelData(int month, int year) {
@@ -89,8 +105,12 @@ public class SalesReportDAO extends BaseReportDAO {
         return summary;
     }
 
-    private List<SaleOrder> querySaleOrders(int month, int year, int page, int pageSize) {
+    private List<SaleOrder> querySaleOrders(int month, int year, int page, int pageSize, String search) {
         List<SaleOrder> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        String searchWhere = searchClause(search, params);
         String sql = "SELECT so.*, c.name AS customer_name, u.name AS created_by_name,"
                 + " GROUP_CONCAT(CONCAT(g.model, '|', od.quantity, '|', od.unit_price) SEPARATOR '; ') AS detail_info"
                 + " FROM sale_order so"
@@ -99,6 +119,7 @@ public class SalesReportDAO extends BaseReportDAO {
                 + " LEFT JOIN order_detail od ON od.order_id = so.order_id"
                 + " LEFT JOIN generator g ON od.generator_id = g.id"
                 + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
+                + searchWhere
                 + " GROUP BY so.order_id"
                 + " ORDER BY so.created_at DESC"
                 + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
@@ -106,8 +127,9 @@ public class SalesReportDAO extends BaseReportDAO {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             int idx = 1;
-            statement.setString(idx++, firstDay(month, year));
-            statement.setString(idx++, lastDay(month, year));
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(idx++, params.get(i));
+            }
             if (page > 0 && pageSize > 0) {
                 statement.setInt(idx++, pageSize);
                 statement.setInt(idx++, (page - 1) * pageSize);

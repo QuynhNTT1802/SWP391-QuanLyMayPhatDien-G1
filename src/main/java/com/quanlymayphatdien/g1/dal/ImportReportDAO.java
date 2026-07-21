@@ -7,22 +7,38 @@ import java.util.List;
 
 public class ImportReportDAO extends BaseReportDAO {
 
-    public int countImportReport(Integer warehouseId, int month, int year) {
+    private String searchClause(String search, List<Object> params) {
+        if (search == null || search.trim().isEmpty()) return "";
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        params.add("%" + search.trim() + "%");
+        return " AND (r.receipt_code LIKE ? OR g.model LIKE ? OR i2.serial_number LIKE ?)";
+    }
+
+    public int countImportReport(Integer warehouseId, int month, int year, String search) {
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         return countWithParams(
                 "SELECT COUNT(*) FROM receipt r"
                 + " JOIN receipt_detail rd ON rd.receipt_id = r.receipt_id"
+                + " JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
+                + " JOIN generator g ON i2.generator_id = g.id"
                 + " WHERE r.receipt_type = 'IMPORT' AND r.status = 'COMPLETED'"
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
-                + (warehouseId != null ? " AND r.warehouse_id = ?" : ""),
-                params(month, year, warehouseId));
+                + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + searchWhere,
+                params);
     }
 
-    public List<ReceiptDetailReportItem> getImportReport(Integer warehouseId, int month, int year, int page, int pageSize) {
-        return queryImportReportDetail(warehouseId, month, year, page, pageSize);
+    public List<ReceiptDetailReportItem> getImportReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
+        return queryImportReportDetail(warehouseId, month, year, page, pageSize, search);
     }
 
     public List<ReceiptDetailReportItem> getAllImportReport(Integer warehouseId, int month, int year) {
-        return queryImportReportDetail(warehouseId, month, year, -1, -1);
+        return queryImportReportDetail(warehouseId, month, year, -1, -1, null);
     }
 
     public List<Object[]> getImportExcelData(Integer warehouseId, int month, int year) {
@@ -41,8 +57,13 @@ public class ImportReportDAO extends BaseReportDAO {
         return queryFlat(sql, params(month, year, warehouseId));
     }
 
-    private List<ReceiptDetailReportItem> queryImportReportDetail(Integer warehouseId, int month, int year, int page, int pageSize) {
+    private List<ReceiptDetailReportItem> queryImportReportDetail(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
         List<ReceiptDetailReportItem> list = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(lastDay(month, year));
+        if (warehouseId != null) params.add(warehouseId);
+        String searchWhere = searchClause(search, params);
         String sql = "SELECT r.receipt_code, r.created_at, w.name AS warehouse_name,"
                 + " g.model, i2.serial_number, u.name AS created_by_name, r.status,"
                 + " po.po_code AS purchase_order_code"
@@ -56,15 +77,16 @@ public class ImportReportDAO extends BaseReportDAO {
                 + " WHERE r.receipt_type = 'IMPORT' AND r.status = 'COMPLETED'"
                 + " AND DATE(r.created_at) >= ? AND DATE(r.created_at) <= ?"
                 + (warehouseId != null ? " AND r.warehouse_id = ?" : "")
+                + searchWhere
                 + " ORDER BY r.created_at DESC, r.receipt_code"
                 + (page > 0 && pageSize > 0 ? " LIMIT ? OFFSET ?" : "");
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             int idx = 1;
-            statement.setString(idx++, firstDay(month, year));
-            statement.setString(idx++, lastDay(month, year));
-            if (warehouseId != null) statement.setInt(idx++, warehouseId);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(idx++, params.get(i));
+            }
             if (page > 0 && pageSize > 0) {
                 statement.setInt(idx++, pageSize);
                 statement.setInt(idx++, (page - 1) * pageSize);
