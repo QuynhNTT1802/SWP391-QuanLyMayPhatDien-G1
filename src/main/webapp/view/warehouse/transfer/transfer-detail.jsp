@@ -8,6 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chi tiết phiếu luân chuyển — Warehouse OS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,14 +17,15 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     <style>
         a.btn, a.back-link { text-decoration: none; }
         .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
         .alert svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
         .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent); }
 
-        .action-bar-top { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
-        .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+        .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
         .filter-active-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 11px; }
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; gap: 8px; color: var(--muted); }
         .empty-state .icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
@@ -49,12 +51,10 @@
         .reject-note-box strong { font-weight: 700; font-size: 14px; margin-bottom: 4px; display: block; }
         .reject-note-box span { font-size: 13px; }
 
-        .modal-host { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-        .modal-host.show { display: flex; }
-        .modal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 480px; }
-        .modal-card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-        .modal-card textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--fg); font-size: 13px; font-family: var(--font-ui); box-sizing: border-box; margin-bottom: 15px; margin-top: 10px; resize: vertical; min-height: 80px; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+        .status-purple { background:#ede9fe; color:#6d28d9; }
+        .status-orange { background:#fff3e0; color:#b15c00; }
+        .status-teal   { background:#e0f2f1; color:#00695c; }
+        .status-pink   { background:#fce4ec; color:#a13d63; }
     </style>
 </head>
 <body>
@@ -73,11 +73,6 @@
             </div>
         </header>
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/transfers">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Quay lại danh sách
-            </a>
-
             <c:if test="${empty transfer}">
                 <div class="section" style="padding: 18px 22px;">
                     <p style="color: var(--muted); font-size: 14px;">${error != null ? error : 'Không tìm thấy phiếu'}</p>
@@ -90,68 +85,85 @@
             <c:choose>
                 <c:when test="${status == 'PENDING_CEO'}">
                     <c:set var="statusLabel" value="Chờ CEO duyệt"/>
-                    <c:set var="statusBg" value="#e2d5f3"/>
-                    <c:set var="statusFg" value="#5a2a82"/>
+                    <c:set var="statusClass" value="status-pending"/>
                 </c:when>
                 <c:when test="${status == 'APPROVED'}">
                     <c:set var="statusLabel" value="Đã duyệt - chờ tạo phiếu xuất"/>
-                    <c:set var="statusBg" value="#d1ecf1"/>
-                    <c:set var="statusFg" value="#0c5460"/>
+                    <c:set var="statusClass" value="status-completed"/>
                 </c:when>
                 <c:when test="${status == 'EXPORTED'}">
                     <c:set var="statusLabel" value="Đã xuất - chờ phiếu nhập"/>
-                    <c:set var="statusBg" value="#fff3cd"/>
-                    <c:set var="statusFg" value="#856404"/>
+                    <c:set var="statusClass" value="status-revision"/>
                 </c:when>
                 <c:when test="${status == 'AWAITING_DEST_ACCEPT'}">
                     <c:set var="statusLabel" value="Chờ kho đích xác nhận (cũ)"/>
-                    <c:set var="statusBg" value="#cce5ff"/>
-                    <c:set var="statusFg" value="#004085"/>
+                    <c:set var="statusClass" value="status-pending"/>
                 </c:when>
                 <c:when test="${status == 'COMPLETED'}">
                     <c:set var="statusLabel" value="Hoàn tất"/>
-                    <c:set var="statusBg" value="#d4edda"/>
-                    <c:set var="statusFg" value="#155724"/>
+                    <c:set var="statusClass" value="status-completed"/>
                 </c:when>
                 <c:when test="${status == 'REJECTED'}">
                     <c:set var="statusLabel" value="Bị từ chối"/>
-                    <c:set var="statusBg" value="#f8d7da"/>
-                    <c:set var="statusFg" value="#721c24"/>
+                    <c:set var="statusClass" value="status-cancelled"/>
                 </c:when>
                 <c:when test="${status == 'REQUEST_REVISION'}">
                     <c:set var="statusLabel" value="Yêu cầu chỉnh sửa"/>
-                    <c:set var="statusBg" value="#fff3cd"/>
-                    <c:set var="statusFg" value="#856404"/>
+                    <c:set var="statusClass" value="status-revision"/>
                 </c:when>
                 <c:otherwise>
                     <c:set var="statusLabel" value="${status}"/>
-                    <c:set var="statusBg" value="#e2e3e5"/>
-                    <c:set var="statusFg" value="#383d41"/>
+                    <c:set var="statusClass" value="status-draft"/>
                 </c:otherwise>
             </c:choose>
 
-            <div class="hero">
-                <div class="hero-body">
-                    <h2 class="hero-name">
-                        <c:out value="${t.transferCode}"/>
-                        <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
+            <div class="header-bar">
+                <div class="left">
+                    <a class="back-link" href="${pageContext.request.contextPath}/transfers">
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Quay lại danh sách
+                    </a>
+                    <span class="code-tag">
+                        <span class="ct-label">Phiếu luân chuyển -</span>
+                        <span><c:out value="${t.transferCode}"/></span>
+                    </span>
+                    <h2 class="page-main-title">
+                        #<c:out value="${t.transferCode}"/>
+                        <span class="status-pill ${statusClass}">
                             <span class="pdot"></span>${statusLabel}
                         </span>
                     </h2>
-                    <div class="hero-meta">
-                        <span>Phiếu luân chuyển</span>
-                        <span class="sep">·</span>
-                        <span class="id">#${t.transferId}</span>
-                        <c:if test="${not empty t.createdAt}">
-                            <span class="sep">·</span>
-                            <span>Ngày tạo: <fmt:formatDate value="${t.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></span>
-                        </c:if>
-                    </div>
-                    <div class="hero-pills">
-                        <span class="pill warehouse"><span class="pdot"></span>${t.sourceWarehouseName} → ${t.destWarehouseName}</span>
-                        <span class="pill status-active"><span class="pdot"></span>Người tạo: <c:out value="${t.createdByName}"/></span>
-                        <span class="pill role-admin"><span class="pdot"></span>${empty t.details ? 0 : t.details.size()} dòng hàng</span>
-                    </div>
+                </div>
+                <div class="right">
+                    <c:if test="${canCeApprove or canCeReject or canCeRequestRevision}">
+                        <button type="button" class="btn btn-primary" onclick="openApproveModal()">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            Duyệt
+                        </button>
+                        <button type="button" class="btn btn-outline-warn" onclick="openRejectModal('ce_request_revision', 'Yêu cầu chỉnh sửa', 'ceoNote', 'Nhập lý do yêu cầu chỉnh sửa...', 'Xác nhận yêu cầu')">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Yêu cầu chỉnh sửa
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('ce_reject', 'Từ chối phiếu', 'ceoNote', 'Nhập lý do từ chối...', 'Xác nhận từ chối')">Từ chối</button>
+                    </c:if>
+                    <c:if test="${canEditRevision}">
+                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/transfers?action=edit_view&amp;id=${t.transferId}">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Sửa &amp; gửi lại duyệt
+                        </a>
+                    </c:if>
+                    <c:if test="${canCreateExport}">
+                        <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_export_receipt&amp;transferId=${t.transferId}">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
+                            Tạo phiếu xuất
+                        </a>
+                    </c:if>
+                    <c:if test="${canCreateImport}">
+                        <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_import_receipt&amp;transferId=${t.transferId}">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
+                            Tạo phiếu nhập
+                        </a>
+                    </c:if>
                 </div>
             </div>
 
@@ -182,317 +194,254 @@
                 </div>
             </c:if>
 
-            <c:if test="${canCeApprove or canCeReject or canCeRequestRevision}">
-                <div class="action-bar-top">
-                    <button type="button" class="btn btn-primary" onclick="openApproveModal()">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Duyệt
-                    </button>
-                    <button type="button" class="btn btn-outline-warn" onclick="openRejectModal('ce_request_revision', 'Yêu cầu chỉnh sửa', 'ceoNote', 'Nhập lý do yêu cầu chỉnh sửa...', 'Xác nhận yêu cầu')">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        Yêu cầu chỉnh sửa
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="openRejectModal('ce_reject', 'Từ chối phiếu', 'ceoNote', 'Nhập lý do từ chối...', 'Xác nhận từ chối')">Từ chối</button>
-                </div>
-            </c:if>
-
-            <c:if test="${canEditRevision}">
-                <div class="action-bar-top">
-                    <a class="btn btn-primary" href="${pageContext.request.contextPath}/transfers?action=edit_view&amp;id=${t.transferId}">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        Sửa &amp; gửi lại duyệt
-                    </a>
-                </div>
-            </c:if>
-
-            <c:if test="${canCreateExport}">
-                <div class="action-bar-top">
-                    <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_export_receipt&amp;transferId=${t.transferId}">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
-                        Tạo phiếu xuất (từ kho nguồn)
-                    </a>
-                </div>
-            </c:if>
-
-            <c:if test="${canCreateImport}">
-                <div class="action-bar-top">
-                    <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_import_receipt&amp;transferId=${t.transferId}">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
-                        Tạo phiếu nhập (tại kho đích)
-                    </a>
-                </div>
-            </c:if>
-
             <c:if test="${not empty t.exportReceiptCode or not empty t.importReceiptCode}">
-                <div class="card" style="padding:14px 18px;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);">
-                    <div style="font-weight:700;margin-bottom:8px;">Phiếu liên quan</div>
-                    <c:if test="${not empty t.exportReceiptCode}">
-                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                            <span style="color:var(--muted);">Phiếu xuất:</span>
-                            <a href="${pageContext.request.contextPath}/export-receipt?action=detail&amp;id=${t.exportReceiptId}" style="font-family:var(--font-mono);font-weight:600;color:var(--accent);">
-                                <c:out value="${t.exportReceiptCode}"/>
-                            </a>
-                        </div>
-                    </c:if>
-                    <c:if test="${not empty t.importReceiptCode}">
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <span style="color:var(--muted);">Phiếu nhập:</span>
-                            <a href="${pageContext.request.contextPath}/import-receipt?action=detail&amp;id=${t.importReceiptId}" style="font-family:var(--font-mono);font-weight:600;color:var(--accent);">
-                                <c:out value="${t.importReceiptCode}"/>
-                            </a>
-                        </div>
-                    </c:if>
+                <div class="section">
+                    <div class="section-head">
+                        <h3>Phiếu liên quan</h3>
+                    </div>
+                    <div class="section-body">
+                        <c:if test="${not empty t.exportReceiptCode}">
+                            <div style="display:flex;gap:8px;align-items:center; padding: 4px 0;">
+                                <span style="color:var(--muted); min-width: 90px;">Phiếu xuất:</span>
+                                <a class="code-link" href="${pageContext.request.contextPath}/export-receipt?action=detail&amp;id=${t.exportReceiptId}">
+                                    <c:out value="${t.exportReceiptCode}"/>
+                                </a>
+                            </div>
+                        </c:if>
+                        <c:if test="${not empty t.importReceiptCode}">
+                            <div style="display:flex;gap:8px;align-items:center; padding: 4px 0;">
+                                <span style="color:var(--muted); min-width: 90px;">Phiếu nhập:</span>
+                                <a class="code-link" href="${pageContext.request.contextPath}/import-receipt?action=detail&amp;id=${t.importReceiptId}">
+                                    <c:out value="${t.importReceiptCode}"/>
+                                </a>
+                            </div>
+                        </c:if>
+                    </div>
                 </div>
             </c:if>
 
-            <div class="tab-bar">
-                <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                    Thông tin & các máy
-                </a>
-                <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Lịch sử cập nhật
-                </a>
+            <div class="section">
+                <div class="section-head">
+                    <h3>Thông tin chung</h3>
+                </div>
+                <div class="section-body">
+                    <div class="form-grid cols-5">
+                        <div class="info-field">
+                            <label>Trạng thái</label>
+                            <input class="info-input" type="text" disabled value="<c:out value='${statusLabel}'/>">
+                        </div>
+                        <div class="info-field">
+                            <label>Mã phiếu</label>
+                            <input class="info-input mono" type="text" disabled value="<c:out value='${t.transferCode}'/>">
+                        </div>
+                        <div class="info-field">
+                            <label>Kho nguồn</label>
+                            <input class="info-input" type="text" disabled value="<c:out value='${t.sourceWarehouseName}'/>">
+                        </div>
+                        <div class="info-field">
+                            <label>Kho đích</label>
+                            <input class="info-input" type="text" disabled value="<c:out value='${t.destWarehouseName}'/>">
+                        </div>
+                        <div class="info-field">
+                            <label>Người tạo</label>
+                            <input class="info-input" type="text" disabled value="<c:out value='${t.createdByName}'/>">
+                        </div>
+                    </div>
+                    <div class="form-grid cols-5" style="margin-top: 14px;">
+                        <div class="info-field">
+                            <label>Ngày tạo</label>
+                            <input class="info-input mono" type="text" disabled value="<c:if test='${not empty t.createdAt}'><fmt:formatDate value='${t.createdAtAsDate}' pattern='dd/MM/yyyy HH:mm'/></c:if>">
+                        </div>
+                        <c:if test="${not empty t.executedAt}">
+                            <div class="info-field">
+                                <label>Ngày hoàn tất</label>
+                                <input class="info-input mono" type="text" disabled value="<fmt:formatDate value='${t.executedAtAsDate}' pattern='dd/MM/yyyy HH:mm'/>">
+                            </div>
+                        </c:if>
+                        <div class="info-field">
+                            <label>Loại phiếu</label>
+                            <input class="info-input" type="text" disabled value="Luân chuyển kho">
+                        </div>
+                        <div class="info-field">
+                            <label>Số dòng hàng</label>
+                            <input class="info-input mono" type="text" disabled value="<c:out value='${totalDetails}'/>">
+                        </div>
+                        <div class="info-field">
+                            <label>Hành động</label>
+                            <input class="info-input" type="text" disabled value="Luân chuyển: ${t.sourceWarehouseName} → ${t.destWarehouseName}">
+                        </div>
+                    </div>
+                    <c:if test="${not empty t.note}">
+                        <div style="margin-top: 18px;">
+                            <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
+                            <div class="note-soft"><c:out value="${t.note}"/></div>
+                        </div>
+                    </c:if>
+                </div>
             </div>
 
-            <c:choose>
-                <c:when test="${currentTab == 'history'}">
-                    <div class="table-card history-card">
-                        <form method="get" action="${pageContext.request.contextPath}/transfers" class="history-filter-bar">
-                            <input type="hidden" name="action" value="detail"/>
-                            <input type="hidden" name="id" value="${t.transferId}"/>
-                            <input type="hidden" name="tab" value="history"/>
-                            <input type="hidden" name="page" value="1"/>
 
-                            <div class="search-input hf-search">
-                                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
+            <div class="section" style="margin-top: 18px;">
+                <div class="tabs" style="margin-bottom: 16px;">
+                    <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                        Thông tin các máy
+                    </a>
+                    <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Lịch sử cập nhật
+                        <c:if test="${not empty totalLogs and totalLogs > 0}"><span class="tab-badge">${totalLogs}</span></c:if>
+                    </a>
+                </div>
+
+                <c:choose>
+                    <c:when test="${currentTab == 'history'}">
+                        <div class="table-card history-card">
+                            <form method="get" action="${pageContext.request.contextPath}/transfers" class="history-filter-bar">
+                                <input type="hidden" name="action" value="detail"/>
+                                <input type="hidden" name="id" value="${t.transferId}"/>
+                                <input type="hidden" name="tab" value="history"/>
+                                <input type="hidden" name="page" value="1"/>
+
+                                <div class="search-input hf-search">
+                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input name="logSearch" value="${logSearch}" placeholder="Tìm người dùng, chi tiết..." autocomplete="off"/>
+                                </div>
+                                <select name="logAction" class="filter-select">
+                                    <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
+                                    <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu</option>
+                                    <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
+                                    <option value="CE_APPROVE" ${logAction == 'CE_APPROVE' ? 'selected' : ''}>CEO duyệt</option>
+                                    <option value="CE_REJECT" ${logAction == 'CE_REJECT' ? 'selected' : ''}>CEO từ chối</option>
+                                    <option value="EXPORT_CREATED" ${logAction == 'EXPORT_CREATED' ? 'selected' : ''}>Tạo phiếu xuất</option>
+                                    <option value="IMPORT_CREATED" ${logAction == 'IMPORT_CREATED' ? 'selected' : ''}>Tạo phiếu nhập</option>
+                                </select>
+                                <div class="date-range">
+                                    <label class="date-label">Từ</label>
+                                    <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
+                                    <label class="date-label">đến</label>
+                                    <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    Áp dụng
+                                </button>
+                                <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}&amp;tab=history" class="btn">
+                                        <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                                        Xóa lọc
+                                    </a>
+                                </c:if>
+                            </form>
+
+                            <div class="result-summary">
+                                Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                                <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                    &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                                </c:if>
                             </div>
-                            <select name="logAction" class="filter-select">
-                                <option value="" ${empty logAction ? 'selected' : ''}>Tất cả hành động</option>
-                                <option value="CREATE" ${logAction == 'CREATE' ? 'selected' : ''}>Tạo phiếu</option>
-                                <option value="UPDATE" ${logAction == 'UPDATE' ? 'selected' : ''}>Cập nhật</option>
-                                <option value="CE_APPROVE" ${logAction == 'CE_APPROVE' ? 'selected' : ''}>CEO duyệt</option>
-                                <option value="CE_REJECT" ${logAction == 'CE_REJECT' ? 'selected' : ''}>CEO từ chối</option>
-                                <option value="EXPORT_CREATED" ${logAction == 'EXPORT_CREATED' ? 'selected' : ''}>Tạo phiếu xuất</option>
-                                <option value="IMPORT_CREATED" ${logAction == 'IMPORT_CREATED' ? 'selected' : ''}>Tạo phiếu nhập</option>
-                            </select>
-                            <div class="date-range">
-                                <label class="date-label">Từ</label>
-                                <input type="date" name="dateFrom" value="${dateFrom}" class="date-input"/>
-                                <label class="date-label">đến</label>
-                                <input type="date" name="dateTo"   value="${dateTo}"   class="date-input"/>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                Áp dụng
-                            </button>
-                            <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
-                                <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}&amp;tab=history" class="btn">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                                    Xóa lọc
-                                </a>
-                            </c:if>
-                        </form>
 
-                        <div class="result-summary">
-                            Tìm thấy <strong>${totalLogs}</strong> bản ghi
-                            <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
-                                &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
-                            </c:if>
-                        </div>
-
-                        <table>
-                            <thead><tr>
-                                <th style="width:150px;">Thời gian</th>
-                                <th style="width:180px;">Người thực hiện</th>
-                                <th style="width:200px;">Hành động</th>
-                                <th>Chi tiết thay đổi</th>
-                            </tr></thead>
-                            <tbody>
-                            <c:choose>
-                                <c:when test="${empty logList}">
-                                    <tr><td colspan="4">
-                                        <div class="empty-state">
-                                            <div class="icon-wrap">
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            <table>
+                                <thead><tr>
+                                    <th style="width:150px;">Thời gian</th>
+                                    <th style="width:180px;">Người thực hiện</th>
+                                    <th style="width:200px;">Hành động</th>
+                                    <th>Chi tiết thay đổi</th>
+                                </tr></thead>
+                                <tbody>
+                                <c:choose>
+                                    <c:when test="${empty logList}">
+                                        <tr><td colspan="4">
+                                            <div class="empty-state">
+                                                <div class="icon-wrap">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                </div>
+                                                <strong>Không có bản ghi nào</strong>
+                                                <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                                    <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}&amp;tab=history">xóa lọc</a></span>
+                                                </c:if>
                                             </div>
-                                            <strong>Không có bản ghi nào</strong>
-                                            <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
-                                                <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${t.transferId}&amp;tab=history">xóa lọc</a></span>
-                                            </c:if>
-                                        </div>
-                                    </td></tr>
-                                </c:when>
-                                <c:otherwise>
-                                    <c:forEach var="log" items="${logList}">
-                                        <tr>
-                                            <td style="font-family:var(--font-mono);"><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                            <td>
-                                                <div style="font-weight:600;color:var(--fg);"><c:out value="${log.username}"/></div>
-                                            </td>
-                                            <td>
-                                                <span class="action-badge action-<c:choose>
-                                                    <c:when test="${log.action == 'CREATE'}">create</c:when>
-                                                    <c:when test="${log.action == 'SUBMIT'}">update</c:when>
-                                                    <c:when test="${log.action == 'UPDATE'}">update</c:when>
-                                                    <c:when test="${log.action == 'CANCEL'}">reject</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_APPROVE'}">approve</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_REJECT'}">reject</c:when>
-                                                    <c:when test="${log.action == 'CE_APPROVE'}">approve</c:when>
-                                                    <c:when test="${log.action == 'CE_REJECT'}">reject</c:when>
-                                                    <c:when test="${log.action == 'CEO_APPROVE'}">approve</c:when>
-                                                    <c:when test="${log.action == 'CEO_REJECT'}">reject</c:when>
-                                                    <c:when test="${log.action == 'EXPORT_CREATED'}">update</c:when>
-                                                    <c:when test="${log.action == 'IMPORT_CREATED'}">approve</c:when>
-                                                    <c:when test="${log.action == 'FINAL_APPROVE'}">approve</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_REJECT_R2'}">reject</c:when>
-                                                    <c:when test="${log.action == 'REQUEST_REVISION'}">update</c:when>
-                                                    <c:otherwise>default</c:otherwise>
-                                                </c:choose>">
-                                                <c:choose>
-                                                    <c:when test="${log.action == 'CREATE'}">Tạo phiếu</c:when>
-                                                    <c:when test="${log.action == 'SUBMIT'}">Gửi duyệt</c:when>
-                                                    <c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when>
-                                                    <c:when test="${log.action == 'CANCEL'}">Hủy phiếu</c:when>
-                                                    <c:when test="${log.action == 'CE_APPROVE'}">CEO duyệt</c:when>
-                                                    <c:when test="${log.action == 'CE_REJECT'}">CEO từ chối</c:when>
-                                                    <c:when test="${log.action == 'EXPORT_CREATED'}">Tạo phiếu xuất</c:when>
-                                                    <c:when test="${log.action == 'IMPORT_CREATED'}">Tạo phiếu nhập</c:when>
-                                                    <c:when test="${log.action == 'CEO_APPROVE'}">CEO duyệt</c:when>
-                                                    <c:when test="${log.action == 'CEO_REJECT'}">CEO từ chối</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_APPROVE'}">Manager duyệt lần 1</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_REJECT'}">Manager từ chối lần 1</c:when>
-                                                    <c:when test="${log.action == 'FINAL_APPROVE'}">Xác nhận cuối</c:when>
-                                                    <c:when test="${log.action == 'MANAGER_REJECT_R2'}">Từ chối xác nhận cuối</c:when>
-                                                    <c:when test="${log.action == 'REQUEST_REVISION'}">Yêu cầu chỉnh sửa</c:when>
-                                                    <c:otherwise>${log.action}</c:otherwise>
-                                                </c:choose></span>
-                                            </td>
-                                            <td style="max-width:380px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
-                                                <c:out value="${log.details}"/>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                            </tbody>
-                        </table>
+                                        </td></tr>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="log" items="${logList}">
+                                            <tr>
+                                                <td style="font-family:var(--font-mono);"><fmt:formatDate value="${log.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
+                                                <td>
+                                                    <div style="font-weight:600;color:var(--fg);"><c:out value="${log.username}"/></div>
+                                                </td>
+                                                <td>
+                                                    <span class="action-badge action-<c:choose>
+                                                        <c:when test="${log.action == 'CREATE'}">create</c:when>
+                                                        <c:when test="${log.action == 'SUBMIT'}">update</c:when>
+                                                        <c:when test="${log.action == 'UPDATE'}">update</c:when>
+                                                        <c:when test="${log.action == 'CANCEL'}">reject</c:when>
+                                                        <c:when test="${log.action == 'MANAGER_APPROVE'}">approve</c:when>
+                                                        <c:when test="${log.action == 'MANAGER_REJECT'}">reject</c:when>
+                                                        <c:when test="${log.action == 'CE_APPROVE'}">approve</c:when>
+                                                        <c:when test="${log.action == 'CE_REJECT'}">reject</c:when>
+                                                        <c:when test="${log.action == 'CEO_APPROVE'}">approve</c:when>
+                                                        <c:when test="${log.action == 'CEO_REJECT'}">reject</c:when>
+                                                        <c:when test="${log.action == 'EXPORT_CREATED'}">update</c:when>
+                                                        <c:when test="${log.action == 'IMPORT_CREATED'}">approve</c:when>
+                                                        <c:when test="${log.action == 'FINAL_APPROVE'}">approve</c:when>
+                                                        <c:when test="${log.action == 'MANAGER_REJECT_R2'}">reject</c:when>
+                                                        <c:when test="${log.action == 'REQUEST_REVISION'}">update</c:when>
+                                                        <c:otherwise>default</c:otherwise>
+                                                    </c:choose>">
+                                                    <c:choose>
+                                                        <c:when test="${log.action == 'CREATE'}">Tạo phiếu</c:when>
+                                                        <c:when test="${log.action == 'SUBMIT'}">Gửi duyệt</c:when>
+                                                        <c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when>
+                                                        <c:when test="${log.action == 'CANCEL'}">Hủy phiếu</c:when>
+                                                        <c:when test="${log.action == 'CE_APPROVE'}">CEO duyệt</c:when>
+                                                        <c:when test="${log.action == 'CE_REJECT'}">CEO từ chối</c:when>
+                                                        <c:when test="${log.action == 'EXPORT_CREATED'}">Tạo phiếu xuất</c:when>
+                                                        <c:when test="${log.action == 'IMPORT_CREATED'}">Tạo phiếu nhập</c:when>
+                                                        <c:when test="${log.action == 'CEO_APPROVE'}">CEO duyệt</c:when>
+                                                        <c:when test="${log.action == 'CEO_REJECT'}">CEO từ chối</c:when>
+                                                        <c:when test="${log.action == 'MANAGER_APPROVE'}">Manager duyệt lần 1</c:when>
+                                                        <c:when test="${log.action == 'MANAGER_REJECT'}">Manager từ chối lần 1</c:when>
+                                                        <c:when test="${log.action == 'FINAL_APPROVE'}">Xác nhận cuối</c:when>
+                                                        <c:when test="${log.action == 'MANAGER_REJECT_R2'}">Từ chối xác nhận cuối</c:when>
+                                                        <c:when test="${log.action == 'REQUEST_REVISION'}">Yêu cầu chỉnh sửa</c:when>
+                                                        <c:otherwise>${log.action}</c:otherwise>
+                                                    </c:choose></span>
+                                                </td>
+                                                <td style="max-width:380px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                                    <c:out value="${log.details}"/>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                                </tbody>
+                            </table>
 
-                        <c:if test="${logTotalPages > 1}">
-                        <div class="pagination">
-                            <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
-                            <div class="controls">
-                                <c:if test="${logPage > 1}">
-                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
-                                </c:if>
-                                <c:forEach begin="1" end="${logTotalPages}" var="p">
-                                    <c:choose>
-                                        <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
-                                        <c:otherwise><a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
-                                <c:if test="${logPage < logTotalPages}">
-                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
-                                </c:if>
-                            </div>
-                        </div>
-                        </c:if>
-                    </div>
-                </c:when>
-                <c:otherwise>
-                    <div class="section" style="padding: 18px 22px;">
-                        <div class="info-grid">
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
-                                    <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:${statusBg};color:${statusFg};">
-                                        <span class="pdot"></span>${statusLabel}
-                                    </span>
+                            <c:if test="${logTotalPages > 1}">
+                            <div class="pagination">
+                                <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
+                                <div class="controls">
+                                    <c:if test="${logPage > 1}">
+                                        <a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                                    </c:if>
+                                    <c:forEach begin="1" end="${logTotalPages}" var="p">
+                                        <c:choose>
+                                            <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
+                                            <c:otherwise><a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                        </c:choose>
+                                    </c:forEach>
+                                    <c:if test="${logPage < logTotalPages}">
+                                        <a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                                    </c:if>
                                 </div>
                             </div>
-                            <div class="info-field">
-                                <div class="info-label">Mã phiếu</div>
-                                <div class="info-value mono">${t.transferCode}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Kho nguồn</div>
-                                <div class="info-value">${t.sourceWarehouseName}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Kho đích</div>
-                                <div class="info-value">${t.destWarehouseName}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Người tạo</div>
-                                <div class="info-value">${t.createdByName}</div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Ngày tạo</div>
-                                <div class="info-value mono">
-                                     <c:if test="${not empty t.createdAt}"><fmt:formatDate value="${t.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></c:if>
-                                </div>
-                            </div>
-                            <c:if test="${not empty t.executedAt}">
-                                <div class="info-field">
-                                    <div class="info-label">Ngày hoàn tất</div>
-                                    <div class="info-value mono"><fmt:formatDate value="${t.executedAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></div>
-                                </div>
                             </c:if>
                         </div>
-                        <c:if test="${not empty t.note}">
-                            <div style="margin-top: 18px;">
-                                <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú phiếu</div>
-                                <div class="note-soft">${t.note}</div>
-                            </div>
-                        </c:if>
-                    </div>
-
-                    <c:if test="${not empty t.managerReviewedAt or not empty t.ceoReviewedAt or not empty t.finalReviewedAt}">
-                        <div class="section" style="padding: 18px 22px; margin-top: 18px;">
-                            <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px;">Lịch sử duyệt</div>
-                            <div class="info-grid">
-                                <c:if test="${not empty t.managerReviewedAt}">
-                                    <div class="info-field">
-                                        <div class="info-label">Manager duyệt lần 1</div>
-                                        <div class="info-value">
-                                            ${t.managerReviewedByName}
-                                            <span class="mono" style="color: var(--muted); font-size: 12px;">lúc <fmt:formatDate value="${t.managerReviewedAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></span>
-                                        </div>
-                                    </div>
-                                </c:if>
-                                <c:if test="${not empty t.ceoReviewedAt}">
-                                    <div class="info-field">
-                                        <div class="info-label">
-                                            <c:choose>
-                                                <c:when test="${status == 'REQUEST_REVISION'}">CEO yêu cầu chỉnh sửa</c:when>
-                                                <c:otherwise>CEO duyệt</c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                        <div class="info-value">
-                                            ${t.ceoReviewedByName}
-                                            <span class="mono" style="color: var(--muted); font-size: 12px;">lúc <fmt:formatDate value="${t.ceoReviewedAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></span>
-                                        </div>
-                                    </div>
-                                </c:if>
-                                <c:if test="${not empty t.finalReviewedAt}">
-                                    <div class="info-field">
-                                        <div class="info-label">Manager xác nhận cuối</div>
-                                        <div class="info-value">
-                                            ${t.finalReviewedByName}
-                                            <span class="mono" style="color: var(--muted); font-size: 12px;">lúc <fmt:formatDate value="${t.finalReviewedAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></span>
-                                        </div>
-                                    </div>
-                                </c:if>
-                            </div>
-                        </div>
-                    </c:if>
-
-                    <div class="table-card history-card" style="margin-top: 18px;">
-                        <div class="result-summary" style="display:flex;align-items:center;justify-content:space-between;">
-                            <span>Danh sách máy phát điện (<strong>${empty t.details ? 0 : t.details.size()}</strong> dòng)</span>
-                            <span>Hành động: luân chuyển <strong style="font-family:var(--font-mono);">${t.sourceWarehouseName} → ${t.destWarehouseName}</strong></span>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="section-head" style="margin-top: 0;">
+                            <h3>Danh sách máy phát điện (<strong>${totalDetails}</strong> dòng)</h3>
                         </div>
                         <table class="product-table">
                             <thead>
@@ -507,13 +456,13 @@
                             </thead>
                             <tbody>
                                 <c:choose>
-                                    <c:when test="${empty t.details}">
+                                    <c:when test="${empty pagedDetails}">
                                         <tr><td colspan="6" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có chi tiết</td></tr>
                                     </c:when>
                                     <c:otherwise>
-                                        <c:forEach var="d" items="${t.details}" varStatus="st">
+                                        <c:forEach var="d" items="${pagedDetails}" varStatus="st">
                                             <tr>
-                                                <td class="mono">${st.count}</td>
+                                                <td class="mono">${(detailPage - 1) * 10 + st.index + 1}</td>
                                                 <td><strong>${d.generatorModel}</strong></td>
                                                 <td class="mono">${d.quantity}</td>
                                                 <td class="mono">${d.serialNumber != null ? d.serialNumber : '—'}</td>
@@ -532,9 +481,29 @@
                                 </c:choose>
                             </tbody>
                         </table>
-                    </div>
-                </c:otherwise>
-            </c:choose>
+
+                        <c:if test="${detailTotalPages > 0}">
+                        <div class="pagination" style="margin-top: 16px;">
+                            <div class="info">Hiển thị <strong>${(detailPage-1)*10 + 1}</strong>–<strong>${detailPage*10 > totalDetails ? totalDetails : detailPage*10}</strong> / <strong>${totalDetails}</strong> bản ghi</div>
+                            <div class="controls">
+                                <c:if test="${detailPage > 1}">
+                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;detailPage=${detailPage - 1}" class="page-btn">&lsaquo;</a>
+                                </c:if>
+                                <c:forEach begin="1" end="${detailTotalPages}" var="p">
+                                    <c:choose>
+                                        <c:when test="${p == detailPage}"><span class="page-btn active">${p}</span></c:when>
+                                        <c:otherwise><a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;detailPage=${p}" class="page-btn">${p}</a></c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                                <c:if test="${detailPage < detailTotalPages}">
+                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&amp;id=${t.transferId}&amp;detailPage=${detailPage + 1}" class="page-btn">&rsaquo;</a>
+                                </c:if>
+                            </div>
+                        </div>
+                        </c:if>
+                    </c:otherwise>
+                </c:choose>
+            </div>
             </c:if>
         </main>
     </div>
@@ -620,5 +589,17 @@
 </script>
 <div class="toast-host" id="toastHost"></div>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.SESSION_DATA && window.SESSION_DATA.message) {
+            if (typeof showToast === 'function') {
+                showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+            } else if (typeof toast === 'function') {
+                toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+            }
+            window.SESSION_DATA = null;
+        }
+    });
+</script>
 </body>
 </html>
