@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -128,7 +128,7 @@
             <h1>Tạo đơn thanh lý</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/liquidations">Thanh lý</a> / Thêm mới</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                     <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                     <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                 </button>
@@ -248,7 +248,7 @@
                         <div class="table-toolbar">
                             <div class="search-input">
                                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                <input type="text" id="serialSearchInput" placeholder="Tìm S/N hoặc model..." autocomplete="off"/>
+                                <input type="text" id="serialSearchInput" placeholder="Tìm số serial hoặc mẫu máy..." autocomplete="off"/>
                             </div>
                             <select class="info-input" id="condFilter" style="width:auto;min-width:160px;" ${empty selectedWarehouseId ? 'disabled' : ''}
                                     onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond='+this.value">
@@ -285,8 +285,8 @@
                                     <thead>
                                         <tr>
                                             <th class="col-cb"><input type="checkbox" id="pickAll"/></th>
-                                            <th>Serial</th>
-                                            <th>Model</th>
+                                            <th>Số serial</th>
+                                            <th>Mẫu máy</th>
                                             <th>Tình trạng</th>
                                             <th class="col-date">Ngày nhập</th>
                                             <th class="col-date">Thời gian tồn</th>
@@ -406,7 +406,7 @@
             });
             document.getElementById('barSelectedCount').textContent = count;
             var modelCount = Object.keys(models).length;
-            document.getElementById('barModelCount').textContent = modelCount > 0 ? ' · ' + modelCount + ' model' : '';
+            document.getElementById('barModelCount').textContent = modelCount > 0 ? ' · ' + modelCount + ' mẫu máy' : '';
             document.getElementById('formTotalVal').textContent = fmt(total) + ' đ';
             document.getElementById('formLiqTotalVal').textContent = fmt(liqTotal) + ' đ';
             var gi = document.getElementById('gridTotalImport');

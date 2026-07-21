@@ -64,7 +64,7 @@ public class InventoryLookupController extends HttpServlet {
             SystemLogger.error("Quan ly kho", "InventoryLookupController.doGet", e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"found\":false,\"message\":\"Loi he thong\"}");
+            response.getWriter().write("{\"found\":false,\"message\":\"Lỗi hệ thống\"}");
         }
     }
 
@@ -73,7 +73,7 @@ public class InventoryLookupController extends HttpServlet {
         if (session == null || session.getAttribute("loggedUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"found\":false,\"message\":\"Chua dang nhap\"}");
+            response.getWriter().write("{\"found\":false,\"message\":\"Chưa đăng nhập\"}");
             return false;
         }
         return true;
@@ -103,7 +103,7 @@ public class InventoryLookupController extends HttpServlet {
             SystemLogger.error("Quan ly kho", "InventoryLookupController.doPost", e.getMessage(), e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"found\":false,\"message\":\"Loi he thong\"}");
+            response.getWriter().write("{\"found\":false,\"message\":\"Lỗi hệ thống\"}");
         }
     }
 
@@ -125,7 +125,7 @@ public class InventoryLookupController extends HttpServlet {
 
         if (serial == null || serial.isEmpty()) {
             body.put("found", false);
-            body.put("message", "Serial trong");
+            body.put("message", "Serial trống");
             new Gson().toJson(body, response.getWriter());
             return;
         }
@@ -133,7 +133,7 @@ public class InventoryLookupController extends HttpServlet {
         Inventory inv = inventoryDAO.findBySerialNumber(serial);
         if (inv == null) {
             body.put("found", false);
-            body.put("message", "Serial chua ton tai trong he thong");
+            body.put("message", "Serial chưa tồn tại trong hệ thống");
             new Gson().toJson(body, response.getWriter());
             return;
         }

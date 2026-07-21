@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -88,7 +88,7 @@
                         </c:if>
                         <div class="search-input">
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo username" autocomplete="off" />
+                            <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo tên đăng nhập" autocomplete="off" />
                         </div>
                         <button type="submit" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -106,7 +106,7 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Username</th>
+                                    <th>Tên đăng nhập</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày gửi</th>
                                     <th>Hành động</th>
@@ -190,7 +190,7 @@
                 <h3>Chi tiết yêu cầu</h3>
                 <div class="sub">Thông tin cấp lại mật khẩu</div>
                 <div class="field">
-                    <label class="field-label">Username</label>
+                    <label class="field-label">Tên đăng nhập</label>
                     <input class="input" id="detailUsername" readonly>
                 </div>
                 <div class="field">
@@ -218,7 +218,7 @@
                 <form action="${pageContext.request.contextPath}/admin/forgot-password" method="post">
                     <input type="hidden" name="requestId" id="requestId">
                     <div class="field">
-                        <label class="field-label">Username</label>
+                        <label class="field-label">Tên đăng nhập</label>
                         <input class="input" type="text" id="username" readonly>
                     </div>
                     <div class="field">

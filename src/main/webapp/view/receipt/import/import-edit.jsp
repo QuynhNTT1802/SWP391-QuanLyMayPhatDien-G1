@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -191,7 +191,7 @@
                                 <tr>
                                     <th class="col-num">#</th>
                                     <th class="col-gen">Máy phát</th>
-                                    <th class="col-serial">Serial</th>
+                                    <th class="col-serial">Số serial</th>
                                     <th class="col-note">Ghi chú</th>
                                     <th class="col-del"></th>
                                 </tr>
@@ -209,7 +209,7 @@
                                                     <span class="stock-info" data-stock-info></span>
                                                     <span class="field-error"></span>
                                                 </td>
-                                                <td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                                <td><input type="text" name="manualSerialNumber" placeholder="Số serial (bắt buộc)" value="<c:out value='${d.serialNumber}'/>" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                                 <td><input type="text" name="manualDetailNote" placeholder="Ghi chú" value="<c:out value='${d.note}'/>" /></td>
                                                 <td class="col-del">
                                                     <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -229,7 +229,7 @@
                                                 <span class="stock-info" data-stock-info></span>
                                                 <span class="field-error"></span>
                                             </td>
-                                            <td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
+                                            <td><input type="text" name="manualSerialNumber" placeholder="Số serial (bắt buộc)" required onblur="validateField(this)"/><span class="field-error"></span></td>
                                             <td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>
                                             <td class="col-del">
                                                 <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
@@ -346,7 +346,7 @@
         var tr = document.createElement('tr');
         tr.innerHTML = '<td class="col-num"><span class="row-num"></span></td>'
                 + '<td><select name="manualGeneratorId" required onchange="onGeneratorChange(this)"><option value="">-- Chọn máy --</option></select><span class="stock-info" data-stock-info></span><span class="field-error" style="display:none;"></span></td>'
-                + '<td><input type="text" name="manualSerialNumber" placeholder="S/N (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
+                + '<td><input type="text" name="manualSerialNumber" placeholder="Số serial (bắt buộc)" required onblur="validateField(this)"/><span class="field-error" style="display:none;"></span></td>'
                 + '<td><input type="text" name="manualDetailNote" placeholder="Ghi chú" /></td>'
                 + '<td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button></td>';
         renderGeneratorOptions(tr.querySelector('select[name="manualGeneratorId"]'));

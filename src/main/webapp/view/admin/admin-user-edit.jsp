@@ -73,7 +73,7 @@
                                     <div class="form-section-head-left">
                                         <div class="form-section-num">01 — THÔNG TIN CƠ BẢN</div>
                                         <h3 class="form-section-title">Họ tên &amp; liên hệ</h3>
-                                        <div class="form-section-desc">Email không thể đổi sau khi tạo tài khoản — đó là khoá đăng nhập của user.</div>
+                                        <div class="form-section-desc">Email không thể đổi sau khi tạo tài khoản — đó là khóa đăng nhập của người dùng.</div>
                                     </div>
                                 </div>
                                 <div class="form-grid">
@@ -90,7 +90,7 @@
                                                 <span class="lock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Khoá</span>
                                             </label>
                                             <input class="input mono" name="email" value="${user.email}" readonly />
-                                        <div class="field-help">Email là khoá đăng nhập, không thể đổi.</div>
+                                        <div class="field-help">Email là khóa đăng nhập, không thể đổi.</div>
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Số điện thoại <span class="req">*</span></label>
@@ -112,12 +112,12 @@
                                     <div class="form-section-head-left">
                                         <div class="form-section-num">02 — VAI TRÒ &amp; KHO</div>
                                         <h3 class="form-section-title">Phân quyền hệ thống</h3>
-                                        <div class="form-section-desc">Chon nhieu vai tro de phan quyen linh hoat. Bo check de go bo vai tro.</div>
+                                        <div class="form-section-desc">Chọn nhiều vai trò để phân quyền linh hoạt. Bỏ check để gỡ bỏ vai trò.</div>
                                     </div>
                                 </div>
                                 <div class="form-grid single">
                                     <div class="field">
-                                        <label class="field-label">Vai tro <span class="req">*</span></label>
+                                        <label class="field-label">Vai trò <span class="req">*</span></label>
                                         <div class="role-grid">
                                             <c:forEach var="role" items="${allRoles}">
                                                 <c:if test="${role.status == 'active'}">
@@ -153,9 +153,33 @@
                             <div class="form-section">
                                 <div class="form-section-head">
                                     <div class="form-section-head-left">
-                                        <div class="form-section-num">03 — QUYEN CA NHAN</div>
-                                        <h3 class="form-section-title">Ghi de quyen nguoi dung</h3>
-                                        <div class="form-section-desc">GRANT cap them quyen, DENY tu choi quyen (uu tien cao hon role). De trong = theo role.</div>
+                                        <div class="form-section-num">03 — KHO PHỤ TRÁCH</div>
+                                        <h3 class="form-section-title">Phân kho làm việc</h3>
+                                        <div class="form-section-desc">Chỉ áp dụng cho nhân viên kho / quản lý kho. Để trống nếu chưa phân công.</div>
+                                    </div>
+                                </div>
+                                <div class="form-grid single">
+                                    <div class="field">
+                                        <label class="field-label">Kho phụ trách</label>
+                                        <select class="select" name="warehouseId" data-orig="${user.warehouseId}">
+                                            <option value="">-- Chưa phân kho --</option>
+                                            <c:forEach var="wh" items="${warehouses}">
+                                                <c:if test="${wh.status == 'active'}">
+                                                    <option value="${wh.warehouseId}" ${user.warehouseId == wh.warehouseId ? 'selected' : ''}><c:out value="${wh.name}"/></option>
+                                                </c:if>
+                                            </c:forEach>
+                                        </select>
+                                        <div class="field-help">Chỉ áp dụng cho vai trò nhân viên kho / quản lý kho.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <div class="form-section-head">
+                                    <div class="form-section-head-left">
+                                        <div class="form-section-num">04 — QUYỀN CÁ NHÂN</div>
+                                        <h3 class="form-section-title">Ghi đè quyền người dùng</h3>
+                                        <div class="form-section-desc">CẤP cấp thêm quyền, TỪ CHỐI từ chối quyền (ưu tiên cao hơn role). Để trống = theo role.</div>
                                     </div>
                                 </div>
                                 <input type="hidden" name="perOverride_submitted" value="1" />
@@ -176,13 +200,13 @@
                                                         <div style="display: flex; align-items: center; gap: 12px; padding: 4px 0; border-bottom: 1px dashed var(--border);">
                                                             <span style="flex: 1; font-size: 12px; font-weight: 600;">${perm.description != null ? perm.description : perm.action}</span>
                                                             <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--muted);">
-                                                                <input type="radio" name="perOverride_${perm.permissionId}" value="default" data-resource="${perm.resource}" data-action="${perm.action}" ${empty ovType ? 'checked' : ''} /> Mac dinh
+                                                                <input type="radio" name="perOverride_${perm.permissionId}" value="default" data-resource="${perm.resource}" data-action="${perm.action}" ${empty ovType ? 'checked' : ''} /> Mặc định
                                                             </label>
                                                             <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--accent); font-weight: 600;">
-                                                                <input type="radio" name="perOverride_${perm.permissionId}" value="GRANT" data-resource="${perm.resource}" data-action="${perm.action}" ${ovType == 'GRANT' ? 'checked' : ''} /> GRANT
+                                                                <input type="radio" name="perOverride_${perm.permissionId}" value="GRANT" data-resource="${perm.resource}" data-action="${perm.action}" ${ovType == 'GRANT' ? 'checked' : ''} /> CẤP
                                                             </label>
                                                             <label style="font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; color: var(--danger); font-weight: 600;">
-                                                                <input type="radio" name="perOverride_${perm.permissionId}" value="DENY" data-resource="${perm.resource}" data-action="${perm.action}" ${ovType == 'DENY' ? 'checked' : ''} /> DENY
+                                                                <input type="radio" name="perOverride_${perm.permissionId}" value="DENY" data-resource="${perm.resource}" data-action="${perm.action}" ${ovType == 'DENY' ? 'checked' : ''} /> TỪ CHỐI
                                                             </label>
                                                         </div>
                                                     </c:forEach>
@@ -190,7 +214,7 @@
                                             </div>
                                         </c:forEach>
                                         <c:if test="${empty groupedPerms}">
-                                            <div style="font-size: 12px; color: var(--muted); padding: 16px; text-align: center;">Khong co quyen nao trong he thong.</div>
+                                            <div style="font-size: 12px; color: var(--muted); padding: 16px; text-align: center;">Không có quyền nào trong hệ thống.</div>
                                         </c:if>
                                     </div>
                                 </div>

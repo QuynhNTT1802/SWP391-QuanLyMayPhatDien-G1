@@ -1,4 +1,4 @@
-
+﻿
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -34,7 +34,7 @@
                     <h1>Chi tiết đề xuất nhập kho</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal?action=list">Đề xuất nhập kho</a> / <span><c:out value="${proposal.proposalCode}"/></span></span>
 <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="i theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -190,7 +190,7 @@
                         <div class="alert ${isWithinDeadline ? 'alert-info' : 'alert-warn'}">
                             <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                             <span>
-                                <strong>Deadline gom đơn / duyệt cho period ${proposal.period}:</strong>
+                                <strong>Hạn chót gom đơn / duyệt cho kỳ ${proposal.period}:</strong>
                                 <c:choose>
                                     <c:when test="${isWithinDeadline}">
                                         còn hiệu lực đến <strong style="font-family:'JetBrains Mono',monospace;">${deadlineDate}</strong>
@@ -616,7 +616,7 @@
             <div class="modal-host" id="resubmitModal">
                 <div class="modal-card">
                     <h3>Gửi duyệt lại</h3>
-                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" để Sale Manager xem xét lại sau khi đã chỉnh sửa.</div>
+                    <div class="modal-sub">Phiếu sẽ chuyển sang trạng thái "Chờ duyệt" để Quản lý Bán hàng xem xét lại sau khi đã chỉnh sửa.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/proposal?action=update">
                         <input type="hidden" name="id" value="${proposal.proposalId}" />
                         <input type="hidden" name="submitType" value="submit" />

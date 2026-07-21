@@ -1,4 +1,4 @@
-<%--
+﻿<%--
     Document   : admin-category-edit
     Created on : May 24, 2026, 8:48:37 AM
     Author     : LENOVO
@@ -124,7 +124,7 @@
                                     <input class="input" name="country" placeholder="VD: Nhật Bản" value="<c:out value="${brandExt.country}"/>" />
                                 </div>
                                 <div class="field">
-                                    <label class="field-label">Website</label>
+                                    <label class="field-label">Trang web</label>
                                     <input class="input" name="website" placeholder="VD: honda.com.vn" value="<c:out value="${brandExt.website}"/>" />
                                 </div>
                                 <div class="field">

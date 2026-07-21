@@ -1099,8 +1099,23 @@
 .tabs {
     display: flex;
     gap: 4px;
-    padding: 0 16px;
-    border-bottom: 1px solid var(--border);
+    padding: 6px 16px 0;
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--surface);
+    overflow: hidden;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+}
+.tabs + .section,
+.tabs + .table-card,
+.tabs + .history-card {
+    border-top: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    margin-top: 0 !important;
     background: var(--surface);
 }
 .tab {
@@ -1112,15 +1127,23 @@
     font-weight: 600;
     color: var(--muted);
     text-decoration: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     transition: all .12s ease;
     cursor: pointer;
+    background: var(--surface-2);
+    position: relative;
+    z-index: 1;
 }
-.tab:hover { color: var(--fg); }
+.tab:hover { color: var(--fg); background: var(--surface-2); }
 .tab.active {
     color: var(--fg);
-    border-bottom-color: var(--accent);
+    background: var(--surface);
+    border-color: var(--border);
+    border-bottom-color: var(--surface);
+    margin-bottom: -1px;
+    font-weight: 700;
 }
 .tab-icon {
     width: 15px;
@@ -1250,3 +1273,26 @@
 
 /* ---------- History / details card wrapper ---------- */
 .history-card { margin-top: 0; }
+
+/* ---------- Bottom action bar (sticky) ---------- */
+.bottom-actions {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px 20px;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+    z-index: 5;
+    text-align: right;
+}
+.bottom-actions .btn {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 0 0 10px !important;
+}
+

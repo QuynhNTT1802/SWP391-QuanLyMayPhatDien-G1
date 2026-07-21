@@ -1,4 +1,4 @@
-<%--
+﻿<%--
     admin-system-log.jsp — Trang xem System Log (lỗi kỹ thuật hệ thống)
     URL: /admin/system-log
     Chỉ admin mới có quyền truy cập (kiểm soát bởi SecurityFilter)
@@ -13,7 +13,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <title>System Log — Warehouse OS</title>
+        <title>Nhật ký hệ thống — Warehouse OS</title>
         <meta name="description" content="Theo dõi lỗi và cảnh báo kỹ thuật của hệ thống Warehouse OS"/>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css"/>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css"/>
@@ -168,7 +168,7 @@
             <div>
                 <!-- ===== Top bar ===== -->
                 <header class="topbar">
-                    <h1>System Log</h1>
+                    <h1>Nhật ký hệ thống</h1>
                     <span class="crumb">/ Lỗi hệ thống</span>
                     <div class="top-actions">
                         <!-- Theme toggle -->
@@ -185,7 +185,7 @@
                     <div class="page-head">
                         <div class="left">
                             <div class="eyebrow">Hệ thống</div>
-                            <h2 class="page-title">System Log</h2>
+                            <h2 class="page-title">Nhật ký hệ thống</h2>
                             <p class="page-sub">Theo dõi lỗi kỹ thuật, cảnh báo và thông tin hoạt động của hệ thống</p>
                         </div>
                         
@@ -199,9 +199,9 @@
                         <select id="levelFilter" name="level" class="filter-select"
                                 onchange="document.getElementById('syslogFilterForm').submit()">
                             <option value="" ${empty level ? 'selected' : ''}>Tất cả mức độ</option>
-                            <option value="ERROR"   ${level == 'ERROR'   ? 'selected' : ''}>ERROR</option>
-                            <option value="WARNING" ${level == 'WARNING' ? 'selected' : ''}>WARNING</option>
-                            <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>INFO</option>
+                            <option value="ERROR"   ${level == 'ERROR'   ? 'selected' : ''}>LỖI</option>
+                            <option value="WARNING" ${level == 'WARNING' ? 'selected' : ''}>CẢNH BÁO</option>
+                            <option value="INFO"    ${level == 'INFO'    ? 'selected' : ''}>THÔNG TIN</option>
                         </select>
 
                         <%-- Dropdown module (load động từ DB) --%>
@@ -317,7 +317,7 @@
                                                     <div class="message-text">${fn:escapeXml(log.message)}</div>
                                                     <c:if test="${not empty log.stackTrace}">
                                                         <details class="stack-details">
-                                                            <summary>Xem stack trace</summary>
+                                                            <summary>Xem dấu vết lỗi</summary>
                                                             <pre>${fn:escapeXml(fn:substring(log.stackTrace, 0, 2000))}<c:if test="${fn:length(log.stackTrace) > 2000}">
 ... (đã rút gọn)</c:if></pre>
                                                         </details>

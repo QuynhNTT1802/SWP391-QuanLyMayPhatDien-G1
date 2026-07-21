@@ -156,6 +156,7 @@ public class InventoryController extends HttpServlet {
     private void handleModelGroup(HttpServletRequest request, HttpServletResponse response,
             Integer selectedWarehouse) throws ServletException, IOException {
         String search = request.getParameter("search");
+        String brand = request.getParameter("brand");
 
         int page = 1;
         int pageSize = 10;
@@ -170,17 +171,18 @@ public class InventoryController extends HttpServlet {
             }
         }
 
-        int totalItems = inventoryDAO.countGeneratorSummary(selectedWarehouse, search);
+        int totalItems = inventoryDAO.countGeneratorSummary(selectedWarehouse, search, brand);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<GeneratorSummary> summaries = inventoryDAO.findGeneratorSummary(selectedWarehouse, search, page, pageSize);
+        List<GeneratorSummary> summaries = inventoryDAO.findGeneratorSummary(selectedWarehouse, search, brand, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("generatorSummaries", summaries);
         request.setAttribute("search", search);
+        request.setAttribute("brand", brand);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);

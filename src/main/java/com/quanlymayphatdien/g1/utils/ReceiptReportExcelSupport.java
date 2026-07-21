@@ -105,7 +105,7 @@ public class ReceiptReportExcelSupport {
 
         r++;
         Row typeRow = sheet.createRow(r);
-        typeRow.createCell(0).setCellValue("Loại phiếu: " + (isImport ? "Nhập kho (IMPORT)" : "Xuất kho (EXPORT)"));
+        typeRow.createCell(0).setCellValue("Loại phiếu: " + (isImport ? "Nhập kho" : "Xuất kho"));
         typeRow.getCell(0).setCellStyle(infoStyle);
 
         r++;
