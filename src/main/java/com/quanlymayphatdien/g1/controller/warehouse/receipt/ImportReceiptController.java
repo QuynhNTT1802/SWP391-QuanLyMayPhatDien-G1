@@ -934,6 +934,10 @@ public class ImportReceiptController extends HttpServlet {
         log.setDetails("Tạo phiếu nhập kho và cập nhật tồn kho");
         activityLogDAO.insert(log);
 
+        if (r.getPurchaseOrderId() != null) {
+            new PurchaseOrderDAO().markCompleted(r.getPurchaseOrderId());
+        }
+
         session.setAttribute("toastMessage", "Thêm phiếu thành công");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/import-receipt?action=list");

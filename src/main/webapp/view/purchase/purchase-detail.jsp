@@ -61,6 +61,10 @@
                             <c:set var="statusLabel" value="Đã duyệt bởi CEO"/>
                             <c:set var="statusPillClass" value="status-approved"/>
                         </c:when>
+                        <c:when test="${po.status == 'COMPLETED'}">
+                            <c:set var="statusLabel" value="Hoàn thành"/>
+                            <c:set var="statusPillClass" value="status-completed"/>
+                        </c:when>
                         <c:when test="${po.status == 'REJECTED'}">
                             <c:set var="statusLabel" value="Từ chối bởi CEO"/>
                             <c:set var="statusPillClass" value="status-rejected"/>

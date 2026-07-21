@@ -83,6 +83,7 @@
                             <%-- Sale Staff (chỉ có view): thấy trạng thái cuối, KHÔNG có Chờ CEO duyệt --%>
                             <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
@@ -91,6 +92,7 @@
                             <c:if test="${perms.contains('purchase_orders.approve') and !perms.contains('purchase_orders.create')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                             </c:if>
 
@@ -98,6 +100,7 @@
                             <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
@@ -106,6 +109,7 @@
                             <c:if test="${perms.contains('purchase_orders.approve') and perms.contains('purchase_orders.create')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
@@ -149,6 +153,7 @@
                                                     <c:choose>
                                                         <c:when test="${po.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo">Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${po.status == 'APPROVED'}"><span class="status-pill status-approved">Đã duyệt bởi CEO</span></c:when>
+                                                        <c:when test="${po.status == 'COMPLETED'}"><span class="status-pill status-completed">Hoàn thành</span></c:when>
                                                         <c:when test="${po.status == 'REJECTED'}"><span class="status-pill status-rejected">Từ chối bởi CEO</span></c:when>
                                                         <c:when test="${po.status == 'CANCELLED'}"><span class="status-pill status-cancelled">Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><c:out value="${po.status}"/></span></c:otherwise>

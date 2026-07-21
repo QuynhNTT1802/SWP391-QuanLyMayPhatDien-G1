@@ -344,17 +344,23 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 details.add(rdDAO.getFromResultSet(resultSet));
             }
 
-            String typeSql = "SELECT receipt_type, warehouse_id, receipt_code FROM receipt WHERE receipt_id = ?";
+            String typeSql = "SELECT receipt_type, warehouse_id, receipt_code, order_id, purchase_order_id FROM receipt WHERE receipt_id = ?";
             statement = connection.prepareStatement(typeSql);
             statement.setInt(1, receiptId);
             resultSet = statement.executeQuery();
             String receiptType = "";
             int warehouseId = 0;
             String receiptCode = "";
+            Integer orderId = null;
+            Integer poId = null;
             if (resultSet.next()) {
                 receiptType = resultSet.getString("receipt_type");
                 warehouseId = resultSet.getInt("warehouse_id");
                 receiptCode = resultSet.getString("receipt_code");
+                int oid = resultSet.getInt("order_id");
+                if (!resultSet.wasNull()) orderId = oid;
+                int pid = resultSet.getInt("purchase_order_id");
+                if (!resultSet.wasNull()) poId = pid;
             }
             InventoryDAO invDAO = new InventoryDAO();
             StockCardDAO scDAO = new StockCardDAO();
@@ -462,6 +468,11 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
 
             connection.commit();
+            if ("EXPORT".equals(receiptType) && orderId != null) {
+                new SaleOrderDAO().markCompleted(orderId);
+            } else if ("IMPORT".equals(receiptType) && poId != null) {
+                new PurchaseOrderDAO().markCompleted(poId);
+            }
             return errors;
         } catch (SQLException e) {
             try {
