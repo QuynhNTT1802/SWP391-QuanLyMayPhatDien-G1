@@ -436,11 +436,6 @@ public class ExportReceiptController extends HttpServlet {
         request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.sendRedirect(request.getContextPath() + "/export-receipt?action=detail&id=" + parseId(request.getParameter("id")));
-    }
-
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -1318,50 +1313,6 @@ public class ExportReceiptController extends HttpServlet {
                 continue;
             }
 
-            ReceiptDetail d = new ReceiptDetail();
-            d.setGeneratorId(genId);
-            d.setSerialNumber(serial);
-            d.setNote(detailNote);
-            details.add(d);
-        }
-        return details;
-    }
-
-    private List<ReceiptDetail> parseDetailsLenient(String[] genIds, String[] serials,
-            String[] detailNotes) {
-        List<ReceiptDetail> details = new ArrayList<>();
-        if (genIds == null) {
-            return details;
-        }
-        for (int i = 0; i < genIds.length; i++) {
-            String idStr = genIds[i];
-            String serial = (serials != null && i < serials.length) ? serials[i] : null;
-            String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-            boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
-                    && (serial == null || serial.trim().isEmpty());
-            if (rowEmpty) {
-                continue;
-            }
-            int genId = 0;
-            try {
-                genId = Integer.parseInt(idStr);
-            } catch (NumberFormatException e) {
-                continue;
-            }
-            if (genId <= 0) {
-                continue;
-            }
-            if (serial != null) {
-                serial = serial.trim();
-                if (serial.isEmpty()) {
-                    serial = null;
-                } else if (serial.length() > MAX_SERIAL_LENGTH) {
-                    serial = serial.substring(0, MAX_SERIAL_LENGTH);
-                }
-            }
-            if (detailNote != null && detailNote.length() > MAX_NOTE_LENGTH) {
-                detailNote = detailNote.substring(0, MAX_NOTE_LENGTH);
-            }
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);

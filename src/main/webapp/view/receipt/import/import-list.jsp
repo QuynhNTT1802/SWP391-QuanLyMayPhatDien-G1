@@ -81,19 +81,6 @@
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                         </select>
 
-                        <select class="filter-select" name="warehouse" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                            <c:choose>
-                                <c:when test="${not empty scopedWarehouseId}">
-                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="">Kho: Tất cả</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}" <c:if test="${whFilter == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </select>
 
                         <div class="spacer"></div>
                         <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/import-receipt?action=list'">
@@ -108,7 +95,7 @@
                                 <tr>
                                     <th>Mã phiếu</th>
                                     <th>Kho</th>
-                                    <th>Phiếu mua</th>
+                                    <th>Đơn liên quan</th>
                                     <th class="col-reason">Lý do</th>
                                     <th class="col-creator">Người tạo</th>
                                     <th class="col-status">Trạng thái</th>
