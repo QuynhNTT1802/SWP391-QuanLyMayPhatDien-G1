@@ -66,12 +66,6 @@ public class OrderController extends HttpServlet {
                 case "create":
                     showCreateForm(request, response);
                     break;
-                case "edit":
-                    showEditForm(request, response);
-                    break;
-                case "reject":
-                    showRejectForm(request, response);
-                    break;
 
                 default:
                     listOrders(request, response);
@@ -104,17 +98,11 @@ public class OrderController extends HttpServlet {
                 case "create":
                     createOrder(request, response);
                     break;
-                case "update":
-                    updateOrder(request, response);
-                    break;
                 case "reject":
                     rejectOrder(request, response);
                     break;
                 case "approve":
                     approveOrder(request, response);
-                    break;
-                case "cancel":
-                    cancelOrder(request, response);
                     break;
                 case "requestRevision":
                     requestRevisionOrder(request, response);
@@ -354,8 +342,6 @@ public class OrderController extends HttpServlet {
 
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
-        request.setAttribute("canCancelOrder", perms != null && perms.contains("orders.cancel"));
-        request.setAttribute("canUpdateOrder", perms != null && perms.contains("orders.update"));
         request.setAttribute("order", order);
         request.setAttribute("details", details);
         request.setAttribute("customerTypeName", customerTypeName);
@@ -690,206 +676,7 @@ public class OrderController extends HttpServlet {
         }
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (permissions == null || !permissions.contains("orders.update")) {
-            setMsg(request.getSession(), "Bạn không có quyền sửa đơn hàng.", "danger");
-            response.sendRedirect(request.getContextPath() + "/order?action=list");
-            return;
-        }
-        int id = Integer.parseInt(request.getParameter("id"));
-        SaleOrderDAO saleorderdao = new SaleOrderDAO();
-        SaleOrder order = saleorderdao.findById(id);
-        GeneratorDAO generatordao = new GeneratorDAO();
-        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
-
-        if (order != null && ("PENDING".equals(order.getStatus()) || "NEEDS_REVISION".equals(order.getStatus()))) {
-            List<OrderDetail> existingDetails = orderdetaildao.findGeneratorById(id);
-
-            List<Generator> generator = generatordao.findAll();
-            CategoryDAO categoryDao = new CategoryDAO();
-            List<Category> customerTypes = categoryDao.findByType("customer_type");
-            java.util.Map<Integer, Integer> stockMap = generatordao.getTotalStockMap();
-
-
-            String newCustIdStr = request.getParameter("newCustomerId");
-            if (newCustIdStr != null && !newCustIdStr.isEmpty()) {
-                try {
-                    int newCustId = Integer.parseInt(newCustIdStr);
-                    Customer preselect = new CustomerDAO().findById(newCustId);
-                    if (preselect != null) {
-                        order.setCustomer(preselect);
-                        order.setCustomerId(preselect.getId());
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-            }
-
-            request.setAttribute("order", order);
-            request.setAttribute("existingDetails", existingDetails);
-            request.setAttribute("generators", generator);
-            request.setAttribute("customerTypes", customerTypes);
-            request.setAttribute("stockMap", stockMap);
-            request.getRequestDispatcher("/view/order/order-edit.jsp").forward(request, response);
-        } else {
-            setMsg(request.getSession(), "Không thể sửa đơn này (đã duyệt/hủy hoặc không tồn tại).", "danger");
-            response.sendRedirect(request.getContextPath() + "/order?action=list");
-        }
-    }
-
-    private void updateOrder(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
-        if (permissions == null || !permissions.contains("orders.update")) {
-            setMsg(request.getSession(), "Bạn không có quyền sửa đơn hàng.", "danger");
-            response.sendRedirect(request.getContextPath() + "/order?action=list");
-            return;
-        }
-
-        SaleOrderDAO saleorderdao = new SaleOrderDAO();
-        OrderDetailDAO orderdetaildao = new OrderDetailDAO();
-        GeneratorDAO generatorDao = new GeneratorDAO();
-
-        int orderId = Integer.parseInt(request.getParameter("orderId"));
-        User user = (User) request.getSession().getAttribute("loggedUser");
-        try {
-
-            String[] genIds = request.getParameterValues("generatorId");
-            String[] qtys = request.getParameterValues("quantity");
-            String[] unitPrices = request.getParameterValues("unitPrice");
-            List<OrderDetail> newDetails = new ArrayList<>();
-            double totalAmount = 0;
-
-            if (genIds != null) {
-                for (int i = 0; i < genIds.length; i++) {
-                    if (genIds[i] == null || genIds[i].isEmpty()) {
-                        continue;
-                    }
-                    int genId = Integer.parseInt(genIds[i]);
-                    int qty = 1;
-                    if (qtys != null && i < qtys.length && qtys[i] != null && !qtys[i].isEmpty()) {
-                        qty = Integer.parseInt(qtys[i]);
-                    }
-                    double inputPrice = 0;
-                    if (unitPrices != null && i < unitPrices.length && unitPrices[i] != null && !unitPrices[i].isEmpty()) {
-                        try {
-                            inputPrice = Double.parseDouble(unitPrices[i]);
-                        } catch (NumberFormatException ex) {
-                            inputPrice = 0;
-                        }
-                    }
-
-                    if (inputPrice <= 0) {
-                        setMsg(request.getSession(), "Đơn giá dòng máy thứ " + (i + 1) + " phải lớn hơn 0.", "danger");
-                        response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
-                        return;
-                    }
-
-                    Generator gen = generatorDao.findById(genId);
-                    if (gen != null) {
-                        double salePrice = inputPrice;
-                        OrderDetail detail = new OrderDetail();
-                        detail.setOrderId(orderId);
-                        detail.setGeneratorId(genId);
-                        detail.setQuantity(qty);
-                        detail.setUnitPrice(salePrice);
-                        newDetails.add(detail);
-                        totalAmount += salePrice * qty;
-                    }
-                }
-            }
-
-            if (newDetails.isEmpty()) {
-                setMsg(request.getSession(), "Vui lòng chọn ít nhất 1 máy cho đơn hàng.", "danger");
-                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
-                return;
-            }
-
-            SaleOrder order = saleorderdao.findById(orderId);
-            if (order == null) {
-                setMsg(request.getSession(), "Không tìm thấy phiếu.", "danger");
-                response.sendRedirect(request.getContextPath() + "/order?action=list");
-                return;
-            }
-
-            CustomerDAO customerDAO = new CustomerDAO();
-
-            String custName = request.getParameter("customerName");
-            String custPhone = request.getParameter("customerPhone");
-            String custEmail = request.getParameter("customerEmail");
-            String custAddress = request.getParameter("customerAddress");
-            String custCompany = request.getParameter("customerCompany");
-            String custTypeIdStr = request.getParameter("customerTypeId");
-            String custNote = request.getParameter("customerNote");
-
-            if (custPhone == null || custPhone.trim().isEmpty()) {
-                setMsg(request.getSession(), "Vui lòng nhập số điện thoại khách hàng.", "danger");
-                response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
-                return;
-            }
-            Customer customer = customerDAO.findByPhone(custPhone.trim());
-            if (customer == null) {
-               
-                customer = new Customer();
-                customer.setName(custName);
-                customer.setPhone(custPhone.trim());
-                customer.setEmail(custEmail);
-                customer.setAddress(custAddress);
-                customer.setCompanyName(custCompany);
-                if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
-                    try {
-                        customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-                customer.setStatus("active");
-                customer.setCreatedBy(user.getId());
-                int newCustId = customerDAO.insert(customer);
-                if (newCustId <= 0) {
-                    setMsg(request.getSession(), "Lỗi tạo khách hàng mới. Vui lòng thử lại.", "danger");
-                    response.sendRedirect(request.getContextPath() + "/order?action=edit&id=" + orderId);
-                    return;
-                }
-                customer.setId(newCustId);
-            } else {
-               
-                customer.setName(custName);
-                customer.setEmail(custEmail);
-                customer.setAddress(custAddress);
-                customer.setCompanyName(custCompany);
-                if (custTypeIdStr != null && !custTypeIdStr.isEmpty()) {
-                    try {
-                        customer.setCustomerTypeId(Integer.parseInt(custTypeIdStr));
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-                customer.setUpdatedBy(user.getId());
-                customerDAO.update(customer);
-            }
-
-            order.setCustomerId(customer.getId());
-
-            order.setCustomerNote(custNote);
-
-            boolean ok = saleorderdao.updateWithDetails(order, newDetails);
-
-            if (ok) {
-                setMsg(request.getSession(), "Cập nhật đơn hàng thành công.", "success");
-            } else {
-                setMsg(request.getSession(),
-                        "Phiếu đã được duyệt hoặc thay đổi trạng thái. Vui lòng tải lại.", "danger");
-            }
-
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "OrderController.updateOrder", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            setMsg(request.getSession(), "Lỗi: " + e.getMessage(), "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/order?action=list");
-    }
-
-    private void approveOrder(HttpServletRequest request, HttpServletResponse response)
+private void approveOrder(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         Set<String> permissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         if (permissions == null || !permissions.contains("orders.approve")) {
@@ -1001,33 +788,6 @@ public class OrderController extends HttpServlet {
             }
         } else {
             setMsg(request.getSession(), "Từ chối thất bại.", "danger");
-        }
-        response.sendRedirect(request.getContextPath() + "/order?action=list");
-    }
-
-    private void cancelOrder(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        HttpSession session = request.getSession();
-
-        Set<String> permissions = (Set<String>) session.getAttribute("userPermissions");
-        if (permissions == null || !permissions.contains("orders.cancel")) {
-            setMsg(session, "Bạn không có quyền hủy đơn hàng.", "danger");
-            response.sendRedirect(request.getContextPath() + "/order?action=list");
-            return;
-        }
-
-        int id = Integer.parseInt(request.getParameter("id"));
-        User user = (User) session.getAttribute("loggedUser");
-        SaleOrderDAO saleorderdao = new SaleOrderDAO();
-
-        int result = saleorderdao.cancelOrder(id, user.getId());
-
-        if (result == 1) {
-            setMsg(session, "Đã hủy đơn hàng.", "success");
-        } else if (result == -1) {
-            setMsg(session, "Không thể hủy: đơn đã xuất kho hoàn tất. Vui lòng tạo phiếu nhập kho hoàn trả.", "danger");
-        } else {
-            setMsg(session, "Hủy thất bại: chỉ có thể hủy đơn ở trạng thái chờ duyệt hoặc đã duyệt (chưa xuất kho).", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");
     }
