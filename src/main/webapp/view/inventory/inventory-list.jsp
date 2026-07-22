@@ -67,10 +67,6 @@
                             <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mẫu máy" autocomplete="off" />
                         </div>
-                        <div class="search-input">
-                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                            <input name="brand" value="<c:out value='${brand}'/>" placeholder="Tìm theo hãng" autocomplete="off" />
-                        </div>
                         <button type="submit" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                             Tìm kiếm
