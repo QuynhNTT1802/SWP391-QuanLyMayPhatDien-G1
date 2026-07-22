@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     <style>
@@ -113,6 +115,25 @@
             font-size: 12.5px;
             margin-bottom: 12px;
         }
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span { color: var(--muted); font-weight: 500; }
+        .confirm-row strong { color: var(--fg); font-weight: 600; text-align: right; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -267,9 +288,23 @@
                 </div>
             </form>
 
+            <div class="modal-host" id="saveConfirmModal" onclick="if (event.target === this) closeSaveConfirm();">
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+                    <h3 id="saveConfirmTitle">Xác nhận gửi phiếu luân chuyển</h3>
+                    <p class="modal-sub">Vui lòng kiểm tra thông tin trước khi gửi phiếu cho CEO duyệt.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeSaveConfirm()">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="saveConfirmBtn" onclick="doConfirmSave()">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                            Xác nhận gửi
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="bottom-actions">
                 <a class="btn" href="javascript:void(0)" onclick="confirmCancelCreate()">Huỷ</a>
-                <button type="submit" form="transferForm" class="btn btn-primary" onclick="return validateForm()">
+                <button type="submit" form="transferForm" class="btn btn-primary" onclick="return openSaveConfirm()">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
                     Gửi CEO duyệt
                 </button>
@@ -544,6 +579,12 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
     window.onGeneratorChange = onGeneratorChange;
     window.onSourceWarehouseChange = onSourceWarehouseChange;
     window.onDestWarehouseChange = onDestWarehouseChange;
+    window.validateForm = validateForm;
+    window.repopulateGeneratorSelects = repopulateGeneratorSelects;
+    window.filterDestWarehouseOptions = filterDestWarehouseOptions;
+    window.validatePairRealtime = validatePairRealtime;
+    window.updateRowMax = updateRowMax;
+    window.renumberRows = renumberRows;
 
     document.addEventListener('DOMContentLoaded', function () {
         renumberRows();
@@ -578,6 +619,53 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
             location.href = window.APP_CTX + '/transfers';
         }
     }
+
+    // ========== Confirm Save Modal ==========
+    function openSaveConfirm() {
+        if (typeof validateForm === 'function' && !validateForm()) {
+            return false;
+        }
+        populateSaveSummary();
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.add('show');
+        return false;
+    }
+
+    function closeSaveConfirm() {
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function doConfirmSave() {
+        closeSaveConfirm();
+        var form = document.getElementById('transferForm');
+        if (form) form.submit();
+    }
+
+    function populateSaveSummary() {
+        var srcEl = document.getElementById('saveSummarySource');
+        var destEl = document.getElementById('saveSummaryDest');
+        var rowsEl = document.getElementById('saveSummaryRows');
+        var srcSel = document.getElementById('sourceWarehouseId');
+        var destSel = document.getElementById('destWarehouseId');
+        if (srcEl && srcSel) {
+            srcEl.textContent = srcSel.options[srcSel.selectedIndex]
+                ? srcSel.options[srcSel.selectedIndex].textContent.trim() : '—';
+        }
+        if (destEl && destSel) {
+            destEl.textContent = destSel.options[destSel.selectedIndex]
+                ? destSel.options[destSel.selectedIndex].textContent.trim() : '—';
+        }
+        if (rowsEl) {
+            var tbody = document.getElementById('detailBody');
+            rowsEl.textContent = tbody ? tbody.querySelectorAll('tr').length : 0;
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSaveConfirm();
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
             showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');

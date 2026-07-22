@@ -55,6 +55,26 @@
         .status-orange { background:#fff3e0; color:#b15c00; }
         .status-teal   { background:#e0f2f1; color:#00695c; }
         .status-pink   { background:#fce4ec; color:#a13d63; }
+
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span { color: var(--muted); font-weight: 500; }
+        .confirm-row strong { color: var(--fg); font-weight: 600; text-align: right; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -153,16 +173,16 @@
                         </a>
                     </c:if>
                     <c:if test="${canCreateExport}">
-                        <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_export_receipt&amp;transferId=${t.transferId}">
+                        <button type="button" class="btn btn-success" onclick="openCreateReceiptConfirm('export')">
                             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
                             Tạo phiếu xuất
-                        </a>
+                        </button>
                     </c:if>
                     <c:if test="${canCreateImport}">
-                        <a class="btn btn-success" href="${pageContext.request.contextPath}/transfers?action=create_import_receipt&amp;transferId=${t.transferId}">
+                        <button type="button" class="btn btn-success" onclick="openCreateReceiptConfirm('import')">
                             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v12H3V7M3 7l3-4h12l3 4M9 12h6"/></svg>
                             Tạo phiếu nhập
-                        </a>
+                        </button>
                     </c:if>
                 </div>
             </div>
@@ -509,6 +529,25 @@
     </div>
 </div>
 
+<div class="modal-host" id="createReceiptConfirmModal" onclick="if (event.target === this) closeCreateReceiptConfirm();">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="createReceiptConfirmTitle">
+        <h3 id="createReceiptConfirmTitle">Xác nhận tạo phiếu</h3>
+        <p class="modal-sub">Vui lòng xác nhận trước khi chuyển sang bước tiếp theo.</p>
+        <div class="confirm-summary">
+            <div class="confirm-row"><span>Loại phiếu</span><strong id="crcType">—</strong></div>
+            <div class="confirm-row"><span>Kho nguồn</span><strong id="crcSource">—</strong></div>
+            <div class="confirm-row"><span>Kho đích</span><strong id="crcDest">—</strong></div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeCreateReceiptConfirm()">Hủy</button>
+            <button type="button" class="btn btn-primary" id="crcConfirmBtn" onclick="doCreateReceiptConfirm()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                Xác nhận
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-host" id="rejectModal">
     <div class="modal-card">
         <h3 id="rejectModalTitle">Từ chối</h3>
@@ -564,6 +603,36 @@
             submitBtn.className = 'btn btn-danger';
         }
         openModal('rejectModal');
+    }
+
+    // ========== Create-receipt confirmation ==========
+    var pendingReceiptUrl = null;
+    function openCreateReceiptConfirm(type) {
+        var url = '';
+        var title = 'Xác nhận tạo phiếu';
+        if (type === 'export') {
+            url = '${pageContext.request.contextPath}/transfers?action=create_export_receipt&transferId=${t.transferId}';
+            document.getElementById('crcType').textContent = 'Phiếu xuất kho';
+        } else if (type === 'import') {
+            url = '${pageContext.request.contextPath}/transfers?action=create_import_receipt&transferId=${t.transferId}';
+            document.getElementById('crcType').textContent = 'Phiếu nhập kho';
+        }
+        document.getElementById('createReceiptConfirmTitle').textContent = title;
+        document.getElementById('crcSource').textContent = '<c:out value="${t.sourceWarehouseName}"/>';
+        document.getElementById('crcDest').textContent = '<c:out value="${t.destWarehouseName}"/>';
+        pendingReceiptUrl = url;
+        openModal('createReceiptConfirmModal');
+    }
+
+    function closeCreateReceiptConfirm() {
+        closeModal('createReceiptConfirmModal');
+        pendingReceiptUrl = null;
+    }
+
+    function doCreateReceiptConfirm() {
+        var url = pendingReceiptUrl;
+        closeCreateReceiptConfirm();
+        if (url) window.location.href = url;
     }
 
     document.querySelectorAll('.modal-host').forEach(function (m) {
