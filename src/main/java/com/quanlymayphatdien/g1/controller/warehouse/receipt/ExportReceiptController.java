@@ -936,6 +936,33 @@ public class ExportReceiptController extends HttpServlet {
                 liqLog.setEntityName(r.getReceiptCode());
                 liqLog.setDetails("Hoàn tất xuất kho cho phiếu thanh lý " + r.getReceiptCode() + ".");
                 activityLogDAO.insert(liqLog);
+
+                Liquidation liq = liqDAO.findById(liquidationId);
+                if (liq != null) {
+                    String liqLink = request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId;
+                    String liqCode = liq.getLiquidationCode();
+                    if (liq.getCreatedBy() > 0 && liq.getCreatedBy() != loggedUser.getId()) {
+                        NotificationService.send(
+                                liq.getCreatedBy(),
+                                "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
+                                loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
+                                liqLink,
+                                "liquidation",
+                                liquidationId
+                        );
+                    }
+                    if (liq.getCeoReviewedBy() != null && liq.getCeoReviewedBy() > 0
+                            && !liq.getCeoReviewedBy().equals(loggedUser.getId())) {
+                        NotificationService.send(
+                                liq.getCeoReviewedBy(),
+                                "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
+                                loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
+                                liqLink,
+                                "liquidation",
+                                liquidationId
+                        );
+                    }
+                }
             }
 
             conn.commit();
