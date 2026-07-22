@@ -146,36 +146,37 @@ public class LiquidationController extends HttpServlet {
         String condFilter = request.getParameter("cond");
         request.setAttribute("condFilter", condFilter != null ? condFilter : "all");
 
-        if (warehouseId != null) {
-            List<Inventory> inStock = inventoryDAO.findEligibleForLiquidation(warehouseId, 6);
-            List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
-
-            int cGood = 0, cPoor = 0, cDamaged = 0;
-            for (Inventory inv : inStock) {
-                if ("GOOD".equals(inv.getCondition())) {
-                    cGood++;
-                } else if ("POOR".equals(inv.getCondition())) {
-                    cPoor++;
-                } else if ("DAMAGED".equals(inv.getCondition())) {
-                    cDamaged++;
-                }
+        String pageParam = request.getParameter("page");
+        int page = 1;
+        if (pageParam != null && !pageParam.trim().isEmpty()) {
+            try {
+                page = Integer.parseInt(pageParam.trim());
+            } catch (NumberFormatException ignore) {
             }
+        }
+        if (page < 1) {
+            page = 1;
+        }
+        int pageSize = 20;
+
+        if (warehouseId != null) {
+            Map<String, Integer> condCounts = inventoryDAO.countEligibleByCondition(warehouseId, 6);
+            int cGood = condCounts.getOrDefault("GOOD", 0);
+            int cPoor = condCounts.getOrDefault("POOR", 0);
+            int cDamaged = condCounts.getOrDefault("DAMAGED", 0);
+            int cAll = cGood + cPoor + cDamaged;
             request.setAttribute("condCountGood", cGood);
             request.setAttribute("condCountPoor", cPoor);
             request.setAttribute("condCountDamaged", cDamaged);
-            request.setAttribute("condCountAll", inStock.size());
+            request.setAttribute("condCountAll", cAll);
 
-            boolean filtering = condFilter != null && !condFilter.isEmpty() && !"all".equals(condFilter);
-            List<Inventory> filtered = new ArrayList<>();
-            for (Inventory inv : inStock) {
-                if (filtering && !condFilter.equals(inv.getCondition())) {
-                    continue;
-                }
-                filtered.add(inv);
-            }
+            String condSql = (condFilter != null && !"all".equals(condFilter)) ? condFilter : null;
+            List<Inventory> inStock = inventoryDAO.findEligibleForLiquidation(warehouseId, 6, condSql, page, pageSize);
+            int totalItems = inventoryDAO.countEligibleForLiquidation(warehouseId, 6, condSql);
 
-            request.setAttribute("pickRows", buildPickRows(filtered, java.util.Collections.emptySet()));
+            request.setAttribute("pickRows", buildPickRows(inStock, java.util.Collections.emptySet()));
 
+            List<Map<String, Object>> locked = inventoryDAO.findPendingLiquidationSerialsByWarehouse(warehouseId);
             List<Map<String, Object>> lockedRows = new ArrayList<>();
             for (Map<String, Object> m : locked) {
                 Map<String, Object> r = new HashMap<>();
@@ -186,6 +187,12 @@ public class LiquidationController extends HttpServlet {
                 lockedRows.add(r);
             }
             request.setAttribute("lockedRows", lockedRows);
+
+            int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("totalItems", totalItems);
+            request.setAttribute("totalPages", totalPages);
         }
 
         User loggedUser = (User) request.getSession().getAttribute("loggedUser");
@@ -753,8 +760,8 @@ public class LiquidationController extends HttpServlet {
             for (User ceo : ceos) {
                 NotificationService.send(
                         ceo.getId(),
-                        "Đơn thanh lý chờ CEO duyệt",
-                        "Quản lý " + user.getName() + " đã tạo và trình lên đơn thanh lý " + l.getLiquidationCode() + " cần CEO duyệt.",
+                        "Đơn thanh lý " + l.getLiquidationCode() + " — chờ CEO duyệt",
+                        "Quản lý " + user.getName() + " đã tạo đơn thanh lý " + l.getLiquidationCode() + " và gửi lên CEO duyệt.",
                         request.getContextPath() + "/liquidations?action=detail&id=" + insertedId,
                         "liquidation",
                         insertedId
@@ -858,8 +865,8 @@ public class LiquidationController extends HttpServlet {
 
         NotificationService.send(
                 l.getCreatedBy(),
-                "CEO đã duyệt đơn thanh lý",
-                "Đơn thanh lý " + l.getLiquidationCode() + " đã được CEO duyệt. Hãy tạo phiếu xuất kho cho đơn này.",
+                "Đơn thanh lý " + l.getLiquidationCode() + " — CEO đã duyệt",
+                "CEO " + user.getName() + " đã duyệt đơn thanh lý " + l.getLiquidationCode() + ". Hãy tạo phiếu xuất kho.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
@@ -914,10 +921,10 @@ public class LiquidationController extends HttpServlet {
 
         NotificationService.send(
                 l.getCreatedBy(),
-                isPermanent ? "CEO từ chối đơn thanh lý" : "CEO yêu cầu sửa đơn thanh lý",
+                isPermanent ? "Đơn thanh lý " + l.getLiquidationCode() + " — CEO đã từ chối" : "Đơn thanh lý " + l.getLiquidationCode() + " — CEO yêu cầu sửa",
                 isPermanent
-                        ? "Đơn " + l.getLiquidationCode() + " đã bị CEO từ chối và huỷ."
-                        : "Đơn " + l.getLiquidationCode() + " bị CEO yêu cầu sửa lại.",
+                        ? "CEO " + user.getName() + " đã từ chối đơn thanh lý " + l.getLiquidationCode() + " và huỷ bỏ."
+                        : "CEO " + user.getName() + " yêu cầu sửa đơn thanh lý " + l.getLiquidationCode() + ". Hãy kiểm tra feedback và chỉnh sửa.",
                 request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                 "liquidation",
                 liquidationId
@@ -1103,8 +1110,8 @@ public class LiquidationController extends HttpServlet {
             for (User rv : reviewers) {
                 NotificationService.send(
                         rv.getId(),
-                        "Đơn thanh lý " + l.getLiquidationCode() + " đã được sửa lại — chờ Sếp duyệt",
-                        "Người dùng đã cập nhật lại đơn thanh lý theo yêu cầu sửa.",
+                        "Đơn thanh lý " + l.getLiquidationCode() + " — đã sửa lại, chờ CEO duyệt",
+                        user.getName() + " đã sửa lại đơn thanh lý " + l.getLiquidationCode() + " và gửi lại CEO duyệt.",
                         request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId,
                         "liquidation",
                         liquidationId

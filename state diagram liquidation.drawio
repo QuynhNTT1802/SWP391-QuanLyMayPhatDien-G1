@@ -1,0 +1,75 @@
+<mxfile host="Electron" agent="Kiro">
+  <diagram id="liquidation-request-statemachine-uc" name="Liquidation Request Lifecycle">
+    <mxGraphModel dx="1070" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="initial" parent="1" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="290" y="293" as="geometry" />
+        </mxCell>
+        <mxCell id="pending" parent="1" style="rounded=0;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=default;fontStyle=1;fontSize=13;" value="Pending" vertex="1">
+          <mxGeometry height="50" width="140" x="420" y="283" as="geometry" />
+        </mxCell>
+        <mxCell id="awaiting_ceo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=default;fontStyle=1;fontSize=13;" value="Awaiting CEO Approval" vertex="1">
+          <mxGeometry height="50" width="160" x="650" y="283" as="geometry" />
+        </mxCell>
+        <mxCell id="reevaluation" parent="1" style="rounded=0;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=default;fontStyle=1;fontSize=13;" value="Request Edit" vertex="1">
+          <mxGeometry height="50" width="150" x="650" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="approved" parent="1" style="rounded=0;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=default;fontStyle=1;fontSize=13;" value="Approved" vertex="1">
+          <mxGeometry height="50" width="150" x="910" y="283" as="geometry" />
+        </mxCell>
+        <mxCell id="cancelled" parent="1" style="rounded=0;whiteSpace=wrap;html=1;arcSize=40;fillColor=#fff2cc;strokeColor=default;fontStyle=1;fontSize=13;" value="Cancelled" vertex="1">
+          <mxGeometry height="50" width="140" x="660" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="final" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="1185" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="t_create" edge="1" parent="1" source="initial" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;" target="pending" value="create">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="t_submit_review" edge="1" parent="1" source="pending" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="awaiting_ceo" value="submit">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="380.0000000000002" y="308" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_return_reeval" edge="1" parent="1" source="awaiting_ceo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="reevaluation" value="request change">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="725" y="283" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_revise_quote" edge="1" parent="1" source="reevaluation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" target="awaiting_ceo" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="125" />
+              <mxPoint x="630" y="296" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="PxBgN6HDgxGuiKBkOr4r-1" connectable="0" parent="t_revise_quote" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="resubmit" vertex="1">
+          <mxGeometry relative="1" x="-0.0214" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_approve" edge="1" parent="1" source="awaiting_ceo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="approved" value="approve">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="t_ceo_reject" edge="1" parent="1" source="awaiting_ceo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="cancelled" value="reject">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="t_approved_final" edge="1" parent="1" source="approved" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="final" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1200" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t_cancelled_final" edge="1" parent="1" source="cancelled" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="final" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
