@@ -663,9 +663,6 @@
             })();
             document.addEventListener('DOMContentLoaded', refreshCustomerCard);
 
-            function onCustomerTypeChange() {
-                // No-op: <select id="customerTypeSelect"> đã được thay bằng hidden input customerTypeId.
-            }
             /* ── Thêm khách hàng mới (quick-create) ── */
             function openNewCustomerModal() {
                 ['ncName', 'ncPhone', 'ncEmail', 'ncCompanyName', 'ncAddress', 'ncTypeId'].forEach(function (id) {
@@ -748,8 +745,6 @@
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') closeNewCustomerModal();
             });
-
-            document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
         </script>
 
         <!-- Modal: Thêm khách hàng mới -->

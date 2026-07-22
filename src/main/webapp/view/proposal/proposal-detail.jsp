@@ -80,7 +80,6 @@
 
                     <c:set var="canApprove" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.approve')}" />
                     <c:set var="canReject" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.reject')}" />
-                    <c:set var="canCancelProp" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
 
 
@@ -574,22 +573,6 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
                             <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Huỷ phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu đề xuất sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
                         </div>
                     </form>
                 </div>

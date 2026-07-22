@@ -194,10 +194,7 @@ public class OrderController extends HttpServlet {
 
         Set<String> userPermissions = (Set<String>) request.getSession().getAttribute("userPermissions");
         request.setAttribute("canCreateOrder", userPermissions != null && userPermissions.contains("orders.create"));
-        request.setAttribute("canUpdateOrder", userPermissions != null && userPermissions.contains("orders.update"));
         request.setAttribute("canApproveOrder", userPermissions != null && userPermissions.contains("orders.approve"));
-        request.setAttribute("canRejectOrder", userPermissions != null && userPermissions.contains("orders.reject"));
-        request.setAttribute("canCancelOrder", userPermissions != null && userPermissions.contains("orders.cancel"));
 
         request.getRequestDispatcher("/view/order/order-list.jsp").forward(request, response);
     }
@@ -357,7 +354,6 @@ public class OrderController extends HttpServlet {
 
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         request.setAttribute("canApproveOrder", perms != null && perms.contains("orders.approve"));
-        request.setAttribute("canRejectOrder", perms != null && perms.contains("orders.reject"));
         request.setAttribute("canCancelOrder", perms != null && perms.contains("orders.cancel"));
         request.setAttribute("canUpdateOrder", perms != null && perms.contains("orders.update"));
         request.setAttribute("order", order);
@@ -375,7 +371,6 @@ public class OrderController extends HttpServlet {
         }
         request.setAttribute("totalQty", totalQty);
         request.setAttribute("totalRows", totalRows);
-        request.setAttribute("userPermissions", perms);
         request.getRequestDispatcher("/view/order/order-detail.jsp").forward(request, response);
     }
 
@@ -393,22 +388,13 @@ public class OrderController extends HttpServlet {
 
         GeneratorDAO generatorDao = new GeneratorDAO();
         CategoryDAO categoryDao = new CategoryDAO();
-        CustomerDAO customerDao = new CustomerDAO();
 
         List<Generator> generators = generatorDao.findAll();
-        List<Category> brands = categoryDao.findByType("brand");
-        List<Category> fuelTypes = categoryDao.findByType("fuel_type");
-        List<Category> phases = categoryDao.findByType("phase");
         List<Category> customerTypes = categoryDao.findByType("customer_type");
-        List<Customer> top4Customers = customerDao.findTop4Alphabetical();
         java.util.Map<Integer, Integer> stockMap = generatorDao.getTotalStockMap();
 
         request.setAttribute("customerTypes", customerTypes);
         request.setAttribute("generators", generators);
-        request.setAttribute("brands", brands);
-        request.setAttribute("fuelTypes", fuelTypes);
-        request.setAttribute("phases", phases);
-        request.setAttribute("top4Customers", top4Customers);
         request.setAttribute("stockMap", stockMap);
         request.setAttribute("canCreateCustomer", true);
 
@@ -723,9 +709,7 @@ public class OrderController extends HttpServlet {
 
             List<Generator> generator = generatordao.findAll();
             CategoryDAO categoryDao = new CategoryDAO();
-            CustomerDAO customerDao = new CustomerDAO();
             List<Category> customerTypes = categoryDao.findByType("customer_type");
-            List<Customer> top4Customers = customerDao.findTop4Alphabetical();
             java.util.Map<Integer, Integer> stockMap = generatordao.getTotalStockMap();
 
 
@@ -746,7 +730,6 @@ public class OrderController extends HttpServlet {
             request.setAttribute("existingDetails", existingDetails);
             request.setAttribute("generators", generator);
             request.setAttribute("customerTypes", customerTypes);
-            request.setAttribute("top4Customers", top4Customers);
             request.setAttribute("stockMap", stockMap);
             request.getRequestDispatcher("/view/order/order-edit.jsp").forward(request, response);
         } else {

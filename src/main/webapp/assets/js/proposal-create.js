@@ -50,11 +50,6 @@ function finalizeUnitPrice(input) {
     updateTotal();
 }
 
-function formatPriceDisplay(input) {
-    var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
-    input.value = n > 0 ? String(n) : '0';
-}
-
 function unformatPrice(input) {
     input.value = input.value.replace(/[^\d]/g, '') || '0';
 }
