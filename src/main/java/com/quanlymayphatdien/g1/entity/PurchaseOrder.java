@@ -40,6 +40,8 @@ public class PurchaseOrder {
     private String createdByName;
     private String approvedByName;
     private String rejectedByName;
+    private String supplierName;
+    private double totalAmount;
     private List<PurchaseOrderDetail> details;
 
     public int getPoId() {
@@ -240,6 +242,22 @@ public class PurchaseOrder {
 
     public void setRejectedByName(String rejectedByName) {
         this.rejectedByName = rejectedByName;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public List<PurchaseOrderDetail> getDetails() {

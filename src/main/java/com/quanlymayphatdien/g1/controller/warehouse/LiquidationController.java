@@ -671,7 +671,7 @@ public class LiquidationController extends HttpServlet {
             uniqueSerials.add(sn);
         }
         if (uniqueSerials.size() != serialNumbers.length) {
-            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Có serial trùng trong phiếu", "UTF-8"));
+            response.sendRedirect(request.getContextPath() + "/liquidations?error=" + encode("Có số serial trùng trong phiếu", "UTF-8"));
             return;
         }
 
@@ -691,18 +691,18 @@ public class LiquidationController extends HttpServlet {
             Inventory inv = inventoryDAO.findBySerialNumber(sn);
             if (inv == null) {
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
-                        + java.net.URLEncoder.encode("Serial \"" + sn + "\" không tồn tại trong hệ thống", "UTF-8"));
+                        + java.net.URLEncoder.encode("Số serial \"" + sn + "\" không tồn tại trong hệ thống", "UTF-8"));
                 return;
             }
             if (inv.getCondition() == null || inv.getCondition().isEmpty()) {
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
-                        + java.net.URLEncoder.encode("Serial \"" + sn + "\" chưa được kiểm kê, không thể thanh lý", "UTF-8"));
+                        + java.net.URLEncoder.encode("Số serial \"" + sn + "\" chưa được kiểm kê, không thể thanh lý", "UTF-8"));
                 return;
             }
             if ("GOOD".equals(inv.getCondition()) && inv.getCreatedAt() != null && inv.getCreatedAt().isAfter(cutoffDate)) {
                 String ageStr = inv.getCreatedAt().format(ageFmt);
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
-                        + java.net.URLEncoder.encode("Serial \"" + sn + "\" là máy tốt mới nhập kho (" + ageStr + "), chưa đủ 6 tháng để thanh lý", "UTF-8"));
+                        + java.net.URLEncoder.encode("Số serial \"" + sn + "\" là máy tốt mới nhập kho (" + ageStr + "), chưa đủ 6 tháng để thanh lý", "UTF-8"));
                 return;
             }
         }
@@ -717,7 +717,7 @@ public class LiquidationController extends HttpServlet {
             if (affected != serialList.size()) {
                 List<String> bad = inventoryDAO.findUnavailableSerials(conn, serialList, warehouseId);
                 conn.rollback();
-                String msg = "Không tạo được phiếu — các serial sau đã bị giữ chỗ hoặc không thuộc kho này: "
+                String msg = "Không tạo được phiếu — các số serial sau đã bị giữ chỗ hoặc không thuộc kho này: "
                         + String.join(", ", bad);
                 response.sendRedirect(request.getContextPath() + "/liquidations?action=create&error="
                         + java.net.URLEncoder.encode(msg, "UTF-8"));
@@ -749,7 +749,7 @@ public class LiquidationController extends HttpServlet {
                 d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
                 d.setLiquidationPrice(parsedPrices[i]);
                 if (detailDAO.insert(d) <= 0) {
-                    throw new Exception("Không lưu được dòng chi tiết cho serial " + serialNumbers[i]);
+                    throw new Exception("Không lưu được dòng chi tiết cho số serial " + serialNumbers[i]);
                 }
             }
 
@@ -1010,7 +1010,7 @@ public class LiquidationController extends HttpServlet {
         }
         if (uniqueSerials.size() != serialNumbers.length) {
             response.sendRedirect(request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId
-                    + "&error=" + java.net.URLEncoder.encode("Có serial trùng trong phiếu", "UTF-8"));
+                    + "&error=" + java.net.URLEncoder.encode("Có số serial trùng trong phiếu", "UTF-8"));
             return;
         }
         List<String> newSerialList = new ArrayList<>(uniqueSerials);
@@ -1100,7 +1100,7 @@ public class LiquidationController extends HttpServlet {
                 d.setOriginalPrice(poPrice != null ? poPrice : BigDecimal.ZERO);
                 d.setLiquidationPrice(parsedPrices[i]);
                 if (detailDAO.insert(conn, d) <= 0) {
-                    throw new Exception("Không lưu được dòng chi tiết cho serial " + serialNumbers[i]);
+                    throw new Exception("Không lưu được dòng chi tiết cho số serial " + serialNumbers[i]);
                 }
             }
 

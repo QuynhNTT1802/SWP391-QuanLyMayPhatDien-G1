@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
@@ -186,7 +186,7 @@
                         <h1>Chỉnh sửa đơn hàng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / Chỉnh sửa</span>
 <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -244,7 +244,7 @@
                                         <div class="cust-trigger-wrap">
                                             <button type="button" class="cust-trigger" id="custTrigger"
                                                     onclick="openCustomerPanel()" aria-haspopup="dialog">
-                                                <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn khách hàng --</span>
+                                                <span class="cust-trigger-label" id="custTriggerLabel">-- Nhấp để chọn khách hàng --</span>
                                                 <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
                                                     <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                                 </svg>

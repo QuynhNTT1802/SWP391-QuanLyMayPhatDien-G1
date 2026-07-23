@@ -13,7 +13,6 @@ import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.quanlymayphatdien.g1.utils.LogModule;
-import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -50,22 +49,7 @@ public class InventoryController extends HttpServlet {
         String pathInfo = request.getPathInfo();
         boolean isList = pathInfo != null && pathInfo.equals("/list");
 
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-        if (scopedWarehouseId > 0) {
-            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
-            Warehouse scopedWh = warehouseDAO.findById(scopedWarehouseId);
-            if (scopedWh != null) {
-                request.setAttribute("scopedWarehouseName", scopedWh.getName());
-            }
-        }
-
-        List<Warehouse> warehouses;
-        if (scopedWarehouseId > 0) {
-            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            warehouses = scoped != null ? java.util.Collections.singletonList(scoped) : new java.util.ArrayList<>();
-        } else {
-            warehouses = warehouseDAO.findAll();
-        }
+        List<Warehouse> warehouses = warehouseDAO.findAll();
         request.setAttribute("warehouses", warehouses);
 
         Map<Integer, Integer> itemCountMap = inventoryDAO.countInStockByWarehouse();
@@ -89,22 +73,6 @@ public class InventoryController extends HttpServlet {
 
     private void handleOverview(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-        if (scopedWarehouseId == 0) {
-            request.setAttribute("warehouses", java.util.Collections.emptyList());
-            request.setAttribute("search", request.getParameter("search"));
-            request.setAttribute("totalItems", 0);
-            request.setAttribute("currentPage", 1);
-            request.setAttribute("totalPages", 1);
-            request.setAttribute("fromIndex", 0);
-            request.setAttribute("toIndex", 0);
-            request.setAttribute("selectedWarehouse", null);
-            request.setAttribute("noWarehouseAssigned", Boolean.TRUE);
-            request.getRequestDispatcher("/view/inventory/inventory-overview.jsp").forward(request, response);
-            return;
-        }
-
         String search = request.getParameter("search");
 
         int page = 1;
@@ -156,29 +124,6 @@ public class InventoryController extends HttpServlet {
 
     private void handleListView(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-
-        if (scopedWarehouseId == 0) {
-            request.setAttribute("scopedWarehouseId", 0);
-            request.setAttribute("generatorSummaries", java.util.Collections.emptyList());
-            request.setAttribute("serialList", java.util.Collections.emptyList());
-            request.setAttribute("viewMode", "group");
-            request.setAttribute("selectedWarehouse", null);
-            request.setAttribute("selectedGenerator", null);
-            request.setAttribute("search", request.getParameter("search"));
-            request.setAttribute("status", request.getParameter("status"));
-            request.setAttribute("totalItems", 0);
-            request.setAttribute("currentPage", 1);
-            request.setAttribute("totalPages", 1);
-            request.setAttribute("fromIndex", 0);
-            request.setAttribute("toIndex", 0);
-            request.setAttribute("noWarehouseAssigned", Boolean.TRUE);
-            request.setAttribute("gens", java.util.Collections.emptyList());
-            request.getRequestDispatcher("/view/inventory/inventory-list.jsp").forward(request, response);
-            return;
-        }
-
         String whParam = request.getParameter("warehouse");
         Integer selectedWarehouse = null;
         if (whParam != null && !whParam.isEmpty()) {
@@ -187,13 +132,6 @@ public class InventoryController extends HttpServlet {
             } catch (NumberFormatException ignored) {
                 SystemLogger.warn(LogModule.INVENTORY, "InventoryController.doGet", "Lỗi định dạng kho: " + ignored.getMessage());
             }
-        }
-        if (selectedWarehouse != null && scopedWarehouseId > 0 && selectedWarehouse != scopedWarehouseId) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-        if (scopedWarehouseId > 0) {
-            selectedWarehouse = scopedWarehouseId;
         }
         if (selectedWarehouse != null) {
             Warehouse sel = warehouseDAO.findById(selectedWarehouse);
@@ -218,6 +156,7 @@ public class InventoryController extends HttpServlet {
     private void handleModelGroup(HttpServletRequest request, HttpServletResponse response,
             Integer selectedWarehouse) throws ServletException, IOException {
         String search = request.getParameter("search");
+        String brand = request.getParameter("brand");
 
         int page = 1;
         int pageSize = 10;
@@ -232,17 +171,18 @@ public class InventoryController extends HttpServlet {
             }
         }
 
-        int totalItems = inventoryDAO.countGeneratorSummary(selectedWarehouse, search);
+        int totalItems = inventoryDAO.countGeneratorSummary(selectedWarehouse, search, brand);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<GeneratorSummary> summaries = inventoryDAO.findGeneratorSummary(selectedWarehouse, search, page, pageSize);
+        List<GeneratorSummary> summaries = inventoryDAO.findGeneratorSummary(selectedWarehouse, search, brand, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("generatorSummaries", summaries);
         request.setAttribute("search", search);
+        request.setAttribute("brand", brand);
         request.setAttribute("totalItems", totalItems);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);

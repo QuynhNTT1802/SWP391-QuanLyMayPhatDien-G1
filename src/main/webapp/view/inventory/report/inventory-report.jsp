@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -74,7 +74,7 @@
             <h1>Báo cáo tồn kho</h1>
             <span class="crumb">/ Kho / Tồn kho / Báo cáo chi tiết</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                     <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
                     <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
                 </button>
@@ -142,7 +142,7 @@
                         </svg>
                     </div>
                     <div class="rpt-kpi">
-                        <div class="label">Số model & kho <span class="dot" style="background:var(--accent)"></span></div>
+                        <div class="label">Số mẫu máy & kho <span class="dot" style="background:var(--accent)"></span></div>
                         <div class="value">${summary.modelCount} <span class="unit">/ ${summary.warehouseCount} kho</span></div>
                         <div class="delta">
                             <span class="sub">Đa dạng sản phẩm &amp; vị trí</span>
@@ -185,7 +185,7 @@
                                 <tr>
                                     <th>Kho</th>
                                     <th class="num">Trong kho</th>
-                                    <th class="num">Model</th>
+                                    <th class="num">Mẫu máy</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -342,17 +342,17 @@
             })();
             </script>
 
-            <div class="section-label">Chi tiết serial trong kỳ</div>
+            <div class="section-label">Chi tiết số serial trong kỳ</div>
             <section class="card">
                 <div style="overflow-x: auto;">
                 <table class="rpt">
                     <thead>
                         <tr>
                             <th class="col-stt">#</th>
-                            <th class="col-serial">Serial</th>
+                            <th class="col-serial">Số serial</th>
                             <th class="col-status">Trạng thái</th>
                             <th>Tình trạng</th>
-                            <th class="col-model">Model</th>
+                            <th class="col-model">Mẫu máy</th>
                             <th class="col-brand">Hãng</th>
                             <th class="col-wh">Kho</th>
                             <th class="col-date">Ngày nhập</th>
@@ -392,7 +392,7 @@
                         <tfoot>
                             <tr>
                                 <td class="col-stt"></td>
-                                <td colspan="7">Tổng (${fn:length(rows)} serial)</td>
+                                <td colspan="7">Tổng (${fn:length(rows)} số serial)</td>
                                 <td></td>
                             </tr>
                         </tfoot>

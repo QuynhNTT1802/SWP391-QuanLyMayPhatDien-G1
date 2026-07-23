@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
@@ -21,7 +21,7 @@
 
     <div>
         <header class="topbar">
-            <h1>Đơn thanh lý đã duyệt</h1>
+            <h1>Đơn thanh lý</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Chọn đơn thanh lý</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
@@ -72,7 +72,7 @@
                 </c:when>
                 <c:otherwise>
                     <div class="table-card">
-                        <table class="users">
+                        <table class="users" style="width:100%;table-layout:fixed;">
                             <thead>
                                 <tr>
                                     <th>Mã đơn</th>
@@ -80,21 +80,22 @@
                                     <th>Ngày duyệt</th>
                                     <th>Số máy</th>
                                     <th>Khách hàng</th>
-                                    <th class="col-actions">Thao tác</th>
+                                    <th>Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:forEach var="l" items="${approvedLiquidations}">
                                     <tr>
-                                        <td><strong style="font-family:monospace;">${l.liquidationCode}</strong></td>
+                                        <td><a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${l.liquidationId}" style="font-family:monospace;text-decoration:none;"><strong style="font-family:monospace;">${l.liquidationCode}</strong></a></td>
                                         <td>${l.warehouseName}</td>
                                         <td>${l.ceoReviewedAt != null ? l.ceoReviewedAt : ''}</td>
                                         <td>${empty l.detailCount ? 0 : l.detailCount}</td>
                                         <td>${l.customerName != null ? l.customerName : '—'}</td>
-                                        <td class="col-actions">
-                                            <a href="${pageContext.request.contextPath}/export-receipt?action=create&liquidationId=${l.liquidationId}" class="btn btn-primary" style="font-size:12px;padding:4px 10px;">
-                                                Tạo phiếu xuất
-                                            </a>
+                                        <td>
+                                            <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewLiquidationDetail(${l.liquidationId}, '${l.liquidationCode}', '${pageContext.request.contextPath}/export-receipt?action=create&liquidationId=${l.liquidationId}')" title="Xem chi tiết">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                Xem chi tiết
+                                            </button>
                                         </td>
                                     </tr>
                                 </c:forEach>
@@ -136,16 +137,88 @@
 </div>
 
 <div class="toast-host" id="toastHost"></div>
+
+<div class="modal-overlay" id="detailModal" style="display:none;">
+    <div class="modal-box" style="max-width:700px;">
+        <div class="modal-header">
+            <h3 id="modalTitle">Chi tiết đơn thanh lý</h3>
+            <button type="button" class="modal-close" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-card" style="border:none;padding:0;">
+                <table class="users" id="detailTable">
+                    <thead>
+                        <tr>
+                            <th>Mẫu máy</th>
+                            <th>Số seri</th>
+                            <th>Giá gốc</th>
+                            <th>Giá thanh lý</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="empty-state" id="detailEmpty" style="display:none;">Không có chi tiết.</div>
+        </div>
+        <div class="modal-footer">
+            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">Tạo phiếu xuất</a>
+            <button type="button" class="btn" onclick="closeDetailModal()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<style>
+.modal-overlay { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center; }
+.modal-box { background:var(--card-bg,#fff);border-radius:12px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+.modal-header { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border,#e5e7eb); }
+.modal-header h3 { margin:0;font-size:16px;font-weight:600; }
+.modal-close { background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted,#999);padding:0;line-height:1; }
+.modal-body { padding:20px;overflow-y:auto;flex:1; }
+.modal-footer { display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border,#e5e7eb); }
+</style>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (window.SESSION_DATA && window.SESSION_DATA.message) {
-            toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
-            window.SESSION_DATA = null;
-        }
-    });
+function viewLiquidationDetail(id, code, createUrl) {
+    document.getElementById('modalTitle').textContent = 'Chi tiết đơn thanh lý ' + code;
+    document.getElementById('createBtn').href = createUrl;
+    var tbody = document.getElementById('detailBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Đang tải...</td></tr>';
+    document.getElementById('detailEmpty').style.display = 'none';
+    document.getElementById('detailModal').style.display = 'flex';
+    fetch(window.APP_CTX + '/export-receipt?action=getLiquidationDetail&id=' + id)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                document.getElementById('detailEmpty').style.display = 'block';
+                return;
+            }
+            data.forEach(function(item) {
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + (item.generatorModel || '') + '</td>'
+                    + '<td>' + (item.serialNumber || '') + '</td>'
+                    + '<td>' + (item.originalPrice ? new Intl.NumberFormat('vi-VN', {style:'currency',currency:'VND'}).format(item.originalPrice) : '') + '</td>'
+                    + '<td>' + (item.liquidationPrice ? new Intl.NumberFormat('vi-VN', {style:'currency',currency:'VND'}).format(item.liquidationPrice) : '') + '</td>';
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(function() {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:red;">Lỗi tải dữ liệu.</td></tr>';
+        });
+}
+function closeDetailModal() {
+    document.getElementById('detailModal').style.display = 'none';
+}
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.SESSION_DATA && window.SESSION_DATA.message) {
+        toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+        window.SESSION_DATA = null;
+    }
+});
 </script>
 </body>
 </html>

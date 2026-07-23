@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : order-list
     Created on : May 26, 2026
 --%>
@@ -51,6 +51,10 @@
             .status-needs-revision {
                 background: #ffe0b2;
                 color: #b15c00;
+            }
+            .status-completed {
+                background: #cce5ff;
+                color: #004085;
             }
             .amount-cell {
                 font-weight: 600;
@@ -186,7 +190,7 @@
                         <h1>Đơn hàng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/order">Kinh doanh</a> / Đơn hàng</span>
 <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -239,6 +243,7 @@
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="APPROVED" <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt</option>
+                            <option value="COMPLETED" <c:if test="${statusFilter == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                             <option value="REJECTED" <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối</option>
                             <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Yêu cầu chỉnh sửa</option>
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
@@ -307,6 +312,7 @@
                                                     <c:choose>
                                                         <c:when test="${order.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${order.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt</span></c:when>
+                                                        <c:when test="${order.status == 'COMPLETED'}"><span class="status-pill status-completed"><span class="pdot"></span>Hoàn thành</span></c:when>
                                                         <c:when test="${order.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối</span></c:when>
                                                         <c:when test="${order.status == 'NEEDS_REVISION'}"><span class="status-pill status-needs-revision"><span class="pdot"></span>Yêu cầu chỉnh sửa</span></c:when>
                                                         <c:when test="${order.status == 'DELETED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã xoá</span></c:when>

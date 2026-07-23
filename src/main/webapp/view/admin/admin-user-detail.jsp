@@ -1,4 +1,4 @@
-<%--
+﻿<%--
     Document   : user-detail
     Created on : May 17, 2026, 3:32:53 PM
     Author     : Aadmin
@@ -149,7 +149,7 @@
                                 <c:forEach var="role" items="${user.roles}">
                                     <span class="pill role-admin"><span class="pdot"></span>
                                         <c:choose>
-                                            <c:when test="${role.roleName == 'admin'}">Admin</c:when>
+                                            <c:when test="${role.roleName == 'admin'}">Quản trị viên</c:when>
                                             <c:when test="${role.roleName == 'warehouse_manager'}">Quản lý kho</c:when>
                                             <c:when test="${role.roleName == 'warehouse_staff'}">Thủ kho</c:when>
                                             <c:when test="${role.roleName == 'accountant'}">Kế toán</c:when>
@@ -169,15 +169,6 @@
                                 <c:choose>
                                     <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
                                     <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
-                                </c:choose>
-                            </div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Kho phụ trách</div>
-                            <div class="info-value">
-                                <c:choose>
-                                    <c:when test="${not empty userWarehouseName}"><span class="pill role-warehouse"><span class="pdot"></span><c:out value="${userWarehouseName}"/></span></c:when>
-                                    <c:otherwise><span style="color:var(--muted)">—</span></c:otherwise>
                                 </c:choose>
                             </div>
                         </div>
@@ -211,7 +202,7 @@
                         <select name="historyAction" id="historyActionSelect" class="filter-select" onchange="this.form.submit()">
                             <option value=""          ${empty historyAction ? 'selected' : ''}>Tất cả hành động</option>
                             <option value="CREATE"           ${historyAction == 'CREATE'           ? 'selected' : ''}>Thêm mới</option>
-                            <option value="UPDATE"           ${historyAction == 'UPDATE'           ? 'selected' : ''}>Cập nhật (admin)</option>
+                            <option value="UPDATE"           ${historyAction == 'UPDATE'           ? 'selected' : ''}>Cập nhật (quản trị viên)</option>
                             <option value="UPDATE_PROFILE"   ${historyAction == 'UPDATE_PROFILE'   ? 'selected' : ''}>Tự cập nhật hồ sơ</option>
                             <option value="CHANGE_PASSWORD"  ${historyAction == 'CHANGE_PASSWORD'  ? 'selected' : ''}>Đổi mật khẩu</option>
                             <option value="ACTIVATE"         ${historyAction == 'ACTIVATE'         ? 'selected' : ''}>Kích hoạt</option>

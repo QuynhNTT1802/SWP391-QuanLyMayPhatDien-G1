@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@page import="com.quanlymayphatdien.g1.dal.InventoryDAO"%>
@@ -34,7 +34,7 @@
             <h1>Tồn kho</h1>
             <span class="crumb">/ Kho / Tồn kho</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                     <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41 1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                     <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                 </button>
@@ -52,33 +52,10 @@
                 <div class="left">
                     <div class="eyebrow">Kho · Tồn kho</div>
                     <h2 class="page-title">Tồn kho hiện tại</h2>
-                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện đang IN_STOCK tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
+                    <div class="page-sub"><fmt:formatNumber value="${kpiTotalQty}"/> máy phát điện đang trong kho tại <fmt:formatNumber value="${kpiTotalWarehouses}"/> kho</div>
                 </div>
             </div>
 
-            <div class="kpi-grid">
-                <div class="kpi-card kpi-total">
-                    <div class="kpi-icon">
-                        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
-                    </div>
-                    <div class="kpi-title">Tổng IN_STOCK</div>
-                    <div class="kpi-value"><fmt:formatNumber value="${kpiTotalQty}"/></div>
-                </div>
-                <div class="kpi-card kpi-active">
-                    <div class="kpi-icon">
-                        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                    </div>
-                    <div class="kpi-title">Kho hoạt động</div>
-                    <div class="kpi-value"><fmt:formatNumber value="${kpiActiveWarehouses}"/></div>
-                </div>
-                <div class="kpi-card kpi-locked">
-                    <div class="kpi-icon">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    </div>
-                    <div class="kpi-title">Kho bị khóa</div>
-                    <div class="kpi-value"><fmt:formatNumber value="${kpiLockedWarehouses}"/></div>
-                </div>
-            </div>
 
             <h3 class="section-heading">
                 <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -108,7 +85,7 @@
                         <tr>
                             <th style="width:60px;text-align:center;font-family:var(--font-mono);">ID</th>
                             <th>Tên kho</th>
-                            <th style="width:160px;text-align:right;">Số serial</th>
+                            <th style="width:160px;text-align:right;">Số máy</th>
                             <th style="width:160px;text-align:right;">Số mặt hàng</th>
                         </tr>
                     </thead>

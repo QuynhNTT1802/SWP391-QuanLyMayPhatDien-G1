@@ -245,6 +245,114 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return list;
     }
 
+    public List<Transfer> findReadyForExportFiltered(String search, String fromDate, String toDate,
+            int page, int pageSize, int scopedWarehouseId, int userId) {
+        List<Transfer> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT t.*, "
+            + "  ws.name AS source_warehouse_name, "
+            + "  wd.name AS dest_warehouse_name, "
+            + "  u1.name AS created_by_name, "
+            + "  u3.name AS ceo_reviewed_by_name, "
+            + "  u4.name AS final_reviewed_by_name, "
+            + "  rexp.receipt_code AS export_receipt_code, "
+            + "  rimp.receipt_code AS import_receipt_code "
+            + "FROM transfer t "
+            + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+            + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+            + "LEFT JOIN user u1 ON t.created_by = u1.id "
+            + "LEFT JOIN user u3 ON t.ceo_reviewed_by = u3.id "
+            + "LEFT JOIN user u4 ON t.final_reviewed_by = u4.id "
+            + "LEFT JOIN receipt rexp ON t.export_receipt_id = rexp.receipt_id "
+            + "LEFT JOIN receipt rimp ON t.import_receipt_id = rimp.receipt_id "
+            + "WHERE t.status = 'APPROVED' AND t.export_receipt_id IS NULL "
+            + "AND (t.source_warehouse_id = ? OR t.created_by = ?) "
+        );
+        List<Object> params = new ArrayList<>();
+        params.add(scopedWarehouseId > 0 ? scopedWarehouseId : -1);
+        params.add(scopedWarehouseId > 0 ? userId : -1);
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (t.transfer_code LIKE ? OR u1.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(t.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(t.created_at) <= ? ");
+            params.add(toDate);
+        }
+        sql.append("ORDER BY t.created_at DESC LIMIT ? OFFSET ?");
+        params.add(pageSize);
+        params.add((page - 1) * pageSize);
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                list.add(getFromResultSet(resultSet));
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
+    public int countReadyForExportFiltered(String search, String fromDate, String toDate,
+            int scopedWarehouseId, int userId) {
+        StringBuilder sql = new StringBuilder(
+            "SELECT COUNT(*) FROM transfer t "
+            + "LEFT JOIN user u1 ON t.created_by = u1.id "
+            + "WHERE t.status = 'APPROVED' AND t.export_receipt_id IS NULL "
+            + "AND (t.source_warehouse_id = ? OR t.created_by = ?) "
+        );
+        List<Object> params = new ArrayList<>();
+        params.add(scopedWarehouseId > 0 ? scopedWarehouseId : -1);
+        params.add(scopedWarehouseId > 0 ? userId : -1);
+
+        if (search != null && !search.trim().isEmpty()) {
+            sql.append("AND (t.transfer_code LIKE ? OR u1.name LIKE ?) ");
+            String like = "%" + search.trim() + "%";
+            params.add(like);
+            params.add(like);
+        }
+        if (fromDate != null && !fromDate.isEmpty()) {
+            sql.append("AND DATE(t.created_at) >= ? ");
+            params.add(fromDate);
+        }
+        if (toDate != null && !toDate.isEmpty()) {
+            sql.append("AND DATE(t.created_at) <= ? ");
+            params.add(toDate);
+        }
+
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
     public List<Transfer> findReadyForImport(int scopedWarehouseId, int userId) {
         List<Transfer> list = new ArrayList<>();
         String sql = "SELECT t.*, "

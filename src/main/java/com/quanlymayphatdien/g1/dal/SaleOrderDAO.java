@@ -397,6 +397,24 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
+    public boolean markCompleted(int orderId) {
+        String sql = "UPDATE sale_order SET status = ? "
+                + "WHERE order_id = ? AND status = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, GlobalUtils.STATUS_COMPLETED);
+            statement.setInt(2, orderId);
+            statement.setString(3, GlobalUtils.STATUS_APPROVED);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            closeResources();
+        }
+    }
+
     public java.util.Map<Integer, Integer> getApprovedQuantitiesByGeneratorExcept(int excludeOrderId) {
         java.util.Map<Integer, Integer> map = new java.util.HashMap<>();
         String sql = "SELECT od.generator_id, SUM(od.quantity) AS total_qty "
