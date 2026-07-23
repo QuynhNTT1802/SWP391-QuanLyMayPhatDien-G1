@@ -24,10 +24,6 @@
         return post('removeScannedSerial', { receiptId: receiptId, inventoryId: inventoryId });
     }
 
-    function cancelPending(receiptId) {
-        return post('cancelPending', { receiptId: receiptId });
-    }
-
     function ensureModal(id, title, body, confirmLabel, danger) {
         var host = document.getElementById(id);
         if (!host) {
@@ -84,7 +80,6 @@
 
     global.ExportScannerActions = {
         removeScannedSerial: removeScannedSerial,
-        cancelPending: cancelPending,
         confirmAction: confirmAction,
         releaseRow: releaseRow
     };

@@ -77,6 +77,12 @@
                             <input name="search" value="<c:out value='${search}'/>" placeholder="Tìm theo mã phiếu, đơn, khách hàng, người tạo" autocomplete="off" />
                         </div>
 
+                        <select class="filter-select" name="relatedType" onchange="this.form.submit()">
+                            <option value="">Đơn liên quan: Tất cả</option>
+                            <option value="ORDER" <c:if test="${relatedType == 'ORDER'}">selected</c:if>>Đơn hàng</option>
+                            <option value="LIQUIDATION" <c:if test="${relatedType == 'LIQUIDATION'}">selected</c:if>>Thanh lý</option>
+                        </select>
+
                         <select class="filter-select" name="status" onchange="this.form.submit()">
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="PENDING" <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
@@ -84,19 +90,6 @@
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                         </select>
 
-                        <select class="filter-select" name="warehouse" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                            <c:choose>
-                                <c:when test="${not empty scopedWarehouseId}">
-                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="">Kho: Tất cả</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}" <c:if test="${whFilter == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </select>
 
                         <div class="spacer"></div>
                         <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/export-receipt?action=list'">
@@ -116,38 +109,41 @@
                                     <th class="col-creator">Người tạo</th>
                                     <th class="col-status">Trạng thái</th>
                                     <th class="col-date">Ngày tạo</th>
-                                    <th class="col-actions">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody id="receiptsBody">
                                 <c:choose>
                                     <c:when test="${empty receiptList}">
-                                        <tr><td colspan="8"><div class="empty-state" style="padding:20px;">Không có phiếu nào.</div></td></tr>
+                                        <tr><td colspan="7"><div class="empty-state" style="padding:20px;">Không có phiếu nào.</div></td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="r" items="${receiptList}">
                                             <tr data-id="${r.receiptId}">
-                                                <td><span class="receipt-code"><c:out value="${r.receiptCode}"/></span></td>
+                                                <td><a class="code-link" href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${r.receiptId}"><c:out value="${r.receiptCode}"/></a></td>
                                                 <td>${r.warehouseName}</td>
                                                 <td class="col-order">
                                                     <c:choose>
-                                                        <c:when test="${not empty r.orderCode}">
-                                                            <div class="badge-avail badge-sale">[Bán hàng]</div><br/>
-                                                            <a href="${pageContext.request.contextPath}/order?action=detail&id=${r.orderId}">${r.orderCode}</a>
-                                                            <div class="cust">${r.customerName}</div>
-                                                        </c:when>
-                                                        <c:when test="${not empty r.liquidationCode}">
-                                                            <div class="badge-avail badge-liqui">[Thanh lý]</div><br/>
-                                                            <a href="${pageContext.request.contextPath}/liquidations?action=detail&id=${r.liquidationId}" class="code-link">${r.liquidationCode}</a>
-                                                            <div class="cust">${r.customerName}</div>
-                                                        </c:when>
+                                                    <c:when test="${not empty r.orderCode}">
+                                                             <a href="javascript:void(0);" class="code-link code-link--purple" onclick="showRelatedModal(this)" data-doc-type="order" data-doc-code="<c:out value='${r.orderCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.orderId}"><c:out value="${r.orderCode}"/></a>
+                                                         </c:when>
+                                                         <c:when test="${not empty r.liquidationCode}">
+                                                             <a href="javascript:void(0);" class="code-link" onclick="showRelatedModal(this)" data-doc-type="liquidation" data-doc-code="<c:out value='${r.liquidationCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.liquidationId}"><c:out value="${r.liquidationCode}"/></a>
+                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-reason">
                                                     <c:choose>
                                                         <c:when test="${not empty r.reasonName}">
-                                                            <span class="status-pill status-neutral"><span class="pdot"></span>${r.reasonName}</span>
+                                                            <c:set var="reasonColor" value="status-neutral"/>
+                                                            <c:set var="rc" value="${fn:toLowerCase(fn:replace(r.reasonName, ' ', ''))}"/>
+                                                            <c:choose>
+                                                                <c:when test="${fn:contains(rc, 'xuất') || fn:contains(rc, 'xuat')}"><c:set var="reasonColor" value="status-purple"/></c:when>
+                                                                <c:when test="${fn:contains(rc, 'chuyển') || fn:contains(rc, 'chuyen') || fn:contains(rc, 'điều') || fn:contains(rc, 'dieu')}"><c:set var="reasonColor" value="status-teal"/></c:when>
+                                                                <c:when test="${fn:contains(rc, 'bảo') || fn:contains(rc, 'bao')}"><c:set var="reasonColor" value="status-pink"/></c:when>
+                                                                <c:when test="${fn:contains(rc, 'hư') || fn:contains(rc, 'hu') || fn:contains(rc, 'hết') || fn:contains(rc, 'het') || fn:contains(rc, 'hỏng') || fn:contains(rc, 'hong') || fn:contains(rc, 'cũ') || fn:contains(rc, 'cu')}"><c:set var="reasonColor" value="status-orange"/></c:when>
+                                                            </c:choose>
+                                                            <span class="status-pill ${reasonColor}"><span class="pdot"></span>${r.reasonName}</span>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
@@ -162,19 +158,6 @@
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-date">${r.createdAt}</td>
-                                                <td class="col-actions">
-                                                    <div class="dropdown">
-                                                        <button class="dropdown-btn" onclick="toggleDropdown(this)" type="button">
-                                                            Hành động <span class="arrow">▾</span>
-                                                        </button>
-                                                        <div class="dropdown-menu">
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${r.receiptId}">
-                                                                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                                <span class="label">Chi tiết</span>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>
@@ -190,6 +173,9 @@
                         </c:if>
                         <c:if test="${not empty search}">
                             <c:set var="filterParams" value="${filterParams}&search=${search}" />
+                        </c:if>
+                        <c:if test="${not empty relatedType}">
+                            <c:set var="filterParams" value="${filterParams}&relatedType=${relatedType}" />
                         </c:if>
                         <div class="pagination">
                             <div class="info">Trang <strong>${currentPage}</strong> / <strong>${totalPages}</strong></div>
@@ -215,47 +201,99 @@
 
         <div class="toast-host" id="toastHost"></div>
 
+        <style>
+            .code-link.code-link--purple { color:#7c3aed; text-decoration:none; cursor:pointer; font-weight:600; font-family:'JetBrains Mono',monospace; font-size:13px; }
+            .code-link.code-link--purple:hover { text-decoration:underline; color:#6d28d9; }
+            .status-purple { background:#ede9fe; color:#6d28d9; }
+            .status-orange { background:#fff3e0; color:#b15c00; }
+            .status-teal   { background:#e0f2f1; color:#00695c; }
+            .status-pink   { background:#fce4ec; color:#a13d63; }
+            .doc-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px; }
+            .doc-modal-backdrop.open { display:flex; }
+            .doc-modal { background:var(--surface); border-radius:8px; width:100%; max-width:480px; box-shadow:0 10px 40px rgba(0,0,0,.25); overflow:hidden; animation:modalPop .18s ease-out; }
+            @keyframes modalPop { from{transform:scale(.96);opacity:0} to{transform:scale(1);opacity:1} }
+            .doc-modal-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); }
+            .doc-modal-header h3 { margin:0; font-size:16px; font-weight:700; }
+            .doc-modal-close { background:transparent; border:none; font-size:22px; line-height:1; cursor:pointer; color:var(--muted); padding:0 4px; }
+            .doc-modal-close:hover { color:var(--fg); }
+            .doc-modal-body { padding:16px 18px; }
+            .doc-info-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed var(--border); font-size:13.5px; }
+            .doc-info-row:last-child { border-bottom:none; }
+            .doc-info-row .lbl { flex:0 0 110px; color:var(--muted); font-weight:500; }
+            .doc-info-row .val { flex:1; color:var(--fg); word-break:break-word; }
+            .doc-modal-footer { padding:12px 18px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; background:var(--surface-2); }
+        </style>
+
+        <div class="doc-modal-backdrop" id="relatedDocModal" onclick="if (event.target === this) closeRelatedModal();">
+            <div class="doc-modal" role="dialog" aria-modal="true" aria-labelledby="relatedDocTitle">
+                <div class="doc-modal-header">
+                    <h3 id="relatedDocTitle">Thông tin</h3>
+                    <button type="button" class="doc-modal-close" onclick="closeRelatedModal()" aria-label="Đóng">&times;</button>
+                </div>
+                <div class="doc-modal-body">
+                    <div class="doc-info-row">
+                        <div class="lbl" id="rdm-code-label">Mã</div>
+                        <div class="val" id="rdm-code">—</div>
+                    </div>
+                    <div class="doc-info-row">
+                        <div class="lbl">Khách hàng</div>
+                        <div class="val" id="rdm-customer">—</div>
+                    </div>
+                </div>
+                <div class="doc-modal-footer">
+                    <button type="button" class="btn" onclick="closeRelatedModal()">Đóng</button>
+                    <a href="#" class="btn btn-primary" id="rdm-detail-link">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/export-scanner-actions.js"></script>
         <script>
-            function toggleDropdown(btn) {
-                var menu = btn.nextElementSibling;
-                var isOpen = menu.classList.contains('open');
-                document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                    if (m !== menu) {
-                        m.classList.remove('open');
-                        m.previousElementSibling.classList.remove('open');
-                    }
-                });
-                if (isOpen) {
-                    menu.classList.remove('open');
-                    btn.classList.remove('open');
-                    return;
+            function showRelatedModal(el) {
+                event.stopPropagation();
+                var type = el.getAttribute('data-doc-type') || 'order';
+                var code = el.getAttribute('data-doc-code') || '—';
+                var cust = el.getAttribute('data-doc-customer') || '—';
+                var id = el.getAttribute('data-doc-id') || '';
+
+                if (type === 'order') {
+                    document.getElementById('relatedDocTitle').textContent = 'Thông tin đơn hàng';
+                    document.getElementById('rdm-code-label').textContent = 'Mã đơn';
+                    document.getElementById('rdm-detail-link').href = window.APP_CTX + '/order?action=detail&id=' + id;
+                } else {
+                    document.getElementById('relatedDocTitle').textContent = 'Thông tin thanh lý';
+                    document.getElementById('rdm-code-label').textContent = 'Mã thanh lý';
+                    document.getElementById('rdm-detail-link').href = window.APP_CTX + '/liquidations?action=detail&id=' + id;
                 }
-                var rect = btn.getBoundingClientRect();
-                menu.style.top = (rect.bottom + 4) + 'px';
-                menu.style.left = rect.left + 'px';
-                menu.style.minWidth = Math.max(170, rect.width) + 'px';
-                menu.classList.add('open');
-                btn.classList.add('open');
+                document.getElementById('rdm-code').textContent = code;
+                document.getElementById('rdm-customer').textContent = cust;
+                document.getElementById('relatedDocModal').classList.add('open');
             }
-            document.addEventListener('click', function (e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown-menu.open').forEach(function (m) {
-                        m.classList.remove('open');
-                    });
-                    document.querySelectorAll('.dropdown-btn.open').forEach(function (b) {
-                        b.classList.remove('open');
-                    });
+            function closeRelatedModal() {
+                document.getElementById('relatedDocModal').classList.remove('open');
+            }
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeRelatedModal();
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.SESSION_DATA && window.SESSION_DATA.message) {
+                    if (typeof showToast === 'function') {
+                        showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+                    } else if (typeof toast === 'function') {
+                        toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
+                    }
+                    window.SESSION_DATA = null;
                 }
             });
-            if (window.SESSION_DATA && window.SESSION_DATA.message) {
-                toast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'default');
-                window.SESSION_DATA = null;
-            }
         </script>
     </body>
 </html>

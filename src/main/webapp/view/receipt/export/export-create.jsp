@@ -17,6 +17,35 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
+    <style>
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span {
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .confirm-row strong {
+            color: var(--fg);
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -46,7 +75,7 @@
                     </div>
                 </div>
 
-            <form id="receiptForm" action="${pageContext.request.contextPath}/export-receipt?action=save" method="POST" onsubmit="return validateReceiptForm()">
+            <form id="receiptForm" action="${pageContext.request.contextPath}/export-receipt?action=save" method="POST" onsubmit="return openSaveConfirm();">
                 <c:if test="${not empty errors}">
                     <div class="alert alert-error" style="margin: 16px 0;">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -271,6 +300,20 @@
                 </button>
             </div>
         </main>
+    </div>
+</div>
+
+<div class="modal-host" id="saveConfirmModal" onclick="if (event.target === this) closeSaveConfirm();">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+        <h3 id="saveConfirmTitle">Xác nhận lưu phiếu xuất</h3>
+        <p class="modal-sub">Vui lòng kiểm tra thông tin trước khi lưu phiếu.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeSaveConfirm()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="doConfirmSave()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                Xác nhận lưu
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1028,6 +1071,78 @@
 
         return valid;
     }
+
+    // ========== Confirm Save Modal ==========
+    function openSaveConfirm() {
+        if (typeof validateReceiptForm === 'function' && !validateReceiptForm()) {
+            return false;
+        }
+        populateSaveSummary();
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.add('show');
+        return false;
+    }
+
+    function closeSaveConfirm() {
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function doConfirmSave() {
+        closeSaveConfirm();
+        var form = document.getElementById('receiptForm');
+        if (form) form.submit();
+    }
+
+    function populateSaveSummary() {
+        var whEl = document.getElementById('saveSummaryWh');
+        var reasonEl = document.getElementById('saveSummaryReason');
+        var totalEl = document.getElementById('saveSummaryTotal');
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        if (whEl) {
+            if (whSelect && whSelect.tagName === 'SELECT') {
+                whEl.textContent = whSelect.options[whSelect.selectedIndex]
+                    ? whSelect.options[whSelect.selectedIndex].textContent.trim()
+                    : '—';
+            } else if (whSelect) {
+                var disp = document.querySelector('.readonly-field strong');
+                whEl.textContent = disp ? disp.textContent.trim() : '—';
+            } else {
+                whEl.textContent = '—';
+            }
+        }
+
+        var reasonSelect = document.querySelector('select[name="reasonId"], input[name="reasonId"][type="hidden"]');
+        if (reasonEl) {
+            if (reasonSelect && reasonSelect.tagName === 'SELECT') {
+                reasonEl.textContent = reasonSelect.options[reasonSelect.selectedIndex]
+                    ? reasonSelect.options[reasonSelect.selectedIndex].textContent.trim()
+                    : '—';
+            } else if (reasonSelect) {
+                var rdisp = reasonSelect.closest('.form-field');
+                if (rdisp) {
+                    var ssel = rdisp.querySelector('select');
+                    reasonEl.textContent = (ssel && ssel.options[ssel.selectedIndex])
+                        ? ssel.options[ssel.selectedIndex].textContent.trim()
+                        : '—';
+                } else {
+                    reasonEl.textContent = '—';
+                }
+            } else {
+                reasonEl.textContent = '—';
+            }
+        }
+
+        if (totalEl) {
+            var totalSource = document.getElementById('totalRowCount') || document.getElementById('orderScannedCount') || document.getElementById('transferScannedCount') || document.getElementById('plainScannedCount');
+            totalEl.textContent = totalSource ? totalSource.textContent.trim() : '0';
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSaveConfirm();
+    });
 
     // ========== DOM Ready ==========
     document.addEventListener('DOMContentLoaded', function () {
