@@ -138,9 +138,6 @@ public class ExportReceiptController extends HttpServlet {
                 case "save":
                     saveReceipt(request, response);
                     break;
-                case "cancelPending":
-                    cancelPending(request, response);
-                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -184,17 +181,18 @@ public class ExportReceiptController extends HttpServlet {
             whFilter = String.valueOf(scopedWarehouseId);
         }
         String search = request.getParameter("search");
+        String relatedType = request.getParameter("relatedType");
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
 
-        int totalItems = receiptDAO.countWithFilters(TYPE, statusFilter, whFilter, search, createdByFilter, loggedUser.getId());
+        int totalItems = receiptDAO.countWithFilters(TYPE, statusFilter, whFilter, search, createdByFilter, relatedType, loggedUser.getId());
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
         if (page > totalPages) {
             page = totalPages;
         }
 
         List<Receipt> receiptList = receiptDAO.findWithFilters(
-                TYPE, statusFilter, whFilter, search, createdByFilter, page, pageSize, loggedUser.getId());
+                TYPE, statusFilter, whFilter, search, createdByFilter, relatedType, page, pageSize, loggedUser.getId());
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
@@ -211,6 +209,7 @@ public class ExportReceiptController extends HttpServlet {
         }
         request.setAttribute("statusFilter", statusFilter);
         request.setAttribute("whFilter", whFilter);
+        request.setAttribute("relatedType", relatedType);
         request.setAttribute("search", search);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
@@ -434,11 +433,6 @@ public class ExportReceiptController extends HttpServlet {
         request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
     }
 
-    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.sendRedirect(request.getContextPath() + "/export-receipt?action=detail&id=" + parseId(request.getParameter("id")));
-    }
-
     private void viewDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -502,6 +496,28 @@ public class ExportReceiptController extends HttpServlet {
             request.setAttribute("dateFrom", dateFrom != null ? dateFrom : "");
             request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         }
+
+        List<ReceiptDetail> allDetails = receipt.getDetails();
+        int totalDetails = allDetails != null ? allDetails.size() : 0;
+        int detailPageSize = 10;
+        int detailPage = 1;
+        String detailPageStr = request.getParameter("detailPage");
+        if (detailPageStr != null && !detailPageStr.isEmpty()) {
+            try { detailPage = Math.max(1, Integer.parseInt(detailPageStr)); }
+            catch (NumberFormatException ignored) { }
+        }
+        int detailTotalPages = Math.max(1, (int) Math.ceil((double) totalDetails / detailPageSize));
+        if (detailPage > detailTotalPages) detailPage = detailTotalPages;
+        List<ReceiptDetail> pagedDetails = new ArrayList<>();
+        if (allDetails != null && !allDetails.isEmpty()) {
+            int fromIndex = (detailPage - 1) * detailPageSize;
+            int toIndex = Math.min(fromIndex + detailPageSize, allDetails.size());
+            pagedDetails = allDetails.subList(fromIndex, toIndex);
+        }
+        request.setAttribute("pagedDetails", pagedDetails);
+        request.setAttribute("detailPage", detailPage);
+        request.setAttribute("detailTotalPages", detailTotalPages);
+        request.setAttribute("totalDetails", totalDetails);
 
         request.setAttribute("receipt", receipt);
         request.setAttribute("isManager", false);
@@ -1217,125 +1233,6 @@ public class ExportReceiptController extends HttpServlet {
         }
     }
 
-    /**
-     * POST /export-receipt?action=cancelPending Rut phieu PENDING do chinh user
-     * tao ra: set status CANCELLED, giai phong tat ca reservation.
-     *
-     * Quyen: creator cua phieu PENDING.
-     */
-    private void cancelPending(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("application/json;charset=UTF-8");
-        HttpSession session = request.getSession(false);
-        User loggedUser = (User) session.getAttribute("loggedUser");
-        Map<String, Object> body = new LinkedHashMap<>();
-
-        int receiptId = parseId(request.getParameter("receiptId"));
-        if (receiptId <= 0) {
-            body.put("success", false);
-            body.put("message", "Thiếu receiptId");
-            new Gson().toJson(body, response.getWriter());
-            return;
-        }
-        Receipt existing = receiptDAO.findById(receiptId);
-        if (existing == null || !TYPE.equals(existing.getReceiptType())) {
-            body.put("success", false);
-            body.put("message", "Phiếu không hợp lệ");
-            new Gson().toJson(body, response.getWriter());
-            return;
-        }
-        if (!GlobalUtils.RECEIPT_STATUS_PENDING.equals(existing.getStatus())) {
-            body.put("success", false);
-            body.put("message", "Chỉ rút được phiếu ở trạng thái chờ duyệt");
-            new Gson().toJson(body, response.getWriter());
-            return;
-        }
-        if (existing.getCreatedBy() != loggedUser.getId()) {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            body.put("success", false);
-            body.put("message", "Chỉ người tạo mới được rút phiếu");
-            new Gson().toJson(body, response.getWriter());
-            return;
-        }
-
-        java.sql.Connection conn = null;
-        boolean ok = false;
-        try {
-            conn = receiptDAO.getConnection();
-            conn.setAutoCommit(false);
-
-            try (java.sql.PreparedStatement ps = conn.prepareStatement(
-                    "UPDATE receipt SET status = ?, approved_by = NULL, "
-                    + "approved_at = NULL WHERE receipt_id = ? AND status = ?")) {
-                ps.setString(1, GlobalUtils.RECEIPT_STATUS_CANCELLED);
-                ps.setInt(2, receiptId);
-                ps.setString(3, GlobalUtils.RECEIPT_STATUS_PENDING);
-                if (ps.executeUpdate() == 0) {
-                    throw new SQLException("Phiếu không còn ở trạng thái chờ duyệt");
-                }
-            }
-
-            conn.commit();
-            ok = true;
-        } catch (SQLException ex) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            body.put("success", false);
-            body.put("message", "Lỗi: " + ex.getMessage());
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        if (ok) {
-            body.put("success", true);
-            body.put("message", "Đã rút phiếu");
-
-            ActivityLog log = new ActivityLog();
-            log.setUserId(loggedUser.getId());
-            log.setEntityType("receipt");
-            log.setAction("CANCEL_PENDING");
-            log.setEntityId(receiptId);
-            log.setEntityName(existing.getReceiptCode());
-            log.setDetails("Rút phiếu đang chờ duyệt");
-            activityLogDAO.insert(log);
-
-            List<User> approvers = userDAO.findUsersByPermission("receipts", "approve");
-            String link = request.getContextPath() + "/export-receipt?action=detail&id=" + receiptId;
-            for (User mgr : approvers) {
-                if (mgr.getId() == loggedUser.getId()) {
-                    continue;
-                }
-                NotificationService.send(
-                        mgr.getId(),
-                        "Phiếu xuất kho bị rút",
-                        "Nhân viên " + loggedUser.getName() + " đã rút phiếu xuất " + existing.getReceiptCode()
-                        + " đang chờ duyệt.",
-                        link,
-                        "export_receipt",
-                        receiptId
-                );
-            }
-        }
-
-        new Gson().toJson(body, response.getWriter());
-    }
-
     private int parseId(String s) {
         if (s == null || s.isEmpty()) {
             return 0;
@@ -1440,50 +1337,6 @@ public class ExportReceiptController extends HttpServlet {
                 continue;
             }
 
-            ReceiptDetail d = new ReceiptDetail();
-            d.setGeneratorId(genId);
-            d.setSerialNumber(serial);
-            d.setNote(detailNote);
-            details.add(d);
-        }
-        return details;
-    }
-
-    private List<ReceiptDetail> parseDetailsLenient(String[] genIds, String[] serials,
-            String[] detailNotes) {
-        List<ReceiptDetail> details = new ArrayList<>();
-        if (genIds == null) {
-            return details;
-        }
-        for (int i = 0; i < genIds.length; i++) {
-            String idStr = genIds[i];
-            String serial = (serials != null && i < serials.length) ? serials[i] : null;
-            String detailNote = (detailNotes != null && i < detailNotes.length) ? detailNotes[i] : null;
-            boolean rowEmpty = (idStr == null || idStr.trim().isEmpty())
-                    && (serial == null || serial.trim().isEmpty());
-            if (rowEmpty) {
-                continue;
-            }
-            int genId = 0;
-            try {
-                genId = Integer.parseInt(idStr);
-            } catch (NumberFormatException e) {
-                continue;
-            }
-            if (genId <= 0) {
-                continue;
-            }
-            if (serial != null) {
-                serial = serial.trim();
-                if (serial.isEmpty()) {
-                    serial = null;
-                } else if (serial.length() > MAX_SERIAL_LENGTH) {
-                    serial = serial.substring(0, MAX_SERIAL_LENGTH);
-                }
-            }
-            if (detailNote != null && detailNote.length() > MAX_NOTE_LENGTH) {
-                detailNote = detailNote.substring(0, MAX_NOTE_LENGTH);
-            }
             ReceiptDetail d = new ReceiptDetail();
             d.setGeneratorId(genId);
             d.setSerialNumber(serial);

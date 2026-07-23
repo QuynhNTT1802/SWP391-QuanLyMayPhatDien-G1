@@ -70,7 +70,6 @@
                             <th>Trạng thái</th>
                             <th style="width:100px;">Tổng tồn</th>
                             <th style="width:100px;">Số mặt hàng</th>
-                            <th class="col-actions">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -95,25 +94,6 @@
                                         </td>
                                         <td><span class="qty-cell qty-ok"><fmt:formatNumber value="${w.totalInventory}"/></span></td>
                                         <td><span class="qty-cell qty-ok">${w.itemCount}</span></td>
-                                        <td class="col-actions">
-                                            <div class="row-actions">
-                                                <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse?action=update&id=${w.warehouseId}'" title="Chỉnh sửa">
-                                                    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                </button>
-                                                <c:choose>
-                                                    <c:when test="${w.status == 'locked'}">
-                                                        <button class="icon-mini" onclick="if(confirm('Mở khóa kho &quot;${fn:escapeXml(w.name)}&quot;? Các máy trong kho sẽ hiển thị lại trong tồn kho.')){location.href='${pageContext.request.contextPath}/warehouse?action=unlock&id=${w.warehouseId}';}" title="Mở khóa kho">
-                                                            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-                                                        </button>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <button class="icon-mini" onclick="if(confirm('Khóa kho &quot;${fn:escapeXml(w.name)}&quot;? Các máy trong kho sẽ bị ẩn khỏi tồn kho cho đến khi mở khóa lại.')){location.href='${pageContext.request.contextPath}/warehouse?action=lock&id=${w.warehouseId}';}" title="Khóa kho">
-                                                            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                                        </button>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                        </td>
                                     </tr>
                                 </c:forEach>
                             </c:otherwise>
