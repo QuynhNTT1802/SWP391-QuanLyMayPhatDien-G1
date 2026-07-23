@@ -386,6 +386,28 @@ public class TransferController extends HttpServlet {
             request.setAttribute("dateTo", dateTo != null ? dateTo : "");
         }
 
+        List<TransferDetail> allDetails = t.getDetails();
+        int totalDetails = allDetails != null ? allDetails.size() : 0;
+        int detailPageSize = 10;
+        int detailPage = 1;
+        String detailPageStr = request.getParameter("detailPage");
+        if (detailPageStr != null && !detailPageStr.isEmpty()) {
+            try { detailPage = Math.max(1, Integer.parseInt(detailPageStr)); }
+            catch (NumberFormatException ignored) { }
+        }
+        int detailTotalPages = Math.max(1, (int) Math.ceil((double) totalDetails / detailPageSize));
+        if (detailPage > detailTotalPages) detailPage = detailTotalPages;
+        List<TransferDetail> pagedDetails = new ArrayList<>();
+        if (allDetails != null && !allDetails.isEmpty()) {
+            int fromIndex = (detailPage - 1) * detailPageSize;
+            int toIndex = Math.min(fromIndex + detailPageSize, allDetails.size());
+            pagedDetails = allDetails.subList(fromIndex, toIndex);
+        }
+        request.setAttribute("pagedDetails", pagedDetails);
+        request.setAttribute("detailPage", detailPage);
+        request.setAttribute("detailTotalPages", detailTotalPages);
+        request.setAttribute("totalDetails", totalDetails);
+
         request.setAttribute("transfer", t);
         request.setAttribute("isOwner", isOwner);
         request.setAttribute("activePage", "transfer-detail");
