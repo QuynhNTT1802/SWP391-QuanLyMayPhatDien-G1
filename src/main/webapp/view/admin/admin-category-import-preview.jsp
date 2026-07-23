@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c"   uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn"  uri="http://java.sun.com/jsp/jstl/functions" %>
 <!doctype html>
@@ -80,7 +80,7 @@
                                         <%-- Cột extension theo type --%>
                                         <c:choose>
                                             <c:when test="${currentType == 'brand'}">
-                                                <th>Quốc gia</th><th>Website</th><th>Năm TL</th><th>Bảo hành</th>
+                                                <th>Quốc gia</th><th>Trang web</th><th>Năm TL</th><th>Bảo hành</th>
                                             </c:when>
                                             <c:when test="${currentType == 'fuel_type'}">
                                                 <th>Đơn vị</th><th>Giá tham khảo</th>

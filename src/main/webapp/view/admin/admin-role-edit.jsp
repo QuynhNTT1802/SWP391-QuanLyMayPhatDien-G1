@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
@@ -68,7 +68,7 @@
             <main>
                 <div class="page-head">
                     <div class="head-left">
-                        <div class="eyebrow">RBAC · Chỉnh sửa</div>
+                        <div class="eyebrow">Phân quyền · Chỉnh sửa</div>
                         <h2 id="roleTitle">${empty role ? 'Vai trò mới' : role.roleName}</h2>
                         <p>Tinh chỉnh phạm vi quyền hạn và thông tin định danh của vai trò trong hệ thống.</p>
                     </div>
@@ -86,20 +86,10 @@
                                     </div>
                                     <div class="field">
                                         <label>Trạng thái</label>
-                                        <c:choose>
-                                            <c:when test="${role.roleName == 'admin'}">
-                                                <select name="status" disabled>
-                                                    <option value="active" selected>Hoạt động</option>
-                                                </select>
-                                                <input type="hidden" name="status" value="active" />
-                                            </c:when>
-                                            <c:otherwise>
-                                                <select name="status">
-                                                    <option value="active" ${role.status == 'active' ? 'selected' : ''}>Hoạt động</option>
-                                                    <option value="inactive" ${role.status == 'inactive' ? 'selected' : ''}>Khóa</option>
-                                                </select>
-                                            </c:otherwise>
-                                        </c:choose>
+                                        <select name="status">
+                                            <option value="active" ${role.status == 'active' ? 'selected' : ''}>Hoạt động</option>
+                                            <option value="inactive" ${role.status == 'inactive' ? 'selected' : ''}>Khóa</option>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="field">

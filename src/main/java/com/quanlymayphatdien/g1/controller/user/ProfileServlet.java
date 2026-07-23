@@ -104,13 +104,13 @@ public class ProfileServlet extends HttpServlet {
 
                 List<String> changes = new ArrayList<>();
                 if (!equalsStr(beforeName, user.getName())) {
-                    changes.add("name: \"" + safe(beforeName) + "\" → \"" + safe(user.getName()) + "\"");
+                    changes.add("Họ tên: \"" + safe(beforeName) + "\" → \"" + safe(user.getName()) + "\"");
                 }
                 if (!equalsStr(beforePhone, user.getPhone())) {
-                    changes.add("phone: \"" + safe(beforePhone) + "\" → \"" + safe(user.getPhone()) + "\"");
+                    changes.add("Số điện thoại: \"" + safe(beforePhone) + "\" → \"" + safe(user.getPhone()) + "\"");
                 }
                 if (!equalsStr(beforeAddress, user.getAddress())) {
-                    changes.add("address: \"" + safe(beforeAddress) + "\" → \"" + safe(user.getAddress()) + "\"");
+                    changes.add("Địa chỉ: \"" + safe(beforeAddress) + "\" → \"" + safe(user.getAddress()) + "\"");
                 }
                 String details = changes.isEmpty()
                         ? "Tự cập nhật hồ sơ: không có thay đổi"

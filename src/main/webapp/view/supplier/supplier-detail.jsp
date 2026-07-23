@@ -1,6 +1,5 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -80,54 +79,59 @@
                 </div>
 
                 <div class="tab-panel active" id="tab-info">
-                    <div class="info-grid">
-                        <div class="info-field">
-                            <div class="info-label">Tên nhà cung cấp</div>
-                            <div class="info-value"><c:out value="${supplier.name}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Số điện thoại</div>
-                            <div class="info-value mono"><c:out value="${supplier.phone}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Email</div>
-                            <div class="info-value"><c:out value="${not empty supplier.email ? supplier.email : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Địa chỉ</div>
-                            <div class="info-value"><c:out value="${not empty supplier.address ? supplier.address : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Loại nhà cung cấp</div>
-                            <div class="info-value"><c:out value="${supplierTypeName}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Tên công ty</div>
-                            <div class="info-value"><c:out value="${not empty supplier.companyName ? supplier.companyName : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Trạng thái</div>
-                            <div class="info-value">
-                                <c:choose>
-                                    <c:when test="${supplier.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                    <c:when test="${supplier.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
-                                </c:choose>
+                    <div class="section">
+                        <div class="section-body">
+                            <div class="form-grid cols-5">
+                                <div class="info-field">
+                                    <label>Tên nhà cung cấp</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${supplier.name}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Số điện thoại</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${supplier.phone}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Email</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty supplier.email ? supplier.email : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Loại nhà cung cấp</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${supplierTypeName}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Trạng thái</label>
+                                    <input class="info-input" type="text" disabled value="${supplier.status == 'active' ? 'Đang hoạt động' : (supplier.status == 'locked' ? 'Bị khóa' : '')}">
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Ngày tạo</div>
-                            <div class="info-value mono"><c:out value="${createdDate}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Cập nhật cuối</div>
-                            <div class="info-value mono"><c:out value="${updatedDate}"/></div>
+                            <div class="form-grid cols-5" style="margin-top:14px;">
+                                <div class="info-field">
+                                    <label>Tên công ty</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty supplier.companyName ? supplier.companyName : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Địa chỉ</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty supplier.address ? supplier.address : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Ngày tạo</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${createdDate}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Cập nhật cuối</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${updatedDate}'/>">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-panel" id="tab-orders">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="font-size:15px;font-weight:700;margin:0;">Đơn mua</h3>
+                        <a href="${pageContext.request.contextPath}/purchase-order" class="btn" style="font-size:12px;">Xem tất cả →</a>
+                    </div>
                     <c:if test="${empty purchaseOrders}">
-                        <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Nhà cung cấp chưa có đơn hàng nào.</div>
+                        <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Nhà cung cấp chưa có đơn mua nào.</div>
                     </c:if>
                     <c:if test="${not empty purchaseOrders}">
                         <table class="detail-table">
@@ -151,7 +155,7 @@
                                         <td>${po.status}</td>
                                         <td>${po.warehouseName}</td>
                                         <td>${po.createdByName}</td>
-                                        <td class="mono"><fmt:formatDate value="${po.createdAt}" pattern="dd/MM/yyyy"/></td>
+                                        <td class="mono"><c:out value="${poDates[st.index]}"/></td>
                                     </tr>
                                 </c:forEach>
                             </tbody>
@@ -193,6 +197,6 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-<script src="${pageContext.request.contextPath}/assets/js/supplier-js.js" charset="UTF-8"></script>
+<script src="${pageContext.request.contextPath}/assets/js/supplier-js.js"></script>
 </body>
 </html>

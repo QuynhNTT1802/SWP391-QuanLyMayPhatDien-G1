@@ -500,7 +500,7 @@
                                     <th style="width: 40px;">#</th>
                                     <th>Dòng máy</th>
                                     <th style="width: 80px;">Số lượng</th>
-                                    <th>Số Serial</th>
+                                    <th>Số serial</th>
                                     <th>Tình trạng</th>
                                     <th>Ghi chú</th>
                                 </tr>

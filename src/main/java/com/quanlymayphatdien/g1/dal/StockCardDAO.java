@@ -11,8 +11,11 @@ import java.sql.SQLException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -672,6 +675,66 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             closeResources();
         }
         return 0;
+    }
+
+    // ===================== BALANCE SNAPSHOT (dùng cho báo cáo tồn kho) =====================
+
+    public Map<String, Integer> getBalanceSnapshot(Integer warehouseId, String beforeDate) {
+        Map<String, Integer> result = new HashMap<>();
+        String sql = "SELECT sc.warehouse_id, sc.generator_id, sc.quantity_after"
+                + " FROM stock_card sc"
+                + " INNER JOIN ("
+                + "  SELECT warehouse_id, generator_id, MAX(stock_card_id) AS max_id"
+                + "  FROM stock_card"
+                + "  WHERE created_at < ?"
+                + (warehouseId != null ? " AND warehouse_id = ?" : "")
+                + "  GROUP BY warehouse_id, generator_id"
+                + " ) latest ON sc.stock_card_id = latest.max_id";
+        List<Object> params = new ArrayList<>();
+        params.add(beforeDate);
+        if (warehouseId != null) params.add(warehouseId);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getInt("warehouse_id") + "_" + resultSet.getInt("generator_id");
+                result.put(key, resultSet.getInt("quantity_after"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return result;
+    }
+
+    public Set<String> getDistinctWhGenBefore(Integer warehouseId, String beforeDate) {
+        Set<String> result = new HashSet<>();
+        String sql = "SELECT DISTINCT warehouse_id, generator_id FROM stock_card WHERE created_at < ?"
+                + (warehouseId != null ? " AND warehouse_id = ?" : "");
+        List<Object> params = new ArrayList<>();
+        params.add(beforeDate);
+        if (warehouseId != null) params.add(warehouseId);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                result.add(resultSet.getInt("warehouse_id") + "_" + resultSet.getInt("generator_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return result;
     }
 
     // ===================== END BÁO CÁO THẺ KHO =====================

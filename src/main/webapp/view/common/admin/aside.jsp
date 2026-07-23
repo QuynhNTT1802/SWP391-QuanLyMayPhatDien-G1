@@ -1,4 +1,4 @@
-
+﻿
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -35,7 +35,7 @@
             <c:when test="${not empty sidebarUser.roles and not empty sidebarUser.roles[0]}">
                 ${sidebarUser.roles[0].description}
             </c:when>
-            <c:otherwise>User</c:otherwise>
+            <c:otherwise>Người dùng</c:otherwise>
         </c:choose>
     </c:set>
 </c:if>
@@ -56,7 +56,7 @@
             </a>
         </c:if>
 
-        <c:if test="${not empty perms and (perms.contains('inventory.view') or perms.contains('stock_card.view'))}">
+        <c:if test="${not empty perms and perms.contains('inventory.view')}">
             <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
                 Kho
@@ -67,12 +67,6 @@
                     <a href="${pageContext.request.contextPath}/inventory">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
                         Tồn kho
-                    </a>
-                </c:if>
-                <c:if test="${not empty perms and perms.contains('stock_card.view')}">
-                    <a href="${pageContext.request.contextPath}/stock-card">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>
-                        Thẻ kho
                     </a>
                 </c:if>
             </div>
@@ -153,47 +147,8 @@
     <c:if test="${not empty perms and perms.contains('liquidations.view')}">
         <a href="${pageContext.request.contextPath}/liquidations">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-
             Thanh lý
         </a>
-    </c:if>
-
-    <c:if test="${not empty perms and (perms.contains('liquidations.approve_ceo') or perms.contains('receipts.view') or perms.contains('inventory.view') or perms.contains('stock_card.view'))}">
-        <div class="nav-parent ${activePage == 'liquidation-report' or activePage == 'receipt-report' or activePage == 'inventory-report' or activePage == 'stock-card-report' ? 'open' : ''}" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Báo cáo
-            <span class="arrow"></span>
-        </div>
-        <div class="nav-children ${activePage == 'liquidation-report' or activePage == 'receipt-report' or activePage == 'inventory-report' or activePage == 'stock-card-report' ? 'open' : ''}">
-            <c:if test="${not empty perms and perms.contains('receipts.view')}">
-                <a href="${pageContext.request.contextPath}/receipts/report?type=IMPORT" class="${activePage == 'receipt-report' and param.type == 'IMPORT' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                    Báo cáo nhập kho
-                </a>
-                <a href="${pageContext.request.contextPath}/receipts/report?type=EXPORT" class="${activePage == 'receipt-report' and param.type == 'EXPORT' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
-                    Báo cáo xuất kho
-                </a>
-            </c:if>
-            <c:if test="${not empty perms and perms.contains('inventory.view')}">
-                <a href="${pageContext.request.contextPath}/inventory/report" class="${activePage == 'inventory-report' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
-                    Báo cáo tồn kho
-                </a>
-            </c:if>
-            <c:if test="${not empty perms and perms.contains('stock_card.view')}">
-                <a href="${pageContext.request.contextPath}/stock-card/report" class="${activePage == 'stock-card-report' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                    Báo cáo thẻ kho
-                </a>
-            </c:if>
-            <c:if test="${not empty perms and perms.contains('liquidations.approve_ceo')}">
-                <a href="${pageContext.request.contextPath}/liquidations/report" class="${activePage == 'liquidation-report' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                    Báo cáo thanh lý
-                </a>
-            </c:if>
-        </div>
     </c:if>
 
     <c:if test="${not empty perms and perms.contains('transfers.view')}">
@@ -210,7 +165,50 @@
         </a>
     </c:if>
 
-
+        <c:if test="${not empty perms and (perms.contains('reports.view') or perms.contains('liquidations.approve_ceo'))}">
+            <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Báo cáo
+                <span class="arrow"></span>
+            </div>
+            <div class="nav-children">
+                <c:if test="${not empty perms and perms.contains('reports.view')}">
+                <a href="${pageContext.request.contextPath}/reports?type=inventory" class="${activePage == 'report-inventory' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+                    Xuất nhập tồn
+                </a>
+                <a href="${pageContext.request.contextPath}/reports?type=import" class="${activePage == 'report-import' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    Nhập
+                </a>
+                <a href="${pageContext.request.contextPath}/reports?type=export" class="${activePage == 'report-export' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
+                    Xuất
+                </a>
+                <a href="${pageContext.request.contextPath}/reports?type=inventory-check" class="${activePage == 'report-inventory-check' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+                    Kiểm kê
+                </a>
+                <a href="${pageContext.request.contextPath}/reports?type=purchase" class="${activePage == 'report-purchase' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>
+                    Mua
+                </a>
+                <a href="${pageContext.request.contextPath}/reports?type=sales" class="${activePage == 'report-sales' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Bán
+                </a>
+                </c:if>
+                <c:if test="${not empty perms and perms.contains('liquidations.approve_ceo')}">
+                <a href="${pageContext.request.contextPath}/liquidations/report" class="${activePage == 'liquidation-report' ? 'active' : ''}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    Thanh lý
+                </a>
+                </c:if>
+            </div>
+        </c:if>
+        
     <div class="nav-section">Quản trị</div>
 
 

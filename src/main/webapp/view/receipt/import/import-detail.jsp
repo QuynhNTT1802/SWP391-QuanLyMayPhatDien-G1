@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -8,7 +8,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Chi tiết phiếu nhập — Warehouse OS</title>
+        <title>Chi tiết phiếu nhập - Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -73,16 +73,6 @@
                                     <span class="pdot"></span>${statusLabel}
                                 </span>
                             </h1>
-                            <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);">
-                                <span><strong style="color:var(--fg);">Kho:</strong> <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></span>
-                                <span><strong style="color:var(--fg);">Người tạo:</strong> <c:out value="${receipt.createdByName}"/></span>
-                                <c:if test="${not empty receipt.approvedByName}">
-                                    <span><strong style="color:var(--fg);">Người duyệt:</strong> <c:out value="${receipt.approvedByName}"/></span>
-                                </c:if>
-                                <c:if test="${not empty receipt.createdAt}">
-                                    <span><strong style="color:var(--fg);">Ngày tạo:</strong> ${receipt.createdAt}</span>
-                                </c:if>
-                            </div>
                         </div>
                     </div>
 
@@ -141,20 +131,20 @@
                                     </div>
                                     <button type="submit" class="btn btn-primary">
                                         <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                                        Áp dụng
+                                    Áp dụng
                                     </button>
                                     <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
                                         <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history" class="btn">
                                             <svg class="icon" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                                            Xóa lọc
+                                        Xóa lọc
                                         </a>
                                     </c:if>
                                 </form>
 
                                 <div class="result-summary">
-                                    Tìm thấy <strong>${totalLogs}</strong> bản ghi
+                                Tìm thấy <strong>${totalLogs}</strong> bản ghi
                                     <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
-                                        &nbsp;—&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
+                                    &nbsp;·&nbsp;<span class="filter-active-badge">Bộ lọc đang hoạt động</span>
                                     </c:if>
                                 </div>
 
@@ -173,9 +163,9 @@
                                                     <div class="icon-wrap">
                                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                                     </div>
-                                                    <strong>Không có bản ghi nào</strong>
+                                        <strong>Không có bản ghi nào</strong>
                                                     <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
-                                                        <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history">xóa lọc</a></span>
+                                        <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${receipt.receiptId}&amp;tab=history">xóa lọc</a></span>
                                                     </c:if>
                                                 </div>
                                             </td></tr>
@@ -197,11 +187,11 @@
                                                             <c:otherwise>default</c:otherwise>
                                                         </c:choose>">
                                                         <c:choose>
-                                                            <c:when test="${log.action == 'CREATE'}">Tạo phiếu</c:when>
-                                                            <c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when>
-                                                            <c:when test="${log.action == 'APPROVE'}">Duyệt</c:when>
-                                                            <c:when test="${log.action == 'REJECT'}">Từ chối</c:when>
-                                                            <c:when test="${log.action == 'REVISION'}">Yêu cầu sửa</c:when>
+<c:when test="${log.action == 'CREATE'}">Tạo phiếu</c:when>
+<c:when test="${log.action == 'UPDATE'}">Cập nhật</c:when>
+<c:when test="${log.action == 'APPROVE'}">Duyệt</c:when>
+<c:when test="${log.action == 'REJECT'}">Từ chối</c:when>
+<c:when test="${log.action == 'REVISION'}">Yêu cầu sửa</c:when>
                                                             <c:otherwise>${log.action}</c:otherwise>
                                                         </c:choose></span>
                                                     </td>
@@ -253,7 +243,7 @@
                                     </div>
                                     <c:if test="${not empty receipt.purchaseOrderCode}">
                                         <div class="info-field">
-                                            <div class="info-label">Phiếu mua nguồn</div>
+                                        <div class="info-label">Phiếu mua nguồn</div>
                                             <div class="info-value mono">
                                                 <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${receipt.purchaseOrderId}">
                                                     <c:out value="${receipt.purchaseOrderCode}"/>
@@ -277,14 +267,14 @@
                                     </c:if>
                                     <c:if test="${not empty receipt.approvedAt}">
                                         <div class="info-field">
-                                            <div class="info-label">Ngày duyệt</div>
+                                        <div class="info-label">Ngày duyệt</div>
                                             <div class="info-value mono">${receipt.approvedAt}</div>
                                         </div>
                                     </c:if>
                                     <c:if test="${not empty receipt.reasonName}">
                                         <div class="info-field">
-                                            <div class="info-label">Lý do</div>
-                                            <div class="info-value"><c:out value="${receipt.reasonName}"/><c:if test="${not empty receipt.reasonNote}"> — <c:out value="${receipt.reasonNote}"/></c:if></div>
+                                        <div class="info-label">Lý do</div>
+                                        <div class="info-value"><c:out value="${receipt.reasonName}"/><c:if test="${not empty receipt.reasonNote}"> · <c:out value="${receipt.reasonNote}"/></c:if></div>
                                         </div>
                                     </c:if>
                                     <div class="info-field">
@@ -306,22 +296,22 @@
 
                             <div class="table-card history-card" style="margin-top: 18px;">
                                 <div class="result-summary" style="display:flex;align-items:center;justify-content:space-between;">
-                                    <span>Danh sách máy phát điện (<strong>${not empty receipt.details ? fn:length(receipt.details) : 0}</strong> dòng)</span>
+                                <span>Danh sách máy phát điện (<strong>${not empty receipt.details ? fn:length(receipt.details) : 0}</strong> dòng)</span>
                                 </div>
                                 <table class="product-table">
                                     <thead>
                                         <tr>
                                             <th style="width: 40px;">#</th>
-                                            <th>Máy phát / Hãng</th>
+                                        <th>Máy phát / Hãng</th>
                                             <th>Serial</th>
-                                            <th>Tình trạng</th>
-                                            <th>Ghi chú</th>
+                                        <th>Tình trạng</th>
+                                        <th>Ghi chú</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <c:choose>
                                             <c:when test="${empty receipt.details}">
-                                                <tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
+<tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--muted);">Chưa có dòng hàng nào trong phiếu.</td></tr>
                                             </c:when>
                                             <c:otherwise>
                                                 <c:forEach var="d" items="${receipt.details}" varStatus="st">
@@ -335,9 +325,9 @@
                                                         <td>
                                                             <c:choose>
                                                                 <c:when test="${d.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>
-                                                                <c:when test="${d.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
+<c:when test="${d.condition == 'POOR'}"><span class="cond-badge cond-poor">Kém</span></c:when>
                                                                 <c:when test="${d.condition == 'DAMAGED'}"><span class="cond-badge cond-damaged">Hỏng</span></c:when>
-                                                                <c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
+<c:otherwise><span class="cond-badge cond-none">Chưa kiểm kê</span></c:otherwise>
                                                             </c:choose>
                                                         </td>
                                                         <td><c:out value="${d.note}"/></td>

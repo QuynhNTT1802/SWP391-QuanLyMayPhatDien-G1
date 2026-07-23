@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : generator-edit
     Created on : May 23, 2026
     Author     : Admin
@@ -92,15 +92,6 @@
                                         <select class="select" name="originId">
                                             <option value="">-- Chọn xuất xứ --</option>
                                             <c:forEach var="c" items="${origins}">
-                                                <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tình trạng</label>
-                                        <select class="select" name="conditionId">
-                                            <option value="">-- Chọn tình trạng --</option>
-                                            <c:forEach var="c" items="${conditions}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
                                             </c:forEach>
                                         </select>

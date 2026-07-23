@@ -15,7 +15,6 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -112,19 +111,9 @@ public class InventoryCheckController extends HttpServlet {
 
     private void viewList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-
         String search = request.getParameter("search");
         String whParam = request.getParameter("warehouseId");
         Integer warehouseId = (whParam != null && !whParam.isEmpty()) ? Integer.parseInt(whParam) : null;
-        if (scopedWarehouseId > 0) {
-            if (warehouseId != null && warehouseId != scopedWarehouseId) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-            warehouseId = scopedWarehouseId;
-        }
         String status = request.getParameter("status");
 
         int page = 1;
@@ -149,16 +138,7 @@ public class InventoryCheckController extends HttpServlet {
         int toIndex = Math.min(page * pageSize, totalItems);
 
         request.setAttribute("checkList", list);
-        if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
-            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
-            if (scoped != null) {
-                request.setAttribute("scopedWarehouseName", scoped.getName());
-            }
-        } else {
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-        }
+        request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("search", search);
         request.setAttribute("selectedWarehouse", warehouseId);
         request.setAttribute("selectedStatus", status);
@@ -176,32 +156,13 @@ public class InventoryCheckController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-
         String warehouseIdParam = request.getParameter("warehouseId");
         Integer warehouseId = null;
         if (warehouseIdParam != null && !warehouseIdParam.isEmpty()) {
             warehouseId = Integer.parseInt(warehouseIdParam);
         }
-        if (scopedWarehouseId > 0) {
-            if (warehouseId != null && warehouseId != scopedWarehouseId) {
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-            warehouseId = scopedWarehouseId;
-        }
 
-        if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
-            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
-            if (scoped != null) {
-                request.setAttribute("scopedWarehouseName", scoped.getName());
-            }
-        } else {
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-        }
+        request.setAttribute("warehouses", warehouseDAO.findAll());
 
         if (warehouseId != null) {
             request.setAttribute("selectedWarehouse", warehouseId);
@@ -251,12 +212,6 @@ public class InventoryCheckController extends HttpServlet {
             request.getRequestDispatcher("/view/inventory-check/inventory-check-detail.jsp").forward(request, response);
             return;
         }
-        HttpSession session = request.getSession(false);
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-        if (scopedWarehouseId > 0 && check.getWarehouseId() != scopedWarehouseId) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
         List<InventoryCheckDetail> details = checkDAO.findDetailsByCheckId(id);
         List<ActivityLog> logs = activityLogDAO.findByEntityTypeAndId("inventory_check", id, 1, 100);
         int totalLogs = activityLogDAO.countByEntityTypeAndId("inventory_check", id);
@@ -296,12 +251,6 @@ public class InventoryCheckController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/inventory-check");
             return;
         }
-        HttpSession session = request.getSession(false);
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
-        if (scopedWarehouseId > 0 && check.getWarehouseId() != scopedWarehouseId) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
         if (!"doing".equals(check.getStatus())) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
@@ -325,7 +274,6 @@ public class InventoryCheckController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
-        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
 
         String whParam = request.getParameter("warehouseId");
         String notes = request.getParameter("notes");
@@ -337,9 +285,6 @@ public class InventoryCheckController extends HttpServlet {
         try {
             warehouseId = Integer.parseInt(whParam);
             if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
-            if (scopedWarehouseId > 0 && warehouseId > 0 && warehouseId != scopedWarehouseId) {
-                errors.add("Bạn chỉ được phép tạo phiếu kiểm kê cho kho của mình");
-            }
         } catch (NumberFormatException e) {
             errors.add("Kho không hợp lệ");
         }
@@ -463,7 +408,7 @@ public class InventoryCheckController extends HttpServlet {
             }
             boolean serialsOk = checkDAO.updateSerialsBatch(serials);
             if (!serialsOk) {
-                session.setAttribute("error", "Có lỗi khi lưu tình trạng serial, vui lòng thử lại");
+                session.setAttribute("error", "Có lỗi khi lưu tình trạng số serial, vui lòng thử lại");
                 response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
                 return;
             }
@@ -512,13 +457,13 @@ public class InventoryCheckController extends HttpServlet {
         int nullStatusCount = checkDAO.countNullStatusByCheckId(checkId);
         if (nullStatusCount < 0) {
             session.setAttribute("error",
-                    "Không thể hoàn thành: lỗi khi kiểm tra trạng thái serial, vui lòng thử lại");
+                    "Không thể hoàn thành: lỗi khi kiểm tra trạng thái số serial, vui lòng thử lại");
             response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
             return;
         }
         if (nullStatusCount > 0) {
             session.setAttribute("error",
-                    "Không thể hoàn thành: còn " + nullStatusCount + " serial chưa được đánh giá tình trạng (Tốt/Kém/Hỏng)");
+                    "Không thể hoàn thành: còn " + nullStatusCount + " số serial chưa được đánh giá tình trạng (Tốt/Kém/Hỏng)");
             response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
             return;
         }
@@ -569,34 +514,16 @@ public class InventoryCheckController extends HttpServlet {
 
     private void exportReport(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        String detailIdStr = request.getParameter("detailId");
         String fromDateStr = request.getParameter("fromDate");
         String toDateStr = request.getParameter("toDate");
 
-        if (detailIdStr == null || detailIdStr.isEmpty()) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        int checkId = Integer.parseInt(request.getParameter("checkId"));
+        List<InventoryCheckDetail> allDetails = checkDAO.findDetailsByCheckId(checkId);
+
+        if (allDetails == null || allDetails.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Không có dữ liệu kiểm kê");
             return;
         }
-        int detailId = Integer.parseInt(detailIdStr);
-
-        InventoryCheckDetail detail = null;
-        List<InventoryCheckDetail> allDetails = checkDAO.findDetailsByCheckId(
-                Integer.parseInt(request.getParameter("checkId")));
-        for (InventoryCheckDetail d : allDetails) {
-            if (d.getId() == detailId) {
-                detail = d;
-                break;
-            }
-        }
-
-        if (detail == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
-        }
-
-        List<StockCard> stockCards = stockCardDAO.findByWarehouseAndGenerator(
-                Integer.parseInt(request.getParameter("warehouseId")),
-                detail.getGeneratorId());
 
         LocalDate fromDate = (fromDateStr != null && !fromDateStr.isEmpty())
                 ? LocalDate.parse(fromDateStr) : null;
@@ -611,17 +538,26 @@ public class InventoryCheckController extends HttpServlet {
             return;
         }
 
+        int warehouseId = Integer.parseInt(request.getParameter("warehouseId"));
+        String warehouseName = request.getParameter("warehouseName");
+
+        List<InventoryCheckExcelSupport.DetailReportData> reportDataList = new ArrayList<>();
+        for (InventoryCheckDetail detail : allDetails) {
+            List<StockCard> stockCards = stockCardDAO.findByWarehouseAndGenerator(
+                    warehouseId, detail.getGeneratorId());
+            reportDataList.add(new InventoryCheckExcelSupport.DetailReportData(detail.getGeneratorModel(), stockCards));
+        }
+
         XSSFWorkbook workbook = InventoryCheckExcelSupport.exportReport(
-                detail.getGeneratorModel(),
-                request.getParameter("warehouseName"),
-                fromDate, toDate, stockCards);
+                warehouseName, fromDate, toDate, reportDataList);
 
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition",
-                "attachment; filename=BaoCaoKiemKe_" + detail.getGeneratorModel() + ".xlsx");
+                "attachment; filename=BaoCaoKiemKe_" + checkId + ".xlsx");
         try (OutputStream out = response.getOutputStream()) {
             workbook.write(out);
         }
         workbook.close();
     }
+
 }

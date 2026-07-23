@@ -1,4 +1,4 @@
-<%@ page contentType="text/html" pageEncoding="UTF-8" %>
+﻿<%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -27,7 +27,7 @@
                         <h1>Tạo đề xuất</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Đề xuất nhập kho</a> / Tạo mới</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -91,7 +91,7 @@
                                         <div class="cust-trigger-wrap">
                                             <button type="button" class="cust-trigger" id="custTrigger"
                                                     onclick="openCustomerPanel()" aria-haspopup="dialog">
-                                                <span class="cust-trigger-label" id="custTriggerLabel">-- Click để chọn nhà cung cấp --</span>
+                                                <span class="cust-trigger-label" id="custTriggerLabel">-- Nhấp để chọn nhà cung cấp --</span>
                                                 <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                                 </svg>
@@ -142,7 +142,7 @@
                                         </a>
                                         <button type="button" class="btn btn-sm" onclick="triggerImportExcel()">
                                             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                            Import Excel
+                                            Nhập từ Excel
                                         </button>
                                     </div>
                                 </div>
@@ -239,11 +239,11 @@
                     <h3>Thêm máy phát mới</h3>
                     <button type="button" class="modal-close" onclick="closeNewGeneratorModal()">&times;</button>
                 </div>
-                <p class="modal-sub">Máy phát sẽ được thêm vào dropdown của mọi dòng bên dưới.</p>
+                <p class="modal-sub">Máy phát sẽ được thêm vào danh sách chọn của mọi dòng bên dưới.</p>
                 <div class="modal-error" id="genModalError"></div>
                 <div class="modal-grid">
                     <div>
-                        <label class="field-label">Mã máy phát (model) <span class="req">*</span></label>
+                        <label class="field-label">Mã máy phát (mẫu máy) <span class="req">*</span></label>
                         <input class="input" id="ngModel" placeholder="VD: Honda EU22i" />
                     </div>
                     <div>
@@ -408,7 +408,7 @@ MSG.SAVE_SUP = 'Lưu NCC';
 MSG.ERR = 'Lỗi';
 MSG.CONN_ERR = 'Lỗi kết nối';
 MSG.EXIST_GEN_PREFIX = 'Mã "';
-MSG.EXIST_GEN_SUFFIX = '" đã có — đã thêm vào dropdown.';
+MSG.EXIST_GEN_SUFFIX = '" đã có — đã thêm vào danh sách chọn.';
 MSG.ADDED_GEN_PREFIX = 'Đã thêm máy phát "';
 MSG.ADDED_GEN_SUFFIX = '"';
 MSG.EXIST_SUP_PREFIX = 'SĐT đã có NCC: ';

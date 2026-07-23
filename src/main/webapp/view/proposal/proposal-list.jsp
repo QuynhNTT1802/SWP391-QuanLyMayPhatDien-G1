@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%
@@ -30,7 +30,7 @@
                     <h1>Đề xuất nhập kho</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Kinh doanh</a> / Đề xuất nhập kho</span>
 <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -61,8 +61,8 @@
 
                     <div class="stats-row">
                         <div class="stat"><div class="lbl">Chờ duyệt</div><div class="val">${pendingCount}</div></div>
-                        <div class="stat"><div class="lbl">Đã duyệt bởi Sale Manager</div><div class="val">${approvedCount}</div></div>
-                        <div class="stat"><div class="lbl">Từ chối bởi Sale Manager</div><div class="val">${rejectedCount}</div></div>
+                        <div class="stat"><div class="lbl">Đã duyệt bởi Quản lý Bán hàng</div><div class="val">${approvedCount}</div></div>
+                        <div class="stat"><div class="lbl">Từ chối bởi Quản lý Bán hàng</div><div class="val">${rejectedCount}</div></div>
                         <div class="stat"><div class="lbl">Đã hủy</div><div class="val">${cancelledCount}</div></div>
                     </div>
 
@@ -90,9 +90,9 @@
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="PENDING"   <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="PENDING_CEO" <c:if test="${statusFilter == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
-                            <option value="APPROVED_SM" <c:if test="${statusFilter == 'APPROVED_SM'}">selected</c:if>>Đã duyệt bởi Sale Manager</option>
+                            <option value="APPROVED_SM" <c:if test="${statusFilter == 'APPROVED_SM'}">selected</c:if>>Đã duyệt bởi Quản lý Bán hàng</option>
                             <option value="APPROVED_CEO" <c:if test="${statusFilter == 'APPROVED_CEO'}">selected</c:if>>Đã duyệt bởi CEO</option>
-                            <option value="REJECTED_SM" <c:if test="${statusFilter == 'REJECTED_SM'}">selected</c:if>>Từ chối bởi Sale Manager</option>
+                            <option value="REJECTED_SM" <c:if test="${statusFilter == 'REJECTED_SM'}">selected</c:if>>Từ chối bởi Quản lý Bán hàng</option>
                             <option value="REJECTED_CEO" <c:if test="${statusFilter == 'REJECTED_CEO'}">selected</c:if>>Từ chối bởi CEO</option>
                             <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
                             <option value="DELETED" <c:if test="${statusFilter == 'DELETED'}">selected</c:if>>Đã xoá</option>
@@ -118,7 +118,7 @@
                                 <th>Ngày tạo</th>
                                 <th>Tháng</th>
                                 <th>Kho</th>
-                                <th>Deadline</th>
+                                <th>Hạn chót</th>
                                 <th>Phiếu mua</th>
                                 <th class="col-status">Trạng thái</th>
 
@@ -162,10 +162,10 @@
                                                             <c:set var="deadlineStr" value="${deadlineDate.toString()}" />
                                                             <c:choose>
                                                                 <c:when test="${deadlineDate.isBefore(currentDate)}">
-                                                                    <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--danger); font-weight:600;" title="Đã quá deadline">${deadlineStr}</span>
+                                                                    <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--danger); font-weight:600;" title="Đã quá hạn">${deadlineStr}</span>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);" title="Deadline gom/duyệt">${deadlineStr}</span>
+                                                                    <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);" title="Hạn chót gom/duyệt">${deadlineStr}</span>
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </c:otherwise>
@@ -189,9 +189,9 @@
                                                         <c:when test="${p.status == 'PENDING'}"><span class="status-pill status-pending"><span class="pdot"></span>Chờ duyệt</span></c:when>
                                                         <c:when test="${p.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo"><span class="pdot"></span>Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${p.status == 'APPROVED' and not empty p.purchaseOrderId}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt bởi CEO</span></c:when>
-                                                        <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt bởi Sale Manager</span></c:when>
+                                                        <c:when test="${p.status == 'APPROVED'}"><span class="status-pill status-approved"><span class="pdot"></span>Đã duyệt bởi Quản lý Bán hàng</span></c:when>
                                                         <c:when test="${p.status == 'REJECTED' and not empty p.purchaseOrderId}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối bởi CEO</span></c:when>
-                                                        <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối bởi Sale Manager</span></c:when>
+                                                        <c:when test="${p.status == 'REJECTED'}"><span class="status-pill status-rejected"><span class="pdot"></span>Từ chối bởi Quản lý Bán hàng</span></c:when>
                                                         <c:when test="${p.status == 'NEEDS_REVISION'}"><span class="status-pill status-revision"><span class="pdot"></span>Cần chỉnh sửa</span></c:when>
                                                         <c:when test="${p.status == 'CANCELLED'}"><span class="status-pill status-cancelled"><span class="pdot"></span>Đã hủy</span></c:when>
                                                         <c:when test="${p.status == 'DELETED'}"><span class="status-pill status-deleted"><span class="pdot"></span>Đã xoá</span></c:when>

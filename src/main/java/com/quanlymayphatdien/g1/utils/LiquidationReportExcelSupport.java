@@ -74,7 +74,7 @@ public class LiquidationReportExcelSupport {
         String wh = warehouseName != null && !warehouseName.isEmpty() ? warehouseName : "Tất cả kho";
 
         String[] headers = {"STT", "Mã đơn", "Ngày thanh lý", "Kho", "Lý do",
-                "Serial Number", "Model", "Giá nhập (VNĐ)", "Giá thanh lý (VNĐ)", "Chênh lệch (VNĐ)",
+                "Serial", "Model", "Giá nhập (VNĐ)", "Giá thanh lý (VNĐ)", "Chênh lệch (VNĐ)",
                 "Khách hàng", "Người duyệt"};
 
         XSSFSheet sheet = wb.createSheet("Báo cáo thanh lý chi tiết");

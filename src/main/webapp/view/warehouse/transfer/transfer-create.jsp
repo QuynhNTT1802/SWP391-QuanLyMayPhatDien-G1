@@ -179,7 +179,7 @@
                                 <select class="input" name="destWarehouseId" id="destWarehouseId" required onchange="onDestWarehouseChange()">
                                     <option value="">-- Chọn kho đích --</option>
                                     <c:forEach var="w" items="${warehouses}">
-                                        <option value="${w.warehouseId}"><c:out value="${w.name}"/></option>
+                                        <option value="${w.warehouseId}" data-warehouse-name="<c:out value='${w.name}'/>"><c:out value="${w.name}"/></option>
                                     </c:forEach>
                                 </select>
                             </div>
@@ -205,10 +205,6 @@
                             <h3 class="form-section-title">Số lượng từng dòng máy cần chuyển</h3>
                         </div>
 
-                        <div class="alert-info">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                            <span>Mỗi dòng chỉ cần chọn dòng máy và số lượng. <strong>Số serial cụ thể sẽ được quét khi tạo phiếu xuất</strong> sau khi CEO duyệt phiếu đề xuất này.</span>
-                        </div>
 
                         <table class="detail-table">
                             <thead>
@@ -224,11 +220,19 @@
                                 <tr>
                                     <td class="col-num"><span class="row-num">1</span></td>
                                     <td>
-                                        <select class="serial-select generator-select" name="generatorId" required id="genSelect0" onchange="onGeneratorChange(this)">
-                                            <option value="">-- Chọn dòng máy --</option>
-                                            <c:forEach var="g" items="${generators}">
-                                                <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> (c\u1ecbn <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
-                                            </c:forEach>
+                                        <select class="serial-select generator-select" name="generatorId" required id="genSelect0" onchange="onGeneratorChange(this)"
+                                                <c:if test="${empty defaultSourceWarehouseId}">disabled</c:if>>
+                                            <c:choose>
+                                                <c:when test="${empty defaultSourceWarehouseId}">
+                                                    <option value="">-- Chọn kho nguồn trước --</option>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <option value="">-- Chọn dòng máy --</option>
+                                                    <c:forEach var="g" items="${generators}">
+                                                        <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> ( <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
+                                                    </c:forEach>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </select>
                                     </td>
                                     <td>
@@ -261,10 +265,17 @@
 </div>
 
 <select id="genOptionsTpl" style="display:none">
-    <option value="">-- Chọn dòng máy --</option>
-    <c:forEach var="g" items="${generators}">
-        <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> (c\u1ecbn <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
-    </c:forEach>
+    <c:choose>
+        <c:when test="${empty defaultSourceWarehouseId}">
+            <option value="">-- Chọn kho nguồn trước --</option>
+        </c:when>
+        <c:otherwise>
+            <option value="">-- Chọn dòng máy --</option>
+            <c:forEach var="g" items="${generators}">
+                <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"><c:out value="${g.model}"/> (còn <c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
+            </c:forEach>
+        </c:otherwise>
+    </c:choose>
 </select>
 
 <script>
@@ -285,23 +296,24 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         for (var i = 0; i < items.length; i++) {
             var g = items[i];
             var qty = g.q != null ? g.q : 0;
-            html += '<option value="' + g.id + '" data-stock="' + qty + '">' + escapeHtml(g.m) + ' (c\u1ecbn ' + qty + ' m\u00e1y)</option>';
+            html += '<option value="' + g.id + '" data-stock="' + qty + '">' + escapeHtml(g.m) + ' (còn ' + qty + ' máy)</option>';
         }
         return html;
     }
 
     function getWarehouseGenerators(whId) {
         if (!whId) {
-            var data0 = window.WAREHOUSE_DATA || {};
-            return data0[0] || [];
+            return [];
         }
         var data = window.WAREHOUSE_DATA || {};
-        return data[whId] || data[String(whId)] || data[0] || [];
+        return data[whId] || data[String(whId)] || [];
     }
 
     function repopulateGeneratorSelects(whId) {
         var items = getWarehouseGenerators(whId);
-        var html = buildOptionsHtml(items);
+        var html = whId
+            ? buildOptionsHtml(items)
+            : '<option value="">-- Chọn kho nguồn trước --</option>';
         var tpl = document.getElementById('genOptionsTpl');
         if (tpl) {
             tpl.innerHTML = html;
@@ -311,6 +323,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
             var sel = selects[i];
             var prev = sel.value;
             sel.innerHTML = html;
+            sel.disabled = !whId;
             if (prev) {
                 var stillExists = false;
                 for (var j = 0; j < sel.options.length; j++) {
@@ -391,9 +404,10 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
             selOptions = '<option value="">-- Chọn dòng máy --</option>';
         }
         var tr = document.createElement('tr');
+        var selectDisabled = src ? '' : ' disabled';
         tr.innerHTML = ''
             + '<td class="col-num"><span class="row-num"></span></td>'
-            + '<td><select class="serial-select generator-select" name="generatorId" required onchange="onGeneratorChange(this)">'
+            + '<td><select class="serial-select generator-select" name="generatorId" required onchange="onGeneratorChange(this)"' + selectDisabled + '>'
             + selOptions
             + '</select></td>'
             + '<td><input type="number" name="quantity" min="1" max="100000" value="1" required class="qty-input" oninput="onQuantityChange(this)" /></td>'
@@ -432,7 +446,44 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
     function onSourceWarehouseChange() {
         var src = document.getElementById('sourceWarehouseId').value;
         repopulateGeneratorSelects(src);
+        filterDestWarehouseOptions(src);
         validatePairRealtime();
+    }
+
+    function filterDestWarehouseOptions(srcId) {
+        var destSel = document.getElementById('destWarehouseId');
+        if (!destSel) return;
+        var prev = destSel.value;
+        var srcText = '';
+        for (var i = 0; i < destSel.options.length; i++) {
+            var opt = destSel.options[i];
+            if (opt.value === srcId) {
+                srcText = opt.getAttribute('data-warehouse-name') || opt.textContent;
+                opt.disabled = true;
+                opt.hidden = true;
+            } else {
+                opt.disabled = false;
+                opt.hidden = false;
+            }
+        }
+        if (prev && prev === srcId) {
+            destSel.value = '';
+        } else if (prev) {
+            destSel.value = prev;
+        }
+        if (srcId && srcText) {
+            var hint = destSel.parentNode.querySelector('.dest-hint');
+            if (!hint) {
+                hint = document.createElement('small');
+                hint.className = 'dest-hint';
+                hint.style.color = 'var(--muted)';
+                hint.style.fontSize = '11.5px';
+                destSel.parentNode.appendChild(hint);
+            }
+        } else {
+            var hint = destSel.parentNode.querySelector('.dest-hint');
+            if (hint) hint.remove();
+        }
     }
 
     function onDestWarehouseChange() {
@@ -484,9 +535,8 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         renumberRows();
         document.querySelectorAll('#detailBody tr').forEach(updateRowMax);
         var initialSrc = document.getElementById('sourceWarehouseId').value;
-        if (initialSrc) {
-            repopulateGeneratorSelects(initialSrc);
-        }
+        repopulateGeneratorSelects(initialSrc);
+        filterDestWarehouseOptions(initialSrc);
         validatePairRealtime();
     });
 })();

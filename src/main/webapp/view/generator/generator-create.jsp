@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : generator-create
     Created on : May 23, 2026
     Author     : Admin
@@ -61,8 +61,6 @@
 
                     <div class="form-layout">
                         <form class="form-card" method="post" action="${pageContext.request.contextPath}/warehouse/generators?action=create">
-                            <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}'/>" />
-                            <input type="hidden" name="rowStt" value="<c:out value='${rowStt}'/>" />
 
                             <div class="form-section">
                                 <div class="form-section-head">
@@ -72,8 +70,7 @@
                                 <div class="form-grid">
                                     <div class="field">
                                         <label class="field-label">Mẫu máy <span class="req">*</span></label>
-                                        <c:set var="_modelValue" value="${empty sessionScope.fieldModel ? prefillModel : sessionScope.fieldModel}" />
-                                        <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value='${_modelValue}'/>" required />
+                                        <input class="input" name="model" placeholder="VD: GX-5000" value="<c:out value="${sessionScope.fieldModel}"/>" required />
                                     </div>
                                     <div class="field">
                                         <label class="field-label">Thương hiệu <span class="req">*</span></label>
@@ -99,15 +96,6 @@
                                             <option value="">-- Chọn xuất xứ --</option>
                                             <c:forEach var="c" items="${origins}">
                                                 <option value="${c.id}" <c:if test="${sessionScope.fieldOriginId == c.id}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tình trạng</label>
-                                        <select class="select" name="conditionId">
-                                            <option value="">-- Chọn tình trạng --</option>
-                                            <c:forEach var="c" items="${conditions}">
-                                                <option value="${c.id}" <c:if test="${sessionScope.fieldConditionId == c.id}">selected</c:if>>${c.name}</option>
                                             </c:forEach>
                                         </select>
                                     </div>
@@ -190,7 +178,6 @@
         <c:remove var="fieldBrandId" scope="session"/>
         <c:remove var="fieldGenTypeId" scope="session"/>
         <c:remove var="fieldOriginId" scope="session"/>
-        <c:remove var="fieldConditionId" scope="session"/>
         <c:remove var="fieldPrice" scope="session"/>
         <c:remove var="fieldDesc" scope="session"/>
         <c:remove var="fieldPower" scope="session"/>

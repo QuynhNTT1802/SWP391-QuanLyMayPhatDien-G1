@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -73,16 +73,6 @@
                                     <span class="pdot"></span>${statusLabel}
                                 </span>
                             </h1>
-                            <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);">
-                                <span><strong style="color:var(--fg);">Kho:</strong> <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${receipt.warehouseId}"><c:out value="${receipt.warehouseName}"/></a></span>
-                                <span><strong style="color:var(--fg);">Người tạo:</strong> <c:out value="${receipt.createdByName}"/></span>
-                                <c:if test="${not empty receipt.approvedByName}">
-                                    <span><strong style="color:var(--fg);">Người duyệt:</strong> <c:out value="${receipt.approvedByName}"/></span>
-                                </c:if>
-                                <c:if test="${not empty receipt.createdAt}">
-                                    <span><strong style="color:var(--fg);">Ngày tạo:</strong> ${receipt.createdAt}</span>
-                                </c:if>
-                            </div>
                         </div>
                     </div>
 

@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%
@@ -11,7 +11,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Quản lý phiếu mua — Warehouse OS</title>
+        <title>Quản lý phiếu mua · Warehouse OS</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -27,10 +27,10 @@
 
             <div>
                 <header class="topbar">
-                    <h1>Phiếu mua</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/purchase-order">Kinh doanh</a> / Phiếu mua</span>
+                        <h1>Phiếu mua</h1>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/purchase-order">Kinh doanh</a> / Phiếu mua</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi theme">
+                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                         </button>
@@ -39,15 +39,23 @@
                 </header>
 
                 <main>
+                    <c:set var="perms" value="${sessionScope.userPermissions}"/>
+                    <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
+
                     <div class="page-head">
                         <div class="left">
                             <div class="eyebrow">Kinh doanh · Phiếu mua</div>
                             <h2 class="page-title">Danh sách phiếu mua</h2>
                             <div class="page-sub">${totalPOs} phiếu mua</div>
                         </div>
-                        <c:set var="perms" value="${sessionScope.userPermissions}"/>
-                        <c:set var="canCreatePo" value="${perms.contains('purchase_orders.create')}"/>
-                        
+                        <div class="right">
+                            <c:if test="${canCreatePo}">
+                                <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=list">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                    Tạo phiếu mua
+                                </a>
+                            </c:if>
+                        </div>
                     </div>
 
                     <script>
@@ -66,46 +74,50 @@
                         <input type="hidden" name="action" value="list" />
 
                         <input type="date" class="filter-select" name="dateFrom" value="${dateFrom}"
-                               title="Từ ngày" onchange="this.form.submit()" />
+                        title="Từ ngày" onchange="this.form.submit()" />
                         <input type="date" class="filter-select" name="dateTo" value="${dateTo}"
-                               title="Đến ngày" onchange="this.form.submit()" />
+                        title="Đến ngày" onchange="this.form.submit()" />
 
                         <select class="filter-select" name="warehouseId" onchange="this.form.submit()">
-                            <option value="">Kho: Tất cả</option>
+                        <option value="">Kho: Tất cả</option>
                             <c:forEach var="w" items="${warehouses}">
                                 <option value="${w.warehouseId}" <c:if test="${warehouseId == w.warehouseId}">selected</c:if>>${w.name}</option>
                             </c:forEach>
                         </select>
 
                         <select class="filter-select" name="status" onchange="this.form.submit()">
-                            <option value="">Trạng thái: Tất cả</option>
+                        <option value="">Trạng thái: Tất cả</option>
 
-                            <%-- Sale Staff (chỉ có view): thấy trạng thái cuối, KHÔNG có Chờ CEO duyệt --%>
+                        <%-- Sale Staff (chỉ có view): thấy trạng thái cuối, KHÔNG có Chờ CEO duyệt --%>
                             <c:if test="${perms.contains('purchase_orders.view') and !perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
-                            <%-- CEO (chỉ có approve): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa --%>
+                        <%-- CEO (chỉ có approve): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa --%>
                             <c:if test="${perms.contains('purchase_orders.approve') and !perms.contains('purchase_orders.create')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                             </c:if>
 
-                            <%-- Sale Manager (có create + view): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa, Đã hủy --%>
+                        <%-- Quản lý Bán hàng (có create + view): thấy Chờ CEO, Đã duyệt, Từ chối, Cần chỉnh sửa, Đã hủy --%>
                             <c:if test="${perms.contains('purchase_orders.create') and !perms.contains('purchase_orders.approve')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
 
-                            <%-- Có cả create + approve (admin/PM): thấy tất cả status --%>
+                        <%-- Có cả create + approve (admin/PM): thấy tất cả status --%>
                             <c:if test="${perms.contains('purchase_orders.approve') and perms.contains('purchase_orders.create')}">
                                 <option value="PENDING_CEO" <c:if test="${status == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
                                 <option value="APPROVED" <c:if test="${status == 'APPROVED'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                                <option value="COMPLETED" <c:if test="${status == 'COMPLETED'}">selected</c:if>>Hoàn thành</option>
                                 <option value="REJECTED" <c:if test="${status == 'REJECTED'}">selected</c:if>>Từ chối bởi CEO</option>
                                 <option value="CANCELLED" <c:if test="${status == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             </c:if>
@@ -126,7 +138,7 @@
                                     <th>Kho</th>
                                     <th>Người tạo</th>
                                     <th>Ngày tạo</th>
-                                    <th>SL đề xuất</th>
+                                    <th>SL dự xuất</th>
                                     <th class="col-status">Trạng thái</th>
                                     
                                 </tr>
@@ -134,7 +146,7 @@
                             <tbody>
                                 <c:choose>
                                     <c:when test="${empty purchaseOrders}">
-                                        <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu mua nào.</td></tr>
+                                    <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Chưa có phiếu mua nào.</td></tr>
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="po" items="${purchaseOrders}">
@@ -149,6 +161,7 @@
                                                     <c:choose>
                                                         <c:when test="${po.status == 'PENDING_CEO'}"><span class="status-pill status-pending_ceo">Chờ CEO duyệt</span></c:when>
                                                         <c:when test="${po.status == 'APPROVED'}"><span class="status-pill status-approved">Đã duyệt bởi CEO</span></c:when>
+                                                        <c:when test="${po.status == 'COMPLETED'}"><span class="status-pill status-completed">Hoàn thành</span></c:when>
                                                         <c:when test="${po.status == 'REJECTED'}"><span class="status-pill status-rejected">Từ chối bởi CEO</span></c:when>
                                                         <c:when test="${po.status == 'CANCELLED'}"><span class="status-pill status-cancelled">Đã hủy</span></c:when>
                                                         <c:otherwise><span class="status-pill"><c:out value="${po.status}"/></span></c:otherwise>

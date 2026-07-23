@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : forgotpass
     Created on : May 15, 2026, 11:16:34 PM
     Author     : FPTShop
@@ -111,7 +111,7 @@
                             Nhớ mật khẩu rồi? <a href="authen?action=login">Đăng nhập</a>
                         </div>
                         <div class="form-bottom">
-                            <a href="auth-gallery.html">Xem tất cả màn auth</a>
+                            <a href="auth-gallery.html">Xem tất cả màn hình xác thực</a>
                             <span>
                                 <a href="#">Liên hệ hỗ trợ</a>
                                 <span class="dot-sep">·</span>

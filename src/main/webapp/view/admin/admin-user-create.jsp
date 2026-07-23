@@ -108,7 +108,7 @@
                                 </div>
                                 <div class="form-grid single">
                                     <div class="field">
-                                        <label class="field-label">Vai tro <span class="req">*</span></label>
+                                        <label class="field-label">Vai trò <span class="req">*</span></label>
                                         <div class="role-grid">
                                             <c:forEach var="role" items="${allRoles}">
                                                 <c:if test="${role.status == 'active'}">
@@ -144,7 +144,7 @@
                                 <div class="form-section-head">
                                     <div class="form-section-num">03 — KHO PHỤ TRÁCH</div>
                                     <h3 class="form-section-title">Phân kho làm việc</h3>
-                                    <div class="form-section-desc">Chỉ áp dụng cho nhân viên kho / quản lý kho. Để trống nếu chưa phân công (user sẽ thấy danh sách rỗng cho đến khi được gán kho).</div>
+                                    <div class="form-section-desc">Chỉ áp dụng cho nhân viên kho / quản lý kho. Để trống nếu chưa phân công (người dùng sẽ thấy danh sách rỗng cho đến khi được gán kho).</div>
                                 </div>
                                 <div class="form-grid single">
                                     <div class="field">
