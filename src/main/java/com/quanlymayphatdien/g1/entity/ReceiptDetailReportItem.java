@@ -3,6 +3,7 @@ package com.quanlymayphatdien.g1.entity;
 import java.time.LocalDateTime;
 
 public class ReceiptDetailReportItem {
+    private int receiptId;
     private String receiptCode;
     private LocalDateTime createdAt;
     private String warehouseName;
@@ -10,9 +11,14 @@ public class ReceiptDetailReportItem {
     private String serialNumber;
     private String createdByName;
     private String status;
+    private Integer purchaseOrderId;
     private String purchaseOrderCode;
     private String customerName;
+    private Integer orderId;
     private String orderCode;
+
+    public int getReceiptId() { return receiptId; }
+    public void setReceiptId(int receiptId) { this.receiptId = receiptId; }
 
     public String getReceiptCode() { return receiptCode; }
     public void setReceiptCode(String receiptCode) { this.receiptCode = receiptCode; }
@@ -35,11 +41,17 @@ public class ReceiptDetailReportItem {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public Integer getPurchaseOrderId() { return purchaseOrderId; }
+    public void setPurchaseOrderId(Integer purchaseOrderId) { this.purchaseOrderId = purchaseOrderId; }
+
     public String getPurchaseOrderCode() { return purchaseOrderCode; }
     public void setPurchaseOrderCode(String purchaseOrderCode) { this.purchaseOrderCode = purchaseOrderCode; }
 
     public String getCustomerName() { return customerName; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
+
+    public Integer getOrderId() { return orderId; }
+    public void setOrderId(Integer orderId) { this.orderId = orderId; }
 
     public String getOrderCode() { return orderCode; }
     public void setOrderCode(String orderCode) { this.orderCode = orderCode; }

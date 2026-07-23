@@ -178,8 +178,8 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.serialNumber}"/></td>
                                     <td><c:out value="${r.model}"/></td>
-                                    <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><c:out value="${r.purchaseOrderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${r.receiptId}" class="code-link"><c:out value="${r.receiptCode}"/></a></td>
+                                    <td><c:choose><c:when test="${not empty r.purchaseOrderId}"><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="code-link"><c:out value="${r.purchaseOrderCode}"/></a></c:when><c:otherwise><c:out value="${r.purchaseOrderCode}"/></c:otherwise></c:choose></td>
                                     <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <td><c:out value="${r.createdByName}"/></td>
@@ -212,8 +212,8 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.serialNumber}"/></td>
                                     <td><c:out value="${r.model}"/></td>
-                                    <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><c:out value="${r.orderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${r.receiptId}" class="code-link"><c:out value="${r.receiptCode}"/></a></td>
+                                    <td><c:choose><c:when test="${not empty r.orderId}"><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${r.orderId}" class="code-link"><c:out value="${r.orderCode}"/></a></c:when><c:otherwise><c:out value="${r.orderCode}"/></c:otherwise></c:choose></td>
                                     <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <td><c:out value="${r.createdByName}"/></td>
@@ -239,14 +239,13 @@
                                 <th>SL thực tế</th>
                                 <th>Chênh lệch</th>
                                 <th>Người tạo</th>
-                                <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="item" items="${checkItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${item.checkCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/inventory-check?action=detail&id=${item.checkId}" class="code-link"><c:out value="${item.checkCode}"/></a></td>
                                     <td><c:out value="${item.warehouseName}"/></td>
                                     <td>${item.generatorId}</td>
                                     <td><c:out value="${item.generatorModel}"/></td>
@@ -254,15 +253,10 @@
                                     <td class="num">${item.actualQuantity}</td>
                                     <td class="num ${item.discrepancy != 0 ? 'text-danger' : ''}">${item.discrepancy}</td>
                                     <td><c:out value="${item.createdByName}"/></td>
-                                    <td>
-                                        <span class="status-badge ${item.status == 'completed' ? 'status-completed' : 'status-doing'}">
-                                            ${item.status == 'completed' ? 'Hoàn thành' : 'Đang kiểm kê'}
-                                        </span>
-                                    </td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty checkItems}">
-                                <tr><td colspan="10" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
