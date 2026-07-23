@@ -22,6 +22,8 @@
       .summary-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; }
       .summary-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 6px; }
       .summary-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+      .code-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+      .code-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -156,13 +158,12 @@
                     </table>
                 </c:when>
 
-                <%-- NHẬP KHO (chi tiết serial) --%>
                 <c:when test="${reportType == 'import'}">
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Số máy</th>
+                                <th>Máy</th>
                                 <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn mua</th>
@@ -196,7 +197,7 @@
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>số máy</th>
+                                <th>Máy</th>
                                 <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn hàng</th>
@@ -285,39 +286,31 @@
                                 <th>STT</th>
                                 <th>Mã phiếu</th>
                                 <th>Kho</th>
-                                <th>Kỳ</th>
+                                <th>Nhà cung cấp</th>
                                 <th>Số lượng</th>
+                                <th>Tổng tiền</th>
                                 <th>Người tạo</th>
                                 <th>Ngày tạo</th>
-                                <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="po" items="${poItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${po.poCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}" class="code-link"><c:out value="${po.poCode}"/></a></td>
                                     <td><c:out value="${po.warehouseName}"/></td>
-                                    <td><c:out value="${po.period}"/></td>
+                                    <td><c:out value="${not empty po.supplierName ? po.supplierName : '—'}"/></td>
                                     <td class="num">${po.totalQuantity}</td>
+                                    <td class="num"><fmt:formatNumber value="${po.totalAmount}" pattern="#,##0"/> ₫</td>
                                     <td><c:out value="${po.createdByName}"/></td>
                                     <td>${po.createdAt.format(rptFmt)}</td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(po.status)}">
-                                        <c:choose>
-                                            <c:when test="${po.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                            <c:when test="${po.status == 'PENDING'}">Chờ duyệt</c:when>
-                                            <c:when test="${po.status == 'CANCELLED'}">Đã hủy</c:when>
-                                            <c:when test="${po.status == 'DRAFT'}">Bản nháp</c:when>
-                                            <c:otherwise><c:out value="${po.status}"/></c:otherwise>
-                                        </c:choose>
-                                    </span></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty poItems}">
                                 <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
-              </table>
+                    </table>
                 </c:when>
 
                 <c:when test="${reportType == 'sales'}">
@@ -338,34 +331,24 @@
                                 <th>STT</th>
                                 <th>Mã đơn</th>
                                 <th>Ngày đặt</th>
-                                <th>Khách hàng</th>
                                 <th>Tổng tiền</th>
                                 <th>Người tạo</th>
-                                <th>Trạng thái</th>
+                                <th>Khách hàng</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="so" items="${saleItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${so.orderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${so.orderId}" class="code-link"><c:out value="${so.orderCode}"/></a></td>
                                     <td><fmt:formatDate value="${so.orderDate}" pattern="dd/MM/yyyy"/></td>
-                                    <td><c:out value="${so.customer.name}"/></td>
                                     <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/></td>
                                     <td><c:out value="${so.createdByName}"/></td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(so.status)}">
-                                        <c:choose>
-                                            <c:when test="${so.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                            <c:when test="${so.status == 'PENDING'}">Chờ duyệt</c:when>
-                                            <c:when test="${so.status == 'CANCELLED'}">Đã hủy</c:when>
-                                            <c:when test="${so.status == 'APPROVED'}">Đã duyệt</c:when>
-                                            <c:otherwise><c:out value="${so.status}"/></c:otherwise>
-                                        </c:choose>
-                                    </span></td>
+                                    <td><c:out value="${so.customer.name}"/></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty saleItems}">
-                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
