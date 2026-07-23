@@ -18,6 +18,11 @@ public class ReceiptDetail {
     private String generatorModel;
     private String generatorBrand;
     private String condition;
+    private String generatorPower;
+    private String generatorFreq;
+    private String generatorWeight;
+    private String generatorStatus;
+    private String generatorName;
 
     public ReceiptDetail() {
     }
@@ -92,5 +97,45 @@ public class ReceiptDetail {
 
     public void setCondition(String condition) {
         this.condition = condition;
+    }
+
+    public String getGeneratorPower() {
+        return generatorPower;
+    }
+
+    public void setGeneratorPower(String generatorPower) {
+        this.generatorPower = generatorPower;
+    }
+
+    public String getGeneratorFreq() {
+        return generatorFreq;
+    }
+
+    public void setGeneratorFreq(String generatorFreq) {
+        this.generatorFreq = generatorFreq;
+    }
+
+    public String getGeneratorWeight() {
+        return generatorWeight;
+    }
+
+    public void setGeneratorWeight(String generatorWeight) {
+        this.generatorWeight = generatorWeight;
+    }
+
+    public String getGeneratorStatus() {
+        return generatorStatus;
+    }
+
+    public void setGeneratorStatus(String generatorStatus) {
+        this.generatorStatus = generatorStatus;
+    }
+
+    public String getGeneratorName() {
+        return generatorName;
+    }
+
+    public void setGeneratorName(String generatorName) {
+        this.generatorName = generatorName;
     }
 }
