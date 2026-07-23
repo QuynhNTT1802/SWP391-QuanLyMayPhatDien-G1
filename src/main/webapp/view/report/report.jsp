@@ -34,7 +34,7 @@
         <div class="page-head">
             <h2>
                 <c:choose>
-                    <c:when test="${reportType == 'inventory'}">Báo cáo tồn kho</c:when>
+                    <c:when test="${reportType == 'inventory'}">Báo cáo xuất nhập tồn</c:when>
                     <c:when test="${reportType == 'import'}">Báo cáo nhập kho</c:when>
                     <c:when test="${reportType == 'export'}">Báo cáo xuất kho</c:when>
                     <c:when test="${reportType == 'inventory-check'}">Báo cáo kiểm kê</c:when>
@@ -76,7 +76,7 @@
 
                 <div class="filter-group">
                     <label>Tìm kiếm</label>
-                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, model, serial..."
+                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, tên máy, serial..."
                            style="width:220px;">
                 </div>
 
@@ -101,11 +101,23 @@
                 <c:when test="${reportType == 'inventory'}">
                     <div class="summary-cards">
                         <div class="summary-card">
-                            <div class="summary-label">Tổng model</div>
+                            <div class="summary-label">Tổng mẫu máy</div>
                             <div class="summary-value">${summary.totalModels}</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Tổng serial tồn kho</div>
+                            <div class="summary-label">Tồn đầu kì</div>
+                            <div class="summary-value"><fmt:formatNumber value="${summary.totalOpen}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Nhập trong kì</div>
+                            <div class="summary-value" style="color:var(--accent)"><fmt:formatNumber value="${summary.totalImport}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Xuất trong kì</div>
+                            <div class="summary-value" style="color:var(--info)"><fmt:formatNumber value="${summary.totalExport}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Tồn cuối kì</div>
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalSerials}" pattern="#,##0"/></div>
                         </div>
                     </div>
@@ -114,10 +126,12 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Kho</th>
-                                <th>Mã máy</th>
-                                <th>Model</th>
+                                <th>Số máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Thương hiệu</th>
                                 <th>Tồn đầu kì</th>
+                                <th>Nhập</th>
+                                <th>Xuất</th>
                                 <th>Tồn cuối kì</th>
                             </tr>
                         </thead>
@@ -130,11 +144,13 @@
                                     <td><c:out value="${item.model}"/></td>
                                     <td><c:out value="${item.brand}"/></td>
                                     <td class="num">${item.openQuantity}</td>
+                                    <td class="num" style="color:var(--accent)">${item.importQuantity}</td>
+                                    <td class="num" style="color:var(--info)">${item.exportQuantity}</td>
                                     <td class="num">${item.closeQuantity}</td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty inventoryItems}">
-                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
@@ -146,8 +162,8 @@
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Serial</th>
-                                <th>Model</th>
+                                <th>Số máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn mua</th>
                                 <th>Ngày</th>
@@ -175,14 +191,13 @@
                     </table>
                 </c:when>
 
-                <%-- XUẤT KHO (chi tiết serial) --%>
                 <c:when test="${reportType == 'export'}">
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Serial</th>
-                                <th>Model</th>
+                                <th>số máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn hàng</th>
                                 <th>Ngày</th>
@@ -217,8 +232,8 @@
                                 <th>STT</th>
                                 <th>Mã phiếu</th>
                                 <th>Kho</th>
-                                <th>Mã máy</th>
-                                <th>Model</th>
+                                <th>Số máy</th>
+                                <th>Mẫu máy</th>
                                 <th>SL hệ thống</th>
                                 <th>SL thực tế</th>
                                 <th>Chênh lệch</th>
@@ -259,7 +274,7 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Model mua nhiều nhất</div>
+                            <div class="summary-label">Mẫu máy mua nhiều nhất</div>
                             <div class="summary-value"><c:out value="${summary.topModel}"/></div>
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
@@ -302,7 +317,7 @@
                                 <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
-   git pull ỏiig                 </table>
+              </table>
                 </c:when>
 
                 <c:when test="${reportType == 'sales'}">
@@ -312,7 +327,7 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Model bán nhiều nhất</div>
+                            <div class="summary-label">Máy bán nhiều nhất</div>
                             <div class="summary-value"><c:out value="${summary.topModel}"/></div>
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>

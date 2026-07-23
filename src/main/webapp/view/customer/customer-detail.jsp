@@ -82,52 +82,57 @@
                 </div>
 
                 <div class="tab-panel active" id="tab-info">
-                    <div class="info-grid">
-                        <div class="info-field">
-                            <div class="info-label">Tên khách hàng</div>
-                            <div class="info-value"><c:out value="${customer.name}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Số điện thoại</div>
-                            <div class="info-value mono"><c:out value="${customer.phone}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Email</div>
-                            <div class="info-value"><c:out value="${not empty customer.email ? customer.email : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Địa chỉ</div>
-                            <div class="info-value"><c:out value="${not empty customer.address ? customer.address : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Loại khách hàng</div>
-                            <div class="info-value"><c:out value="${customerTypeName}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Tên công ty</div>
-                            <div class="info-value"><c:out value="${not empty customer.companyName ? customer.companyName : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Trạng thái</div>
-                            <div class="info-value">
-                                <c:choose>
-                                    <c:when test="${customer.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                    <c:when test="${customer.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
-                                </c:choose>
+                    <div class="section">
+                        <div class="section-body">
+                            <div class="form-grid cols-5">
+                                <div class="info-field">
+                                    <label>Tên khách hàng</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${customer.name}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Số điện thoại</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${customer.phone}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Email</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty customer.email ? customer.email : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Loại khách hàng</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${customerTypeName}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Trạng thái</label>
+                                    <input class="info-input" type="text" disabled value="${customer.status == 'active' ? 'Đang hoạt động' : (customer.status == 'locked' ? 'Bị khóa' : '')}">
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Ngày tạo</div>
-                            <div class="info-value mono"><c:out value="${createdDate}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Cập nhật cuối</div>
-                            <div class="info-value mono"><c:out value="${updatedDate}"/></div>
+                            <div class="form-grid cols-5" style="margin-top:14px;">
+                                <div class="info-field">
+                                    <label>Tên công ty</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty customer.companyName ? customer.companyName : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Địa chỉ</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty customer.address ? customer.address : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Ngày tạo</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${createdDate}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Cập nhật cuối</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${updatedDate}'/>">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-panel" id="tab-orders">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="font-size:15px;font-weight:700;margin:0;">Đơn hàng</h3>
+                        <a href="${pageContext.request.contextPath}/order" class="btn" style="font-size:12px;">Xem tất cả →</a>
+                    </div>
                     <c:if test="${empty customerOrders}">
                         <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Khách hàng chưa có đơn hàng nào.</div>
                     </c:if>
