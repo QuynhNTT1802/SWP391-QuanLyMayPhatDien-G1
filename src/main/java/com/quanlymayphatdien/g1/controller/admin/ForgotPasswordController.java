@@ -10,8 +10,7 @@ import com.quanlymayphatdien.g1.entity.Admin;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -115,8 +114,7 @@ public class ForgotPasswordController extends HttpServlet {
                 session.setAttribute("error", "Không thể cập nhật yêu cầu. Vui lòng thử lại.");
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.AUTH, "ForgotPasswordController",
-                "Lỗi khi cấp lại mật khẩu cho requestId=" + requestIdStr + ": " + e.getMessage(), e);
+            e.printStackTrace();
             session.setAttribute("error", "Lỗi hệ thống khi cấp mật khẩu: " + e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/forgot-password");

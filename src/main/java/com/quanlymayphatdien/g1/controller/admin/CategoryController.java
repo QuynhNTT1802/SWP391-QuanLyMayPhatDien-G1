@@ -9,8 +9,7 @@ import com.quanlymayphatdien.g1.dal.CategoryDAO;
 import com.quanlymayphatdien.g1.dal.CategoryExtensionDAO;
 import com.quanlymayphatdien.g1.entity.*;
 import com.quanlymayphatdien.g1.utils.CategoryExcelSupport;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -83,8 +82,7 @@ public class CategoryController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.CATEGORY, "CategoryController",
-                    "Lỗi xử lý GET " + action + ": " + e.getMessage(), e);
+            e.printStackTrace();
             throw new ServletException(e);
         }
     }
@@ -104,8 +102,7 @@ public class CategoryController extends HttpServlet {
                 importCategoryConfirm(request, response);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.CATEGORY, "CategoryController",
-                    "Lỗi xử lý POST " + action + ": " + e.getMessage(), e);
+            e.printStackTrace();
             throw new ServletException(e);
         }
     }
@@ -347,7 +344,7 @@ public class CategoryController extends HttpServlet {
                     request.setAttribute("activeTab", "history".equals(activeTab) ? "history" : "info");
                 }
             } catch (Exception e) {
-                SystemLogger.error(LogModule.CATEGORY, "CategoryController.viewCategoryEdit", e.getMessage(), e);
+                e.printStackTrace();
             }
         }
 
@@ -504,7 +501,7 @@ public class CategoryController extends HttpServlet {
                     logDelete(request, id, c.getName(), c.getType(), c.getStatus(), c.getModule());
                 }
             } catch (Exception e) {
-                SystemLogger.error(LogModule.CATEGORY, "CategoryController.deleteCategory", e.getMessage(), e);
+                e.printStackTrace();
             }
         }
 
@@ -638,7 +635,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, name, "CREATE", description);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.SYSTEM, "CategoryController.logCreate", e.getMessage(), e);
+            e.printStackTrace();
         }
     }
 
@@ -775,7 +772,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, newCategory.getName(), "UPDATE", desc.toString());
         } catch (Exception e) {
-            SystemLogger.error(LogModule.SYSTEM, "CategoryController.logUpdate", e.getMessage(), e);
+            e.printStackTrace();
         }
     }
 
@@ -797,7 +794,7 @@ public class CategoryController extends HttpServlet {
 
             insertLog(user, entityId, name, "DELETE", description);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.SYSTEM, "CategoryController.logDelete", e.getMessage(), e);
+            e.printStackTrace();
         }
     }
 

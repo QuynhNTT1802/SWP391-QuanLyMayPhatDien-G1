@@ -1,10 +1,9 @@
-/*
+﻿/*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -95,7 +94,7 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -116,7 +115,7 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
                 return getFromResultSet(resultSet);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -137,7 +136,7 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
             statement.setInt(6, w.getWarehouseId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

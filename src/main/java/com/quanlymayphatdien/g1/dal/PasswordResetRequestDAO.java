@@ -1,10 +1,9 @@
-/*
+﻿/*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.PasswordResetRequest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -232,7 +231,7 @@ public class PasswordResetRequestDAO extends DBContext implements I_DAO<Password
             statement.setInt(5, req.getId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

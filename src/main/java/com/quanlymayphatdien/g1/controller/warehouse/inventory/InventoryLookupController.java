@@ -2,7 +2,7 @@ package com.quanlymayphatdien.g1.controller.warehouse.inventory;
 
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
+
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -61,7 +61,7 @@ public class InventoryLookupController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quan ly kho", "InventoryLookupController.doGet", e.getMessage(), e);
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"found\":false,\"message\":\"Lỗi hệ thống\"}");
@@ -100,7 +100,7 @@ public class InventoryLookupController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quan ly kho", "InventoryLookupController.doPost", e.getMessage(), e);
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"found\":false,\"message\":\"Lỗi hệ thống\"}");

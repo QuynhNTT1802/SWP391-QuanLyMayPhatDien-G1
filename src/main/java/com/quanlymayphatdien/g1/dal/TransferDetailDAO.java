@@ -1,6 +1,5 @@
-package com.quanlymayphatdien.g1.dal;
+﻿package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.TransferDetail;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -33,8 +32,7 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -58,8 +56,7 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -74,8 +71,7 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
             statement.setInt(1, transferId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -104,8 +100,7 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
             statement.setInt(5, d.getTransferDetailId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -121,8 +116,7 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
             statement.setInt(1, d.getTransferDetailId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -155,8 +149,7 @@ public class TransferDetailDAO extends DBContext implements I_DAO<TransferDetail
                 return resultSet.getInt(1);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

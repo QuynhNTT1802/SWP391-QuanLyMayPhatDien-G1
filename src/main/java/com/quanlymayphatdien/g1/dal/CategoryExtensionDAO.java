@@ -1,8 +1,6 @@
-package com.quanlymayphatdien.g1.dal;
+﻿package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.*;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,7 +34,7 @@ public class CategoryExtensionDAO extends DBContext {
             }
             statement.executeUpdate();
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -66,7 +64,7 @@ public class CategoryExtensionDAO extends DBContext {
                 result = b;
             }
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -88,7 +86,7 @@ public class CategoryExtensionDAO extends DBContext {
             }
             statement.executeUpdate();
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -113,7 +111,7 @@ public class CategoryExtensionDAO extends DBContext {
                 result = ft;
             }
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -130,7 +128,7 @@ public class CategoryExtensionDAO extends DBContext {
             statement.setString(2, origin.getCountryCode());
             statement.executeUpdate();
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -151,7 +149,7 @@ public class CategoryExtensionDAO extends DBContext {
                 result = o;
             }
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -168,7 +166,7 @@ public class CategoryExtensionDAO extends DBContext {
             statement.setString(2, ct.getTaxType());
             statement.executeUpdate();
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -189,7 +187,7 @@ public class CategoryExtensionDAO extends DBContext {
                 result = ct;
             }
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -206,7 +204,7 @@ public class CategoryExtensionDAO extends DBContext {
             statement.setInt(1, categoryId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -224,7 +222,7 @@ public class CategoryExtensionDAO extends DBContext {
             statement.setInt(1, categoryId);
             statement.executeUpdate();
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -278,7 +276,7 @@ public class CategoryExtensionDAO extends DBContext {
                         map.put(cid, b);
                     }
                 } catch (SQLException e) {
-                    SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                    e.printStackTrace();
                 } finally {
                     closeResources();
                 }
@@ -306,7 +304,7 @@ public class CategoryExtensionDAO extends DBContext {
                         map.put(cid, ft);
                     }
                 } catch (SQLException e) {
-                    SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                    e.printStackTrace();
                 } finally {
                     closeResources();
                 }
@@ -330,7 +328,7 @@ public class CategoryExtensionDAO extends DBContext {
                         map.put(cid, o);
                     }
                 } catch (SQLException e) {
-                    SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                    e.printStackTrace();
                 } finally {
                     closeResources();
                 }
@@ -354,7 +352,7 @@ public class CategoryExtensionDAO extends DBContext {
                         map.put(cid, ct);
                     }
                 } catch (SQLException e) {
-                    SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                    e.printStackTrace();
                 } finally {
                     closeResources();
                 }
