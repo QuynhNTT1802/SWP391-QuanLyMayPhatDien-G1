@@ -77,11 +77,11 @@
                             <thead>
                                 <tr>
                                     <th>Mã phiếu</th>
-                                    <th>Kho ngu?n</th>
+                                    <th>Kho nguồn</th>
                                     <th>Kho đích</th>
-                                    <th>Ngu?i t?o</th>
+                                    <th>Nguời tạo</th>
                                     <th>Ngày tạo</th>
-                                    <th>Chi ti?t</th>
+                                    <th>Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -95,7 +95,7 @@
                                         <td>
                                             <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewTransferDetail(${t.transferId}, '${t.transferCode}', '${pageContext.request.contextPath}/export-receipt?action=create&transferId=${t.transferId}')" title="Xem chi ti?t">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                Xem chi ti?t
+                                                Xem chi tiết
                                             </button>
                                         </td>
                                     </tr>
@@ -151,8 +151,7 @@
                     <thead>
                         <tr>
                             <th>Mẫu máy</th>
-                            <th>S? seri</th>
-                            <th>S? lu?ng</th>
+                            <th>Số luợng</th>
                             <th>Ghi chú</th>
                         </tr>
                     </thead>
@@ -203,7 +202,6 @@ function viewTransferDetail(id, code, createUrl) {
             data.forEach(function(item) {
                 var tr = document.createElement('tr');
                 tr.innerHTML = '<td>' + (item.generatorModel || '') + '</td>'
-                    + '<td>' + (item.serialNumber || '') + '</td>'
                     + '<td>' + item.quantity + '</td>'
                     + '<td>' + (item.note || '') + '</td>';
                 tbody.appendChild(tr);

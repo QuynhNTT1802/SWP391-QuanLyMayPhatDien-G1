@@ -467,13 +467,67 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return null;
     }
 
-    @Override
-    public int insert(Transfer t) {
-        String sql = "INSERT INTO transfer (transfer_code, source_warehouse_id, dest_warehouse_id, "
-                + "status, created_by, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public Transfer findActiveByWarehousePair(int sourceId, int destId) {
+        String sql = "SELECT t.*, "
+                + "  ws.name AS source_warehouse_name, "
+                + "  wd.name AS dest_warehouse_name, "
+                + "  u1.name AS created_by_name "
+                + "FROM transfer t "
+                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
+                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
+                + "LEFT JOIN user u1 ON t.created_by = u1.id "
+                + "WHERE t.source_warehouse_id = ? "
+                + "  AND t.dest_warehouse_id = ? "
+                + "  AND t.status IN ('PENDING_CEO','REQUEST_REVISION') "
+                + "ORDER BY t.created_at DESC LIMIT 1";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, sourceId);
+            statement.setInt(2, destId);
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return getFromResultSet(resultSet);
+            }
+        } catch (SQLException e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return null;
+    }
+
+    @Override
+    public int insert(Transfer t) {
+        String insertSql = "INSERT INTO transfer (transfer_code, source_warehouse_id, dest_warehouse_id, "
+                + "status, created_by, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String checkSql = "SELECT transfer_id FROM transfer "
+                + "WHERE source_warehouse_id = ? AND dest_warehouse_id = ? "
+                + "  AND status IN ('PENDING_CEO','REQUEST_REVISION') "
+                + "LIMIT 1 FOR UPDATE";
+        boolean originalAutoCommit = true;
+        try {
+            connection = getConnection();
+            originalAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+
+            statement = connection.prepareStatement(checkSql);
+            statement.setInt(1, t.getSourceWarehouseId());
+            statement.setInt(2, t.getDestWarehouseId());
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                connection.rollback();
+                return -2;
+            }
+            if (resultSet != null) {
+                resultSet.close();
+                resultSet = null;
+            }
+            statement.close();
+            statement = null;
+
+            statement = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, t.getTransferCode());
             statement.setInt(2, t.getSourceWarehouseId());
             statement.setInt(3, t.getDestWarehouseId());
@@ -489,13 +543,30 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
             if (rows > 0) {
                 resultSet = statement.getGeneratedKeys();
                 if (resultSet.next()) {
-                    return resultSet.getInt(1);
+                    int newId = resultSet.getInt(1);
+                    connection.commit();
+                    return newId;
                 }
             }
+            connection.rollback();
         } catch (SQLException e) {
             com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
                     e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                // ignore
+            }
         } finally {
+            try {
+                if (connection != null) {
+                    connection.setAutoCommit(originalAutoCommit);
+                }
+            } catch (SQLException ex) {
+                // ignore
+            }
             closeResources();
         }
         return -1;

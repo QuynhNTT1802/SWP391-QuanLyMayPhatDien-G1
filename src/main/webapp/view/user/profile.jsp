@@ -540,6 +540,24 @@
                 <% } %>
               </div>
               <% } %>
+              <div style="margin-top:14px; padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); display:flex; align-items:center; gap:12px;">
+                <div style="width:34px; height:34px; border-radius:8px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Kho đang công tác</div>
+                  <% if (request.getAttribute("scopedWarehouseId") != null && ((Integer) request.getAttribute("scopedWarehouseId")) > 0) { %>
+                    <div style="font-size:14px; font-weight:600; color:var(--fg); margin-top:2px;"><%= request.getAttribute("scopedWarehouseName") != null ? request.getAttribute("scopedWarehouseName") : "Kho #" + request.getAttribute("scopedWarehouseId") %></div>
+                    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Bạn chỉ có thể thao tác trên kho được phân công.</div>
+                  <% } else if (request.getAttribute("scopedWarehouseId") != null && ((Integer) request.getAttribute("scopedWarehouseId")) == 0) { %>
+                    <div style="font-size:14px; font-weight:600; color:var(--danger); margin-top:2px;">Chưa được gán kho</div>
+                    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Vai trò của bạn yêu cầu được gán vào một kho cụ thể. Liên hệ quản trị viên.</div>
+                  <% } else { %>
+                    <div style="font-size:14px; font-weight:600; color:var(--fg); margin-top:2px;">Không giới hạn kho</div>
+                    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Bạn có thể thao tác trên tất cả các kho trong hệ thống.</div>
+                  <% } %>
+                </div>
+              </div>
             </div>
           </section>
 
