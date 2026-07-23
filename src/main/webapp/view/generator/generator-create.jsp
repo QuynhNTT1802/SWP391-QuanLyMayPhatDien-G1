@@ -99,15 +99,6 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Tình trạng</label>
-                                        <select class="select" name="conditionId">
-                                            <option value="">-- Chọn tình trạng --</option>
-                                            <c:forEach var="c" items="${conditions}">
-                                                <option value="${c.id}" <c:if test="${sessionScope.fieldConditionId == c.id}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
                                     <div class="field full-width">
                                         <label class="field-label">Mô tả</label>
                                         <textarea class="input" name="description" rows="3" placeholder="Mô tả chi tiết về máy phát điện..."><c:out value="${sessionScope.fieldDesc}"/></textarea>
@@ -187,7 +178,6 @@
         <c:remove var="fieldBrandId" scope="session"/>
         <c:remove var="fieldGenTypeId" scope="session"/>
         <c:remove var="fieldOriginId" scope="session"/>
-        <c:remove var="fieldConditionId" scope="session"/>
         <c:remove var="fieldPrice" scope="session"/>
         <c:remove var="fieldDesc" scope="session"/>
         <c:remove var="fieldPower" scope="session"/>

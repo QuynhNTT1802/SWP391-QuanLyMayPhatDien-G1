@@ -39,15 +39,62 @@ public class InventoryReportDAO extends BaseReportDAO {
 
     public Map<String, Object> getInventorySummary(Integer warehouseId, int month, int year) {
         Map<String, Object> summary = new java.util.HashMap<>();
+        String firstDay = firstDay(month, year);
         String nextDay = nextDay(month, year);
+        Map<String, Integer> openMap = stockCardDAO.getBalanceSnapshot(warehouseId, firstDay);
         Map<String, Integer> closeMap = stockCardDAO.getBalanceSnapshot(warehouseId, nextDay);
-        int totalSerials = closeMap.values().stream().mapToInt(Integer::intValue).sum();
-        summary.put("totalSerials", totalSerials);
+        int totalOpen = openMap.values().stream().mapToInt(Integer::intValue).sum();
+        int totalClose = closeMap.values().stream().mapToInt(Integer::intValue).sum();
+        summary.put("totalOpen", totalOpen);
+        summary.put("totalSerials", totalClose);
         summary.put("totalModels", (int) closeMap.keySet().stream()
                 .map(k -> k.split("_")[1])
                 .distinct()
                 .count());
+
+        int totalImport = 0, totalExport = 0;
+        Map<String, int[]> ieMap = getImportExportMap(warehouseId, month, year);
+        for (int[] ie : ieMap.values()) {
+            totalImport += ie[0];
+            totalExport += ie[1];
+        }
+        summary.put("totalImport", totalImport);
+        summary.put("totalExport", totalExport);
         return summary;
+    }
+
+    private Map<String, int[]> getImportExportMap(Integer warehouseId, int month, int year) {
+        Map<String, int[]> ieMap = new java.util.HashMap<>();
+        List<Object> params = new ArrayList<>();
+        params.add(firstDay(month, year));
+        params.add(nextDay(month, year));
+        String sql = "SELECT warehouse_id, generator_id, transaction_type, SUM(quantity_change) AS total_qty"
+                + " FROM stock_card"
+                + " WHERE created_at >= ? AND created_at < ?"
+                + (warehouseId != null ? " AND warehouse_id = ?" : "")
+                + " GROUP BY warehouse_id, generator_id, transaction_type";
+        if (warehouseId != null) params.add(warehouseId);
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            for (int i = 0; i < params.size(); i++)
+                statement.setObject(i + 1, params.get(i));
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                String key = resultSet.getInt("warehouse_id") + "_" + resultSet.getInt("generator_id");
+                int qty = resultSet.getInt("total_qty");
+                String type = resultSet.getString("transaction_type");
+                int[] ie = ieMap.getOrDefault(key, new int[]{0, 0});
+                if ("IMPORT".equals(type)) ie[0] += qty;
+                else if ("EXPORT".equals(type)) ie[1] += qty;
+                ieMap.put(key, ie);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeResources();
+        }
+        return ieMap;
     }
 
     public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
@@ -64,6 +111,7 @@ public class InventoryReportDAO extends BaseReportDAO {
 
         Map<String, Integer> openMap = stockCardDAO.getBalanceSnapshot(warehouseId, firstDay);
         Map<String, Integer> closeMap = stockCardDAO.getBalanceSnapshot(warehouseId, nextDay);
+        Map<String, int[]> ieMap = getImportExportMap(warehouseId, month, year);
 
         List<Object> params = new ArrayList<>();
         params.add(nextDay);
@@ -96,6 +144,9 @@ public class InventoryReportDAO extends BaseReportDAO {
                 item.setModel(resultSet.getString("model"));
                 item.setBrand(resultSet.getString("brand"));
                 item.setOpenQuantity(openMap.getOrDefault(key, 0));
+                int[] ie = ieMap.getOrDefault(key, new int[]{0, 0});
+                item.setImportQuantity(ie[0]);
+                item.setExportQuantity(ie[1]);
                 item.setCloseQuantity(closeMap.getOrDefault(key, 0));
                 list.add(item);
             }

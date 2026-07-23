@@ -184,6 +184,12 @@ public class SupplierController extends HttpServlet {
                 PurchaseOrderDAO poDAO = new PurchaseOrderDAO();
                 List<PurchaseOrder> purchaseOrders = poDAO.findBySupplierId(id);
                 request.setAttribute("purchaseOrders", purchaseOrders);
+                DateTimeFormatter poFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                List<String> poDates = new ArrayList<>();
+                for (PurchaseOrder po : purchaseOrders) {
+                    poDates.add(po.getCreatedAt() != null ? po.getCreatedAt().format(poFmt) : "—");
+                }
+                request.setAttribute("poDates", poDates);
 
                 request.getRequestDispatcher("/view/supplier/supplier-detail.jsp").forward(request, response);
                 return;
