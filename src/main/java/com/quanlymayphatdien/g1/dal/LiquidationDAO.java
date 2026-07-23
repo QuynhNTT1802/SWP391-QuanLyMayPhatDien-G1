@@ -1,4 +1,4 @@
-﻿package com.quanlymayphatdien.g1.dal;
+package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Liquidation;
 import java.sql.Connection;
