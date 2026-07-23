@@ -259,12 +259,7 @@
                                 </small>
                             </div>
                             </c:if>
-                            <div class="scanner-box" id="importScannerBox">
-                                <div class="scanner-input-wrap">
-                                    <input type="text" id="importScanBox" autocomplete="off"
-                                           placeholder="" />
-                                </div>
-                            </div>
+
                         </div>
 
                         <div class="tab-pane" data-tab="excel">
@@ -467,7 +462,6 @@
             generatorCache = [];
             warn.style.display = 'flex';
             disableAllRows(true);
-            refreshScannerState();
             return;
         }
         warn.style.display = 'none';
@@ -479,7 +473,6 @@
                 refreshAllGeneratorSelects();
                 applyPrefill();
                 applyActiveGeneratorToAllRows();
-                refreshScannerState();
             })
             .catch(function (err) {
                 console.error(err);
@@ -487,7 +480,6 @@
                 refreshAllGeneratorSelects();
                 applyPrefill();
                 applyActiveGeneratorToAllRows();
-                refreshScannerState();
             });
     }
 
@@ -534,7 +526,6 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initImportTabs();
-        refreshScannerState();
         updatePoCounter();
         updateEmptyState();
         if (isTransferImportMode) {
@@ -571,10 +562,7 @@
             }
         });
         if (tabName === 'scan') {
-            setTimeout(function () {
-                var scanEl = document.getElementById('importScanBox');
-                if (scanEl && !scanEl.disabled) scanEl.focus();
-            }, 50);
+            // global scanner không cần focus input
         }
     }
 
@@ -610,7 +598,6 @@
 
     function onActiveGeneratorChange() {
         applyActiveGeneratorToAllRows();
-        refreshScannerState();
     }
 
     function buildEmptyRow() {
@@ -732,7 +719,6 @@
         }
         updateRowNumbers();
         updatePoCounter();
-        refreshScannerState();
     }
 
     function removeGroup(btn) {
@@ -743,7 +729,6 @@
         updateEmptyState();
         updateRowNumbers();
         updatePoCounter();
-        refreshScannerState();
     }
 
     function addRow() {
@@ -920,79 +905,55 @@
 
     // ========== Scanner nhập kho ==========
     var importScannerLock = false;
+    var importScanBuf = '';
+    var importScanLastKey = 0;
+    var IMPORT_SCAN_THRESHOLD = 50;
+    var IMPORT_SCAN_MIN_LEN = 2;
 
     function initImportScanner() {
-        var scanInput = document.getElementById('importScanBox');
-        var scanBox = document.getElementById('importScannerBox');
-        if (!scanInput) return;
+        // Global scanner: bắt mọi keydown ở document, phân biệt scanner (gõ
+        // nhanh < 50ms/char) với người gõ tay (chậm > 100ms). Khi Enter/Tab
+        // xuất hiện và buffer đủ dài → xử lý như scan.
+        document.addEventListener('keydown', function (e) {
+            var now = Date.now();
+            var gap = now - importScanLastKey;
+            importScanLastKey = now;
 
-        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        var genPicker = document.getElementById('activeGeneratorId');
-        refreshScannerState();
-        if (whSelect && whSelect.tagName === 'SELECT') {
-            whSelect.addEventListener('change', refreshScannerState);
-        }
-        if (genPicker) {
-            genPicker.addEventListener('change', refreshScannerState);
-        }
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                importScanBuf = '';
+                return;
+            }
 
-        scanInput.addEventListener('keydown', function (e) {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            if (importScannerLock) return;
-            var serial = scanInput.value.trim();
-            if (!serial) return;
-            handleImportScan(serial);
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                if (importScanBuf.length >= IMPORT_SCAN_MIN_LEN) {
+                    var serial = importScanBuf.trim();
+                    importScanBuf = '';
+                    if (serial && !importScannerLock) {
+                        e.preventDefault();
+                        handleImportScan(serial);
+                    }
+                    return;
+                }
+                importScanBuf = '';
+                return;
+            }
+
+            if (gap > IMPORT_SCAN_THRESHOLD) importScanBuf = '';
+
+            if (e.key && e.key.length === 1 && !e.isComposing) {
+                importScanBuf += e.key;
+            } else if (e.key === 'Backspace' && importScanBuf.length > 0) {
+                importScanBuf = importScanBuf.slice(0, -1);
+            }
         });
 
-        scanInput.addEventListener('input', function () {
-            scanInput.classList.remove('success', 'error');
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) importScanBuf = '';
         });
-
-        setTimeout(function () {
-            if (!scanInput.disabled) scanInput.focus();
-        }, 100);
     }
 
-    function refreshScannerState() {
-        var scanInput = document.getElementById('importScanBox');
-        var scanBox = document.getElementById('importScannerBox');
-        if (!scanInput) return;
-        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        var wh = whSelect ? whSelect.value : '';
-        var isTransferMode = !!document.querySelector('tr.transfer-suggest-row');
-        var genPicker = document.getElementById('activeGeneratorId');
-        var hasGen = !genPicker || !!genPicker.value;
-
-        if (!wh) {
-            scanBox.classList.add('disabled');
-            scanInput.disabled = true;
-            scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
-        } else if (!isTransferImportMode && !isTransferMode && !hasGen) {
-            scanBox.classList.add('disabled');
-            scanInput.disabled = true;
-            scanInput.placeholder = 'Vui lòng chọn mẫu máy phát điện trước khi quét...';
-        } else {
-            scanBox.classList.remove('disabled');
-            scanInput.disabled = false;
-            scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét mã vạch (hoặc gõ tay rồi Enter)...';
-        }
-    }
-
-    function setImportScanStatus(msg, type) {
-        var el = document.getElementById('importScanStatus');
-        if (!el) return;
-        el.textContent = msg;
-        el.classList.remove('success', 'error');
-        if (type) el.classList.add(type);
-    }
-
-    function flashImportScan(type) {
-        var inp = document.getElementById('importScanBox');
-        if (!inp) return;
-        inp.classList.remove('success', 'error');
-        inp.classList.add(type);
-        setTimeout(function () { inp.classList.remove(type); }, 900);
+    function clearScanBuf() {
+        importScanBuf = '';
     }
 
     function flashRowSuccess(row) {
@@ -1015,8 +976,8 @@
         var whId = whSelect ? whSelect.value : '';
         if (!whId) {
             importScannerLock = false;
-            setImportScanStatus('Vui lòng chọn kho trước khi quét.', 'error');
-            flashImportScan('error');
+            toast('Vui lòng chọn kho trước khi quét.', 'danger');
+            clearScanBuf();
             return;
         }
 
@@ -1025,10 +986,8 @@
             if (currentFilled >= expectedRowsJs) {
                 importScannerLock = false;
                 var fullMsg = 'Đã quét đủ ' + expectedRowsJs + ' số serial theo phiếu. Không thể quét thêm.';
-                setImportScanStatus(fullMsg, 'error');
-                flashImportScan('error');
                 toast(fullMsg, 'danger');
-                focusScanBox();
+                clearScanBuf();
                 return;
             }
         }
@@ -1038,10 +997,10 @@
 
         if (!isTransferImportMode && !isTransferMode && !activeInfo) {
             importScannerLock = false;
-            setImportScanStatus('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'error');
-            flashImportScan('error');
+            toast('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'danger');
             var picker = document.getElementById('activeGeneratorId');
             if (picker) picker.focus();
+            clearScanBuf();
             return;
         }
 
@@ -1052,10 +1011,8 @@
         if (dupFound) {
             importScannerLock = false;
             var dupMsg = 'Số serial "' + serial + '" đã tồn tại trong phiếu này.';
-            setImportScanStatus(dupMsg, 'error');
-            flashImportScan('error');
             toast(dupMsg, 'danger');
-            focusScanBox();
+            clearScanBuf();
             return;
         }
 
@@ -1075,18 +1032,14 @@
                         if (isTransferImportMode) {
                             sysMsg = 'Số serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + (data.status || 'unknown') + '), không thể nhập.';
                         }
-                        setImportScanStatus(sysMsg, 'error');
-                        flashImportScan('error');
                         toast(sysMsg, 'danger');
-                        focusScanBox();
+                        clearScanBuf();
                         return;
                     }
                 } else if (isTransferImportMode) {
                     var nfMsg = 'Số serial "' + serial + '" không tồn tại trong hệ thống, không thể nhập từ phiếu luân chuyển.';
-                    setImportScanStatus(nfMsg, 'error');
-                    flashImportScan('error');
                     toast(nfMsg, 'danger');
-                    focusScanBox();
+                    clearScanBuf();
                     return;
                 }
 
@@ -1096,10 +1049,8 @@
                     if (filled >= allowed) {
                         importScannerLock = false;
                         var perGenMsg = 'Đã quét đủ ' + allowed + ' số serial cho mẫu ' + (activeInfo.model || '') + '.';
-                        setImportScanStatus(perGenMsg, 'error');
-                        flashImportScan('error');
                         toast(perGenMsg, 'danger');
-                        focusScanBox();
+                        clearScanBuf();
                         return;
                     }
                 }
@@ -1117,7 +1068,6 @@
                 var targetTr = addRowToGroup(group, serial, '', existingInvId);
                 group.setAttribute('open', '');
                 flashRowSuccess(targetTr);
-                flashImportScan('success');
                 var modelLabel;
                 if (isTransferImportMode && data && data.found) {
                     modelLabel = data.generatorModel || '';
@@ -1125,30 +1075,21 @@
                     modelLabel = activeInfo ? (activeInfo.model || '') : '';
                 }
                 var okMsg = existingInvId
-                        ? ('✓ Đã nhập lại số serial "' + serial + '" (đã bán trước đó) vào kho.')
-                        : ('✓ Đã thêm số serial "' + serial + '" vào mẫu ' + modelLabel + '.');
-                setImportScanStatus(okMsg, 'success');
+                        ? 'Đã nhập lại số serial "' + serial + '" (đã bán trước đó) vào kho'
+                        : 'Đã thêm số serial "' + serial + '" vào mẫu ' + modelLabel;
+                toast(okMsg, 'success');
                 updatePoCounter();
 
-                var scanEl2 = document.getElementById('importScanBox');
-                if (scanEl2) scanEl2.value = '';
-                focusScanBox();
+                clearScanBuf();
             })
             .catch(function (err) {
                 importScannerLock = false;
                 console.error(err);
-                setImportScanStatus('Lỗi kết nối: ' + err.message, 'error');
-                flashImportScan('error');
-                focusScanBox();
+                toast('Lỗi kết nối: ' + err.message, 'danger');
+                clearScanBuf();
             });
     }
 
-    function focusScanBox() {
-        var scanEl = document.getElementById('importScanBox');
-        if (scanEl && !scanEl.disabled) {
-            scanEl.focus();
-        }
-    }
 
     function findPoTargetRow() {
         var rows = document.querySelectorAll('#detailGroups tr');

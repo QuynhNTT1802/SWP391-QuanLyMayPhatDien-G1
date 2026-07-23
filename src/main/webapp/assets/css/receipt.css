@@ -545,64 +545,6 @@
 .stock-info .stock-label { color: var(--muted); }
 .stock-info .stock-value { color: var(--accent); font-weight: 600; }
 
-/* ---------- Scanner box (create) ---------- */
-.scanner-box {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 14px 16px;
-    margin-bottom: 14px;
-    background: var(--accent-soft);
-    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-    border-radius: var(--radius);
-}
-.scanner-box label {
-    font-size: 11px;
-    color: var(--accent);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-}
-.scanner-box .scanner-input-wrap { position: relative; }
-.scanner-box input {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--fg);
-    font-size: 14px;
-    font-family: var(--font-mono);
-    box-sizing: border-box;
-    transition: border-color .15s ease, box-shadow .15s ease;
-}
-.scanner-box input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-}
-.scanner-box input.success {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-}
-.scanner-box input.error {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
-}
-.scanner-box input:disabled {
-    background: var(--surface-2);
-    color: var(--muted);
-    cursor: not-allowed;
-}
-.scanner-box small {
-    color: var(--muted);
-    font-size: 12px;
-    min-height: 16px;
-}
-.scanner-box small.success { color: var(--accent); }
-.scanner-box small.error   { color: var(--danger); }
-.scanner-box.disabled      { opacity: .55; }
-
 /* ---------- Picker mẫu máy phía trên ô quét ---------- */
 .scanner-model-picker {
     display: flex;
@@ -688,17 +630,6 @@
 
 .tab-pane.active {
     display: block;
-}
-
-.scanner-counter {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: var(--surface-2);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
 }
 
 .excel-action-row {
