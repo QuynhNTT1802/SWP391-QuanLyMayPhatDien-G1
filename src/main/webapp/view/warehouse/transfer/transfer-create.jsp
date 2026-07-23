@@ -209,9 +209,6 @@
                                         </option>
                                     </c:forEach>
                                 </select>
-                                <c:if test="${scopedWarehouseId > 0}">
-                                    <small style="color:var(--muted);font-size:11.5px;">Kho của bạn: <c:out value="${scopedWarehouseName}"/></small>
-                                </c:if>
                             </div>
 
                             <div class="form-field">

@@ -105,7 +105,6 @@
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
                         <div>
                             <div style="font-weight: 700; margin-bottom: 4px;">Tạo phiếu xuất từ phiếu đề xuất luân chuyển <c:out value="${transferCode}"/></div>
-                            <div style="font-size: 12.5px;">Quét các serial từ kho nguồn <strong><c:out value="${transfer.sourceWarehouseName}"/></strong>. Khi lưu, phiếu đề xuất sẽ chuyển sang trạng thái <strong>ĐÃ XUẤT</strong> và kho đích sẽ nhận thông báo để tạo phiếu nhập.</div>
                         </div>
                     </div>
                 </c:if>

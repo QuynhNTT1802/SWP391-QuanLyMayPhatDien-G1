@@ -162,7 +162,7 @@
             <div class="empty-state" id="detailEmpty" style="display:none;">Không có chi tiết.</div>
         </div>
         <div class="modal-footer">
-            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">T?o phi?u xu?t</a>
+            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">Tạo phiếu xuất</a>
             <button type="button" class="btn" onclick="closeDetailModal()">Đóng</button>
         </div>
     </div>

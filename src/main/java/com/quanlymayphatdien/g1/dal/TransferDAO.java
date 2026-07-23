@@ -478,7 +478,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "LEFT JOIN user u1 ON t.created_by = u1.id "
                 + "WHERE t.source_warehouse_id = ? "
                 + "  AND t.dest_warehouse_id = ? "
-                + "  AND t.status IN ('PENDING_CEO','REQUEST_REVISION') "
+                + "  AND t.status IN ('PENDING_CEO','REQUEST_REVISION','APPROVED','EXPORTED') "
                 + "ORDER BY t.created_at DESC LIMIT 1";
         try {
             connection = getConnection();
@@ -504,7 +504,7 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
                 + "status, created_by, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         String checkSql = "SELECT transfer_id FROM transfer "
                 + "WHERE source_warehouse_id = ? AND dest_warehouse_id = ? "
-                + "  AND status IN ('PENDING_CEO','REQUEST_REVISION') "
+                + "  AND status IN ('PENDING_CEO','REQUEST_REVISION','APPROVED','EXPORTED') "
                 + "LIMIT 1 FOR UPDATE";
         boolean originalAutoCommit = true;
         try {
