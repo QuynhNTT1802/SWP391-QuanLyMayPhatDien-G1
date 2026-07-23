@@ -1,6 +1,5 @@
-package com.quanlymayphatdien.g1.dal;
+﻿package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.Admin;
 import com.quanlymayphatdien.g1.entity.Role;
 import java.sql.*;
@@ -27,7 +26,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -59,13 +58,13 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -90,13 +89,13 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -152,13 +151,13 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return generatedId;
             } catch (SQLException e) {
                 conn.rollback();
-                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return -1;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return -1;
         }
     }
@@ -218,7 +217,7 @@ public class AdminDAO extends DBContext implements I_DAO<Admin> {
                 return getFromResultSet(resultSet);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

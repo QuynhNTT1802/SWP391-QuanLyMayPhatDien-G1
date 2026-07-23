@@ -1,12 +1,10 @@
-/*
+﻿/*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,7 +41,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-           SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+           e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -76,7 +74,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 return resultSet.getInt(1);
             }
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -114,7 +112,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 list.add(resultSet.getInt("inventory_id"));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -133,7 +131,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                 list.add(resultSet.getInt("inventory_id"));
             }
         } catch (SQLException e) {
-            SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -154,7 +152,7 @@ public class ReceiptDetailDAO extends DBContext implements I_DAO<ReceiptDetail> 
                   return resultSet.getBigDecimal("unit_price");
               }
           } catch(Exception e) {
-              SystemLogger.error(LogModule.SYSTEM, "Lỗi ngoại lệ", e.getMessage() != null? e.getMessage() : e.getClass().getName(),e);
+              e.printStackTrace();
           } finally {
               closeResources();
           }

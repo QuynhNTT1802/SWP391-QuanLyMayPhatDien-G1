@@ -1,6 +1,5 @@
 package com.quanlymayphatdien.g1.filter;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.Filter;
@@ -36,7 +35,6 @@ public class SecurityFilter implements Filter {
 
     private static final List<Rule> RULES = List.of(
             Rule.exact("/admin/dashboard", "dashboard.view"),
-            Rule.exact("/admin/system-log", "system_log.view"),
             Rule.exact("/admin/forgot-password", "forgot_pw.process"),
             Rule.action("/admin/users",
                     Map.of(
@@ -176,8 +174,7 @@ public class SecurityFilter implements Filter {
                 session.setAttribute("userPermissions", freshPerms);
                 req.getServletContext().removeAttribute("perm_refresh_" + userId);
             } catch (SQLException e) {
-                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                        e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
             }
         }
 

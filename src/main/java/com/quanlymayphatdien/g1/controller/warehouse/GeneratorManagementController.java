@@ -7,8 +7,7 @@ import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -115,7 +114,6 @@ public class GeneratorManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                SystemLogger.warn(LogModule.GENERATOR, "GeneratorManagementController.listGenerators", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
@@ -262,7 +260,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Thêm máy phát điện thất bại!");
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.GENERATOR, "GeneratorManagementController.createGenerator", e.getMessage(), e);
+            e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
@@ -353,7 +351,7 @@ public class GeneratorManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Không tìm thấy máy phát điện!");
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.GENERATOR, "GeneratorManagementController.updateGenerator", e.getMessage(), e);
+            e.printStackTrace();
             request.getSession().setAttribute("message", "Lỗi: " + e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/warehouse/generators?action=list");
