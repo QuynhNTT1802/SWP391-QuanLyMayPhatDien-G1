@@ -6,7 +6,11 @@
     int __unread = 0;
     Object __u = session.getAttribute("loggedUser");
     if (__u instanceof User) {
-        __unread = new NotificationDAO().countUnread(((User) __u).getId());
+        try {
+            __unread = new NotificationDAO().countUnread(((User) __u).getId());
+        } catch (Exception e) {
+            __unread = 0;
+        }
     }
     request.setAttribute("__bellUnread", __unread);
 %>
