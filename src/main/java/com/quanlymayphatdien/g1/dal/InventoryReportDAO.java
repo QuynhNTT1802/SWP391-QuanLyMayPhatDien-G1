@@ -86,7 +86,7 @@ public class InventoryReportDAO extends BaseReportDAO {
                 String type = resultSet.getString("transaction_type");
                 int[] ie = ieMap.getOrDefault(key, new int[]{0, 0});
                 if ("IMPORT".equals(type)) ie[0] += qty;
-                else if ("EXPORT".equals(type)) ie[1] += qty;
+                else if ("EXPORT".equals(type)) ie[1] += Math.abs(qty);
                 ieMap.put(key, ie);
             }
         } catch (SQLException e) {
@@ -104,7 +104,7 @@ public class InventoryReportDAO extends BaseReportDAO {
         return queryFlat(
             "SELECT DATE_FORMAT(created_at,'%Y-%m'),"
             + " SUM(CASE WHEN transaction_type='IMPORT' THEN quantity_change ELSE 0 END),"
-            + " SUM(CASE WHEN transaction_type='EXPORT' THEN quantity_change ELSE 0 END)"
+            + " SUM(CASE WHEN transaction_type='EXPORT' THEN -quantity_change ELSE 0 END)"
             + " FROM stock_card WHERE YEAR(created_at)=?"
             + (warehouseId != null ? " AND warehouse_id=?" : "")
             + " GROUP BY 1 ORDER BY 1", p);
