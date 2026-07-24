@@ -2,7 +2,6 @@ package com.quanlymayphatdien.g1.controller.warehouse;
 
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.InventoryCheckDAO;
-import com.quanlymayphatdien.g1.dal.InventoryCheckReportDAO;
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.dal.StockCardDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
@@ -10,7 +9,6 @@ import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.InventoryCheck;
 import com.quanlymayphatdien.g1.entity.InventoryCheckDetail;
-import com.quanlymayphatdien.g1.entity.InventoryCheckReportItem;
 import com.quanlymayphatdien.g1.entity.InventoryCheckSerial;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
@@ -41,7 +39,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class InventoryCheckController extends HttpServlet {
 
     private final InventoryCheckDAO checkDAO = new InventoryCheckDAO();
-    private final InventoryCheckReportDAO checkReportDAO = new InventoryCheckReportDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
     private final InventoryDAO inventoryDAO = new InventoryDAO();
     private final StockCardDAO stockCardDAO = new StockCardDAO();
@@ -136,16 +133,16 @@ public class InventoryCheckController extends HttpServlet {
             }
         }
 
-        int totalItems = checkReportDAO.countDetailList(search, warehouseId, status);
+        int totalItems = checkDAO.countWithFilters(search, warehouseId, status);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<InventoryCheckReportItem> list = checkReportDAO.getDetailList(search, warehouseId, status, page, pageSize);
+        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
-        request.setAttribute("checkItems", list);
+        request.setAttribute("checkList", list);
         request.setAttribute("warehouses", warehouseDAO.findAll());
         request.setAttribute("search", search);
         request.setAttribute("selectedWarehouse", warehouseId);
@@ -158,6 +155,13 @@ public class InventoryCheckController extends HttpServlet {
         request.setAttribute("totalChecks", checkDAO.countTotal());
         request.setAttribute("doingCount", checkDAO.countByStatus("doing"));
         request.setAttribute("completedCount", checkDAO.countByStatus("completed"));
+
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+        request.setAttribute("month", month);
+        request.setAttribute("year", year);
 
         request.getRequestDispatcher("/view/inventory-check/inventory-check-list.jsp").forward(request, response);
     }
@@ -527,12 +531,24 @@ public class InventoryCheckController extends HttpServlet {
         Integer warehouseId = (whParam != null && !whParam.isEmpty()) ? Integer.parseInt(whParam) : null;
         String status = request.getParameter("status");
 
-        List<InventoryCheckReportItem> list = checkReportDAO.getAllDetailList(search, warehouseId, status);
+        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, 1, Integer.MAX_VALUE);
+
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+
+        final int fMonth = month, fYear = year;
+        list = list.stream()
+            .filter(c -> c.getCreatedAt() != null
+                && c.getCreatedAt().getMonthValue() == fMonth
+                && c.getCreatedAt().getYear() == fYear)
+            .collect(Collectors.toList());
 
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet("Kiểm kê");
 
-        String[] headers = {"STT", "Mã phiếu", "Kho", "Số máy", "Mẫu máy", "SL hệ thống", "SL thực tế", "Chênh lệch", "Người tạo"};
+        String[] headers = {"STT", "Mã phiếu", "Trạng thái", "Người thực hiện", "Kho kiểm kê", "Thời gian bắt đầu", "Thời gian kết thúc"};
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             headerRow.createCell(i).setCellValue(headers[i]);
@@ -540,17 +556,21 @@ public class InventoryCheckController extends HttpServlet {
 
         int rowNum = 1;
         for (int i = 0; i < list.size(); i++) {
-            InventoryCheckReportItem item = list.get(i);
+            InventoryCheck c = list.get(i);
             Row r = sheet.createRow(rowNum++);
             r.createCell(0).setCellValue(i + 1);
-            r.createCell(1).setCellValue(item.getCheckCode() != null ? item.getCheckCode() : "");
-            r.createCell(2).setCellValue(item.getWarehouseName() != null ? item.getWarehouseName() : "");
-            r.createCell(3).setCellValue(item.getGeneratorId());
-            r.createCell(4).setCellValue(item.getGeneratorModel() != null ? item.getGeneratorModel() : "");
-            r.createCell(5).setCellValue(item.getSystemQuantity());
-            r.createCell(6).setCellValue(item.getActualQuantity());
-            r.createCell(7).setCellValue(item.getDiscrepancy());
-            r.createCell(8).setCellValue(item.getCreatedByName() != null ? item.getCreatedByName() : "");
+            r.createCell(1).setCellValue(c.getCheckCode() != null ? c.getCheckCode() : "");
+
+            String statusText;
+            if ("doing".equals(c.getStatus())) statusText = "Đang kiểm kê";
+            else if ("completed".equals(c.getStatus())) statusText = "Đã hoàn thành";
+            else statusText = c.getStatus() != null ? c.getStatus() : "";
+            r.createCell(2).setCellValue(statusText);
+
+            r.createCell(3).setCellValue(c.getCreatedByName() != null ? c.getCreatedByName() : "");
+            r.createCell(4).setCellValue(c.getWarehouseName() != null ? c.getWarehouseName() : "");
+            r.createCell(5).setCellValue(c.getStartedAt() != null ? c.getStartedAt().toString() : "");
+            r.createCell(6).setCellValue(c.getCompletedAt() != null ? c.getCompletedAt().toString() : "");
         }
 
         for (int i = 0; i < headers.length; i++) {

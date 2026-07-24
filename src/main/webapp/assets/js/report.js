@@ -21,7 +21,7 @@ RPT.initCharts = function() {
         if (!d || !d.length) return;
         var sets = RPT.COLORS[c.report];
         if (!sets) return;
-        var isBar = c.report === 'inventory' || c.report === 'export_';
+        var isBar = c.report === 'inventory' || c.report === 'export_' || c.report === 'purchase' || c.report === 'sales';
         var datasets = sets.map(function(s, i) {
             var colIdx = i + 1;
             return {

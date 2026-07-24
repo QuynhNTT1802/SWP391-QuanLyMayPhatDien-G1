@@ -33,10 +33,6 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                         Tạo phiếu kiểm kê
                     </a>
-                    <button class="btn btn-success" onclick="exportExcel()">
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                        Xuất Excel
-                    </button>
                 </div>
             </header>
 
@@ -80,6 +76,12 @@
                         <option value="doing" <c:if test="${selectedStatus == 'doing'}">selected</c:if>>Đang kiểm kê</option>
                         <option value="completed" <c:if test="${selectedStatus == 'completed'}">selected</c:if>>Đã hoàn thành</option>
                     </select>
+                    <select name="month" class="filter-select" style="width:auto;">
+                        <c:forEach var="m" begin="1" end="12">
+                            <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
+                        </c:forEach>
+                    </select>
+                    <input type="number" name="year" value="${year}" class="edit-input" style="width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;">
                     <div class="spacer"></div>
                     <c:if test="${not empty search or not empty selectedWarehouse or not empty selectedStatus}">
                         <a href="${pageContext.request.contextPath}/inventory-check" class="btn">
@@ -87,50 +89,65 @@
                             Xoá lọc
                         </a>
                     </c:if>
+                    <button type="button" class="btn" style="background:#fff;color:#000;border:1px solid #ddd;" onclick="exportExcel()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
+                    </button>
                 </form>
 
                 <div class="table-card" style="margin-top:16px;">
                     <table class="users">
                         <thead>
                             <tr>
-                                <th style="width:40px;">STT</th>
+                                <th style="width:40px;">#</th>
                                 <th>Mã phiếu</th>
-                                <th>Kho</th>
-                                <th>Số máy</th>
-                                <th>Mẫu máy</th>
-                                <th>SL hệ thống</th>
-                                <th>SL thực tế</th>
-                                <th>Chênh lệch</th>
-                                <th>Người tạo</th>
+                                <th>Trạng thái</th>
+                                <th>Người thực hiện</th>
+                                <th>Kho kiểm kê</th>
+                                <th>Thời gian bắt đầu</th>
+                                <th>Thời gian kết thúc</th>
                                 <th class="col-actions">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:choose>
-                                <c:when test="${empty checkItems}">
-                                    <tr><td colspan="10">
+                                <c:when test="${empty checkList}">
+                                    <tr><td colspan="8">
                                         <div class="empty-state"><strong>Không tìm thấy phiếu kiểm kê</strong></div>
                                     </td></tr>
                                 </c:when>
                                 <c:otherwise>
-                                    <c:forEach var="item" items="${checkItems}" varStatus="st">
-                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${item.checkId}'" style="cursor:pointer;">
+                                    <c:forEach var="c" items="${checkList}" varStatus="st">
+                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" style="cursor:pointer;">
                                             <td>${fromIndex + st.index}</td>
-                                            <td><strong><c:out value="${item.checkCode}"/></strong></td>
-                                            <td><c:out value="${item.warehouseName}"/></td>
-                                            <td>${item.generatorId}</td>
-                                            <td><c:out value="${item.generatorModel}"/></td>
-                                            <td class="num">${item.systemQuantity}</td>
-                                            <td class="num">${item.actualQuantity}</td>
-                                            <td class="num ${item.discrepancy != 0 ? 'text-danger' : ''}">${item.discrepancy}</td>
-                                            <td><c:out value="${item.createdByName}"/></td>
+                                            <td><strong><c:out value="${c.checkCode}"/></strong></td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${c.status == 'doing'}">
+                                                        <span class="status-doing"><span class="sdot"></span>Đang kiểm kê</span>
+                                                    </c:when>
+                                                    <c:when test="${c.status == 'completed'}">
+                                                        <span class="status-completed"><span class="sdot"></span>Đã hoàn thành</span>
+                                                    </c:when>
+                                                    <c:otherwise><c:out value="${c.status}"/></c:otherwise>
+                                                </c:choose>
+                                            </td>
+                                            <td><c:out value="${c.createdByName}"/></td>
+                                            <td><c:out value="${c.warehouseName}"/></td>
+                                            <td>${c.startedAt}</td>
+                                            <td>
+                                                <c:choose>
+                                                    <c:when test="${not empty c.completedAt}">${c.completedAt}</c:when>
+                                                    <c:otherwise><span>—</span></c:otherwise>
+                                                </c:choose>
+                                            </td>
                                             <td class="col-actions">
                                                 <div class="row-actions">
-                                                    <a href="${pageContext.request.contextPath}/inventory-check?action=detail&id=${item.checkId}" class="icon-mini" title="Xem chi tiết">
+                                                    <a href="${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}" class="icon-mini" title="Xem chi tiết">
                                                         <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                     </a>
-                                                    <c:if test="${item.status == 'doing'}">
-                                                        <a href="${pageContext.request.contextPath}/inventory-check?action=edit&id=${item.checkId}" class="icon-mini" title="Chỉnh sửa">
+                                                    <c:if test="${c.status == 'doing'}">
+                                                        <a href="${pageContext.request.contextPath}/inventory-check?action=edit&id=${c.id}" class="icon-mini" title="Chỉnh sửa">
                                                             <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                                         </a>
                                                     </c:if>
