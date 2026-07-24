@@ -148,7 +148,7 @@
                     <thead>
                         <tr>
                             <th>Mã máy</th>
-                            <th>Tên máy</th>
+                            <th>Mô tả</th>
                             <th>Thương hiệu</th>
                             <th>SL đề xuất</th>
                             <th>SL duyệt</th>

@@ -18,8 +18,6 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import jakarta.servlet.ServletException;
@@ -109,7 +107,7 @@ public class ProposalController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doGet", e.getMessage(), e);
+            e.printStackTrace();
             e.printStackTrace();
             if (!response.isCommitted()) {
                 session.setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
@@ -185,7 +183,7 @@ public class ProposalController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doPost", e.getMessage(), e);
+            e.printStackTrace();
             e.printStackTrace();
             session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
             session.setAttribute("toastType", "danger");
@@ -584,7 +582,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 );
                 if (!ok) anyNotifFailed = true;
             } catch (Exception e) {
-                SystemLogger.error(LogModule.PROPOSAL, "ProposalController.saveProposal.sendNotification", e.getMessage(), e);
+                e.printStackTrace();
                 anyNotifFailed = true;
             }
         }
@@ -843,7 +841,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                         id
                     );
                 } catch (Exception e) {
-                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.approveProposal.sendNotification", e.getMessage(), e);
+                    e.printStackTrace();
                 }
                 if (!notifOk) {
                     session.setAttribute("toastMessage", "Đã duyệt nhưng không gửi được thông báo cho nhân viên tạo");
@@ -913,7 +911,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                         id
                     );
                 } catch (Exception e) {
-                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.rejectProposal.sendNotification", e.getMessage(), e);
+                    e.printStackTrace();
                 }
                 if (!notifOk) {
                     session.setAttribute("toastMessage", "Đã từ chối nhưng không gửi được thông báo cho nhân viên tạo");
@@ -2010,7 +2008,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             safeWriteJson(response, "{\"ok\":true,\"existing\":false,\"id\":" + newId
                     + ",\"model\":\"" + escapeJson(model.trim()) + "\"}");
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.quickCreateGenerator", e.getMessage(), e);
+            e.printStackTrace();
             try {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 safeWriteJson(response, "{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage()) + "\"}");

@@ -14,7 +14,7 @@ import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
 import com.quanlymayphatdien.g1.utils.NotificationService;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -75,7 +75,6 @@ public class InventoryCheckController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý kho", "InventoryCheckController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -104,7 +103,6 @@ public class InventoryCheckController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý kho", "InventoryCheckController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }

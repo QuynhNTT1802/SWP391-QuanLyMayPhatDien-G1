@@ -96,15 +96,6 @@
                                             </c:forEach>
                                         </select>
                                     </div>
-                                    <div class="field">
-                                        <label class="field-label">Tình trạng</label>
-                                        <select class="select" name="conditionId">
-                                            <option value="">-- Chọn tình trạng --</option>
-                                            <c:forEach var="c" items="${conditions}">
-                                                <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
                                     <div class="field full-width">
                                         <label class="field-label">Mô tả</label>
                                         <c:set var="vDesc" value="${not empty sessionScope.fieldDesc ? sessionScope.fieldDesc : generator.description}"/>

@@ -64,9 +64,9 @@ public class ImportReportDAO extends BaseReportDAO {
         params.add(lastDay(month, year));
         if (warehouseId != null) params.add(warehouseId);
         String searchWhere = searchClause(search, params);
-        String sql = "SELECT r.receipt_code, r.created_at, w.name AS warehouse_name,"
+        String sql = "SELECT r.receipt_id, r.receipt_code, r.created_at, w.name AS warehouse_name,"
                 + " g.model, i2.serial_number, u.name AS created_by_name, r.status,"
-                + " po.po_code AS purchase_order_code"
+                + " r.purchase_order_id, po.po_code AS purchase_order_code"
                 + " FROM receipt r"
                 + " JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
                 + " JOIN user u ON r.created_by = u.id"
@@ -94,6 +94,7 @@ public class ImportReportDAO extends BaseReportDAO {
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 ReceiptDetailReportItem item = new ReceiptDetailReportItem();
+                item.setReceiptId(resultSet.getInt("receipt_id"));
                 item.setReceiptCode(resultSet.getString("receipt_code"));
                 if (resultSet.getTimestamp("created_at") != null)
                     item.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
@@ -102,6 +103,7 @@ public class ImportReportDAO extends BaseReportDAO {
                 item.setSerialNumber(resultSet.getString("serial_number"));
                 item.setCreatedByName(resultSet.getString("created_by_name"));
                 item.setStatus(resultSet.getString("status"));
+                try { item.setPurchaseOrderId(resultSet.getInt("purchase_order_id")); } catch (SQLException ignored) {}
                 item.setPurchaseOrderCode(resultSet.getString("purchase_order_code"));
                 list.add(item);
             }

@@ -120,12 +120,15 @@ public class PurchaseReportDAO extends BaseReportDAO {
         if (warehouseId != null) params.add(warehouseId);
         String searchWhere = searchClause(search, params);
         String sql = "SELECT po.*, w.name AS warehouse_name, u.name AS created_by_name,"
-                + " GROUP_CONCAT(CONCAT(g.model, '|', pod.final_quantity, '|', COALESCE(pod.unit_price, 0)) SEPARATOR '; ') AS detail_info"
+                + " GROUP_CONCAT(DISTINCT s.name SEPARATOR ', ') AS supplier_name,"
+                + " COALESCE(SUM(pod.final_quantity * pod.unit_price), 0) AS total_amount"
                 + " FROM purchase_order po"
                 + " LEFT JOIN warehouse w ON po.warehouse_id = w.warehouse_id"
                 + " LEFT JOIN user u ON po.created_by = u.id"
                 + " LEFT JOIN purchase_order_detail pod ON pod.po_id = po.po_id"
                 + " LEFT JOIN generator g ON pod.generator_id = g.id"
+                + " LEFT JOIN import_proposal ip ON ip.purchase_order_id = po.po_id"
+                + " LEFT JOIN supplier s ON s.id = ip.supplier_id"
                 + " WHERE DATE(po.created_at) >= ? AND DATE(po.created_at) <= ?"
                 + (warehouseId != null ? " AND po.warehouse_id = ?" : "")
                 + searchWhere
@@ -161,6 +164,8 @@ public class PurchaseReportDAO extends BaseReportDAO {
                 po.setCreatedByName(resultSet.getString("created_by_name"));
                 po.setStatus(resultSet.getString("status"));
                 po.setTotalQuantity(resultSet.getInt("total_quantity"));
+                po.setSupplierName(resultSet.getString("supplier_name"));
+                po.setTotalAmount(resultSet.getDouble("total_amount"));
                 if (resultSet.getTimestamp("created_at") != null) {
                     po.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
                 }

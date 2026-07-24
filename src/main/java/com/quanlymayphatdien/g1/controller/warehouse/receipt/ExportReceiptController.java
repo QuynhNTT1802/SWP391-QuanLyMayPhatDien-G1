@@ -35,8 +35,7 @@ import com.quanlymayphatdien.g1.entity.Transfer;
 import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.utils.NotificationService;
@@ -123,7 +122,6 @@ public class ExportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -144,7 +142,6 @@ public class ExportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -1055,6 +1052,33 @@ public class ExportReceiptController extends HttpServlet {
                 liqLog.setEntityName(r.getReceiptCode());
                 liqLog.setDetails("Hoàn tất xuất kho cho phiếu thanh lý " + r.getReceiptCode() + ".");
                 activityLogDAO.insert(liqLog);
+
+                Liquidation liq = liqDAO.findById(liquidationId);
+                if (liq != null) {
+                    String liqLink = request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId;
+                    String liqCode = liq.getLiquidationCode();
+                    if (liq.getCreatedBy() > 0 && liq.getCreatedBy() != loggedUser.getId()) {
+                        NotificationService.send(
+                                liq.getCreatedBy(),
+                                "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
+                                loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
+                                liqLink,
+                                "liquidation",
+                                liquidationId
+                        );
+                    }
+                    if (liq.getCeoReviewedBy() != null && liq.getCeoReviewedBy() > 0
+                            && !liq.getCeoReviewedBy().equals(loggedUser.getId())) {
+                        NotificationService.send(
+                                liq.getCeoReviewedBy(),
+                                "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
+                                loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
+                                liqLink,
+                                "liquidation",
+                                liquidationId
+                        );
+                    }
+                }
             }
 
             conn.commit();

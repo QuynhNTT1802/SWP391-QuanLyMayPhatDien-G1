@@ -22,6 +22,8 @@
       .summary-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; }
       .summary-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 6px; }
       .summary-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+      .code-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+      .code-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -34,7 +36,7 @@
         <div class="page-head">
             <h2>
                 <c:choose>
-                    <c:when test="${reportType == 'inventory'}">Báo cáo tồn kho</c:when>
+                    <c:when test="${reportType == 'inventory'}">Báo cáo xuất nhập tồn</c:when>
                     <c:when test="${reportType == 'import'}">Báo cáo nhập kho</c:when>
                     <c:when test="${reportType == 'export'}">Báo cáo xuất kho</c:when>
                     <c:when test="${reportType == 'inventory-check'}">Báo cáo kiểm kê</c:when>
@@ -76,7 +78,7 @@
 
                 <div class="filter-group">
                     <label>Tìm kiếm</label>
-                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, model, serial..."
+                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, tên máy, serial..."
                            style="width:220px;">
                 </div>
 
@@ -101,11 +103,23 @@
                 <c:when test="${reportType == 'inventory'}">
                     <div class="summary-cards">
                         <div class="summary-card">
-                            <div class="summary-label">Tổng model</div>
+                            <div class="summary-label">Tổng mẫu máy</div>
                             <div class="summary-value">${summary.totalModels}</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Tổng serial tồn kho</div>
+                            <div class="summary-label">Tồn đầu kì</div>
+                            <div class="summary-value"><fmt:formatNumber value="${summary.totalOpen}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Nhập trong kì</div>
+                            <div class="summary-value" style="color:var(--accent)"><fmt:formatNumber value="${summary.totalImport}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Xuất trong kì</div>
+                            <div class="summary-value" style="color:var(--info)"><fmt:formatNumber value="${summary.totalExport}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Tồn cuối kì</div>
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalSerials}" pattern="#,##0"/></div>
                         </div>
                     </div>
@@ -114,10 +128,12 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Kho</th>
-                                <th>Mã máy</th>
-                                <th>Model</th>
+                                <th>Số máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Thương hiệu</th>
                                 <th>Tồn đầu kì</th>
+                                <th>Nhập</th>
+                                <th>Xuất</th>
                                 <th>Tồn cuối kì</th>
                             </tr>
                         </thead>
@@ -130,24 +146,25 @@
                                     <td><c:out value="${item.model}"/></td>
                                     <td><c:out value="${item.brand}"/></td>
                                     <td class="num">${item.openQuantity}</td>
+                                    <td class="num" style="color:var(--accent)">${item.importQuantity}</td>
+                                    <td class="num" style="color:var(--info)">${item.exportQuantity}</td>
                                     <td class="num">${item.closeQuantity}</td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty inventoryItems}">
-                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
                 </c:when>
 
-                <%-- NHẬP KHO (chi tiết serial) --%>
                 <c:when test="${reportType == 'import'}">
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Serial</th>
-                                <th>Model</th>
+                                <th>Máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn mua</th>
                                 <th>Ngày</th>
@@ -161,8 +178,8 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.serialNumber}"/></td>
                                     <td><c:out value="${r.model}"/></td>
-                                    <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><c:out value="${r.purchaseOrderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${r.receiptId}" class="code-link"><c:out value="${r.receiptCode}"/></a></td>
+                                    <td><c:choose><c:when test="${not empty r.purchaseOrderId}"><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="code-link"><c:out value="${r.purchaseOrderCode}"/></a></c:when><c:otherwise><c:out value="${r.purchaseOrderCode}"/></c:otherwise></c:choose></td>
                                     <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <td><c:out value="${r.createdByName}"/></td>
@@ -175,14 +192,13 @@
                     </table>
                 </c:when>
 
-                <%-- XUẤT KHO (chi tiết serial) --%>
                 <c:when test="${reportType == 'export'}">
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Serial</th>
-                                <th>Model</th>
+                                <th>Máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn hàng</th>
                                 <th>Ngày</th>
@@ -196,8 +212,8 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.serialNumber}"/></td>
                                     <td><c:out value="${r.model}"/></td>
-                                    <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><c:out value="${r.orderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${r.receiptId}" class="code-link"><c:out value="${r.receiptCode}"/></a></td>
+                                    <td><c:choose><c:when test="${not empty r.orderId}"><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${r.orderId}" class="code-link"><c:out value="${r.orderCode}"/></a></c:when><c:otherwise><c:out value="${r.orderCode}"/></c:otherwise></c:choose></td>
                                     <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <td><c:out value="${r.createdByName}"/></td>
@@ -217,20 +233,19 @@
                                 <th>STT</th>
                                 <th>Mã phiếu</th>
                                 <th>Kho</th>
-                                <th>Mã máy</th>
-                                <th>Model</th>
+                                <th>Số máy</th>
+                                <th>Mẫu máy</th>
                                 <th>SL hệ thống</th>
                                 <th>SL thực tế</th>
                                 <th>Chênh lệch</th>
                                 <th>Người tạo</th>
-                                <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="item" items="${checkItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${item.checkCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/inventory-check?action=detail&id=${item.checkId}" class="code-link"><c:out value="${item.checkCode}"/></a></td>
                                     <td><c:out value="${item.warehouseName}"/></td>
                                     <td>${item.generatorId}</td>
                                     <td><c:out value="${item.generatorModel}"/></td>
@@ -238,15 +253,10 @@
                                     <td class="num">${item.actualQuantity}</td>
                                     <td class="num ${item.discrepancy != 0 ? 'text-danger' : ''}">${item.discrepancy}</td>
                                     <td><c:out value="${item.createdByName}"/></td>
-                                    <td>
-                                        <span class="status-badge ${item.status == 'completed' ? 'status-completed' : 'status-doing'}">
-                                            ${item.status == 'completed' ? 'Hoàn thành' : 'Đang kiểm kê'}
-                                        </span>
-                                    </td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty checkItems}">
-                                <tr><td colspan="10" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
@@ -259,7 +269,7 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Model mua nhiều nhất</div>
+                            <div class="summary-label">Mẫu máy mua nhiều nhất</div>
                             <div class="summary-value"><c:out value="${summary.topModel}"/></div>
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
@@ -270,39 +280,31 @@
                                 <th>STT</th>
                                 <th>Mã phiếu</th>
                                 <th>Kho</th>
-                                <th>Kỳ</th>
+                                <th>Nhà cung cấp</th>
                                 <th>Số lượng</th>
+                                <th>Tổng tiền</th>
                                 <th>Người tạo</th>
                                 <th>Ngày tạo</th>
-                                <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="po" items="${poItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${po.poCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}" class="code-link"><c:out value="${po.poCode}"/></a></td>
                                     <td><c:out value="${po.warehouseName}"/></td>
-                                    <td><c:out value="${po.period}"/></td>
+                                    <td><c:out value="${not empty po.supplierName ? po.supplierName : '—'}"/></td>
                                     <td class="num">${po.totalQuantity}</td>
+                                    <td class="num"><fmt:formatNumber value="${po.totalAmount}" pattern="#,##0"/> ₫</td>
                                     <td><c:out value="${po.createdByName}"/></td>
                                     <td>${po.createdAt.format(rptFmt)}</td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(po.status)}">
-                                        <c:choose>
-                                            <c:when test="${po.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                            <c:when test="${po.status == 'PENDING'}">Chờ duyệt</c:when>
-                                            <c:when test="${po.status == 'CANCELLED'}">Đã hủy</c:when>
-                                            <c:when test="${po.status == 'DRAFT'}">Bản nháp</c:when>
-                                            <c:otherwise><c:out value="${po.status}"/></c:otherwise>
-                                        </c:choose>
-                                    </span></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty poItems}">
                                 <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
-   git pull ỏiig                 </table>
+                    </table>
                 </c:when>
 
                 <c:when test="${reportType == 'sales'}">
@@ -312,7 +314,7 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Model bán nhiều nhất</div>
+                            <div class="summary-label">Máy bán nhiều nhất</div>
                             <div class="summary-value"><c:out value="${summary.topModel}"/></div>
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
@@ -323,34 +325,24 @@
                                 <th>STT</th>
                                 <th>Mã đơn</th>
                                 <th>Ngày đặt</th>
-                                <th>Khách hàng</th>
                                 <th>Tổng tiền</th>
                                 <th>Người tạo</th>
-                                <th>Trạng thái</th>
+                                <th>Khách hàng</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="so" items="${saleItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${so.orderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${so.orderId}" class="code-link"><c:out value="${so.orderCode}"/></a></td>
                                     <td><fmt:formatDate value="${so.orderDate}" pattern="dd/MM/yyyy"/></td>
-                                    <td><c:out value="${so.customer.name}"/></td>
                                     <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/></td>
                                     <td><c:out value="${so.createdByName}"/></td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(so.status)}">
-                                        <c:choose>
-                                            <c:when test="${so.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                            <c:when test="${so.status == 'PENDING'}">Chờ duyệt</c:when>
-                                            <c:when test="${so.status == 'CANCELLED'}">Đã hủy</c:when>
-                                            <c:when test="${so.status == 'APPROVED'}">Đã duyệt</c:when>
-                                            <c:otherwise><c:out value="${so.status}"/></c:otherwise>
-                                        </c:choose>
-                                    </span></td>
+                                    <td><c:out value="${so.customer.name}"/></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty saleItems}">
-                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
