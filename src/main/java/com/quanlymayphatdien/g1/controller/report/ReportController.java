@@ -7,7 +7,6 @@ package com.quanlymayphatdien.g1.controller.report;
 
 import com.quanlymayphatdien.g1.dal.ExportReportDAO;
 import com.quanlymayphatdien.g1.dal.ImportReportDAO;
-import com.quanlymayphatdien.g1.dal.InventoryCheckReportDAO;
 import com.quanlymayphatdien.g1.dal.InventoryReportDAO;
 import com.quanlymayphatdien.g1.dal.PurchaseReportDAO;
 import com.quanlymayphatdien.g1.dal.SalesReportDAO;
@@ -31,7 +30,7 @@ public class ReportController extends HttpServlet {
     private final InventoryReportDAO inventoryReportDAO = new InventoryReportDAO();
     private final ImportReportDAO importReportDAO = new ImportReportDAO();
     private final ExportReportDAO exportReportDAO = new ExportReportDAO();
-    private final InventoryCheckReportDAO inventoryCheckReportDAO = new InventoryCheckReportDAO();
+    
     private final PurchaseReportDAO purchaseReportDAO = new PurchaseReportDAO();
     private final SalesReportDAO salesReportDAO = new SalesReportDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
@@ -146,16 +145,6 @@ public class ReportController extends HttpServlet {
                 req.setAttribute("trendJson", gson.toJson(exportReportDAO.trendExport(warehouseId, year)));
                 break;
             }
-            case "inventory-check": {
-                totalItems = inventoryCheckReportDAO.countInventoryCheckReport(warehouseId, month, year, search);
-                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
-                if (page > totalPages) {
-                    page = totalPages;
-                }
-                req.setAttribute("checkItems", inventoryCheckReportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize, search));
-                req.setAttribute("trendJson", gson.toJson(inventoryCheckReportDAO.trendCheck(warehouseId, year)));
-                break;
-            }
             case "purchase": {
                 totalItems = purchaseReportDAO.countPurchaseReport(warehouseId, month, year, search);
                 totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
@@ -235,12 +224,6 @@ public class ReportController extends HttpServlet {
                 var data = exportReportDAO.getExportExcelData(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportExport(data, month, year, warehouseName);
                 filename = "BaoCaoXuat_T" + month + "_" + year + ".xlsx";
-                break;
-            }
-            case "inventory-check": {
-                var data = inventoryCheckReportDAO.getAllInventoryCheckReport(warehouseId, month, year);
-                workbook = ReportExcelSupport.exportInventoryCheck(data, month, year, warehouseName);
-                filename = "BaoCaoKiemKe_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "purchase": {

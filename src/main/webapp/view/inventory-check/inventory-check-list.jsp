@@ -33,6 +33,10 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                         Tạo phiếu kiểm kê
                     </a>
+                    <button class="btn btn-success" onclick="exportExcel()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
+                    </button>
                 </div>
             </header>
 
@@ -187,5 +191,19 @@
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/inventory-check.js"></script>
+    <script>
+    function exportExcel() {
+        var form = document.querySelector('form[action*="inventory-check"]');
+        var params = new URLSearchParams();
+        params.set('action', 'exportExcel');
+        var inputs = form.querySelectorAll('input[name], select[name]');
+        inputs.forEach(function(inp) {
+            if (inp.name !== 'action' && inp.name !== 'page' && inp.value) {
+                params.set(inp.name, inp.value);
+            }
+        });
+        window.location = form.action + '?' + params.toString();
+    }
+    </script>
 </body>
 </html>

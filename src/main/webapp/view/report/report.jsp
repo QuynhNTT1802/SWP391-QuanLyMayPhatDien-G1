@@ -32,7 +32,6 @@
                     <c:when test="${reportType == 'inventory'}">Báo cáo xuất nhập tồn</c:when>
                     <c:when test="${reportType == 'import'}">Báo cáo nhập kho</c:when>
                     <c:when test="${reportType == 'export'}">Báo cáo xuất kho</c:when>
-                    <c:when test="${reportType == 'inventory-check'}">Báo cáo kiểm kê</c:when>
                     <c:when test="${reportType == 'purchase'}">Báo cáo mua hàng</c:when>
                     <c:when test="${reportType == 'sales'}">Báo cáo bán hàng</c:when>
                 </c:choose>
@@ -226,46 +225,6 @@
                             </c:forEach>
                             <c:if test="${empty exportItems}">
                                 <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
-                            </c:if>
-                        </tbody>
-                    </table>
-                </c:when>
-
-                <c:when test="${reportType == 'inventory-check'}">
-                    <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart3" height="80"></canvas></div>
-                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart3',data:${trendJson},report:'check'});</script>
-                    </c:if>
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Mã phiếu</th>
-                                <th>Kho</th>
-                                <th>Số máy</th>
-                                <th>Mẫu máy</th>
-                                <th>SL hệ thống</th>
-                                <th>SL thực tế</th>
-                                <th>Chênh lệch</th>
-                                <th>Người tạo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="item" items="${checkItems}" varStatus="st">
-                                <tr>
-                                    <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><a href="${pageContext.request.contextPath}/inventory-check?action=detail&id=${item.checkId}" class="code-link"><c:out value="${item.checkCode}"/></a></td>
-                                    <td><c:out value="${item.warehouseName}"/></td>
-                                    <td>${item.generatorId}</td>
-                                    <td><c:out value="${item.generatorModel}"/></td>
-                                    <td class="num">${item.systemQuantity}</td>
-                                    <td class="num">${item.actualQuantity}</td>
-                                    <td class="num ${item.discrepancy != 0 ? 'text-danger' : ''}">${item.discrepancy}</td>
-                                    <td><c:out value="${item.createdByName}"/></td>
-                                </tr>
-                            </c:forEach>
-                            <c:if test="${empty checkItems}">
-                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
