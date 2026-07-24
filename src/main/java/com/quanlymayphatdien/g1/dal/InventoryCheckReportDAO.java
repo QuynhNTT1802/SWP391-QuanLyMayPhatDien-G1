@@ -14,6 +14,74 @@ public class InventoryCheckReportDAO extends BaseReportDAO {
         return " AND (ic.check_code LIKE ? OR g.model LIKE ?)";
     }
 
+    private String buildWhere(List<Object> params, Integer warehouseId, String status, String search) {
+        List<String> clauses = new ArrayList<>();
+        if (warehouseId != null) {
+            clauses.add("ic.warehouse_id = ?");
+            params.add(warehouseId);
+        }
+        if (status != null && !status.isEmpty()) {
+            clauses.add("ic.status = ?");
+            params.add(status);
+        }
+        String sw = searchClause(search, params);
+        if (!sw.isEmpty()) {
+            clauses.add(sw.substring(5));
+        }
+        if (clauses.isEmpty()) return "";
+        return " AND " + String.join(" AND ", clauses);
+    }
+
+    public int countDetailList(String search, Integer warehouseId, String status) {
+        List<Object> params = new ArrayList<>();
+        String where = buildWhere(params, warehouseId, status, search);
+        return countWithParams(
+                "SELECT COUNT(*) FROM inventory_check ic"
+                + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
+                + " JOIN generator g ON icd.generator_id = g.id"
+                + " WHERE 1=1" + where,
+                params);
+    }
+
+    public List<InventoryCheckReportItem> getDetailList(String search, Integer warehouseId, String status, int page, int pageSize) {
+        List<Object> params = new ArrayList<>();
+        String where = buildWhere(params, warehouseId, status, search);
+        String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
+                + " ic.status, u.name AS created_by_name,"
+                + " ic.started_at, ic.completed_at,"
+                + " icd.generator_id, g.model AS generator_model,"
+                + " icd.system_quantity, icd.actual_quantity,"
+                + " (COALESCE(icd.system_quantity, 0) - COALESCE(icd.actual_quantity, 0)) AS discrepancy"
+                + " FROM inventory_check ic"
+                + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
+                + " JOIN generator g ON icd.generator_id = g.id"
+                + " LEFT JOIN warehouse w ON ic.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN user u ON ic.created_by = u.id"
+                + " WHERE 1=1" + where
+                + " ORDER BY ic.created_at DESC, ic.check_code"
+                + " LIMIT ? OFFSET ?";
+        return queryInventoryCheckReport(sql, params, page, pageSize);
+    }
+
+    public List<InventoryCheckReportItem> getAllDetailList(String search, Integer warehouseId, String status) {
+        List<Object> params = new ArrayList<>();
+        String where = buildWhere(params, warehouseId, status, search);
+        String sql = "SELECT ic.id AS check_id, ic.check_code, ic.warehouse_id, w.name AS warehouse_name,"
+                + " ic.status, u.name AS created_by_name,"
+                + " ic.started_at, ic.completed_at,"
+                + " icd.generator_id, g.model AS generator_model,"
+                + " icd.system_quantity, icd.actual_quantity,"
+                + " (COALESCE(icd.system_quantity, 0) - COALESCE(icd.actual_quantity, 0)) AS discrepancy"
+                + " FROM inventory_check ic"
+                + " JOIN inventory_check_detail icd ON icd.check_id = ic.id"
+                + " JOIN generator g ON icd.generator_id = g.id"
+                + " LEFT JOIN warehouse w ON ic.warehouse_id = w.warehouse_id"
+                + " LEFT JOIN user u ON ic.created_by = u.id"
+                + " WHERE 1=1" + where
+                + " ORDER BY ic.created_at DESC, ic.check_code";
+        return queryInventoryCheckReport(sql, params, -1, -1);
+    }
+
     public int countInventoryCheckReport(Integer warehouseId, int month, int year, String search) {
         List<Object> params = new ArrayList<>();
         params.add(firstDay(month, year));
