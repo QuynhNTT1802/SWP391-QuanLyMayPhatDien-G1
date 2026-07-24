@@ -1,4 +1,4 @@
-var RPT = RPT || {};
+﻿var RPT = RPT || {};
 
 RPT.COLORS = {
     inventory: [
