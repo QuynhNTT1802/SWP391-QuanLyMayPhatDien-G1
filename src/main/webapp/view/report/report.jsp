@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/report.js"></script>
@@ -39,53 +40,44 @@
         </div>
 
         <div class="report-filter-bar">
-            <form method="GET" action="${pageContext.request.contextPath}/reports" class="filter-form">
+            <form method="GET" action="${pageContext.request.contextPath}/reports" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                 <input type="hidden" name="type" value="${reportType}"/>
+                <input type="hidden" name="page" value="1"/>
 
-                <div class="filter-group">
-                    <label>Kì báo cáo</label>
-                    <div class="filter-row">
-                        <select name="month" class="edit-input" style="width:100px;">
-                            <c:forEach var="m" begin="1" end="12">
-                                <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
-                            </c:forEach>
-                        </select>
-                        <input type="number" name="year" value="${year}" class="edit-input" style="width:110px;">
-                    </div>
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input name="search" value="<c:out value="${search}"/>" placeholder="Mã phiếu, tên máy, serial..." autocomplete="off" />
                 </div>
 
                 <c:if test="${reportType != 'sales'}">
-                    <div class="filter-group">
-                        <label>Kho</label>
-                        <select name="warehouseId" class="edit-input" style="width:200px;">
-                            <option value="">Tất cả</option>
-                            <c:forEach var="wh" items="${warehouses}">
-                                <option value="${wh.warehouseId}" ${wh.warehouseId == selWarehouseId ? 'selected' : ''}>
-                                    <c:out value="${wh.name}"/>
-                                </option>
-                            </c:forEach>
-                        </select>
-                    </div>
+                    <select name="warehouseId" class="filter-select" onchange="this.form.submit()">
+                        <option value="">Kho: Tất cả</option>
+                        <c:forEach var="wh" items="${warehouses}">
+                            <option value="${wh.warehouseId}" ${wh.warehouseId == selWarehouseId ? 'selected' : ''}>
+                                <c:out value="${wh.name}"/>
+                            </option>
+                        </c:forEach>
+                    </select>
                 </c:if>
 
-                <div class="filter-group">
-                    <label>Tìm kiếm</label>
-                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, tên máy, serial..."
-                           style="width:220px;">
-                </div>
+                <select name="month" class="filter-select" style="width:auto;">
+                    <c:forEach var="m" begin="1" end="12">
+                        <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
+                    </c:forEach>
+                </select>
+                <input type="number" name="year" value="${year}" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--fg);font-size:13px;font-family:var(--font-ui);font-weight:600;">
 
-                <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                        Xem
+                <div class="spacer"></div>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    Xem
+                </button>
+                <c:if test="${sessionScope.userPermissions.contains('reports.export')}">
+                    <button type="button" class="btn btn-success" onclick="RPT.exportExcel()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
                     </button>
-                    <c:if test="${sessionScope.userPermissions.contains('reports.export')}">
-                        <button type="button" class="btn btn-success" onclick="RPT.exportExcel()">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                            Xuất Excel
-                        </button>
-                    </c:if>
-                </div>
+                </c:if>
             </form>
         </div>
 
