@@ -117,7 +117,7 @@
                         </div>
                     </div>
                     <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart0" height="120"></canvas></div>
+                    <div class="rpt-chart"><canvas id="chart0" height="80"></canvas></div>
                     <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart0',data:${trendJson},report:'inventory'});</script>
                     </c:if>
                     <table class="report-table">
@@ -157,7 +157,7 @@
 
                 <c:when test="${reportType == 'import'}">
                     <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart1" height="120"></canvas></div>
+                    <div class="rpt-chart"><canvas id="chart1" height="80"></canvas></div>
                     <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart1',data:${trendJson},report:'import_'});</script>
                     </c:if>
                     <table class="report-table">
@@ -195,7 +195,7 @@
 
                 <c:when test="${reportType == 'export'}">
                     <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart2" height="120"></canvas></div>
+                    <div class="rpt-chart"><canvas id="chart2" height="80"></canvas></div>
                     <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart2',data:${trendJson},report:'export_'});</script>
                     </c:if>
                     <table class="report-table">
@@ -233,7 +233,7 @@
 
                 <c:when test="${reportType == 'inventory-check'}">
                     <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart3" height="120"></canvas></div>
+                    <div class="rpt-chart"><canvas id="chart3" height="80"></canvas></div>
                     <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart3',data:${trendJson},report:'check'});</script>
                     </c:if>
                     <table class="report-table">
@@ -284,7 +284,7 @@
                         </div>
                     </div>
                     <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart4" height="120"></canvas></div>
+                    <div class="rpt-chart"><canvas id="chart4" height="80"></canvas></div>
                     <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart4',data:${trendJson},report:'purchase'});</script>
                     </c:if>
                     <table class="report-table">
@@ -333,7 +333,7 @@
                         </div>
                     </div>
                     <c:if test="${not empty trendJson}">
-                    <div class="rpt-chart"><canvas id="chart5" height="120"></canvas></div>
+                    <div class="rpt-chart"><canvas id="chart5" height="80"></canvas></div>
                     <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart5',data:${trendJson},report:'sales'});</script>
                     </c:if>
                     <table class="report-table">
