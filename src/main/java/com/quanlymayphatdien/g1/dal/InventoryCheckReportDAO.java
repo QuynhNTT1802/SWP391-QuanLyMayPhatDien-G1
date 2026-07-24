@@ -30,6 +30,18 @@ public class InventoryCheckReportDAO extends BaseReportDAO {
                 params);
     }
 
+    public List<Object[]> trendCheck(Integer warehouseId, int year) {
+        List<Object> p = new ArrayList<>();
+        p.add(year);
+        if (warehouseId != null) p.add(warehouseId);
+        return queryFlat(
+            "SELECT DATE_FORMAT(ic.created_at,'%Y-%m'),COUNT(DISTINCT ic.id)"
+            + " FROM inventory_check ic"
+            + " WHERE YEAR(ic.created_at)=?"
+            + (warehouseId != null ? " AND ic.warehouse_id=?" : "")
+            + " GROUP BY 1 ORDER BY 1", p);
+    }
+
     public List<InventoryCheckReportItem> getInventoryCheckReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {
         List<Object> params = new ArrayList<>();
         params.add(firstDay(month, year));

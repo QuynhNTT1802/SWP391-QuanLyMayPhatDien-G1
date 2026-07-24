@@ -40,6 +40,19 @@ public class PurchaseReportDAO extends BaseReportDAO {
         return queryPurchaseOrders(warehouseId, month, year, -1, -1, null);
     }
 
+    public List<Object[]> trendPurchase(Integer warehouseId, int year) {
+        List<Object> p = new ArrayList<>();
+        p.add(year);
+        if (warehouseId != null) p.add(warehouseId);
+        return queryFlat(
+            "SELECT DATE_FORMAT(po.created_at,'%Y-%m'),COALESCE(SUM(pod.final_quantity*pod.unit_price),0)"
+            + " FROM purchase_order po"
+            + " LEFT JOIN purchase_order_detail pod ON pod.po_id=po.po_id"
+            + " WHERE YEAR(po.created_at)=?"
+            + (warehouseId != null ? " AND po.warehouse_id=?" : "")
+            + " GROUP BY 1 ORDER BY 1", p);
+    }
+
     public List<Object[]> getPurchaseExcelData(Integer warehouseId, int month, int year) {
         String sql = "SELECT po.po_code, w.name, po.period,"
                 + " g.model, pod.final_quantity, u.name,"

@@ -40,6 +40,15 @@ public class SalesReportDAO extends BaseReportDAO {
         return querySaleOrders(month, year, -1, -1, null);
     }
 
+    public List<Object[]> trendSales(int year) {
+        List<Object> p = new ArrayList<>();
+        p.add(year);
+        return queryFlat(
+            "SELECT DATE_FORMAT(so.created_at,'%Y-%m'),COALESCE(SUM(so.total_amount),0)"
+            + " FROM sale_order so WHERE YEAR(so.created_at)=?"
+            + " GROUP BY 1 ORDER BY 1", p);
+    }
+
     public List<Object[]> getSalesExcelData(int month, int year) {
         String sql = "SELECT so.order_code, DATE_FORMAT(so.created_at, '%d/%m/%Y'),"
                 + " c.name, g.model, od.quantity, od.unit_price,"

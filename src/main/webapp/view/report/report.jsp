@@ -16,15 +16,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report.css">
-    <style>
-      .summary-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-      .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
-      .summary-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; }
-      .summary-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 6px; }
-      .summary-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-      .code-link { color: var(--accent); text-decoration: none; font-weight: 600; }
-      .code-link:hover { text-decoration: underline; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/report.js"></script>
 </head>
 <body>
 <div class="app">
@@ -88,7 +81,7 @@
                         Xem
                     </button>
                     <c:if test="${sessionScope.userPermissions.contains('reports.export')}">
-                        <button type="button" class="btn btn-success" onclick="exportExcel()">
+                        <button type="button" class="btn btn-success" onclick="RPT.exportExcel()">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                             Xuất Excel
                         </button>
@@ -123,6 +116,10 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalSerials}" pattern="#,##0"/></div>
                         </div>
                     </div>
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart0" height="120"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart0',data:${trendJson},report:'inventory'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -159,6 +156,10 @@
                 </c:when>
 
                 <c:when test="${reportType == 'import'}">
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart1" height="120"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart1',data:${trendJson},report:'import_'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -193,6 +194,10 @@
                 </c:when>
 
                 <c:when test="${reportType == 'export'}">
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart2" height="120"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart2',data:${trendJson},report:'export_'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -227,6 +232,10 @@
                 </c:when>
 
                 <c:when test="${reportType == 'inventory-check'}">
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart3" height="120"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart3',data:${trendJson},report:'check'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -274,6 +283,10 @@
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
                     </div>
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart4" height="120"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart4',data:${trendJson},report:'purchase'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -306,7 +319,7 @@
                         </tbody>
                     </table>
                 </c:when>
-
+                
                 <c:when test="${reportType == 'sales'}">
                     <div class="summary-cards">
                         <div class="summary-card">
@@ -319,6 +332,10 @@
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
                     </div>
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart5" height="120"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart5',data:${trendJson},report:'sales'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
@@ -336,7 +353,7 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${so.orderId}" class="code-link"><c:out value="${so.orderCode}"/></a></td>
                                     <td><fmt:formatDate value="${so.orderDate}" pattern="dd/MM/yyyy"/></td>
-                                    <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/></td>
+                                    <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/> ₫</td>
                                     <td><c:out value="${so.createdByName}"/></td>
                                     <td><c:out value="${so.customer.name}"/></td>
                                 </tr>
@@ -372,12 +389,12 @@
 </div>
 
 <script>
-    function exportExcel() {
-        var url = '${pageContext.request.contextPath}/reports?action=export&type=${reportType}'
-            + '&month=${month}&year=${year}'
-            + '&warehouseId=${selWarehouseId}';
-        window.location.href = url;
-    }
+RPT.ctx = '${pageContext.request.contextPath}';
+RPT.type = '${reportType}';
+RPT.month = ${month};
+RPT.year = ${year};
+RPT.warehouseId = '${selWarehouseId}';
+RPT.initCharts();
 </script>
 </body>
 </html>
