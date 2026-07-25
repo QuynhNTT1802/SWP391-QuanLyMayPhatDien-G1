@@ -6,40 +6,6 @@
     margin-bottom: 20px;
 }
 
-.filter-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-end;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.filter-group label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.filter-row {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-
-.filter-actions {
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-    margin-left: auto;
-}
-
 .report-table-wrap {
     background: var(--bg);
     border: 1px solid var(--border);
@@ -80,7 +46,7 @@
 }
 
 .report-table td.num {
-    text-align: right;
+    text-align: center;
     font-variant-numeric: tabular-nums;
     font-family: 'Courier New', monospace;
 }
