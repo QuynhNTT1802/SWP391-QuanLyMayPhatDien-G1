@@ -87,6 +87,11 @@ function updateRowNumbers() {
 function addRow() {
     var clone = document.getElementById('rowTemplate').content.cloneNode(true);
     document.getElementById('detailBody').appendChild(clone);
+    var rows = document.getElementById('detailBody').querySelectorAll('tr');
+    var newRow = rows[rows.length - 1];
+    if (window.initGenSelectSearch) {
+        window.initGenSelectSearch(newRow);
+    }
     updateRowNumbers();
     updateTotal();
 }

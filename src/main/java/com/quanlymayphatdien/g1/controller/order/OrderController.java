@@ -510,7 +510,7 @@ public class OrderController extends HttpServlet {
 
         String orderCode = request.getParameter("orderCode");
         if (orderCode == null || orderCode.trim().isEmpty()) {
-            String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             int todayCount = saleorderdao.countTodayOrders() + 1;
             orderCode = String.format("ORD-%s-%03d", dateStr, todayCount);
         }

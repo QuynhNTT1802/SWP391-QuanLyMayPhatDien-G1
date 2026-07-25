@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/select-search.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-create.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-edit.css">
 </head>
@@ -461,6 +462,7 @@ MSG.ADDED_SUP_SUFFIX = '"';
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
+<script src="${pageContext.request.contextPath}/assets/js/select-search.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/proposal-create.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/proposal-edit.js"></script>
