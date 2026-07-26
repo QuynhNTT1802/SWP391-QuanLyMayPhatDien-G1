@@ -4,7 +4,6 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -48,7 +47,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -112,7 +111,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -162,7 +161,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 return resultSet.getInt(1);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error("He thong", "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -369,7 +368,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             connection = getConnection();
             return insert(connection, sc);   // g?i method b�n tr�n
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

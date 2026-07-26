@@ -13,8 +13,7 @@ import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -78,8 +77,7 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "OrderController.doGet", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             setMsg(request.getSession(), "Lỗi hệ thống: " + e.getMessage(), "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
@@ -130,8 +128,7 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "OrderController.doPost", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             setMsg(request.getSession(), "Lỗi xử lý dữ liệu: " + e.getMessage(), "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
@@ -164,7 +161,7 @@ public class OrderController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                SystemLogger.warn(LogModule.ORDER, "OrderController.listOrders", "Lỗi định dạng trang: " + e.getMessage());
+                e.printStackTrace();
                 page = 1;
             }
         }
@@ -487,7 +484,7 @@ public class OrderController extends HttpServlet {
                     + "\",\"companyName\":\"" + escapeJson(companyName != null ? companyName.trim() : "")
                     + "\",\"customerTypeId\":" + (typeIdStr != null && !typeIdStr.trim().isEmpty() ? typeIdStr.trim() : "0") + "}");
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "quickCreateCustomer", e.getMessage(), e);
+            e.printStackTrace();
             response.getWriter().write("{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage() != null ? e.getMessage() : "không xác định") + "\"}");
         }
     }
@@ -899,8 +896,7 @@ public class OrderController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "OrderController.updateOrder", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             setMsg(request.getSession(), "Lỗi: " + e.getMessage(), "danger");
         }
         response.sendRedirect(request.getContextPath() + "/order?action=list");

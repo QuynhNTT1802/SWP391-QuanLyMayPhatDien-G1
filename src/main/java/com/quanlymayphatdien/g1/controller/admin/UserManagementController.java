@@ -10,8 +10,7 @@ import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -59,7 +58,7 @@ public class UserManagementController extends HttpServlet {
                 try {
                     showUpdateForm(request, response);
                 } catch (SQLException ex) {
-                    SystemLogger.error(LogModule.USER, "UserManagementController.showUpdateForm", ex.getMessage(), ex);
+                    ex.printStackTrace();
                     Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -239,7 +238,7 @@ public class UserManagementController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            SystemLogger.error(LogModule.USER, "UserManagementController.createUser", e.getMessage(), e);
+            e.printStackTrace();
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -398,7 +397,7 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Không tìm thấy tài khoản!");
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.USER, "UserManagementController.updateUser", e.getMessage(), e);
+            e.printStackTrace();
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
@@ -604,7 +603,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                SystemLogger.warn(LogModule.USER, "UserManagementController.listUsers", "Lỗi định dạng trang: " + e.getMessage());
+                e.printStackTrace();
                 page = 1;
             }
         }

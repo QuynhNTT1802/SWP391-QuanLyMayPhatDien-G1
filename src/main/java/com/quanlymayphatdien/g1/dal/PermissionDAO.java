@@ -5,7 +5,6 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.Permission;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -67,7 +66,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 permissions.add(key);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.getRolePermissions", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -99,7 +98,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             }
 
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.applyOverrides", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -123,7 +122,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.getPermissionByRoleId", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -150,7 +149,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(value);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.getUserOverrides", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -171,7 +170,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             statement.setString(4, type);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.setUserOverride", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -188,7 +187,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
             statement.setInt(2, perId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.removeUserOverride", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -240,7 +239,7 @@ public class PermissionDAO extends DBContext implements I_DAO<Permission> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "PermissionDAO.findAll", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

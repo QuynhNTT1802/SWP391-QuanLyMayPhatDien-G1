@@ -35,8 +35,6 @@ import com.quanlymayphatdien.g1.entity.Transfer;
 import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.utils.NotificationService;
@@ -123,7 +121,7 @@ public class ExportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.doGet", e.getMessage(), e);
+            e.printStackTrace();
             e.printStackTrace();
         }
     }
@@ -147,7 +145,7 @@ public class ExportReceiptController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.RECEIPT, "ExportReceiptController.doPost", e.getMessage(), e);
+            e.printStackTrace();
             e.printStackTrace();
         }
     }

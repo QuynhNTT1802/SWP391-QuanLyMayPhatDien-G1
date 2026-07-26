@@ -8,8 +8,7 @@ import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -55,8 +54,7 @@ public class RoleController extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ROLE, "RoleController",
-                "Lỗi xử lý GET " + action + ": " + e.getMessage(), e);
+            e.printStackTrace();
             throw new ServletException(e);
         }
     }
@@ -74,8 +72,7 @@ public class RoleController extends HttpServlet {
                 saveRoleFull(request, response);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ROLE, "RoleController",
-                "Lỗi xử lý POST /admin/role/save: " + e.getMessage(), e);
+            e.printStackTrace();
             throw new ServletException(e);
         }
     }
@@ -379,7 +376,7 @@ public class RoleController extends HttpServlet {
                 logRoleAction(request, roleId, name, "UPDATE_PERMISSIONS", permDetails.toString());
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ROLE, "RoleController.log quyền", e.getMessage(), e);
+            e.printStackTrace();
         }
         roleDAO.updatePermissionRole(roleId, new ArrayList<>(expanded));
 
@@ -411,8 +408,7 @@ public class RoleController extends HttpServlet {
             log.setDetails(details);
             logDAO.insert(log);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ROLE,
-                    "RoleController.logRoleAction", e.getMessage(), e);
+            e.printStackTrace();
         }
     }
     private static final Map<String, String> MODULE_LABELS = Map.of(

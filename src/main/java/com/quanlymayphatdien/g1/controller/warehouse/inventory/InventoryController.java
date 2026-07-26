@@ -11,8 +11,7 @@ import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.GeneratorSummary;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import com.quanlymayphatdien.g1.entity.Warehouse;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -83,7 +82,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
-                SystemLogger.warn("Quản lý kho", "InventoryController.handleOverview", "Lỗi định dạng trang: " + e.getMessage());
+                e.printStackTrace();
                 page = 1;
             }
         }
@@ -130,7 +129,7 @@ public class InventoryController extends HttpServlet {
             try {
                 selectedWarehouse = Integer.parseInt(whParam);
             } catch (NumberFormatException ignored) {
-                SystemLogger.warn(LogModule.INVENTORY, "InventoryController.doGet", "Lỗi định dạng kho: " + ignored.getMessage());
+                ignored.printStackTrace();
             }
         }
         if (selectedWarehouse != null) {
@@ -166,7 +165,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
-                SystemLogger.warn("Quản lý kho", "InventoryController.handleModelGroup", "Lỗi định dạng trang: " + e.getMessage());
+                e.printStackTrace();
                 page = 1;
             }
         }
@@ -214,7 +213,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
-                SystemLogger.warn(LogModule.INVENTORY, "InventoryController.doGet", "Lỗi định dạng trang: " + e.getMessage());
+                e.printStackTrace();
                 page = 1;
             }
         }
