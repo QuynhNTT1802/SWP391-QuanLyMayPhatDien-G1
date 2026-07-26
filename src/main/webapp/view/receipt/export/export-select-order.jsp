@@ -90,7 +90,7 @@
                                         <td>${o.customer.name}</td>
                                         <td><fmt:formatDate value="${o.approvedAt}" pattern="dd/MM/yyyy HH:mm"/></td>
                                         <td class="amount-cell">
-                                            <fmt:formatNumber value="${o.totalAmount}" type="currency" currencySymbol="?"/>
+                                            <fmt:formatNumber value="${o.totalAmount}" pattern="#,##0"/> ₫
                                         </td>
                                         <td>
                                         <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewOrderDetail(${o.orderId}, '${o.orderCode}', '${pageContext.request.contextPath}/export-receipt?action=create&orderId=${o.orderId}')" title="Xem chi tiết đơn hàng">

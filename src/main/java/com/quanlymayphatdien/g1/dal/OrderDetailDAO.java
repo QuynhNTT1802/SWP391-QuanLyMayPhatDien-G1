@@ -131,6 +131,22 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
         return -1;
     }
 
+    public boolean deleteByOrderId(int orderId) {
+        String sql = "DELETE FROM order_detail WHERE order_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, orderId);
+            statement.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } finally {
+            closeResources();
+        }
+        return false;
+    }
+
     public boolean insertBatch(List<OrderDetail> list) {
         String sql = "INSERT INTO order_detail (order_id, generator_id, quantity, unit_price, note) "
                 + "VALUES (?, ?, ?, ?, ?)";

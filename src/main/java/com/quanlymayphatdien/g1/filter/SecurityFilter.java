@@ -98,8 +98,6 @@ public class SecurityFilter implements Filter {
             Rule.action("/order",
                     Map.of(
                             "create", "orders.create",
-                            "edit", "orders.update",
-                            "update", "orders.update",
                             "approve", "orders.approve",
                             "reject", "orders.reject",
                             "cancel", "orders.cancel"),

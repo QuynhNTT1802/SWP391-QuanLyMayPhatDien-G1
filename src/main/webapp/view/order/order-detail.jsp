@@ -580,6 +580,7 @@
                     <c:set var="canRejectNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canRevisionNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canDeleteNow" value="${order.status == 'PENDING' && isOwner}" />
+                    <c:set var="canEditNow" value="${order.status == 'NEEDS_REVISION' && isOwner}" />
 
                     <%-- ============================================================
                          HEADER BAR
@@ -600,6 +601,13 @@
                             </h2>
                         </div>
                         <div class="right">
+
+                            <c:if test="${canEditNow}">
+                                <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Chỉnh sửa
+                                </a>
+                            </c:if>
 
                             <c:if test="${canApproveNow}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
@@ -768,8 +776,8 @@
                                                                data-gen-weight="<c:out value='${d.generatorWeight}'/>"
                                                                data-gen-status="<c:out value='${d.generatorStatus}'/>"><c:out value="${d.generatorModel}"/></a></strong></td>
                                                         <td class="text-right mono"><fmt:formatNumber value="${d.quantity}"/></td>
-                                                        <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
-                                                        <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/> ₫</td>
+                                                        <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" pattern="#,##0"/> ₫</td>
                                                         <td><c:out value="${d.note}"/></td>
                                                         <td>
                                                             <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
@@ -784,7 +792,7 @@
                                             <tr>
                                                 <td colspan="4" class="text-right" style="padding: 12px 14px;">Tổng cộng:</td>
                                                 <td class="text-right mono" style="padding: 12px 14px; color: var(--accent);">
-                                                    <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                                    <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0"/> ₫
                                                 </td>
                                                 <td colspan="2"></td>
                                             </tr>

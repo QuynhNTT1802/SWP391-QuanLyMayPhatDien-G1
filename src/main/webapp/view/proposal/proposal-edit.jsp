@@ -199,7 +199,7 @@
                                                 </td>
                                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
                                                 <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="${d.quantity}" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
-                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#0'/>" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                                 <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                             </tr>
