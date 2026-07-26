@@ -1030,7 +1030,7 @@
                     } else {
                         var sysMsg = 'Số serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.';
                         if (isTransferImportMode) {
-                            sysMsg = 'Số serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + (data.status || 'unknown') + '), không thể nhập.';
+                            sysMsg = 'Số serial "' + serial + '" đang trong trạng thái luân chuyển, không thể nhập.';
                         }
                         toast(sysMsg, 'danger');
                         clearScanBuf();
@@ -1075,7 +1075,7 @@
                     modelLabel = activeInfo ? (activeInfo.model || '') : '';
                 }
                 var okMsg = existingInvId
-                        ? 'Đã nhập lại số serial "' + serial + '" (đã bán trước đó) vào kho'
+                        ? 'Đã nhập lại số serial "' + serial + '" (đã xuất trước đó) vào kho'
                         : 'Đã thêm số serial "' + serial + '" vào mẫu ' + modelLabel;
                 toast(okMsg, 'success');
                 updatePoCounter();

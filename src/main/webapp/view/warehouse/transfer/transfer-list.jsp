@@ -22,7 +22,7 @@
     <jsp:include page="../../common/admin/aside.jsp"></jsp:include>
     <div>
         <header class="topbar">
-            <h1>Phiếu luân chuyển kho</h1>
+            <h1>Phiếu đề xuất luân chuyển</h1>
             <span class="crumb">/ Quản lý kho / Luân chuyển</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
@@ -42,7 +42,7 @@
             <div class="page-head">
                 <div class="left">
                     <div class="eyebrow">Kho · Phiếu luân chuyển</div>
-                    <h2 class="page-title">Danh sách phiếu luân chuyển</h2>
+                    <h2 class="page-title">Danh sách phiếu đề xuất luân chuyển</h2>
                 </div>
             </div>
 

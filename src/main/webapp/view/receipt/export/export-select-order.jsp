@@ -37,9 +37,7 @@
 
             <div class="page-head">
                 <div class="left">
-                    <div class="eyebrow">Kho</div>
                     <h2 class="page-title">Chọn đơn hàng đã duyệt</h2>
-                    <div class="page-sub">${totalItems} đơn hàng</div>
                 </div>
             </div>
 

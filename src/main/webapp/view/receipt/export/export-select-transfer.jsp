@@ -37,9 +37,7 @@
 
             <div class="page-head">
                 <div class="left">
-                    <div class="eyebrow">Kho</div>
-                    <h2 class="page-title">Chọn phiếu luân chuyển đã duyệt</h2>
-                    <div class="page-sub">${totalItems} phiếu luân chuyển</div>
+                    <h2 class="page-title">Phiếu luân chuyển</h2>
                 </div>
             </div>
 
@@ -185,7 +183,7 @@
 </style>
 <script>
 function viewTransferDetail(id, code, createUrl) {
-    document.getElementById('modalTitle').textContent = 'Chi tiết phiếu luân chuyển ' + code;
+    document.getElementById('modalTitle').textContent = 'Chi tiết phiếu luân chuyển ' ;
     document.getElementById('createBtn').href = createUrl;
     var tbody = document.getElementById('detailBody');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Đang tải...</td></tr>';

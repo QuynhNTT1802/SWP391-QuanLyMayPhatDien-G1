@@ -22,14 +22,7 @@ import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 
-/**
- *
- * @author FPTShop
- *
- * Moi serial = 1 dong trong bang inventory.
- * Trang /inventory/list liet ke tung serial voi cac filter (warehouse, generator, status, search).
- * Trang /inventory (overview) hien thi KPI tong ton theo COUNT(inventory WHERE IN_STOCK).
- */
+
 @WebServlet(name = "InventoryController", urlPatterns = {"/inventory", "/inventory/*"})
 public class InventoryController extends HttpServlet {
 
