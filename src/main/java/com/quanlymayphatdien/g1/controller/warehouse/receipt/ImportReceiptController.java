@@ -31,6 +31,7 @@ import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
+import com.quanlymayphatdien.g1.dal.TransferDAO;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -376,8 +377,8 @@ public class ImportReceiptController extends HttpServlet {
         Integer scopedWarehouseId = (Integer) session.getAttribute("scopedWarehouseId");
         if (scopedWarehouseId == null) scopedWarehouseId = 0;
 
-        com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
-        java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
+        TransferDAO tDAO = new TransferDAO();
+        java.util.List<Transfer> transfers
                 = tDAO.findReadyForImport(scopedWarehouseId, loggedUser.getId());
 
         request.setAttribute("transfers", transfers);

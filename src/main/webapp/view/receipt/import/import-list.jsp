@@ -117,6 +117,9 @@
                                                         <c:when test="${not empty r.purchaseOrderCode}">
                                                             <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="code-link"><c:out value="${r.purchaseOrderCode}"/></a>
                                                         </c:when>
+                                                        <c:when test="${not empty r.transferCode}">
+                                                            <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${r.linkedTransferId}" class="code-link"><c:out value="${r.transferCode}"/></a>
+                                                        </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
                                                 </td>

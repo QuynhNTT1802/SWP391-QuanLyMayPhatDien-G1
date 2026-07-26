@@ -127,9 +127,12 @@
                                                              <a href="javascript:void(0);" class="code-link code-link--purple" onclick="showRelatedModal(this)" data-doc-type="order" data-doc-code="<c:out value='${r.orderCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.orderId}"><c:out value="${r.orderCode}"/></a>
                                                          </c:when>
                                                          <c:when test="${not empty r.liquidationCode}">
-                                                             <a href="javascript:void(0);" class="code-link" onclick="showRelatedModal(this)" data-doc-type="liquidation" data-doc-code="<c:out value='${r.liquidationCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.liquidationId}"><c:out value="${r.liquidationCode}"/></a>
-                                                         </c:when>
-                                                        <c:otherwise><span class="muted">—</span></c:otherwise>
+                                                              <a href="javascript:void(0);" class="code-link" onclick="showRelatedModal(this)" data-doc-type="liquidation" data-doc-code="<c:out value='${r.liquidationCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.liquidationId}"><c:out value="${r.liquidationCode}"/></a>
+                                                          </c:when>
+                                                          <c:when test="${not empty r.transferCode}">
+                                                              <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${r.linkedTransferId}" class="code-link"><c:out value="${r.transferCode}"/></a>
+                                                          </c:when>
+                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-reason">
