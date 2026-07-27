@@ -44,6 +44,18 @@ public class ExportReportDAO extends BaseReportDAO {
         return queryExportReportDetail(warehouseId, month, year, -1, -1, null);
     }
 
+    public List<Object[]> trendExport(Integer warehouseId, int year) {
+        List<Object> p = new ArrayList<>();
+        p.add(year);
+        if (warehouseId != null) p.add(warehouseId);
+        return queryFlat(
+            "SELECT DATE_FORMAT(r.created_at,'%Y-%m'),COUNT(*)"
+            + " FROM receipt r WHERE r.receipt_type='EXPORT'"
+            + " AND YEAR(r.created_at)=?"
+            + (warehouseId != null ? " AND r.warehouse_id=?" : "")
+            + " GROUP BY 1 ORDER BY 1", p);
+    }
+
     public List<Object[]> getExportExcelData(Integer warehouseId, int month, int year) {
         String sql = "SELECT r.receipt_code, DATE_FORMAT(r.created_at, '%d/%m/%Y'), w.name,"
                 + " c.name, g.model, i2.serial_number, u.name"

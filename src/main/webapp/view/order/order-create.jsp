@@ -757,12 +757,6 @@
             })();
             document.addEventListener('DOMContentLoaded', refreshCustomerCard);
 
-            function onCustomerTypeChange() {
-                // No-op: <select id="customerTypeSelect"> đã được thay bằng hidden input customerTypeId.
-                // Function vẫn được gọi từ searchable-dropdown.js để tương thích ngược với các trang khác.
-            }
-            document.addEventListener('DOMContentLoaded', onCustomerTypeChange);
-
             document.addEventListener('DOMContentLoaded', function () {
                 if (window.SESSION_DATA && window.SESSION_DATA.message) {
                     if (typeof showToast === 'function') {

@@ -72,6 +72,12 @@
                         <option value="doing" <c:if test="${selectedStatus == 'doing'}">selected</c:if>>Đang kiểm kê</option>
                         <option value="completed" <c:if test="${selectedStatus == 'completed'}">selected</c:if>>Đã hoàn thành</option>
                     </select>
+                    <select name="month" class="filter-select" style="width:auto;">
+                        <c:forEach var="m" begin="1" end="12">
+                            <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
+                        </c:forEach>
+                    </select>
+                    <input type="number" name="year" value="${year}" class="edit-input" style="width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;">
                     <div class="spacer"></div>
                     <c:if test="${not empty search or not empty selectedWarehouse or not empty selectedStatus}">
                         <a href="${pageContext.request.contextPath}/inventory-check" class="btn">
@@ -79,6 +85,10 @@
                             Xoá lọc
                         </a>
                     </c:if>
+                    <button type="button" class="btn" style="background:#fff;color:#000;border:1px solid #ddd;" onclick="exportExcel()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
+                    </button>
                 </form>
 
                 <div class="table-card" style="margin-top:16px;">
@@ -183,5 +193,19 @@
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/inventory-check.js"></script>
+    <script>
+    function exportExcel() {
+        var form = document.querySelector('form[action*="inventory-check"]');
+        var params = new URLSearchParams();
+        params.set('action', 'exportExcel');
+        var inputs = form.querySelectorAll('input[name], select[name]');
+        inputs.forEach(function(inp) {
+            if (inp.name !== 'action' && inp.name !== 'page' && inp.value) {
+                params.set(inp.name, inp.value);
+            }
+        });
+        window.location = form.action + '?' + params.toString();
+    }
+    </script>
 </body>
 </html>

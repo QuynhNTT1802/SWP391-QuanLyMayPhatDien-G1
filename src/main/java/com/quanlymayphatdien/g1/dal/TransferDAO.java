@@ -456,35 +456,6 @@ public class TransferDAO extends DBContext implements I_DAO<Transfer> {
         return null;
     }
 
-    public Transfer findActiveByWarehousePair(int sourceId, int destId) {
-        String sql = "SELECT t.*, "
-                + "  ws.name AS source_warehouse_name, "
-                + "  wd.name AS dest_warehouse_name, "
-                + "  u1.name AS created_by_name "
-                + "FROM transfer t "
-                + "LEFT JOIN warehouse ws ON t.source_warehouse_id = ws.warehouse_id "
-                + "LEFT JOIN warehouse wd ON t.dest_warehouse_id = wd.warehouse_id "
-                + "LEFT JOIN user u1 ON t.created_by = u1.id "
-                + "WHERE t.source_warehouse_id = ? "
-                + "  AND t.dest_warehouse_id = ? "
-                + "  AND t.status IN ('PENDING_CEO','REQUEST_REVISION','APPROVED','EXPORTED') "
-                + "ORDER BY t.created_at DESC LIMIT 1";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, sourceId);
-            statement.setInt(2, destId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return getFromResultSet(resultSet);
-            }
-        } catch (SQLException e) {
-        } finally {
-            closeResources();
-        }
-        return null;
-    }
-
     @Override
     public int insert(Transfer t) {
         String insertSql = "INSERT INTO transfer (transfer_code, source_warehouse_id, dest_warehouse_id, "

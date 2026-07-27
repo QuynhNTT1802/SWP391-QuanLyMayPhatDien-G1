@@ -302,7 +302,7 @@
                                                     <c:out value="${order.createdByName}"/>
                                                 </td>
                                                 <td class="amount-cell">
-                                                    <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                                    <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0"/> ₫
                                                 </td>
                                                 <td class="col-status">
                                                     <c:choose>

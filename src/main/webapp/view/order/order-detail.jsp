@@ -575,8 +575,8 @@
                     <c:set var="canApproveNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canRejectNow" value="${order.status == 'PENDING' && canApproveOrder}" />
                     <c:set var="canRevisionNow" value="${order.status == 'PENDING' && canApproveOrder}" />
-                    <c:set var="canCancelNow" value="${order.status == 'PENDING' && canApproveOrder && canCancelOrder}" />
                     <c:set var="canDeleteNow" value="${order.status == 'PENDING' && isOwner}" />
+                    <c:set var="canEditNow" value="${order.status == 'NEEDS_REVISION' && isOwner}" />
 
                     <%-- ============================================================
                          HEADER BAR
@@ -598,6 +598,13 @@
                         </div>
                         <div class="right">
 
+                            <c:if test="${canEditNow}">
+                                <a class="btn btn-primary" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
+                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Chỉnh sửa
+                                </a>
+                            </c:if>
+
                             <c:if test="${canApproveNow}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
@@ -615,28 +622,6 @@
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                     Từ chối
                                 </button>
-                            </c:if>
-                            <c:if test="${canCancelNow}">
-                                <button type="button" class="btn" onclick="openModal('cancelModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Hủy đơn
-                                </button>
-                            </c:if>
-                            <c:if test="${canUpdateOrder && order.status == 'NEEDS_REVISION' && isOwner}">
-                                <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Chỉnh sửa
-                                </a>
-                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                    Gửi duyệt lại
-                                </button>
-                            </c:if>
-                            <c:if test="${canUpdateOrder && order.status == 'PENDING'}">
-                                <a class="btn" href="${pageContext.request.contextPath}/order?action=edit&id=${order.orderId}">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                    Sửa
-                                </a>
                             </c:if>
                             <c:if test="${canDeleteNow}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
@@ -740,11 +725,7 @@
                                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                     <input id="ordSearch" placeholder="Tìm kiếm thông tin..." autocomplete="off"/>
                                 </div>
-                                <div class="spacer"></div>
-                                <button type="button" class="btn" title="Xuất file (đang phát triển)">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    Xuất file
-                                </button>
+
                             </div>
 
                             <div style="overflow-x:auto;">
@@ -787,8 +768,8 @@
                                                                data-gen-weight="<c:out value='${d.generatorWeight}'/>"
                                                                data-gen-status="<c:out value='${d.generatorStatus}'/>"><c:out value="${d.generatorModel}"/></a></strong></td>
                                                         <td class="text-right mono"><fmt:formatNumber value="${d.quantity}"/></td>
-                                                        <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></td>
-                                                        <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" type="currency" currencySymbol="₫"/></td>
+                                                        <td class="text-right mono"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/> ₫</td>
+                                                        <td class="text-right mono" style="font-weight:600;"><fmt:formatNumber value="${d.quantity * d.unitPrice}" pattern="#,##0"/> ₫</td>
                                                         <td><c:out value="${d.note}"/></td>
                                                         <td>
                                                             <span class="status-pill ${statusPillClass}"><span class="pdot"></span>${statusLabel}</span>
@@ -803,7 +784,7 @@
                                             <tr>
                                                 <td colspan="4" class="text-right" style="padding: 12px 14px;">Tổng cộng:</td>
                                                 <td class="text-right mono" style="padding: 12px 14px; color: var(--accent);">
-                                                    <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                                    <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0"/> ₫
                                                 </td>
                                                 <td colspan="2"></td>
                                             </tr>
@@ -990,22 +971,6 @@
             </div>
         </c:if>
 
-        <c:if test="${canCancelNow}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Hủy đơn hàng</h3>
-                    <div class="modal-sub">Đơn hàng sẽ bị hủy. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=cancel">
-                        <input type="hidden" name="id" value="${order.orderId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
         <c:if test="${canDeleteNow}">
             <div class="modal-host" id="deleteModal">
                 <div class="modal-card">
@@ -1058,34 +1023,7 @@
             </div>
         </c:if>
 
-        <c:if test="${canUpdateOrder && order.status == 'NEEDS_REVISION' && isOwner}">
-            <div class="modal-host" id="resubmitModal">
-                <div class="modal-card">
-                    <h3>Gửi duyệt lại</h3>
-                    <div class="modal-sub">Đơn hàng sẽ chuyển sang trạng thái "Chờ duyệt" để Quản lý Bán hàng xem xét lại sau khi đã chỉnh sửa.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/order?action=update" id="resubmitForm">
-                        <input type="hidden" name="orderId" value="${order.orderId}" />
-                        <input type="hidden" name="customerName" value="<c:out value='${order.customer.name}'/>" />
-                        <input type="hidden" name="customerPhone" value="<c:out value='${order.customer.phone}'/>" />
-                        <input type="hidden" name="customerEmail" value="<c:out value='${order.customer.email}'/>" />
-                        <input type="hidden" name="customerAddress" value="<c:out value='${order.customer.address}'/>" />
-                        <input type="hidden" name="customerCompany" value="<c:out value='${order.customer.companyName}'/>" />
-                        <input type="hidden" name="customerTypeId" value="<c:out value='${order.customer.customerTypeId}'/>" />
-                        <input type="hidden" name="customerNote" value="<c:out value='${order.customerNote}'/>" />
-                        <input type="hidden" name="note" value="<c:out value='${order.note}'/>" />
-                        <c:forEach var="d" items="${details}">
-                            <input type="hidden" name="generatorId" value="${d.generatorId}" />
-                            <input type="hidden" name="quantity" value="${d.quantity}" />
-                            <input type="hidden" name="unitPrice" value="${d.unitPrice}" />
-                        </c:forEach>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('resubmitModal')">Đóng</button>
-                            <button type="submit" class="btn btn-primary">Gửi duyệt lại</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
+        
 
         <div class="gen-modal-backdrop" id="generatorModal" onclick="if (event.target === this) closeGeneratorModal();">
             <div class="gen-modal" role="dialog" aria-modal="true">

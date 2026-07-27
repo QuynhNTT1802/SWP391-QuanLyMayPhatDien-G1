@@ -308,24 +308,6 @@ public class CustomerDAO extends DBContext implements I_DAO<Customer> {
         return false;
     }
 
-    public List<Customer> findTop4Alphabetical() {
-        List<Customer> list = new ArrayList<>();
-        String sql = "SELECT * FROM customer WHERE status = 'active' ORDER BY name ASC LIMIT 4";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        } finally {
-            closeResources();
-        }
-        return list;
-    }
-
     public List<Customer> searchByKeyword(String keyword) {
         List<Customer> list = new ArrayList<>();
         String sql;

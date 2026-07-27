@@ -15,7 +15,7 @@ import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-import com.quanlymayphatdien.g1.utils.NotificationUtil;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

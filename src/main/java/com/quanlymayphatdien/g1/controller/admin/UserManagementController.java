@@ -613,7 +613,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                page = 1;
+                e.printStackTrace();
             }
         }
 

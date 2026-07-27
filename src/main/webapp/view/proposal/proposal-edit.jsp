@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
+
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-create.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-edit.css">
 </head>
@@ -194,7 +195,7 @@
                                                 </td>
                                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
                                                 <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="${d.quantity}" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
-                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
+                                                <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#0'/>" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                                 <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
                                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                             </tr>
@@ -457,6 +458,7 @@ MSG.ADDED_SUP_SUFFIX = '"';
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
+
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/proposal-create.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/proposal-edit.js"></script>

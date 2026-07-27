@@ -50,11 +50,6 @@ function finalizeUnitPrice(input) {
     updateTotal();
 }
 
-function formatPriceDisplay(input) {
-    var n = parseInt(input.value.replace(/[^\d]/g, '')) || 0;
-    input.value = n > 0 ? String(n) : '0';
-}
-
 function unformatPrice(input) {
     input.value = input.value.replace(/[^\d]/g, '') || '0';
 }
@@ -92,6 +87,11 @@ function updateRowNumbers() {
 function addRow() {
     var clone = document.getElementById('rowTemplate').content.cloneNode(true);
     document.getElementById('detailBody').appendChild(clone);
+    var rows = document.getElementById('detailBody').querySelectorAll('tr');
+    var newRow = rows[rows.length - 1];
+    if (window.initGenSelectSearch) {
+        window.initGenSelectSearch(newRow);
+    }
     updateRowNumbers();
     updateTotal();
 }
