@@ -31,7 +31,8 @@ import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
-import com.quanlymayphatdien.g1.utils.NotificationUtil;
+import com.quanlymayphatdien.g1.dal.TransferDAO;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -331,12 +332,15 @@ public class ImportReceiptController extends HttpServlet {
         String toDate = request.getParameter("toDate");
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
+        HttpSession session = request.getSession(false);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+        Integer filterWarehouseId = scopedWarehouseId > 0 ? scopedWarehouseId : null;
 
         PurchaseOrderDAO dao = new PurchaseOrderDAO();
-        int totalItems = dao.countApprovedAvailableFiltered(search, fromDate, toDate);
+        int totalItems = dao.countApprovedAvailableFiltered(search, fromDate, toDate, filterWarehouseId);
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
         if (page > totalPages) page = totalPages;
-        List<PurchaseOrder> approvedPOs = dao.findApprovedAvailableFiltered(search, fromDate, toDate, page, pageSize);
+        List<PurchaseOrder> approvedPOs = dao.findApprovedAvailableFiltered(search, fromDate, toDate, filterWarehouseId, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
@@ -344,7 +348,18 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("search", search);
         request.setAttribute("fromDate", fromDate);
         request.setAttribute("toDate", toDate);
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        if (scopedWarehouseId > 0) {
+            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
+            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            if (scoped != null) {
+                whList.add(scoped);
+            }
+            request.setAttribute("warehouses", whList);
+            request.setAttribute("scopedWarehouseId", scopedWarehouseId);
+            request.setAttribute("scopedWarehouseName", scoped != null ? scoped.getName() : null);
+        } else {
+            request.setAttribute("warehouses", warehouseDAO.findAll());
+        }
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("totalItems", totalItems);
@@ -362,8 +377,8 @@ public class ImportReceiptController extends HttpServlet {
         Integer scopedWarehouseId = (Integer) session.getAttribute("scopedWarehouseId");
         if (scopedWarehouseId == null) scopedWarehouseId = 0;
 
-        com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
-        java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
+        TransferDAO tDAO = new TransferDAO();
+        java.util.List<Transfer> transfers
                 = tDAO.findReadyForImport(scopedWarehouseId, loggedUser.getId());
 
         request.setAttribute("transfers", transfers);

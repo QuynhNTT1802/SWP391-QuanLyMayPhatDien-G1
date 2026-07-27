@@ -15,26 +15,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Endpoint tra cuu serial phuc vu cho quet barcode o cac trang:
- *  - Tao phieu nhap / xuat kho
- *  - Kiem ke kho
- *
- * GET /inventory-lookup?action=scan&serial=XXX&warehouseId=YYY
- *  Tra ve JSON:
- *   {
- *     "found": true|false,
- *     "serialNumber": "...",
- *     "generatorId": int,
- *     "generatorModel": "...",
- *     "generatorBrand": "...",
- *     "currentWarehouseId": int,
- *     "currentWarehouseName": "...",
- *     "status": "IN_STOCK|SOLD|IN_TRANSIT|LIQUIDATED|...",
- *     "blocked": bool,
- *     "inTargetWarehouse": bool|null
- *   }
- */
 @WebServlet(name = "InventoryLookupController", urlPatterns = {"/inventory-lookup"})
 public class InventoryLookupController extends HttpServlet {
 

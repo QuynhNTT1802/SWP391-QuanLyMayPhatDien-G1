@@ -5,6 +5,7 @@ import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
@@ -257,6 +258,9 @@ public class UserManagementController extends HttpServlet {
                 request.setAttribute("user", user);
                 request.setAttribute("allRoles", roleDAO.findAll());
 
+                WarehouseDAO warehouseDAO = new WarehouseDAO();
+                request.setAttribute("warehouses", warehouseDAO.findAll());
+
                 PermissionDAO perDAO = new PermissionDAO();
                 List<Permission> allPermissions = perDAO.findAll();
                 List<String[]> userOverrides = perDAO.getUserOverrides(userId);
@@ -290,6 +294,7 @@ public class UserManagementController extends HttpServlet {
             String phone = request.getParameter("phone");
             String address = request.getParameter("address");
             String status = request.getParameter("status");
+            String warehouseIdStr = request.getParameter("warehouseId");
 
             UserDAO userDAO = new UserDAO();
             RoleDAO roleDAO = new RoleDAO();
@@ -336,6 +341,11 @@ public class UserManagementController extends HttpServlet {
                 user.setPhone(phone);
                 user.setAddress(address);
                 user.setStatus(status);
+                if (warehouseIdStr != null && !warehouseIdStr.isEmpty()) {
+                    user.setWarehouseId(Integer.parseInt(warehouseIdStr));
+                } else {
+                    user.setWarehouseId(null);
+                }
                 user.setUpdatedAt(LocalDateTime.now());
                 user.setUpdatedBy(1);
 

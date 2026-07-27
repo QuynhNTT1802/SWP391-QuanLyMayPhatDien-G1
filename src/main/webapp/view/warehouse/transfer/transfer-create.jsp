@@ -169,6 +169,14 @@
                     <div class="alert-body">
                         <div class="alert-title">Không thể gửi phiếu</div>
                         <span><c:out value="${toastMessage}"/></span>
+                        <c:if test="${not empty pendingTransferId}">
+                            <div style="margin-top:10px;">
+                                <a class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;"
+                                   href="${pageContext.request.contextPath}/transfers?action=detail&id=${pendingTransferId}">
+                                    Xem phiếu đang chờ xử lý
+                                </a>
+                            </div>
+                        </c:if>
                     </div>
                 </div>
             </c:if>
@@ -201,16 +209,13 @@
                                         </option>
                                     </c:forEach>
                                 </select>
-                                <c:if test="${scopedWarehouseId > 0}">
-                                    <small style="color:var(--muted);font-size:11.5px;">Kho của bạn: <c:out value="${scopedWarehouseName}"/></small>
-                                </c:if>
                             </div>
 
                             <div class="form-field">
                                 <label>Kho đích <span class="req">*</span></label>
                                 <select class="input" name="destWarehouseId" id="destWarehouseId" required onchange="onDestWarehouseChange()">
                                     <option value="">-- Chọn kho đích --</option>
-                                    <c:forEach var="w" items="${warehouses}">
+                                    <c:forEach var="w" items="${destWarehouses}">
                                         <option value="${w.warehouseId}" data-warehouse-name="<c:out value='${w.name}'/>"><c:out value="${w.name}"/></option>
                                     </c:forEach>
                                 </select>

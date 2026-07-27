@@ -247,6 +247,11 @@
                                        Phiếu mua <c:out value="${receipt.purchaseOrderCode}"/> →
                                     </a>
                                 </c:if>
+                                <c:if test="${not empty receipt.transferCode}">
+                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${receipt.linkedTransferId}" class="related-link">
+                                        Phiếu luân chuyển <c:out value="${receipt.transferCode}"/> →
+                                    </a>
+                                </c:if>
                             </div>
                             <c:if test="${not empty receipt.note}">
                                 <div style="margin-top: 18px;">

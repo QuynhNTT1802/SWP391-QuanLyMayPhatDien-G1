@@ -176,7 +176,6 @@
     else if (e.key === 'Escape') { cancel() }
   })
 
-
   ;[].slice.call(document.querySelectorAll('[data-danger]')).forEach(function (btn) {
     btn.addEventListener('click', function () {
       var action = btn.dataset.danger

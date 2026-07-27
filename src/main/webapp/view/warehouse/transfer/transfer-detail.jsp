@@ -469,7 +469,6 @@
                                     <th style="width: 40px;">#</th>
                                     <th>Dòng máy</th>
                                     <th style="width: 80px;">Số lượng</th>
-                                    <th>Số serial</th>
                                     <th>Tình trạng</th>
                                     <th>Ghi chú</th>
                                 </tr>
@@ -485,7 +484,6 @@
                                                 <td class="mono">${(detailPage - 1) * 10 + st.index + 1}</td>
                                                 <td><strong>${d.generatorModel}</strong></td>
                                                 <td class="mono">${d.quantity}</td>
-                                                <td class="mono">${d.serialNumber != null ? d.serialNumber : '—'}</td>
                                                 <td>
                                                     <c:choose>
                                                         <c:when test="${d.condition == 'GOOD'}"><span class="cond-badge cond-good">Tốt</span></c:when>

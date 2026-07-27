@@ -3,8 +3,10 @@ import static com.quanlymayphatdien.g1.utils.GlobalUtils.REGEX_PHONE;
 import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.entity.Warehouse;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,6 +42,17 @@ public class ProfileServlet extends HttpServlet {
         } else {
             request.setAttribute("user", user);
         }
+
+        int scopedWhId = userDAO.getScopedWarehouseId(latestUser != null ? latestUser.getId() : user.getId());
+        String scopedWhName = null;
+        if (scopedWhId > 0) {
+            Warehouse wh = new WarehouseDAO().findById(scopedWhId);
+            if (wh != null) {
+                scopedWhName = wh.getName();
+            }
+        }
+        request.setAttribute("scopedWarehouseId", scopedWhId);
+        request.setAttribute("scopedWarehouseName", scopedWhName);
 
         request.getRequestDispatcher("/view/user/profile.jsp").forward(request, response);
     }

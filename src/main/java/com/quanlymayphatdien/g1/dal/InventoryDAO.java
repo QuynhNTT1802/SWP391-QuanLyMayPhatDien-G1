@@ -561,12 +561,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return result;
     }
 
-    /**
-     * Lấy tình trạng kiểm kê (GOOD/POOR/DAMAGED) của lần kiểm kê hoàn thành gần
-     * nhất cho từng serial trong danh sách, bất kể trạng thái tồn kho hiện tại.
-     * Dùng cho màn sửa đơn: máy đã nằm trong đơn (PENDING_LIQUIDATION) vẫn cần
-     * hiển thị đúng tình trạng. Trả về Map serial -> status.
-     */
     public Map<String, String> findLatestConditionBySerials(List<String> serials) {
         Map<String, String> result = new HashMap<>();
         if (serials == null || serials.isEmpty()) {

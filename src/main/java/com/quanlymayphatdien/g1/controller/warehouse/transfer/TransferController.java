@@ -189,12 +189,13 @@ public class TransferController extends HttpServlet {
         HttpSession session = request.getSession(false);
         int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
 
-        List<Warehouse> allWarehouses = warehouseDAO.findAll();
-        request.setAttribute("warehouses", allWarehouses);
         List<Generator> allActive = generatorDAO.findAllActive();
         request.setAttribute("generators", allActive);
         request.setAttribute("activePage", "transfer-create");
 
+        List<Warehouse> allWarehouses = warehouseDAO.findAll();
+        request.setAttribute("destWarehouses", allWarehouses);
+        List<Warehouse> sourceWarehouses;
         if (scopedWarehouseId > 0) {
             com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
@@ -202,9 +203,15 @@ public class TransferController extends HttpServlet {
                 request.setAttribute("scopedWarehouseName", scoped.getName());
                 request.setAttribute("defaultSourceWarehouseId", scoped.getWarehouseId());
             }
+            sourceWarehouses = new ArrayList<>();
+            if (scoped != null) {
+                sourceWarehouses.add(scoped);
+            }
         } else {
             request.setAttribute("defaultSourceWarehouseId", null);
+            sourceWarehouses = allWarehouses;
         }
+        request.setAttribute("warehouses", sourceWarehouses);
 
         Map<Integer, Integer> inStockByGen = scopedWarehouseId > 0
                 ? inventoryDAO.countInStockMapByWarehouse(scopedWarehouseId)
@@ -214,7 +221,7 @@ public class TransferController extends HttpServlet {
         // Build warehouse -> generator (with stock) JSON for client-side filter
         Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
         warehouseData.put(0, new ArrayList<>());
-        for (Warehouse w : allWarehouses) {
+        for (Warehouse w : sourceWarehouses) {
             Map<Integer, Integer> stockByGenerator = inventoryDAO.countInStockMapByWarehouse(w.getWarehouseId());
             List<Map<String, Object>> wsGens = new ArrayList<>();
             for (Generator g : allActive) {
@@ -489,6 +496,18 @@ public class TransferController extends HttpServlet {
         if (sourceWh > 0 && destWh > 0 && sourceWh == destWh) {
             errors.add("Kho nguồn và kho đích phải khác nhau");
         }
+        if (sourceWh > 0 && destWh > 0 && sourceWh != destWh) {
+            Transfer active = transferDAO.findActiveByWarehousePair(sourceWh, destWh);
+            if (active != null) {
+                errors.add("Đã tồn tại phiếu " + active.getTransferCode()
+                        + " (" + mapStatusLabel(active.getStatus()) + ") "
+                        + "giữa kho nguồn và kho đích đã chọn. "
+                        + "Vui lòng xử lý phiếu này trước khi tạo phiếu mới.");
+                request.setAttribute("pendingTransferId", active.getTransferId());
+                request.setAttribute("pendingTransferCode", active.getTransferCode());
+                request.setAttribute("pendingTransferStatus", active.getStatus());
+            }
+        }
         if (note != null && note.length() > MAX_NOTE_LENGTH) {
             errors.add("Ghi chú không vượt quá " + MAX_NOTE_LENGTH + " ký tự");
         }
@@ -583,6 +602,12 @@ public class TransferController extends HttpServlet {
         t.setNote(note);
 
         int newId = transferDAO.insert(t);
+        if (newId == -2) {
+            request.setAttribute("toastMessage", "Đã tồn tại phiếu luân chuyển đang chờ xử lý giữa kho nguồn và kho đích đã chọn. Vui lòng đợi xử lý phiếu cũ trước khi tạo phiếu mới.");
+            request.setAttribute("toastType", "danger");
+            showCreateForm(request, response);
+            return;
+        }
         if (newId <= 0) {
             request.setAttribute("toastMessage", "Không thể tạo phiếu");
             request.setAttribute("toastType", "danger");
@@ -605,7 +630,7 @@ public class TransferController extends HttpServlet {
 
         List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 1000);
         for (User ceo : ceos) {
-            NotificationUtil.send(
+            NotificationService.send(
                     ceo.getId(),
                     "Phiếu luân chuyển mới chờ duyệt",
                     "Nhân viên " + user.getName() + " đã tạo phiếu luân chuyển "
@@ -748,7 +773,7 @@ public class TransferController extends HttpServlet {
             session.setAttribute("toastType", "success");
 
             try {
-                NotificationUtil.send(
+                NotificationService.send(
                         t.getCreatedBy(),
                         "Phiếu luân chuyển yêu cầu chỉnh sửa",
                         "CEO yêu cầu chỉnh sửa phiếu " + t.getTransferCode() + ": " + note,
@@ -913,7 +938,7 @@ public class TransferController extends HttpServlet {
             try {
                 List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 1000);
                 for (User ceo : ceos) {
-                    NotificationUtil.send(
+                    NotificationService.send(
                             ceo.getId(),
                             "Phiếu luân chuyển được sửa và gửi lại",
                             "Nhân viên " + user.getName() + " đã sửa phiếu " + t.getTransferCode()
@@ -968,6 +993,28 @@ public class TransferController extends HttpServlet {
         session.setAttribute("toastMessage", msg);
         session.setAttribute("toastType", "danger");
         response.sendRedirect(request.getContextPath() + "/transfers?action=create");
+    }
+
+    private String mapStatusLabel(String status) {
+        if (status == null) {
+            return "";
+        }
+        switch (status) {
+            case GlobalUtils.TRANSFER_STATUS_PENDING_CEO:
+                return "chờ CEO duyệt";
+            case GlobalUtils.TRANSFER_STATUS_REQUEST_REVISION:
+                return "yêu cầu chỉnh sửa";
+            case GlobalUtils.TRANSFER_STATUS_APPROVED:
+                return "đã duyệt";
+            case GlobalUtils.TRANSFER_STATUS_EXPORTED:
+                return "đã xuất kho";
+            case GlobalUtils.TRANSFER_STATUS_COMPLETED:
+                return "hoàn thành";
+            case GlobalUtils.TRANSFER_STATUS_REJECTED:
+                return "đã từ chối";
+            default:
+                return status;
+        }
     }
 
     private int parseInt(String s, int def) {

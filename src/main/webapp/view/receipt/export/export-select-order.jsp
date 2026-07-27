@@ -37,9 +37,7 @@
 
             <div class="page-head">
                 <div class="left">
-                    <div class="eyebrow">Kho</div>
-                    <h2 class="page-title">Chọn đơn hàng đã duyệt</h2>
-                    <div class="page-sub">${totalItems} đơn hàng</div>
+                    <h2 class="page-title">Đơn hàng</h2>
                 </div>
             </div>
 
@@ -80,7 +78,7 @@
                                     <th>Khách hàng</th>
                                     <th>Ngày duyệt</th>
                                     <th>Tổng tiền</th>
-                                    <th>Chi ti?t</th>
+                                    <th>Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>

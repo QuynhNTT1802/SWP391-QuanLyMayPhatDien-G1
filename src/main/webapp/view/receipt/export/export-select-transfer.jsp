@@ -37,9 +37,7 @@
 
             <div class="page-head">
                 <div class="left">
-                    <div class="eyebrow">Kho</div>
-                    <h2 class="page-title">Chọn phiếu luân chuyển đã duyệt</h2>
-                    <div class="page-sub">${totalItems} phiếu luân chuyển</div>
+                    <h2 class="page-title">Phiếu luân chuyển</h2>
                 </div>
             </div>
 
@@ -77,11 +75,11 @@
                             <thead>
                                 <tr>
                                     <th>Mã phiếu</th>
-                                    <th>Kho ngu?n</th>
+                                    <th>Kho nguồn</th>
                                     <th>Kho đích</th>
-                                    <th>Ngu?i t?o</th>
+                                    <th>Nguời tạo</th>
                                     <th>Ngày tạo</th>
-                                    <th>Chi ti?t</th>
+                                    <th>Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -95,7 +93,7 @@
                                         <td>
                                             <button type="button" class="btn" style="font-size:12px;padding:4px 10px;" onclick="viewTransferDetail(${t.transferId}, '${t.transferCode}', '${pageContext.request.contextPath}/export-receipt?action=create&transferId=${t.transferId}')" title="Xem chi ti?t">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                Xem chi ti?t
+                                                Xem chi tiết
                                             </button>
                                         </td>
                                     </tr>
@@ -151,8 +149,7 @@
                     <thead>
                         <tr>
                             <th>Mẫu máy</th>
-                            <th>S? seri</th>
-                            <th>S? lu?ng</th>
+                            <th>Số luợng</th>
                             <th>Ghi chú</th>
                         </tr>
                     </thead>
@@ -163,7 +160,7 @@
             <div class="empty-state" id="detailEmpty" style="display:none;">Không có chi tiết.</div>
         </div>
         <div class="modal-footer">
-            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">T?o phi?u xu?t</a>
+            <a id="createBtn" href="#" class="btn btn-primary" style="font-size:13px;padding:6px 16px;">Tạo phiếu xuất</a>
             <button type="button" class="btn" onclick="closeDetailModal()">Đóng</button>
         </div>
     </div>
@@ -186,7 +183,7 @@
 </style>
 <script>
 function viewTransferDetail(id, code, createUrl) {
-    document.getElementById('modalTitle').textContent = 'Chi tiết phiếu luân chuyển ' + code;
+    document.getElementById('modalTitle').textContent = 'Chi tiết phiếu luân chuyển ' ;
     document.getElementById('createBtn').href = createUrl;
     var tbody = document.getElementById('detailBody');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--muted)">Đang tải...</td></tr>';
@@ -203,7 +200,6 @@ function viewTransferDetail(id, code, createUrl) {
             data.forEach(function(item) {
                 var tr = document.createElement('tr');
                 tr.innerHTML = '<td>' + (item.generatorModel || '') + '</td>'
-                    + '<td>' + (item.serialNumber || '') + '</td>'
                     + '<td>' + item.quantity + '</td>'
                     + '<td>' + (item.note || '') + '</td>';
                 tbody.appendChild(tr);

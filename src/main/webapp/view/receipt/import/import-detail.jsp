@@ -102,6 +102,12 @@
                                         <input class="info-input mono" type="text" disabled value="<c:out value='${receipt.purchaseOrderCode}'/>">
                                     </div>
                                 </c:if>
+                                <c:if test="${not empty receipt.transferCode}">
+                                    <div class="info-field">
+                                        <label>Phiếu luân chuyển</label>
+                                        <input class="info-input mono" type="text" disabled value="<c:out value='${receipt.transferCode}'/>">
+                                    </div>
+                                </c:if>
                                 <div class="info-field">
                                     <label>Người tạo</label>
                                     <input class="info-input" type="text" disabled value="<c:out value='${receipt.createdByName}'/>">
@@ -134,6 +140,11 @@
                             <c:if test="${not empty receipt.purchaseOrderCode}">
                                 <div style="margin-top: 14px;">
                                     <a class="code-link" href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${receipt.purchaseOrderId}">Xem phiếu mua <c:out value="${receipt.purchaseOrderCode}"/> →</a>
+                                </div>
+                            </c:if>
+                            <c:if test="${not empty receipt.transferCode}">
+                                <div style="margin-top: 14px;">
+                                    <a class="code-link" href="${pageContext.request.contextPath}/transfers?action=detail&id=${receipt.linkedTransferId}">Xem phiếu luân chuyển <c:out value="${receipt.transferCode}"/> →</a>
                                 </div>
                             </c:if>
                             <c:if test="${not empty receipt.note}">
