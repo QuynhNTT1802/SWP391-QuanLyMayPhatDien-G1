@@ -211,7 +211,7 @@
                                     <thead>
                                         <tr>
                                             <th>Mã máy</th>
-                                            <th>Tên máy</th>
+                                            <th>Mô tả</th>
                                             <th>Thương hiệu</th>
                                             <th class="text-right">SL đề xuất</th>
                                             <th class="text-right">Tồn kho</th>

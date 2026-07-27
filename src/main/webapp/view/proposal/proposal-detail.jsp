@@ -292,7 +292,7 @@
                                     <thead>
                                         <tr>
                                             <th>Mã máy phát</th>
-                                            <th>Tên máy phát</th>
+                                            
                                             <th>Hãng</th>
                                             <th>Công suất</th>
                                             <th class="text-right">SL</th>
@@ -321,7 +321,7 @@
                                                         data-search="<c:out value='${d.generatorCode} ${d.generatorName} ${d.brandName} ${d.supplierName}'/>"
                                                         data-status="${proposal.status}">
                                                         <td class="mono"><c:out value="${d.generatorCode}"/></td>
-                                                        <td><strong><c:out value="${d.generatorName}"/></strong></td>
+                                                        
                                                         <td><c:out value="${d.brandName}"/></td>
                                                         <td class="mono">
                                                             <c:choose>

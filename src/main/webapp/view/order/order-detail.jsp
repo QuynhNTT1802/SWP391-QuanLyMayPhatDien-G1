@@ -722,7 +722,7 @@
                             </a>
                         </div>
 
-                        <%-- ============ Tab 1: Bảng sản phẩm ============ --%>
+                        
                         <div class="tab-panel ${currentTab != 'history' ? 'active' : ''}" data-panel="generators">
                             <div class="table-toolbar">
                                 <div class="search-input">
@@ -736,8 +736,8 @@
                                 <table class="product-table" id="ordTable">
                                     <thead>
                                         <tr>
-                                            <th>Mã máy phát</th>
-                                            <th>Tên sản phẩm</th>
+                                            
+                                            <th>Mã máy</th>
                                             <th class="text-right">Số lượng</th>
                                             <th class="text-right">Đơn giá</th>
                                             <th class="text-right">Thành tiền</th>
@@ -762,7 +762,7 @@
                                                     <tr data-row-id="${st.index}"
                                                         data-search="<c:out value='${d.generatorId} ${d.generatorModel}'/>"
                                                         data-status="${order.status}">
-                                                        <td class="mono"><c:out value="${d.generatorId}"/></td>
+                                                        
                                                         <td><strong><a href="javascript:void(0);" class="gen-link"
                                                                onclick="showGeneratorModal(this)"
                                                                data-gen-id="${d.generatorId}"
@@ -838,7 +838,7 @@
                             </c:if>
                         </div>
 
-                        <%-- ============ Tab 2: Lịch sử ============ --%>
+                        
                         <div class="tab-panel ${currentTab == 'history' ? 'active' : ''}" data-panel="history">
                             <form method="get" action="${pageContext.request.contextPath}/order" class="history-filter-bar">
                                 <input type="hidden" name="action" value="detail"/>
