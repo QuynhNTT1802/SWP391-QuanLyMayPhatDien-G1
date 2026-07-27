@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -1135,10 +1136,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
-    /**
-     * Returns a map of generator_id -> in-stock count at the given warehouse.
-     * Used by proposal screens to show tồn kho next to each generator row.
-     */
     public Map<Integer, Integer> countInStockMapByWarehouse(int warehouseId) {
         Map<Integer, Integer> map = new LinkedHashMap<>();
         if (warehouseId <= 0) {
@@ -1159,6 +1156,33 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             System.out.println(e.getMessage());
         }
         return map;
+    }
+
+    public Map<Integer, Map<Integer, Integer>> getStockDistributionByGeneratorIds(List<Integer> generatorIds) {
+        Map<Integer, Map<Integer, Integer>> result = new LinkedHashMap<>();
+        if (generatorIds == null || generatorIds.isEmpty()) {
+            return result;
+        }
+        String placeholders = String.join(",", Collections.nCopies(generatorIds.size(), "?"));
+        String sql = "SELECT generator_id, warehouse_id, COUNT(*) AS cnt FROM inventory "
+                + "WHERE generator_id IN (" + placeholders + ") AND status = 'IN_STOCK' "
+                + "GROUP BY generator_id, warehouse_id ORDER BY generator_id, warehouse_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            for (int i = 0; i < generatorIds.size(); i++) {
+                ps.setInt(i + 1, generatorIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int genId = rs.getInt("generator_id");
+                    int whId = rs.getInt("warehouse_id");
+                    int cnt = rs.getInt("cnt");
+                    result.computeIfAbsent(genId, k -> new LinkedHashMap<>()).put(whId, cnt);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
     }
 
     public int countActiveWarehouses() {

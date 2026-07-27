@@ -616,9 +616,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
     function confirmCancelCreate() {
-        if (confirm('Bạn có chắc muốn huỷ tạo phiếu luân chuyển?')) {
-            location.href = window.APP_CTX + '/transfers';
-        }
+        location.href = window.APP_CTX + '/transfers';
     }
 
     // ========== Confirm Save Modal ==========

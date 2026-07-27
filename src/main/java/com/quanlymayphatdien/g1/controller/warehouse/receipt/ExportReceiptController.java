@@ -382,6 +382,22 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 request.setAttribute("stockWarnings", stockWarnings);
                 request.setAttribute("stockWarningGenIds", shortGenIds);
+
+                List<Integer> allGenIds = new ArrayList<>();
+                for (OrderDetail od : ods) {
+                    if (!allGenIds.contains(od.getGeneratorId())) {
+                        allGenIds.add(od.getGeneratorId());
+                    }
+                }
+                Map<Integer, Map<Integer, Integer>> stockDist = inventoryDAO.getStockDistributionByGeneratorIds(allGenIds);
+                request.setAttribute("stockDistributionJson", new Gson().toJson(stockDist));
+
+                List<Warehouse> allWh = warehouseDAO.findAll();
+                Map<String, String> whMap = new LinkedHashMap<>();
+                for (Warehouse w : allWh) {
+                    whMap.put(String.valueOf(w.getWarehouseId()), w.getName());
+                }
+                request.setAttribute("warehouseMapJson", new Gson().toJson(whMap));
             }
         }
 

@@ -236,8 +236,8 @@
                             <c:if test="${empty fromExportReceipt}">
                             <div class="scanner-model-picker">
                                 <label>Mẫu máy phát điện *</label>
-                                <select id="activeGeneratorId" name="selectedGeneratorId" required onchange="onActiveGeneratorChange()">
-                                    <option value="">-- Chọn mẫu máy trước khi quét --</option>
+                                <select id="activeGeneratorId" name="selectedGeneratorId" onchange="onActiveGeneratorChange()">
+                                    <option value="">-- Chọn mẫu máy --</option>
                                     <c:choose>
                                         <c:when test="${not empty availableGenerators}">
                                             <c:forEach var="gen" items="${availableGenerators}">
@@ -262,7 +262,7 @@
                                 <small class="hint">
                                     <c:choose>
                                         <c:when test="${not empty availableGenerators}">Chỉ hiển thị các mẫu máy có trong phiếu mua</c:when>
-                                        <c:otherwise>Mỗi số serial quét vào sẽ tự gắn vào mẫu máy đã chọn.</c:otherwise>
+                                        <c:otherwise>Chọn nếu quét mã vạch. Khi nhập Excel, mã máy được lấy từ file.</c:otherwise>
                                     </c:choose>
                                 </small>
                             </div>
