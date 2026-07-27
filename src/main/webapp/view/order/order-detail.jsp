@@ -582,9 +582,7 @@
                     <c:set var="canDeleteNow" value="${order.status == 'PENDING' && isOwner}" />
                     <c:set var="canEditNow" value="${order.status == 'NEEDS_REVISION' && isOwner}" />
 
-                    <%-- ============================================================
-                         HEADER BAR
-                         ============================================================ --%>
+                   
                     <div class="header-bar">
                         <div class="left">
                             <a class="back-link" href="${pageContext.request.contextPath}/order?action=list">
