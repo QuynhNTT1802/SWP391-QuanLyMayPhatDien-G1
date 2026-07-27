@@ -218,7 +218,6 @@ public class TransferController extends HttpServlet {
                 : new LinkedHashMap<>();
         request.setAttribute("inStockByGen", inStockByGen);
 
-        // Build warehouse -> generator (with stock) JSON for client-side filter
         Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
         warehouseData.put(0, new ArrayList<>());
         for (Warehouse w : sourceWarehouses) {
@@ -271,7 +270,6 @@ public class TransferController extends HttpServlet {
         Map<Integer, Integer> inStockByGen = inventoryDAO.countInStockMapByWarehouse(sourceWhId);
         request.setAttribute("inStockByGen", inStockByGen);
 
-        // Build warehouse -> generator (with stock) JSON for client-side filter
         Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
         warehouseData.put(0, new ArrayList<>());
         for (Warehouse w : allWarehouses) {
@@ -288,7 +286,6 @@ public class TransferController extends HttpServlet {
         }
         request.setAttribute("warehouseDataJson", new com.google.gson.Gson().toJson(warehouseData));
 
-        // Aggregate transfer details by generatorId to pre-fill quantities
         Map<Integer, Integer> detailQtyMap = new LinkedHashMap<>();
         Map<Integer, String> detailNoteMap = new LinkedHashMap<>();
         if (t.getDetails() != null) {

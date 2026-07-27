@@ -13,6 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -280,7 +282,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 if (s.getCustomerId() > 0) {
                     ps.setInt(2, s.getCustomerId());
                 } else {
-                    ps.setNull(2, java.sql.Types.INTEGER);
+                    ps.setNull(2, Types.INTEGER);
                 }
                 ps.setInt(3, s.getCreatedBy());
                 ps.setInt(4, s.getApprovedBy());
@@ -528,12 +530,12 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, s.getOrderCode());
             if (s.getCustomerId() > 0) {
                 statement.setInt(2, s.getCustomerId());
             } else {
-                statement.setNull(2, java.sql.Types.INTEGER);
+                statement.setNull(2, Types.INTEGER);
             }
             statement.setInt(3, s.getCreatedBy());
             statement.setString(4, GlobalUtils.STATUS_PENDING);
@@ -679,7 +681,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     if (s.getCustomerId() > 0) {
                         ps.setInt(1, s.getCustomerId());
                     } else {
-                        ps.setNull(1, java.sql.Types.INTEGER);
+                        ps.setNull(1, Types.INTEGER);
                     }
                     ps.setString(2, s.getCustomerNote());
                     ps.setDouble(3, s.getTotalAmount());

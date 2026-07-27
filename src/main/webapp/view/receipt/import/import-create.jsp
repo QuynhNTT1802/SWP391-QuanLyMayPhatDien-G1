@@ -830,6 +830,28 @@
             toast('Có ' + rowsWithGenButNoSerial + ' dòng đã gắn với nhóm máy nhưng chưa nhập số serial.', 'danger');
             valid = false;
         }
+        if (isTransferImportMode && expectedRowsJs && expectedRowsJs > 0) {
+            var filledTransferCount = 0;
+            detailRows.forEach(function (r) {
+                var sn = r.querySelector('input[name="manualSerialNumber"]');
+                if (sn && sn.value && sn.value.trim() !== '') {
+                    filledTransferCount++;
+                }
+            });
+            if (filledTransferCount < expectedRowsJs) {
+                toast('Phiếu nhập theo luân chuyển phải chứa đủ ' + expectedRowsJs
+                    + ' serial từ phiếu xuất. Hiện tại mới nhập ' + filledTransferCount
+                    + ' serial.', 'danger');
+                detailRows.forEach(function (r) {
+                    var sn = r.querySelector('input[name="manualSerialNumber"]');
+                    if (sn && (!sn.value || sn.value.trim() === '')) {
+                        sn.classList.add('is-invalid');
+                        r.classList.add('table-warning');
+                    }
+                });
+                valid = false;
+            }
+        }
 
         if (!valid && firstInvalid) firstInvalid.focus();
         return valid;

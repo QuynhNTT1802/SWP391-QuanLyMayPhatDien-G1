@@ -1,12 +1,17 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Liquidation;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -258,7 +263,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             if (reviewerId != null) {
                 ps.setInt(2, reviewerId);
             } else {
-                ps.setNull(2, java.sql.Types.INTEGER);
+                ps.setNull(2, Types.INTEGER);
             }
             ps.setObject(3, now);
             ps.setObject(4, now);
@@ -371,11 +376,11 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
         StringBuilder w = new StringBuilder(" WHERE l.status = 'COMPLETED'");
         if (from != null) {
             w.append(" AND DATE(r.approved_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(r.approved_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND l.warehouse_id = ?");
@@ -408,8 +413,8 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.math.BigDecimal totalOriginal = java.math.BigDecimal.ZERO;
-            java.math.BigDecimal totalLiquidation = java.math.BigDecimal.ZERO;
+            BigDecimal totalOriginal = BigDecimal.ZERO;
+            BigDecimal totalLiquidation = BigDecimal.ZERO;
             int machineCount = 0;
             int orderCount = 0;
             if (resultSet.next()) {
@@ -421,7 +426,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             java.math.BigDecimal loss = totalLiquidation.subtract(totalOriginal);
             double recoveryRate = totalOriginal.signum() > 0
                     ? totalLiquidation.multiply(new java.math.BigDecimal(100))
-                            .divide(totalOriginal, 1, java.math.RoundingMode.HALF_UP).doubleValue()
+                            .divide(totalOriginal, 1, RoundingMode.HALF_UP).doubleValue()
                     : 0.0;
             m.put("machineCount", machineCount);
             m.put("orderCount", orderCount);
@@ -499,7 +504,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
                 java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
                 double rate = orig.signum() > 0
-                        ? liq.multiply(new java.math.BigDecimal(100)).divide(orig, 1, java.math.RoundingMode.HALF_UP).doubleValue()
+                        ? liq.multiply(new BigDecimal(100)).divide(orig, 1, RoundingMode.HALF_UP).doubleValue()
                         : 0.0;
                 r.put("warehouseName", resultSet.getString("warehouse_name"));
                 r.put("machineCount", resultSet.getInt("machine_count"));
@@ -630,16 +635,16 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             while (resultSet.next()) {
                 Map<String, Object> r = new java.util.HashMap<>();
                 java.math.BigDecimal orig = resultSet.getBigDecimal("original_price");
                 java.math.BigDecimal liq = resultSet.getBigDecimal("liquidation_price");
                 if (orig == null) {
-                    orig = java.math.BigDecimal.ZERO;
+orig = BigDecimal.ZERO;
                 }
                 if (liq == null) {
-                    liq = java.math.BigDecimal.ZERO;
+liq = BigDecimal.ZERO;
                 }
                 r.put("liquidationId", resultSet.getInt("liquidation_id"));
                 r.put("liquidationCode", resultSet.getString("liquidation_code"));
@@ -652,7 +657,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 r.put("totalLoss", liq.subtract(orig));
                 r.put("customerName", resultSet.getString("customer_name"));
                 r.put("ceoName", resultSet.getString("ceo_name"));
-                java.time.LocalDateTime reviewedAt = resultSet.getObject("export_at", java.time.LocalDateTime.class);
+                LocalDateTime reviewedAt = resultSet.getObject("export_at", LocalDateTime.class);
                 r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
                 r.put("exportAtStr", reviewedAt != null ? reviewedAt.toLocalDate().format(df) : "");
                 r.put("condition", resultSet.getString("condition"));
@@ -708,7 +713,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             if (t.getCustomerId() != null) {
                 statement.setInt(6, t.getCustomerId());
             } else {
-                statement.setNull(6, java.sql.Types.INTEGER);
+                statement.setNull(6, Types.INTEGER);
             }
             statement.setObject(7, now);
             statement.setObject(8, now);
@@ -786,16 +791,16 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             while (resultSet.next()) {
                 Map<String, Object> r = new java.util.HashMap<>();
                 java.math.BigDecimal orig = resultSet.getBigDecimal("total_original");
                 java.math.BigDecimal liq = resultSet.getBigDecimal("total_liquidation");
-                if (orig == null) orig = java.math.BigDecimal.ZERO;
-                if (liq == null) liq = java.math.BigDecimal.ZERO;
+                if (orig == null) orig = BigDecimal.ZERO;
+                if (liq == null) liq = BigDecimal.ZERO;
                 r.put("liquidationId", resultSet.getInt("liquidation_id"));
                 r.put("liquidationCode", resultSet.getString("liquidation_code"));
-                java.time.LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", java.time.LocalDateTime.class);
+                LocalDateTime reviewedAt = resultSet.getObject("ceo_reviewed_at", LocalDateTime.class);
                 r.put("ceoReviewedAt", reviewedAt);
                 r.put("reviewedAtStr", reviewedAt != null ? reviewedAt.format(df) : "");
                 r.put("warehouseName", resultSet.getString("warehouse_name"));

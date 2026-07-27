@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 + "VALUES (?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setInt(1, d.getOrderId());
             statement.setInt(2, d.getGeneratorId());
             statement.setInt(3, d.getQuantity());

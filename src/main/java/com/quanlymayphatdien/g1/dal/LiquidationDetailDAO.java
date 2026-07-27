@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
                 statement.setBigDecimal(5, t.getLiquidationPrice());
 
             } else {
-                statement.setNull(5, java.sql.Types.DECIMAL);
+                statement.setNull(5, Types.DECIMAL);
             }
 
             return statement.executeUpdate() > 0 ? 1 : 0;
@@ -147,7 +148,7 @@ public class LiquidationDetailDAO extends DBContext implements I_DAO<Liquidation
             if (t.getLiquidationPrice() != null) {
                 stmt.setBigDecimal(5, t.getLiquidationPrice());
             } else {
-                stmt.setNull(5, java.sql.Types.DECIMAL);
+                stmt.setNull(5, Types.DECIMAL);
             }
 
             return stmt.executeUpdate() > 0 ? 1 : 0;

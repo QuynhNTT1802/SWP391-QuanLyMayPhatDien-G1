@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -132,7 +133,7 @@ public class WarehouseDAO extends DBContext implements I_DAO<Warehouse> {
             statement.setString(2, w.getAddress());
             statement.setString(3, w.getDescription());
             statement.setString(4, w.getStatus());
-            statement.setTimestamp(5, w.getUpdatedAt() != null ? Timestamp.valueOf(w.getUpdatedAt()) : Timestamp.valueOf(java.time.LocalDateTime.now()));
+            statement.setTimestamp(5, w.getUpdatedAt() != null ? Timestamp.valueOf(w.getUpdatedAt()) : Timestamp.valueOf(LocalDateTime.now()));
             statement.setInt(6, w.getWarehouseId());
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {

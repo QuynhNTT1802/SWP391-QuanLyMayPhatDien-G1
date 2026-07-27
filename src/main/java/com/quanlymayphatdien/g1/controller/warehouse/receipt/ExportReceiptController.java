@@ -1,8 +1,4 @@
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package com.quanlymayphatdien.g1.controller.warehouse.receipt;
 
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
@@ -33,7 +29,6 @@ import com.quanlymayphatdien.g1.entity.Transfer;
 import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.entity.Warehouse;
@@ -48,7 +43,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -56,10 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- *
- * @author FPTShop
- */
 @WebServlet(name = "ExportReceiptController", urlPatterns = {"/export-receipt"})
 public class ExportReceiptController extends HttpServlet {
 
@@ -199,7 +194,7 @@ public class ExportReceiptController extends HttpServlet {
         request.setAttribute("receiptList", receiptList);
         if (scopedWarehouseId > 0) {
             Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("warehouses", scoped != null ? Collections.singletonList(scoped) : Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
                 request.setAttribute("scopedWarehouseName", scoped.getName());
@@ -228,7 +223,7 @@ public class ExportReceiptController extends HttpServlet {
 
         if (scopedWarehouseId > 0) {
             Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("warehouses", scoped != null ? Collections.singletonList(scoped) : Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
                 request.setAttribute("scopedWarehouseName", scoped.getName());
@@ -864,8 +859,7 @@ public class ExportReceiptController extends HttpServlet {
             }
             r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
             r.setApprovedBy(loggedUser.getId());
-            r.setApprovedAt(java.time.LocalDateTime.now());
-            // receiptId sẽ được insert bên trong transaction bên dưới
+            r.setApprovedAt(LocalDateTime.now());
             receiptId = -1;
         }
 
@@ -884,11 +878,11 @@ public class ExportReceiptController extends HttpServlet {
                     if (reasonId != null) {
                         ps.setInt(3, reasonId);
                     } else {
-                        ps.setNull(3, java.sql.Types.INTEGER);
+                        ps.setNull(3, Types.INTEGER);
                     }
                     ps.setString(4, GlobalUtils.RECEIPT_STATUS_COMPLETED);
                     ps.setInt(5, loggedUser.getId());
-                    ps.setTimestamp(6, java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()));
+                    ps.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
                     ps.setInt(7, receiptId);
                     ps.executeUpdate();
                 }
@@ -903,7 +897,7 @@ public class ExportReceiptController extends HttpServlet {
                         ps.executeUpdate();
                     }
                 }
-                java.util.Set<String> existingSerials = new java.util.HashSet<>();
+                Set<String> existingSerials = new HashSet<>();
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT i.serial_number FROM receipt_detail rd "
                         + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
@@ -915,7 +909,7 @@ public class ExportReceiptController extends HttpServlet {
                         }
                     }
                 }
-                java.util.List<ReceiptDetail> toInsert = new java.util.ArrayList<>();
+                List<ReceiptDetail> toInsert = new ArrayList<>();
                 for (ReceiptDetail d : details) {
                     if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) continue;
                     String sn = d.getSerialNumber().trim();
@@ -949,7 +943,7 @@ public class ExportReceiptController extends HttpServlet {
                 if (!toInsert.isEmpty()) {
                     detailDAO.batchInsert(conn, toInsert);
                 }
-                java.util.List<ReceiptDetail> allDetails = new java.util.ArrayList<>();
+                List<ReceiptDetail> allDetails = new ArrayList<>();
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT rd.*, i.generator_id, i.serial_number FROM receipt_detail rd "
                         + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
@@ -1190,7 +1184,7 @@ public class ExportReceiptController extends HttpServlet {
         if (genIds == null) {
             return details;
         }
-        java.util.Set<String> seenSerials = new java.util.HashSet<>();
+        Set<String> seenSerials = new HashSet<>();
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;

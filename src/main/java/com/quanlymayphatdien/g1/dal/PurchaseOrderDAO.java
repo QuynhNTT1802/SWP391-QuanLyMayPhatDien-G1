@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -261,7 +263,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     if (d.getProposalDetailId() != null) {
                         ps.setInt(2, d.getProposalDetailId());
                     } else {
-                        ps.setNull(2, java.sql.Types.INTEGER);
+                        ps.setNull(2, Types.INTEGER);
                     }
                     ps.setInt(3, d.getGeneratorId());
                     ps.setInt(4, d.getProposedQuantity());
@@ -269,7 +271,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     if (d.getUnitPrice() != null) {
                         ps.setBigDecimal(6, d.getUnitPrice());
                     } else {
-                        ps.setNull(6, java.sql.Types.DECIMAL);
+                        ps.setNull(6, Types.DECIMAL);
                     }
                     ps.setInt(7, d.getFinalQuantity());
                     ps.setString(8, d.getNote());
@@ -343,7 +345,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 if (d.getProposalDetailId() != null) {
                     statement.setInt(2, d.getProposalDetailId());
                 } else {
-                    statement.setNull(2, java.sql.Types.INTEGER);
+                    statement.setNull(2, Types.INTEGER);
                 }
                 statement.setInt(3, d.getGeneratorId());
                 statement.setInt(4, d.getProposedQuantity());
@@ -351,7 +353,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 if (d.getUnitPrice() != null) {
                     statement.setBigDecimal(6, d.getUnitPrice());
                 } else {
-                    statement.setNull(6, java.sql.Types.DECIMAL);
+                    statement.setNull(6, Types.DECIMAL);
                 }
                 statement.setInt(7, d.getFinalQuantity());
                 statement.setString(8, d.getNote());
@@ -566,11 +568,11 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         List<Object> params = new ArrayList<>();
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND p.period_start >= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+            params.add(Date.valueOf(LocalDate.parse(dateFrom)));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND p.period_start <= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
+            params.add(Date.valueOf(LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND p.warehouse_id = ?");
@@ -617,11 +619,11 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         List<Object> params = new ArrayList<>();
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND period_start >= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+            params.add(Date.valueOf(LocalDate.parse(dateFrom)));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND period_start <= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
+            params.add(Date.valueOf(LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND warehouse_id = ?");
@@ -1121,7 +1123,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setDate(1, java.sql.Date.valueOf(currentPeriodEnd));
+            statement.setDate(1, Date.valueOf(currentPeriodEnd));
             statement.setString(2, currentPeriod);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {

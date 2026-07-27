@@ -4,11 +4,13 @@
  */
 package com.quanlymayphatdien.g1.utils;
 
+import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -225,7 +227,7 @@ public class ReceiptExcelSupport {
 
     private static String removeDiacritics(String s) {
         if (s == null) return "";
-        String normalized = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD);
+        String normalized = Normalizer.normalize(s, Normalizer.Form.NFD);
         return normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 
@@ -271,7 +273,7 @@ public class ReceiptExcelSupport {
             row.createCell(1).setCellValue(g != null ? g.getModel() : "");
             String brand = "";
             if (g != null && g.getCategories() != null) {
-                for (com.quanlymayphatdien.g1.entity.Category c : g.getCategories()) {
+                for (Category c : g.getCategories()) {
                     if ("brand".equals(c.getType())) {
                         brand = c.getName();
                         break;
