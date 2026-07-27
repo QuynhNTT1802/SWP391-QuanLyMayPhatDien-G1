@@ -35,7 +35,7 @@ public class ReportExcelSupport {
         CellStyle headerStyle = createHeaderStyle(wb);
         CellStyle dataStyle = createDataStyle(wb);
 
-        String[] headers = {"STT", "Kho", "Mã máy", "Model", "Thương hiệu",
+        String[] headers = {"STT", "Kho", "Mẫu máy", "Thương hiệu",
             "Tồn đầu kì", "Nhập trong kì", "Xuất trong kì", "Tồn cuối kì"};
         int rowNum = sheet.getLastRowNum() + 1;
         Row headerRow = sheet.createRow(rowNum++);
@@ -52,20 +52,18 @@ public class ReportExcelSupport {
             r.getCell(0).setCellStyle(dataStyle);
             r.createCell(1).setCellValue(item.getWarehouseName());
             r.getCell(1).setCellStyle(dataStyle);
-            r.createCell(2).setCellValue(String.valueOf(item.getGeneratorId()));
+            r.createCell(2).setCellValue(item.getModel());
             r.getCell(2).setCellStyle(dataStyle);
-            r.createCell(3).setCellValue(item.getModel());
+            r.createCell(3).setCellValue(item.getBrand());
             r.getCell(3).setCellStyle(dataStyle);
-            r.createCell(4).setCellValue(item.getBrand());
+            r.createCell(4).setCellValue(item.getOpenQuantity());
             r.getCell(4).setCellStyle(dataStyle);
-            r.createCell(5).setCellValue(item.getOpenQuantity());
+            r.createCell(5).setCellValue(item.getImportQuantity());
             r.getCell(5).setCellStyle(dataStyle);
-            r.createCell(6).setCellValue(item.getImportQuantity());
+            r.createCell(6).setCellValue(item.getExportQuantity());
             r.getCell(6).setCellStyle(dataStyle);
-            r.createCell(7).setCellValue(item.getExportQuantity());
+            r.createCell(7).setCellValue(item.getCloseQuantity());
             r.getCell(7).setCellStyle(dataStyle);
-            r.createCell(8).setCellValue(item.getCloseQuantity());
-            r.getCell(8).setCellStyle(dataStyle);
         }
 
         for (int i = 0; i < headers.length; i++) {
@@ -185,8 +183,8 @@ public class ReportExcelSupport {
         CellStyle headerStyle = createHeaderStyle(wb);
         CellStyle dataStyle = createDataStyle(wb);
 
-        String[] headers = {"STT", "Mã đơn hàng", "Ngày đặt", "Khách hàng", "Mặt hàng",
-            "Tổng tiền", "Người tạo", "Trạng thái"};
+        String[] headers = {"STT", "Mã phiếu", "Kho", "Khách hàng",
+            "Số lượng", "Tổng tiền", "Người tạo", "Ngày tạo"};
         int rowNum = sheet.getLastRowNum() + 1;
         Row headerRow = sheet.createRow(rowNum++);
         for (int i = 0; i < headers.length; i++) {

@@ -116,7 +116,6 @@
                             <tr>
                                 <th>STT</th>
                                 <th>Kho</th>
-                                <th>Số máy</th>
                                 <th>Mẫu máy</th>
                                 <th>Thương hiệu</th>
                                 <th>Tồn đầu kì</th>
@@ -130,7 +129,6 @@
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${item.warehouseName}"/></td>
-                                    <td>${item.generatorId}</td>
                                     <td><c:out value="${item.model}"/></td>
                                     <td><c:out value="${item.brand}"/></td>
                                     <td class="num">${item.openQuantity}</td>
@@ -140,7 +138,7 @@
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty inventoryItems}">
-                                <tr><td colspan="9" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
@@ -291,11 +289,13 @@
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Mã đơn</th>
-                                <th>Ngày đặt</th>
+                                <th>Mã phiếu</th>
+                                <th>Kho</th>
+                                <th>Khách hàng</th>
+                                <th>Số lượng</th>
                                 <th>Tổng tiền</th>
                                 <th>Người tạo</th>
-                                <th>Khách hàng</th>
+                                <th>Ngày tạo</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -303,39 +303,43 @@
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${so.orderId}" class="code-link"><c:out value="${so.orderCode}"/></a></td>
-                                    <td><fmt:formatDate value="${so.orderDate}" pattern="dd/MM/yyyy"/></td>
+                                    <td><c:out value="${so.warehouseName}"/></td>
+                                    <td><c:out value="${so.customer.name}"/></td>
+                                    <td class="num">${so.totalQuantity}</td>
                                     <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/> ₫</td>
                                     <td><c:out value="${so.createdByName}"/></td>
-                                    <td><c:out value="${so.customer.name}"/></td>
+                                    <td><fmt:formatDate value="${so.createdAt}" pattern="dd/MM/yyyy"/></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty saleItems}">
-                                <tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
                 </c:when>
             </c:choose>
+            <c:if test="${totalPages > 1}">
+                <c:set var="q" value="type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}"/>
+                <c:if test="${not empty search}"><c:set var="q" value="${q}&search=${fn:escapeXml(search)}"/></c:if>
+                <div class="pagination">
+                    <div class="info">Hiển thị <strong>${(currentPage - 1) * 15 + 1}</strong>–<strong>${currentPage * 15 > totalItems ? totalItems : currentPage * 15}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                    <div class="controls">
+                        <c:if test="${currentPage > 1}">
+                            <a href="?${q}&page=${currentPage - 1}" class="page-btn">‹</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${totalPages}" var="p">
+                            <c:choose>
+                                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                <c:otherwise><a href="?${q}&page=${p}" class="page-btn">${p}</a></c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="?${q}&page=${currentPage + 1}" class="page-btn">›</a>
+                        </c:if>
+                    </div>
+                </div>
+            </c:if>
         </div>
-
-        <c:if test="${totalPages > 1}">
-            <c:set var="q" value="type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}"/>
-            <c:if test="${not empty search}"><c:set var="q" value="${q}&search=${fn:escapeXml(search)}"/></c:if>
-            <div class="pagination">
-                <c:if test="${currentPage > 1}">
-                    <a href="?${q}&page=${currentPage - 1}" class="page-link">Trước</a>
-                </c:if>
-                <c:forEach var="p" begin="1" end="${totalPages}">
-                    <c:if test="${p >= currentPage - 2 && p <= currentPage + 2}">
-                        <a href="?${q}&page=${p}" class="page-link ${p == currentPage ? 'active' : ''}">${p}</a>
-                    </c:if>
-                </c:forEach>
-                <c:if test="${currentPage < totalPages}">
-                    <a href="?${q}&page=${currentPage + 1}" class="page-link">Sau</a>
-                </c:if>
-                <span class="page-info">${totalItems} bản ghi</span>
-            </div>
-        </c:if>
     </main>
 </div>
 

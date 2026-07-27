@@ -14,7 +14,7 @@ public class SalesReportDAO extends BaseReportDAO {
         params.add("%" + search.trim() + "%");
         params.add("%" + search.trim() + "%");
         params.add("%" + search.trim() + "%");
-        return " AND (so.order_code LIKE ? OR c.name LIKE ? OR g.model LIKE ?)";
+        return " AND (so.order_code LIKE ? OR c.name LIKE ? OR w.name LIKE ?)";
     }
 
     public int countSalesReport(int month, int year, String search) {
@@ -50,15 +50,22 @@ public class SalesReportDAO extends BaseReportDAO {
     }
 
     public List<Object[]> getSalesExcelData(int month, int year) {
-        String sql = "SELECT so.order_code, DATE_FORMAT(so.created_at, '%d/%m/%Y'),"
-                + " c.name, g.model, od.quantity, od.unit_price,"
-                + " (od.quantity * od.unit_price), u.name, so.status"
+        String sql = "SELECT so.order_code,"
+                + " COALESCE(w.name, '') AS warehouse_name,"
+                + " COALESCE(c.name, '') AS customer_name,"
+                + " COALESCE(SUM(od.quantity), 0) AS total_qty,"
+                + " so.total_amount,"
+                + " COALESCE(u.name, '') AS created_by_name,"
+                + " DATE_FORMAT(so.created_at, '%d/%m/%Y') AS created_date,"
+                + " so.status"
                 + " FROM sale_order so"
                 + " JOIN user u ON so.created_by = u.id"
                 + " LEFT JOIN customer c ON so.customer_id = c.id"
-                + " JOIN order_detail od ON od.order_id = so.order_id"
-                + " JOIN generator g ON od.generator_id = g.id"
+                + " LEFT JOIN order_detail od ON od.order_id = so.order_id"
+                + " LEFT JOIN receipt r ON r.order_id = so.order_id AND r.receipt_type = 'export'"
+                + " LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
                 + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
+                + " GROUP BY so.order_id"
                 + " ORDER BY so.created_at DESC";
         return queryFlat(sql, params(month, year, null));
     }
@@ -120,13 +127,17 @@ public class SalesReportDAO extends BaseReportDAO {
         params.add(firstDay(month, year));
         params.add(lastDay(month, year));
         String searchWhere = searchClause(search, params);
-        String sql = "SELECT so.*, c.name AS customer_name, u.name AS created_by_name,"
-                + " GROUP_CONCAT(CONCAT(g.model, '|', od.quantity, '|', od.unit_price) SEPARATOR '; ') AS detail_info"
+        String sql = "SELECT so.*,"
+                + " ANY_VALUE(c.name) AS customer_name,"
+                + " ANY_VALUE(u.name) AS created_by_name,"
+                + " COALESCE(SUM(od.quantity), 0) AS total_qty,"
+                + " ANY_VALUE(w.name) AS warehouse_name"
                 + " FROM sale_order so"
                 + " LEFT JOIN customer c ON so.customer_id = c.id"
                 + " LEFT JOIN user u ON so.created_by = u.id"
                 + " LEFT JOIN order_detail od ON od.order_id = so.order_id"
-                + " LEFT JOIN generator g ON od.generator_id = g.id"
+                + " LEFT JOIN receipt r ON r.order_id = so.order_id AND r.receipt_type = 'export'"
+                + " LEFT JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
                 + " WHERE DATE(so.created_at) >= ? AND DATE(so.created_at) <= ?"
                 + searchWhere
                 + " GROUP BY so.order_id"
@@ -152,6 +163,8 @@ public class SalesReportDAO extends BaseReportDAO {
                 so.setCreatedByName(resultSet.getString("created_by_name"));
                 so.setStatus(resultSet.getString("status"));
                 so.setTotalAmount(resultSet.getDouble("total_amount"));
+                so.setWarehouseName(resultSet.getString("warehouse_name"));
+                so.setTotalQuantity(resultSet.getInt("total_qty"));
                 if (resultSet.getTimestamp("created_at") != null) {
                     so.setCreatedAt(resultSet.getTimestamp("created_at"));
                 }
