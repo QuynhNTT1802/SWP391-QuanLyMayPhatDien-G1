@@ -630,7 +630,7 @@ public class TransferController extends HttpServlet {
 
         List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 1000);
         for (User ceo : ceos) {
-            NotificationService.send(
+            NotificationUtil.send(
                     ceo.getId(),
                     "Phiếu luân chuyển mới chờ duyệt",
                     "Nhân viên " + user.getName() + " đã tạo phiếu luân chuyển "
@@ -773,7 +773,7 @@ public class TransferController extends HttpServlet {
             session.setAttribute("toastType", "success");
 
             try {
-                NotificationService.send(
+                NotificationUtil.send(
                         t.getCreatedBy(),
                         "Phiếu luân chuyển yêu cầu chỉnh sửa",
                         "CEO yêu cầu chỉnh sửa phiếu " + t.getTransferCode() + ": " + note,
@@ -938,7 +938,7 @@ public class TransferController extends HttpServlet {
             try {
                 List<User> ceos = userDAO.findUsersWithRoles("ceo", null, null, 1, 1000);
                 for (User ceo : ceos) {
-                    NotificationService.send(
+                    NotificationUtil.send(
                             ceo.getId(),
                             "Phiếu luân chuyển được sửa và gửi lại",
                             "Nhân viên " + user.getName() + " đã sửa phiếu " + t.getTransferCode()

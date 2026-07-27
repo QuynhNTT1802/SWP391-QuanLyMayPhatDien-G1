@@ -15,7 +15,6 @@ import com.quanlymayphatdien.g1.dal.OrderDetailDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDAO;
 import com.quanlymayphatdien.g1.dal.ReceiptDetailDAO;
 import com.quanlymayphatdien.g1.dal.SaleOrderDAO;
-import com.quanlymayphatdien.g1.dal.StockCardDAO;
 import com.quanlymayphatdien.g1.dal.TransferDAO;
 import com.quanlymayphatdien.g1.dal.TransferDetailDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
@@ -30,7 +29,6 @@ import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
-import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.Transfer;
 import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
@@ -38,7 +36,7 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
-import com.quanlymayphatdien.g1.utils.NotificationUtil;
+import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -873,20 +871,12 @@ public class ExportReceiptController extends HttpServlet {
             receiptId = -1;
         }
 
-        java.sql.Connection conn = null;
-        boolean ok = false;
-        try {
-            conn = receiptDAO.getConnection();
-            conn.setAutoCommit(false);
-
-            if (existingReceipt == null) {
-                receiptId = receiptDAO.insert(conn, r);
-                if (receiptId <= 0) {
-                    throw new java.sql.SQLException("Không thể tạo phiếu, vui lòng thử lại");
-                }
-            }
-
-            if (existingReceipt != null) {
+        if (existingReceipt != null) {
+            java.sql.Connection conn = null;
+            boolean ok = false;
+            try {
+                conn = receiptDAO.getConnection();
+                conn.setAutoCommit(false);
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "UPDATE receipt SET warehouse_id = ?, note = ?, reason_id = ?, "
                         + "status = ?, approved_by = ?, approved_at = ? "
@@ -904,7 +894,6 @@ public class ExportReceiptController extends HttpServlet {
                     ps.setInt(7, receiptId);
                     ps.executeUpdate();
                 }
-
                 if (liquidationId > 0) {
                     try (java.sql.PreparedStatement ps = conn.prepareStatement(
                             "UPDATE inventory SET status = ? "
@@ -916,7 +905,6 @@ public class ExportReceiptController extends HttpServlet {
                         ps.executeUpdate();
                     }
                 }
-
                 java.util.Set<String> existingSerials = new java.util.HashSet<>();
                 try (java.sql.PreparedStatement ps = conn.prepareStatement(
                         "SELECT i.serial_number FROM receipt_detail rd "
@@ -929,17 +917,11 @@ public class ExportReceiptController extends HttpServlet {
                         }
                     }
                 }
-
                 java.util.List<ReceiptDetail> toInsert = new java.util.ArrayList<>();
                 for (ReceiptDetail d : details) {
-                    if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
-                        continue;
-                    }
+                    if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) continue;
                     String sn = d.getSerialNumber().trim();
-                    if (existingSerials.contains(sn)) {
-                        continue;
-                    }
-
+                    if (existingSerials.contains(sn)) continue;
                     Inventory inv = inventoryDAO.findBySerialNumber(sn);
                     if (inv == null) {
                         throw new SQLException("Số serial \"" + sn + "\" không tồn tại trong hệ thống");
@@ -969,81 +951,84 @@ public class ExportReceiptController extends HttpServlet {
                 if (!toInsert.isEmpty()) {
                     detailDAO.batchInsert(conn, toInsert);
                 }
-            } else {
-                for (ReceiptDetail d : details) {
-                    if (d.getSerialNumber() == null || d.getSerialNumber().trim().isEmpty()) {
-                        continue;
-                    }
-                    Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
-                    if (inv == null) {
-                        throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không tồn tại trong hệ thống");
-                    }
-                    if (liquidationId > 0) {
-                        if (!inventoryDAO.isPendingLiquidationAtWarehouse(conn, inv.getSerialNumber(), warehouseId)) {
-                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái ĐANG THANH LÝ tại kho này");
+                java.util.List<ReceiptDetail> allDetails = new java.util.ArrayList<>();
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(
+                        "SELECT rd.*, i.generator_id, i.serial_number FROM receipt_detail rd "
+                        + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
+                        + "WHERE rd.receipt_id = ?")) {
+                    ps.setInt(1, receiptId);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            ReceiptDetail rd = new ReceiptDetail();
+                            rd.setReceiptId(rs.getInt("receipt_id"));
+                            rd.setInventoryId(rs.getInt("inventory_id"));
+                            rd.setGeneratorId(rs.getInt("generator_id"));
+                            allDetails.add(rd);
                         }
-                        if (inventoryDAO.markAsExportedFromPendingLiquidation(conn, inv.getInventoryId()) <= 0) {
-                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái PENDING_LIQUIDATION");
-                        }
-                    } else {
-                        if (!inventoryDAO.isInStockAtWarehouse(inv.getSerialNumber(), warehouseId)) {
-                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK tại kho này");
-                        }
-                        boolean marked = isTransferExport
-                                ? inventoryDAO.markAsInTransit(conn, inv.getInventoryId())
-                                : inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
-                        if (!marked) {
-                            throw new SQLException("Số serial \"" + d.getSerialNumber() + "\" không ở trạng thái IN_STOCK");
-                        }
-                    }
-                    d.setReceiptId(receiptId);
-                    d.setInventoryId(inv.getInventoryId());
-                }
-
-                detailDAO.batchInsert(conn, details);
-            }
-
-            if (liquidationId > 0) {
-                LiquidationDAO liqDAO = new LiquidationDAO();
-                liqDAO.updateStatus(conn, liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
-                ActivityLog liqLog = new ActivityLog();
-                liqLog.setUserId(loggedUser.getId());
-                liqLog.setEntityType("liquidation");
-                liqLog.setAction("EXPORT_APPROVE");
-                liqLog.setEntityId(liquidationId);
-                liqLog.setEntityName(r.getReceiptCode());
-                liqLog.setDetails("Hoàn tất xuất kho cho đơn thanh lý " + r.getReceiptCode() + ".");
-                activityLogDAO.insert(liqLog);
-            }
-
-            java.util.List<ReceiptDetail> allDetails = new java.util.ArrayList<>();
-            try (java.sql.PreparedStatement ps = conn.prepareStatement(
-                    "SELECT rd.*, i.generator_id, i.serial_number FROM receipt_detail rd "
-                    + "JOIN inventory i ON rd.inventory_id = i.inventory_id "
-                    + "WHERE rd.receipt_id = ?")) {
-                ps.setInt(1, receiptId);
-                try (java.sql.ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        ReceiptDetail rd = new ReceiptDetail();
-                        rd.setReceiptId(rs.getInt("receipt_id"));
-                        rd.setInventoryId(rs.getInt("inventory_id"));
-                        rd.setGeneratorId(rs.getInt("generator_id"));
-                        allDetails.add(rd);
                     }
                 }
+                if (isTransferExport) {
+                    receiptDAO.writeStockCardsForTransfer(conn, receiptId, r.getReceiptCode(),
+                            warehouseId, loggedUser.getId(), allDetails);
+                } else {
+                    receiptDAO.writeStockCardsForExport(conn, receiptId, r.getReceiptCode(),
+                            warehouseId, loggedUser.getId(), allDetails);
+                }
+                if (liquidationId > 0) {
+                    LiquidationDAO liqDAO = new LiquidationDAO();
+                    liqDAO.updateStatus(conn, liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
+                    ActivityLog liqLog = new ActivityLog();
+                    liqLog.setUserId(loggedUser.getId());
+                    liqLog.setEntityType("liquidation");
+                    liqLog.setAction("EXPORT_APPROVE");
+                    liqLog.setEntityId(liquidationId);
+                    liqLog.setEntityName(r.getReceiptCode());
+                    liqLog.setDetails("Hoàn tất xuất kho cho phiếu thanh lý " + r.getReceiptCode() + ".");
+                    activityLogDAO.insert(liqLog);
+                }
+                conn.commit();
+                ok = true;
+            } catch (java.sql.SQLException ex) {
+                if (conn != null) {
+                    try { conn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                }
+                errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
+            } finally {
+                if (conn != null) {
+                    try { conn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                    try { conn.close(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                }
             }
-            if (isTransferExport) {
-                writeStockCardsForTransfer(conn, receiptId, r.getReceiptCode(),
-                        warehouseId, loggedUser.getId(), allDetails);
-            } else {
-                receiptDAO.writeStockCardsForExport(conn, receiptId, r.getReceiptCode(),
-                        warehouseId, loggedUser.getId(), allDetails);
+            if (!ok) {
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("toastMessage", buildErrorMessage("Lưu phiếu thất bại:", errors));
+                request.setAttribute("warehouses", warehouseDAO.findAll());
+                request.setAttribute("generators", genDAO.findAllActive());
+                request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
+                request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+                request.setAttribute("allSerials", loadAllInStockSerials());
+                request.setAttribute("receipt", existingReceipt);
+                request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
+                return;
             }
-
+        } else {
+            try {
+                receiptId = receiptDAO.insertExport(r, details, loggedUser.getId());
+            } catch (java.sql.SQLException ex) {
+                errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
+                request.setAttribute("toastType", "danger");
+                request.setAttribute("toastMessage", buildErrorMessage("Lưu phiếu thất bại:", errors));
+                request.setAttribute("warehouses", warehouseDAO.findAll());
+                request.setAttribute("generators", genDAO.findAllActive());
+                request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
+                request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
+                request.setAttribute("allSerials", loadAllInStockSerials());
+                request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
+                return;
+            }
             if (liquidationId > 0) {
                 LiquidationDAO liqDAO = new LiquidationDAO();
-                liqDAO.updateStatus(conn, liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
-
+                liqDAO.updateStatus(liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
                 ActivityLog liqLog = new ActivityLog();
                 liqLog.setUserId(loggedUser.getId());
                 liqLog.setEntityType("liquidation");
@@ -1052,13 +1037,12 @@ public class ExportReceiptController extends HttpServlet {
                 liqLog.setEntityName(r.getReceiptCode());
                 liqLog.setDetails("Hoàn tất xuất kho cho phiếu thanh lý " + r.getReceiptCode() + ".");
                 activityLogDAO.insert(liqLog);
-
                 Liquidation liq = liqDAO.findById(liquidationId);
                 if (liq != null) {
                     String liqLink = request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId;
                     String liqCode = liq.getLiquidationCode();
                     if (liq.getCreatedBy() > 0 && liq.getCreatedBy() != loggedUser.getId()) {
-                        NotificationUtil.send(
+                        NotificationService.send(
                                 liq.getCreatedBy(),
                                 "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
                                 loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
@@ -1069,7 +1053,7 @@ public class ExportReceiptController extends HttpServlet {
                     }
                     if (liq.getCeoReviewedBy() != null && liq.getCeoReviewedBy() > 0
                             && !liq.getCeoReviewedBy().equals(loggedUser.getId())) {
-                        NotificationUtil.send(
+                        NotificationService.send(
                                 liq.getCeoReviewedBy(),
                                 "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
                                 loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
@@ -1080,48 +1064,6 @@ public class ExportReceiptController extends HttpServlet {
                     }
                 }
             }
-
-            conn.commit();
-            ok = true;
-        } catch (java.sql.SQLException ex) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (java.sql.SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            receiptId = (existingReceipt != null) ? existingReceipt.getReceiptId() : -1;
-            errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                } catch (java.sql.SQLException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    conn.close();
-                } catch (java.sql.SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        if (!ok) {
-            request.setAttribute("toastType", "danger");
-            request.setAttribute("toastMessage", buildErrorMessage("Lưu phiếu thất bại:", errors));
-            request.setAttribute("warehouses", warehouseDAO.findAll());
-            request.setAttribute("generators", genDAO.findAllActive());
-            request.setAttribute("brandMap", buildBrandMap(genDAO.findAllActive()));
-            request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
-            request.setAttribute("allSerials", loadAllInStockSerials());
-            if (existingReceipt != null) {
-                request.setAttribute("receipt", existingReceipt);
-                request.getRequestDispatcher("/view/receipt/export/export-edit.jsp").forward(request, response);
-            } else {
-                request.getRequestDispatcher("/view/receipt/export/export-create.jsp").forward(request, response);
-            }
-            return;
         }
 
         ActivityLog log = new ActivityLog();
@@ -1161,47 +1103,6 @@ public class ExportReceiptController extends HttpServlet {
         }
     }
 
-    private void writeStockCardsForTransfer(Connection conn, int receiptId, String receiptCode,
-            int sourceWarehouseId, int createdBy,
-            List<ReceiptDetail> details) throws SQLException {
-        if (details == null || details.isEmpty()) {
-            return;
-        }
-        StockCardDAO scDAO = new StockCardDAO();
-        Map<Integer, List<ReceiptDetail>> grouped = new LinkedHashMap<>();
-        for (ReceiptDetail d : details) {
-            if (d.getGeneratorId() > 0) {
-                grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
-            }
-        }
-        for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
-            int genId = entry.getKey();
-            int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (java.sql.PreparedStatement qtyPs = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'")) {
-                qtyPs.setInt(1, sourceWarehouseId);
-                qtyPs.setInt(2, genId);
-                try (java.sql.ResultSet qtyRs = qtyPs.executeQuery()) {
-                    if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
-                    }
-                }
-            }
-            StockCard sc = new StockCard();
-            sc.setWarehouseId(sourceWarehouseId);
-            sc.setGeneratorId(genId);
-            sc.setReceiptId(receiptId);
-            sc.setTransactionType("TRANSFER_OUT");
-            sc.setQuantityChange(-totalQty);
-            sc.setQuantityAfter(qtyAfter);
-            sc.setReferenceNote("Phiếu xuất " + receiptCode + " (luân chuyển)");
-            sc.setCreatedAt(java.time.LocalDateTime.now());
-            sc.setCreatedBy(createdBy);
-            scDAO.insert(conn, sc);
-        }
-    }
-
     private void notifyDestWarehouseStaff(com.quanlymayphatdien.g1.entity.Transfer transfer,
             Receipt receipt, User sender, String contextPath) {
         List<User> staff = userDAO.findUsersByPermission("receipts", "view");
@@ -1219,7 +1120,7 @@ public class ExportReceiptController extends HttpServlet {
                 continue;
             }
             if (scopedWh != null && scopedWh == transfer.getDestWarehouseId()) {
-                NotificationUtil.send(
+                NotificationService.send(
                         u.getId(),
                         "Phiếu xuất mới từ kho nguồn",
                         "Kho nguồn đã tạo phiếu xuất " + receipt.getReceiptCode()
@@ -1373,12 +1274,6 @@ public class ExportReceiptController extends HttpServlet {
         }
     }
 
-    /**
-     * Kiem tra phieu xuat tao tu order da quet dung va du serial theo tung
-     * model. - Thieu may: so luong quet < quantity trong order
-     * - Thua may: so luong quet > quantity trong order - Quet nham: generatorId
-     * khong thuoc order
-     */
     private void validateOrderCompleteness(int orderId, List<ReceiptDetail> details, List<String> errors) {
         List<OrderDetail> ods = new OrderDetailDAO().findGeneratorById(orderId);
         if (ods == null || ods.isEmpty()) {

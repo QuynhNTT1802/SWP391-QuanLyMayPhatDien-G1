@@ -230,7 +230,6 @@
                   </div>
                   <div class="tx-amount">
                     ${isActive ? 'Hoạt động' : 'Đã khóa'}
-                    <span class="when">Mã: ${u.id}</span>
                   </div>
                 </div>
               </c:forEach>

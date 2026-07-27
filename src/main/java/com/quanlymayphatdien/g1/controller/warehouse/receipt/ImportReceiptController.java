@@ -32,7 +32,8 @@ import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.dal.TransferDAO;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.entity.Warehouse;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -191,7 +192,7 @@ public class ImportReceiptController extends HttpServlet {
 
         request.setAttribute("receiptList", receiptList);
         if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
@@ -1117,84 +1118,17 @@ public class ImportReceiptController extends HttpServlet {
         r.setApprovedBy(loggedUser.getId());
         r.setApprovedAt(java.time.LocalDateTime.now());
 
-        int receiptId = -1;
-        java.sql.Connection conn = null;
-        boolean ok = false;
-        try {
-            conn = receiptDAO.getConnection();
-            conn.setAutoCommit(false);
-            receiptId = receiptDAO.insert(conn, r);
-            if (receiptId <= 0) {
-                throw new java.sql.SQLException("Không thể tạo phiếu, vui lòng thử lại");
-            }
-            if (isTransferImport && exportReceipt != null && exportReceipt.getDetails() != null) {
-                List<ReceiptDetail> rdList = new ArrayList<>();
-                for (ReceiptDetail src : exportReceipt.getDetails()) {
-                    if (!inventoryDAO.completeTransferImport(conn, src.getInventoryId(), warehouseId)) {
-                        throw new SQLException("Số serial inventory_id=" + src.getInventoryId()
-                                + " không ở trạng thái IN_TRANSIT");
-                    }
-                    ReceiptDetail rd = new ReceiptDetail();
-                    rd.setReceiptId(receiptId);
-                    rd.setInventoryId(src.getInventoryId());
-                    rd.setGeneratorId(src.getGeneratorId());
-                    rd.setNote(src.getNote());
-                    rdList.add(rd);
-                }
-                detailDAO.batchInsert(conn, rdList);
-                receiptDAO.writeStockCardsForImport(conn, receiptId, r.getReceiptCode(),
-                        warehouseId, loggedUser.getId(), rdList);
-            } else {
-                for (ReceiptDetail d : details) {
-                    int existingInvId = d.getInventoryId();
-                    if (existingInvId > 0) {
-                        Inventory existingInv
-                                = inventoryDAO.findBySerialNumber(d.getSerialNumber());
-                        if (existingInv == null
-                                || existingInv.getInventoryId() != existingInvId
-                                || !"SOLD".equals(existingInv.getStatus())) {
-                            throw new SQLException("Số serial '" + d.getSerialNumber()
-                                    + "' không còn ở trạng thái SOLD, vui lòng quay lại và bỏ số serial này.");
-                        }
-                        int updated = inventoryDAO.reactivateSold(conn, existingInvId,
-                                d.getGeneratorId(), warehouseId);
-                        if (updated <= 0) {
-                            throw new SQLException("Không thể nhập lại số serial '" + d.getSerialNumber()
-                                    + "' (cập nhật inventory thất bại).");
-                        }
-                        d.setInventoryId(existingInvId);
-                    } else {
-                        if (inventoryDAO.serialExists(conn, d.getSerialNumber())) {
-                            throw new SQLException("Số serial '" + d.getSerialNumber()
-                                    + "' đã tồn tại trong hệ thống (vui lòng quay lại và bỏ số serial trùng).");
-                        }
-                        int invId = inventoryDAO.insertInStock(conn, d.getGeneratorId(), d.getSerialNumber(), warehouseId);
-                        if (invId <= 0) {
-throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() + "'");
-                        }
-                        d.setInventoryId(invId);
-                    }
-                    d.setReceiptId(receiptId);
-                }
-                detailDAO.batchInsert(conn, details);
-                receiptDAO.writeStockCardsForImport(conn, receiptId, r.getReceiptCode(),
-                        warehouseId, loggedUser.getId(), details);
-            }
-            conn.commit();
-            ok = true;
-        } catch (java.sql.SQLException ex) {
-            if (conn != null) {
-                try { conn.rollback(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-            }
-            receiptId = -1;
-            errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
-        } finally {
-            if (conn != null) {
-                try { conn.setAutoCommit(true); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-                try { conn.close(); } catch (java.sql.SQLException e) { e.printStackTrace(); }
-            }
+        List<ReceiptDetail> detailsToSave;
+        if (isTransferImport && exportReceipt != null && exportReceipt.getDetails() != null) {
+            detailsToSave = exportReceipt.getDetails();
+        } else {
+            detailsToSave = details;
         }
-        if (!ok) {
+        int receiptId;
+        try {
+            receiptId = receiptDAO.insertImport(r, detailsToSave, loggedUser.getId());
+        } catch (SQLException ex) {
+            errors.add("Lỗi hệ thống khi lưu phiếu: " + ex.getMessage());
             request.setAttribute("toastType", "danger");
             request.setAttribute("toastMessage", buildErrorMessage("Lưu phiếu thất bại:", errors));
             request.setAttribute("warehouses", warehouseDAO.findAll());
@@ -1476,8 +1410,23 @@ throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() 
                 }
             }
 
-            if (!isTransferImport && !serial.isEmpty() && inventoryDAO.isSerialBlocked(serial)) {
-                errors.add("Số serial \"" + serial + "\" đã tồn tại trong hệ thống");
+            if (!serial.isEmpty()) {
+                Inventory inv = inventoryDAO.findBySerialNumber(serial);
+                if (isTransferImport) {
+                    if (inv == null) {
+                        errors.add("Số serial \"" + serial + "\" không tồn tại trong hệ thống, không thể nhập từ phiếu luân chuyển");
+                    } else if (!"IN_TRANSIT".equals(inv.getStatus()) && !"SOLD".equals(inv.getStatus())) {
+                        String statusName = "IN_STOCK".equals(inv.getStatus()) ? "tồn kho"
+                                : "IN_TRANSIT".equals(inv.getStatus()) ? "đang luân chuyển"
+                                : "SOLD".equals(inv.getStatus()) ? "đã bán"
+                                : inv.getStatus() != null ? inv.getStatus().toLowerCase() : "không xác định";
+                        errors.add("Số serial \"" + serial + "\" đang ở trạng thái " + statusName + ", không thể nhập từ phiếu luân chuyển");
+                    }
+                } else {
+                    if (inv != null && !"SOLD".equals(inv.getStatus())) {
+                        errors.add("Số serial \"" + serial + "\" đã tồn tại trong hệ thống");
+                    }
+                }
             }
 
             if (resolved != null) {
@@ -1747,10 +1696,10 @@ throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() 
             if (scopedWh != null && scopedWh == transfer.getSourceWarehouseId()) {
                 NotificationUtil.send(
                         u.getId(),
-                        "Ph\u00ed\u1ebfu nh\u1eadp \u0111\u00e3 ho\u00e0n t\u1ea5t",
-                        "Kho \u0111\u00edch \u0111\u00e3 t\u1ea1o ph\u00ed\u1ebfu nh\u1eadp " + receipt.getReceiptCode()
-                                + " cho phi\u1ebfu lu\u00e2n chuy\u1ec3n " + transfer.getTransferCode()
-                                + ". Qu\u00e1 tr\u00ecnh lu\u00e2n chuy\u1ec3n \u0111\u00e3 ho\u00e0n t\u1ea5t.",
+                        "Phiếu nhập đã hoàn tất",
+                        "Kho đích đã tạo phiếu nhập " + receipt.getReceiptCode()
+                                + " cho phiếu luân chuyển " + transfer.getTransferCode()
+                                + ". Quá trình luân chuyển đã hoàn tất.",
                         contextPath + "/transfers?action=detail&id=" + transfer.getTransferId(),
                         "transfer",
                         transfer.getTransferId()
