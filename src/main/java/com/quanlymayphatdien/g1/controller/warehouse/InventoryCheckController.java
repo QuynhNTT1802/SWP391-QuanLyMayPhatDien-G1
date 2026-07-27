@@ -12,8 +12,10 @@ import com.quanlymayphatdien.g1.entity.InventoryCheckDetail;
 import com.quanlymayphatdien.g1.entity.InventoryCheckSerial;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
 import com.quanlymayphatdien.g1.utils.NotificationUtil;
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -165,17 +167,29 @@ public class InventoryCheckController extends HttpServlet {
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String warehouseIdParam = request.getParameter("warehouseId");
-        Integer warehouseId = null;
-        if (warehouseIdParam != null && !warehouseIdParam.isEmpty()) {
-            warehouseId = Integer.parseInt(warehouseIdParam);
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        int warehouseId = resolveAssignedWarehouseId(session, loggedUser);
+        if (warehouseId <= 0) {
+            session.setAttribute("toastType", "danger");
+            session.setAttribute("toastMessage", "Tài khoản của bạn chưa được gán kho để tạo phiếu kiểm kê");
+            response.sendRedirect(request.getContextPath() + "/inventory-check");
+            return;
         }
 
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        request.setAttribute("selectedWarehouse", warehouseId);
+        String currentWarehouseName = "";
+        Warehouse currentWarehouse = warehouseDAO.findById(warehouseId);
+        if (currentWarehouse == null) {
+            session.setAttribute("toastType", "danger");
+            session.setAttribute("toastMessage", "Kho được gán cho tài khoản không tồn tại hoặc đã bị vô hiệu hóa");
+            response.sendRedirect(request.getContextPath() + "/inventory-check");
+            return;
+        }
+        currentWarehouseName = currentWarehouse.getName();
+        request.setAttribute("currentWarehouseName", currentWarehouseName);
 
-        if (warehouseId != null) {
-            request.setAttribute("selectedWarehouse", warehouseId);
-
+        if (warehouseId > 0) {
             List<Inventory> listSerials = inventoryDAO.findInStockByWarehouse(warehouseId);
 
             Map<Integer, List<Inventory>> groupedByGenerator = new HashMap<>();
@@ -284,18 +298,14 @@ public class InventoryCheckController extends HttpServlet {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
 
-        String whParam = request.getParameter("warehouseId");
         String notes = request.getParameter("notes");
         String[] genIds = request.getParameterValues("generatorId");
 
         List<String> errors = new ArrayList<>();
 
-        int warehouseId = 0;
-        try {
-            warehouseId = Integer.parseInt(whParam);
-            if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
-        } catch (NumberFormatException e) {
-            errors.add("Kho không hợp lệ");
+        int warehouseId = resolveAssignedWarehouseId(session, loggedUser);
+        if (warehouseId <= 0) {
+            errors.add("Tài khoản của bạn chưa được gán kho");
         }
 
         List<InventoryCheckDetail> details = new ArrayList<>();
@@ -329,9 +339,12 @@ public class InventoryCheckController extends HttpServlet {
 
         int checkId = checkDAO.insert(check);
         if (checkId <= 0) {
+            Warehouse currentWarehouse = warehouseDAO.findById(warehouseId);
             request.setAttribute("toastMessage", "Không thể tạo phiếu kiểm kê");
             request.setAttribute("toastType", "danger");
-            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("selectedWarehouse", warehouseId);
+            request.setAttribute("currentWarehouseName",
+                    currentWarehouse != null ? currentWarehouse.getName() : "");
             request.getRequestDispatcher("/view/inventory-check/inventory-check-create.jsp").forward(request, response);
             return;
         }
@@ -363,6 +376,14 @@ public class InventoryCheckController extends HttpServlet {
         session.setAttribute("toastMessage", "Tạo phiếu kiểm kê thành công");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+    }
+
+    private int resolveAssignedWarehouseId(HttpSession session, User loggedUser) {
+        int warehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+        if (warehouseId <= 0 && loggedUser != null && loggedUser.getWarehouseId() != null) {
+            warehouseId = loggedUser.getWarehouseId();
+        }
+        return warehouseId;
     }
 
     private void updateCheck(HttpServletRequest request, HttpServletResponse response)

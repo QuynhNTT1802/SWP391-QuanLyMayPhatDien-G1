@@ -48,10 +48,11 @@
                 </div>
 
                 <c:if test="${not empty sessionScope.toastMessage}">
-                    <div class="toast toast-success">
+                    <div class="toast ${sessionScope.toastType == 'danger' ? 'toast-danger' : 'toast-success'}">
                         <c:out value="${sessionScope.toastMessage}"/>
                     </div>
                     <c:remove var="toastMessage" scope="session"/>
+                    <c:remove var="toastType" scope="session"/>
                 </c:if>
 
                 <form method="get" action="${pageContext.request.contextPath}/inventory-check" class="filter-form">

@@ -1,6 +1,5 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -38,7 +37,7 @@
                     <div class="left">
                         <div class="eyebrow">Kiểm kê</div>
                         <h2 class="page-title">Tạo phiếu kiểm kê mới</h2>
-                        <div class="page-sub">Chọn kho cần kiểm kê</div>
+                        <div class="page-sub">Kho kiểm kê được lấy tự động theo tài khoản của bạn</div>
                     </div>
                 </div>
 
@@ -48,23 +47,15 @@
                     </div>
                 </c:if>
 
-                <form method="get" action="${pageContext.request.contextPath}/inventory-check" id="warehouseForm" class="mb-16">
-                    <input type="hidden" name="action" value="create" />
-                    <br>
+                <div class="section section-body mb-16">
                     <div class="form-field field-max-400">
-                        <select name="warehouseId" onchange="this.form.submit()" <c:if test="${not empty inventoryList}">class="has-value"</c:if>>
-                            <option value="">-- Chọn kho --</option>
-                            <c:forEach var="wh" items="${warehouses}">
-                                <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                            </c:forEach>
-                        </select>
+                        <label>Kho kiểm kê</label>
+                        <input type="text" class="edit-input" value="${currentWarehouseName}" disabled />
                     </div>
-                </form>
+                </div>
 
-                <c:if test="${not empty selectedWarehouse}">
+                <c:if test="${selectedWarehouse > 0}">
                     <form method="POST" action="${pageContext.request.contextPath}/inventory-check?action=save" id="createForm">
-                        <input type="hidden" name="warehouseId" value="${selectedWarehouse}" />
-
                         <div class="section section-body">
                             <div class="form-field full">
                                 <label>Ghi chú</label>

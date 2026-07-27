@@ -382,7 +382,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     }
                     boolean marked = isTransfer
                             ? invDAO.markAsInTransit(conn, inv.getInventoryId())
-                            : invDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
+                            : invDAO.markAsExported(conn, inv.getInventoryId(), GlobalUtils.INVENTORY_STATUS_SOLD);
                     if (!marked) {
                         throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái IN_STOCK");
                     }

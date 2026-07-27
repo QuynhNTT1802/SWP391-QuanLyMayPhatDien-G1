@@ -135,10 +135,10 @@ public class OrderController extends HttpServlet {
         boolean canViewAllOrders = permissions != null && permissions.contains("orders.approve");
         int userId = canViewAllOrders ? 0 : user.getId();
 
-        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId, user.getId());
-        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_REJECTED, userId, user.getId());
-        int approved = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId, user.getId());
-        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId, user.getId());
+        int pendding = saleorderdao.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING, userId, user.getId());
+        int rejected = saleorderdao.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_REJECTED, userId, user.getId());
+        int approved = saleorderdao.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_APPROVED, userId, user.getId());
+        int cancelled = saleorderdao.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_CANCELLED, userId, user.getId());
         List<SaleOrder> allOrders = saleorderdao.searchByNameCode(searchFilter, statusFilter, userId, user.getId());
 
         int page = 1;
@@ -332,7 +332,7 @@ public class OrderController extends HttpServlet {
         boolean isOwner = loggedUser != null && order.getCreatedBy() == loggedUser.getId();
 
         // If deleted and not the creator, redirect
-        if (GlobalUtils.STATUS_DELETED.equals(order.getStatus()) && !isOwner) {
+        if (GlobalUtils.SALE_ORDER_STATUS_DELETED.equals(order.getStatus()) && !isOwner) {
             setMsg(session, "Đơn hàng đã bị xoá.", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
@@ -412,7 +412,7 @@ public class OrderController extends HttpServlet {
         }
 
         boolean isOwner = loggedUser.getId() == order.getCreatedBy();
-        if (!isOwner || !GlobalUtils.STATUS_NEEDS_REVISION.equals(order.getStatus())) {
+        if (!isOwner || !GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION.equals(order.getStatus())) {
             setMsg(session, "Bạn không có quyền chỉnh sửa đơn hàng này.", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
@@ -563,7 +563,7 @@ public class OrderController extends HttpServlet {
         }
 
         boolean isOwner = user.getId() == existing.getCreatedBy();
-        if (!isOwner || !GlobalUtils.STATUS_NEEDS_REVISION.equals(existing.getStatus())) {
+        if (!isOwner || !GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION.equals(existing.getStatus())) {
             setMsg(session, "Bạn không có quyền chỉnh sửa đơn hàng này.", "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
             return;
@@ -699,7 +699,7 @@ public class OrderController extends HttpServlet {
         updated.setCustomerNote(custNote);
         updated.setTotalAmount(totalAmount);
         updated.setUpdatedBy(user.getId());
-        updated.setStatus(GlobalUtils.STATUS_PENDING);
+        updated.setStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING);
 
         boolean ok = saleorderdao.updateForRevision(updated);
         if (ok) {

@@ -441,20 +441,23 @@
 .sum-damaged .summary-val { color: var(--danger); }
 
 .toast {
+    display: block;
     padding: 10px 16px;
     border-radius: var(--radius);
     margin-bottom: 12px;
     font-weight: 600;
     font-size: 13px;
+    opacity: 1;
+    transform: none;
+    transition: none;
 }
 .toast-success {
     background: var(--accent);
     color: var(--bg);
 }
 .toast-danger {
-    background: var(--danger-soft);
-    color: var(--danger);
-    border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+    background: var(--danger);
+    color: var(--bg);
 }
 .toast-info {
     background: var(--accent);

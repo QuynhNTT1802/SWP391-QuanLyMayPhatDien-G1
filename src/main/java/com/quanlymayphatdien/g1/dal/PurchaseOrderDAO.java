@@ -926,9 +926,9 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
                     + "WHERE purchase_order_id = ? AND status = ?");
-            statement.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
+            statement.setString(1, GlobalUtils.IMPORT_PROPOSAL_STATUS_PENDING_CEO);
             statement.setInt(2, poId);
-            statement.setString(3, GlobalUtils.STATUS_APPROVED);
+            statement.setString(3, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             statement.executeUpdate();
             connection.commit();
             return true;
@@ -959,7 +959,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
                     + "WHERE purchase_order_id = ?");
-            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             statement.setInt(2, poId);
             statement.executeUpdate();
             connection.commit();
@@ -978,7 +978,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ? "
                     + "WHERE po_id = ? AND status = ?");
-            statement.setString(1, GlobalUtils.STATUS_COMPLETED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_COMPLETED);
             statement.setInt(2, poId);
             statement.setString(3, GlobalUtils.PO_STATUS_APPROVED);
             return statement.executeUpdate() > 0;
@@ -1010,7 +1010,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ?, reject_reason = ? "
                     + "WHERE purchase_order_id = ?");
-            statement.setString(1, GlobalUtils.STATUS_REJECTED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_REJECTED);
             statement.setString(2, reason);
             statement.setInt(3, poId);
             statement.executeUpdate();

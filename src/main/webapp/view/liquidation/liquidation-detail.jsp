@@ -284,13 +284,12 @@
                                     </div>
                                     <div class="info-field">
                                         <label>Lý do thanh lý <span style="color:var(--danger)">*</span></label>
-                                        <select class="info-input" disabled>
+                                        <select class="info-input" name="reasonId" required>
                                             <option value="">-- Chọn lý do --</option>
                                             <c:forEach var="r" items="${reasons}">
                                                 <option value="${r.id}" ${r.id == liquidation.reasonId ? 'selected' : ''}>${r.name}</option>
                                             </c:forEach>
                                         </select>
-                                        <input type="hidden" name="reasonId" value="${liquidation.reasonId}" />
                                     </div>
                                     <div class="info-field">
                                         <label>Ngày tạo</label>

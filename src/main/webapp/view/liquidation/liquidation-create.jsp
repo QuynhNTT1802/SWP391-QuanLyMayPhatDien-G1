@@ -143,7 +143,7 @@
                         <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Quay lại
                     </a>
-                    <button type="button" class="btn" onclick="location.reload()">
+                    <button type="button" class="btn" onclick="clearLiqState();location.reload()">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                         Làm mới
                     </button>
@@ -159,7 +159,7 @@
                         <div class="form-grid cols-4">
                             <div class="info-field">
                                 <label>Kho hàng <span style="color:var(--danger)">*</span></label>
-                                <select class="info-input" name="warehouseId" id="warehouseId" required onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId='+this.value">
+                                <select class="info-input" name="warehouseId" id="warehouseId" required onchange="saveLiqStateAndGo('${pageContext.request.contextPath}/liquidations?action=create&warehouseId='+this.value)">
                                     <option value="">-- Chọn kho hàng --</option>
                                     <c:forEach var="w" items="${warehouses}">
                                         <option value="${w.warehouseId}" ${selectedWarehouseId == w.warehouseId ? 'selected' : ''}>${w.name}</option>
@@ -244,7 +244,7 @@
                                 <input type="text" id="serialSearchInput" placeholder="Tìm số serial hoặc mẫu máy..." autocomplete="off"/>
                             </div>
                             <select class="info-input" id="condFilter" style="width:auto;min-width:160px;" ${empty selectedWarehouseId ? 'disabled' : ''}
-                                    onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond='+this.value+'&page=1<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>">
+                                    onchange="saveLiqStateAndGo('${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond='+this.value+'&page=1<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>')">
                                 <option value="all" ${condFilter == 'all' ? 'selected' : ''}>Tất cả (${condCountAll})</option>
                                 <option value="DAMAGED" ${condFilter == 'DAMAGED' ? 'selected' : ''}>Hỏng (${condCountDamaged})</option>
                                 <option value="POOR" ${condFilter == 'POOR' ? 'selected' : ''}>Kém (${condCountPoor})</option>
@@ -354,7 +354,7 @@
                                                     <button class="page-btn" disabled>« Trước</button>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond=${condFilter}&page=${currentPage-1}<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>">« Trước</a>
+                                                     <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond=${condFilter}&page=${currentPage-1}<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>" onclick="saveLiqStateAndGo(this.href);return false;">« Trước</a>
                                                 </c:otherwise>
                                             </c:choose>
                                             <span class="page-indicator">Trang ${currentPage} / ${totalPages}</span>
@@ -363,7 +363,7 @@
                                                     <button class="page-btn" disabled>Sau »</button>
                                                 </c:when>
                                                 <c:otherwise>
-                                                    <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond=${condFilter}&page=${currentPage+1}<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>">Sau »</a>
+                                                     <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond=${condFilter}&page=${currentPage+1}<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>" onclick="saveLiqStateAndGo(this.href);return false;">Sau »</a>
                                                 </c:otherwise>
                                             </c:choose>
                                         </div>
@@ -443,15 +443,16 @@
                 }
             }
         }
+        window.recalcLiq = recalc;
 
-        checkboxes.forEach(function (cb) { cb.addEventListener('change', recalc); });
+        checkboxes.forEach(function (cb) { cb.addEventListener('change', function() { recalc(); saveLiqState(); }); });
 
         function formatPriceInput(el) {
             var digits = (el.value || '').replace(/[^0-9]/g, '');
             el.value = digits ? Number(digits).toLocaleString('vi-VN') : '';
         }
         document.querySelectorAll('.liq-price-input').forEach(function (el) {
-            el.addEventListener('input', function () { formatPriceInput(el); recalc(); });
+            el.addEventListener('input', function () { formatPriceInput(el); recalc(); saveLiqState(); });
         });
 
         var pickAll = document.getElementById('pickAll');
@@ -462,6 +463,7 @@
                     if (row && row.style.display !== 'none') cb.checked = pickAll.checked;
                 });
                 recalc();
+                saveLiqState();
             });
         }
 
@@ -486,38 +488,48 @@
                 if (row && row.style.display !== 'none') cb.checked = true;
             });
             recalc();
+            saveLiqState();
         };
         window.deselectAll = function () {
             checkboxes.forEach(function (cb) { cb.checked = false; });
+            clearLiqState();
             recalc();
         };
 
         var form = document.getElementById('liquidationForm');
         if (form) {
             form.addEventListener('submit', function (e) {
-                var checked = checkboxes.filter(function (cb) { return cb.checked; });
-                if (checked.length === 0) {
+                saveLiqState();
+
+                var allSelections = getAllLiqSelections();
+                var totalSelected = Object.keys(allSelections).length;
+
+                if (totalSelected === 0) {
                     e.preventDefault();
                     alert('Phải chọn ít nhất 1 máy phát điện.');
                     return;
                 }
-                var missingPrice = checked.some(function (cb) {
-                    var row = cb.closest('.pick-trow');
-                    var priceInput = row ? row.querySelector('.liq-price-input') : null;
-                    var v = priceInput ? (priceInput.value || '').replace(/[^0-9]/g, '') : '';
-                    return !v || Number(v) <= 0;
-                });
+
+                var missingPrice = false;
+                for (var sn in allSelections) {
+                    var p = (allSelections[sn].price || '').replace(/[^0-9]/g, '');
+                    if (!p || Number(p) <= 0) { missingPrice = true; break; }
+                }
                 if (missingPrice) {
                     e.preventDefault();
                     alert('Phải nhập giá thanh lý (lớn hơn 0) cho tất cả máy đã chọn.');
                     return;
                 }
+
                 var custId = (document.getElementById('sdHiddenId') || {}).value;
                 if (!custId || !custId.trim()) {
                     e.preventDefault();
                     alert('Phải chọn khách hàng hoặc tạo khách hàng mới trước khi gửi Sếp duyệt.');
                     return;
                 }
+
+                injectAllLiqSelections(allSelections);
+
                 document.querySelectorAll('.liq-price-input').forEach(function (el) {
                     el.value = (el.value || '').replace(/[^0-9]/g, '');
                 });
@@ -676,6 +688,7 @@
     window.clearCustomerSelection = function() {
         if (typeof origClearSelection === 'function') origClearSelection();
         refreshCustomerCard();
+        if (typeof saveLiqState === 'function') saveLiqState();
     };
 
     (function() {
@@ -683,7 +696,10 @@
         if (list) {
             list.addEventListener('click', function(e) {
                 if (e.target.closest('.cust-card')) {
-                    setTimeout(refreshCustomerCard, 0);
+                    setTimeout(function() {
+                        refreshCustomerCard();
+                        if (typeof saveLiqState === 'function') saveLiqState();
+                    }, 0);
                 }
             });
         }
@@ -801,6 +817,7 @@
         var label = document.getElementById('custTriggerLabel');
         if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
         refreshCustomerCard();
+        if (typeof saveLiqState === 'function') saveLiqState();
     }
 </script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
@@ -819,6 +836,184 @@
             showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
         }
     })();
+</script>
+<script>
+(function() {
+    var whId = '<c:out value="${selectedWarehouseId}"/>';
+    var STORAGE_KEY = 'liq_create_' + (whId || '0');
+
+    window.saveLiqState = function() {
+        if (!whId) return;
+        var state = { selections: {}, customer: {} };
+
+        document.querySelectorAll('.pick-cb:checked').forEach(function(cb) {
+            var row = cb.closest('.pick-trow');
+            var priceInput = row ? row.querySelector('.liq-price-input') : null;
+            state.selections[cb.value] = {
+                genId: cb.getAttribute('data-gen') || '',
+                price: priceInput ? priceInput.value : '',
+                condition: cb.getAttribute('data-condition') || ''
+            };
+        });
+
+        var existing = sessionStorage.getItem(STORAGE_KEY);
+        if (existing) {
+            try {
+                var prev = JSON.parse(existing);
+                if (prev && prev.selections) {
+                    for (var sn in prev.selections) {
+                        if (!state.selections[sn]) {
+                            state.selections[sn] = prev.selections[sn];
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        var custId = document.getElementById('sdHiddenId');
+        if (custId && custId.value) {
+            state.customer = {
+                id: custId.value,
+                name: (document.getElementById('inpCustName') || {}).value || '',
+                phone: (document.getElementById('inpCustPhone') || {}).value || '',
+                email: (document.getElementById('inpCustEmail') || {}).value || '',
+                address: (document.getElementById('inpCustAddress') || {}).value || '',
+                companyName: (document.getElementById('customerCompany') || {}).value || ''
+            };
+        }
+
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    };
+
+    window.getAllLiqSelections = function() {
+        var all = {};
+
+        document.querySelectorAll('.pick-cb:checked').forEach(function(cb) {
+            var row = cb.closest('.pick-trow');
+            var priceInput = row ? row.querySelector('.liq-price-input') : null;
+            all[cb.value] = {
+                genId: cb.getAttribute('data-gen') || '',
+                price: priceInput ? priceInput.value : '',
+                condition: cb.getAttribute('data-condition') || ''
+            };
+        });
+
+        var raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            try {
+                var saved = JSON.parse(raw);
+                if (saved && saved.selections) {
+                    for (var sn in saved.selections) {
+                        if (!all[sn]) {
+                            all[sn] = saved.selections[sn];
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        return all;
+    };
+
+    window.saveLiqStateAndGo = function(url) {
+        saveLiqState();
+        window.location.href = url;
+    };
+
+    window.clearLiqState = function() {
+        sessionStorage.removeItem(STORAGE_KEY);
+    };
+
+    window.injectAllLiqSelections = function(selections) {
+        var frm = document.getElementById('liquidationForm');
+        if (!frm) return;
+
+        document.querySelectorAll('.inj-liq-serial, .inj-liq-gen, .inj-liq-price').forEach(function(el) { el.remove(); });
+
+        document.querySelectorAll('.pick-cb').forEach(function(cb) { cb.disabled = true; });
+        document.querySelectorAll('.gen-hidden').forEach(function(el) { el.disabled = true; });
+        document.querySelectorAll('.liq-price-input').forEach(function(el) { el.disabled = true; });
+
+        for (var sn in selections) {
+            var item = selections[sn];
+            var priceDigits = (item.price || '').replace(/[^0-9]/g, '');
+            if (!priceDigits || Number(priceDigits) <= 0) continue;
+
+            var inpSerial = document.createElement('input');
+            inpSerial.type = 'hidden';
+            inpSerial.name = 'serialNumber';
+            inpSerial.value = sn;
+            inpSerial.className = 'inj-liq-serial';
+            frm.appendChild(inpSerial);
+
+            var inpGen = document.createElement('input');
+            inpGen.type = 'hidden';
+            inpGen.name = 'generatorId';
+            inpGen.value = item.genId;
+            inpGen.className = 'inj-liq-gen';
+            frm.appendChild(inpGen);
+
+            var inpPrice = document.createElement('input');
+            inpPrice.type = 'hidden';
+            inpPrice.name = 'liquidationPrice';
+            inpPrice.value = priceDigits;
+            inpPrice.className = 'inj-liq-price';
+            frm.appendChild(inpPrice);
+        }
+    };
+
+    function restoreLiqState() {
+        if (!whId) return;
+
+        var urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.has('page')) {
+            sessionStorage.removeItem(STORAGE_KEY);
+            return;
+        }
+
+        var raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        var state;
+        try { state = JSON.parse(raw); } catch(e) { return; }
+        if (!state) return;
+
+        if (state.selections) {
+            document.querySelectorAll('.pick-cb').forEach(function(cb) {
+                var saved = state.selections[cb.value];
+                if (saved) {
+                    cb.checked = true;
+                    var row = cb.closest('.pick-trow');
+                    if (row) {
+                        var genHidden = row.querySelector('.gen-hidden');
+                        var priceInput = row.querySelector('.liq-price-input');
+                        if (genHidden) genHidden.disabled = false;
+                        if (priceInput) {
+                            priceInput.disabled = false;
+                            if (saved.price) priceInput.value = saved.price;
+                        }
+                    }
+                }
+            });
+        }
+
+        if (state.customer && state.customer.id) {
+            var c = state.customer;
+            var setVal = function(id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
+            setVal('sdHiddenId', c.id);
+            setVal('inpCustName', c.name);
+            setVal('inpCustPhone', c.phone);
+            setVal('inpCustEmail', c.email);
+            setVal('inpCustAddress', c.address);
+            setVal('customerCompany', c.companyName);
+            var label = document.getElementById('custTriggerLabel');
+            if (label) { label.textContent = c.name || c.phone || ''; label.classList.add('has-value'); }
+            setTimeout(function() { if (typeof refreshCustomerCard === 'function') refreshCustomerCard(); }, 50);
+        }
+    }
+
+    restoreLiqState();
+    if (typeof recalcLiq === 'function') recalcLiq();
+})();
 </script>
 </body>
 </html>

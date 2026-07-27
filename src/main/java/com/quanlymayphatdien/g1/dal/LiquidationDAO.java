@@ -1,6 +1,7 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Liquidation;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
@@ -282,7 +283,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     }
 
     public boolean updateCeoReject(int liquidationId, int ceoId, int feedbackId, boolean isPermanent) {
-        String status = isPermanent ? "CANCELLED" : "CEO_REQUEST_EDIT";
+        String status = isPermanent ? GlobalUtils.LIQUIDATION_STATUS_CANCELLED : GlobalUtils.LIQUIDATION_STATUS_CEO_REQUEST_EDIT;
         String sql = "UPDATE liquidation SET status = ?, ceo_reviewed_by = ?, ceo_reviewed_at = ?, ceo_feedback_id = ?, updated_at = ? WHERE liquidation_id = ?";
         try {
             connection = getConnection();
@@ -373,7 +374,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
     // Dùng mốc receipt.approved_at (ngày xuất kho thực tế) thay vì ceo_reviewed_at.
     // Các query gọi buildReportWhere phải có JOIN receipt r ON l.converted_receipt_id = r.receipt_id trong FROM.
     private String buildReportWhere(java.time.LocalDate from, java.time.LocalDate to, Integer warehouseId, List<Object> params) {
-        StringBuilder w = new StringBuilder(" WHERE l.status = 'COMPLETED'");
+        StringBuilder w = new StringBuilder(" WHERE l.status = '" + GlobalUtils.LIQUIDATION_STATUS_COMPLETED + "'");
         if (from != null) {
             w.append(" AND DATE(r.approved_at) >= ?");
             params.add(Date.valueOf(from));
@@ -707,7 +708,7 @@ liq = BigDecimal.ZERO;
             LocalDateTime now = LocalDateTime.now();
             statement.setString(1, t.getLiquidationCode());
             statement.setInt(2, t.getCreatedBy());
-            statement.setString(3, t.getStatus() != null ? t.getStatus() : "PENDING_CEO");
+            statement.setString(3, t.getStatus() != null ? t.getStatus() : GlobalUtils.LIQUIDATION_STATUS_PENDING_CEO);
             statement.setInt(4, t.getReasonId());
             statement.setInt(5, t.getWarehouseId());
             if (t.getCustomerId() != null) {
@@ -836,10 +837,10 @@ liq = BigDecimal.ZERO;
                 + "JOIN warehouse w ON l.warehouse_id = w.warehouse_id "
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
                 + "LEFT JOIN (SELECT liquidation_id, COUNT(*) AS detail_count, SUM(original_price) AS total_original_price, SUM(liquidation_price) AS total_liquidation_price FROM liquidation_detail GROUP BY liquidation_id) agg ON agg.liquidation_id = l.liquidation_id "
-                + "WHERE l.status = 'APPROVED' "
+                + "WHERE l.status = '" + GlobalUtils.LIQUIDATION_STATUS_APPROVED + "' "
                 + "AND NOT EXISTS ("
                 + "  SELECT 1 FROM receipt r "
-                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> 'CANCELLED'"
+                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "'"
                 + ") ");
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {
@@ -882,10 +883,10 @@ liq = BigDecimal.ZERO;
                 "SELECT COUNT(*) FROM liquidation l "
                 + "JOIN user u ON l.created_by = u.id "
                 + "LEFT JOIN customer cu ON l.customer_id = cu.id "
-                + "WHERE l.status = 'APPROVED' "
+                + "WHERE l.status = '" + GlobalUtils.LIQUIDATION_STATUS_APPROVED + "' "
                 + "AND NOT EXISTS ("
                 + "  SELECT 1 FROM receipt r "
-                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> 'CANCELLED'"
+                + "  WHERE r.liquidation_id = l.liquidation_id AND r.status <> '" + GlobalUtils.RECEIPT_STATUS_CANCELLED + "'"
                 + ") ");
         List<Object> params = new ArrayList<>();
         if (search != null && !search.trim().isEmpty()) {

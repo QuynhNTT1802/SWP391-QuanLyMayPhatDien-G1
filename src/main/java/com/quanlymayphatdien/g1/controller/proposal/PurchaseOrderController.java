@@ -563,16 +563,7 @@ public class PurchaseOrderController extends HttpServlet {
             logList.add(m);
         }
 
-        if ("RETURNED".equals(po.getStatus()) && po.getRejectedAt() != null) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("createdAt", toDate(po.getRejectedAt()));
-            m.put("user", po.getRejectedByName() != null ? po.getRejectedByName() : "—");
-            m.put("action", "RETURN");
-            m.put("actionLabel", "Trả lại chỉnh sửa");
-            m.put("details", "Trả lại phiếu mua cho bộ phận tạo"
-                    + (po.getRejectReason() != null ? ": " + po.getRejectReason() : ""));
-            logList.add(m);
-        } else if ("REJECTED".equals(po.getStatus()) && po.getRejectedAt() != null) {
+        if ("REJECTED".equals(po.getStatus()) && po.getRejectedAt() != null) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("createdAt", toDate(po.getRejectedAt()));
             m.put("user", po.getRejectedByName() != null ? po.getRejectedByName() : "—");
@@ -583,19 +574,7 @@ public class PurchaseOrderController extends HttpServlet {
             logList.add(m);
         }
 
-        if ("CANCELLED".equals(po.getStatus()) && po.getRejectedAt() != null) {
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("createdAt", toDate(po.getRejectedAt()));
-            m.put("user", po.getRejectedByName() != null ? po.getRejectedByName() : "—");
-            String mode = po.getCancelMode();
-            String cancelLabel = "REBUILD".equals(mode) ? "Hủy & trả đề xuất về chờ duyệt" : "Hủy & từ chối đề xuất";
-            m.put("action", "CANCEL");
-            m.put("actionLabel", cancelLabel);
-            m.put("details", cancelLabel + " phiếu mua " + po.getPoCode()
-                    + (po.getCancelReason() != null ? ": " + po.getCancelReason() : ""));
-            logList.add(m);
-        }
-
+       
         if (po.getUpdatedAt() != null && po.getCreatedAt() != null
                 && po.getUpdatedAt().isAfter(po.getCreatedAt())
                 && !"RETURNED".equals(po.getStatus())

@@ -206,16 +206,16 @@ public class ProposalController extends HttpServlet {
         String dbStatus = statusFilter;
         Boolean hasPo = null;
         if ("APPROVED_SM".equals(statusFilter)) {
-            dbStatus = GlobalUtils.STATUS_APPROVED;
+            dbStatus = GlobalUtils.SALE_ORDER_STATUS_APPROVED;
             hasPo = Boolean.FALSE;
         } else if ("APPROVED_CEO".equals(statusFilter)) {
-            dbStatus = GlobalUtils.STATUS_APPROVED;
+            dbStatus = GlobalUtils.SALE_ORDER_STATUS_APPROVED;
             hasPo = Boolean.TRUE;
         } else if ("REJECTED_SM".equals(statusFilter)) {
-            dbStatus = GlobalUtils.STATUS_REJECTED;
+            dbStatus = GlobalUtils.SALE_ORDER_STATUS_REJECTED;
             hasPo = Boolean.FALSE;
         } else if ("REJECTED_CEO".equals(statusFilter)) {
-            dbStatus = GlobalUtils.STATUS_REJECTED;
+            dbStatus = GlobalUtils.SALE_ORDER_STATUS_REJECTED;
             hasPo = Boolean.TRUE;
         }
 
@@ -255,10 +255,10 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
         request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, dateFrom, dateTo, loggedUser.getId()));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
-        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING,   createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.SALE_ORDER_STATUS_APPROVED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.SALE_ORDER_STATUS_REJECTED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.SALE_ORDER_STATUS_CANCELLED, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
 
  
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
@@ -304,11 +304,11 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     
     private boolean canEditProposal(ImportProposal p, int currentUserId, boolean canApprove) {
         if (p == null) return false;
-        if (!GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())) {
+        if (!GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION.equals(p.getStatus())) {
             return false;
         }
         if (p.getCreatedBy() == currentUserId) return true;
-        boolean isCeoRequestedRevision = GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())
+        boolean isCeoRequestedRevision = GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION.equals(p.getStatus())
                 && GlobalUtils.REVISION_REQUESTER_CEO.equals(p.getRevisionRequestedByRole());
         return isCeoRequestedRevision && canApprove;
     }
@@ -370,8 +370,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         User loggedUser = (User) session.getAttribute("loggedUser");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
         boolean isCreator = p.getCreatedBy() == loggedUser.getId();
-        boolean isViewingDeleted = GlobalUtils.STATUS_DELETED.equals(p.getStatus()) && isCreator;
-        if (GlobalUtils.STATUS_DELETED.equals(p.getStatus()) && !isCreator) {
+        boolean isViewingDeleted = GlobalUtils.SALE_ORDER_STATUS_DELETED.equals(p.getStatus()) && isCreator;
+        if (GlobalUtils.SALE_ORDER_STATUS_DELETED.equals(p.getStatus()) && !isCreator) {
             session.setAttribute("toastMessage", "Phiếu này đã bị xoá và không còn khả dụng.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=list");
@@ -470,7 +470,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             return;
         }
         ImportProposal p = new ImportProposalDAO().findById(id);
-        if (p == null || !GlobalUtils.STATUS_PENDING.equals(p.getStatus())) {
+        if (p == null || !GlobalUtils.SALE_ORDER_STATUS_PENDING.equals(p.getStatus())) {
             session.setAttribute("toastMessage", "Chỉ phiếu đang chờ duyệt mới có thể từ chối.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
@@ -512,7 +512,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         p.setWarehouseId(warehouseId);
         p.setSupplierId(headerSupplierId);
         p.setNote(request.getParameter("note"));
-        p.setStatus(GlobalUtils.STATUS_PENDING);
+        p.setStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING);
         p.setCreatedBy(user.getId());
         p.setProposalDate(LocalDateTime.now());
         p.setPeriod(PeriodUtils.currentPeriod());
@@ -616,7 +616,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         p.setProposalId(id);
         p.setNote(hasDetailForm ? request.getParameter("note") : existing.getNote());
         p.setSupplierId(hasDetailForm ? headerSupplierId : existing.getSupplierId());
-        p.setStatus(GlobalUtils.STATUS_PENDING);
+        p.setStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING);
         dao.update(p);
 
         if (hasDetailForm) {
@@ -743,7 +743,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         ImportProposalDAO dao = new ImportProposalDAO();
         ImportProposal existing = dao.findById(id);
         if (existing == null
-                || !GlobalUtils.STATUS_PENDING.equals(existing.getStatus())
+                || !GlobalUtils.SALE_ORDER_STATUS_PENDING.equals(existing.getStatus())
                 || existing.getCreatedBy() != currentUserId(request)) {
             session.setAttribute("toastMessage", "Không thể xoá phiếu này (đã được xử lý hoặc không phải người tạo).");
             session.setAttribute("toastType", "danger");
@@ -1003,7 +1003,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             return;
         }
         ImportProposal p = new ImportProposalDAO().findById(id);
-        if (p == null || !GlobalUtils.STATUS_APPROVED.equals(p.getStatus())) {
+        if (p == null || !GlobalUtils.SALE_ORDER_STATUS_APPROVED.equals(p.getStatus())) {
             session.setAttribute("toastMessage", "Chỉ phiếu đã duyệt mới tạo được phiếu nhập");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
