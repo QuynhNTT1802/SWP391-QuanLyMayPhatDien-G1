@@ -276,8 +276,6 @@ public class ExportReceiptController extends HttpServlet {
                     request.setAttribute("warehouses", whList);
                 }
 
-                // Pre-fill Receipt with one empty ReceiptDetail per required unit
-                // (giống pattern order flow: user sẽ scan serials để fill)
                 Receipt prefill = new Receipt();
                 prefill.setReceiptType(TYPE);
                 prefill.setLinkedTransferId(transferId);
@@ -300,7 +298,6 @@ public class ExportReceiptController extends HttpServlet {
                 Gson gson = new Gson();
                 request.setAttribute("prefillDetailsJson", gson.toJson(prefillDetails));
 
-                // Build expectedRows for the counter banner
                 int totalTransferRows = 0;
                 if (transfer.getDetails() != null) {
                     for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
@@ -309,7 +306,6 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 request.setAttribute("expectedTransferRows", totalTransferRows);
 
-                // Build stock warnings for shortage display
                 java.util.List<String> stockWarningsTransfer = new java.util.ArrayList<>();
                 if (transfer.getDetails() != null) {
                     for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
@@ -597,13 +593,13 @@ public class ExportReceiptController extends HttpServlet {
         int page = parsePage(request.getParameter("page"));
         int pageSize = 10;
 
-        com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+        TransferDAO tDAO = new TransferDAO();
         int totalItems = tDAO.countReadyForExportFiltered(search, fromDate, toDate, scopedWarehouseId, loggedUser.getId());
         int totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
         if (page > totalPages) {
             page = totalPages;
         }
-        java.util.List<com.quanlymayphatdien.g1.entity.Transfer> transfers
+        List<Transfer> transfers
                 = tDAO.findReadyForExportFiltered(search, fromDate, toDate, page, pageSize, scopedWarehouseId, loggedUser.getId());
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);

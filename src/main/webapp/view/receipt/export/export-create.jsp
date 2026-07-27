@@ -80,7 +80,7 @@
                     <div class="alert alert-error" style="margin: 16px 0;">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <div class="alert-body">
-                            <div class="alert-title">Không thể gửi phiếu &mdash; tồn kho không đủ</div>
+                            <div class="alert-title">Không thể gửi phiếu !; tồn kho không đủ</div>
                             <ul>
                                 <c:forEach var="e" items="${errors}">
                                     <li><c:out value="${e}"/></li>
@@ -614,9 +614,6 @@
     var EXPORT_SCAN_MIN_LEN = 2;
 
     function initExportScanner() {
-        // Global scanner: bắt mọi keydown ở document, phân biệt scanner (gõ
-        // nhanh < 50ms/char) với người gõ tay (chậm > 100ms). Khi Enter/Tab
-        // xuất hiện và buffer đủ dài → xử lý như scan.
         document.addEventListener('keydown', function (e) {
             var now = Date.now();
             var gap = now - exportScanLastKey;
@@ -721,7 +718,6 @@
                     return;
                 }
 
-                // Check against order/transfer requirements
                 if (isOrderMode && ORDER_REQUIREMENTS && ORDER_REQUIREMENTS.length > 0) {
                     var genOk = false;
                     ORDER_REQUIREMENTS.forEach(function (req) {
@@ -756,7 +752,6 @@
                     }
                 }
 
-                // Auto-create group and add row
                 var genId = data.generatorId;
                 var group = getOrCreateGroup(genId, data.generatorModel, data.generatorBrand);
                 if (!group) {
@@ -826,7 +821,6 @@
             var group = getOrCreateGroup(p.generatorId, p.model, null);
             if (!group) return;
             if (isLiquidationMode && p.serialNumber) {
-                // Liquidation: pre-filled serial, read-only
                 var tr = addRowToGroup(group, p.serialNumber, p.note || '', null);
                 if (tr) {
                     var snInput = tr.querySelector('input[name="serialNumber"]');
@@ -1100,7 +1094,6 @@
             }
         }
 
-        // Liquidation mode
         if (isLiquidationMode) {
             generatorCache = [];
             applyPrefill();
@@ -1108,7 +1101,6 @@
         } else if (prefillDetails && prefillDetails.length > 0) {
             var whId = document.getElementById('warehouseSelect').value;
             if (whId) {
-                // onWarehouseChange will call applyPrefill after loading cache
                 onWarehouseChange();
             } else {
                 applyPrefill();
