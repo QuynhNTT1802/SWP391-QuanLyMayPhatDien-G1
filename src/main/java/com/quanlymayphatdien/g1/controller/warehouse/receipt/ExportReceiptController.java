@@ -36,6 +36,8 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
+import com.quanlymayphatdien.g1.entity.Warehouse;
+import static com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED;
 import com.quanlymayphatdien.g1.utils.NotificationService;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -196,7 +198,7 @@ public class ExportReceiptController extends HttpServlet {
 
         request.setAttribute("receiptList", receiptList);
         if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
@@ -225,7 +227,7 @@ public class ExportReceiptController extends HttpServlet {
         int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
 
         if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
@@ -243,10 +245,10 @@ public class ExportReceiptController extends HttpServlet {
         String transferIdStr = request.getParameter("transferId");
         if (transferIdStr != null && !transferIdStr.isEmpty()) {
             int transferId = parseId(transferIdStr);
-            com.quanlymayphatdien.g1.dal.TransferDAO transferDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
-            com.quanlymayphatdien.g1.entity.Transfer transfer = transferDAO.findById(transferId);
+            TransferDAO transferDAO = new TransferDAO();
+            Transfer transfer = transferDAO.findById(transferId);
             if (transfer != null
-                    && com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED.equals(transfer.getStatus())
+                    && TRANSFER_STATUS_APPROVED.equals(transfer.getStatus())
                     && transfer.getExportReceiptId() == null) {
                 if (scopedWarehouseId > 0 && scopedWarehouseId != transfer.getSourceWarehouseId()) {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -259,9 +261,9 @@ public class ExportReceiptController extends HttpServlet {
                 request.setAttribute("preselectSourceWarehouseId", transfer.getSourceWarehouseId());
                 request.setAttribute("transferDetails", transfer.getDetails());
 
-                Map<Integer, Integer> inStockByGen = new java.util.LinkedHashMap<>();
+                Map<Integer, Integer> inStockByGen = new LinkedHashMap<>();
                 if (transfer.getDetails() != null) {
-                    for (com.quanlymayphatdien.g1.entity.TransferDetail d : transfer.getDetails()) {
+                    for (TransferDetail d : transfer.getDetails()) {
                         int qty = inventoryDAO.findInStockByWarehouseAndGenerator(
                                 transfer.getSourceWarehouseId(), d.getGeneratorId()).size();
                         inStockByGen.put(d.getGeneratorId(), qty);
@@ -269,9 +271,9 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 request.setAttribute("inStockByGenForTransfer", inStockByGen);
 
-                com.quanlymayphatdien.g1.entity.Warehouse src = warehouseDAO.findById(transfer.getSourceWarehouseId());
+                Warehouse src = warehouseDAO.findById(transfer.getSourceWarehouseId());
                 if (src != null) {
-                    java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
+                    List<Warehouse> whList = new ArrayList<>();
                     whList.add(src);
                     request.setAttribute("warehouses", whList);
                 }
@@ -280,9 +282,9 @@ public class ExportReceiptController extends HttpServlet {
                 prefill.setReceiptType(TYPE);
                 prefill.setLinkedTransferId(transferId);
                 prefill.setNote("Xuất kho theo phiếu luân chuyển " + transfer.getTransferCode());
-                java.util.List<ReceiptDetail> prefillDetails = new java.util.ArrayList<>();
+                List<ReceiptDetail> prefillDetails = new ArrayList<>();
                 if (transfer.getDetails() != null) {
-                    for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
+                    for (TransferDetail td : transfer.getDetails()) {
                         int qty = td.getQuantity() > 0 ? td.getQuantity() : 1;
                         for (int k = 0; k < qty; k++) {
                             ReceiptDetail rd = new ReceiptDetail();
@@ -300,15 +302,15 @@ public class ExportReceiptController extends HttpServlet {
 
                 int totalTransferRows = 0;
                 if (transfer.getDetails() != null) {
-                    for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
+                    for (TransferDetail td : transfer.getDetails()) {
                         totalTransferRows += td.getQuantity() > 0 ? td.getQuantity() : 1;
                     }
                 }
                 request.setAttribute("expectedTransferRows", totalTransferRows);
 
-                java.util.List<String> stockWarningsTransfer = new java.util.ArrayList<>();
+                List<String> stockWarningsTransfer = new ArrayList<>();
                 if (transfer.getDetails() != null) {
-                    for (com.quanlymayphatdien.g1.entity.TransferDetail td : transfer.getDetails()) {
+                    for (TransferDetail td : transfer.getDetails()) {
                         int reqQty = td.getQuantity() > 0 ? td.getQuantity() : 1;
                         int haveQty = inStockByGen.containsKey(td.getGeneratorId())
                                 ? inStockByGen.get(td.getGeneratorId()) : 0;
@@ -806,13 +808,13 @@ public class ExportReceiptController extends HttpServlet {
         }
 
         int transferId = parseId(request.getParameter("transferId"));
-        com.quanlymayphatdien.g1.entity.Transfer transferForExport = null;
+        Transfer transferForExport = null;
         boolean isTransferExport = false;
         if (transferId > 0) {
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            TransferDAO tDAO = new TransferDAO();
             transferForExport = tDAO.findById(transferId);
             if (transferForExport == null
-                    || !com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED.equals(transferForExport.getStatus())
+                    || !GlobalUtils.TRANSFER_STATUS_APPROVED.equals(transferForExport.getStatus())
                     || transferForExport.getExportReceiptId() != null) {
                 HttpSession s = request.getSession();
                 s.setAttribute("toastMessage", "Phiếu đề xuất không hợp lệ hoặc đã có phiếu xuất");
@@ -1072,7 +1074,7 @@ public class ExportReceiptController extends HttpServlet {
         activityLogDAO.insert(log);
 
         if (isTransferExport && transferForExport != null) {
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            TransferDAO tDAO = new TransferDAO();
             if (tDAO.markExportReceiptCreated(transferId, receiptId)) {
                 ActivityLog transferLog = new ActivityLog();
                 transferLog.setUserId(loggedUser.getId());
@@ -1099,7 +1101,7 @@ public class ExportReceiptController extends HttpServlet {
         }
     }
 
-    private void notifyDestWarehouseStaff(com.quanlymayphatdien.g1.entity.Transfer transfer,
+    private void notifyDestWarehouseStaff(Transfer transfer,
             Receipt receipt, User sender, String contextPath) {
         List<User> staff = userDAO.findUsersByPermission("receipts", "view");
         if (staff == null) {
@@ -1111,7 +1113,7 @@ public class ExportReceiptController extends HttpServlet {
             }
             Integer scopedWh = null;
             try {
-                scopedWh = new com.quanlymayphatdien.g1.dal.UserDAO().getScopedWarehouseId(u.getId());
+                scopedWh = new UserDAO().getScopedWarehouseId(u.getId());
             } catch (Exception ex) {
                 continue;
             }

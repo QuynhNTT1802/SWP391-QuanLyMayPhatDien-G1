@@ -220,7 +220,7 @@ public class ImportReceiptController extends HttpServlet {
         int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
 
         if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
@@ -254,10 +254,10 @@ public class ImportReceiptController extends HttpServlet {
         String exportReceiptIdStr = request.getParameter("exportReceiptId");
         if (exportReceiptIdStr != null && !exportReceiptIdStr.isEmpty()) {
             int exportReceiptId = parseId(exportReceiptIdStr);
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
-            com.quanlymayphatdien.g1.entity.Transfer transfer = tDAO.findByExportReceiptId(exportReceiptId);
+            TransferDAO tDAO = new TransferDAO();
+            Transfer transfer = tDAO.findByExportReceiptId(exportReceiptId);
             if (transfer != null
-                    && com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transfer.getStatus())
+                    && GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transfer.getStatus())
                     && transfer.getImportReceiptId() == null) {
                 if (scopedWarehouseId > 0 && scopedWarehouseId != transfer.getDestWarehouseId()) {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -272,7 +272,7 @@ public class ImportReceiptController extends HttpServlet {
     }
 
     private void applyExportReceiptPrefillToRequest(HttpServletRequest request,
-                                                    com.quanlymayphatdien.g1.entity.Transfer transfer,
+Transfer transfer,
                                                     Receipt exportReceipt) {
         if (transfer == null || exportReceipt == null) return;
         request.setAttribute("transfer", transfer);
@@ -319,9 +319,9 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("prefillDetailsJson", gson.toJson(prefillDetails));
         request.setAttribute("transferRowListJson", gson.toJson(transferRowList));
 
-        com.quanlymayphatdien.g1.entity.Warehouse dest = warehouseDAO.findById(transfer.getDestWarehouseId());
+        Warehouse dest = warehouseDAO.findById(transfer.getDestWarehouseId());
         if (dest != null) {
-            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
+            List<Warehouse> whList = new ArrayList<>();
             whList.add(dest);
             request.setAttribute("warehouses", whList);
         }
@@ -350,8 +350,8 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("fromDate", fromDate);
         request.setAttribute("toDate", toDate);
         if (scopedWarehouseId > 0) {
-            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            List<Warehouse> whList = new ArrayList<>();
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             if (scoped != null) {
                 whList.add(scoped);
             }
@@ -1063,13 +1063,13 @@ public class ImportReceiptController extends HttpServlet {
             return;
         }
 
-        com.quanlymayphatdien.g1.entity.Transfer transferForImport = null;
+        Transfer transferForImport = null;
         Receipt exportReceipt = null;
         if (exportReceiptId > 0) {
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            TransferDAO tDAO = new TransferDAO();
             transferForImport = tDAO.findByExportReceiptId(exportReceiptId);
             if (transferForImport == null
-                    || !com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transferForImport.getStatus())
+                    || !GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transferForImport.getStatus())
                     || transferForImport.getImportReceiptId() != null) {
                 HttpSession s = request.getSession();
                 s.setAttribute("toastMessage", "Phiếu đề xuất không hợp lệ hoặc đã có phiếu nhập");
@@ -1150,7 +1150,7 @@ public class ImportReceiptController extends HttpServlet {
         activityLogDAO.insert(log);
 
         if (isTransferImport && transferForImport != null) {
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            TransferDAO tDAO = new TransferDAO();
             if (tDAO.markImportReceiptCreated(transferForImport.getTransferId(), receiptId, loggedUser.getId())) {
                 ActivityLog transferLog = new ActivityLog();
                 transferLog.setUserId(loggedUser.getId());
@@ -1681,7 +1681,7 @@ public class ImportReceiptController extends HttpServlet {
         return details;
     }
 
-    private void notifySourceWarehouseStaff(com.quanlymayphatdien.g1.entity.Transfer transfer,
+    private void notifySourceWarehouseStaff(Transfer transfer,
                                             Receipt receipt, User sender, String contextPath) {
         java.util.List<User> staff = userDAO.findUsersByPermission("receipts", "view");
         if (staff == null) return;
@@ -1689,7 +1689,7 @@ public class ImportReceiptController extends HttpServlet {
             if (u.getId() == sender.getId()) continue;
             Integer scopedWh = null;
             try {
-                scopedWh = new com.quanlymayphatdien.g1.dal.UserDAO().getScopedWarehouseId(u.getId());
+                scopedWh = new UserDAO().getScopedWarehouseId(u.getId());
             } catch (Exception ex) {
                 continue;
             }
