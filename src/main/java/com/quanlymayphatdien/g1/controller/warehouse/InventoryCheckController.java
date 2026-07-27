@@ -13,7 +13,7 @@ import com.quanlymayphatdien.g1.entity.InventoryCheckSerial;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -496,7 +496,7 @@ public class InventoryCheckController extends HttpServlet {
                             + " (" + (diff > 0 ? "thiếu " + diff : "thừa " + (-diff)) + ")."
                             + " Vui lòng kiểm tra và tạo phiếu nhập/xuất bù.";
                     String link = "/inventory-check?action=detail&id=" + checkId;
-                    NotificationService.sendToRole("warehouse_staff", title, message, link,
+                    NotificationUtil.sendToRole("warehouse_staff", title, message, link,
                             "inventory_check", checkId);
                 }
             }

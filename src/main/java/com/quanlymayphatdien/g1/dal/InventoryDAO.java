@@ -22,6 +22,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
             String search, String brand, int page, int pageSize) {
+        return findGeneratorSummary(warehouseId, search, brand, null, page, pageSize);
+    }
+
+    public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
+            String search, String brand, String stockStatus, int page, int pageSize) {
         List<GeneratorSummary> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT g.id, g.model, "
@@ -46,7 +51,21 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             sql.append("AND EXISTS (SELECT 1 FROM generator_category gc JOIN category c ON gc.category_id = c.id WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?) ");
             params.add("%" + brand.trim() + "%");
         }
-        sql.append("GROUP BY g.id, g.model ORDER BY g.model LIMIT ? OFFSET ?");
+        sql.append("GROUP BY g.id, g.model ");
+        if (stockStatus != null) {
+            switch (stockStatus) {
+                case "low":
+                    sql.append("HAVING total_serials > 0 AND total_serials <= 5 ");
+                    break;
+                case "out":
+                    sql.append("HAVING total_serials = 0 ");
+                    break;
+                case "attention":
+                    sql.append("HAVING total_serials <= 5 ");
+                    break;
+            }
+        }
+        sql.append("ORDER BY total_serials ASC, g.model LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
         try {
@@ -73,6 +92,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     public int countGeneratorSummary(Integer warehouseId, String search, String brand) {
+        return countGeneratorSummary(warehouseId, search, brand, null);
+    }
+
+    public int countGeneratorSummary(Integer warehouseId, String search, String brand, String stockStatus) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(DISTINCT g.id) "
               + "FROM generator g "
@@ -92,9 +115,24 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             sql.append("AND EXISTS (SELECT 1 FROM generator_category gc JOIN category c ON gc.category_id = c.id WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?) ");
             params.add("%" + brand.trim() + "%");
         }
+        sql.append("GROUP BY g.id, g.model ");
+        if (stockStatus != null) {
+            switch (stockStatus) {
+                case "low":
+                    sql.append("HAVING COUNT(i.inventory_id) > 0 AND COUNT(i.inventory_id) <= 5 ");
+                    break;
+                case "out":
+                    sql.append("HAVING COUNT(i.inventory_id) = 0 ");
+                    break;
+                case "attention":
+                    sql.append("HAVING COUNT(i.inventory_id) <= 5 ");
+                    break;
+            }
+        }
+        String countSql = "SELECT COUNT(*) FROM (" + sql.toString() + ") sub";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql.toString());
+            statement = connection.prepareStatement(countSql);
             for (int i = 0; i < params.size(); i++) {
                 statement.setObject(i + 1, params.get(i));
             }

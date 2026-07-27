@@ -41,10 +41,10 @@
 
     <main class="dashboard-container">
 
-      <%-- Hero Header Banner --%>
+      <%-- Đầu trang hero --%>
       <jsp:include page="dashboard-header.jsp" />
 
-      <%-- Section 1: 4 Template KPI Cards --%>
+      <%-- Phần 1: 4 Thẻ KPI --%>
       <section>
         <div class="kpis">
           <div class="kpi">
@@ -59,7 +59,7 @@
 
           <div class="kpi">
             <div class="label">Tài Khoản Bị Khóa</div>
-            <div class="value mono" style="color:var(--danger)"><fmt:formatNumber value="${not empty lockedUsers ? lockedUsers : 0}" pattern="#,##0"/></div>
+            <div class="value mono"><fmt:formatNumber value="${not empty lockedUsers ? lockedUsers : 0}" pattern="#,##0"/></div>
             <div class="delta">
               <span class="change down">Đã khóa</span>
               tạm ngưng bảo mật
@@ -78,7 +78,7 @@
           </div>
 
           <div class="kpi">
-            <div class="label">Tổng Quyền Hạn RBAC</div>
+            <div class="label">Tổng Quyền Hạn Phân Quyền</div>
             <div class="value mono">${not empty totalPermissions ? totalPermissions : 0}</div>
             <div class="delta">
               <span class="change up">Chức năng</span>
@@ -89,7 +89,7 @@
         </div>
       </section>
 
-      <%-- Admin Quick Hub: 4 Phím Tắt Thao Tác Nhanh Với Icon Phân Biệt --%>
+      <%-- Trung tâm điều khiển nhanh Quản trị --%>
       <div class="dash-sec-head">
         <h3>
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -98,7 +98,7 @@
       </div>
 
       <div class="dash-quick-grid">
-        <%-- Icon 1: Quản Lý Người Dùng (Icon Nhóm Người Dùng Users Group) --%>
+        <%-- Icon 1: Quản Lý Người Dùng (Icon Nhóm Người Dùng) --%>
         <a href="${pageContext.request.contextPath}/admin/users" class="dash-quick-btn">
           <div class="dash-quick-icon">
             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -106,7 +106,7 @@
           Quản Lý Người Dùng
         </a>
 
-        <%-- Icon 2: Tạo Tài Khoản Mới (Icon Người Dùng Thêm User Plus) --%>
+        <%-- Icon 2: Tạo Tài Khoản Mới (Icon Người Dùng Thêm) --%>
         <a href="${pageContext.request.contextPath}/admin/users?action=create" class="dash-quick-btn">
           <div class="dash-quick-icon">
             <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
@@ -114,7 +114,7 @@
           Tạo Người Dùng Mới
         </a>
 
-        <%-- Icon 3: Phân Quyền RBAC (Icon Khiên Bảo Mật Shield) --%>
+        <%-- Icon 3: Phân Quyền (Icon Khiên Bảo Mật) --%>
         <a href="${pageContext.request.contextPath}/admin/roles" class="dash-quick-btn">
           <div class="dash-quick-icon">
             <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -122,7 +122,7 @@
           Phân Quyền
         </a>
 
-        <%-- Icon 4: Danh Mục Vật Tư (Icon Khối Lưới Grid) --%>
+        <%-- Icon 4: Danh Mục Vật Tư (Icon Khối Lưới) --%>
         <a href="${pageContext.request.contextPath}/admin/categories?module=qu%e1%ba%a3n%20l%c3%bd%20v%e1%ba%adt%20t%c6%b0" class="dash-quick-btn">
           <div class="dash-quick-icon">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -131,7 +131,7 @@
         </a>
       </div>
 
-      <%-- Section 2: Activity Grid (Left 2fr: Biểu Đồ Cột Nằm Ngang Với Phối Màu Template Tokens | Right 1fr: User Mới Tạo .tx-list) --%>
+      <%-- Phần 2: Lưới hoạt động (Trái 2fr: Biểu đồ cột | Phải 1fr: Người dùng mới) --%>
       <div class="dash-sec-head">
         <h3>
           <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
@@ -141,7 +141,7 @@
       </div>
 
       <section class="dash-grid-3-1">
-        <%-- Left 2fr: Biểu Đồ Cột Nằm Ngang (Horizontal Bar Chart) Với Phối Màu Chuẩn Template Design Tokens --%>
+        <%-- Trái 2fr: Biểu đồ cột phân bố vai trò --%>
         <div class="card">
           <div class="card-head">
             <div>
@@ -162,23 +162,7 @@
                 <div style="display:flex;flex-direction:column;gap:14px">
                   <c:forEach var="entry" items="${userByRole}">
                     <c:set var="barPct" value="${entry.value * 100 / maxRoleCount}"/>
-                    <c:choose>
-                      <c:when test="${fn:containsIgnoreCase(entry.key, 'Quản Trị') or fn:containsIgnoreCase(entry.key, 'Admin')}">
-                        <c:set var="roleColor" value="var(--accent)"/>
-                      </c:when>
-                      <c:when test="${fn:containsIgnoreCase(entry.key, 'Kho') or fn:containsIgnoreCase(entry.key, 'Warehouse')}">
-                        <c:set var="roleColor" value="var(--info)"/>
-                      </c:when>
-                      <c:when test="${fn:containsIgnoreCase(entry.key, 'Kinh Doanh') or fn:containsIgnoreCase(entry.key, 'Sale')}">
-                        <c:set var="roleColor" value="var(--purple)"/>
-                      </c:when>
-                      <c:when test="${fn:containsIgnoreCase(entry.key, 'CEO') or fn:containsIgnoreCase(entry.key, 'Giám Đốc')}">
-                        <c:set var="roleColor" value="var(--warn)"/>
-                      </c:when>
-                      <c:otherwise>
-                        <c:set var="roleColor" value="var(--danger)"/>
-                      </c:otherwise>
-                    </c:choose>
+                    <c:set var="roleColor" value="var(--muted)"/>
                     <div style="display:flex;align-items:center;gap:16px">
                       <div style="width:180px;font-size:13px;font-weight:600;color:var(--fg);text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                         <c:out value="${entry.key}"/>
@@ -197,7 +181,7 @@
                   <div style="display:flex;align-items:center;gap:16px">
                     <div style="width:180px;font-size:13px;font-weight:600;color:var(--fg);text-align:right;flex-shrink:0">Quản Trị Hệ Thống</div>
                     <div style="flex:1;height:26px;background:var(--surface-2);border-radius:6px;overflow:hidden;border:1px solid var(--border)">
-                      <div style="width:100%;height:100%;background:var(--accent);border-radius:5px;display:flex;align-items:center;padding-left:10px">
+                      <div style="width:100%;height:100%;background:var(--muted);border-radius:5px;display:flex;align-items:center;padding-left:10px">
                         <span style="font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:700">1 tài khoản</span>
                       </div>
                     </div>
@@ -206,7 +190,7 @@
                   <div style="display:flex;align-items:center;gap:16px">
                     <div style="width:180px;font-size:13px;font-weight:600;color:var(--fg);text-align:right;flex-shrink:0">Vận Hành Kho</div>
                     <div style="flex:1;height:26px;background:var(--surface-2);border-radius:6px;overflow:hidden;border:1px solid var(--border)">
-                      <div style="width:75%;height:100%;background:var(--info);border-radius:5px;display:flex;align-items:center;padding-left:10px">
+                      <div style="width:75%;height:100%;background:var(--muted);border-radius:5px;display:flex;align-items:center;padding-left:10px">
                         <span style="font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:700">4 tài khoản</span>
                       </div>
                     </div>
@@ -215,7 +199,7 @@
                   <div style="display:flex;align-items:center;gap:16px">
                     <div style="width:180px;font-size:13px;font-weight:600;color:var(--fg);text-align:right;flex-shrink:0">Kinh Doanh</div>
                     <div style="flex:1;height:26px;background:var(--surface-2);border-radius:6px;overflow:hidden;border:1px solid var(--border)">
-                      <div style="width:55%;height:100%;background:var(--purple);border-radius:5px;display:flex;align-items:center;padding-left:10px">
+                      <div style="width:55%;height:100%;background:var(--muted);border-radius:5px;display:flex;align-items:center;padding-left:10px">
                         <span style="font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:700">3 tài khoản</span>
                       </div>
                     </div>
@@ -226,7 +210,7 @@
           </div>
         </div>
 
-        <%-- Right 1fr: User Mới Tạo Gần Đây (.tx-list) --%>
+        <%-- Phải 1fr: Người dùng mới tạo gần đây --%>
         <div class="card">
           <div class="card-head">
             <h3>Người Dùng Mới Tạo</h3>
@@ -244,9 +228,9 @@
                     <div class="tx-title"><c:out value="${u.name}"/></div>
                     <div class="tx-sub"><c:out value="${not empty u.roles and not empty u.roles[0] ? u.roles[0].description : u.email}"/></div>
                   </div>
-                  <div class="tx-amount" style="color:${isActive ? 'var(--accent)' : 'var(--danger)'}">
+                  <div class="tx-amount">
                     ${isActive ? 'Hoạt động' : 'Đã khóa'}
-                    <span class="when">ID: ${u.id}</span>
+                    <span class="when">Mã: ${u.id}</span>
                   </div>
                 </div>
               </c:forEach>
@@ -258,7 +242,7 @@
         </div>
       </section>
 
-      <%-- Section 3: 3 Template Alert Cards (.alerts) --%>
+      <%-- Phần 3: 3 Thẻ Cảnh Báo --%>
       <div class="dash-sec-head">
         <h3>
           <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
@@ -289,13 +273,13 @@
           <div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
           <div class="alert-body">
             <div class="alert-title">Cấu hình phân quyền <span class="count">${not empty totalRoles ? totalRoles : 0} Vai trò</span></div>
-            <div class="alert-desc">Cấu hình chi tiết vai trò và gán danh sách quyền hạn chức năng RBAC.</div>
+            <div class="alert-desc">Cấu hình chi tiết vai trò và gán danh sách quyền hạn chức năng.</div>
             <a class="alert-cta" href="${pageContext.request.contextPath}/admin/roles">Cấu hình phân quyền →</a>
           </div>
         </div>
       </section>
 
-      <%-- Section 4: System Footer --%>
+      <%-- Phần 4: Chân trang hệ thống --%>
       <div class="foot">
         <span>Đồng bộ cuối · ${not empty todayFormattedDate ? todayFormattedDate : 'Hôm nay'} · Bộ Phận Quản Trị Hệ Thống</span>
         <span>v1.0.0</span>

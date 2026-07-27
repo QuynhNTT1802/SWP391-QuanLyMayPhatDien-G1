@@ -168,20 +168,14 @@
   }
 
   function cancel() {
-    var dirty = getDirtyFields()
-    if (dirty.length === 0) { window.location.href = CTX + '/admin/users?action=list'; return }
-    confirmAction('Hu\u1ef7 thay \u0111\u1ed5i?', 'B\u1ea1n c\u00f3 ' + dirty.length + ' thay \u0111\u1ed5i ch\u01b0a l\u01b0u. T\u1ea5t c\u1ea3 s\u1ebd b\u1ecb m\u1ea5t n\u1ebfu r\u1eddi kh\u1ecfi.', function () {
-      window.location.href = CTX + '/admin/users?action=list'
-    })
+    window.location.href = CTX + '/admin/users?action=list'
   }
 
   document.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); save() }
     else if (e.key === 'Escape') { cancel() }
   })
-  window.addEventListener('beforeunload', function (e) {
-    if (getDirtyFields().length > 0) { e.preventDefault(); e.returnValue = '' }
-  })
+
 
   ;[].slice.call(document.querySelectorAll('[data-danger]')).forEach(function (btn) {
     btn.addEventListener('click', function () {

@@ -17,7 +17,9 @@ import com.quanlymayphatdien.g1.dal.SupplierDAO;
 import com.quanlymayphatdien.g1.dal.TransferDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
 import com.quanlymayphatdien.g1.entity.GeneratorSummary;
+import com.quanlymayphatdien.g1.entity.ImportProposal;
 import com.quanlymayphatdien.g1.entity.Role;
+import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.Transfer;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
@@ -110,33 +112,45 @@ public class DashboardController extends HttpServlet {
         loadCeoData(request, roleNames, userId);
         loadAdminExtendedData(request, roleNames);
 
-        // Fetch detailed model inventory for template table
-        List<GeneratorSummary> modelSummaries = inventoryDAO.findGeneratorSummary(warehouseId, null, null, 1, 20);
-        request.setAttribute("modelSummaries", modelSummaries);
-
-        int lowStockCount = 0;
-        int outOfStockCount = 0;
-        if (modelSummaries != null) {
-            for (GeneratorSummary ms : modelSummaries) {
-                if (ms.getTotalSerials() <= 5 && ms.getTotalSerials() > 0) {
-                    lowStockCount++;
-                } else if (ms.getTotalSerials() == 0) {
-                    outOfStockCount++;
-                }
+        // Fetch detailed model inventory for template table with pagination
+        String stockStatus = request.getParameter("stockStatus");
+        if (stockStatus == null || stockStatus.isEmpty()) {
+            stockStatus = "all";
+        }
+        int summaryPage = 1;
+        String pageParam = request.getParameter("page");
+        if (pageParam != null && !pageParam.isEmpty()) {
+            try {
+                summaryPage = Integer.parseInt(pageParam);
+                if (summaryPage < 1) summaryPage = 1;
+            } catch (NumberFormatException e) {
+                summaryPage = 1;
             }
         }
+        int pageSize = 10;
+
+        String effectiveStatus = "all".equals(stockStatus) ? null : stockStatus;
+        int totalItems = inventoryDAO.countGeneratorSummary(warehouseId, null, null, effectiveStatus);
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+        if (summaryPage > totalPages && totalPages > 0) summaryPage = totalPages;
+
+        List<GeneratorSummary> modelSummaries = inventoryDAO.findGeneratorSummary(
+                warehouseId, null, null, effectiveStatus, summaryPage, pageSize);
+        request.setAttribute("modelSummaries", modelSummaries);
+
+        int lowStockCount = inventoryDAO.countGeneratorSummary(warehouseId, null, null, "low");
+        int outOfStockCount = inventoryDAO.countGeneratorSummary(warehouseId, null, null, "out");
         request.setAttribute("lowStockModelsCount", lowStockCount);
         request.setAttribute("outOfStockModelsCount", outOfStockCount);
 
-        List<GeneratorSummary> lowOutStockModels = new ArrayList<>();
-        if (modelSummaries != null) {
-            for (GeneratorSummary m : modelSummaries) {
-                if (m.getTotalSerials() <= 5) {
-                    lowOutStockModels.add(m);
-                }
-            }
-        }
-        request.setAttribute("lowOutStockModels", lowOutStockModels);
+        int fromIndex = (summaryPage - 1) * pageSize + 1;
+        int toIndex = Math.min(summaryPage * pageSize, totalItems);
+        request.setAttribute("currentPage", summaryPage);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        request.setAttribute("fromIndex", fromIndex);
+        request.setAttribute("toIndex", toIndex);
+        request.setAttribute("currentStockStatus", stockStatus);
 
         Object stockObj = request.getAttribute("totalInStock");
         long grandInStock = (stockObj instanceof Number) ? ((Number) stockObj).longValue() : 0L;
@@ -340,6 +354,37 @@ public class DashboardController extends HttpServlet {
             }
             request.setAttribute("myDonutSegments", myDonutSegments);
             request.setAttribute("myDonutTotal", myTotal);
+
+            boolean isSalesManagerRole = roleNames != null
+                    && (roleNames.contains("sales_manager") || roleNames.contains("sale_manager"));
+            boolean isSalesStaffRole = roleNames != null && roleNames.contains("sales_staff");
+
+            if (isSalesManagerRole) {
+                request.setAttribute("poPendingCeoCount",
+                        purchaseOrderDAO.countByFilters(null, null, 0, GlobalUtils.PO_STATUS_PENDING_CEO));
+                request.setAttribute("proposalsPendingApproval",
+                        importProposalDAO.countByStatus(GlobalUtils.STATUS_PENDING, null, null, null, userId));
+                request.setAttribute("recentProposalsForApproval",
+                        importProposalDAO.searchByFilters(
+                                GlobalUtils.STATUS_PENDING, null, null, null, null, null, userId, null, 1, 5));
+                request.setAttribute("approvedOrdersThisMonth",
+                        saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_APPROVED, 0, userId));
+            }
+
+            if (isSalesStaffRole) {
+                request.setAttribute("myProposalCount",
+                        importProposalDAO.countByStatus(null, userId, null, null, userId));
+                request.setAttribute("myRecentProposals",
+                        importProposalDAO.searchByFilters(null, null, userId, null, null, null, userId, null, 1, 5));
+                List<SaleOrder> myRecentSaleOrders = saleOrderDAO.searchByNameCode(null, null, userId, userId);
+                if (myRecentSaleOrders != null && myRecentSaleOrders.size() > 5) {
+                    myRecentSaleOrders = myRecentSaleOrders.subList(0, 5);
+                }
+                request.setAttribute("myRecentSaleOrders",
+                        myRecentSaleOrders != null ? myRecentSaleOrders : new ArrayList<>());
+                request.setAttribute("myNeedsRevision",
+                        importProposalDAO.countByStatus(GlobalUtils.STATUS_NEEDS_REVISION, userId, null, null, userId));
+            }
         } catch (Exception e) {
             System.err.println("DashboardController loadSalesData error: " + e.getMessage());
         }

@@ -31,7 +31,7 @@ import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
 
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -1730,7 +1730,7 @@ throw new SQLException("Không thể tạo số serial '" + d.getSerialNumber() 
                 continue;
             }
             if (scopedWh != null && scopedWh == transfer.getSourceWarehouseId()) {
-                NotificationService.send(
+                NotificationUtil.send(
                         u.getId(),
                         "Ph\u00ed\u1ebfu nh\u1eadp \u0111\u00e3 ho\u00e0n t\u1ea5t",
                         "Kho \u0111\u00edch \u0111\u00e3 t\u1ea1o ph\u00ed\u1ebfu nh\u1eadp " + receipt.getReceiptCode()

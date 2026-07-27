@@ -1,0 +1,71 @@
+<mxfile host="Electron" agent="Antigravity">
+  <diagram id="package-diagram-swp391" name="2.1 Package Diagram">
+    <mxGraphModel dx="3337" dy="2121" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pkg_view" parent="1" style="shape=folder;fontStyle=1;tabWidth=42;tabHeight=14;tabPosition=left;html=1;boundedLbl=1;verticalAlign=bottom;align=center;spacingBottom=10;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="View" vertex="1">
+          <mxGeometry height="110" width="210" x="170" y="-60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_bean" parent="1" style="shape=folder;fontStyle=1;tabWidth=42;tabHeight=14;tabPosition=left;html=1;boundedLbl=1;verticalAlign=bottom;align=center;spacingBottom=10;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="Bean" vertex="1">
+          <mxGeometry height="110" width="210" x="-90" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_controller" parent="1" style="shape=folder;fontStyle=1;tabWidth=42;tabHeight=14;tabPosition=left;html=1;boundedLbl=1;verticalAlign=bottom;align=center;spacingBottom=10;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="Controller" vertex="1">
+          <mxGeometry height="110" width="210" x="510" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_util" parent="1" style="shape=folder;fontStyle=1;tabWidth=42;tabHeight=14;tabPosition=left;html=1;boundedLbl=1;verticalAlign=bottom;align=center;spacingBottom=10;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="Util" vertex="1">
+          <mxGeometry height="110" width="210" x="900" y="15" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_dao" parent="1" style="shape=folder;fontStyle=1;tabWidth=42;tabHeight=14;tabPosition=left;html=1;boundedLbl=1;verticalAlign=bottom;align=center;spacingBottom=10;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="DAO" vertex="1">
+          <mxGeometry height="110" width="210" x="490" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg_filter" parent="1" style="shape=folder;fontStyle=1;tabWidth=42;tabHeight=14;tabPosition=left;html=1;boundedLbl=1;verticalAlign=bottom;align=center;spacingBottom=10;fontSize=16;fillColor=#ffffff;strokeColor=#000000;strokeWidth=1.5;" value="Filter" vertex="1">
+          <mxGeometry height="110" width="210" x="470" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="pkg_view" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;entryX=0;entryY=0;entryDx=21;entryDy=0;entryPerimeter=0;" target="pkg_controller" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="pkg_view" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;entryX=0;entryY=0;entryDx=126;entryDy=14;entryPerimeter=0;" target="pkg_bean" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="pkg_controller" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;entryX=0;entryY=0;entryDx=210;entryDy=86;entryPerimeter=0;" target="pkg_bean" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" x="0.0442" y="-2" as="geometry">
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="pkg_controller" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;entryX=0;entryY=0;entryDx=126;entryDy=14;entryPerimeter=0;" target="pkg_dao" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="pkg_controller" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;exitX=0;exitY=0;exitDx=126;exitDy=14;exitPerimeter=0;" target="pkg_util" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" x="-0.0009" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="pkg_dao" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;exitX=0;exitY=0;exitDx=0;exitDy=38;exitPerimeter=0;" target="pkg_bean" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="pkg_dao" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;exitX=0;exitY=0;exitDx=210;exitDy=38;exitPerimeter=0;" target="pkg_util" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" x="-0.1756" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="pkg_util" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;" target="pkg_bean" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" x="-0.2342" y="-1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="pkg_util" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;entryX=0;entryY=0;entryDx=210;entryDy=86;entryPerimeter=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" target="pkg_dao" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" x="-0.1484" y="8" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="pkg_filter" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;exitX=0;exitY=0;exitDx=126;exitDy=14;exitPerimeter=0;" target="pkg_dao" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="pkg_filter" style="rounded=0;html=1;dashed=1;endArrow=open;endFill=0;strokeColor=#000000;fontSize=10;exitX=0;exitY=0;exitDx=0;exitDy=38;exitPerimeter=0;" target="pkg_bean" value="&amp;lt;&amp;lt;dependency&amp;gt;&amp;gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

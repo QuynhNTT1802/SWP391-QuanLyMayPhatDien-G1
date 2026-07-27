@@ -38,7 +38,7 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -1058,7 +1058,7 @@ public class ExportReceiptController extends HttpServlet {
                     String liqLink = request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId;
                     String liqCode = liq.getLiquidationCode();
                     if (liq.getCreatedBy() > 0 && liq.getCreatedBy() != loggedUser.getId()) {
-                        NotificationService.send(
+                        NotificationUtil.send(
                                 liq.getCreatedBy(),
                                 "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
                                 loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
@@ -1069,7 +1069,7 @@ public class ExportReceiptController extends HttpServlet {
                     }
                     if (liq.getCeoReviewedBy() != null && liq.getCeoReviewedBy() > 0
                             && !liq.getCeoReviewedBy().equals(loggedUser.getId())) {
-                        NotificationService.send(
+                        NotificationUtil.send(
                                 liq.getCeoReviewedBy(),
                                 "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
                                 loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
@@ -1219,7 +1219,7 @@ public class ExportReceiptController extends HttpServlet {
                 continue;
             }
             if (scopedWh != null && scopedWh == transfer.getDestWarehouseId()) {
-                NotificationService.send(
+                NotificationUtil.send(
                         u.getId(),
                         "Phiếu xuất mới từ kho nguồn",
                         "Kho nguồn đã tạo phiếu xuất " + receipt.getReceiptCode()

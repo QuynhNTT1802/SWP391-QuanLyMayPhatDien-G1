@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import com.quanlymayphatdien.g1.dal.UserDAO;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -684,7 +684,7 @@ public class OrderController extends HttpServlet {
 
             List<User> approvers = userDAO.findUsersByPermission("orders", "approve");
             for (User u : approvers) {
-                NotificationService.send(
+                NotificationUtil.send(
                     u.getId(),
                     "Đơn hàng " + order.getOrderCode() + " chờ duyệt",
                     "Nhân viên " + user.getName() + " vừa tạo đơn hàng cần duyệt.",
@@ -949,7 +949,7 @@ public class OrderController extends HttpServlet {
 
             int creatorId = order != null ? order.getCreatedBy() : 0;
             if (creatorId > 0) {
-                NotificationService.send(
+                NotificationUtil.send(
                     creatorId,
                     "Đơn hàng " + order.getOrderCode() + " đã được duyệt",
                     "Đơn hàng " + order.getOrderCode() + " đã được " + user.getName() + " duyệt.",
@@ -1004,7 +1004,7 @@ public class OrderController extends HttpServlet {
 
             int creatorId = order != null ? order.getCreatedBy() : 0;
             if (creatorId > 0) {
-                NotificationService.send(
+                NotificationUtil.send(
                     creatorId,
                     "Đơn hàng " + order.getOrderCode() + " bị từ chối",
                     "Đơn hàng " + order.getOrderCode() + " bị " + user.getName() + " từ chối (lý do: " + reason + ").",

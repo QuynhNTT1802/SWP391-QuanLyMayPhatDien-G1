@@ -7,12 +7,12 @@ import com.quanlymayphatdien.g1.entity.User;
 
 import java.util.List;
 
-public class NotificationService {
+public class NotificationUtil {
 
     private static final NotificationDAO dao = new NotificationDAO();
     private static final UserDAO userDAO = new UserDAO();
 
-    private NotificationService() {
+    private NotificationUtil() {
     }
 
     public static boolean send(int userId, String title, String message, String link,

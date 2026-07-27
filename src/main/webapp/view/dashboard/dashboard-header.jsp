@@ -4,23 +4,15 @@
 
 <div class="dash-hero">
   <div class="dash-hero-left">
-    <div class="dash-avatar">
-      <c:choose>
-        <c:when test="${not empty sessionScope.loggedUser.name}">
-          ${fn:substring(sessionScope.loggedUser.name, 0, 1)}
-        </c:when>
-        <c:otherwise>U</c:otherwise>
-      </c:choose>
-    </div>
     <div class="dash-welcome">
       <h2>
         Xin chào, ${not empty sessionScope.loggedUser.name ? sessionScope.loggedUser.name : 'Người dùng'}!
         <c:choose>
           <c:when test="${activeRole == 'ceo'}">
-            <span class="role-badge ceo">CEO / Ban Giám Đốc</span>
+            <span class="role-badge ceo">Giám đốc Điều hành</span>
           </c:when>
           <c:when test="${activeRole == 'admin'}">
-            <span class="role-badge admin">System Administrator</span>
+            <span class="role-badge admin">Quản trị viên hệ thống</span>
           </c:when>
           <c:when test="${activeRole == 'warehouse'}">
             <span class="role-badge warehouse">Quản Lý & Vận Hành Kho</span>
@@ -47,15 +39,15 @@
 
   <c:if test="${not empty availableDashboardRoles and fn:length(availableDashboardRoles) > 1}">
   <div class="dash-hero-right">
-    <div class="role-switcher" title="Chuyển đổi góc nhìn Dashboard">
+    <div class="role-switcher" title="Chuyển đổi góc nhìn bảng điều khiển">
       <c:forEach var="rKey" items="${availableDashboardRoles}">
         <c:url var="switchUrl" value="/admin/dashboard">
           <c:param name="viewRole" value="${rKey}" />
         </c:url>
         <a href="${switchUrl}" class="role-switch-btn ${activeRole == rKey ? 'active' : ''}">
           <c:choose>
-            <c:when test="${rKey == 'ceo'}">CEO</c:when>
-            <c:when test="${rKey == 'admin'}">Admin</c:when>
+            <c:when test="${rKey == 'ceo'}">Giám đốc</c:when>
+            <c:when test="${rKey == 'admin'}">Quản trị</c:when>
             <c:when test="${rKey == 'warehouse'}">Kho</c:when>
             <c:when test="${rKey == 'sales'}">Kinh doanh</c:when>
           </c:choose>

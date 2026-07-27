@@ -21,7 +21,7 @@
     .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; }
     .kpi .label { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; margin-bottom: 10px; }
-    .kpi .label .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .kpi .label .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
     .kpi .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg); }
     .kpi .value .unit { font-size: 13px; font-weight: 500; color: var(--muted); margin-inline-start: 4px; }
     .kpi .delta { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
@@ -43,9 +43,7 @@
     .tx:last-child { border-bottom: 0; }
     .tx-icon { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); }
     .tx-icon svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-    .tx-icon.in { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
-    .tx-icon.out { color: var(--info); background: var(--info-soft); border-color: transparent; }
-    .tx-icon.move { color: var(--warn); background: var(--warn-soft); border-color: transparent; }
+    .tx-icon.in, .tx-icon.out, .tx-icon.move { color: var(--muted-2); background: var(--surface-2); border-color: var(--border); }
     .tx-body { line-height: 1.3; min-width: 0; }
     .tx-title { font-size: 13px; font-weight: 500; }
     .tx-sub { font-size: 11.5px; color: var(--muted); font-family: var(--font-mono); }
@@ -67,9 +65,7 @@
     .alert { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
     .alert-icon { width: 30px; height: 30px; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
     .alert-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-    .alert.warn .alert-icon { background: var(--warn-soft); color: var(--warn); }
-    .alert.danger .alert-icon { background: var(--danger-soft); color: var(--danger); }
-    .alert.info .alert-icon { background: var(--info-soft); color: var(--info); }
+    .alert.warn .alert-icon, .alert.danger .alert-icon, .alert.info .alert-icon { background: var(--surface-2); color: var(--muted-2); }
     .alert-body { flex: 1; min-width: 0; }
     .alert-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
     .alert-title .count { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-radius: 3px; background: var(--surface-2); color: var(--fg-soft); border: 1px solid var(--border); font-weight: 500; }
@@ -175,7 +171,7 @@
 
         <div class="search">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input placeholder="Tìm SKU, phiếu, nhà cung cấp…" />
+          <input placeholder="Tìm mã hàng, phiếu, nhà cung cấp…" />
           <kbd>⌘K</kbd>
         </div>
 
@@ -199,27 +195,27 @@
         <section data-od-id="kpis">
           <div class="kpis">
             <div class="kpi">
-              <div class="label">Tổng SKU đang quản lý <span class="dot"></span></div>
+              <div class="label">Tổng mã hàng đang quản lý <span class="dot"></span></div>
               <div class="value mono">12,438</div>
               <div class="delta">
                 <span class="change up">▲ 1.8%</span>
                 so với tuần trước
               </div>
               <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                <polyline points="0,24 12,22 24,20 36,21 48,18 60,16 72,14 84,15 96,11 108,9 120,7" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
-                <polyline points="0,24 12,22 24,20 36,21 48,18 60,16 72,14 84,15 96,11 108,9 120,7 120,32 0,32" fill="var(--accent)" opacity="0.12"/>
+                <polyline points="0,24 12,22 24,20 36,21 48,18 60,16 72,14 84,15 96,11 108,9 120,7" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
+                <polyline points="0,24 12,22 24,20 36,21 48,18 60,16 72,14 84,15 96,11 108,9 120,7 120,32 0,32" fill="var(--muted)" opacity="0.12"/>
               </svg>
             </div>
 
             <div class="kpi">
               <div class="label">Tổng tồn kho (đơn vị)</div>
-              <div class="value mono">348,920 <span class="unit">pcs</span></div>
+              <div class="value mono">348,920 <span class="unit">chiếc</span></div>
               <div class="delta">
                 <span class="change down">▼ 4.2%</span>
                 so với đầu tháng
               </div>
               <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                <polyline points="0,10 12,11 24,13 36,12 48,15 60,17 72,19 84,18 96,21 108,23 120,25" fill="none" stroke="var(--fg-soft)" stroke-width="1.6"/>
+                <polyline points="0,10 12,11 24,13 36,12 48,15 60,17 72,19 84,18 96,21 108,23 120,25" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
               </svg>
             </div>
 
@@ -231,19 +227,19 @@
                 tháng này
               </div>
               <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                <polyline points="0,22 12,20 24,21 36,18 48,17 60,15 72,17 84,13 96,12 108,10 120,8" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+                <polyline points="0,22 12,20 24,21 36,18 48,17 60,15 72,17 84,13 96,12 108,10 120,8" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
               </svg>
             </div>
 
             <div class="kpi">
-              <div class="label">SKU sắp hết hàng</div>
-              <div class="value mono" style="color: var(--danger)">47</div>
+              <div class="label">Mã hàng sắp hết</div>
+              <div class="value mono">47</div>
               <div class="delta">
                 <span class="change down">▲ 12</span>
                 cần đặt hàng tuần này
               </div>
               <svg class="spark" viewBox="0 0 120 32" preserveAspectRatio="none">
-                <polyline points="0,28 12,26 24,27 36,24 48,22 60,20 72,17 84,15 96,12 108,9 120,6" fill="none" stroke="var(--danger)" stroke-width="1.6"/>
+                <polyline points="0,28 12,26 24,27 36,24 48,22 60,20 72,17 84,15 96,12 108,9 120,6" fill="none" stroke="var(--muted)" stroke-width="1.6"/>
               </svg>
             </div>
           </div>
@@ -259,7 +255,7 @@
             <div class="card-head">
               <div>
                 <h3>Nhập / Xuất kho</h3>
-                <div class="sub" style="margin-top:2px">Đơn vị: nghìn pcs</div>
+                <div class="sub" style="margin-top:2px">Đơn vị: nghìn chiếc</div>
               </div>
               <div class="tabs">
                 <button class="tab">7N</button>
@@ -292,25 +288,25 @@
                   <text x="440" y="236">10/5</text>
                   <text x="535" y="236">12/5</text>
                 </g>
-                <polyline points="60,160 108,140 155,150 203,120 250,110 298,135 345,95 393,110 440,80 488,90 535,70 583,95 630,75 678,60" fill="none" stroke="var(--accent)" stroke-width="2"/>
-                <polyline points="60,160 108,140 155,150 203,120 250,110 298,135 345,95 393,110 440,80 488,90 535,70 583,95 630,75 678,60 678,220 60,220" fill="var(--accent)" opacity="0.10"/>
-                <polyline points="60,180 108,170 155,165 203,160 250,140 298,150 345,130 393,140 440,120 488,135 535,110 583,125 630,105 678,115" fill="none" stroke="var(--info)" stroke-width="2" stroke-dasharray="3,3"/>
-                <g fill="var(--accent)">
+                <polyline points="60,160 108,140 155,150 203,120 250,110 298,135 345,95 393,110 440,80 488,90 535,70 583,95 630,75 678,60" fill="none" stroke="var(--muted)" stroke-width="2"/>
+                <polyline points="60,160 108,140 155,150 203,120 250,110 298,135 345,95 393,110 440,80 488,90 535,70 583,95 630,75 678,60 678,220 60,220" fill="var(--muted)" opacity="0.10"/>
+                <polyline points="60,180 108,170 155,165 203,160 250,140 298,150 345,130 393,140 440,120 488,135 535,110 583,125 630,105 678,115" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3,3"/>
+                <g fill="var(--muted)">
                   <circle cx="678" cy="60" r="3.5"/>
-                  <circle cx="678" cy="60" r="6" fill="var(--accent)" opacity="0.25"/>
+                  <circle cx="678" cy="60" r="6" fill="var(--muted)" opacity="0.25"/>
                 </g>
-                <g fill="var(--info)">
+                <g fill="var(--muted)">
                   <circle cx="678" cy="115" r="2.5"/>
                 </g>
                 <g transform="translate(630, 38)">
                   <rect x="0" y="0" width="78" height="20" rx="3" fill="var(--surface-2)" stroke="var(--border)"/>
-                  <text x="6" y="14" font-family="var(--font-mono)" font-size="11" fill="var(--fg)">38,2k pcs</text>
+                  <text x="6" y="14" font-family="var(--font-mono)" font-size="11" fill="var(--fg)">38,2k chiếc</text>
                 </g>
               </svg>
               <div class="chart-legend">
-                <span class="legend-item"><span class="legend-swatch" style="background:var(--accent)"></span>Nhập kho · 412k pcs</span>
-                <span class="legend-item"><span class="legend-swatch" style="background:var(--info); height:2px; border-top: 1px dashed var(--info)"></span>Xuất kho · 367k pcs</span>
-                <span class="legend-item" style="margin-inline-start:auto"><span class="mono" style="color:var(--accent)">+45,2k</span> tồn ròng</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:var(--muted)"></span>Nhập kho · 412k chiếc</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:var(--muted); height:2px; border-top: 1px dashed var(--muted)"></span>Xuất kho · 367k chiếc</span>
+                <span class="legend-item" style="margin-inline-start:auto"><span class="mono" style="font-weight:600">+45,2k</span> tồn ròng</span>
               </div>
             </div>
           </div>
@@ -338,7 +334,7 @@
                     <div class="tx-title">Xuất kho — Sữa Vinamilk 1L</div>
                     <div class="tx-sub">PX-1183 · KH: Coopmart Hà Đông · 1,200 thùng</div>
                   </div>
-                  <div class="tx-amount" style="color:var(--info)">−1,200<span class="when">12/05 · 08:15</span></div>
+                  <div class="tx-amount">−1,200<span class="when">12/05 · 08:15</span></div>
                 </div>
 
                 <div class="tx">
@@ -365,7 +361,7 @@
                     <div class="tx-title">Xuất kho — Mì Hảo Hảo tôm chua cay</div>
                     <div class="tx-sub">PX-1182 · KH: BigC Long Biên · 2,400 thùng</div>
                   </div>
-                  <div class="tx-amount" style="color:var(--info)">−2,400<span class="when">11/05 · 14:08</span></div>
+                  <div class="tx-amount">−2,400<span class="when">11/05 · 14:08</span></div>
                 </div>
 
                 <div class="tx">
@@ -384,7 +380,7 @@
 
         <div class="section-head">
           <h2>Tồn kho chi tiết</h2>
-          <span class="meta">Hiển thị 6 / 12,438 SKU</span>
+          <span class="meta">Hiển thị 6 / 12,438 mã hàng</span>
         </div>
         <section class="card" data-od-id="inventory" style="overflow:hidden">
           <div class="card-head">
@@ -407,7 +403,7 @@
           <table class="inv">
             <thead>
               <tr>
-                <th style="width:120px">SKU</th>
+                <th style="width:120px">MÃ HÀNG</th>
                 <th>Sản phẩm</th>
                 <th>Danh mục</th>
                 <th>Kho</th>
@@ -435,7 +431,7 @@
                 <td>HN-01 · B1</td>
                 <td class="num">186</td>
                 <td class="num">120</td>
-                <td class="num" style="color:var(--warn)">66</td>
+                <td class="num">66</td>
                 <td><span class="pill low"><span class="pdot"></span>Sắp hết</span></td>
               </tr>
               <tr>
@@ -455,7 +451,7 @@
                 <td>HCM-03 · D2</td>
                 <td class="num">0</td>
                 <td class="num">240</td>
-                <td class="num" style="color:var(--danger)">−240</td>
+                <td class="num">−240</td>
                 <td><span class="pill out"><span class="pdot"></span>Hết hàng</span></td>
               </tr>
               <tr>
@@ -475,7 +471,7 @@
                 <td>DN-02 · B5</td>
                 <td class="num">412</td>
                 <td class="num">380</td>
-                <td class="num" style="color:var(--warn)">32</td>
+                <td class="num">32</td>
                 <td><span class="pill low"><span class="pdot"></span>Sắp hết</span></td>
               </tr>
             </tbody>
@@ -490,7 +486,7 @@
           <div class="alert warn">
             <div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
             <div class="alert-body">
-              <div class="alert-title">Sắp hết hàng <span class="count">47 SKU</span></div>
+              <div class="alert-title">Sắp hết hàng <span class="count">47 mã hàng</span></div>
               <div class="alert-desc">Khả dụng dưới ngưỡng an toàn (≤ 7 ngày tồn). Có 12 SKU thuộc nhóm bán chạy.</div>
               <a class="alert-cta" href="#">Xem danh sách →</a>
             </div>
@@ -499,7 +495,7 @@
           <div class="alert danger">
             <div class="alert-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div>
             <div class="alert-body">
-              <div class="alert-title">Hết hàng <span class="count">8 SKU</span></div>
+              <div class="alert-title">Hết hàng <span class="count">8 mã hàng</span></div>
               <div class="alert-desc">Tồn = 0 nhưng vẫn có đơn đặt trước. Cần xử lý ngay để tránh trễ giao.</div>
               <a class="alert-cta" href="#">Tạo phiếu nhập gấp →</a>
             </div>
@@ -508,7 +504,7 @@
           <div class="alert info">
             <div class="alert-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
             <div class="alert-body">
-              <div class="alert-title">Sắp hết hạn <span class="count">15 SKU</span></div>
+              <div class="alert-title">Sắp hết hạn <span class="count">15 mã hàng</span></div>
               <div class="alert-desc">Còn dưới 30 ngày HSD. Tổng giá trị 142 triệu ₫. Đề xuất khuyến mãi xả hàng.</div>
               <a class="alert-cta" href="#">Xem chi tiết →</a>
             </div>
@@ -517,7 +513,7 @@
 
         <div class="foot">
           <span>Đồng bộ cuối · 12/05/2026 13:12 · Kho HN-01</span>
-          <span>v2.4.1 · 6 người dùng đang online</span>
+          <span>v2.4.1 · 6 người dùng đang trực tuyến</span>
         </div>
 
       </main>

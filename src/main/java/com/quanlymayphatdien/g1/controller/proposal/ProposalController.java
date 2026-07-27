@@ -19,7 +19,7 @@ import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
 import com.quanlymayphatdien.g1.dal.UserDAO;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -572,7 +572,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         boolean anyNotifFailed = false;
         for (User u : approvers) {
             try {
-                boolean ok = NotificationService.send(
+                boolean ok = NotificationUtil.send(
                     u.getId(),
                     "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
                     "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
@@ -832,7 +832,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             if (p != null && p.getCreatedBy() > 0) {
                 boolean notifOk = false;
                 try {
-                    notifOk = NotificationService.send(
+                    notifOk = NotificationUtil.send(
                         p.getCreatedBy(),
                         "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
                         "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
@@ -902,7 +902,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             if (p != null && p.getCreatedBy() > 0) {
                 boolean notifOk = false;
                 try {
-                    notifOk = NotificationService.send(
+                    notifOk = NotificationUtil.send(
                         p.getCreatedBy(),
                         "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
                         "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",

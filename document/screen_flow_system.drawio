@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" modified="2026-07-24T16:08:00.000Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.4.0 Chrome/112.0.5615.204 Electron/24.5.1 Safari/537.36" version="21.4.0" type="device" pages="8">
+  
+  <!-- ==================== PAGE 1: Guest screen flow ==================== -->
+  <diagram name="Guest screen flow" id="diag-guest">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-guest" value="Guest Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="300" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="g-access" value="Access System" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="g-login" value="Login Page" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-forgot" value="Forgot Password" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="320" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-reset" value="Reset Confirmation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="320" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e-g1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g-access" target="g-login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-g1" value="Redirect if unauthenticated" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g1">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-g2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g-login" target="g-forgot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-g2" value="Click &quot;Forgot Password&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g2">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-g3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g-forgot" target="g-reset">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-g3" value="Submit Username / Email" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g3">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+
+        <mxCell id="e-g4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="g-reset" target="g-login">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="785" y="420" />
+              <mxPoint x="515" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl-g4" value="Click &quot;Return to Login&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g4">
+          <mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 2: User screen flow ==================== -->
+  <diagram name="User screen flow" id="diag-user">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-u" value="Authenticated User Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="350" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="u-login" value="Login Success" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="150" y="250" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-prof" value="User Profile" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-pass" value="Change Password" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="250" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-noti" value="Notification List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="340" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-logout" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="430" width="130" height="40" as="geometry" /></mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e-u1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-prof"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u1" value="Click &quot;Profile&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-u2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-pass"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u2" value="Click &quot;Change Password&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-u3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-noti"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u3" value="Click &quot;Notifications&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-u4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-logout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u4" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u4"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 3: Sales Staff screen flow ==================== -->
+  <diagram name="Sales Staff screen flow" id="diag-sales-staff">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ss" value="Sales Staff Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="350" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ss-login" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="240" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-dash" value="Sales Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="340" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-logout" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="440" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Customer Operations -->
+        <mxCell id="ss-cust" value="Customer List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="160" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-cust-c" value="Add Customer Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="120" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-cust-d" value="Customer Details Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="200" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Proposal Creation -->
+        <mxCell id="ss-prop" value="Proposal List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="340" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-prop-c" value="Create Proposal Form" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="300" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-prop-d" value="Proposal Details" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="380" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Sales Order Creation -->
+        <mxCell id="ss-ord" value="Sales Order List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="520" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-ord-c" value="Create Order Form" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="480" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-ord-d" value="Order Details" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="560" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Main Connectors -->
+        <mxCell id="ess-log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-login" target="ss-dash"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ss-log" value="Click &quot;Dashboard&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-log"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-logout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ss-out" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-out"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-cust"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess1" value="Click &quot;Manage Customer&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-prop"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess2" value="Click &quot;Manage Proposal&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-ord"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess3" value="Click &quot;Manage Order&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <!-- Sub Connectors -->
+        <mxCell id="ess-c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-cust" target="ss-cust-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess-c1" value="Click &quot;Add Customer&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-c1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-c3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-cust" target="ss-cust-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess-c3" value="Click &quot;View Detail&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-c3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-p1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-prop" target="ss-prop-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess-p1" value="Click &quot;Create Proposal&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-p1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-p3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-prop" target="ss-prop-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess-p3" value="Click &quot;View Detail&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-p3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-o1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-ord" target="ss-ord-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess-o1" value="Click &quot;Create Order&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-o1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-o3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-ord" target="ss-ord-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess-o3" value="Click &quot;View Detail&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess-o3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 4: Sales Manager screen flow ==================== -->
+  <diagram name="Sales Manager screen flow" id="diag-sales-mgr">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-sm" value="Sales Manager Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="380" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="sm-login" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="240" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-dash" value="Sales Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="340" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-logout" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="440" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Proposal Approval -->
+        <mxCell id="sm-prop" value="Proposal List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="160" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-prop-d" value="Review Proposal Detail" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="120" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-prop-rej" value="Reject Proposal Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="200" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Order Approval -->
+        <mxCell id="sm-ord" value="Pending Order List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="340" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-ord-d" value="Review Order Detail" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="300" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-ord-rej" value="Reject Order Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="380" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Purchase Orders -->
+        <mxCell id="sm-pur" value="Purchase Order List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="520" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-pur-c" value="Review &amp; Create PO" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="480" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-pur-d" value="PO Details" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="560" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Main Connectors -->
+        <mxCell id="esm-log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-login" target="sm-dash"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-sm-log" value="Click &quot;Dashboard&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-log"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-logout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-sm-out" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-out"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-prop"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm1" value="Click &quot;Review Proposals&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-ord"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm2" value="Click &quot;Pending Orders&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-pur"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm3" value="Click &quot;Purchase Orders&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <!-- Sub Connectors -->
+        <mxCell id="esm-p1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-prop" target="sm-prop-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-p1" value="Click &quot;Review&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-p1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-prop" target="sm-prop-rej"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-p2" value="Click &quot;Reject&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-p2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-o1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-ord" target="sm-ord-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-o1" value="Click &quot;Review&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-o1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-o2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-ord" target="sm-ord-rej"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-o2" value="Click &quot;Reject&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-o2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-pu1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-pur" target="sm-pur-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-pu1" value="Click &quot;Create PO&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-pu1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-pu2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-pur" target="sm-pur-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-pu2" value="Click &quot;View Detail&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-pu2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 5: Warehouse Staff screen flow ==================== -->
+  <diagram name="Warehouse Staff screen flow" id="diag-wh-staff">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ws" value="Warehouse Staff Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="380" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ws-login" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="240" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-dash" value="Warehouse Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="360" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-logout" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="480" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Generator List -->
+        <mxCell id="ws-gen" value="Generator Inventory" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="140" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-gen-d" value="Generator Details" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="140" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- Import Receipt -->
+        <mxCell id="ws-imp" value="Import Receipt List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="250" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-imp-c" value="Create Import Receipt" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="250" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Export Receipt -->
+        <mxCell id="ws-exp" value="Export Receipt List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="360" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-exp-c" value="Create Export Receipt" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="360" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Transfer Request -->
+        <mxCell id="ws-trans" value="Transfer Request List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="470" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-trans-c" value="Create Transfer Request" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="470" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Stock Audit Sheet -->
+        <mxCell id="ws-check" value="Stock Audit Sheet List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="580" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-check-c" value="Create Audit Sheet" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="580" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="ews-log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-login" target="ws-dash"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ws-log" value="Click &quot;Dashboard&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-log"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews-out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-logout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ws-out" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-out"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-gen"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews1" value="Click &quot;Generators&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-imp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews2" value="Click &quot;Import Receipts&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-exp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews3" value="Click &quot;Export Receipts&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-trans"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews4" value="Click &quot;Transfers&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews4"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-check"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews5" value="Click &quot;Stock Audits&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews5"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <!-- Sub Connectors -->
+        <mxCell id="ews-g" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-gen" target="ws-gen-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews-g" value="Click &quot;View Detail&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-g"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews-i" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-imp" target="ws-imp-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews-i" value="Click &quot;New Import&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-i"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews-e" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-exp" target="ws-exp-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews-e" value="Click &quot;New Export&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-e"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews-t" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-trans" target="ws-trans-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews-t" value="Click &quot;New Transfer&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-t"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ews-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-check" target="ws-check-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ews-c" value="Click &quot;New Audit Sheet&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ews-c"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 6: Warehouse Manager screen flow ==================== -->
+  <diagram name="Warehouse Manager screen flow" id="diag-wh-mgr">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-wm" value="Warehouse Manager Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="400" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="wm-login" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="320" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-dash" value="Warehouse Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="440" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-logout" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="560" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Features -->
+        <mxCell id="wm-wh" value="Warehouse List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="140" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-wh-u" value="Update Warehouse Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="140" width="170" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="wm-inv" value="Stock Overview" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="230" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-inv-r" value="Inventory Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="230" width="170" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="wm-trans" value="Transfer Requests" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="320" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-trans-a" value="Approve Transfer" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="320" width="170" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="wm-check" value="Stock Audit List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="410" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-check-a" value="Approve Stock Audit" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="410" width="170" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="wm-liq" value="Equipment Liquidation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="500" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-liq-r" value="Liquidation Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="500" width="170" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="wm-sc" value="Stock Cards" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="590" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-sc-d" value="Stock Card Detail Timeline" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="590" width="170" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="wm-sup" value="Supplier List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="360" y="680" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-sup-e" value="Add / Edit Supplier Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="680" width="170" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="ewm-log" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-login" target="wm-dash"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-wm-log" value="Click &quot;Dashboard&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-log"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-out" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-logout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-out" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-out"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-wh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm1" value="Click &quot;Warehouses&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-inv"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm2" value="Click &quot;Stock Overview&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-trans"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm3" value="Click &quot;Transfer Approvals&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-check"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm4" value="Click &quot;Audit Approvals&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm4"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-liq"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm5" value="Click &quot;Liquidation&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm5"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-sc"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm6" value="Click &quot;Stock Cards&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm6"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-sup"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm7" value="Click &quot;Suppliers&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm7"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <!-- Sub Connectors -->
+        <mxCell id="ewm-wh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-wh" target="wm-wh-u"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-wh" value="Click &quot;Edit&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-wh"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-i" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-inv" target="wm-inv-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-i" value="Click &quot;Export Report&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-i"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-t" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-trans" target="wm-trans-a"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-t" value="Click &quot;Approve/Reject&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-t"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-check" target="wm-check-a"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-c" value="Click &quot;Approve Audit&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-c"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-l" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-liq" target="wm-liq-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-l" value="Click &quot;Export Report&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-l"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-s" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-sc" target="wm-sc-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-s" value="Click &quot;View Detail&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-s"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ewm-sup" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-sup" target="wm-sup-e"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ewm-sup" value="Click &quot;Add/Edit&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ewm-sup"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 7: Admin screen flow ==================== -->
+  <diagram name="Admin screen flow" id="diag-admin">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ac" value="System Admin Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="350" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ac-adm-log" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="240" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-adm" value="Admin Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="360" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-adm-out" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="480" width="140" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="ac-user" value="User Management" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="240" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-user-m" value="Add / Edit User Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="240" width="160" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="ac-role" value="Role &amp; Permission" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="360" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-role-m" value="Edit Role Permission Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="360" width="180" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="ac-cat" value="Category Management" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="480" width="170" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-cat-m" value="Edit Category &amp; Import Preview Modal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="480" width="220" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="eac-ad-l" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm-log" target="ac-adm"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-ad-l" value="Click &quot;Dashboard&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-ad-l"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-ad-o" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-adm-out"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-ad-o" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-ad-o"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-a1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-user"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-a1" value="Click &quot;Manage Account&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-a1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-a2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-role"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-a2" value="Click &quot;Manage Role&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-a2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-a3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-cat"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-a3" value="Click &quot;Manage Category&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-a3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-u-m" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-user" target="ac-user-m"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-u-m" value="Click &quot;Add/Edit&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-u-m"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-r-m" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-role" target="ac-role-m"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-r-m" value="Click &quot;Edit Quyền&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-r-m"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-c-m" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-cat" target="ac-cat-m"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-c-m" value="Click &quot;Edit / Import&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-c-m"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 8: CEO screen flow ==================== -->
+  <diagram name="CEO screen flow" id="diag-ceo">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ceo" value="CEO Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="300" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ac-ceo-log" value="Login" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="240" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-ceo" value="CEO Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="360" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-ceo-out" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="480" width="140" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="ac-rep" value="Executive Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="300" width="160" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-rep-sub" value="Revenue &amp; Inventory Stats" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="300" width="180" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="ac-appr" value="Final Order &amp; Proposal Approval" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="420" width="210" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-appr-sub" value="Approve / Reject Dialog" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="420" width="180" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="eac-co-l" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-ceo-log" target="ac-ceo"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-co-l" value="Click &quot;Dashboard&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-co-l"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-co-o" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-ceo" target="ac-ceo-out"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-co-o" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-co-o"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-ceo" target="ac-rep"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-c1" value="Click &quot;Statistic / Report&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-c1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-c2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-ceo" target="ac-appr"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-c2" value="Review Approvals" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-c2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-c1-sub" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-rep" target="ac-rep-sub"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-c1-sub" value="Click &quot;View Stats&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-c1-sub"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="eac-c2-sub" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-appr" target="ac-appr-sub"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-eac-c2-sub" value="Click &quot;Review&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="eac-c2-sub"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

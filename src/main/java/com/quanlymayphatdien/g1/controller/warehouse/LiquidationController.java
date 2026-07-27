@@ -25,7 +25,7 @@ import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -758,7 +758,7 @@ public class LiquidationController extends HttpServlet {
             // Đơn đi thẳng CEO → thông báo các CEO
             List<User> ceos = userDAO.findUsersByPermission("liquidations", "approve_ceo");
             for (User ceo : ceos) {
-                NotificationService.send(
+                NotificationUtil.send(
                         ceo.getId(),
                         "Đơn thanh lý " + l.getLiquidationCode() + " — chờ CEO duyệt",
                         "Quản lý " + user.getName() + " đã tạo đơn thanh lý " + l.getLiquidationCode() + " và gửi lên CEO duyệt.",
@@ -863,7 +863,7 @@ public class LiquidationController extends HttpServlet {
 
         liquidationDAO.updateStatus(liquidationId, "APPROVED", user.getId(), null);
 
-        NotificationService.send(
+        NotificationUtil.send(
                 l.getCreatedBy(),
                 "Đơn thanh lý " + l.getLiquidationCode() + " — CEO đã duyệt",
                 "CEO " + user.getName() + " đã duyệt đơn thanh lý " + l.getLiquidationCode() + ". Hãy tạo phiếu xuất kho.",
@@ -919,7 +919,7 @@ public class LiquidationController extends HttpServlet {
             }
         }
 
-        NotificationService.send(
+        NotificationUtil.send(
                 l.getCreatedBy(),
                 isPermanent ? "Đơn thanh lý " + l.getLiquidationCode() + " — CEO đã từ chối" : "Đơn thanh lý " + l.getLiquidationCode() + " — CEO yêu cầu sửa",
                 isPermanent
@@ -1108,7 +1108,7 @@ public class LiquidationController extends HttpServlet {
 
             List<User> reviewers = userDAO.findUsersByPermission("liquidations", "approve_ceo");
             for (User rv : reviewers) {
-                NotificationService.send(
+                NotificationUtil.send(
                         rv.getId(),
                         "Đơn thanh lý " + l.getLiquidationCode() + " — đã sửa lại, chờ CEO duyệt",
                         user.getName() + " đã sửa lại đơn thanh lý " + l.getLiquidationCode() + " và gửi lại CEO duyệt.",
